@@ -32,7 +32,7 @@ class ResticRunner:
         repository: str,
         password: str,
         verbose: bool = False,
-        binary_search_paths: list = None,
+        binary_search_paths: List[str] = None,
     ) -> None:
         self.repository = repository
         self.password = password
@@ -515,8 +515,11 @@ class ResticRunner:
         Execute forget command for given snapshot
         """
         cmd = "forget {}".format(snapshot)
-        # We need live output here since server errors will not stop client from deletion atempts
-        result, output = self.executor(cmd, live_output=True)
+        # We need to be verbose here since server errors will not stop client from deletion attempts
+        verbose = self.verbose
+        self.verbose = True
+        result, output = self.executor(cmd):
+        self.verbose = verbose
         if result:
             logger.info("successfully forgot snapshot.")
             return True
