@@ -14,7 +14,7 @@ __version__ = "1.3.0"
 import sys
 import os
 from command_runner import command_runner
-from npbackup import __version__ as npbackup_version
+from npbackup.npbackup import __version__ as npbackup_version
 from NPBackupInstaller import __version__ as installer_version
 from customization import (
     COMPANY_NAME,
