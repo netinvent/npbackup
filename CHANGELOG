@@ -1,0 +1,60 @@
+## v2.0.0
+
+  - First open public release
+  - Refactor GUI so actions became non-blocking
+    - Added loader animation for gui events
+    - Added backup window with current state
+    - Added internationalization support (currently en and fr)
+  - Refactor restic.ls function to return a generator since restic ls command gives chunks of json, which is bad memory wise when parsing each chunk into a big list
+  - On Windows, "The cloud operation is not supported on a read-only volume." and "The media is write protected." errors will not make backup fail, see #4155
+    - This fix can be removed once #4155 is resolved, see # TEMP-FIX-4155 comment in restic_wrapper package
+  - Added Additional backup parameter option
+  - Added optional backup tags
+  - Added optional prometheus group label and additional labels entries
+  - Make sure backend connections number parameter works with all backends
+  - Added priority configuration for restic operations, defaults to low priority to not disturb operations
+  - Added WindowsApps folder (reparse points) to exclusion list (fix "The file cannot be accessed by the system." error)
+  - Fixed backup did use verbose option twice
+  - Updated restic binary to restic 0.15.0 compiled with go1.19.5 on windows/amd64
+  - Made theme configurable
+  - Make sure we exit all subprocesses when exiting npbackup
+  - Improve config GUI for supporting elder config files properly
+  - Fix restic metrics when 0 bytes of data have been added to the repo
+  - Fix restoration must ignore case on Windows
+  - Fix backup_job variable substitution in config file
+  - Fix for ruamel.yaml global objects being modified out of current scope encrypting current config while saving
+  - Fix npbackup could not start when no config file was present
+  - Drastically improve ls operation speed by changing command_runner method from poller to monitor (no live output) except for backup operation
+  - Compiler:
+    - Compile python 3.7 and 3.10 targets so we also get to use Windows 7 which can't run python > 3.7
+  - Installer:
+    - Moved task creation process to npbackup so we can recreate tasks on systems where npbackup is already installed
+
+## v1.8.0
+
+  - Implement VSS support for Windows
+  - Do not require UAC elevation for npbackup.exe (Still highly recommended, but at least we allow non admin users to backup their data (without VSS))
+  - Search restic executable path when not found locally for both Windows and Linux platforms
+  - Make exclusion lists always ignore case on Windows systems
+  - Highly improve exclusion lists
+  - Keep structure and comments in yaml configuration files
+  - Simplify configuration file data encryption
+  - Fix limit-download parameter not working
+  - Fix error when rest_connections was set to 0
+  - Add some config gui logging
+  - Cosmetic gui fixes
+  - Fix never enforce execution timeout on backup operation
+  - Fix bogus filename encodings while showing backup contents / usernames
+  - Added more restic metrics
+  - Fixed bogus restric metrics
+  - Allow setting additional prometheus labels
+  - Fix gui snapshot contents don't show duplicate parents on Windows when backing up 'c:\foo' and 'C:\bar'
+  - Internal code cleanup
+  - Installer:
+    - Make sure we don't overwrite destination configuration file if existing
+
+## v1.5.3
+  - First closed public release
+
+## v0.1.0 - 1.5.2
+  - Internal development and tests

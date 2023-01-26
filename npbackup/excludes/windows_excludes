@@ -1,0 +1,255 @@
+# Windows Fs exclude patterns for backup
+# patterns are FileMatch compatible (restic)
+
+# rev 2023011501
+
+# Generic Microsoft excludes
+?:\Users\*\AppData\Local\Temp
+?:\Users\*\AppData\LocalLow
+?:\Users\*\Documents and Settings\*\Cookies
+?:\Users\*\Documents and Settings\*\Recent
+?:\Users\*\Documents and Settings\*\Local Settings\Temp
+?:\Users\*\AppData\Roaming\Microsoft\Windows\Recent
+?:\Users\*\AppData\Local\Temp
+?:\Users\*\AppData\Local\History
+?:\Users\*\AppData\Local\Application Data
+?:\Users\*\AppData\Local\Microsoft\Internet Explorer
+?:\Users\*\AppData\Local\Microsoft\Windows\History
+?:\Users\*\AppData\Local\Microsoft\Terminel Server Client\Cache
+?:\Users\*\AppData\**\Temp
+?:\Users\*\AppData\Roaming\Microsoft\Windows\Themes\CachedFiles
+?:\Users\*\AppData\Internet Explorer
+?:\Users\*\AppData\*\Microsoft\*\InetCookies
+?:\Users\*\AppData\*\Microsoft Office\*\OfficeFileCache
+?:\Users\*\AppData\*\Microsoft Office\*\WebServiceCache
+?:\Users\*\AppData\*\Microsoft Office\*\Lync\Tracing
+?:\Users\*\AppData\*\Microsoft Office\*\Recent
+?:\Users\*\AppData\Local\Microsoft\Office\*OfficeFileCache
+?:\Users\*\AppData\Local\Microsoft\Office\Recent
+?:\Users\*\AppData\Local\Microsoft\Outlook\RoamCache
+?:\Users\*\AppData\LocalLow\Microsoft\CryptnetUrlCache
+?:\Users\*\AppData\Local\Downloaded Installations
+?:\Users\*\AppData\Local\GroupPolicy
+?:\Users\*\AppData\Local\Microsoft\AppV
+?:\Users\*\AppData\Local\Microsoft\Messenger
+?:\Users\*\AppData\Local\Microsoft\OneNote
+?:\Users\*\AppData\Local\Microsoft\Terminal Server Client
+?:\Users\*\AppData\Local\Microsoft\UEV
+?:\Users\*\AppData\Local\Microsoft\Windows Live
+?:\Users\*?:\Users\*\AppData\Local\Microsoft\Windows Live Contacts
+?:\Users\*\AppData\Local\Microsoft\Application Shortcuts
+?:\Users\*\AppData\Local\Microsoft\Notifications
+?:\Users\*\AppData\Local\Microsoft\Windows\UsrClass.dat.LOG*
+?:\Users\*\ntuser.dat.LOG*
+?:\Users\*\**\Temporary Internet Files
+?:\Users\*\AppData\**\Microsoft\Windows\INetCache\*
+
+
+# Temp folder for files that are ready to be burned on DVD
+?:\Users\*\AppData\Local\Microsoft\Windows\Burn
+?:\Users\*\AppData\Local\Microsoft\Windows\CD Burning
+
+# Generic application cache & temp folders (excludes all aaaCacheaaa or bbbTempbbb dirs)
+?:\Users\*\AppData\Local\*\*Cache*
+?:\Users\*\AppData\LocalLow\*\*Cache*
+?:\Users\*\AppData\Roaming\*\*Cache*
+?:\Users\*\AppData\Local\*\*Temp*
+?:\Users\*\AppData\LocalLow\*\*Temp*
+?:\Users\*\AppData\Roaming\*\*Temp*
+
+# Various Win 10 caches
+**\OfficeFileCache
+**\SmartLookupCache
+**\BackstageInAppNavCache
+**\MruServiceCache
+
+# Error reports
+?:\Users\*\AppData\Local\Microosft\Windows\WER
+?:\Users\*\AppData\Local\CrashDumps
+?:\Users\*\AppData\Local\Diagnostics
+
+# Windows 10 Edge
+?:\Users\*\AppData\Local\Microsoft\Windows\*Cache
+?:\Users\*\MicrosoftEdgeBackups
+?:\Users\*\AppData\Local\MicrosoftEdge\SharedCacheContainers
+?:\Users\*\AppData\Local\Microsoft\Edge\User Data\Default\DawnCache
+
+# Windows 10 Store Application cache and state
+?:\Users\*\AppData\Local\Packages\*\AC
+?:\Users\*\AppData\Local\Packages\*\TempState
+?:\Users\*\AppData\Local\Packages\*\LocalState
+?:\Users\*\AppData\Local\Packages\*\LocalCache
+?:\Users\*\AppData\Local\Packages\*\RoamingState
+?:\Users\*\AppData\Local\Packages\*\AppData\User\Default\CacheStorage
+?:\Users\*\AppData\Local\Packages\*\AppData\CacheStorage
+?:\Users\*\AppData\Local\Package Cache
+
+# Windows 10 Windows application reparse points
+?:\Users\*\AppData\Local\Microsoft\WindowsApps
+
+# Windows 10 various stuff
+?:\Users\*\AppData\Local\Microsoft\Windows\Notifications
+?:\Users\*\AppData\Local\Microsoft\Windows\Explorer
+
+# Windows downloads
+?:\Users\*\Downloads
+
+# Windows update cache
+?:\Windows\SoftwareDistribution\Download
+
+# Windows offline files
+?:\Windows\CSC
+
+# Generic Windows folders
+?:\Windows\Temp
+?:\Windows\Downloaded Program Files
+?:\RECYCLER
+?:\$$recycle.bin
+?:\System Volume Information
+
+# swap file (Windows XP, 7, 8)
+?:\pagefile.sys
+
+# swap file (Windows 8)
+?:\swapfile.sys
+
+# hibernation file
+?:\hiberfil.sys
+
+# Windows Upgrade temp download folder
+?:\$$WINDOWS.~BT
+
+# Windows 10 Upgrade previous install
+?:\Windows.old
+
+# Windows performance logs
+?:\PerfLogs
+
+# Windows filesystem directories
+?:\$$mft
+?:\$$logfile
+?:\$$volume
+?:\$$bitmap
+?:\$$extend
+?:\$$reparse
+
+# Onedrive AppData
+?:\Users\*\AppData\Local\Microsoft\OneDrive
+
+# Unnecessary folder exclusions
+?:\Users\AppData\Roaming\Microsoft\Windows\Cookies
+?:\Users\*\NetHood
+?:\Users\*\PrintHood
+?:\Users\*\Cookies
+?:\Users\*\Recent
+?:\Users\*\SentTo
+?:\Users\*\LocalService
+?:\Users\*\NetworkService
+?:\Users\*\AppData\LocalLow
+?:\Users\*\Tracing
+
+# Generic system file exlusions
+**\MSOCache
+**\MSOCache.*
+**\Config.Msi
+
+#### Applications
+
+# Office telemetry data
+?:\Users\*\AppData\Local\Microsoft\Office\OTeleData*
+
+
+# Blink based navigators (can be in AppData\Local or AppData\Roaming)
+?:\Users\*\AppData\**\Local Storage
+?:\Users\*\AppData\**\Session Storage
+?:\Users\*\AppData\**\Crash Reports
+?:\Users\*\AppData\**\sessionstore\.bak
+?:\Users\*\AppData\**\DawnCache
+
+# Chrome 66+
+?:\Users\*\AppData\**\Chrome\User Data\**\LOG
+?:\Users\*\AppData\**\Chrome\User Data\**\File System
+?:\Users\*\AppData\**\Chrome\User Data\**\SwReporter
+?:\Users\*\AppData\**\Chrome\User Data\**\PepperFlash
+
+# Opera 41+
+?:\Users\*\AppData\**\Opera\Opera\profile\cache4
+?:\Users\*\AppData\Roaming\Opera Software\**\Sessions
+?:\Users\*\AppData\Roaming\Opera Software\**\LOG
+
+# Vivaldi 1.x+
+?:\Users\*\AppData\**\Vivaldi\User Data\Application
+?:\Users\*\AppData\**\Vivaldi\User Data\LOG
+
+
+# Thunderbird
+?:\Users\*\AppData\Local\Thunderbird\Mozilla Thunderbird\updates
+?:\Users\*\AppData\Roaming\Thunderbird\Profiles\*\crashes
+
+
+
+# Github Desktop
+?:\Users\*\AppData\Local\GitHubDesktop
+
+# Google Apps Sync
+?:\Users\*\AppData\Local\Google\Google Apps Sync\Tracing
+
+# Adobe Acrobat DC
+?:\Users\*\AppData\Local\Adobe\AcroCef\DC\Acrobat\Cache
+
+# Apple Logs
+?:\Users\*\AppData\Local\Apple Computer\Logs
+?:\Users\*\AppData\Roaming\Apple Computer\Logs
+
+# Apple iPhone backups :(
+?:\Users\*\AppData\Roaming\Apple Computer\MobileSync\Backup
+
+# iTunes downloaded album artwork
+?:\Users\*\Music\iTunes\Album Artwork\Download
+
+# Java
+?:\Users\*\AppData\Local\Sun
+?:\Users\*\AppData\LocalLow\Sun\Java\Deployment\log
+?:\Users\*\AppData\Roaming\Sun\Java\Deployment\log
+
+# Cisco Webex
+?:\Users\*\AppData\Local\webEx\wbxcache
+
+# Ignite Realtime Spark client logs
+?:\Users\*\AppData\Roaming\Spark\logs
+
+# TeamViewer \ SimpleHelp quick support
+?:\Users\*\AppData\*\Teamviewer
+?:\Users\*\AppData\*\JWrapper-Remote Support
+?:\Users\*\AppData\*\JWrapper-SimpleHelp Technician
+
+
+# Zoom remote tool
+?:\Users\*\AppData\*\Zoom
+
+
+# Dropbox, OneDrive, SkyDrive data directories (not excluded by default because of cryptolockers attacks)
+?:\Users\*\SkyDrive*
+?:\Users\*\Dropbox
+?:\Users\*\OneDrive
+
+# Dropbox config directory
+?:\Users\*\AppData\Local\Dropbox
+
+# Owncloud \ nextcloud logs
+?:\Users\AppData\Local\owncloud
+?:\Users\AppData\Local\Nextcloud
+?:\Users\AppData\Roaming\Nextcloud\logs
+
+# AMD cache files
+?:\Users\*\AppData\Local\AMD\*Cache
+
+# DirectX Cache
+?:\Users\*\AppData\Local\D3DSCache
+
+# Restic caches
+?:\Users\*\AppData\Local\restic
+
+# VSCode history + logs
+?:\Users\*\AppData\Roaming\Code\User\History
+?:\Users\*\AppData\Roaming\Code\logs

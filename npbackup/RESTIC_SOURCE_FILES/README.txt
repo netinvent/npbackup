@@ -1,0 +1,1 @@
+This folder should contain restic binaries directly downloaded from github.com/restic/restic for Linux and Windows

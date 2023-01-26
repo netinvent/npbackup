@@ -1,0 +1,38 @@
+# windows sys Fs exclude patterns for backup
+# patterns are FileMatch compatible (restic)
+
+# rev 2023010701
+
+# Exclusion list that removes most of Windows system and program files
+# This list is a complementary to windows_excludes
+
+?:\Windows
+?:\Program Files
+?:\Program Files (x86)
+?:\ProgramData
+
+
+## Optional program data (should be safe to exclude)
+# Edge
+?:\Users\*\AppData\Local\Microsoft\Edge
+# Microsoft Teams
+?:\Users\*\AppData\Local\Microsoft\Teams
+# UWP Binaries
+?:\Users\*\AppData\Local\Packages
+
+?:\Users\*\AppData\Local\Logseq
+?:\Users\*\AppData\Local\BraveSoftware
+# .pylint.d exclusion does not work
+?:\Users\*\AppData\.pylint.d
+?:\Users\*\AppData\Local\GoToMeeting
+?:\Users\*\AppData\Local\Programs\GIMP*
+?:\Users\*\AppData\Local\Programs\Opera
+?:\Users\*\AppData\Local\pypa
+?:\Users\*\AppData\Local\JetBrains
+
+## Optional program data, less safe to exclude, enable if you know what you are doing
+# ?:\Users\*\AppData\Roaming\npm
+# ?:\Users\*\AppData\Roaming\JetBrains
+# ?:\Users\*\AppData\Roaming\Microsoft\Teams
+# ?:\Users\*\AppData\Roaming\Roaming\LibreOffice
+# ?:\Users\*\AppData\Roaming\REAPER

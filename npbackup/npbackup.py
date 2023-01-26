@@ -1,0 +1,413 @@
+#! /usr/bin/env python
+#  -*- coding: utf-8 -*-
+#
+# This file is part of npbackup
+
+__intname__ = "npbackup"
+__author__ = "Orsiris de Jong"
+__site__ = "https://www.netperfect.fr/npbackup"
+__description__ = "NetPerfect Backup Client"
+__copyright__ = "Copyright (C) 2022-2023 NetInvent"
+__license__ = "GPL-3.0-only"
+__build__ = "2023012401"
+__version__ = "2.0.0"
+
+
+import os
+import sys
+import atexit
+from argparse import ArgumentParser
+import dateutil.parser
+from datetime import datetime
+import tempfile
+import pidfile
+import ofunctions.logger_utils
+from ofunctions.process import kill_childs
+import PySimpleGUI as sg
+from customization import PYSIMPLEGUI_THEME, OEM_ICON, LICENSE_TEXT, LICENSE_FILE
+import configuration
+from windows.task import create_scheduled_task
+from gui.config import config_gui
+from gui.main import main_gui
+from core.runner import runner
+from core.i18n_helper import _t
+from path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
+
+# Nuitka compat, see https://stackoverflow.com/a/74540217
+# charset_normalizer comes with ruamel.yaml
+try:
+    from charset_normalizer import md__mypyc
+except ImportError:
+    pass
+
+
+_DEBUG = False
+_VERBOSE = False
+LOG_FILE = os.path.join(CURRENT_DIR, "{}.log".format(__intname__))
+CONFIG_FILE = os.path.join(CURRENT_DIR, "{}.conf".format(__intname__))
+PID_FILE = os.path.join(tempfile.gettempdir(), "{}.pid".format(__intname__))
+
+
+logger = ofunctions.logger_utils.logger_get_logger(LOG_FILE)
+
+sg.theme(PYSIMPLEGUI_THEME)
+sg.SetOptions(icon=OEM_ICON)
+
+
+def execution_logs(start_time: datetime) -> None:
+    """
+    Try to know if logger.warning or worse has been called
+    logger._cache contains a dict of values like {10: boolean, 20: boolean, 30: boolean, 40: boolean, 50: boolean}
+    where
+    10 = debug, 20 = info, 30 = warning, 40 = error, 50 = critical
+    so "if 30 in logger._cache" checks if warning has been triggered
+    ATTENTION: logger._cache does only contain cache of current main, not modules, deprecated in favor of
+    ofunctions.ContextFilterWorstLevel
+    """
+    end_time = datetime.utcnow()
+
+    logger_worst_level = 0
+    for flt in logger.filters:
+        if isinstance(flt, ofunctions.logger_utils.ContextFilterWorstLevel):
+            logger_worst_level = flt.worst_level
+
+    log_level_reached = "success"
+    try:
+        if logger_worst_level >= 40:
+            log_level_reached = "errors"
+        elif logger_worst_level >= 30:
+            log_level_reached = "warnings"
+    except:
+        pass
+    logger.info(
+        "ExecTime = {}, finished, state is: {}.".format(end_time - start_time, log_level_reached)
+    )
+    # using sys.exit(code) in a atexit function will swallow the exitcode and render 0
+
+
+def main():
+    global logger
+    global _DEBUG
+    global _VERBOSE
+    global CONFIG_FILE
+
+    parser = ArgumentParser(
+        prog='{} {} - {}'.format(__description__, __copyright__, __site__),
+        description="""Portable Network Backup Client\n
+This program is distributed under the GNU General Public License and comes with ABSOLUTELY NO WARRANTY.\n
+This is free software, and you are welcome to redistribute it under certain conditions; Please type --license for more info.""",
+    )
+
+    parser.add_argument(
+        "--check", action="store_true", help="Check if a recent backup exists"
+    )
+
+    parser.add_argument("-b", "--backup", action="store_true", help="Run a backup")
+
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        default=False,
+        help="Force running a backup regardless of existing backups",
+    )
+
+    parser.add_argument(
+        "-c",
+        "--config-file",
+        dest="config_file",
+        type=str,
+        default=None,
+        required=False,
+        help="Path to alternative configuration file",
+    )
+
+    parser.add_argument(
+        "--config-gui",
+        action="store_true",
+        default=False,
+        help="Show configuration GUI"
+    )
+
+    parser.add_argument(
+        "-l", "--list", action="store_true", help="Show current snapshots"
+    )
+
+    parser.add_argument(
+        "--ls",
+        type=str,
+        default=None,
+        required=False,
+        help="Show content given snapshot. Use \"latest\" for most recent snapshot."
+    )
+
+    parser.add_argument(
+        "-f",
+        "--find",
+        type=str,
+        default=None,
+        required=False,
+        help="Find full path of given file / directory",
+    )
+
+    parser.add_argument(
+        "-r",
+        "--restore",
+        type=str,
+        default=None,
+        required=False,
+        help="Restore to path given by --restore",
+    )
+
+    parser.add_argument(
+        "--restore-include",
+        type=str,
+        default=None,
+        required=False,
+        help="Restore only paths within include path",
+    )
+
+    parser.add_argument(
+        "--restore-from-snapshot",
+        type=str,
+        default="latest",
+        required=False,
+        help="Choose which snapshot to restore from. Defaults to latest",
+    )
+
+    parser.add_argument(
+        "--forget", type=str, default=None, required=False, help="Forget snapshot"
+    )
+    parser.add_argument(
+        "--raw", type=str, default=None, required=False, help="Raw commands"
+    )
+
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Show verbose output"
+    )
+    parser.add_argument("-d", "--debug", action="store_true", help="Run with debugging")
+    parser.add_argument(
+        "-V", "--version", action="store_true", help="Show program version"
+    )
+
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Run operations in test mode (no actual modifications"
+    )
+
+    parser.add_argument(
+        "--create-scheduled-task", type=str, default=None, required=False, help="Create task that runs every n minutes"
+    )
+
+    parser.add_argument(
+        "--license", action="store_true", help=("Show license")
+    )
+
+    args = parser.parse_args()
+    if args.version:
+        print("{} v{} {}".format(__intname__, __version__, __build__))
+        sys.exit(0)
+
+    if args.license:
+        try:
+            with open(LICENSE_FILE, 'r') as file_handle:
+                print(file_handle.read())
+        except OSError:
+            print(LICENSE_TEXT)
+        sys.exit(0)
+
+    if args.debug or os.environ.get("_DEBUG", 'False').capitalize() == 'True':
+        _DEBUG = True
+        logger.setLevel(ofunctions.logger_utils.logging.DEBUG)
+
+    if args.verbose:
+        _VERBOSE = True
+
+    # Make sure we log execution time and error state at the end of the program
+    if args.backup or args.restore or args.find or args.list or args.check:
+        atexit.register(
+            execution_logs,
+            datetime.utcnow(),
+        )
+
+    if args.config_file:
+        if not os.path.isfile(args.config_file):
+            logger.critical("Given file {} cannot be read.".format(args.config_file))
+        CONFIG_FILE = args.config_file
+
+    # Program entry
+    if args.config_gui:
+        try:
+            config_dict = configuration.load_config(CONFIG_FILE)
+        except FileNotFoundError:
+            logger.warning("No configuration file found. Please use --config-file \"path\" to specify one or put a config file into current directory. Will create fresh config file in current directory.")
+            config_dict = configuration.empty_config_dict
+        
+        config_dict = config_gui(config_dict, CONFIG_FILE)
+        sys.exit(0)
+
+    logger.info("{} v{}".format(__intname__, __version__))
+    if args.create_scheduled_task:
+        try:
+            result = create_scheduled_task(executable_path=CURRENT_EXECUTABLE, interval_minutes=int(args.create_scheduled_task))
+            if result:
+                sys.exit(0)
+            else:
+                sys.exit(22)
+        except ValueError:
+            sys.exit(23)
+
+    try:
+        config = configuration.load_config(CONFIG_FILE)
+    except FileNotFoundError:
+        message = _t('config_gui.no_config_available')
+        logger.error(message)
+
+        config = configuration.empty_config_dict
+        # If no arguments are passed, assume we are launching the GUI
+        if len(sys.argv) == 1:
+            result = sg.Popup('{}\n\n{}'.format(message, _t('config_gui.create_new_config')) , custom_text=(_t('generic._yes'), _t('generic._no')))
+            if result == _t('generic._yes'):
+                config = config_gui(config, CONFIG_FILE)
+                sg.Popup(_t('config_gui.saved_initial_config'))
+                sys.exit(6)
+            else:
+                logger.error('No configuration created via GUI')
+                sys.exit(7)
+
+    action = {}
+
+    dry_run = False
+    if args.dry_run:
+        dry_run = True
+
+    if args.check:
+        action["action"] = "check"
+        result = runner(action=action, config=config, verbose=_VERBOSE)
+        if result:
+            sys.exit(0)
+        else:
+            sys.exit(2)
+
+    if args.list:
+        action["action"] = "list"
+        result = runner(action=action, config=config, verbose=_VERBOSE)
+        if result:
+            for snapshot in result:
+                try:
+                    tags = snapshot["tags"]
+                except KeyError:
+                    tags = None
+                logger.info(
+                    "ID: {} Hostname: {}, Username: {}, Tags: {}, source: {}, time: {}".format(
+                        snapshot["short_id"],
+                        snapshot["hostname"],
+                        snapshot["username"],
+                        tags,
+                        snapshot["paths"],
+                        dateutil.parser.parse(snapshot["time"]),
+                    )
+                )
+            sys.exit(0)
+        else:
+            sys.exit(2)
+
+    if args.ls:
+        action["action"] = "ls"
+        action["snapshot"] = args.ls
+        result = runner(action=action, config=config, verbose=_VERBOSE)
+        if result:
+            logger.info("Snapshot content:\n{}")
+            for entry in result:
+                logger.info(entry)
+            sys.exit(0)
+        else:
+            logger.error("Snapshot could not be listed.")
+            sys.exit(2)
+
+    if args.find:
+        action["action"] = "find"
+        action["path"] = args.find
+        result = runner(action=action, config=config, verbose=_VERBOSE)
+        if result:
+            sys.exit(0)
+        else:
+            sys.exit(2)
+    try:
+        with pidfile.PIDFile(PID_FILE):
+            if args.backup:
+                action["action"] = "backup"
+                action["force"] = args.force
+                result = runner(action=action, config=config, dry_run=dry_run, verbose=_VERBOSE)
+                if result:
+                    logger.info("Backup finished.")
+                    sys.exit(0)
+                else:
+                    logger.error("Backup operation failed.")
+                    sys.exit(2)
+            if args.restore:
+                action["action"] = "restore"
+                action["target"] = args.restore
+                action["snapshot"] = args.restore_from_snapshot
+                action["restore-include"] = args.restore_include
+                result = runner(action=action, config=config, verbose=_VERBOSE)
+                if result:
+                    sys.exit(0)
+                else:
+                    sys.exit(2)
+
+            if args.forget:
+                action["action"] = "forget"
+                action["snapshot"] = args.forget
+                result = runner(action=action, config=config, verbose=_VERBOSE)
+                if result:
+                    sys.exit(0)
+                else:
+                    sys.exit(2)
+
+            if args.raw:
+                action["action"] = "raw"
+                action["command"] = args.raw
+                result = runner(action=action, config=config, verbose=_VERBOSE)
+                if result:
+                    sys.exit(0)
+                else:
+                    sys.exit(2)
+
+    except pidfile.AlreadyRunningError:
+        logger.warning("Backup process already running. Will not continue.")
+        # EXIT_CODE 21 = current backup process already running
+        sys.exit(21)
+
+    logger.info("Running GUI")
+    try:
+        version_string = "{} v{} {}\n{}".format(
+                    __intname__,
+                    __version__,
+                    __build__,
+                    __copyright__)
+        with pidfile.PIDFile(PID_FILE):
+            main_gui(config, CONFIG_FILE, version_string)
+    except pidfile.AlreadyRunningError:
+        logger.warning("Backup GUI already running. Will not continue")
+        # EXIT_CODE 21 = current backup process already running
+        sys.exit(21)
+
+def slow_kill_childs(pid: int, delay: int = 1):
+    logger.info("Cleanup")
+    kill_childs(pid)
+
+if __name__ == "__main__":
+    try:
+        # kill_childs normally would not be necessary, but let's just be foolproof here
+        # Nevertheless, let's delay a bit so we don't get bad surprises
+        atexit.register(slow_kill_childs, os.getpid(), )
+        main()
+    except KeyboardInterrupt as exc:
+        logger.error("Program interrupted by keyboard. {}".format(exc))
+        logger.info("Trace:", exc_info=True)
+        # EXIT_CODE 200 = keyboard interrupt
+        sys.exit(200)
+    except Exception as exc:
+        logger.error("Program interrupted by error. {}".format(exc))
+        logger.info("Trace:", exc_info=True)
+        # EXIT_CODE 201 = Non handled exception
+        sys.exit(201)

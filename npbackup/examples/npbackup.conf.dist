@@ -1,0 +1,58 @@
+# NPBackup config file for npbackup v2.0+
+# (C) 2022-2023 NetInvent
+
+backup:
+  compression: auto
+  exclude_caches: true
+  exclude_files:
+  - excludes/generic_excluded_extensions
+  - excludes/generic_excludes
+  - excludes/windows_excludes
+  - excludes/linux_excludes
+  exclude_case_ignore: false   # Exclusions will always have case ignored on Windows systems regarless of this setting
+  one_file_system: true
+  ## Paths can contain multiple values, one per line, without quotation marks
+  paths: path_to_directory
+  use_fs_snapshot: true  # Use VSS snapshot on Windows (needs administrator rights), will fallback to non VSS on failure
+  pre_exec_command: ''
+  pre_exec_timeout: 3600
+  pre_exec_failure_is_fatal: false
+  post_exec_command: ''
+  post_exec_timeout: 3600
+  post_exec_failure_is_fatal: false
+  tags:
+  additional_parameters: ''
+  priority: low
+
+repo:
+  repository: 
+  password: 
+  ## Backup age, in seconds, which is the minimum time between two backups
+  minimum_backup_age: 84600
+  upload_speed: 0      # in KiB, use 0 for unlimited upload speed
+  download_speed: 0    # in KiB, use 0 for unlimited download speed
+  backend_connections: 0 # Fine tune simultaneous connections to backend, use 0 for standard configuration
+
+
+prometheus:
+  ## Supervision
+  metrics: true
+  backup_job: ${HOSTNAME} # ${HOSTNAME} is a variable which can be replaced with a constant string
+  # Prometheus metrics destination can be a http / https server with optional basic authentication (pushgateway), or a file path for node textfile collector to pickup
+  destination: #  https://push.monitoring.example.tld/metrics/job/${BACKUP_JOB} where ${BACKUP_JOB} is defined in prometheus_backup_job
+  # prometheus instance, becomes exported_instance when using a push gateway
+  instance: ${HOSTNAME}
+
+  # prometheus metrics upload password
+  http_username:
+  http_password:
+
+  # Arbitrary group to filter later backups on
+  group:
+
+  # Additional prometheus labels
+  additional_labels:
+
+env:
+  variables:
+  # - SOME_ENV=Value

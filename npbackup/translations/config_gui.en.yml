@@ -1,0 +1,47 @@
+en:
+  encrypted_data: Encrypted Data
+  backup: Backup
+  compression: Compression
+  backup_paths: Backup paths
+  use_fs_snapshot: Use VSS snapshots
+  windows_only: Windows only
+  exclude_files: Exclude files
+  exclude_case_ignore: Ignore case for excludes
+  windows_always: always enabled for Windows
+  exclude_cache_dirs: Exclude cache dirs
+  one_file_system: Do not follow mountpoints
+  pre_exec_command: Pre-exec command
+  maximum_exec_time: Maximum exec time
+  exec_failure_is_fatal: Execution failure is fatal
+  post_exec_command: Post-exec command
+  tags: Tags
+  one_per_line: one per line
+  backup_priority: Backup priority
+  additional_parameters: Additional parameters
+
+  backup_destination: Backup destination
+  maximum_backup_age: Maximum backup age
+  backup_repo_uri: backup repo URI / path
+  backup_repo_password: Backup repo password
+  upload_speed: Upload speed limit (KB/s)
+  download_speed: Download speed limit (KB/s)
+  backend_connections: Simultaneous repo connections
+
+  prometheus_config: Prometheus configuration
+  explanation: Available variables ${HOSTNAME}, ${BACKUP_JOB}
+  enable_prometheus: Enable prometheus metrics
+  job_name: Job name (backup_job)
+  metrics_destination: Metrics destination (URI / file)
+  metrics_username: HTTP metrics username
+  metrics_password: HTTP metrics password
+  instance: Prometheus instance
+  additional_labels: Additional labels
+
+  no_config_available: No configuration file found. Please use --config-file "path" to specify one or copy a config file next to the NPBackup binary
+  create_new_config: Would you like to create a new configuration ?
+  saved_initial_config: If you saved your configuration, you may now reload this program
+
+  environment_variables: Environment variables
+  format_equals: Format variable=value
+
+  np_binary: Cannot find backup backend. Please install restic binary from restic.net

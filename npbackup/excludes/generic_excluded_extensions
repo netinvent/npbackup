@@ -1,0 +1,49 @@
+# File extensions exclude patterns for backup
+# patterns are FileMatch compatible (restic)
+
+# rev 2023010701
+
+*.back
+*.bak
+*.bkp
+*.cache
+*.chk
+*.dmp
+*.dump
+*.err
+*.lock
+*.lockfile
+*.log
+*.log[0-9]
+*.log.[0-9]
+*.log.[0-9][0-9]
+*.old
+*.tmp
+*.temp
+*.pid
+
+# Browser not finished downloads
+*.download
+*.crdownload
+*.part
+
+# Adobe lightroom preview files
+*.lrprev
+
+# AutoCAD
+*.dwl
+*.dwl2
+*.atmp
+
+# Microsoft Access lock file
+*.laccdb
+*.swp
+
+# Microsoft Outlook Exchange sync files (can still be backed up since we may convert from ost to pst)
+#*.ost
+
+# Microsoft Tracelog files
+*.etl
+
+# Python compiled files
+*.py[cod]

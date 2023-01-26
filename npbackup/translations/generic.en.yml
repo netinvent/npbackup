@@ -1,0 +1,29 @@
+en:
+  accept: Accept
+  cancel: Cancel
+  quit: Exit
+  configure: Configure
+  about: About
+
+  _yes: Yes
+  _no: No
+
+  seconds: seconds
+
+  group: Group
+
+  too_old: Too old
+  up_to_date: Up to date
+  unknown: Unknown
+  not_connected: Not conntected
+
+  size: Size
+  path: Path
+  modification_date: Modification date
+
+  content: Content
+  version: Version
+  destination: Destination
+
+  decrypt: Decrypt
+  encrypt: Encrypt

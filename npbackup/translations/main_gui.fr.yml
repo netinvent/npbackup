@@ -1,0 +1,31 @@
+fr:
+  loading_data_from_repo: Chargement d'informations depuis le dépot
+  this_will_take_a_while: Cela prendra quelques instants
+  cannot_get_content: Impossible d'obtenir le contenu
+  creating_tree: Création de l'arborescence
+  restore_to: Restaurer vers
+  restore: Restaurer
+  restoration: Restauration
+  restore_in_progress: Restauration en cours
+  restore_done: Restauration terminée
+  restore_failed: Restauration inachevée. Veuillez verifier les journaux
+  select_folder: Veuillez sélectionner un dossier
+  only_include: Inclure seulement
+  destination_folder: Dossier de destination
+  backup_state: Etat de sauvegarde
+  backup_list_to: List des sauvegardes vers
+  local_folder: Dossier local
+  external_server: serveur externalisé
+  launch_backup: Sauvegarder
+  see_content: Voir contenu
+  backup_content_from: Contenu de la sauvegarde du
+  backup_from: Sauvegarde du
+  backup_activity: Activité de sauvegarde
+  backup_in_progress: Sauvegarde en cours
+  backup_done: Sauvegarde terminée
+  backup_failed: Sauvegarde échouée, veuillez vérifier les journaux
+  select_backup: Veuillez sélectionner une sauvegarde
+  run_as: faite en tant que
+  identified_by: identifiée en tant que
+  unknown_repo: Format de dépot inconnu
+  repository_not_configured: Dépot non configuré

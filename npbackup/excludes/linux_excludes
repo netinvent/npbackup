@@ -1,0 +1,92 @@
+# Unixes Fs exclude patterns for backup
+# patterns are FileMatch compatible (restic)
+
+# rev 2023010701
+
+# Generic unix sys path excludes
+/dev
+lost+found
+/media
+/mnt
+/proc
+/run
+/selinux
+/var/cache
+/var/log
+/var/run
+/var/tmp
+/tmp
+
+# More MacOS specific sys path excludes
+/afs
+/Network
+/automount
+/private/Network
+/private/tmp
+/private/var/tmp
+/private/var/folders
+/private/var/run
+/private/var/spool/postfix
+/private/var/automount
+/private/var/db/fseventsd
+/Previous Systems
+
+# For user file exclusions, we'll keep both $HOME/ and /home/*/ syntaxes so we are sure to exclude users which home isn't /home, but still be able to exclude all other /home/user directories
+# Home directory excludes mostly found on unixes
+$HOME/Downloads
+$HOME/Library
+$HOME/snap
+$HOME/.Trash
+$HOME/.bundle
+$HOME/.cache
+$HOME/.dbus
+$HOME/.debug
+$HOME/.gvfs
+$HOME/.local/share/gvfs-metadata
+$HOME/.local/share/Trash
+$HOME/.dropbox
+$HOME/.dropbox-dist
+$HOME/.local/pipx
+$HOME/.local/share/Trash
+$HOME/.npm
+$HOME/.pyenv
+$HOME/.thumbnails
+$HOME/.virtualenvs
+$HOME/.Trash
+$HOME/.recently-used
+$HOME/.xession-errors
+$HOME/OneDrive
+$HOME/Dropbox
+$HOME/SkyDrive*
+
+/home/*/Downloads
+/home/*/Library
+/home/*/snap
+/home/*/.Trash
+/home/*/.bundle
+/home/*/.cache
+/home/*/.dbus
+/home/*/.debug
+/home/*/.gvfs
+/home/*/.local/share/gvfs-metadata
+/home/*/.local/share/Trash
+/home/*/.dropbox
+/home/*/.dropbox-dist
+/home/*/.local/pipx
+/home/*/.local/share/Trash
+/home/*/.npm
+/home/*/.pyenv
+/home/*/.thumbnails
+/home/*/.virtualenvs
+/home/*/.Trash
+/home/*/.recently-used
+/home/*/.xession-errors
+/home/*/OneDrive
+/home/*/Dropbox
+/home/*/SkyDrive*
+
+# Some morre generic MacOS exclusions
+**/Network Trash Folder
+**/.fseventsd*
+**/.Spotlight-*
+**/*Mobile*Backups

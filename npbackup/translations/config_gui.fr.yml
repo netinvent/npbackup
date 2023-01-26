@@ -1,0 +1,47 @@
+fr:
+  encrypted_data: Donnée Chiffrée
+  backup: Sauvegarde
+  compression: Compression
+  backup_paths: Chemins à sauvegarder
+  use_fs_snapshot: Utiliser les instantanés VSS
+  windows_only: Windows seulement
+  exclude_files: Fichiers d'exclusion
+  exclude_case_ignore: Ignorer la casse aux exclusions
+  windows_always: toujours actif pour Windows
+  exclude_cache_dirs: Exclude dossiers cache
+  one_file_system: Ne pas suivre les points de montage
+  pre_exec_command: Commande pré-sauvegarde
+  maximum_exec_time: Temps maximal d'execution
+  exec_failure_is_fatal: L'échec d'execution est fatal
+  post_exec_command: Commande post-sauvegarde
+  tags: Tags
+  one_per_line: un par ligne
+  backup_priority: Priorité de sauvegarde
+  additional_parameters: Paramètres supplémentaires
+
+  backup_destination: Destination de sauvegarde
+  maximum_backup_age: Age minimal d'une sauvegarde
+  backup_repo_uri: URL / chemin dépot de sauvegarde
+  backup_repo_password: Mot de passe dépot de sauvegarde
+  upload_speed: Vitesse limite de téléversement (KB/s)
+  download_speed: Vitesse limite de téléchargement (KB/s)
+  backend_connections: Connexions simultanées au dépot
+
+  prometheus_config: Configuration prometheus
+  explanation: Variables disponibles ${HOSTNAME}, ${BACKUP_JOB}
+  enable_prometheus: Activer les métriques prometheus
+  job_name: Nom du travail (backup_job)
+  metrics_destination: Destination métriques (URI / fichier)
+  metrics_username: Nom d'utilisateur métriques HTTP
+  metrics_password: Mot de passe métriques HTTP
+  instance: Instance Prometheus
+  additional_labels: Labels supplémentaires
+
+  no_config_available: Aucun fichier de configuration trouvé. Merci d'utiliser --config-file "chemin" pour spécifier un fichier, ou copier un fichier de configuration a côté du binaire NPBackup.
+  create_new_config: Souhaitez-vous créer une nouvelle configuration ?
+  saved_initial_config: Si vous avez enregistré une configuration, vous pouvez à présent recharger le programme.
+
+  environment_variables: Variables d'environnement
+  format_equals: Format variable=valeur
+
+  no_binary: Impossible de trouver le coeur de sauvegarde. Merci d'installer le binaire restic depuis restic.net

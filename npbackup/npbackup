@@ -1,0 +1,22 @@
+#! /usr/bin/env python
+#  -*- coding: utf-8 -*-
+#
+# This file is part of npbackup
+
+from npbackup import *
+
+if __name__ == "__main__":
+    try:
+        # kill_childs normally would not be necessary, but let's just be foolproof here
+        atexit.register(kill_childs, os.getpid(), )
+        main()
+    except KeyboardInterrupt as exc:
+        logger.error("Program interrupted by keyboard. {}".format(exc))
+        logger.info("Trace:", exc_info=True)
+        # EXIT_CODE 200 = keyboard interrupt
+        sys.exit(200)
+    except Exception as exc:
+        logger.error("Program interrupted by error. {}".format(exc))
+        logger.info("Trace:", exc_info=True)
+        # EXIT_CODE 201 = Non handled exception
+        sys.exit(201)

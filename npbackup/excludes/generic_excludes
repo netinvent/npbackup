@@ -1,0 +1,104 @@
+# patterns are FileMatch compatible (restic)
+
+# rev 2023010701
+
+# Microsoft Office lock files (eg */~$somefile.doc)
+**/~$$*
+
+# MacOS files
+**/.DS_Store
+
+# odrive sync dir
+**/.odrive
+
+# Generic directories / files
+**/cache*.db
+**/TemporaryFiles
+
+# Generic Thumbs files
+**/thumb*.db
+**/icon*.db
+**/icons*.db
+**/*cache.db
+**/iconcache*.db
+
+# Generic Thumbs directories
+**/thumbnails
+**/thumbcache*.db
+
+# Generic tmp dir
+**/Temp
+**/tmp
+
+# Generic caches dir for most navigators
+
+**/.cache
+**/Font*Cache
+**/File*Cache
+**/Dist*Cache
+**/Native*Cache
+**/Play*Cache
+**/Asset*Cache
+**/Activities*Cache
+**/Script*Cache
+**/Gpu*Cache
+**/Code*Cache
+**/Local*Cache
+**/Session*Cache
+**/Web*Cache
+**/JS*Cache
+**/CRL*Cache
+**/GrShader*Cache
+**/Shader*Cache
+**/Cache_data
+**/Cache
+**/Caches
+**/CacheStorage
+**/Cachedata
+**/CachedFiles
+**/Cache*Storage
+**/Cache*data
+**/Cached*Files
+# firefox specific
+**/cache2
+
+# npm
+**/npm-cache
+
+# Thumbnails folder
+**/Thumbnails
+
+# Lock files
+**/lock
+**/lockfile
+
+# Generic cookie files and folders
+**/Cookie
+
+# Python cache files
+**/__pycache__
+
+# Synology NAS working directory
+#exclude_regex = .*/.SynologyWorkingDirectory
+**/.SynologyWorkingDirectory
+
+**/.tmp.drivedownload
+
+# Adobe CS files
+**/web-cache-temp
+
+# Speific coverage files
+**/.tox
+**/.nox
+**/.coverage
+**/.pytest_cache
+
+# Python VENV back files
+**/env.bak
+**/venv.bak
+
+# PyCharm
+**/.idea
+
+# VSCore
+**/.vscode

@@ -1,0 +1,29 @@
+fr:
+  accept: Valider
+  cancel: Annuler
+  quit: Quitter
+  configure: Configurer
+  about: A propos
+
+  _yes: Oui
+  _no: Non
+
+  seconds: secondes
+
+  group: Groupe
+
+  too_old: Trop ancien
+  up_to_date: A jour
+  unknown: Inconnu
+  not_connected: Non connecté
+
+  size: Taille
+  path: Chemin
+  modification_date: Date de modification
+
+  content: Contenu
+  version: Version
+  destination: Destination
+
+  decrypt: Déchiffrer
+  encrypt: Chiffrer
