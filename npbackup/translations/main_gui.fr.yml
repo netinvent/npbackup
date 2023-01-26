@@ -7,8 +7,8 @@ fr:
   restore: Restaurer
   restoration: Restauration
   restore_in_progress: Restauration en cours
-  restore_done: Restauration terminée
-  restore_failed: Restauration inachevée. Veuillez verifier les journaux
+  restore_done: Restauration terminée en %{seconds} secondes
+  restore_failed: Restauration échouée en %{seconds} secondes, veuillez vérifier les journaux
   select_folder: Veuillez sélectionner un dossier
   only_include: Inclure seulement
   destination_folder: Dossier de destination
@@ -22,8 +22,8 @@ fr:
   backup_from: Sauvegarde du
   backup_activity: Activité de sauvegarde
   backup_in_progress: Sauvegarde en cours
-  backup_done: Sauvegarde terminée
-  backup_failed: Sauvegarde échouée, veuillez vérifier les journaux
+  backup_done: Sauvegarde terminée en %{seconds} secondes
+  backup_failed: Sauvegarde échouée en %{seconds} secondes, veuillez vérifier les journaux
   select_backup: Veuillez sélectionner une sauvegarde
   run_as: faite en tant que
   identified_by: identifiée en tant que

@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023012401"
-__version__ = "1.4.2"
+__build__ = "2023012501"
+__version__ = "1.5.0"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -36,6 +36,7 @@ class ResticRunner:
         self._get_binary()
 
         self._is_init = None
+        self._exec_time = None
         self._last_command_status = False
         self._limit_upload = None
         self._limit_download = None
@@ -95,6 +96,15 @@ class ResticRunner:
     def stdout(self, value):
         self._stdout = value
 
+    @property
+    def exec_time(self) -> Optional[int]:
+        return self._exec_time
+
+    @exec_time.setter
+    def exec_time(self, value: int):
+        self._exec_time = value
+
+
     def executor(
         self, cmd: str, errors_allowed: bool = False, live_stream=False,
     ) -> Tuple[bool, str]:
@@ -104,6 +114,7 @@ class ResticRunner:
         When using live_stream, we'll have command_runner fill stdout queue, which is useful for interactive GUI programs, but slower, especially for ls operation
 
         """
+        start_time = datetime.utcnow()
         self._executor_finished = False
         _cmd = "\"{}\" {}{}".format(self._binary, cmd, self.generic_arguments)
         logger.debug("Running command: [{}]".format(_cmd))
@@ -123,6 +134,7 @@ class ResticRunner:
         self._remove_env()
 
         self._executor_finished = True
+        self.exec_time = (datetime.utcnow() - start_time).total_seconds
 
         if exit_code == 0:
             self.last_command_status = True
@@ -468,7 +480,7 @@ class ResticRunner:
         logger.critical("Raw command failed.")
         return False, output
 
-    def has_snapshot_timedelta(self, delta: int = 84600) -> Optional[datetime]:
+    def has_snapshot_timedelta(self, delta: int = 86400) -> Optional[datetime]:
         """
         Checks if a snapshot exists that is newer that delta seconds
         Eg: if delta = -3600 we expect a snapshot newer than an hour ago, and return True if exists

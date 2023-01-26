@@ -23,5 +23,6 @@ Is there a repository at the following location?
 
 
 - Linux installer script
-- Windowss installer GUI
+- Windows installer GUI
+
 

@@ -176,13 +176,13 @@ def config_gui(config_dict: dict, config_file: str):
         if event == 'accept':
             config_dict = update_config_dict(values, config_dict)
             configuration.save_config(config_file, config_dict)
-            sg.Popup("Configuration sauvegardée", keep_on_top=True)
+            sg.Popup(_t("config_gui.configuration_saved"), keep_on_top=True)
             logger.info("Configuration saved successfully.")
             break
         if event == _t("generic.decrypt"):
-            if sg.PopupGetText('Enter admin password') == configuration.ADMIN_PASSWORD:
+            if sg.PopupGetText(_t('config_gui.enter_admin_password')) == configuration.ADMIN_PASSWORD:
                 update_gui(window, config_dict, unencrypted=True)
             else:
-                sg.PopupError('Wrong password')
+                sg.PopupError(_t('config_gui.wrong_password'))
     window.close()
     return config_dict

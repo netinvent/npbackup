@@ -9,8 +9,8 @@ __site__ = "https://www.netperfect.fr/npbackup"
 __description__ = "NetPerfect Backup Client"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023012401"
-__version__ = "2.0.0"
+__build__ = "2023012601"
+__version__ = "2.1.0"
 
 
 import os
@@ -29,12 +29,11 @@ import configuration
 from windows.task import create_scheduled_task
 from gui.config import config_gui
 from gui.main import main_gui
-from core.runner import runner
+from core.runner import NPBackupRunner
 from core.i18n_helper import _t
 from path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
 
 # Nuitka compat, see https://stackoverflow.com/a/74540217
-# charset_normalizer comes with ruamel.yaml
 try:
     from charset_normalizer import md__mypyc
 except ImportError:
@@ -85,7 +84,7 @@ def execution_logs(start_time: datetime) -> None:
     # using sys.exit(code) in a atexit function will swallow the exitcode and render 0
 
 
-def main():
+def interface():
     global logger
     global _DEBUG
     global _VERBOSE
@@ -256,40 +255,40 @@ This is free software, and you are welcome to redistribute it under certain cond
             sys.exit(23)
 
     try:
-        config = configuration.load_config(CONFIG_FILE)
+        config_dict = configuration.load_config(CONFIG_FILE)
     except FileNotFoundError:
         message = _t('config_gui.no_config_available')
         logger.error(message)
 
-        config = configuration.empty_config_dict
+        config_dict = configuration.empty_config_dict
         # If no arguments are passed, assume we are launching the GUI
         if len(sys.argv) == 1:
             result = sg.Popup('{}\n\n{}'.format(message, _t('config_gui.create_new_config')) , custom_text=(_t('generic._yes'), _t('generic._no')))
             if result == _t('generic._yes'):
-                config = config_gui(config, CONFIG_FILE)
+                config_dict = config_gui(config_dict, CONFIG_FILE)
                 sg.Popup(_t('config_gui.saved_initial_config'))
                 sys.exit(6)
             else:
                 logger.error('No configuration created via GUI')
                 sys.exit(7)
 
-    action = {}
 
     dry_run = False
     if args.dry_run:
         dry_run = True
 
+    npbackup_runner = NPBackupRunner(config_dict=config_dict)
+    npbackup_runner.dry_run = dry_run
+    npbackup_runner.verbose = _VERBOSE
+
     if args.check:
-        action["action"] = "check"
-        result = runner(action=action, config=config, verbose=_VERBOSE)
-        if result:
+        if npbackup_runner.check_recent_backups():
             sys.exit(0)
         else:
             sys.exit(2)
 
     if args.list:
-        action["action"] = "list"
-        result = runner(action=action, config=config, verbose=_VERBOSE)
+        result = npbackup_runner.list()
         if result:
             for snapshot in result:
                 try:
@@ -311,11 +310,9 @@ This is free software, and you are welcome to redistribute it under certain cond
             sys.exit(2)
 
     if args.ls:
-        action["action"] = "ls"
-        action["snapshot"] = args.ls
-        result = runner(action=action, config=config, verbose=_VERBOSE)
+        result = npbackup_runner.ls(snapshot=args.ls)
         if result:
-            logger.info("Snapshot content:\n{}")
+            logger.info("Snapshot content:")
             for entry in result:
                 logger.info(entry)
             sys.exit(0)
@@ -324,9 +321,7 @@ This is free software, and you are welcome to redistribute it under certain cond
             sys.exit(2)
 
     if args.find:
-        action["action"] = "find"
-        action["path"] = args.find
-        result = runner(action=action, config=config, verbose=_VERBOSE)
+        result = npbackup_runner.find(path=args.find)
         if result:
             sys.exit(0)
         else:
@@ -334,9 +329,7 @@ This is free software, and you are welcome to redistribute it under certain cond
     try:
         with pidfile.PIDFile(PID_FILE):
             if args.backup:
-                action["action"] = "backup"
-                action["force"] = args.force
-                result = runner(action=action, config=config, dry_run=dry_run, verbose=_VERBOSE)
+                result = npbackup_runner.backup(force=args.force)
                 if result:
                     logger.info("Backup finished.")
                     sys.exit(0)
@@ -344,29 +337,21 @@ This is free software, and you are welcome to redistribute it under certain cond
                     logger.error("Backup operation failed.")
                     sys.exit(2)
             if args.restore:
-                action["action"] = "restore"
-                action["target"] = args.restore
-                action["snapshot"] = args.restore_from_snapshot
-                action["restore-include"] = args.restore_include
-                result = runner(action=action, config=config, verbose=_VERBOSE)
+                result = npbackup_runner.restore(snapshot=args.restore_from_snapshot, target=args.restore, restore_includes=args.restore_include)
                 if result:
                     sys.exit(0)
                 else:
                     sys.exit(2)
 
             if args.forget:
-                action["action"] = "forget"
-                action["snapshot"] = args.forget
-                result = runner(action=action, config=config, verbose=_VERBOSE)
+                result = npbackup_runner.forget(snapshot=args.forget)
                 if result:
                     sys.exit(0)
                 else:
                     sys.exit(2)
 
             if args.raw:
-                action["action"] = "raw"
-                action["command"] = args.raw
-                result = runner(action=action, config=config, verbose=_VERBOSE)
+                result = npbackup_runner.raw(command=args.raw)
                 if result:
                     sys.exit(0)
                 else:
@@ -385,22 +370,18 @@ This is free software, and you are welcome to redistribute it under certain cond
                     __build__,
                     __copyright__)
         with pidfile.PIDFile(PID_FILE):
-            main_gui(config, CONFIG_FILE, version_string)
+            main_gui(config_dict, CONFIG_FILE, version_string)
     except pidfile.AlreadyRunningError:
         logger.warning("Backup GUI already running. Will not continue")
         # EXIT_CODE 21 = current backup process already running
         sys.exit(21)
 
-def slow_kill_childs(pid: int, delay: int = 1):
-    logger.info("Cleanup")
-    kill_childs(pid)
 
-if __name__ == "__main__":
+def main():
     try:
-        # kill_childs normally would not be necessary, but let's just be foolproof here
-        # Nevertheless, let's delay a bit so we don't get bad surprises
-        atexit.register(slow_kill_childs, os.getpid(), )
-        main()
+        # kill_childs normally would not be necessary, but let's just be foolproof here (kills restic subprocess in all cases)
+        atexit.register(kill_childs, os.getpid(), )
+        interface()
     except KeyboardInterrupt as exc:
         logger.error("Program interrupted by keyboard. {}".format(exc))
         logger.info("Trace:", exc_info=True)
@@ -411,3 +392,8 @@ if __name__ == "__main__":
         logger.info("Trace:", exc_info=True)
         # EXIT_CODE 201 = Non handled exception
         sys.exit(201)
+
+
+if __name__ == "__main__":
+    main()
+

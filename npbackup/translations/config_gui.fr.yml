@@ -45,3 +45,7 @@ fr:
   format_equals: Format variable=valeur
 
   no_binary: Impossible de trouver le coeur de sauvegarde. Merci d'installer le binaire restic depuis restic.net
+
+  configuration_saved: Configuration sauvegardée
+  enter_backup_admin_password: Veuillez entrer le mot de passe administrateur de sauvegarde
+  wrong_password: Mot de passe érroné

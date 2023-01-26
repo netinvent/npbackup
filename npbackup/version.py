@@ -4,5 +4,5 @@
 # This file is part of npbackup
 
 NAME = "npbackup"
-BUILD = "2023012401"
-VERSION = "2.0.0"
+BUILD = "202301261"
+VERSION = "2.1.0"

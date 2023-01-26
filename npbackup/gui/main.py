@@ -10,7 +10,7 @@ __license__ = "GPL-3.0-only"
 __build__ = "2023012501"
 
 
-from typing import List
+from typing import List, Optional, Tuple
 import os
 from logging import getLogger
 import re
@@ -18,17 +18,22 @@ import dateutil
 import queue
 from time import sleep
 import PySimpleGUI as sg
-from ofunctions.threading import threaded
+from ofunctions.threading import threaded, Future
+from threading import Thread
 from ofunctions.misc import BytesConverter
 from customization import OEM_STRING, OEM_LOGO, loader_animation, folder_icon, file_icon, LICENSE_TEXT, LICENSE_FILE
 from gui.config import config_gui
-from core.runner import runner
+from core.runner import NPBackupRunner
 from core.i18n_helper import _t
 
 
 logger = getLogger(__intname__)
 
-def _about_gui(version_string):
+# Let's use mutable to get a cheap way of transfering data from thread to main program
+# There are no possible race conditions since we don't modifiy the data from anywhere outside the thread
+THREAD_SHARED_DICT = {}
+
+def _about_gui(version_string: str) -> None:
     license_content = LICENSE_TEXT
     try:
         with open(LICENSE_FILE, 'r') as file_handle:
@@ -52,17 +57,10 @@ def _about_gui(version_string):
 
 
 @threaded
-def _get_gui_data(config):
-    action = {
-        'action': 'list'
-    }
-    snapshots = runner(action=action, config=config)
-    action = {
-        'action': 'has_recent_snapshots'
-    }
-
-    current_state = runner(action=action, config=config)
-
+def _get_gui_data(config_dict: dict) -> Tuple[bool, List[str]]:
+    runner = NPBackupRunner(config_dict=config_dict)
+    snapshots = runner.list()
+    current_state = runner.check_recent_backups()
     snapshot_list = []
     if snapshots:
         snapshots.reverse()  # Let's show newer snapshots first
@@ -78,27 +76,26 @@ def _get_gui_data(config):
     return current_state, snapshot_list
 
 
-def get_gui_data(config):
+def get_gui_data(config_dict: dict) -> Future:
     try:
-        if not config['repo']['repository'] and not config['repo']['password']:
+        if not config_dict['repo']['repository'] and not config_dict['repo']['password']:
             sg.Popup(_t('main_gui.repository_not_configured'))
             return None, None
     except KeyError:
         sg.Popup(_t('main_gui.repository_not_configured'))
         return None, None
-    action = {'action': 'check-binary'}
-    result = runner(action=action, config=config)
-    if not result:
+    runner = NPBackupRunner(config_dict=config_dict)
+    if not runner.has_binary:
         sg.Popup(_t('config_gui.no_binary'))
         return None, None
-    thread = _get_gui_data(config)
+    thread = _get_gui_data(config_dict)
     while not thread.done() and not thread.cancelled():
         sg.PopupAnimated(loader_animation, message=_t("main_gui.loading_data_from_repo"), time_between_frames=50, background_color='darkgreen')
     sg.PopupAnimated(None)
     return thread.result()
 
 
-def _gui_update_state(window, current_state, snapshot_list):
+def _gui_update_state(window, current_state: bool, snapshot_list: List[str]) -> None:
     if current_state:
         window["state-button"].Update(_t("generic.up_to_date"), button_color=("white", "springgreen4"))
     elif current_state is False:
@@ -113,7 +110,7 @@ def _gui_update_state(window, current_state, snapshot_list):
 
 
 @threaded
-def _make_treedata_from_json(ls_result: List[dict]):
+def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
     """
     Treelist data construction from json input that looks like
 
@@ -134,11 +131,6 @@ def _make_treedata_from_json(ls_result: List[dict]):
     for entry in ls_result:
         # Make sure we drop the prefix '/' so sg.TreeData does not get an empty root
         entry['path'] = entry['path'].lstrip('/')
-        # Since Windows ignores case, we need to make tree keys lower or upper case only so 'C' and 'c' means the same
-        # We only need to modifiy the tree key, the name will still retain case
-        if os.name == 'nt':
-            entry['path'] = entry['path'].lower()
-
         parent = os.path.dirname(entry['path'])
 
         # Make sure we normalize mtime, and remove microseconds 
@@ -152,12 +144,9 @@ def _make_treedata_from_json(ls_result: List[dict]):
 
 
 @threaded
-def _ls_window(config, snapshot_id):
-    action = {
-        "action": "ls",
-        "snapshot": snapshot_id,
-    }
-    result = runner(action=action, config=config)
+def _ls_window(config: dict, snapshot_id: str) -> Future:
+    runner = NPBackupRunner(config_dict=config)
+    result = runner.ls(snapshot=snapshot_id)
     if not result:
         return result, None
 
@@ -185,7 +174,7 @@ def _ls_window(config, snapshot_id):
     return backup_content, result
 
 
-def ls_window(config, snapshot):
+def ls_window(config: dict, snapshot: str) -> bool:
     snapshot_id = re.match(r".*\[ID (.*)\].*", snapshot).group(1)
     thread = _ls_window(config, snapshot_id)
     
@@ -238,15 +227,25 @@ def ls_window(config, snapshot):
                 sg.PopupError(_t('main_gui.select_folder'))
                 continue
             restore_window(config, snapshot_id, values["-TREE-"])
-    window.close()
+    
+    # Closing a big sg.TreeData is really slow
+    # This is a little trichery lesson
+    # Still we should open a case at PySimpleGUI to know why closing a sg.TreeData window is painfully slow # TODO
+    window.hide()
+    Thread(target=window.close, args=() )
+
+    return True
 
 
 @threaded
-def _restore_window(action, config):
-    return runner(action=action, config=config)
+def _restore_window(config_dict: dict, snapshot: str, target: str, restore_includes: Optional[List]) -> Future:
+    runner = NPBackupRunner(config_dict=config_dict)
+    result = runner.restore(snapshot, target, restore_includes)
+    THREAD_SHARED_DICT['exec_time'] = runner.exec_time
+    return result
 
 
-def restore_window(config, snapshot_id, includes):
+def restore_window(config_dict: dict, snapshot_id: str, restore_include: List[str]) -> None:
     left_col = [
         [
             sg.Text(_t("main_gui.destination_folder")),
@@ -265,37 +264,39 @@ def restore_window(config, snapshot_id, includes):
         if event in (sg.WIN_CLOSED, sg.WIN_CLOSE_ATTEMPTED_EVENT, "cancel"):
             break
         if event == "restore":
-            action = {
-                "action": "restore",
-                "snapshot": snapshot_id,
-                "target": values["-RESTORE-FOLDER-"],
-                "restore-include": includes,
-            }
-
-            thread = _restore_window(action=action, config=config)
+            thread = _restore_window(config_dict=config_dict, snapshot=snapshot_id, target=values["-RESTORE-FOLDER-"], restore_includes=restore_include)
             while not thread.done() and not thread.cancelled():
                 sg.PopupAnimated(loader_animation, message="{}...".format(_t("main_gui.restore_in_progress")), time_between_frames=50, background_color='darkgreen')
             sg.PopupAnimated(None)
 
             result = thread.result()
+            try:
+                exec_time = THREAD_SHARED_DICT['exec_time']
+            except KeyError:
+                exec_time = 'N/A'
             if result:
-                sg.Popup(_t("main_gui.restore_done"), keep_on_top=True)
+                sg.Popup(_t("main_gui.restore_done", seconds=exec_time), keep_on_top=True)
             else:
-                sg.PopupError(_t("main_gui.restore_failed"), keep_on_top=True)
+                sg.PopupError(_t("main_gui.restore_failed", seconds=exec_time), keep_on_top=True)
             break
     window.close()
 
 
 @threaded
-def _gui_backup(action, config, stdout):
-    return runner(action=action, config=config, verbose=True, stdout=stdout)  # We must use verbose so we get progress output from restic
+def _gui_backup(config_dict, stdout) -> Future:
+    runner = NPBackupRunner(config_dict=config_dict)
+    runner.verbose = True  # We must use verbose so we get progress output from ResticRunner
+    runner.stdout = stdout
+    result = runner.backup(force=True)   # Since we run manually, force backup regardless of recent backup state
+    THREAD_SHARED_DICT['exec_time'] = runner.exec_time
+    return result
 
 
-def main_gui(config, config_file, version_string):
+def main_gui(config_dict: dict, config_file: str, version_string: str):
     backup_destination = _t('main_gui.local_folder')
     backend_type = None
     try:
-        backend_type = config['repo']['repository'].split(':')[0].upper()
+        backend_type = config_dict['repo']['repository'].split(':')[0].upper()
         if backend_type in ['REST', 'S3', 'B2', 'SFTP', 'SWIFT', 'AZURE', 'GZ', 'RCLONE']:
             backup_destination = "{} {}".format(_t('main_gui.external_server'), backend_type)
     except (KeyError, AttributeError, TypeError):
@@ -358,7 +359,7 @@ def main_gui(config, config_file, version_string):
     )
 
     window.read(timeout=1)
-    current_state, snapshot_list = get_gui_data(config)
+    current_state, snapshot_list = get_gui_data(config_dict)
     _gui_update_state(window, current_state, snapshot_list)
     while True:
         event, values = window.read(timeout=60000)
@@ -373,7 +374,9 @@ def main_gui(config, config_file, version_string):
             # We need to read that window at least once fopr it to exist
             progress_window.read(timeout=1)
             stdout = queue.Queue()
-            thread = _gui_backup(action={"action": "backup", "force": True}, config=config, stdout=stdout)
+
+            # let's use a mutable so the backup thread can modify it
+            thread = _gui_backup(config_dict=config_dict, stdout=stdout)
             while not thread.done() and not thread.cancelled():
                 try:
                     stdout_line = stdout.get(timeout=.01)
@@ -385,13 +388,17 @@ def main_gui(config, config_file, version_string):
                 sg.PopupAnimated(loader_animation, message="{}...".format(_t('main_gui.backup_in_progress')), time_between_frames=50, background_color='darkgreen')
             sg.PopupAnimated(None)
             result = thread.result()
-            current_state, snapshot_list = get_gui_data(config)
+            try:
+                exec_time = THREAD_SHARED_DICT['exec_time']
+            except KeyError:
+                exec_time = 'N/A'
+            current_state, snapshot_list = get_gui_data(config_dict)
             _gui_update_state(window, current_state, snapshot_list)
             if not result:
-                sg.PopupError(_t("main_gui.backup_failed"),
+                sg.PopupError(_t("main_gui.backup_failed", seconds=exec_time),
                 keep_on_top=True)
             else:
-                sg.Popup(_t("main_gui.backup_done"),
+                sg.Popup(_t("main_gui.backup_done", seconds=exec_time),
                 keep_on_top=True)
             progress_window.close()
             continue
@@ -399,21 +406,21 @@ def main_gui(config, config_file, version_string):
             if not values["snapshot-list"]:
                 sg.Popup(_t("main_gui.select_backup"), keep_on_top=True)
                 continue
-            restore_window(config, snapshot=values["snapshot-list"][0])
+            restore_window(config_dict, snapshot=values["snapshot-list"][0])
         if event == "see-content":
             if not values["snapshot-list"]:
                 sg.Popup(_t("main_gui.select_backup"), keep_on_top=True)
                 continue
-            ls_window(config, snapshot=values["snapshot-list"][0])
+            ls_window(config_dict, snapshot=values["snapshot-list"][0])
         if event == "configure":
-            config = config_gui(config, config_file)
+            config_dict = config_gui(config_dict, config_file)
         if event == _t("generic.destination"):
             try:
                 if backend_type:
                     if backend_type in ['REST', 'SFTP']:
-                        destination_string = config['repo']['repository'].split('@')[-1]
+                        destination_string = config_dict['repo']['repository'].split('@')[-1]
                     else:
-                        destination_string = config['repo']['repository']
+                        destination_string = config_dict['repo']['repository']
                 sg.PopupNoFrame(destination_string)
             except (TypeError, KeyError):
                 sg.PopupNoFrame(_t("main_gui.unknown_repo"))
@@ -421,5 +428,5 @@ def main_gui(config, config_file, version_string):
             _about_gui(version_string)
 
         # Update GUI on every window.read timeout = every minute or everytime an event happens, including the "uptodate" button
-        current_state, snapshot_list = get_gui_data(config)
+        current_state, snapshot_list = get_gui_data(config_dict)
         _gui_update_state(window, current_state, snapshot_list)
