@@ -29,28 +29,28 @@ from version import NAME, VERSION
 logger = getLogger(__intname__)
 
 
-def metric_writer(config: dict, restic_result: bool, result_string: str):
+def metric_writer(config_dict: dict, restic_result: bool, result_string: str):
     try:
-        if config["prometheus"]["metrics"]:
+        if config_dict["prometheus"]["metrics"]:
             # Evaluate variables
-            if config["prometheus"]["instance"] == "${HOSTNAME}":
+            if config_dict["prometheus"]["instance"] == "${HOSTNAME}":
                 instance = platform.node()
             else:
-                instance = config["prometheus"]["instance"]
-            if config["prometheus"]["backup_job"] == "${HOSTNAME}":
+                instance = config_dict["prometheus"]["instance"]
+            if config_dict["prometheus"]["backup_job"] == "${HOSTNAME}":
                 backup_job = platform.node()
             else:
-                backup_job = config["prometheus"]["backup_job"]
+                backup_job = config_dict["prometheus"]["backup_job"]
             try:
-                prometheus_group = config["prometheus"]["group"]
+                prometheus_group = config_dict["prometheus"]["group"]
             except (KeyError, AttributeError):
                 prometheus_group = None
             try:
-                prometheus_additional_labels = config["prometheus"]["additional_labels"]
+                prometheus_additional_labels = config_dict["prometheus"]["additional_labels"]
             except (KeyError, AttributeError):
                 prometheus_additional_labels = None
 
-            destination = config["prometheus"]["destination"]
+            destination = config_dict["prometheus"]["destination"]
             destination = destination.replace("${BACKUP_JOB}", backup_job)
 
             # Configure lables
@@ -85,8 +85,8 @@ def metric_writer(config: dict, restic_result: bool, result_string: str):
             if destination.lower().startswith("http"):
                 try:
                     authentication = (
-                        config["prometheus"]["http_username"],
-                        config["prometheus"]["http_password"],
+                        config_dict["prometheus"]["http_username"],
+                        config_dict["prometheus"]["http_password"],
                     )
                 except KeyError:
                     logger.info("No metrics authentication present.")
@@ -354,7 +354,7 @@ class NPBackupRunner:
             exclude_caches = False
         try:
             one_file_system = (
-                config["backup"]["one_file_system"] if os.name != "nt" else False
+                self.config_dict["backup"]["one_file_system"] if os.name != "nt" else False
             )
         except KeyError:
             one_file_system = False
