@@ -46,7 +46,9 @@ def metric_writer(config_dict: dict, restic_result: bool, result_string: str):
             except (KeyError, AttributeError):
                 prometheus_group = None
             try:
-                prometheus_additional_labels = config_dict["prometheus"]["additional_labels"]
+                prometheus_additional_labels = config_dict["prometheus"][
+                    "additional_labels"
+                ]
             except (KeyError, AttributeError):
                 prometheus_additional_labels = None
 
@@ -354,7 +356,9 @@ class NPBackupRunner:
             exclude_caches = False
         try:
             one_file_system = (
-                self.config_dict["backup"]["one_file_system"] if os.name != "nt" else False
+                self.config_dict["backup"]["one_file_system"]
+                if os.name != "nt"
+                else False
             )
         except KeyError:
             one_file_system = False
