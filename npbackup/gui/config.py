@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.config"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023012201"
+__build__ = "2023012601"
 
 
 from logging import getLogger
@@ -372,7 +372,7 @@ def config_gui(config_dict: dict, config_file: str):
             break
         if event == _t("generic.decrypt"):
             if (
-                sg.PopupGetText(_t("config_gui.enter_admin_password"))
+                sg.PopupGetText(_t("config_gui.enter_backup_admin_password"))
                 == configuration.ADMIN_PASSWORD
             ):
                 update_gui(window, config_dict, unencrypted=True)
