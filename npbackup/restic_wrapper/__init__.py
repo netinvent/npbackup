@@ -518,7 +518,7 @@ class ResticRunner:
         # We need to be verbose here since server errors will not stop client from deletion attempts
         verbose = self.verbose
         self.verbose = True
-        result, output = self.executor(cmd):
+        result, output = self.executor(cmd)
         self.verbose = verbose
         if result:
             logger.info("successfully forgot snapshot.")
