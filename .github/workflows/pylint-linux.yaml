@@ -1,0 +1,46 @@
+name: pylint-linux-tests
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        # python-version: [3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, "3.10", 'pypy-3.6', 'pypy-3.7']
+        python-version: [3.9]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install --upgrade setuptools
+        if [ -f npbackup/requirements.txt ]; then pip install -r npbackup/requirements.txt; fi
+    - name: Lint with Pylint
+      if: ${{ matrix.python-version == '3.9' }}
+      run: |
+        python -m pip install pylint
+        # Do not run pylint on python 3.3 because isort is not available for python 3.3, don't run on python 3.4 because pylint: disable=xxxx does not exist
+        # Disable E0401 import error since we lint on linux and pywin32 is obviously missing
+        python -m pylint --disable=C,W,R,E0401 --max-line-length=127 npbackup
+    - name: Lint with flake8
+      if: ${{ matrix.python-version == '3.9' }}
+      run: |
+        python -m pip install flake8
+        # stop the build if there are Python syntax errors or undefined names
+        python -m flake8 --count --select=E9,F63,F7,F82 --show-source --statistics npbackup
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        python -m flake8 --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics npbackup
+    - name: Lint with Black
+      # Don't run on python < 3.6 since black does not exist there, run only once
+      if: ${{ matrix.python-version == '3.9' }}
+      run: |
+        pip install black
+        python -m black --check npbackup
