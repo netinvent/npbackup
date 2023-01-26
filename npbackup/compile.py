@@ -16,7 +16,14 @@ import os
 from command_runner import command_runner
 from npbackup import __version__ as npbackup_version
 from NPBackupInstaller import __version__ as installer_version
-from customization import COMPANY_NAME, TRADEMARKS, PRODUCT_NAME, FILE_DESCRIPTION, COPYRIGHT, LICENSE_FILE
+from customization import (
+    COMPANY_NAME,
+    TRADEMARKS,
+    PRODUCT_NAME,
+    FILE_DESCRIPTION,
+    COPYRIGHT,
+    LICENSE_FILE,
+)
 from core.restic_source_binary import get_restic_internal_binary
 from path_helper import BASEDIR
 
@@ -25,77 +32,98 @@ def check_private_build():
     private = False
     try:
         import _private_secret_keys
+
         print("WARNING: Building with private secret key")
         private = True
     except ImportError:
         try:
             import secret_keys
+
             print("Building with default secret key")
         except ImportError:
             print("Cannot find secret keys")
             sys.exit()
-    
+
     dist_conf_file_path = get_private_conf_dist_file()
-    if '_private' in dist_conf_file_path:
-        print('WARNING: Building with a private conf.dist file')
+    if "_private" in dist_conf_file_path:
+        print("WARNING: Building with a private conf.dist file")
         private = True
-    
+
     return private
 
+
 def get_private_conf_dist_file():
-    private_dist_conf_file = '_private_npbackup.conf.dist'
-    dist_conf_file = 'npbackup.conf.dist'
-    dist_conf_file_path = os.path.join(BASEDIR, 'examples', private_dist_conf_file)
+    private_dist_conf_file = "_private_npbackup.conf.dist"
+    dist_conf_file = "npbackup.conf.dist"
+    dist_conf_file_path = os.path.join(BASEDIR, "examples", private_dist_conf_file)
     if not os.path.isfile(dist_conf_file_path):
-        dist_conf_file_path = os.path.join(BASEDIR, 'examples', dist_conf_file)
-    
+        dist_conf_file_path = os.path.join(BASEDIR, "examples", dist_conf_file)
+
     return dist_conf_file_path
 
-    
 
-def compile(arch='64'):
-    OUTPUT_DIR = os.path.join(BASEDIR, 'BUILD' + '-PRIVATE' if check_private_build() else '')
+def compile(arch="64"):
+    OUTPUT_DIR = os.path.join(
+        BASEDIR, "BUILD" + "-PRIVATE" if check_private_build() else ""
+    )
 
     if not os.path.isdir(OUTPUT_DIR):
         os.makedirs(OUTPUT_DIR)
 
-    PYTHON_EXECUTABLE=sys.executable
+    PYTHON_EXECUTABLE = sys.executable
 
     # npbackup compilation
     # Strip possible version suffixes '-dev'
-    _npbackup_version = npbackup_version.split('-')[0]
-    PRODUCT_VERSION=_npbackup_version + '.0'
-    FILE_VERSION=_npbackup_version + '.0'
+    _npbackup_version = npbackup_version.split("-")[0]
+    PRODUCT_VERSION = _npbackup_version + ".0"
+    FILE_VERSION = _npbackup_version + ".0"
 
     file_description = "{} P{}-{}".format(FILE_DESCRIPTION, sys.version_info[1], arch)
 
-
     restic_source_file = get_restic_internal_binary(arch)
     if not restic_source_file:
-        print('Cannot find restic source file.')
+        print("Cannot find restic source file.")
         return
-    output_arch_dir = os.path.join(OUTPUT_DIR, 'win-p{}{}-{}'.format(sys.version_info[0], sys.version_info[1], arch))
+    output_arch_dir = os.path.join(
+        OUTPUT_DIR,
+        "win-p{}{}-{}".format(sys.version_info[0], sys.version_info[1], arch),
+    )
 
-    if os.name == 'nt':
-        program_executable = 'npbackup.exe'
+    if os.name == "nt":
+        program_executable = "npbackup.exe"
     else:
-        program_executable = 'npbackup'
+        program_executable = "npbackup"
     program_executable_path = os.path.join(output_arch_dir, program_executable)
 
-    translations_dir = 'translations'
+    translations_dir = "translations"
     translations_dir_path = os.path.join(BASEDIR, translations_dir)
 
     # Override default config file with a private version if needed
-    private_dist_conf_file = '_private_npbackup.conf.dist'
-    dist_conf_file = 'npbackup.conf.dist'
+    private_dist_conf_file = "_private_npbackup.conf.dist"
+    dist_conf_file = "npbackup.conf.dist"
     dist_conf_file_path = get_private_conf_dist_file()
 
-    excludes_dir = 'excludes'
+    excludes_dir = "excludes"
     excludes_dir_path = os.path.join(BASEDIR, excludes_dir)
-        
 
-    EXE_OPTIONS="--company-name=\"{}\" --product-name=\"{}\" --file-version=\"{}\" --product-version=\"{}\" --copyright=\"{}\" --file-description=\"{}\" --trademarks=\"{}\"".format(COMPANY_NAME, PRODUCT_NAME, FILE_VERSION, PRODUCT_VERSION, COPYRIGHT, file_description, TRADEMARKS)
-    CMD="{} -m nuitka --python-flag=no_docstrings --python-flag=-O --onefile --plugin-enable=tk-inter --include-data-dir=\"{}\"=\"{}\" --include-data-file=\"{}\"=LICENSE.md --include-data-file={}=restic.exe --windows-icon-from-ico=npbackup_icon.ico {} --output-dir=\"{}\" npbackup.py".format(PYTHON_EXECUTABLE, translations_dir_path, translations_dir, LICENSE_FILE, restic_source_file, EXE_OPTIONS, output_arch_dir)
+    EXE_OPTIONS = '--company-name="{}" --product-name="{}" --file-version="{}" --product-version="{}" --copyright="{}" --file-description="{}" --trademarks="{}"'.format(
+        COMPANY_NAME,
+        PRODUCT_NAME,
+        FILE_VERSION,
+        PRODUCT_VERSION,
+        COPYRIGHT,
+        file_description,
+        TRADEMARKS,
+    )
+    CMD = '{} -m nuitka --python-flag=no_docstrings --python-flag=-O --onefile --plugin-enable=tk-inter --include-data-dir="{}"="{}" --include-data-file="{}"=LICENSE.md --include-data-file={}=restic.exe --windows-icon-from-ico=npbackup_icon.ico {} --output-dir="{}" npbackup.py'.format(
+        PYTHON_EXECUTABLE,
+        translations_dir_path,
+        translations_dir,
+        LICENSE_FILE,
+        restic_source_file,
+        EXE_OPTIONS,
+        output_arch_dir,
+    )
 
     print(CMD)
     errors = False
@@ -104,11 +132,29 @@ def compile(arch='64'):
         errors = True
 
     # installer compilation
-    _installer_version = installer_version.split('-')[0]
-    PRODUCT_VERSION=_installer_version + '.0'
-    FILE_VERSION=_installer_version + '.0'
-    EXE_OPTIONS="--company-name=\"{}\" --product-name=\"{}\" --file-version=\"{}\" --product-version=\"{}\" --copyright=\"{}\" --file-description=\"{}\" --trademarks=\"{}\"".format(COMPANY_NAME, PRODUCT_NAME, FILE_VERSION, PRODUCT_VERSION, COPYRIGHT, file_description, TRADEMARKS)
-    CMD="{} -m nuitka --python-flag=no_docstrings --python-flag=-O --onefile --plugin-enable=tk-inter --include-data-file=\"{}\"=\"{}\" --include-data-file=\"{}\"=\"{}\" --include-data-dir=\"{}\"=\"{}\" --windows-icon-from-ico=npbackup_icon.ico --windows-uac-admin {} --output-dir=\"{}\" NPBackupInstaller.py".format(PYTHON_EXECUTABLE, program_executable_path, program_executable, dist_conf_file_path, dist_conf_file, excludes_dir_path, excludes_dir, EXE_OPTIONS, output_arch_dir)
+    _installer_version = installer_version.split("-")[0]
+    PRODUCT_VERSION = _installer_version + ".0"
+    FILE_VERSION = _installer_version + ".0"
+    EXE_OPTIONS = '--company-name="{}" --product-name="{}" --file-version="{}" --product-version="{}" --copyright="{}" --file-description="{}" --trademarks="{}"'.format(
+        COMPANY_NAME,
+        PRODUCT_NAME,
+        FILE_VERSION,
+        PRODUCT_VERSION,
+        COPYRIGHT,
+        file_description,
+        TRADEMARKS,
+    )
+    CMD = '{} -m nuitka --python-flag=no_docstrings --python-flag=-O --onefile --plugin-enable=tk-inter --include-data-file="{}"="{}" --include-data-file="{}"="{}" --include-data-dir="{}"="{}" --windows-icon-from-ico=npbackup_icon.ico --windows-uac-admin {} --output-dir="{}" NPBackupInstaller.py'.format(
+        PYTHON_EXECUTABLE,
+        program_executable_path,
+        program_executable,
+        dist_conf_file_path,
+        dist_conf_file,
+        excludes_dir_path,
+        excludes_dir,
+        EXE_OPTIONS,
+        output_arch_dir,
+    )
 
     print(CMD)
     exit_code, output = command_runner(CMD, timeout=0, live_output=True)
@@ -116,6 +162,7 @@ def compile(arch='64'):
         errors = True
 
     print("ERRORS", errors)
+
 
 if __name__ == "__main__":
     # I know, I could improve UX here

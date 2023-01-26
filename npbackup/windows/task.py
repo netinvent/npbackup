@@ -30,12 +30,11 @@ CURRENT_DIR = os.path.dirname(CURRENT_EXECUTABLE)
 TASK_AUTHOR = "NetPerfect R1 Research"
 TASK_URI = "\\{}".format(PROGRAM_NAME)
 TASK_ARGS = "--backup"
-TEMP_TASKFILE = os.path.join(tempfile.gettempdir(), 'backup_task.xml')
-
+TEMP_TASKFILE = os.path.join(tempfile.gettempdir(), "backup_task.xml")
 
 
 def create_scheduled_task(executable_path, interval_minutes: int):
-    if os.name != 'nt':
+    if os.name != "nt":
         logger.error("Can only create a scheduled task on Windows")
         return False
 
@@ -93,21 +92,41 @@ def create_scheduled_task(executable_path, interval_minutes: int):
         <WorkingDirectory>{}</WorkingDirectory>
         </Exec>
     </Actions>
-    </Task>""".format(TASK_AUTHOR, TASK_URI, interval_minutes, executable_path, TASK_ARGS, executable_dir)
+    </Task>""".format(
+        TASK_AUTHOR,
+        TASK_URI,
+        interval_minutes,
+        executable_path,
+        TASK_ARGS,
+        executable_dir,
+    )
     # Create task file
     try:
-        with open(TEMP_TASKFILE, 'w') as file_handle:
+        with open(TEMP_TASKFILE, "w") as file_handle:
             file_handle.write(SCHEDULED_TASK_FILE_CONTENT)
     except OSError as exc:
-        logger.error("Could not create temporary scheduled task file {}: {}".format(TEMP_TASKFILE, exc))
+        logger.error(
+            "Could not create temporary scheduled task file {}: {}".format(
+                TEMP_TASKFILE, exc
+            )
+        )
         return False
-    
+
     # Setup task
-    command_runner('schtasks /DELETE /TN "{}" /F'.format(PROGRAM_NAME), valid_exit_codes=[0, 1],
-                                      windows_no_window=True, encoding='cp437')
+    command_runner(
+        'schtasks /DELETE /TN "{}" /F'.format(PROGRAM_NAME),
+        valid_exit_codes=[0, 1],
+        windows_no_window=True,
+        encoding="cp437",
+    )
     logger.info("Creating scheduled task {}".format(PROGRAM_NAME))
-    exit_code, output = command_runner('schtasks /CREATE /TN "{}" /XML "{}" /RU System /F'.format(PROGRAM_NAME, TEMP_TASKFILE),
-                                                  windows_no_window=True, encoding='cp437')
+    exit_code, output = command_runner(
+        'schtasks /CREATE /TN "{}" /XML "{}" /RU System /F'.format(
+            PROGRAM_NAME, TEMP_TASKFILE
+        ),
+        windows_no_window=True,
+        encoding="cp437",
+    )
     if exit_code != 0:
         logger.error("Could not create new task: {}".format(output))
         return False
@@ -115,7 +134,9 @@ def create_scheduled_task(executable_path, interval_minutes: int):
     try:
         os.remove(TEMP_TASKFILE)
     except OSError as exc:
-        logger.warning("Could not remove temporary task file {}: {}".format(TEMP_TASKFILE, exc))
+        logger.warning(
+            "Could not remove temporary task file {}: {}".format(TEMP_TASKFILE, exc)
+        )
         return False
     logger.info("Scheduled task created.")
     return True

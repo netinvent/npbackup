@@ -23,7 +23,7 @@ from restic_wrapper import ResticRunner
 import platform
 from core.restic_source_binary import get_restic_internal_binary
 from path_helper import CURRENT_DIR, BASEDIR
-from version import NAME, BUILD, VERSION
+from version import NAME, VERSION
 
 
 logger = getLogger(__intname__)
@@ -54,9 +54,7 @@ def metric_writer(config: dict, restic_result: bool, result_string: str):
             destination = destination.replace("${BACKUP_JOB}", backup_job)
 
             # Configure lables
-            labels = 'instance="{}",backup_job="{}"'.format(
-                instance, backup_job
-            )
+            labels = 'instance="{}",backup_job="{}"'.format(instance, backup_job)
             if prometheus_group:
                 labels += ',group="{}"'.format(prometheus_group)
 
@@ -67,13 +65,12 @@ def metric_writer(config: dict, restic_result: bool, result_string: str):
                         prometheus_additional_labels = [prometheus_additional_labels]
                     for additional_label in prometheus_additional_labels:
                         label, value = additional_label.split("=")
-                        labels += ',{}=\"{}\"'.format(label.strip(), value.strip())
+                        labels += ',{}="{}"'.format(label.strip(), value.strip())
             except (KeyError, AttributeError, TypeError, ValueError):
                 logger.error("Bogus additional labels defined in configuration.")
                 logger.debug("Trace:", exc_info=True)
 
             labels += ',npversion="{}{}"'.format(NAME, VERSION)
-
 
             errors, metrics = restic_output_2_metrics(
                 restic_result=restic_result, output=result_string, labels=labels
@@ -87,7 +84,10 @@ def metric_writer(config: dict, restic_result: bool, result_string: str):
                         file_handle.write(metric + "\n")
             if destination.lower().startswith("http"):
                 try:
-                    authentication = (config["prometheus"]["http_username"], config["prometheus"]["http_password"])
+                    authentication = (
+                        config["prometheus"]["http_username"],
+                        config["prometheus"]["http_password"],
+                    )
                 except KeyError:
                     logger.info("No metrics authentication present.")
                     authentication = None
@@ -102,6 +102,7 @@ class NPBackupRunner:
     """
     Wraps ResticRunner into a class that is usable by NPBackup
     """
+
     def __init__(self, config_dict):
         self.config_dict = config_dict
 
@@ -124,7 +125,7 @@ class NPBackupRunner:
     @dry_run.setter
     def dry_run(self, value):
         if not isinstance(value, bool):
-            raise ValueError('Bogus dry_run parameter given: {}'.format(value))
+            raise ValueError("Bogus dry_run parameter given: {}".format(value))
         self._dry_run = value
 
     @property
@@ -134,7 +135,7 @@ class NPBackupRunner:
     @verbose.setter
     def verbose(self, value):
         if not isinstance(value, bool):
-            raise ValueError('Bogus verbose parameter given: {}'.format(value))
+            raise ValueError("Bogus verbose parameter given: {}".format(value))
         self._verbose = value
 
     @property
@@ -143,10 +144,15 @@ class NPBackupRunner:
 
     @stdout.setter
     def stdout(self, value):
-        if not isinstance(value, str) and not isinstance(value, int) and not isinstance(value, Callable) and not isinstance(value, queue.Queue):
-            raise ValueError('Bogus stdout parameter given: {}'.format(value))
-        self._stdout = value  
- 
+        if (
+            not isinstance(value, str)
+            and not isinstance(value, int)
+            and not isinstance(value, Callable)
+            and not isinstance(value, queue.Queue)
+        ):
+            raise ValueError("Bogus stdout parameter given: {}".format(value))
+        self._stdout = value
+
     @property
     def has_binary(self):
         return True if self.restic_runner.binary else False
@@ -163,14 +169,15 @@ class NPBackupRunner:
         """
         Decorator that calculates time of a function execution
         """
+
         def wrapper(self, *args, **kwargs):
             start_time = datetime.datetime.utcnow()
             result = fn(self, *args, **kwargs)
             self.exec_time = (datetime.datetime.utcnow() - start_time).total_seconds()
             logger.info("Runner took {} seconds".format(self.exec_time))
             return result
-        return wrapper
 
+        return wrapper
 
     def create_restic_runner(self):
         try:
@@ -181,7 +188,10 @@ class NPBackupRunner:
             return None
 
         self.restic_runner = ResticRunner(
-            repository=repository, password=password, verbose=self.verbose, binary_search_paths=[BASEDIR, CURRENT_DIR]
+            repository=repository,
+            password=password,
+            verbose=self.verbose,
+            binary_search_paths=[BASEDIR, CURRENT_DIR],
         )
 
         if self.restic_runner.binary is None:
@@ -194,33 +204,41 @@ class NPBackupRunner:
 
     def apply_config_to_restic_runner(self):
         try:
-            if self.config_dict['repo']['upload_speed']:
-                self.restic_runner.limit_upload = self.config_dict['repo']['upload_speed']
+            if self.config_dict["repo"]["upload_speed"]:
+                self.restic_runner.limit_upload = self.config_dict["repo"][
+                    "upload_speed"
+                ]
         except KeyError:
             pass
         except ValueError:
             logger.error("Bogus upload limit given.")
         try:
-            if self.config_dict['repo']['download_speed']:
-                self.restic_runner.limit_download = self.config_dict['repo']['download_speed']
+            if self.config_dict["repo"]["download_speed"]:
+                self.restic_runner.limit_download = self.config_dict["repo"][
+                    "download_speed"
+                ]
         except KeyError:
             pass
         except ValueError:
             logger.error("Bogus download limit given.")
         try:
-            if self.config_dict['repo']['backend_connections']:
-                self.restic_runner.backend_connections = self.config_dict['repo']['backend_connections']
+            if self.config_dict["repo"]["backend_connections"]:
+                self.restic_runner.backend_connections = self.config_dict["repo"][
+                    "backend_connections"
+                ]
         except KeyError:
             pass
         except ValueError:
             logger.error("Bogus backend connections value given.")
         try:
-            self.restic_runner.additional_parameters = self.config_dict['backup']['additional_parameters']
+            self.restic_runner.additional_parameters = self.config_dict["backup"][
+                "additional_parameters"
+            ]
         except KeyError:
             pass
         try:
-            if self.config_dict['backup']['priority']:
-                self.restic_runner.priority = self.config_dict['backup']['priority']
+            if self.config_dict["backup"]["priority"]:
+                self.restic_runner.priority = self.config_dict["backup"]["priority"]
         except KeyError:
             pass
         except ValueError:
@@ -229,7 +247,7 @@ class NPBackupRunner:
         self.restic_runner.stdout = self.stdout
 
         try:
-            env_variables = self.config_dict['env']['variables']
+            env_variables = self.config_dict["env"]["variables"]
         except KeyError:
             env_variables = None
 
@@ -302,9 +320,9 @@ class NPBackupRunner:
         Run backup after checking if no recent backup exists, unless force == True
         """
 
-         # Preflight checks
+        # Preflight checks
         try:
-            paths = self.config_dict['backup']['paths']
+            paths = self.config_dict["backup"]["paths"]
         except KeyError:
             logger.error("No backup paths defined.")
             return False
@@ -341,75 +359,84 @@ class NPBackupRunner:
         except KeyError:
             one_file_system = False
         try:
-            use_fs_snapshot = (
-                self.config_dict["backup"]["use_fs_snapshot"]
-            )
+            use_fs_snapshot = self.config_dict["backup"]["use_fs_snapshot"]
         except KeyError:
             use_fs_snapshot = False
         try:
-            pre_exec_command = self.config_dict["backup"]['pre_exec_command']
+            pre_exec_command = self.config_dict["backup"]["pre_exec_command"]
         except KeyError:
             pre_exec_command = None
 
         try:
-            pre_exec_timeout = self.config_dict["backup"]['pre_exec_timeout']
+            pre_exec_timeout = self.config_dict["backup"]["pre_exec_timeout"]
         except KeyError:
             pre_exec_timeout = 0
 
         try:
-            pre_exec_failure_is_fatal = self.config_dict["backup"]['pre_exec_failure_is_fatal']
+            pre_exec_failure_is_fatal = self.config_dict["backup"][
+                "pre_exec_failure_is_fatal"
+            ]
         except KeyError:
             pre_exec_failure_is_fatal = None
 
-
         try:
-            post_exec_command = self.config_dict["backup"]['post_exec_command']
+            post_exec_command = self.config_dict["backup"]["post_exec_command"]
         except KeyError:
             post_exec_command = None
 
         try:
-            post_exec_timeout = self.config_dict["backup"]['post_exec_timeout']
+            post_exec_timeout = self.config_dict["backup"]["post_exec_timeout"]
         except KeyError:
             post_exec_timeout = 0
 
         try:
-            post_exec_failure_is_fatal = self.config_dict["backup"]['post_exec_failure_is_fatal']
+            post_exec_failure_is_fatal = self.config_dict["backup"][
+                "post_exec_failure_is_fatal"
+            ]
         except KeyError:
             post_exec_failure_is_fatal = None
 
         # Make sure we convert tag to list if only one tag is given
         try:
-            tags = self.config_dict['backup']['tags']
+            tags = self.config_dict["backup"]["tags"]
             if not isinstance(tags, list):
                 tags = [tags]
         except KeyError:
             tags = None
 
         try:
-            additional_parameters = self.config_dict['backup']['additional_parameters']
+            additional_parameters = self.config_dict["backup"]["additional_parameters"]
         except KeyError:
             additional_parameters = None
 
         # Check if backup is required
         if not self.restic_runner.is_init:
             self.restic_runner.init()
-        if (
-            self.check_recent_backups() and not force
-        ):
+        if self.check_recent_backups() and not force:
             logger.info("No backup necessary.")
             return True
-        
+
         # Run backup here
         logger.info("Running backup of {}".format(paths))
 
         if pre_exec_command:
-            exit_code, output = command_runner(pre_exec_command, shell=True, timeout=pre_exec_timeout)
+            exit_code, output = command_runner(
+                pre_exec_command, shell=True, timeout=pre_exec_timeout
+            )
             if exit_code != 0:
-                logger.error("Pre-execution of command {} failed with:\n{}".format(pre_exec_command, output))
+                logger.error(
+                    "Pre-execution of command {} failed with:\n{}".format(
+                        pre_exec_command, output
+                    )
+                )
                 if pre_exec_failure_is_fatal:
                     return False
             else:
-                logger.debug("Pre-execution of command {} success with\n{}.".format(pre_exec_command, output))
+                logger.debug(
+                    "Pre-execution of command {} success with\n{}.".format(
+                        pre_exec_command, output
+                    )
+                )
 
         result, result_string = self.restic_runner.backup(
             paths=paths,
@@ -425,15 +452,25 @@ class NPBackupRunner:
         )
         logger.debug("Restic output:\n{}".format(result_string))
         metric_writer(self.config_dict, result, result_string)
-        
+
         if post_exec_command:
-            exit_code, output = command_runner(post_exec_command, shell=True, timeout=post_exec_timeout)
+            exit_code, output = command_runner(
+                post_exec_command, shell=True, timeout=post_exec_timeout
+            )
             if exit_code != 0:
-                logger.error("Post-execution of command {} failed with:\n{}".format(post_exec_command, output))
+                logger.error(
+                    "Post-execution of command {} failed with:\n{}".format(
+                        post_exec_command, output
+                    )
+                )
                 if post_exec_failure_is_fatal:
                     return False
             else:
-                logger.debug("Post-execution of command {} success with\n{}.".format(post_exec_command, output))
+                logger.debug(
+                    "Post-execution of command {} success with\n{}.".format(
+                        post_exec_command, output
+                    )
+                )
         return result
 
     @exec_timer
@@ -451,4 +488,3 @@ class NPBackupRunner:
         logger.info("Running raw command: {}".format(command))
         result = self.restic_runner.raw(command=command)
         return result
-

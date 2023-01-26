@@ -79,7 +79,9 @@ def execution_logs(start_time: datetime) -> None:
     except:
         pass
     logger.info(
-        "ExecTime = {}, finished, state is: {}.".format(end_time - start_time, log_level_reached)
+        "ExecTime = {}, finished, state is: {}.".format(
+            end_time - start_time, log_level_reached
+        )
     )
     # using sys.exit(code) in a atexit function will swallow the exitcode and render 0
 
@@ -91,7 +93,7 @@ def interface():
     global CONFIG_FILE
 
     parser = ArgumentParser(
-        prog='{} {} - {}'.format(__description__, __copyright__, __site__),
+        prog="{} {} - {}".format(__description__, __copyright__, __site__),
         description="""Portable Network Backup Client\n
 This program is distributed under the GNU General Public License and comes with ABSOLUTELY NO WARRANTY.\n
 This is free software, and you are welcome to redistribute it under certain conditions; Please type --license for more info.""",
@@ -124,7 +126,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         "--config-gui",
         action="store_true",
         default=False,
-        help="Show configuration GUI"
+        help="Show configuration GUI",
     )
 
     parser.add_argument(
@@ -136,7 +138,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Show content given snapshot. Use \"latest\" for most recent snapshot."
+        help='Show content given snapshot. Use "latest" for most recent snapshot.',
     )
 
     parser.add_argument(
@@ -189,16 +191,20 @@ This is free software, and you are welcome to redistribute it under certain cond
     )
 
     parser.add_argument(
-        "--dry-run", action="store_true", help="Run operations in test mode (no actual modifications"
+        "--dry-run",
+        action="store_true",
+        help="Run operations in test mode (no actual modifications",
     )
 
     parser.add_argument(
-        "--create-scheduled-task", type=str, default=None, required=False, help="Create task that runs every n minutes"
+        "--create-scheduled-task",
+        type=str,
+        default=None,
+        required=False,
+        help="Create task that runs every n minutes",
     )
 
-    parser.add_argument(
-        "--license", action="store_true", help=("Show license")
-    )
+    parser.add_argument("--license", action="store_true", help=("Show license"))
 
     args = parser.parse_args()
     if args.version:
@@ -207,13 +213,13 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     if args.license:
         try:
-            with open(LICENSE_FILE, 'r') as file_handle:
+            with open(LICENSE_FILE, "r") as file_handle:
                 print(file_handle.read())
         except OSError:
             print(LICENSE_TEXT)
         sys.exit(0)
 
-    if args.debug or os.environ.get("_DEBUG", 'False').capitalize() == 'True':
+    if args.debug or os.environ.get("_DEBUG", "False").capitalize() == "True":
         _DEBUG = True
         logger.setLevel(ofunctions.logger_utils.logging.DEBUG)
 
@@ -237,16 +243,21 @@ This is free software, and you are welcome to redistribute it under certain cond
         try:
             config_dict = configuration.load_config(CONFIG_FILE)
         except FileNotFoundError:
-            logger.warning("No configuration file found. Please use --config-file \"path\" to specify one or put a config file into current directory. Will create fresh config file in current directory.")
+            logger.warning(
+                'No configuration file found. Please use --config-file "path" to specify one or put a config file into current directory. Will create fresh config file in current directory.'
+            )
             config_dict = configuration.empty_config_dict
-        
+
         config_dict = config_gui(config_dict, CONFIG_FILE)
         sys.exit(0)
 
     logger.info("{} v{}".format(__intname__, __version__))
     if args.create_scheduled_task:
         try:
-            result = create_scheduled_task(executable_path=CURRENT_EXECUTABLE, interval_minutes=int(args.create_scheduled_task))
+            result = create_scheduled_task(
+                executable_path=CURRENT_EXECUTABLE,
+                interval_minutes=int(args.create_scheduled_task),
+            )
             if result:
                 sys.exit(0)
             else:
@@ -257,21 +268,23 @@ This is free software, and you are welcome to redistribute it under certain cond
     try:
         config_dict = configuration.load_config(CONFIG_FILE)
     except FileNotFoundError:
-        message = _t('config_gui.no_config_available')
+        message = _t("config_gui.no_config_available")
         logger.error(message)
 
         config_dict = configuration.empty_config_dict
         # If no arguments are passed, assume we are launching the GUI
         if len(sys.argv) == 1:
-            result = sg.Popup('{}\n\n{}'.format(message, _t('config_gui.create_new_config')) , custom_text=(_t('generic._yes'), _t('generic._no')))
-            if result == _t('generic._yes'):
+            result = sg.Popup(
+                "{}\n\n{}".format(message, _t("config_gui.create_new_config")),
+                custom_text=(_t("generic._yes"), _t("generic._no")),
+            )
+            if result == _t("generic._yes"):
                 config_dict = config_gui(config_dict, CONFIG_FILE)
-                sg.Popup(_t('config_gui.saved_initial_config'))
+                sg.Popup(_t("config_gui.saved_initial_config"))
                 sys.exit(6)
             else:
-                logger.error('No configuration created via GUI')
+                logger.error("No configuration created via GUI")
                 sys.exit(7)
-
 
     dry_run = False
     if args.dry_run:
@@ -337,7 +350,11 @@ This is free software, and you are welcome to redistribute it under certain cond
                     logger.error("Backup operation failed.")
                     sys.exit(2)
             if args.restore:
-                result = npbackup_runner.restore(snapshot=args.restore_from_snapshot, target=args.restore, restore_includes=args.restore_include)
+                result = npbackup_runner.restore(
+                    snapshot=args.restore_from_snapshot,
+                    target=args.restore,
+                    restore_includes=args.restore_include,
+                )
                 if result:
                     sys.exit(0)
                 else:
@@ -365,10 +382,8 @@ This is free software, and you are welcome to redistribute it under certain cond
     logger.info("Running GUI")
     try:
         version_string = "{} v{} {}\n{}".format(
-                    __intname__,
-                    __version__,
-                    __build__,
-                    __copyright__)
+            __intname__, __version__, __build__, __copyright__
+        )
         with pidfile.PIDFile(PID_FILE):
             main_gui(config_dict, CONFIG_FILE, version_string)
     except pidfile.AlreadyRunningError:
@@ -380,7 +395,10 @@ This is free software, and you are welcome to redistribute it under certain cond
 def main():
     try:
         # kill_childs normally would not be necessary, but let's just be foolproof here (kills restic subprocess in all cases)
-        atexit.register(kill_childs, os.getpid(), )
+        atexit.register(
+            kill_childs,
+            os.getpid(),
+        )
         interface()
     except KeyboardInterrupt as exc:
         logger.error("Program interrupted by keyboard. {}".format(exc))
@@ -396,4 +414,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

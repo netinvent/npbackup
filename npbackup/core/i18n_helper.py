@@ -20,25 +20,26 @@ from path_helper import BASEDIR
 logger = getLogger(__intname__)
 
 
-TRANSLATIONS_DIR = os.path.join(BASEDIR, 'translations')
+TRANSLATIONS_DIR = os.path.join(BASEDIR, "translations")
 
 # getdefaultlocale returns a tuple like ('fr-FR', 'cp1251')
 # Let's only use the fr part, so other french speaking countries also have french translation
-_locale = os.environ.get('NPBACKUP_LOCALE', getdefaultlocale()[0])
+_locale = os.environ.get("NPBACKUP_LOCALE", getdefaultlocale()[0])
 try:
-    _locale, _ = _locale.split('_')
+    _locale, _ = _locale.split("_")
 except ValueError:
     try:
-        _locale, _ = _locale.split('-')
+        _locale, _ = _locale.split("-")
     except ValueError:
         pass
 
 try:
     i18n.load_path.append(TRANSLATIONS_DIR)
 except OSError as exc:
-    print('Cannot load translations: {}'.format(exc))
-i18n.set('locale', _locale)
-i18n.set('fallback', 'en')
+    print("Cannot load translations: {}".format(exc))
+i18n.set("locale", _locale)
+i18n.set("fallback", "en")
+
 
 def _t(*args, **kwargs):
     try:
