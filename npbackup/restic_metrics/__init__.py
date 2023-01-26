@@ -324,7 +324,7 @@ if __name__ == "__main__":
     destination_file = os.path.join(destination_dir, output_filename)
     try:
         with open(log_file, "r") as file_handle:
-            errors, metrics = restic_output_2_metrics(
+            errors, metrics = restic_output_2_metrics(True, 
                 output=file_handle.readlines(), labels=labels
             )
         if errors:
