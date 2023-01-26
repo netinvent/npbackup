@@ -29,7 +29,7 @@ jobs:
         python -m pip install pylint
         # Do not run pylint on python 3.3 because isort is not available for python 3.3, don't run on python 3.4 because pylint: disable=xxxx does not exist
         # Disable E0401 import error since we lint on linux and pywin32 is obviously missing
-        python -m pylint --disable=C,W,R,E0401 --max-line-length=127 npbackup
+        python -m pylint --disable=C,W,R --max-line-length=127 npbackup
     - name: Lint with flake8
       if: ${{ matrix.python-version == '3.9' }}
       run: |
