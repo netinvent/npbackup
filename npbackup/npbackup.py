@@ -27,7 +27,12 @@ import PySimpleGUI as sg
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
 
-from npbackup.customization import PYSIMPLEGUI_THEME, OEM_ICON, LICENSE_TEXT, LICENSE_FILE
+from npbackup.customization import (
+    PYSIMPLEGUI_THEME,
+    OEM_ICON,
+    LICENSE_TEXT,
+    LICENSE_FILE,
+)
 import npbackup.configuration as configuration
 from npbackup.windows.task import create_scheduled_task
 from npbackup.gui.config import config_gui

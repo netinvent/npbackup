@@ -159,7 +159,7 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
     for entry in ls_result:
         # Make sure we drop the prefix '/' so sg.TreeData does not get an empty root
         entry["path"] = entry["path"].lstrip("/")
-        if os.name == 'nt':
+        if os.name == "nt":
             # On windows, we need to make sure tree keys don't get duplicate because of lower/uppercase
             # Shown filenames aren't affected by this
             entry["path"] = entry["path"].lower()

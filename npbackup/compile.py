@@ -64,9 +64,7 @@ def get_private_conf_dist_file():
 
 def compile(arch="64"):
     is_private = check_private_build()
-    OUTPUT_DIR = os.path.join(
-        BASEDIR, "BUILD" + "-PRIVATE" if is_private else ""
-    )
+    OUTPUT_DIR = os.path.join(BASEDIR, "BUILD" + "-PRIVATE" if is_private else "")
 
     if not os.path.isdir(OUTPUT_DIR):
         os.makedirs(OUTPUT_DIR)
@@ -79,7 +77,9 @@ def compile(arch="64"):
     PRODUCT_VERSION = _npbackup_version + ".0"
     FILE_VERSION = _npbackup_version + ".0"
 
-    file_description = "{} P{}-{}{}".format(FILE_DESCRIPTION, sys.version_info[1], arch, 'priv' if is_private else '')
+    file_description = "{} P{}-{}{}".format(
+        FILE_DESCRIPTION, sys.version_info[1], arch, "priv" if is_private else ""
+    )
 
     restic_source_file = get_restic_internal_binary(arch)
     if not restic_source_file:
