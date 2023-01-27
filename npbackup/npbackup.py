@@ -25,7 +25,7 @@ import ofunctions.logger_utils
 from ofunctions.process import kill_childs
 import PySimpleGUI as sg
 
-sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
+
 
 from npbackup.customization import (
     PYSIMPLEGUI_THEME,
