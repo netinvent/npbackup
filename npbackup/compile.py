@@ -7,14 +7,14 @@ __intname__ = "npbackup.compile-and-package-for-windows"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023012201"
+__build__ = "2023012701"
 __version__ = "1.3.0"
 
 
 import sys
 import os
 from command_runner import command_runner
-from npbackup import VERSION as npbackup_version
+from npbackup import __version__ as npbackup_version
 from npbackup.NPBackupInstaller import __version__ as installer_version
 from npbackup.customization import (
     COMPANY_NAME,
