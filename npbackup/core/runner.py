@@ -488,6 +488,12 @@ class NPBackupRunner:
         return result
 
     @exec_timer
+    def forget(self, snapshot: str) -> bool:
+        logger.info("Forgetting snapshot {}"format(snapshot))
+        result = self.restic_runner.forget(snapshot)
+        return result
+
+    @exec_timer
     def raw(self, command: str) -> bool:
         logger.info("Running raw command: {}".format(command))
         result = self.restic_runner.raw(command=command)
