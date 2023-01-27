@@ -24,8 +24,8 @@ from npbackup.customization import (
     COPYRIGHT,
     LICENSE_FILE,
 )
-from core.restic_source_binary import get_restic_internal_binary
-from path_helper import BASEDIR
+from npbackup.core.restic_source_binary import get_restic_internal_binary
+from npbackup.path_helper import BASEDIR
 
 
 def check_private_build():
