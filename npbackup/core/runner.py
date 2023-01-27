@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023012501"
+__build__ = "2023012701"
 
 
 from typing import Optional, Callable, Union, List
@@ -272,8 +272,8 @@ class NPBackupRunner:
             logger.error("Cannot initialize additional environment variables")
 
         try:
-            self.minimum_backup_age = self.config_dict["repo"]["minimum_backup_age"]
-        except KeyError:
+            self.minimum_backup_age = int(self.config_dict["repo"]["minimum_backup_age"])
+        except (KeyError, ValueError):
             self.minimum_backup_age = 86400
 
     @exec_timer
