@@ -21,7 +21,7 @@ import PySimpleGUI as sg
 from ofunctions.threading import threaded, Future
 from threading import Thread
 from ofunctions.misc import BytesConverter
-from customization import (
+from npbackup.customization import (
     OEM_STRING,
     OEM_LOGO,
     loader_animation,
@@ -30,9 +30,9 @@ from customization import (
     LICENSE_TEXT,
     LICENSE_FILE,
 )
-from gui.config import config_gui
-from core.runner import NPBackupRunner
-from core.i18n_helper import _t
+from npbackup.gui.config import config_gui
+from npbackup.core.runner import NPBackupRunner
+from npbackup.core.i18n_helper import _t
 
 
 logger = getLogger(__intname__)

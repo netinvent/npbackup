@@ -24,14 +24,19 @@ import pidfile
 import ofunctions.logger_utils
 from ofunctions.process import kill_childs
 import PySimpleGUI as sg
-from customization import PYSIMPLEGUI_THEME, OEM_ICON, LICENSE_TEXT, LICENSE_FILE
-import configuration
-from windows.task import create_scheduled_task
-from gui.config import config_gui
-from gui.main import main_gui
-from core.runner import NPBackupRunner
-from core.i18n_helper import _t
-from path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
+
+sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
+
+from npbackup.customization import PYSIMPLEGUI_THEME, OEM_ICON, LICENSE_TEXT, LICENSE_FILE
+import npbackup.configuration as configuration
+from npbackup.windows.task import create_scheduled_task
+from npbackup.gui.config import config_gui
+from npbackup.gui.main import main_gui
+from npbackup.core.runner import NPBackupRunner
+from npbackup.core.i18n_helper import _t
+from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
+
+del sys.path[0]
 
 # Nuitka compat, see https://stackoverflow.com/a/74540217
 try:

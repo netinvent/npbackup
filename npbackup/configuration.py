@@ -14,17 +14,17 @@ import sys
 from ruamel.yaml import YAML
 from logging import getLogger
 from cryptidy import symmetric_encryption as enc
-from customization import ID_STRING
+from npbackup.customization import ID_STRING
 
 # Try to import a private key, if not available, fallback to the default key
 try:
-    from _private_secret_keys import AES_KEY, ADMIN_PASSWORD
-    from _private_revac import revac
+    from npbackup._private_secret_keys import AES_KEY, ADMIN_PASSWORD
+    from npbackup._private_revac import revac
 
     AES_KEY = revac(AES_KEY)
 except ImportError:
     try:
-        from secret_keys import AES_KEY, ADMIN_PASSWORD
+        from npbackup.secret_keys import AES_KEY, ADMIN_PASSWORD
     except ImportError:
         print("No secret_keys file. Please read documentation.")
         sys.exit(1)

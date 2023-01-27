@@ -17,8 +17,8 @@ import shutil
 from distutils.dir_util import copy_tree
 from command_runner import command_runner
 import ofunctions.logger_utils
-from customization import PROGRAM_NAME, PROGRAM_DIRECTORY
-from path_helper import BASEDIR, CURRENT_DIR
+from npbackup.customization import PROGRAM_NAME, PROGRAM_DIRECTORY
+from npbackup.path_helper import BASEDIR, CURRENT_DIR
 
 
 _DEBUG = os.environ.get("_DEBUG", False)

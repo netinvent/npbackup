@@ -14,9 +14,9 @@ __version__ = "1.3.0"
 import sys
 import os
 from command_runner import command_runner
-from npbackup.npbackup import __version__ as npbackup_version
-from NPBackupInstaller import __version__ as installer_version
-from customization import (
+from npbackup import VERSION as npbackup_version
+from npbackup.NPBackupInstaller import __version__ as installer_version
+from npbackup.customization import (
     COMPANY_NAME,
     TRADEMARKS,
     PRODUCT_NAME,
@@ -63,8 +63,9 @@ def get_private_conf_dist_file():
 
 
 def compile(arch="64"):
+    is_private = check_private_build()
     OUTPUT_DIR = os.path.join(
-        BASEDIR, "BUILD" + "-PRIVATE" if check_private_build() else ""
+        BASEDIR, "BUILD" + "-PRIVATE" if is_private else ""
     )
 
     if not os.path.isdir(OUTPUT_DIR):
@@ -78,7 +79,7 @@ def compile(arch="64"):
     PRODUCT_VERSION = _npbackup_version + ".0"
     FILE_VERSION = _npbackup_version + ".0"
 
-    file_description = "{} P{}-{}".format(FILE_DESCRIPTION, sys.version_info[1], arch)
+    file_description = "{} P{}-{}{}".format(FILE_DESCRIPTION, sys.version_info[1], arch, 'priv' if is_private else '')
 
     restic_source_file = get_restic_internal_binary(arch)
     if not restic_source_file:

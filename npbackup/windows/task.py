@@ -15,7 +15,7 @@ import os
 from logging import getLogger
 import tempfile
 from command_runner import command_runner
-from customization import PROGRAM_NAME
+from npbackup.customization import PROGRAM_NAME
 
 logger = getLogger(__intname__)
 

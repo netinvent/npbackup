@@ -12,8 +12,8 @@ __build__ = "2023012601"
 
 from logging import getLogger
 import PySimpleGUI as sg
-import configuration
-from core.i18n_helper import _t
+import npbackup.configuration as configuration
+from npbackup.core.i18n_helper import _t
 
 logger = getLogger(__intname__)
 
