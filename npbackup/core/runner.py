@@ -489,7 +489,7 @@ class NPBackupRunner:
 
     @exec_timer
     def forget(self, snapshot: str) -> bool:
-        logger.info("Forgetting snapshot {}"format(snapshot))
+        logger.info("Forgetting snapshot {}".format(snapshot))
         result = self.restic_runner.forget(snapshot)
         return result
 
