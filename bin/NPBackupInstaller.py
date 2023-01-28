@@ -17,9 +17,14 @@ import shutil
 from distutils.dir_util import copy_tree
 from command_runner import command_runner
 import ofunctions.logger_utils
+
+# Insert parent dir as path se we get to use npbackup as package
+sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
+
 from npbackup.customization import PROGRAM_NAME, PROGRAM_DIRECTORY
 from npbackup.path_helper import BASEDIR, CURRENT_DIR
 
+del sys.path[0]
 
 _DEBUG = os.environ.get("_DEBUG", False)
 LOG_FILE = os.path.join(CURRENT_DIR, __intname__ + ".log")
