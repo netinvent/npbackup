@@ -23,7 +23,7 @@ from npbackup.restic_metrics import restic_output_2_metrics, upload_metrics
 from npbackup.restic_wrapper import ResticRunner
 from npbackup.core.restic_source_binary import get_restic_internal_binary
 from npbackup.path_helper import CURRENT_DIR, BASEDIR
-from npbackup import __name__ as NAME, __version__ as VERSION
+from npbackup import __intname__ as NAME, __version__ as VERSION
 
 
 logger = getLogger(__intname__)
@@ -181,7 +181,7 @@ class NPBackupRunner:
 
         return wrapper
 
-    def create_restic_runner(self):
+    def create_restic_runner(self) -> None:
         try:
             repository = self.config_dict["repo"]["repository"]
             password = self.config_dict["repo"]["password"]
@@ -204,7 +204,9 @@ class NPBackupRunner:
                 logger.info("Using dev binary !")
                 self.restic_runner.binary = binary
 
-    def apply_config_to_restic_runner(self):
+    def apply_config_to_restic_runner(self) -> None:
+        if not self.restic_runner:
+            return None
         try:
             if self.config_dict["repo"]["upload_speed"]:
                 self.restic_runner.limit_upload = self.config_dict["repo"][
@@ -272,7 +274,9 @@ class NPBackupRunner:
             logger.error("Cannot initialize additional environment variables")
 
         try:
-            self.minimum_backup_age = int(self.config_dict["repo"]["minimum_backup_age"])
+            self.minimum_backup_age = int(
+                self.config_dict["repo"]["minimum_backup_age"]
+            )
         except (KeyError, ValueError):
             self.minimum_backup_age = 86400
 
