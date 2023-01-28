@@ -21,7 +21,7 @@ Is there a repository at the following location?
       
       Fatal: wrong password or no key found
 
-
+- Implement remote upgrade procedure
 - Linux installer script
 - Windows installer GUI
 
