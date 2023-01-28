@@ -7,7 +7,7 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023012501"
+__build__ = "2023012701"
 __version__ = "1.5.0"
 
 
@@ -218,6 +218,7 @@ class ResticRunner:
 
         for path in probe_paths:
             probed_path = os.path.join(path, binary)
+            logger.debug("Probing for binary in \"{}\"".format(probed_path))
             if os.path.isfile(probed_path):
                 self._binary = probed_path
                 return
