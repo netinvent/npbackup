@@ -2,8 +2,10 @@
   - Added execution time information
   - Code cleanup
     - Refactor runner into a class
+    - Refactor npbackup into package
     - Adding missing typing
     - Code is now formatted with black
+    - Code must now pass pylint and flake8
   - Workaround for painfully slow sg.TreeData window.close()
   - Simplify npbackup shortcut
   - Shift default interval from 23H30 to 24H
