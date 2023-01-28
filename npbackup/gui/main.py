@@ -24,9 +24,9 @@ from ofunctions.misc import BytesConverter
 from npbackup.customization import (
     OEM_STRING,
     OEM_LOGO,
-    loader_animation,
-    folder_icon,
-    file_icon,
+    LOADER_ANIMATION,
+    FOLDER_ICON,
+    FILE_ICON,
     LICENSE_TEXT,
     LICENSE_FILE,
 )
@@ -112,7 +112,7 @@ def get_gui_data(config_dict: dict) -> Future:
     thread = _get_gui_data(config_dict)
     while not thread.done() and not thread.cancelled():
         sg.PopupAnimated(
-            loader_animation,
+            LOADER_ANIMATION,
             message=_t("main_gui.loading_data_from_repo"),
             time_between_frames=50,
             background_color="darkgreen",
@@ -173,7 +173,7 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
                 key=entry["path"],
                 text=entry["name"],
                 values=["", mtime],
-                icon=folder_icon,
+                icon=FOLDER_ICON,
             )
         elif entry["type"] == "file":
             size = BytesConverter(entry["size"]).human
@@ -182,7 +182,7 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
                 key=entry["path"],
                 text=entry["name"],
                 values=[size, mtime],
-                icon=file_icon,
+                icon=FILE_ICON,
             )
     return treedata
 
@@ -231,7 +231,7 @@ def ls_window(config: dict, snapshot: str) -> bool:
 
     while not thread.done() and not thread.cancelled():
         sg.PopupAnimated(
-            loader_animation,
+            LOADER_ANIMATION,
             message="{}. {}".format(
                 _t("main_gui.loading_data_from_repo"),
                 _t("main_gui.this_will_take_a_while"),
@@ -248,14 +248,14 @@ def ls_window(config: dict, snapshot: str) -> bool:
     # Preload animation before thread so we don't have to deal with slow initial drawing due to cpu usage of thread
     # This is an arbitrary way to make sure we get to see the popup
     sg.PopupAnimated(
-        loader_animation,
+        LOADER_ANIMATION,
         message="{}...".format(_t("main_gui.creating_tree")),
         time_between_frames=1,
         background_color="darkgreen",
     )
     sleep(0.01)
     sg.PopupAnimated(
-        loader_animation,
+        LOADER_ANIMATION,
         message="{}...".format(_t("main_gui.creating_tree")),
         time_between_frames=1,
         background_color="darkgreen",
@@ -264,7 +264,7 @@ def ls_window(config: dict, snapshot: str) -> bool:
 
     while not thread.done() and not thread.cancelled():
         sg.PopupAnimated(
-            loader_animation,
+            LOADER_ANIMATION,
             message="{}...".format(_t("main_gui.creating_tree")),
             time_between_frames=150,
             background_color="darkgreen",
@@ -363,7 +363,7 @@ def restore_window(
             )
             while not thread.done() and not thread.cancelled():
                 sg.PopupAnimated(
-                    loader_animation,
+                    LOADER_ANIMATION,
                     message="{}...".format(_t("main_gui.restore_in_progress")),
                     time_between_frames=50,
                     background_color="darkgreen",
@@ -520,7 +520,7 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
                     if stdout_line:
                         progress_window["progress"].Update(stdout_line)
                 sg.PopupAnimated(
-                    loader_animation,
+                    LOADER_ANIMATION,
                     message="{}...".format(_t("main_gui.backup_in_progress")),
                     time_between_frames=50,
                     background_color="darkgreen",
