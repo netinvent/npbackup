@@ -60,12 +60,12 @@ def check_private_build():
 def get_private_conf_dist_file():
     private_dist_conf_file = "_private_npbackup.conf.dist"
     dist_conf_file = "npbackup.conf.dist"
-    dist_conf_file_path = os.path.join(BASEDIR, "examples", private_dist_conf_file)
+    dist_conf_file_path = os.path.join(BASEDIR, os.pardir, "examples", private_dist_conf_file)
     if os.path.isfile(dist_conf_file_path):
         print("Building with private dist config file")
     else:
         print("Building with default dist config file")
-        dist_conf_file_path = os.path.join(BASEDIR, "examples", dist_conf_file)
+        dist_conf_file_path = os.path.join(BASEDIR, os.pardir, "examples", dist_conf_file)
 
     return dist_conf_file_path
 
@@ -134,7 +134,7 @@ def compile(arch="64"):
     dist_conf_file_dest = os.path.basename(dist_conf_file_source)
 
     excludes_dir = "excludes"
-    excludes_dir_source = os.path.join(BASEDIR, excludes_dir)
+    excludes_dir_source = os.path.join(BASEDIR, os.pardir, excludes_dir)
     excludes_dir_dest = excludes_dir
     r"""
     C:\GIT\npbackup>C:\GIT\NPBACKUP\venv\scripts\python.exe -m nuitka --python-flag=no_docstrings --python-flag=-O --onefile --plugin-enable=tk-inter --include-data-dir="C:\GIT\npbackup\npbackup\translations"="npbackup\translations" --include-data-file="C:\GIT\npbackup\npbackup\LICENSE.md"="npbackup\LICENSE.md" --include-data-file=npbackup\RESTIC_SOURCE_FILES\restic_0.15.0_windows_amd64.exe="restic.exe" --windows-icon-from-ico=npbackup\npbackup_icon.ico --company-name="NetInvent" --product-name="NPBackup Network Backup Client" --file-version="2.1.0.0" --product-version="2.1.0.0" --copyright="NetInvent 2022-2023" --file-description="Network Backup Client P10-x64priv" --trademarks="NetInvent (C)" --output-dir="C:\GIT\npbackup\npbackup\BUILD-PRIVATE\win-p310-x64" bin\npbackup
