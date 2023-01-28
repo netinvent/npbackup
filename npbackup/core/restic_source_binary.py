@@ -1,7 +1,8 @@
 import os
 import glob
 
-RESTIC_SOURCE_FILES_DIR = "RESTIC_SOURCE_FILES"
+from npbackup.path_helper import BASEDIR
+RESTIC_SOURCE_FILES_DIR = os.path.join(BASEDIR, os.pardir, "RESTIC_SOURCE_FILES")
 
 
 def get_restic_internal_binary(arch):
