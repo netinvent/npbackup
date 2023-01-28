@@ -248,7 +248,7 @@ def upload_metrics(destination, authentication, metrics):
 
 
 def write_metrics_file(metrics, filename):
-    with open(filename, "w", encoding='utf-8') as file_handle:
+    with open(filename, "w", encoding="utf-8") as file_handle:
         for metric in metrics:
             file_handle.write(metric + "\n")
 
@@ -323,7 +323,7 @@ if __name__ == "__main__":
         labels += ",{}".format(labels)
     destination_file = os.path.join(destination_dir, output_filename)
     try:
-        with open(log_file, "r", encoding='utf-8') as file_handle:
+        with open(log_file, "r", encoding="utf-8") as file_handle:
             errors, metrics = restic_output_2_metrics(
                 True, output=file_handle.readlines(), labels=labels
             )

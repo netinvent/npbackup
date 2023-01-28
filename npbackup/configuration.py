@@ -33,26 +33,10 @@ except ImportError:
 logger = getLogger(__name__)
 
 ENCRYPTED_OPTIONS = [
-    {
-        'section': 'repo',
-        'name': 'repository',
-        'type': str
-    },
-    {
-        'section': 'repo',
-        'name': 'password',
-        'type': str
-    },
-    {
-        'section': 'prometheus',
-        'name': 'http_username',
-        'type': str
-    },    
-    {
-        'section': 'prometheus',
-        'name': 'http_password',
-        'type': str
-    },    
+    {"section": "repo", "name": "repository", "type": str},
+    {"section": "repo", "name": "password", "type": str},
+    {"section": "prometheus", "name": "http_username", "type": str},
+    {"section": "prometheus", "name": "http_password", "type": str},
 ]
 
 empty_config_dict = {"backup": {}, "repo": {}, "prometheus": {}, "env": {}}
@@ -62,17 +46,26 @@ def decrypt_data(config_dict):
     try:
         for option in ENCRYPTED_OPTIONS:
             try:
-                if config_dict[option['section']][option['name']]:
-                    print(config_dict[option['section']][option['name']], option)
-                    _, config_dict[option['section']][option['name']] = enc.decrypt_message_hf(
-                        config_dict[option['section']][option['name']], AES_KEY, ID_STRING, ID_STRING
+                if config_dict[option["section"]][option["name"]]:
+                    print(config_dict[option["section"]][option["name"]], option)
+                    (
+                        _,
+                        config_dict[option["section"]][option["name"]],
+                    ) = enc.decrypt_message_hf(
+                        config_dict[option["section"]][option["name"]],
+                        AES_KEY,
+                        ID_STRING,
+                        ID_STRING,
                     )
             except KeyError:
-                logger.error("No {}:{} available.".format(option['section'], option['name']))
+                logger.error(
+                    "No {}:{} available.".format(option["section"], option["name"])
+                )
                 logger.debug("Trace", exc_info=True)
     except ValueError:
         logger.error(
-            "Cannot decrypt this configuration file. Has the AES key changed ?", exc_info=True
+            "Cannot decrypt this configuration file. Has the AES key changed ?",
+            exc_info=True,
         )
         sys.exit(11)
     except TypeError:
@@ -86,12 +79,19 @@ def decrypt_data(config_dict):
 def encrypt_data(config_dict):
     for option in ENCRYPTED_OPTIONS:
         try:
-            if config_dict[option['section']][option['name']] and not config_dict[option['section']][option['name']].startswith(ID_STRING):
-                config_dict[option['section']][option['name']] = enc.encrypt_message_hf(
-                    config_dict[option['section']][option['name']], AES_KEY, ID_STRING, ID_STRING
+            if config_dict[option["section"]][option["name"]] and not config_dict[
+                option["section"]
+            ][option["name"]].startswith(ID_STRING):
+                config_dict[option["section"]][option["name"]] = enc.encrypt_message_hf(
+                    config_dict[option["section"]][option["name"]],
+                    AES_KEY,
+                    ID_STRING,
+                    ID_STRING,
                 ).decode("utf-8")
         except KeyError:
-            logger.error("No {}:{} available.".format(option['section'], option['name']))
+            logger.error(
+                "No {}:{} available.".format(option["section"], option["name"])
+            )
             logger.debug("Trace", exc_info=True)
     return config_dict
 
@@ -100,8 +100,11 @@ def is_encrypted(config_dict):
     try:
         is_enc = True
         for option in ENCRYPTED_OPTIONS:
-            if (isinstance(config_dict[option['section']][option['name']], config_dict[option['section']][option['type']])
-            and not config_dict[option['section']][option['name']].startswith(ID_STRING)
+            if isinstance(
+                config_dict[option["section"]][option["name"]],
+                config_dict[option["section"]][option["type"]],
+            ) and not config_dict[option["section"]][option["name"]].startswith(
+                ID_STRING
             ):
                 is_enc = False
         return is_enc
