@@ -168,7 +168,7 @@ class ResticRunner:
         if exit_code == 0:
             self.last_command_status = True
             return True, output
-        elif exit_code == 3 and os.name == "nt":
+        if exit_code == 3 and os.name == "nt":
             # TEMP-FIX-4155, since we don't have reparse point support for Windows, see https://github.com/restic/restic/issues/4155, we have to filter manually for cloud errors which should not affect backup result
             # exit_code = 3 when errors are present but snapshot could be created
             # Since errors are always shown, we don't need restic --verbose option explicitly
@@ -176,7 +176,7 @@ class ResticRunner:
             for line in output.split("\n"):
                 if re.match("error", line, re.IGNORECASE):
                     if re.match(
-                        ".*: The cloud operation is not supported on a read-only volume\.|.*: The media is write protected\.",
+                        r".*: The cloud operation is not supported on a read-only volume\.|.*: The media is write protected\.",
                         line,
                         re.IGNORECASE,
                     ):
@@ -218,7 +218,7 @@ class ResticRunner:
 
         for path in probe_paths:
             probed_path = os.path.join(path, binary)
-            logger.debug("Probing for binary in \"{}\"".format(probed_path))
+            logger.debug('Probing for binary in "{}"'.format(probed_path))
             if os.path.isfile(probed_path):
                 self._binary = probed_path
                 return
@@ -263,7 +263,7 @@ class ResticRunner:
             if value > 0:
                 self._backend_connections = value
         except TypeError:
-            logger.warn("Bogus backend_connections value given.")
+            logger.warning("Bogus backend_connections value given.")
 
     @property
     def additional_parameters(self):
@@ -362,11 +362,11 @@ class ResticRunner:
     def last_command_status(self, value: bool):
         self._last_command_status = value
 
-    def list(self, object: str = "snapshots") -> Optional[list]:
+    def list(self, obj: str = "snapshots") -> Optional[list]:
         """
         Returns json list of snapshots
         """
-        cmd = "list {} --json".format(object)
+        cmd = "list {} --json".format(obj)
         result, output = self.executor(cmd)
         if result:
             try:
@@ -385,7 +385,7 @@ class ResticRunner:
         if result and output:
             """
             # When not using --json, we must remove first line since it will contain a heading string like:
-            # snapshot db125b40 of [C:\GIT\npbackup] filtered by [] at 2023-01-03 09:41:30.9104257 +0100 CET):
+            # snapshot db125b40 of [C:\\GIT\\npbackup] filtered by [] at 2023-01-03 09:41:30.9104257 +0100 CET):
             return output.split("\n", 2)[2]
 
             Using --json here does not return actual json content, but lines with each file being a json... !
