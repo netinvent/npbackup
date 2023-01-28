@@ -7,8 +7,8 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023012401"
-__version__ = "1.3.0"
+__build__ = "2023012801"
+__version__ = "1.4.0"
 
 import sys
 from ruamel.yaml import YAML
@@ -32,56 +32,47 @@ except ImportError:
 
 logger = getLogger(__name__)
 
+ENCRYPTED_OPTIONS = [
+    {
+        'section': 'repo',
+        'name': 'repository',
+        'type': str
+    },
+    {
+        'section': 'repo',
+        'name': 'password',
+        'type': str
+    },
+    {
+        'section': 'prometheus',
+        'name': 'http_username',
+        'type': str
+    },    
+    {
+        'section': 'prometheus',
+        'name': 'http_password',
+        'type': str
+    },    
+]
 
 empty_config_dict = {"backup": {}, "repo": {}, "prometheus": {}, "env": {}}
 
 
 def decrypt_data(config_dict):
     try:
-        try:
-            if config_dict["repo"]["repository"]:
-                _, config_dict["repo"]["repository"] = enc.decrypt_message_hf(
-                    config_dict["repo"]["repository"], AES_KEY, ID_STRING, ID_STRING
-                )
-        except KeyError:
-            logger.error("No repository URL available.")
-            logger.debug("Trace", exc_info=True)
-
-        try:
-            if config_dict["repo"]["password"]:
-                _, config_dict["repo"]["password"] = enc.decrypt_message_hf(
-                    config_dict["repo"]["password"], AES_KEY, ID_STRING, ID_STRING
-                )
-        except KeyError:
-            logger.error("No password available.")
-            logger.debug("Trace", exc_info=True)
-
-        try:
-            if config_dict["prometheus"]["http_username"]:
-                _, config_dict["prometheus"]["http_username"] = enc.decrypt_message_hf(
-                    config_dict["prometheus"]["http_username"],
-                    AES_KEY,
-                    ID_STRING,
-                    ID_STRING,
-                )
-        except KeyError as exc:
-            logger.error("No encrypted http username available.")
-            logger.debug("Trace", exc_info=True)
-
-        try:
-            if config_dict["prometheus"]["http_password"]:
-                _, config_dict["prometheus"]["http_password"] = enc.decrypt_message_hf(
-                    config_dict["prometheus"]["http_password"],
-                    AES_KEY,
-                    ID_STRING,
-                    ID_STRING,
-                )
-        except KeyError:
-            logger.error("No encrypted http password available.")
-            logger.debug("Trace", exc_info=True)
+        for option in ENCRYPTED_OPTIONS:
+            try:
+                if config_dict[option['section']][option['name']]:
+                    print(config_dict[option['section']][option['name']], option)
+                    _, config_dict[option['section']][option['name']] = enc.decrypt_message_hf(
+                        config_dict[option['section']][option['name']], AES_KEY, ID_STRING, ID_STRING
+                    )
+            except KeyError:
+                logger.error("No {}:{} available.".format(option['section'], option['name']))
+                logger.debug("Trace", exc_info=True)
     except ValueError:
         logger.error(
-            "Cannot decrypt this configuration file. Has the AES key changed ?"
+            "Cannot decrypt this configuration file. Has the AES key changed ?", exc_info=True
         )
         sys.exit(11)
     except TypeError:
@@ -93,71 +84,27 @@ def decrypt_data(config_dict):
 
 
 def encrypt_data(config_dict):
-    try:
-        if config_dict["repo"]["repository"] and not config_dict["repo"][
-            "repository"
-        ].startswith(ID_STRING):
-            config_dict["repo"]["repository"] = enc.encrypt_message_hf(
-                config_dict["repo"]["repository"], AES_KEY, ID_STRING, ID_STRING
-            ).decode("utf-8")
-    except KeyError:
-        logger.error("No repository URL available.")
-        logger.debug("Trace", exc_info=True)
-    try:
-        if config_dict["repo"]["password"] and not config_dict["repo"][
-            "password"
-        ].startswith(ID_STRING):
-            config_dict["repo"]["password"] = enc.encrypt_message_hf(
-                config_dict["repo"]["password"], AES_KEY, ID_STRING, ID_STRING
-            ).decode("utf-8")
-    except KeyError:
-        logger.error("No repository password available.")
-        logger.debug("Trace", exc_info=True)
-
-    try:
-        if config_dict["prometheus"]["http_username"] and not config_dict["prometheus"][
-            "http_username"
-        ].startswith(ID_STRING):
-            config_dict["prometheus"]["http_username"] = enc.encrypt_message_hf(
-                config_dict["prometheus"]["http_username"],
-                AES_KEY,
-                ID_STRING,
-                ID_STRING,
-            ).decode("utf-8")
-    except KeyError:
-        logger.error("No http username available.")
-        logger.debug("Trace", exc_info=True)
-    try:
-        if config_dict["prometheus"]["http_password"] and not config_dict["prometheus"][
-            "http_password"
-        ].startswith(ID_STRING):
-            config_dict["prometheus"]["http_password"] = enc.encrypt_message_hf(
-                config_dict["prometheus"]["http_password"],
-                AES_KEY,
-                ID_STRING,
-                ID_STRING,
-            ).decode("utf-8")
-    except KeyError:
-        logger.error("No http password available.")
-        logger.debug("Trace", exc_info=True)
-
+    for option in ENCRYPTED_OPTIONS:
+        try:
+            if config_dict[option['section']][option['name']] and not config_dict[option['section']][option['name']].startswith(ID_STRING):
+                config_dict[option['section']][option['name']] = enc.encrypt_message_hf(
+                    config_dict[option['section']][option['name']], AES_KEY, ID_STRING, ID_STRING
+                ).decode("utf-8")
+        except KeyError:
+            logger.error("No {}:{} available.".format(option['section'], option['name']))
+            logger.debug("Trace", exc_info=True)
     return config_dict
 
 
 def is_encrypted(config_dict):
     try:
-        if (
-            isinstance(config_dict["repo"]["repository"], str)
-            and config_dict["repo"]["repository"].startswith(ID_STRING)
-            and isinstance(config_dict["repo"]["password"], str)
-            and config_dict["repo"]["password"].startswith(ID_STRING)
-            and isinstance(config_dict["prometheus"]["http_username"], str)
-            and config_dict["prometheus"]["http_username"].startswith(ID_STRING)
-            and isinstance(config_dict["prometheus"]["http_password"], str)
-            and config_dict["prometheus"]["http_password"].startswith(ID_STRING)
-        ):
-            return True
-        return False
+        is_enc = True
+        for option in ENCRYPTED_OPTIONS:
+            if (isinstance(config_dict[option['section']][option['name']], config_dict[option['section']][option['type']])
+            and not config_dict[option['section']][option['name']].startswith(ID_STRING)
+            ):
+                is_enc = False
+        return is_enc
     except KeyError:
         return False
     except AttributeError:
@@ -169,6 +116,7 @@ def load_config(config_file):
     """
     Using ruamel.yaml preserves comments and order of yaml files
     """
+    logger.debug("Using configuration file {}".format(config_file))
     with open(config_file, "r", encoding="utf-8") as file_handle:
         # RoundTrip loader is default and preserves comments and ordering
         yaml = YAML(typ="rt")
