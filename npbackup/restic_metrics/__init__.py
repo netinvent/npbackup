@@ -6,8 +6,8 @@ __intname__ = "restic_metrics"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 Orsiris de Jong - NetInvent"
 __licence__ = "BSD-3-Clause"
-__version__ = "1.4.1"
-__build__ = "2023012001"
+__version__ = "1.4.2"
+__build__ = "2023012801"
 __description__ = (
     "Converts restic command line output to a text file node_exporter can scrape"
 )
@@ -70,7 +70,7 @@ def restic_output_2_metrics(restic_result, output, labels=None):
     for line in output.splitlines():
         # for line in output:
         matches = re.match(
-            "Files:\s+(\d+)\snew,\s+(\d+)\schanged,\s+(\d+)\sunmodified",
+            r"Files:\s+(\d+)\snew,\s+(\d+)\schanged,\s+(\d+)\sunmodified",
             line,
             re.IGNORECASE,
         )
@@ -96,7 +96,7 @@ def restic_output_2_metrics(restic_result, output, labels=None):
                 errors = True
 
         matches = re.match(
-            "Dirs:\s+(\d+)\snew,\s+(\d+)\schanged,\s+(\d+)\sunmodified",
+            r"Dirs:\s+(\d+)\snew,\s+(\d+)\schanged,\s+(\d+)\sunmodified",
             line,
             re.IGNORECASE,
         )
@@ -122,7 +122,7 @@ def restic_output_2_metrics(restic_result, output, labels=None):
                 errors = True
 
         matches = re.match(
-            "Added to the repo.*:\s([-+]?(?:\d*\.\d+|\d+))\s(\w+)\s+\((.*)\sstored\)",
+            r"Added to the repo.*:\s([-+]?(?:\d*\.\d+|\d+))\s(\w+)\s+\((.*)\sstored\)",
             line,
             re.IGNORECASE,
         )
@@ -160,7 +160,7 @@ def restic_output_2_metrics(restic_result, output, labels=None):
                 errors = True
 
         matches = re.match(
-            "processed\s(\d+)\sfiles,\s([-+]?(?:\d*\.\d+|\d+))\s(\w+)\sin\s((\d+:\d+:\d+)|(\d+:\d+)|(\d+))",
+            r"processed\s(\d+)\sfiles,\s([-+]?(?:\d*\.\d+|\d+))\s(\w+)\sin\s((\d+:\d+:\d+)|(\d+:\d+)|(\d+))",
             line,
             re.IGNORECASE,
         )
@@ -199,14 +199,14 @@ def restic_output_2_metrics(restic_result, output, labels=None):
                 logger.warning("Cannot parse restic log for repo size: {}".format(exc))
                 errors = True
         matches = re.match(
-            "Failure|Fatal|Unauthorized|no such host|s there a repository at the following location\?",
+            r"Failure|Fatal|Unauthorized|no such host|s there a repository at the following location\?",
             line,
             re.IGNORECASE,
         )
         if matches:
             try:
                 logger.debug(
-                    'Matcher found error: "{}\ in line "{}".'.format(
+                    'Matcher found error: "{}" in line "{}".'.format(
                         matches.group(), line
                     )
                 )
@@ -234,7 +234,7 @@ def upload_metrics(destination, authentication, metrics):
             data += "{}\n".format(metric)
         logger.debug("metrics:\n{}".format(data))
         result = requests.post(
-            destination, headers=headers, data=data, auth=authentication
+            destination, headers=headers, data=data, auth=authentication, timeout=4
         )
         if result.status_code == 200:
             logger.info("Metrics pushed succesfully.")
@@ -248,7 +248,7 @@ def upload_metrics(destination, authentication, metrics):
 
 
 def write_metrics_file(metrics, filename):
-    with open(filename, "w") as file_handle:
+    with open(filename, "w", encoding='utf-8') as file_handle:
         for metric in metrics:
             file_handle.write(metric + "\n")
 
@@ -323,7 +323,7 @@ if __name__ == "__main__":
         labels += ",{}".format(labels)
     destination_file = os.path.join(destination_dir, output_filename)
     try:
-        with open(log_file, "r") as file_handle:
+        with open(log_file, "r", encoding='utf-8') as file_handle:
             errors, metrics = restic_output_2_metrics(
                 True, output=file_handle.readlines(), labels=labels
             )
