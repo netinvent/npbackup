@@ -26,14 +26,13 @@ from ofunctions.process import kill_childs
 import PySimpleGUI as sg
 
 
-
 from npbackup.customization import (
     PYSIMPLEGUI_THEME,
     OEM_ICON,
     LICENSE_TEXT,
     LICENSE_FILE,
 )
-import npbackup.configuration as configuration
+from npbackup import configuration
 from npbackup.windows.task import create_scheduled_task
 from npbackup.gui.config import config_gui
 from npbackup.gui.main import main_gui
@@ -45,7 +44,8 @@ del sys.path[0]
 
 # Nuitka compat, see https://stackoverflow.com/a/74540217
 try:
-    from charset_normalizer import md__mypyc
+    # pylint: disable=W0611 (unused-import)
+    from charset_normalizer import md__mypyc  # noqa
 except ImportError:
     pass
 
@@ -86,8 +86,8 @@ def execution_logs(start_time: datetime) -> None:
             log_level_reached = "errors"
         elif logger_worst_level >= 30:
             log_level_reached = "warnings"
-    except:
-        pass
+    except AttributeError as exc:
+        logger.error("Cannot get worst log level reached: {}".format(exc))
     logger.info(
         "ExecTime = {}, finished, state is: {}.".format(
             end_time - start_time, log_level_reached
@@ -97,7 +97,6 @@ def execution_logs(start_time: datetime) -> None:
 
 
 def interface():
-    global logger
     global _DEBUG
     global _VERBOSE
     global CONFIG_FILE
@@ -223,7 +222,7 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     if args.license:
         try:
-            with open(LICENSE_FILE, "r") as file_handle:
+            with open(LICENSE_FILE, "r", 'utf-8') as file_handle:
                 print(file_handle.read())
         except OSError:
             print(LICENSE_TEXT)
