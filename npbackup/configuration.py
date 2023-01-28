@@ -46,8 +46,9 @@ def decrypt_data(config_dict):
     try:
         for option in ENCRYPTED_OPTIONS:
             try:
-                if config_dict[option["section"]][option["name"]]:
-                    print(config_dict[option["section"]][option["name"]], option)
+                if config_dict[option["section"]][option["name"]] and config_dict[
+                    option["section"]
+                ][option["name"]].startswith(ID_STRING):
                     (
                         _,
                         config_dict[option["section"]][option["name"]],
