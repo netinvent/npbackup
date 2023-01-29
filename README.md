@@ -55,7 +55,7 @@ While restic is a fanstastic program, NPBackup tries to complete restic in order
 ## Quickstart
 
 On Windows, use `NPBackupInstaller.exe` to install NPBackup into program files.
-On Linux, just copy `npbackup` to `/usr/local/bin`
+On Linux, just copy `npbackup` to `/usr/local/bin` or use `pip install npbackup`
 
 Copy the example config from model `examples/npbackup.conf.dist` into the directory where npbackup is installed.
 
