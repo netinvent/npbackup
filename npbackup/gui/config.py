@@ -224,7 +224,7 @@ def config_gui(config_dict: dict, config_file: str):
         [sg.Text(_t("config_gui.prometheus_config"), font="helvetica 16")],
         [sg.Text(_t("config_gui.explanation"))],
         [
-            sg.Text(_t("config_gui_enable_prometheus"), size=(30, 1)),
+            sg.Text(_t("config_gui.enable_prometheus"), size=(30, 1)),
             sg.Checkbox("", key="prometheus---metrics", size=(0, 1)),
         ],
         [
