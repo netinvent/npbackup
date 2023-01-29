@@ -21,6 +21,12 @@ Is there a repository at the following location?
       
       Fatal: wrong password or no key found
 
+    - Example: non reachable server:
+
+    Fatal: unable to open config file: Head "https://user:***@good.example.tld/user/config": dial tcp [ipv6]:443: connectex: Une tentative de connexion a échoué car le parti connecté n’a pas répondu convenablement au-delà d’une certaine durée ou une connexion établie a échoué car l’hôte de connexion n’a pas répondu.
+Is there a repository at the following location?
+rest:https://user:***@good.example.tld/user/
+
 - Implement remote upgrade procedure
 - Linux installer script
 - Windows installer GUI
