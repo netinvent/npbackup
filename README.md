@@ -123,7 +123,7 @@ On servers, we'll configure a prometheus file that gets written on each backup, 
 On laptops, since we might be away from our usual network, we'll push the backup metrics to a remote push gateway which laters gets collected by prometheus itself.
 
 The current NPBackup dashboard:
-[!image](img/grafana_dashboard.png)
+![image](img/grafana_dashboard.png)
 
 ## End user expericence
 
