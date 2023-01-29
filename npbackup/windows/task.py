@@ -43,7 +43,7 @@ def create_scheduled_task(executable_path, interval_minutes: int):
     SCHEDULED_TASK_FILE_CONTENT = """<?xml version="1.0" encoding="UTF-16"?>
     <Task version="1.3" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
     <RegistrationInfo>
-        <Date>2023-01-05T11:48:15.2259301</Date>
+        <Date>2023-01-01T13:37:00.1234567</Date>
         <Author>{}</Author>
         <URI>\{}</URI>
     </RegistrationInfo>
@@ -53,7 +53,7 @@ def create_scheduled_task(executable_path, interval_minutes: int):
             <Interval>PT{}M</Interval>
             <StopAtDurationEnd>false</StopAtDurationEnd>
         </Repetition>
-        <StartBoundary>2023-01-01T09:00:00</StartBoundary>
+        <StartBoundary>2023-01-30T09:00:00</StartBoundary>
         <ExecutionTimeLimit>P1D</ExecutionTimeLimit>
         <Enabled>true</Enabled>
         </TimeTrigger>
