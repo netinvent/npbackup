@@ -1,6 +1,13 @@
+[![License](https://img.shields.io/badge/license-GPLv3-blu.svg)](https://opensource.org/licenses/GPL-3.0)
+[![Percentage of issues still open](http://isitmaintained.com/badge/open/netinvent/npbackup.svg)](http://isitmaintained.com/project/netinvent/npbackup "Percentage of issues still open")
+[![GitHub Release](https://img.shields.io/github/release/netinvent/npbackup.svg?label=Latest)](https://github.com/netinvent/npbackup/releases/latest)
+
+
 # NPBackup
 
 A one fits all backup solution that solves modern problems with modern solutions
+
+Available in both CLI / GUI flavors for both system administrators and end users
 
 ## Features
 
@@ -47,10 +54,10 @@ So, a new backup solution out of nowhere, packed with too much features for it's
 NPBackup relies on the well known [restic](https://restic.net) backup program, which has been battle proven for years.
 While restic is a fanstastic program, NPBackup tries to complete restic in order to offer a broader user experience.
 
-## Quickstart
+## Quickstart CLI
 
 On Windows, use `NPBackupInstaller.exe` to install NPBackup into program files.
-On Linux, just copy `npbackup` to `/usr/local/bin`
+On Linux, just copy `npbackup` to `/usr/local/bin` or use `pip install npbackup`
 
 Copy the example config from model `examples/npbackup.conf.dist` into the directory where npbackup is installed.
 
@@ -67,6 +74,28 @@ You can use `npbackup --list` or the GUI to list backups.
 The GUI allows an end user to check current backups & restore files.rom backups:
 
 The YAML configuration file encrypts sensible data so the end user doesn't have to know repository URI or password.
+
+## Quickstart GUI
+
+Just run the npbackup executable and configure it.
+
+![image](img/interface_v2.1.0.png)
+Main minimalistic interface allows to: 
+ - List current backups
+ - Launch a manual backup
+ - See if last backup is recent enough
+
+![image](img/restore_window_v2.1.0.png)
+Restore window allows to browse through backups and select what files to restore.
+
+![image](img/configuration_v2.1.0.png)
+Configuration allows to edit the YAML configuration files directly as end user
+
+**Security Note**
+Please note that right clicking on "<encrypted data>" in the configuration GUI will allow to decrypt that data, by prompting a backup admin password.
+That password is set at compile-time and should be different depending on the organization.
+
+This allows a system admin to see repo URI and passwords, without leaving this information available on the computer.
 
 ### The difficulty of laptop backups
 

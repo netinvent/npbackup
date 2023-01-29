@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023012401"
-__version__ = "1.4.2"
+__build__ = "2023012701"
+__version__ = "1.5.0"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -27,29 +27,39 @@ logger = getLogger(__intname__)
 
 
 class ResticRunner:
-    def __init__(self, repository: str, password: str, verbose : bool = False, binary_search_paths : list = None) -> None:
+    def __init__(
+        self,
+        repository: str,
+        password: str,
+        binary_search_paths: List[str] = None,
+    ) -> None:
         self.repository = repository
         self.password = password
-        self.verbose = verbose
+        self._verbose = False
+        self._dry_run = False
+        self._stdout = None
         self._binary = None
         self.binary_search_paths = binary_search_paths
         self._get_binary()
 
         self._is_init = None
+        self._exec_time = None
         self._last_command_status = False
         self._limit_upload = None
         self._limit_download = None
         self._backend_connections = None
         self._priority = None
-        backend = self.repository.split(':')[0].upper()
-        if backend in ['REST', 'S3', 'B2', 'SFTP', 'SWIFT', 'AZURE', 'GZ', 'RCLONE']:
+        backend = self.repository.split(":")[0].upper()
+        if backend in ["REST", "S3", "B2", "SFTP", "SWIFT", "AZURE", "GZ", "RCLONE"]:
             self._backend_type = backend.lower()
         else:
-            self._backend_type = 'local'
+            self._backend_type = "local"
         self._addition_parameters = None
         self._environment_variables = {}
 
-        self._stop_on = None  # Function which will make executor abort if result is True
+        self._stop_on = (
+            None  # Function which will make executor abort if result is True
+        )
         self._executor_finished = False  # Internal value to check whether executor is done, accessed via self.executor_finished property
         self._stdout = None  # Optional outputs when command is run as thread
 
@@ -65,7 +75,7 @@ class ResticRunner:
             os.environ["RESTIC_PASSWORD"] = self.password
         if self.repository:
             os.environ["RESTIC_REPOSITORY"] = self.repository
-        
+
         for env_variable, value in self.environment_variables.items():
             os.environ[env_variable] = value
 
@@ -90,13 +100,46 @@ class ResticRunner:
     @property
     def stdout(self) -> Optional[Union[int, str, Callable, queue.Queue]]:
         return self._stdout
-    
+
     @stdout.setter
-    def stdout(self, value):
+    def stdout(self, value: Optional[Union[int, str, Callable, queue.Queue]]):
         self._stdout = value
 
+    @property
+    def verbose(self) -> bool:
+        return self._verbose
+
+    @verbose.setter
+    def verbose(self, value):
+        if isinstance(value, bool):
+            self._verbose = value
+        else:
+            raise ValueError("Bogus verbose value given")
+
+    @property
+    def dry_run(self) -> bool:
+        return self._dry_run
+
+    @dry_run.setter
+    def dry_run(self, value: bool):
+        if isinstance(value, bool):
+            self._dry_run = value
+        else:
+            raise ValueError("Bogus dry run value givne")
+
+    @property
+    def exec_time(self) -> Optional[int]:
+        return self._exec_time
+
+    @exec_time.setter
+    def exec_time(self, value: int):
+        self._exec_time = value
+
     def executor(
-        self, cmd: str, errors_allowed: bool = False, live_stream=False,
+        self,
+        cmd: str,
+        errors_allowed: bool = False,
+        live_stream=False,
     ) -> Tuple[bool, str]:
         """
         Executes restic with given command
@@ -104,37 +147,62 @@ class ResticRunner:
         When using live_stream, we'll have command_runner fill stdout queue, which is useful for interactive GUI programs, but slower, especially for ls operation
 
         """
+        start_time = datetime.utcnow()
         self._executor_finished = False
-        _cmd = "\"{}\" {}{}".format(self._binary, cmd, self.generic_arguments)
+        _cmd = '"{}" {}{}'.format(self._binary, cmd, self.generic_arguments)
         logger.debug("Running command: [{}]".format(_cmd))
         self._make_env()
         if live_stream:
             exit_code, output = command_runner(
-                _cmd, timeout=None, split_streams=False, encoding='utf-8', live_output=self.verbose, valid_exit_codes=errors_allowed,
-                stdout=self._stdout, stop_on=self.stop_on, on_exit=self.on_exit, method='poller', priority=self._priority, io_priority=self._priority
+                _cmd,
+                timeout=None,
+                split_streams=False,
+                encoding="utf-8",
+                live_output=self.verbose,
+                valid_exit_codes=errors_allowed,
+                stdout=self._stdout,
+                stop_on=self.stop_on,
+                on_exit=self.on_exit,
+                method="poller",
+                priority=self._priority,
+                io_priority=self._priority,
             )
         else:
             exit_code, output = command_runner(
-                _cmd, timeout=None, split_streams=False, encoding='utf-8', live_output=self.verbose, valid_exit_codes=errors_allowed,
-                stop_on=self.stop_on, on_exit=self.on_exit, method='monitor', priority=self._priority, io_priority=self._priority
+                _cmd,
+                timeout=None,
+                split_streams=False,
+                encoding="utf-8",
+                live_output=self.verbose,
+                valid_exit_codes=errors_allowed,
+                stop_on=self.stop_on,
+                on_exit=self.on_exit,
+                method="monitor",
+                priority=self._priority,
+                io_priority=self._priority,
             )
 
         # Don't keep protected environment variables in memory when not necessary
         self._remove_env()
 
         self._executor_finished = True
+        self.exec_time = (datetime.utcnow() - start_time).total_seconds
 
         if exit_code == 0:
             self.last_command_status = True
             return True, output
-        elif exit_code == 3 and os.name == 'nt':
+        if exit_code == 3 and os.name == "nt":
             # TEMP-FIX-4155, since we don't have reparse point support for Windows, see https://github.com/restic/restic/issues/4155, we have to filter manually for cloud errors which should not affect backup result
             # exit_code = 3 when errors are present but snapshot could be created
             # Since errors are always shown, we don't need restic --verbose option explicitly
             cloud_error = True
-            for line in output.split('\n'):
-                if re.match('error', line, re.IGNORECASE):
-                    if re.match('.*: The cloud operation is not supported on a read-only volume\.|.*: The media is write protected\.', line, re.IGNORECASE):
+            for line in output.split("\n"):
+                if re.match("error", line, re.IGNORECASE):
+                    if re.match(
+                        r".*: The cloud operation is not supported on a read-only volume\.|.*: The media is write protected\.",
+                        line,
+                        re.IGNORECASE,
+                    ):
                         cloud_error = True
                     else:
                         cloud_error = False
@@ -159,28 +227,34 @@ class ResticRunner:
         if not self.binary_search_paths:
             self.binary_search_paths = []
 
-
-        if os.name == 'nt':
+        if os.name == "nt":
             binary = "restic.exe"
-            probe_paths = self.binary_search_paths + ['', os.path.join(os.environ.get('windir'), 'SYSTEM32'), os.environ.get('windir'),
-        os.path.join(os.environ.get('ProgramFiles'), 'restic')]
+            probe_paths = self.binary_search_paths + [
+                "",
+                os.path.join(os.environ.get("windir"), "SYSTEM32"),
+                os.environ.get("windir"),
+                os.path.join(os.environ.get("ProgramFiles"), "restic"),
+            ]
         else:
             binary = "restic"
-            probe_paths = self.binary_search_paths + ['', '/usr/bin', '/usr/local/bin']
+            probe_paths = self.binary_search_paths + ["", "/usr/bin", "/usr/local/bin"]
 
         for path in probe_paths:
             probed_path = os.path.join(path, binary)
+            logger.debug('Probing for binary in "{}"'.format(probed_path))
             if os.path.isfile(probed_path):
                 self._binary = probed_path
                 return
-        logger.error("No backup engine binary found. Please install latest binary from restic.net")
+        logger.error(
+            "No backup engine binary found. Please install latest binary from restic.net"
+        )
 
     @property
     def limit_upload(self):
         return self._limit_upload
 
     @limit_upload.setter
-    def limit_upload(self, value : int):
+    def limit_upload(self, value: int):
         try:
             value = int(value)
             if value > 0:
@@ -200,7 +274,6 @@ class ResticRunner:
                 self._limit_download = value
         except TypeError:
             raise ValueError("Cannot set download limit")
-        
 
     @property
     def backend_connections(self):
@@ -213,7 +286,7 @@ class ResticRunner:
             if value > 0:
                 self._backend_connections = value
         except TypeError:
-            logger.warn("Bogus backend_connections value given.")
+            logger.warning("Bogus backend_connections value given.")
 
     @property
     def additional_parameters(self):
@@ -226,10 +299,10 @@ class ResticRunner:
     @property
     def priority(self):
         return self._priority
-    
+
     @priority.setter
     def priority(self, value: str):
-        if value not in ['low', 'normal', 'high']:
+        if value not in ["low", "normal", "high"]:
             raise ValueError("Bogus priority given.")
         self._priority = value
 
@@ -252,7 +325,7 @@ class ResticRunner:
         if not os.path.isfile(value):
             raise ValueError("Non existent binary given: {}".format(value))
         self._binary = value
-        
+
     @property
     def generic_arguments(self):
         """
@@ -263,15 +336,22 @@ class ResticRunner:
             args += " --limit-upload {}".format(self.limit_upload)
         if self.limit_download:
             args += " --limit-download {}".format(self.limit_download)
-        if self.backend_connections and self._backend_type != 'local':
-            args += " -o {}.connections={}".format(self._backend_type, self.backend_connections)
+        if self.backend_connections and self._backend_type != "local":
+            args += " -o {}.connections={}".format(
+                self._backend_type, self.backend_connections
+            )
         if self.verbose:
             args += " -vv"
         if self.additional_parameters:
-            args += ' {}'.format(self.additional_parameters)
+            args += " {}".format(self.additional_parameters)
         return args
 
-    def init(self, repository_version: int = 2, compression: str = "auto", errors_allowed: bool = False) -> bool:
+    def init(
+        self,
+        repository_version: int = 2,
+        compression: str = "auto",
+        errors_allowed: bool = False,
+    ) -> bool:
         cmd = "init --repository-version {} --compression {}".format(
             repository_version, compression
         )
@@ -305,11 +385,11 @@ class ResticRunner:
     def last_command_status(self, value: bool):
         self._last_command_status = value
 
-    def list(self, object: str = "snapshots") -> Optional[list]:
+    def list(self, obj: str = "snapshots") -> Optional[list]:
         """
         Returns json list of snapshots
         """
-        cmd = "list {} --json".format(object)
+        cmd = "list {} --json".format(obj)
         result, output = self.executor(cmd)
         if result:
             try:
@@ -328,7 +408,7 @@ class ResticRunner:
         if result and output:
             """
             # When not using --json, we must remove first line since it will contain a heading string like:
-            # snapshot db125b40 of [C:\GIT\npbackup] filtered by [] at 2023-01-03 09:41:30.9104257 +0100 CET):
+            # snapshot db125b40 of [C:\\GIT\\npbackup] filtered by [] at 2023-01-03 09:41:30.9104257 +0100 CET):
             return output.split("\n", 2)[2]
 
             Using --json here does not return actual json content, but lines with each file being a json... !
@@ -373,12 +453,14 @@ class ResticRunner:
         Executes restic backup after interpreting all arguments
         """
         # make sure path is a list and does not have trailing slashes
-        cmd = "backup {}".format(" ".join(["\"{}\"".format(path.rstrip('/\\')) for path in paths]))
+        cmd = "backup {}".format(
+            " ".join(['"{}"'.format(path.rstrip("/\\")) for path in paths])
+        )
 
-        case_ignore_param = ''
+        case_ignore_param = ""
         # Always use case ignore excludes under windows
-        if os.name == 'nt' or exclude_case_ignore:
-            case_ignore_param = 'i' 
+        if os.name == "nt" or exclude_case_ignore:
+            case_ignore_param = "i"
 
         for exclude_pattern in exclude_patterns:
             cmd += " --{}exclude {}".format(case_ignore_param, exclude_pattern)
@@ -391,20 +473,28 @@ class ResticRunner:
         if one_file_system:
             cmd += " --one-file-system"
         if use_fs_snapshot:
-            if os.name == 'nt':
+            if os.name == "nt":
                 cmd += " --use-fs-snapshot"
                 logger.info("Using VSS snapshot to backup")
             else:
-                logger.warning("Parameter --use-fs-snapshot was given, which is only compatible with Windows")
+                logger.warning(
+                    "Parameter --use-fs-snapshot was given, which is only compatible with Windows"
+                )
         if dry_run:
             cmd += " --dry-run"
         if additional_parameters:
-            cmd += ' {}'.format(additional_parameters)
+            cmd += " {}".format(additional_parameters)
         result, output = self.executor(cmd, live_stream=True)
 
-        if use_fs_snapshot and not result and re.search('VSS Error', output, re.IGNORECASE):
+        if (
+            use_fs_snapshot
+            and not result
+            and re.search("VSS Error", output, re.IGNORECASE)
+        ):
             logger.warning("VSS cannot be used. Backup will be done without VSS.")
-            result, output = self.executor(cmd.replace(" --use-fs-snapshot", ""), live_stream=True)
+            result, output = self.executor(
+                cmd.replace(" --use-fs-snapshot", ""), live_stream=True
+            )
         if result:
             return True, output
         return False, output
@@ -413,7 +503,7 @@ class ResticRunner:
         """
         Returns find command
         """
-        cmd = "find \"{}\" --json".format(path)
+        cmd = 'find "{}" --json'.format(path)
         result, output = self.executor(cmd)
         if result:
             logger.info("Successfuly found {}".format(path))
@@ -429,14 +519,14 @@ class ResticRunner:
         """
         Restore given snapshot to directory
         """
-        case_ignore_param = ''
+        case_ignore_param = ""
         # Always use case ignore excludes under windows
-        if os.name == 'nt':
-            case_ignore_param = 'i' 
-        cmd = "restore \"{}\" --target \"{}\"".format(snapshot, target)
+        if os.name == "nt":
+            case_ignore_param = "i"
+        cmd = 'restore "{}" --target "{}"'.format(snapshot, target)
         if includes:
             for include in includes:
-                cmd += " --{}include \"{}\"".format(case_ignore_param, include)
+                cmd += ' --{}include "{}"'.format(case_ignore_param, include)
         result, output = self.executor(cmd)
         if result:
             logger.info("successfully restored data.")
@@ -449,8 +539,11 @@ class ResticRunner:
         Execute forget command for given snapshot
         """
         cmd = "forget {}".format(snapshot)
-        # We need live output here since server errors will not stop client from deletion atempts
-        result, output = self.executor(cmd, live_output=True)
+        # We need to be verbose here since server errors will not stop client from deletion attempts
+        verbose = self.verbose
+        self.verbose = True
+        result, output = self.executor(cmd)
+        self.verbose = verbose
         if result:
             logger.info("successfully forgot snapshot.")
             return True
@@ -468,7 +561,7 @@ class ResticRunner:
         logger.critical("Raw command failed.")
         return False, output
 
-    def has_snapshot_timedelta(self, delta: int = 84600) -> Optional[datetime]:
+    def has_snapshot_timedelta(self, delta: int = 86400) -> Optional[datetime]:
         """
         Checks if a snapshot exists that is newer that delta seconds
         Eg: if delta = -3600 we expect a snapshot newer than an hour ago, and return True if exists

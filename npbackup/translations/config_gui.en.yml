@@ -45,3 +45,7 @@ en:
   format_equals: Format variable=value
 
   np_binary: Cannot find backup backend. Please install restic binary from restic.net
+
+  configuration_saved: Configuration saved
+  enter_backup_admin_password: Enter backup administrator password
+  wrong_password: Wrong password

@@ -3,6 +3,6 @@
 #
 # This file is part of npbackup
 
-NAME = "npbackup"
-BUILD = "2023012401"
-VERSION = "2.0.0"
+__intname__ = "npbackup"
+__build__ = "2023012901"
+__version__ = "2.1.0"

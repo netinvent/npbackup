@@ -1,7 +1,20 @@
-## v2.0.0
+## v2.1.0
+  - Added execution time information
+  - Code cleanup
+    - Refactor runner into a class
+    - Refactor npbackup into package
+    - Adding missing typing
+    - Code is now formatted with black
+    - Code must now pass pylint and flake8
+  - Workaround for painfully slow sg.TreeData window.close()
+  - Simplify npbackup shortcut
+  - Shift default interval from 23H30 to 24H
+  - Fixed missing translations for admin password popups
+
+## v2.0.0 - 24/02/2023
 
   - First open public release
-  - Refactor GUI so actions became non-blocking
+  - Refactor GUI so actions become non-blocking
     - Added loader animation for gui events
     - Added backup window with current state
     - Added internationalization support (currently en and fr)
