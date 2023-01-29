@@ -97,7 +97,7 @@ That password is set at compile-time and should be different depending on the or
 
 This allows a system admin to see repo URI and passwords, without leaving this information available on the computer.
 
-### The difficulty of laptop backups
+## The difficulty of laptop backups
 
 As a matter of fact, laptop backups are the hardest. No one can predict when a laptop is on, and if it has access to internet.
 Creating a backup strategy in those cases isn't a simple task.
@@ -108,18 +108,28 @@ OF course, both time options are configurable.
 In order to avoid sluggish user experience while backing up, process and io priority can be lowered.
 Once done, NPBackup can send backup results in Prometheus format directly to a push gateway, for prometheus to catch them.
 
-### A good server backup solution
+## A good server backup solution
 
 Server backups can be achieved by setting up a scheduled task / cron job.
 
 Of course, since NPBackup supports pre-exec and post-exec commands, it can be used to backup various services like virtual hosts or databases where snapshot/dump operations are required.
-When run on a server, prometheus support can be shifted from a push gateway to a file, which will be picked up by node_exporter file collector.
+When run on a server, prometheus support can be shifted from a push gateway to a file, which will be picked up by node_exporter file collector.:
 
-### End user expericence
+## Monitoring
+
+NPBackup includes full prometheus support, including grafana dashboard.
+On servers, we'll configure a prometheus file that gets written on each backup, and later can be collected by node_exporter.
+
+On laptops, since we might be away from our usual network, we'll push the backup metrics to a remote push gateway which laters gets collected by prometheus itself.
+
+The current NPBackup dashboard:
+[!image](img/grafana_dashboard.png)
+
+## End user expericence
 
 While admin user experience is important, NPBackup also offers a GUI for end user experience, allowing to list all backup contents, navigate and restore files, without the need of an admin. The end user can also check if they have a recent backup completed, and launch backups manually if needed.
 
-### Security
+## Security
 
 NPBackup inherits all security measures of restic (AES-256 client side encryption including metadata), append only mode REST server backend.
 
