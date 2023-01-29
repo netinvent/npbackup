@@ -8,7 +8,7 @@ __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2023012801"
-__version__ = "1.4.0"
+__version__ = "1.4.1"
 
 
 import sys
@@ -119,8 +119,6 @@ def compile(arch="64"):
         "win-p{}{}-{}".format(sys.version_info[0], sys.version_info[1], arch),
     )
 
-    program_executable_path = os.path.join(output_arch_dir, program_executable)
-
     translations_dir = "translations"
     translations_dir_source = os.path.join(BASEDIR, translations_dir)
     translations_dir_dest = os.path.join(PACKAGE_DIR, translations_dir)
@@ -130,15 +128,18 @@ def compile(arch="64"):
     icon_file = os.path.join(PACKAGE_DIR, 'npbackup_icon.ico')
 
     # Installer specific files, no need for a npbackup package directory here
+
+    program_executable_path = os.path.join(output_arch_dir, program_executable)
+
     dist_conf_file_source = get_private_conf_dist_file()
-    dist_conf_file_dest = os.path.basename(dist_conf_file_source)
+    dist_conf_file_dest = os.path.basename(dist_conf_file_source.replace('_private_', ''))
 
     excludes_dir = "excludes"
     excludes_dir_source = os.path.join(BASEDIR, os.pardir, excludes_dir)
     excludes_dir_dest = excludes_dir
-    r"""
-    C:\GIT\npbackup>C:\GIT\NPBACKUP\venv\scripts\python.exe -m nuitka --python-flag=no_docstrings --python-flag=-O --onefile --plugin-enable=tk-inter --include-data-dir="C:\GIT\npbackup\npbackup\translations"="npbackup\translations" --include-data-file="C:\GIT\npbackup\npbackup\LICENSE.md"="npbackup\LICENSE.md" --include-data-file=npbackup\RESTIC_SOURCE_FILES\restic_0.15.0_windows_amd64.exe="restic.exe" --windows-icon-from-ico=npbackup\npbackup_icon.ico --company-name="NetInvent" --product-name="NPBackup Network Backup Client" --file-version="2.1.0.0" --product-version="2.1.0.0" --copyright="NetInvent 2022-2023" --file-description="Network Backup Client P10-x64priv" --trademarks="NetInvent (C)" --output-dir="C:\GIT\npbackup\npbackup\BUILD-PRIVATE\win-p310-x64" bin\npbackup
-    """
+
+    NUITKA_OPTIONS = '--enable-plugin=data-hiding' if have_nuitka_commercial() else ''
+
     EXE_OPTIONS = '--company-name="{}" --product-name="{}" --file-version="{}" --product-version="{}" --copyright="{}" --file-description="{}" --trademarks="{}"'.format(
         COMPANY_NAME,
         PRODUCT_NAME,
@@ -148,7 +149,6 @@ def compile(arch="64"):
         file_description,
         TRADEMARKS,
     )
-    NUITKA_OPTIONS = '--enable-plugin=data-hiding' if have_nuitka_commercial() else ''
 
     CMD = '{} -m nuitka --python-flag=no_docstrings --python-flag=-O {} {} --onefile --plugin-enable=tk-inter --include-data-dir="{}"="{}" --include-data-file="{}"="{}" --include-data-file="{}"="{}" --windows-icon-from-ico="{}" --output-dir="{}" bin/npbackup'.format(
         PYTHON_EXECUTABLE,

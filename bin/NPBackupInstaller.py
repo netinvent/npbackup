@@ -7,8 +7,8 @@ __intname__ = "npbackup.installer"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023011101"
-__version__ = "1.1.6"
+__build__ = "2023012901"
+__version__ = "1.1.7"
 
 
 import sys
@@ -22,13 +22,14 @@ import ofunctions.logger_utils
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
 
 from npbackup.customization import PROGRAM_NAME, PROGRAM_DIRECTORY
-from npbackup.path_helper import BASEDIR, CURRENT_DIR
+from npbackup.path_helper import CURRENT_DIR
 
 del sys.path[0]
 
 _DEBUG = os.environ.get("_DEBUG", False)
 LOG_FILE = os.path.join(CURRENT_DIR, __intname__ + ".log")
 
+BASEDIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 
 INSTALL_TO = "{}{}{}".format(
     os.environ.get("PROGRAMFILES", None), os.sep, PROGRAM_DIRECTORY
@@ -95,7 +96,7 @@ def install(config_file=None):
     if not config_file:
         # Execute config file modification if needed
         source = os.path.join(BASEDIR, CONF_FILE)
-        destination = os.path.join(INSTALL_TO, CONF_FILE.rstrip(".dist"))
+        destination = os.path.join(INSTALL_TO, CONF_FILE.replace(".dist", ""))
         config_file = destination
         if os.path.isfile(destination):
             logger.info("Keeping in place configuration file.")
