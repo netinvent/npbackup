@@ -129,6 +129,7 @@ class NPBackupRunner:
         if not isinstance(value, bool):
             raise ValueError("Bogus dry_run parameter given: {}".format(value))
         self._dry_run = value
+        self.apply_config_to_restic_runner()
 
     @property
     def verbose(self):
@@ -139,6 +140,7 @@ class NPBackupRunner:
         if not isinstance(value, bool):
             raise ValueError("Bogus verbose parameter given: {}".format(value))
         self._verbose = value
+        self.apply_config_to_restic_runner()
 
     @property
     def stdout(self):
@@ -154,6 +156,7 @@ class NPBackupRunner:
         ):
             raise ValueError("Bogus stdout parameter given: {}".format(value))
         self._stdout = value
+        self.apply_config_to_restic_runner()
 
     @property
     def has_binary(self):
@@ -192,7 +195,6 @@ class NPBackupRunner:
         self.restic_runner = ResticRunner(
             repository=repository,
             password=password,
-            verbose=self.verbose,
             binary_search_paths=[BASEDIR, CURRENT_DIR],
         )
 
@@ -280,6 +282,10 @@ class NPBackupRunner:
         except (KeyError, ValueError):
             self.minimum_backup_age = 86400
 
+        self.restic_runner.verbose = self.verbose
+        self.restic_runner.dry_run = self.dry_run
+        self.restic_runner.stdout = self.stdout
+
     @exec_timer
     def list(self) -> Optional[dict]:
         logger.info("Listing snapshots")
@@ -325,7 +331,6 @@ class NPBackupRunner:
         """
         Run backup after checking if no recent backup exists, unless force == True
         """
-
         # Preflight checks
         try:
             paths = self.config_dict["backup"]["paths"]

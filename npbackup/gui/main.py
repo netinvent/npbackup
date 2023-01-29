@@ -324,6 +324,7 @@ def _restore_window(
     config_dict: dict, snapshot: str, target: str, restore_includes: Optional[List]
 ) -> Future:
     runner = NPBackupRunner(config_dict=config_dict)
+    runner.verbose = True
     result = runner.restore(snapshot, target, restore_includes)
     THREAD_SHARED_DICT["exec_time"] = runner.exec_time
     return result
@@ -395,7 +396,7 @@ def _gui_backup(config_dict, stdout) -> Future:
     )
     runner.stdout = stdout
     result = runner.backup(
-        force=True
+        force=True,
     )  # Since we run manually, force backup regardless of recent backup state
     THREAD_SHARED_DICT["exec_time"] = runner.exec_time
     return result

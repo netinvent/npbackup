@@ -31,12 +31,13 @@ class ResticRunner:
         self,
         repository: str,
         password: str,
-        verbose: bool = False,
         binary_search_paths: List[str] = None,
     ) -> None:
         self.repository = repository
         self.password = password
-        self.verbose = verbose
+        self._verbose = False
+        self._dry_run = False
+        self._stdout = None
         self._binary = None
         self.binary_search_paths = binary_search_paths
         self._get_binary()
@@ -101,8 +102,30 @@ class ResticRunner:
         return self._stdout
 
     @stdout.setter
-    def stdout(self, value):
+    def stdout(self, value: Optional[Union[int, str, Callable, queue.Queue]]):
         self._stdout = value
+
+    @property
+    def verbose(self) -> bool:
+        return self._verbose
+
+    @verbose.setter
+    def verbose(self, value):
+        if isinstance(value, bool):
+            self._verbose = value
+        else:
+            raise ValueError("Bogus verbose value given")
+
+    @property
+    def dry_run(self) -> bool:
+        return self._dry_run
+
+    @dry_run.setter
+    def dry_run(self, value: bool):
+        if isinstance(value, bool):
+            self._dry_run = value
+        else:
+            raise ValueError("Bogus dry run value givne")
 
     @property
     def exec_time(self) -> Optional[int]:
