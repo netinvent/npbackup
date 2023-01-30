@@ -1,6 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 #  -*- coding: utf-8 -*-
-#
-# This file is part of npbackup
 
 # Placeholder so this directory becomes a package

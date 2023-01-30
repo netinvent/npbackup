@@ -18,7 +18,7 @@ from command_runner import command_runner
 # Insert parent dir as path se we get to use npbackup as package
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
 
-from npbackup import __version__ as npbackup_version
+from npbackup.__main__ import __version__ as npbackup_version
 from bin.NPBackupInstaller import __version__ as installer_version
 from npbackup.customization import (
     COMPANY_NAME,
@@ -91,7 +91,7 @@ def compile(arch="64"):
     PACKAGE_DIR = 'npbackup'
 
     is_private = check_private_build()
-    OUTPUT_DIR = os.path.abspath(os.path.join(BASEDIR, os.pardir, "BUILD", "-PRIVATE" if is_private else ""))
+    OUTPUT_DIR = os.path.abspath(os.path.join(BASEDIR, os.pardir, "BUILDS", "-PRIVATE" if is_private else ""))
 
     if not os.path.isdir(OUTPUT_DIR):
         os.makedirs(OUTPUT_DIR)
