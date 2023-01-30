@@ -86,9 +86,10 @@ class BinaryDistribution(setuptools.Distribution):
 
 
 package_path = os.path.abspath(PACKAGE_NAME)
-package_file = os.path.join(package_path, "__main__.py")
-if not os.path.isfile(package_file):
-    package_file = os.path.join(package_path, "npbackup.py")
+for path in ['__main__.py', PACKAGE_NAME + '.py']:
+    package_file = os.path.join(package_path, "__main__.py")
+    if  os.path.isfile(package_file):
+        break
 metadata = get_metadata(package_file)
 requirements = parse_requirements(os.path.join(package_path, "requirements.txt"))
 long_description = _read_file("README.md")

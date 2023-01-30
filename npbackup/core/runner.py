@@ -23,7 +23,7 @@ from npbackup.restic_metrics import restic_output_2_metrics, upload_metrics
 from npbackup.restic_wrapper import ResticRunner
 from npbackup.core.restic_source_binary import get_restic_internal_binary
 from npbackup.path_helper import CURRENT_DIR, BASEDIR
-from npbackup import __intname__ as NAME, __version__ as VERSION
+from npbackup.__main__ import __intname__ as NAME, __version__ as VERSION
 
 
 logger = getLogger(__intname__)

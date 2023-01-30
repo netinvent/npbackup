@@ -3,6 +3,4 @@
 #
 # This file is part of npbackup
 
-__intname__ = "npbackup"
-__build__ = "2023012901"
-__version__ = "2.1.0"
+# Placeholder so this directory becomes a package

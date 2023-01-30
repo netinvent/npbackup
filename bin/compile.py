@@ -18,7 +18,7 @@ from command_runner import command_runner
 # Insert parent dir as path se we get to use npbackup as package
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
 
-from npbackup import __version__ as npbackup_version
+from npbackup.__main__ import __version__ as npbackup_version
 from bin.NPBackupInstaller import __version__ as installer_version
 from npbackup.customization import (
     COMPANY_NAME,
