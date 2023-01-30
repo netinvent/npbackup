@@ -170,13 +170,17 @@ class NPBackupRunner:
     def exec_time(self, value: int):
         self._exec_time = value
 
-    def exec_timer(fn):
+    # pylint does not understand why this function does not take a self parameter
+    # It's a decorator, and the inner function will have the self argument instead
+    # pylint: disable=no-self-argument
+    def exec_timer(fn: Callable):
         """
         Decorator that calculates time of a function execution
         """
 
         def wrapper(self, *args, **kwargs):
             start_time = datetime.datetime.utcnow()
+            # pylint: disable=E1102 (not-callable)
             result = fn(self, *args, **kwargs)
             self.exec_time = (datetime.datetime.utcnow() - start_time).total_seconds()
             logger.info("Runner took {} seconds".format(self.exec_time))

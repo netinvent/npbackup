@@ -66,7 +66,7 @@ def _about_gui(version_string: str) -> None:
 
 
 @threaded
-def _get_gui_data(config_dict: dict) -> Tuple[bool, List[str]]:
+def _get_gui_data(config_dict: dict) -> Future:
     runner = NPBackupRunner(config_dict=config_dict)
     snapshots = runner.list()
     current_state = runner.check_recent_backups()
@@ -94,7 +94,7 @@ def _get_gui_data(config_dict: dict) -> Tuple[bool, List[str]]:
     return current_state, snapshot_list
 
 
-def get_gui_data(config_dict: dict) -> Future:
+def get_gui_data(config_dict: dict) -> Tuple[bool, List[str]]:
     try:
         if (
             not config_dict["repo"]["repository"]
@@ -109,6 +109,8 @@ def get_gui_data(config_dict: dict) -> Future:
     if not runner.has_binary:
         sg.Popup(_t("config_gui.no_binary"))
         return None, None
+    # We get a thread result, hence pylint will complain the thread isn't a tuple
+    # pylint: disable=E1101 (no-member)
     thread = _get_gui_data(config_dict)
     while not thread.done() and not thread.cancelled():
         sg.PopupAnimated(
@@ -227,6 +229,8 @@ def _ls_window(config: dict, snapshot_id: str) -> Future:
 
 def ls_window(config: dict, snapshot: str) -> bool:
     snapshot_id = re.match(r".*\[ID (.*)\].*", snapshot).group(1)
+    # We get a thread result, hence pylint will complain the thread isn't a tuple
+    # pylint: disable=E1101 (no-member)
     thread = _ls_window(config, snapshot_id)
 
     while not thread.done() and not thread.cancelled():
@@ -260,6 +264,8 @@ def ls_window(config: dict, snapshot: str) -> bool:
         time_between_frames=1,
         background_color="darkgreen",
     )
+    # We get a thread result, hence pylint will complain the thread isn't a tuple
+    # pylint: disable=E1101 (no-member)
     thread = _make_treedata_from_json(ls_result)
 
     while not thread.done() and not thread.cancelled():
@@ -356,6 +362,8 @@ def restore_window(
         if event in (sg.WIN_CLOSED, sg.WIN_CLOSE_ATTEMPTED_EVENT, "cancel"):
             break
         if event == "restore":
+            # We get a thread result, hence pylint will complain the thread isn't a tuple
+            # pylint: disable=E1101 (no-member)
             thread = _restore_window(
                 config_dict=config_dict,
                 snapshot=snapshot_id,
@@ -511,6 +519,8 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
             stdout = queue.Queue()
 
             # let's use a mutable so the backup thread can modify it
+            # We get a thread result, hence pylint will complain the thread isn't a tuple
+            # pylint: disable=E1101 (no-member)
             thread = _gui_backup(config_dict=config_dict, stdout=stdout)
             while not thread.done() and not thread.cancelled():
                 try:
@@ -544,11 +554,6 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
                 )
             progress_window.close()
             continue
-        if event == "restore-to":
-            if not values["snapshot-list"]:
-                sg.Popup(_t("main_gui.select_backup"), keep_on_top=True)
-                continue
-            restore_window(config_dict, snapshot=values["snapshot-list"][0])
         if event == "see-content":
             if not values["snapshot-list"]:
                 sg.Popup(_t("main_gui.select_backup"), keep_on_top=True)
