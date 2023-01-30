@@ -7,8 +7,8 @@ __intname__ = "npbackup.compile-and-package-for-windows"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023012801"
-__version__ = "1.4.1"
+__build__ = "2023013001"
+__version__ = "1.4.2"
 
 
 import sys
@@ -91,7 +91,9 @@ def compile(arch="64"):
     PACKAGE_DIR = 'npbackup'
 
     is_private = check_private_build()
-    OUTPUT_DIR = os.path.abspath(os.path.join(BASEDIR, os.pardir, "BUILDS", "-PRIVATE" if is_private else ""))
+    build_dir = "BUILDS"
+    build_dir += "-PRIVATE" if is_private else ""
+    OUTPUT_DIR = os.path.abspath(os.path.join(BASEDIR, os.pardir, build_dir))
 
     if not os.path.isdir(OUTPUT_DIR):
         os.makedirs(OUTPUT_DIR)
