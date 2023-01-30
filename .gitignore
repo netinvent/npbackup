@@ -153,6 +153,7 @@ cython_debug/
 
 RESTIC_SOURCE_FILES/restic*
 _private*
-BUILD-PRIVATE
+BUILDS
+BUILDS-PRIVATE
 *.conf
 COMPILE.CMD
