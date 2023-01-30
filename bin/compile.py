@@ -91,7 +91,7 @@ def compile(arch="64"):
     PACKAGE_DIR = 'npbackup'
 
     is_private = check_private_build()
-    OUTPUT_DIR = os.path.abspath(os.path.join(BASEDIR, os.pardir, "BUILD", "-PRIVATE" if is_private else ""))
+    OUTPUT_DIR = os.path.abspath(os.path.join(BASEDIR, os.pardir, "BUILDS", "-PRIVATE" if is_private else ""))
 
     if not os.path.isdir(OUTPUT_DIR):
         os.makedirs(OUTPUT_DIR)
