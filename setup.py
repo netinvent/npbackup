@@ -17,7 +17,6 @@ DESCRIPTION = "One fits all solution for deduplicated and compressed backups on 
 
 import sys
 import os
-
 import pkg_resources
 import setuptools
 
@@ -52,8 +51,8 @@ def get_metadata(package_file):
     for line in _read_file(package_file).splitlines():
         if line.startswith("__version__") or line.startswith("__description__"):
             delim = "="
-            _metadata[line.split(delim)[0].strip().replace("__", "")] = (
-                line.split(delim)[1].strip().replace("'\"", "")
+            _metadata[line.split(delim)[0].strip().strip("__")] = (
+                line.split(delim)[1].strip().strip("'\"")
             )
     return _metadata
 
@@ -77,12 +76,37 @@ def parse_requirements(filename):
             )
         )
 
+# With this, we can enforce a binary package.
+class BinaryDistribution(setuptools.Distribution):
+    """Distribution which always forces a binary package with platform name"""
+
+    @staticmethod
+    def has_ext_modules():
+        return True
+
 
 package_path = os.path.abspath(PACKAGE_NAME)
-package_file = os.path.join(package_path, "npbackup.py")
+package_file = os.path.join(package_path, "__main__.py")
+if not os.path.isfile(package_file):
+    package_file = os.path.join(package_path, "npbackup.py")
 metadata = get_metadata(package_file)
 requirements = parse_requirements(os.path.join(package_path, "requirements.txt"))
 long_description = _read_file("README.md")
+
+package_data = {
+    '': ['translations/*.yml']
+}
+
+binary_suffix = "%d" % sys.version_info[0]
+
+if os.name == "nt":
+    scripts = ["misc/npbackup.cmd"]
+    console_scripts = []
+else:
+    scripts = []
+    console_scripts = [
+        "npbackup%s = npbackup.npbackup:main" % binary_suffix,
+    ]
 
 setuptools.setup(
     name=PACKAGE_NAME,
@@ -91,6 +115,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     version=metadata["version"],
     install_requires=requirements,
+    package_data=package_data,
     classifiers=[
         # command_runner is mature
         "Development Status :: 5 - Production/Stable",
@@ -98,17 +123,24 @@ setuptools.setup(
         "Intended Audience :: System Administrators",
         "Intended Audience :: Information Technology",
         "Intended Audience :: Developers",
-        "Topic :: System :: Archiving :: Backup"
+        "Intended Audience :: Science/Research",
+        "Topic :: System :: Archiving :: Backup",
         "Topic :: System",
         "Topic :: System :: Monitoring",
         "Topic :: Utilities",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
         "Operating System :: POSIX :: Linux",
-        "Operation System :: Microsoft :: Windows"
-        "License :: OSI Approved :: GNU Lesser General Public License v3",
+        "Operating System :: Microsoft :: Windows",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     ],
     description=DESCRIPTION,
     license="GPLv3",
@@ -129,5 +161,11 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     python_requires=">=3.6",
-    scripts=['npbackup/npbackup']
+    scripts=scripts,
+        entry_points={
+            "console_scripts": console_scripts,
+    },
+    # As we do version specific hacks for installed inline copies, make the
+    # wheel version and platform specific.
+    #distclass=BinaryDistribution,
 )
