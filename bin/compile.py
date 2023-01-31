@@ -7,13 +7,17 @@ __intname__ = "npbackup.compile-and-package-for-windows"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023013001"
-__version__ = "1.4.2"
+__build__ = "2023013101"
+__version__ = "1.5.0"
 
 
 import sys
 import os
+import argparse
 from command_runner import command_runner
+
+ARCHES = ['x86', 'x64']
+AUDIENCES = ['public', 'private']
 
 # Insert parent dir as path se we get to use npbackup as package
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
@@ -30,10 +34,11 @@ from npbackup.customization import (
 )
 from npbackup.core.restic_source_binary import get_restic_internal_binary
 from npbackup.path_helper import BASEDIR
+import glob
 
 del sys.path[0]
 
-def check_private_build():
+def check_private_build(audience):
     private = False
     try:
         import npbackup._private_secret_keys
@@ -49,7 +54,7 @@ def check_private_build():
             print("Cannot find secret keys")
             sys.exit()
 
-    dist_conf_file_path = get_private_conf_dist_file()
+    dist_conf_file_path = get_conf_dist_file(audience)
     if "_private" in dist_conf_file_path:
         print("WARNING: Building with a private conf.dist file")
         private = True
@@ -57,17 +62,27 @@ def check_private_build():
     return private
 
 
-def get_private_conf_dist_file():
-    private_dist_conf_file = "_private_npbackup.conf.dist"
-    dist_conf_file = "npbackup.conf.dist"
-    dist_conf_file_path = os.path.join(BASEDIR, os.pardir, "examples", private_dist_conf_file)
-    if os.path.isfile(dist_conf_file_path):
-        print("Building with private dist config file")
-    else:
-        print("Building with default dist config file")
-        dist_conf_file_path = os.path.join(BASEDIR, os.pardir, "examples", dist_conf_file)
+def move_audience_files(audience):
+    for dir in [os.path.join(BASEDIR, os.pardir, 'examples'), BASEDIR]:
+        if audience == 'private':
+            possible_non_used_path = '_NOUSE_private_'
+            guessed_files = glob.glob(os.path.join(dir, '{}*'.format(possible_non_used_path)))
+            for file in guessed_files:
+                os.rename(file, file.replace(possible_non_used_path, ""))
+        elif audience == 'public':
+            possible_non_used_path = '_private_'
+            guessed_files = glob.glob(os.path.join(dir, '{}*'.format(possible_non_used_path)))
+            for file in guessed_files:
+                os.rename(file, file.replace(possible_non_used_path, "_NOUSE{}".format(possible_non_used_path)))
 
-    return dist_conf_file_path
+
+def get_conf_dist_file(audience):
+    if audience == 'private':
+        file = "_private_npbackup.conf.dist"
+    else:
+        file = "npbackup.conf.dist"
+    dist_conf_file_path = os.path.join(BASEDIR, os.pardir, "examples", file)
+    return  dist_conf_file_path
 
 
 def have_nuitka_commercial():
@@ -80,20 +95,21 @@ def have_nuitka_commercial():
         return False
 
 
-def compile(arch="64"):
+def compile(arch, audience):
     if os.name == "nt":
         program_executable = "npbackup.exe"
         restic_executable = "restic.exe"
+        platform = "windows"
     else:
         program_executable = "npbackup"
         restic_executable = "restic"
+        platform = "linux"
 
     PACKAGE_DIR = 'npbackup'
 
-    is_private = check_private_build()
+    check_private_build(audience)
     build_dir = "BUILDS"
-    build_dir += "-PRIVATE" if is_private else ""
-    OUTPUT_DIR = os.path.abspath(os.path.join(BASEDIR, os.pardir, build_dir))
+    OUTPUT_DIR = os.path.abspath(os.path.join(BASEDIR, os.pardir, build_dir, audience, platform, arch))
 
     if not os.path.isdir(OUTPUT_DIR):
         os.makedirs(OUTPUT_DIR)
@@ -107,7 +123,7 @@ def compile(arch="64"):
     FILE_VERSION = _npbackup_version + ".0"
 
     file_description = "{} P{}-{}{}".format(
-        FILE_DESCRIPTION, sys.version_info[1], arch, "priv" if is_private else ""
+        FILE_DESCRIPTION, sys.version_info[1], arch, "priv" if audience == 'private' else ''
     )
 
     restic_source_file = get_restic_internal_binary(arch)
@@ -115,11 +131,6 @@ def compile(arch="64"):
         print("Cannot find restic source file.")
         return
     restic_dest_file = os.path.join(PACKAGE_DIR, restic_executable)
-
-    output_arch_dir = os.path.join(
-        OUTPUT_DIR,
-        "win-p{}{}-{}".format(sys.version_info[0], sys.version_info[1], arch),
-    )
 
     translations_dir = "translations"
     translations_dir_source = os.path.join(BASEDIR, translations_dir)
@@ -131,9 +142,9 @@ def compile(arch="64"):
 
     # Installer specific files, no need for a npbackup package directory here
 
-    program_executable_path = os.path.join(output_arch_dir, program_executable)
+    program_executable_path = os.path.join(OUTPUT_DIR, program_executable)
 
-    dist_conf_file_source = get_private_conf_dist_file()
+    dist_conf_file_source = get_conf_dist_file(audience)
     dist_conf_file_dest = os.path.basename(dist_conf_file_source.replace('_private_', ''))
 
     excludes_dir = "excludes"
@@ -163,7 +174,7 @@ def compile(arch="64"):
         restic_source_file,
         restic_dest_file,
         icon_file,
-        output_arch_dir,
+        OUTPUT_DIR,
     )
 
     print(CMD)
@@ -196,7 +207,7 @@ def compile(arch="64"):
         excludes_dir_source,
         excludes_dir_dest,
         icon_file,
-        output_arch_dir,
+        OUTPUT_DIR,
     )
 
     print(CMD)
@@ -207,7 +218,53 @@ def compile(arch="64"):
     print("COMPILE ERRORS", errors)
 
 
+class ArchAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if values not in ARCHES:
+            print("Got value:", values)
+            raise argparse.ArgumentError(self, "Not a valid arch")
+        setattr(namespace, self.dest, values)
+
+
+class AudienceAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if values not in AUDIENCES + ['all']:
+            print("Got value:", values)
+            raise argparse.ArgumentError(self, "Not a valid audience")
+        setattr(namespace, self.dest, values)    
+
+
 if __name__ == "__main__":
-    # I know, I could improve UX here
-    compile(arch=sys.argv[1])
-    check_private_build()
+    parser = argparse.ArgumentParser(
+    prog="npbackup compile.py", description="Compiler script for NPBackup"
+    )
+
+    parser.add_argument(
+    "--arch",
+    type=str,
+    dest="arch",
+    default=None,
+    required=True,
+    action=ArchAction,
+    help="Target arch, x64 or x86",
+    )
+
+    parser.add_argument(
+        "--audience",
+        type=str,
+        dest="audience",
+        default='private',
+        required=False,
+        help="Target audience, private or public",
+    )
+
+    args = parser.parse_args()
+    if args.audience.lower() == 'all':
+        audiences = AUDIENCES
+    else:
+        audiences = [args.audience]
+        
+    for audience in audiences:
+        move_audience_files(audience)
+        compile(arch=args.arch, audience=audience)
+        check_private_build(audience)
