@@ -108,8 +108,8 @@ def compile(arch, audience):
     PACKAGE_DIR = 'npbackup'
 
     check_private_build(audience)
-    build_dir = "BUILDS"
-    OUTPUT_DIR = os.path.abspath(os.path.join(BASEDIR, os.pardir, build_dir, audience, platform, arch))
+    BUILDS_DIR = os.path.abspath(os.path.join(BASEDIR, os.pardir, "BUILDS"))
+    OUTPUT_DIR = os.path.join(BUILDS_DIR, audience, platform, arch)
 
     if not os.path.isdir(OUTPUT_DIR):
         os.makedirs(OUTPUT_DIR)
@@ -214,6 +214,10 @@ def compile(arch, audience):
     exit_code, output = command_runner(CMD, timeout=0, live_output=True)
     if exit_code != 0:
         errors = True
+    else:
+        ## Create version file
+        with open(os.path.join(BUILDS_DIR, 'VERSION'), 'w') as fh:
+            fh.write(npbackup_version)
 
     print("COMPILE ERRORS", errors)
 
