@@ -8,7 +8,7 @@ __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "202303101"
-__version__ = "0.0.1"
+__version__ = "1.0.0"
 
 
 DEVEL=True
@@ -18,10 +18,6 @@ import os
 from upgrade_server import configuration
 from ofunctions.logger_utils import logger_get_logger
 
-
-#ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
-#config_file = 'upgrade_server.conf'
-#config_dict = configuration.load_config(os.path.join(ROOT_DIR, config_file)
 
 config_dict = configuration.load_config()
 try:

@@ -1,10 +1,13 @@
 #! /usr/bin/env python3
 #  -*- coding: utf-8 -*-
 
+__intname__ = "npbackup.upgrade_server.api"
+__author__ = "Orsiris de Jong"
+__copyright__ = "Copyright (C) 2023 NetInvent"
+__license__ = "GPL-3.0-only"
+__build__ = "202303101"
 __appname__ = "npbackup.upgrader"
-__author__ = "Alan Smithee"
-__build__ = "2022112201"
-__version__ = "1.0-beta"
+
 
 from typing import Literal
 import logging
@@ -47,7 +50,7 @@ def get_current_username(credentials: HTTPBasicCredentials = Depends(security)):
 
 
 @app.get("/")
-async def api_root():
+async def api_root(auth = Depends(get_current_username)):
     if crud.is_enabled():
         return {
             "app": __appname__,
