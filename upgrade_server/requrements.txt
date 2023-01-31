@@ -1,0 +1,4 @@
+fastapi
+fastapi-offline>=1.5.0
+uvicorn
+pydantic
