@@ -61,4 +61,4 @@ options:
   auto_upgrade: true
   auto_upgrade_server_url:
   auto_upgrade_server_username:
-  auto_upgrade_server_password
+  auto_upgrade_server_password:
