@@ -1,4 +1,4 @@
-# NPBackup config file for npbackup v2.0+
+# NPBackup config file for npbackup v2.2+
 # (C) 2022-2023 NetInvent
 
 backup:
@@ -56,3 +56,9 @@ prometheus:
 env:
   variables:
   # - SOME_ENV=Value
+
+options:
+  auto_upgrade: true
+  auto_upgrade_server_url:
+  auto_upgrade_server_username:
+  auto_upgrade_server_password
