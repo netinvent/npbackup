@@ -153,6 +153,7 @@ cython_debug/
 
 RESTIC_SOURCE_FILES/restic*
 _private*
+_NOUSE_private*
 NOUSE_private*
 BUILDS
 BUILDS-PRIVATE
