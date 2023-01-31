@@ -9,8 +9,8 @@ __site__ = "https://www.netperfect.fr/npbackup"
 __description__ = "NetPerfect Backup Client"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023013001"
-__version__ = "2.1.1"
+__build__ = "2023013101"
+__version__ = "2.2.0-dev"
 
 
 import os
@@ -39,6 +39,7 @@ from npbackup.gui.main import main_gui
 from npbackup.core.runner import NPBackupRunner
 from npbackup.core.i18n_helper import _t
 from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
+from npbackup.upgrade_client.upgrader import auto_upgrade
 
 del sys.path[0]
 
@@ -214,6 +215,7 @@ This is free software, and you are welcome to redistribute it under certain cond
     )
 
     parser.add_argument("--license", action="store_true", help=("Show license"))
+    parser.add_argument("--auto-upgrade", action="store_true", help=("Auto upgrade NPBackup"))
 
     args = parser.parse_args()
     if args.version:
@@ -294,6 +296,24 @@ This is free software, and you are welcome to redistribute it under certain cond
             else:
                 logger.error("No configuration created via GUI")
                 sys.exit(7)
+
+    if args.auto_upgrade:
+        logger.info("Running user initiated auto upgrade")
+        try:
+            upgrade_url = config_dict['options']['auto_upgrade_server_url']
+            username = config_dict['options']['auto_upgrade_server_username']
+            password = config_dict['options']['auto_upgrade_server_password']
+        except KeyError as exc:
+            logger.error("Missing auto upgrade info: %s", exc)
+            sys.exit(23)
+        else:
+            result = auto_upgrade(upgrade_url=upgrade_url, username=username, password=password)
+            if result:
+                sys.exit(0)
+            else:
+                sys.exit(23)
+
+
 
     dry_run = False
     if args.dry_run:
