@@ -15,6 +15,7 @@ from typing import Optional, Union
 from logging import getLogger
 import hashlib
 from upgrade_server.models.files import FileGet, FileSend
+from upgrade_server.models.oper import CurrentVersion
 import upgrade_server.configuration as configuration
 
 
@@ -35,6 +36,20 @@ def sha256sum_data(data):
 def is_enabled() -> bool:
     return not os.path.isfile("DISABLED")
 
+
+def get_current_version() -> Optional[CurrentVersion]:
+    try:
+        path = os.path.join(config_dict['upgrades']['data_root'], 'VERSION')
+        print(path)
+        if os.path.isfile(path):
+            with open(path, 'r') as fh:
+                ver =fh.readline()
+                return(CurrentVersion(version=ver))
+    except OSError:
+        logger.error("Cannot get current version")
+    except Exception:
+        logger.error("Version seems to be bogus in VERSION file")
+    
 
 def get_file(file: FileGet, content: bool = False) -> Optional[Union[FileSend, bytes]]:
     possible_filename = 'npbackup{}'.format(

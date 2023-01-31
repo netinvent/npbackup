@@ -16,6 +16,7 @@ from fastapi import FastAPI, HTTPException, Response, Depends, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi_offline import FastAPIOffline
 from upgrade_server.models.files import FileGet, FileSend, Platform, Arch
+from upgrade_server.models.oper import CurrentVersion
 import upgrade_server.crud as crud
 import upgrade_server.configuration as configuration
 
@@ -59,6 +60,26 @@ async def api_root(auth = Depends(get_current_username)):
         return {
             "app": "Currently under maintenance"
         }
+
+
+@app.get("/current_version", response_model=CurrentVersion, status_code=200)
+async def current_version(auth = Depends(get_current_username)):
+    try:
+        result = crud.get_current_version()
+        if not result:
+            raise HTTPException(
+                status_code=404,
+                detail="Not found"
+            )
+        return result
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.debug("Cannot get file: {}".format(exc), exc_info=True)
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot get file: {}".format(exc),
+        )
 
 
 @app.get("/upgrades/{platform}/{arch}", response_model=FileSend, status_code=200)
