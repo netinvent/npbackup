@@ -214,10 +214,11 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Create task that runs every n minutes",
     )
 
-    parser.add_argument("--license", action="store_true", help=("Show license"))
+    parser.add_argument("--license", action="store_true", help="Show license")
     parser.add_argument(
-        "--auto-upgrade", action="store_true", help=("Auto upgrade NPBackup")
-    )
+        "--auto-upgrade", action="store_true", help="Auto upgrade NPBackup")
+    parser.add_argument(
+        "--upgrade-conf", action="store_true", help="Add new configuration elements after upgrade")
 
     args = parser.parse_args()
     if args.version:
@@ -299,6 +300,24 @@ This is free software, and you are welcome to redistribute it under certain cond
                 logger.error("No configuration created via GUI")
                 sys.exit(7)
 
+    if args.upgrade_conf:
+        # Whatever we need to add here for future releases
+        # Eg:
+
+        logger.info("Upgrading configuration file to version %s", __version__)
+        try:
+            config_dict["options"]
+        except KeyError:
+            # Create new section
+            config_dict["options"] = {}
+        try:
+            config_dict["options"]["how_many_fancy_options"]
+        except KeyError:
+            # Create new entry
+            config_dict["options"]["how_many_fancy_options"] = "Yes !"
+        configuration.save_config(CONFIG_FILE, config_dict)
+        sys.exit(0)
+
     # Try to perform an auto upgrade if needed
     try:
         auto_upgrade = config_dict["options"]["auto_upgrade"]
@@ -319,7 +338,7 @@ This is free software, and you are welcome to redistribute it under certain cond
                 "auto_upgrade_server_password"
             ]
         except KeyError as exc:
-            logger.error("Missing auto upgrade info: %s", exc)
+            logger.error("Missing auto upgrade info: %s, cannot launch auto upgrade", exc)
         else:
             if args.auto_upgrade:
                 logger.info("Running user initiated auto upgrade")

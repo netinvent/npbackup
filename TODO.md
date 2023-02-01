@@ -32,3 +32,4 @@ rest:https://user:***@good.example.tld/user/
 - Windows installer GUI
 - Create task from GUI
 - Make cloud file filters optional
+- Default config parameters
