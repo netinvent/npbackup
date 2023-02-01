@@ -5,11 +5,12 @@
 
 __intname__ = "npbackup.upgrade_client.upgrader"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2021-2023 NetInvent"
+__copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "BSD-3-Clause"
 __build__ = "2023020101"
 
 
+from typing import Optional
 import os
 from logging import getLogger
 import hashlib
@@ -39,9 +40,61 @@ def sha256sum_data(data):
 def need_upgrade(upgrade_interval: int) -> bool:
     """
     Basic counter which allows an upgrade only every X times this is called so failed operations won't end in an endless upgrade loop
+    
+    We need to make to select a write counter file that is writable
+    So we actually test a local file and a temp file (less secure for obvious reasons)
+    We just have to make sure that once we can write to one file, we stick to it unless proven otherwise
+
+    The for loop logic isn't straight simple, but allows file fallback
     """
     # file counter, local, home, or temp if not available
-    return True  # WIP
+    counter_file = 'npbackup.autoupgrade.log'
+
+    def _write_count(file: str, counter: int) -> bool:
+        try:
+            with open(file, 'w') as fpw:
+                fpw.write(str(counter))
+                return True
+        except OSError:
+            # We may not have write privileges, hence we need a backup plan
+            return False
+
+    def _get_count(file: str) -> Optional[int]:
+        try:
+            with open(file, 'r') as fpr:
+                count = int(fpr.read())
+                return count
+        except OSError:
+            # We may not have read privileges
+            None
+        except ValueError:
+            logger.error("Bogus upgrade counter in %s", file)
+            return None
+
+
+
+    for file in [os.path.join(CURRENT_DIR, counter_file), os.path.join(tempfile.gettempdir(), counter_file)]:
+        if not os.path.isfile(file):
+            if _write_count(file, 1):
+                logger.debug('Initial upgrade counter written to %s', file)
+            else:
+                logger.debug("Cannot write to upgrade counter file %s", file)
+                continue
+        count = _get_count(file)
+        # Make sure we can write to the file before we make any assumptions
+        result = _write_count(file, count + 1)
+        if result:
+            print('UPGRADE INTERNAL AND COUNT', upgrade_interval, count, file)
+            if count >= upgrade_interval:
+                # Reinitialize upgrade counter before we actually approve upgrades
+                if _write_count(file, 0):
+                    logger.info("Auto upgrade has decided upgrade check is required")
+                    return True
+            break
+        else:
+            logger.debug("Cannot write upgrade counter to %s", file)
+            continue
+    return False
 
 
 def auto_upgrader(upgrade_url: str, username: str, password: str) -> bool:
