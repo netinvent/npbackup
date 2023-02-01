@@ -7,13 +7,15 @@ __intname__ = "npbackup.gui.config"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023012601"
+__build__ = "2023020101"
 
 
+import sys
 from logging import getLogger
 import PySimpleGUI as sg
 import npbackup.configuration as configuration
 from npbackup.core.i18n_helper import _t
+
 
 logger = getLogger(__intname__)
 
@@ -43,6 +45,8 @@ def config_gui(config_dict: dict, config_file: str):
                             "http_password",
                             "repository",
                             "password",
+                            "server_username",
+                            "server_password",
                         ]:
                             try:
                                 if config_dict[section][entry] is None:
@@ -68,7 +72,11 @@ def config_gui(config_dict: dict, config_file: str):
         for key, value in values.items():
             if value == ENCRYPTED_DATA_PLACEHOLDER:
                 continue
-            section, entry = key.split("---")
+            try:
+                section, entry = key.split("---")
+            except ValueError:
+                # Don't bother with keys that don't begin with "---"
+                continue
             # check whether we need to split into list
             if not isinstance(value, bool):
                 result = value.split("\n")
@@ -96,7 +104,6 @@ def config_gui(config_dict: dict, config_file: str):
     right_click_menu = ["", [_t("generic.decrypt")]]
 
     backup_col = [
-        [sg.Text(_t("config_gui.backup"), font="helvetica 16")],
         [
             sg.Text(_t("config_gui.compression"), size=(30, 1)),
             sg.Combo(["auto", "max", "off"], key="backup---compression", size=(48, 1)),
@@ -117,7 +124,16 @@ def config_gui(config_dict: dict, config_file: str):
                 ),
                 size=(30, 2),
             ),
-            sg.Checkbox("", key="backup---use_fs_snapshot", size=(0, 1)),
+            sg.Checkbox("", key="backup---use_fs_snapshot", size=(41, 1)),
+        ],
+        [
+            sg.Text(
+                "{}\n({})".format(
+                    _t("config_gui.ignore_cloud_files"), _t("config_gui.windows_only")
+                ),
+                size=(30, 2),
+            ),
+            sg.Checkbox("", key="backup---ignore_cloud_files", size=(41, 1)),
         ],
         [
             sg.Text(
@@ -136,15 +152,15 @@ def config_gui(config_dict: dict, config_file: str):
                 ),
                 size=(30, 2),
             ),
-            sg.Checkbox("", key="backup---exclude_case_ignore", size=(0, 1)),
+            sg.Checkbox("", key="backup---exclude_case_ignore", size=(41, 1)),
         ],
         [
             sg.Text(_t("config_gui.exclude_cache_dirs"), size=(30, 1)),
-            sg.Checkbox("", key="backup---exclude_caches", size=(0, 1)),
+            sg.Checkbox("", key="backup---exclude_caches", size=(41, 1)),
         ],
         [
             sg.Text(_t("config_gui.one_file_system"), size=(30, 1)),
-            sg.Checkbox("", key="backup---one_file_system", size=(0, 1)),
+            sg.Checkbox("", key="backup---one_file_system", size=(41, 1)),
         ],
         [
             sg.Text(_t("config_gui.pre_exec_command"), size=(30, 1)),
@@ -156,7 +172,7 @@ def config_gui(config_dict: dict, config_file: str):
         ],
         [
             sg.Text(_t("config_gui.exec_failure_is_fatal"), size=(30, 1)),
-            sg.Checkbox("", key="backup---pre_exec_failure_is_fatal", size=(0, 1)),
+            sg.Checkbox("", key="backup---pre_exec_failure_is_fatal", size=(41, 1)),
         ],
         [
             sg.Text(_t("config_gui.post_exec_command"), size=(30, 1)),
@@ -168,7 +184,7 @@ def config_gui(config_dict: dict, config_file: str):
         ],
         [
             sg.Text(_t("config_gui.exec_failure_is_fatal"), size=(30, 1)),
-            sg.Checkbox("", key="backup---post_exec_failure_is_fatal", size=(0, 1)),
+            sg.Checkbox("", key="backup---post_exec_failure_is_fatal", size=(41, 1)),
         ],
         [
             sg.Text(
@@ -188,7 +204,6 @@ def config_gui(config_dict: dict, config_file: str):
     ]
 
     repo_col = [
-        [sg.Text(_t("config_gui.backup_destination"), font="helvetica 16")],
         [
             sg.Text(
                 "{}\n({})".format(
@@ -220,12 +235,11 @@ def config_gui(config_dict: dict, config_file: str):
         ],
     ]
 
-    options_col = [
-        [sg.Text(_t("config_gui.prometheus_config"), font="helvetica 16")],
+    prometheus_col = [
         [sg.Text(_t("config_gui.explanation"))],
         [
             sg.Text(_t("config_gui.enable_prometheus"), size=(30, 1)),
-            sg.Checkbox("", key="prometheus---metrics", size=(0, 1)),
+            sg.Checkbox("", key="prometheus---metrics", size=(41, 1)),
         ],
         [
             sg.Text(_t("config_gui.job_name"), size=(30, 1)),
@@ -265,7 +279,6 @@ def config_gui(config_dict: dict, config_file: str):
     ]
 
     env_col = [
-        [sg.Text(_t("config_gui.environment_variables"), font="helvetica 16")],
         [
             sg.Text(
                 "{}\n({}\n{})".format(
@@ -279,6 +292,29 @@ def config_gui(config_dict: dict, config_file: str):
         ],
     ]
 
+    options_col = [
+        [
+            sg.Text(_t("config_gui.auto_upgrade"), size=(30, 1)),
+            sg.Checkbox("", key="options---auto_upgrade", size=(41, 1)),
+        ],
+        [
+            sg.Text(_t("config_gui.auto_upgrade_server_url"), size=(30, 1)),
+            sg.Input(key="options---server_url", size=(50, 1)),
+        ],
+        [
+            sg.Text(_t("config_gui.auto_upgrade_server_username"), size=(30, 1)),
+            sg.Input(key="options---server_username", size=(50, 1)),
+        ],
+        [
+            sg.Text(_t("config_gui.auto_upgrade_server_password"), size=(30, 1)),
+            sg.Input(key="options---server_password", size=(50, 1)),
+        ],
+        [
+            sg.Text(_t("config_gui.auto_upgrade_interval"), size=(30, 1)),
+            sg.Input(key="options---interval", size=(50, 1)),
+        ],
+    ]
+
     buttons = [
         [
             sg.Text(" " * 135),
@@ -287,66 +323,63 @@ def config_gui(config_dict: dict, config_file: str):
         ]
     ]
 
-    layout = [
+    tab_group_layout = [
         [
-            sg.Column(
-                [
-                    [
-                        sg.Column(
-                            backup_col,
-                            element_justification="L",
-                            scrollable=False,
-                            vertical_scroll_only=False,
-                            size=(620, 610),
-                            vertical_alignment="top",
-                        ),
-                    ]
-                ],
-                vertical_alignment="top",
-            ),
-            sg.Column(
-                [
-                    [
-                        sg.Column(
-                            repo_col,
-                            element_justification="L",
-                            scrollable=False,
-                            vertical_scroll_only=False,
-                            size=(620, 210),
-                            vertical_alignment="top",
-                        )
-                    ],
-                    [
-                        sg.Column(
-                            options_col,
-                            element_justification="L",
-                            scrollable=False,
-                            vertical_scroll_only=False,
-                            size=(620, 300),
-                            vertical_alignment="top",
-                        )
-                    ],
-                    [
-                        sg.Column(
-                            env_col,
-                            element_justification="L",
-                            scrollable=False,
-                            vertical_scroll_only=False,
-                            size=(620, 100),
-                            vertical_alignment="top",
-                        )
-                    ],
-                ],
-                vertical_alignment="top",
-            ),
+            sg.Tab(
+                _t("config_gui.backup"),
+                backup_col,
+                font="helvetica 16",
+                key="--tab-backup--",
+                element_justification="C",
+            )
         ],
+        [
+            sg.Tab(
+                _t("config_gui.backup_destination"),
+                repo_col,
+                font="helvetica 16",
+                key="--tab-repo--",
+                element_justification="C",
+            )
+        ],
+        [
+            sg.Tab(
+                _t("config_gui.prometheus_config"),
+                prometheus_col,
+                font="helvetica 16",
+                key="--tab-prometheus--",
+                element_justification="C",
+            )
+        ],
+        [
+            sg.Tab(
+                _t("config_gui.environment_variables"),
+                env_col,
+                font="helvetica 16",
+                key="--tab-env--",
+                element_justification="C",
+            )
+        ],
+        [
+            sg.Tab(
+                _t("generic.options"),
+                options_col,
+                font="helvetica 16",
+                key="--tab-options--",
+                element_justification="C",
+            )
+        ],
+    ]
+
+    layout = [
+        [sg.TabGroup(tab_group_layout, enable_events=True, key="--tabgroup--")],
         [sg.Column(buttons, element_justification="C")],
     ]
 
     window = sg.Window(
         "Configuration",
         layout,
-        text_justification="L",
+        text_justification="C",
         auto_size_text=True,
         auto_size_buttons=False,
         no_titlebar=False,

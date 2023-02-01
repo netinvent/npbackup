@@ -27,9 +27,7 @@ Is there a repository at the following location?
 Is there a repository at the following location?
 rest:https://user:***@good.example.tld/user/
 
-- Implement remote upgrade procedure
+
 - Linux installer script
 - Windows installer GUI
 - Create task from GUI
-- Make cloud file filters optional
-- Default config parameters

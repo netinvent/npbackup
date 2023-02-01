@@ -1,7 +1,19 @@
+#! /usr/bin/env python
+#  -*- coding: utf-8 -*-
+#
+# This file is part of npbackup
+
+__intname__ = "npbackup.gui.core.restic_source_binary"
+__author__ = "Orsiris de Jong"
+__copyright__ = "Copyright (C) 2022-2023 NetInvent"
+__license__ = "GPL-3.0-only"
+__build__ = "2023011701"
+
+
 import os
 import glob
-
 from npbackup.path_helper import BASEDIR
+
 
 RESTIC_SOURCE_FILES_DIR = os.path.join(BASEDIR, os.pardir, "RESTIC_SOURCE_FILES")
 

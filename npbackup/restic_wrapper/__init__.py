@@ -54,6 +54,7 @@ class ResticRunner:
             self._backend_type = backend.lower()
         else:
             self._backend_type = "local"
+        self._ignore_cloud_files = True
         self._addition_parameters = None
         self._environment_variables = {}
 
@@ -128,6 +129,17 @@ class ResticRunner:
             raise ValueError("Bogus dry run value givne")
 
     @property
+    def ignore_cloud_files(self) -> bool:
+        return self._ignore_cloud_files
+
+    @ignore_cloud_files.setter
+    def ignore_cloud_files(self, value):
+        if isinstance(value, bool):
+            self._ignore_cloud_files = value
+        else:
+            raise ValueError("Bogus ignore_cloud_files value given")
+
+    @property
     def exec_time(self) -> Optional[int]:
         return self._exec_time
 
@@ -191,7 +203,7 @@ class ResticRunner:
         if exit_code == 0:
             self.last_command_status = True
             return True, output
-        if exit_code == 3 and os.name == "nt":
+        if exit_code == 3 and os.name == "nt" and self.ignore_cloud_files:
             # TEMP-FIX-4155, since we don't have reparse point support for Windows, see https://github.com/restic/restic/issues/4155, we have to filter manually for cloud errors which should not affect backup result
             # exit_code = 3 when errors are present but snapshot could be created
             # Since errors are always shown, we don't need restic --verbose option explicitly

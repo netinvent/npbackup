@@ -4,6 +4,7 @@ en:
   quit: Exit
   configure: Configure
   about: About
+  options: Options
 
   _yes: Yes
   _no: No

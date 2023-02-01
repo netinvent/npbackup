@@ -40,7 +40,7 @@ def sha256sum_data(data):
 def need_upgrade(upgrade_interval: int) -> bool:
     """
     Basic counter which allows an upgrade only every X times this is called so failed operations won't end in an endless upgrade loop
-    
+
     We need to make to select a write counter file that is writable
     So we actually test a local file and a temp file (less secure for obvious reasons)
     We just have to make sure that once we can write to one file, we stick to it unless proven otherwise
@@ -48,11 +48,11 @@ def need_upgrade(upgrade_interval: int) -> bool:
     The for loop logic isn't straight simple, but allows file fallback
     """
     # file counter, local, home, or temp if not available
-    counter_file = 'npbackup.autoupgrade.log'
+    counter_file = "npbackup.autoupgrade.log"
 
     def _write_count(file: str, counter: int) -> bool:
         try:
-            with open(file, 'w') as fpw:
+            with open(file, "w") as fpw:
                 fpw.write(str(counter))
                 return True
         except OSError:
@@ -61,7 +61,7 @@ def need_upgrade(upgrade_interval: int) -> bool:
 
     def _get_count(file: str) -> Optional[int]:
         try:
-            with open(file, 'r') as fpr:
+            with open(file, "r") as fpr:
                 count = int(fpr.read())
                 return count
         except OSError:
@@ -71,12 +71,13 @@ def need_upgrade(upgrade_interval: int) -> bool:
             logger.error("Bogus upgrade counter in %s", file)
             return None
 
-
-
-    for file in [os.path.join(CURRENT_DIR, counter_file), os.path.join(tempfile.gettempdir(), counter_file)]:
+    for file in [
+        os.path.join(CURRENT_DIR, counter_file),
+        os.path.join(tempfile.gettempdir(), counter_file),
+    ]:
         if not os.path.isfile(file):
             if _write_count(file, 1):
-                logger.debug('Initial upgrade counter written to %s', file)
+                logger.debug("Initial upgrade counter written to %s", file)
             else:
                 logger.debug("Cannot write to upgrade counter file %s", file)
                 continue
@@ -170,11 +171,21 @@ def auto_upgrader(upgrade_url: str, username: str, password: str) -> bool:
     logger.info("Upgrade file written to %s", executable)
 
     log_file = os.path.join(tempfile.gettempdir(), file_info["filename"] + ".log")
+    logger.info("Logging upgrade to %s", log_file)
 
     # Actual upgrade process
     new_executable = os.path.join(CURRENT_DIR, os.path.basename(CURRENT_EXECUTABLE))
-    cmd = 'del "{}"; move "{}" "{}"; del "{}" > {}'.format(
-        CURRENT_EXECUTABLE, executable, new_executable, executable, log_file
+    cmd = 'del "{}" > "{}" && move "{}" "{}" >> "{}" && del "{}" >> "{}" && "{}" --upgrade-conf >> "{}"'.format(
+        CURRENT_EXECUTABLE,
+        log_file,
+        executable,
+        log_file,
+        new_executable,
+        log_file,
+        executable,
+        log_file,
+        new_executable,
+        log_file,
     )
     logger.info(
         "Launching upgrade. Current process will quit. Upgrade starts in %s seconds. Upgrade is done by OS logged in %s",
