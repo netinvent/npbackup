@@ -41,7 +41,6 @@ def is_enabled() -> bool:
 def get_current_version() -> Optional[CurrentVersion]:
     try:
         path = os.path.join(config_dict["upgrades"]["data_root"], "VERSION")
-        print(path)
         if os.path.isfile(path):
             with open(path, "r") as fh:
                 ver = fh.readline()
