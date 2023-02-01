@@ -3,7 +3,8 @@
     - Aupgrade client integrated into NPBackup, that can be called manually via --auto-upgrade or automatically run every n backups
     - Upgrade server which servers files and their metadata
   - Improved setup.py to provide launch scripts for both Linux and Windows platforms
-  ! Made windows floud file filter optional (enabled by default)
+  - Made windows cloud file filter optional (enabled by default)
+  - Added default configuration settings
 
 ## v2.1.0 - 29/01/2023
   - Added execution time information
