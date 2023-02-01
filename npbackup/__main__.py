@@ -216,9 +216,13 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     parser.add_argument("--license", action="store_true", help="Show license")
     parser.add_argument(
-        "--auto-upgrade", action="store_true", help="Auto upgrade NPBackup")
+        "--auto-upgrade", action="store_true", help="Auto upgrade NPBackup"
+    )
     parser.add_argument(
-        "--upgrade-conf", action="store_true", help="Add new configuration elements after upgrade")
+        "--upgrade-conf",
+        action="store_true",
+        help="Add new configuration elements after upgrade",
+    )
 
     args = parser.parse_args()
     if args.version:
@@ -338,7 +342,9 @@ This is free software, and you are welcome to redistribute it under certain cond
                 "auto_upgrade_server_password"
             ]
         except KeyError as exc:
-            logger.error("Missing auto upgrade info: %s, cannot launch auto upgrade", exc)
+            logger.error(
+                "Missing auto upgrade info: %s, cannot launch auto upgrade", exc
+            )
         else:
             if args.auto_upgrade:
                 logger.info("Running user initiated auto upgrade")
