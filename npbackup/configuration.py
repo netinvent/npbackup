@@ -7,8 +7,8 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023012801"
-__version__ = "1.4.0"
+__build__ = "2023020101"
+__version__ = "1.5.0 for npbackup 2.2.0+"
 
 import sys
 from ruamel.yaml import YAML
@@ -37,6 +37,8 @@ ENCRYPTED_OPTIONS = [
     {"section": "repo", "name": "password", "type": str},
     {"section": "prometheus", "name": "http_username", "type": str},
     {"section": "prometheus", "name": "http_password", "type": str},
+    {"section": "options", "name": "auto_upgrade_server_username", "type": str},
+    {"section": "options", "name": "auto_upgrade_server_password", "type": str},
 ]
 
 empty_config_dict = {"backup": {}, "repo": {}, "prometheus": {}, "env": {}}
@@ -62,7 +64,6 @@ def decrypt_data(config_dict):
                 logger.error(
                     "No {}:{} available.".format(option["section"], option["name"])
                 )
-                logger.debug("Trace", exc_info=True)
     except ValueError:
         logger.error(
             "Cannot decrypt this configuration file. Has the AES key changed ?",
@@ -93,7 +94,6 @@ def encrypt_data(config_dict):
             logger.error(
                 "No {}:{} available.".format(option["section"], option["name"])
             )
-            logger.debug("Trace", exc_info=True)
     return config_dict
 
 
@@ -101,16 +101,18 @@ def is_encrypted(config_dict):
     try:
         is_enc = True
         for option in ENCRYPTED_OPTIONS:
-            if isinstance(
-                config_dict[option["section"]][option["name"]],
-                config_dict[option["section"]][option["type"]],
-            ) and not config_dict[option["section"]][option["name"]].startswith(
-                ID_STRING
-            ):
-                is_enc = False
+            try:
+                if isinstance(
+                    config_dict[option["section"]][option["name"]],
+                    option["type"],
+                ) and not config_dict[option["section"]][option["name"]].startswith(
+                    ID_STRING
+                ):
+                    is_enc = False
+            except KeyError:
+                # Don't care about encryption on missing items
+                pass
         return is_enc
-    except KeyError:
-        return False
     except AttributeError:
         # NoneType
         return False
@@ -126,6 +128,7 @@ def load_config(config_file):
         yaml = YAML(typ="rt")
         config_dict = yaml.load(file_handle)
         if not is_encrypted(config_dict):
+            logger.info("Encrypting non encrypted data in configuration file")
             config_dict = encrypt_data(config_dict)
             save_config(config_file, config_dict)
         config_dict = decrypt_data(config_dict)
