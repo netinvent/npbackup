@@ -595,7 +595,6 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
                 sg.PopupNoFrame(_t("main_gui.unknown_repo"))
         if event == "about":
             _about_gui(version_string, config_dict)
-
-        # Update GUI on every window.read timeout = every minute or everytime an event happens, including the "uptodate" button
-        current_state, snapshot_list = get_gui_data(config_dict)
-        _gui_update_state(window, current_state, snapshot_list)
+        if event == "state-button":
+            current_state, snapshot_list = get_gui_data(config_dict)
+            _gui_update_state(window, current_state, snapshot_list)
