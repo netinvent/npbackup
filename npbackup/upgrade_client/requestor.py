@@ -231,15 +231,15 @@ class Requestor:
             logger.error(
                 "Cannot establish a session: SSL/TLS error. Are your server & client certificates valid ?"
             )
-            logger.info("Trace:", exc_info=True)
+            logger.debug("Trace:", exc_info=True)
         except requests.exceptions.ConnectionError:
             logger.error(
                 "Cannot establish a session. Looks like we cannot reach the server."
             )
-            logger.info("Trace:", exc_info=True)
+            logger.debug("Trace:", exc_info=True)
         except Exception as exc:  # pylint: disable=W0703,broad-except
             logger.error("Cannot establish a session, unknown reason: %s", exc)
-            logger.info("Trace:", exc_info=True)
+            logger.debug("Trace:", exc_info=True)
         return False
 
     def create_session(self, endpoint: str = None, authenticated: bool = False) -> bool:
@@ -333,15 +333,15 @@ class Requestor:
             logger.error(
                 "Cannot establish a session: SSL/TLS error. Are your server & client certificates valid ?"
             )
-            logger.error("Trace:", exc_info=True)
+            logger.debug("Trace:", exc_info=True)
         except requests.exceptions.ConnectionError:
             logger.error(
                 "Cannot establish a session. Looks like we cannot reach the server."
             )
-            logger.error("Trace:", exc_info=True)
+            logger.debug("Trace:", exc_info=True)
         except Exception as exc:  # pylint: disable=W0703,broad-except
             logger.error("Cannot establish a session, unknown reason: %s", exc)
-            logger.error("Trace:", exc_info=True)
+            logger.debug("Trace:", exc_info=True)
         return False
 
     def requestor(
