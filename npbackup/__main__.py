@@ -329,7 +329,7 @@ This is free software, and you are welcome to redistribute it under certain cond
     except KeyError:
         auto_upgrade = True
     try:
-        auto_upgrade_interval = config_dict["options"]["ainterval"]
+        auto_upgrade_interval = config_dict["options"]["interval"]
     except KeyError:
         auto_upgrade_interval = 10
 
