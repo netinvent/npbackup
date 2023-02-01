@@ -4,6 +4,7 @@ fr:
   compression: Compression
   backup_paths: Chemins à sauvegarder
   use_fs_snapshot: Utiliser les instantanés VSS
+  ignore_cloud_files: Exclure le fichiers dans le cloud
   windows_only: Windows seulement
   exclude_files: Fichiers d'exclusion
   exclude_case_ignore: Ignorer la casse aux exclusions

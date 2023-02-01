@@ -4,6 +4,7 @@ en:
   compression: Compression
   backup_paths: Backup paths
   use_fs_snapshot: Use VSS snapshots
+  ignore_cloud_files: Ignore in-cloud files
   windows_only: Windows only
   exclude_files: Exclude files
   exclude_case_ignore: Ignore case for excludes
