@@ -36,7 +36,7 @@ except ValueError:
 try:
     i18n.load_path.append(TRANSLATIONS_DIR)
 except OSError as exc:
-    print("Cannot load translations: {}".format(exc))
+    logger.error("Cannot load translations: {}".format(exc))
 i18n.set("locale", _locale)
 i18n.set("fallback", "en")
 
