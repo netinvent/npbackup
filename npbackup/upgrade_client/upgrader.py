@@ -84,7 +84,6 @@ def need_upgrade(upgrade_interval: int) -> bool:
         # Make sure we can write to the file before we make any assumptions
         result = _write_count(file, count + 1)
         if result:
-            print('UPGRADE INTERNAL AND COUNT', upgrade_interval, count, file)
             if count >= upgrade_interval:
                 # Reinitialize upgrade counter before we actually approve upgrades
                 if _write_count(file, 0):
