@@ -7,17 +7,19 @@ __intname__ = "npbackup.upgrade_client.upgrader"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2021-2023 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2023012801"
+__build__ = "2023020101"
 
 
 import os
 from logging import getLogger
 import hashlib
 import tempfile
+from packaging import version
 from ofunctions.platform import get_os, os_arch
 from command_runner import deferred_command
 from npbackup.upgrade_client.requestor import Requestor
 from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
+from npbackup.__main__ import __version__ as npbackup_version
 
 logger = getLogger(__intname__)
 
@@ -34,7 +36,7 @@ def sha256sum_data(data):
     return sha256.hexdigest()
 
 
-def auto_upgrade(upgrade_url: str, username: str, password: str):
+def auto_upgrade(upgrade_url: str, username: str, password: str) -> bool:
     """
     Auto upgrade binary NPBackup distributions
 
@@ -43,7 +45,7 @@ def auto_upgrade(upgrade_url: str, username: str, password: str):
     """
     is_nuitka = "__compiled__" in globals()
     if not is_nuitka:
-        logger.debug("No upgrade necessary")
+        logger.info("No upgrade necessary")
         return True
     logger.info("Upgrade server is %s", upgrade_url)
     requestor = Requestor(upgrade_url, username, password)
@@ -60,6 +62,20 @@ def auto_upgrade(upgrade_url: str, username: str, password: str):
         logger.error("Current server is not a NPBackup update server")
         return False
 
+    result = requestor.data_model('current_version')
+    try:
+        online_version = result['version']
+    except KeyError:
+        logger.error("Upgrade server failed to provide proper version info")
+        return False
+    else:
+        if online_version:
+            if version.parse(online_version) > version.parse(npbackup_version):
+                logger.info("Current version %s is older than online version %s", npbackup_version, online_version)
+            else:
+                logger.info("Current version %s is up-to-date (online version %s)", npbackup_version, online_version)
+                return True
+
     platform_and_arch = '{}/{}'.format(get_os(), os_arch()).lower()
 
     file_info = requestor.data_model('upgrades', id_record=platform_and_arch)
@@ -71,8 +87,6 @@ def auto_upgrade(upgrade_url: str, username: str, password: str):
     
     file_data = requestor.requestor('upgrades/' + platform_and_arch + '/data', raw=True)
     if not file_data:
-
-    #if not isinstance(file_data, bytes): # WIP
         logger.error("Cannot get update file")
         return False
 
