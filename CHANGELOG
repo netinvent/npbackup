@@ -5,6 +5,7 @@
   - Improved setup.py to provide launch scripts for both Linux and Windows platforms
   - Made windows cloud file filter optional (enabled by default)
   - Added default configuration settings
+  - Rewrite configuration gui into a tabbed gui
   - Updated restic binary to restic 0.15.1 compiled with go1.19.5
 
 ## v2.1.0 - 29/01/2023
