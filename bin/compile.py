@@ -14,6 +14,7 @@ __version__ = "1.5.0"
 import sys
 import os
 import argparse
+import atexit
 from command_runner import command_runner
 
 ARCHES = ['x86', 'x64']
@@ -68,7 +69,7 @@ def move_audience_files(audience):
             possible_non_used_path = '_NOUSE_private_'
             guessed_files = glob.glob(os.path.join(dir, '{}*'.format(possible_non_used_path)))
             for file in guessed_files:
-                os.rename(file, file.replace(possible_non_used_path, ""))
+                os.rename(file, file.replace(possible_non_used_path, "_private_"))
         elif audience == 'public':
             possible_non_used_path = '_private_'
             guessed_files = glob.glob(os.path.join(dir, '{}*'.format(possible_non_used_path)))
@@ -216,7 +217,7 @@ def compile(arch, audience):
         errors = True
     else:
         ## Create version file
-        with open(os.path.join(BUILDS_DIR, 'VERSION'), 'w') as fh:
+        with open(os.path.join(BUILDS_DIR, audience, 'VERSION'), 'w') as fh:
             fh.write(npbackup_version)
 
     print("COMPILE ERRORS", errors)
@@ -263,12 +264,18 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    if args.audience.lower() == 'all':
-        audiences = AUDIENCES
-    else:
-        audiences = [args.audience]
-        
-    for audience in audiences:
-        move_audience_files(audience)
-        compile(arch=args.arch, audience=audience)
-        check_private_build(audience)
+
+    # Make sure we get out dev environment back when compilation ends / fails
+    atexit.register(move_audience_files, 'private',)
+    try:
+        if args.audience.lower() == 'all':
+            audiences = AUDIENCES
+        else:
+            audiences = [args.audience]
+            
+        for audience in audiences:
+            move_audience_files(audience)
+            compile(arch=args.arch, audience=audience)
+            check_private_build(audience)
+    except Exception:
+        print("COMPILATION FAILED")
