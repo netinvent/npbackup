@@ -34,7 +34,7 @@ from npbackup.customization import (
 from npbackup.gui.config import config_gui
 from npbackup.core.runner import NPBackupRunner
 from npbackup.core.i18n_helper import _t
-from npbackup.core.upgrade_runner import run_upgrade
+from npbackup.core.upgrade_runner import run_upgrade, check_new_version
 
 
 logger = getLogger(__intname__)
@@ -46,6 +46,16 @@ THREAD_SHARED_DICT = {}
 
 def _about_gui(version_string: str, config_dict: dict) -> None:
     license_content = LICENSE_TEXT
+    if check_new_version(config_dict):
+        new_version = [
+            sg.Button(
+                _t("config_gui.auto_upgrade_launch"), key="autoupgrade", size=(12, 2)
+            )
+        ]
+    else:
+        new_version = [
+            sg.Text(_t("generic.is_uptodate"))
+        ]
     try:
         with open(LICENSE_FILE, "r") as file_handle:
             license_content = file_handle.read()
@@ -54,19 +64,16 @@ def _about_gui(version_string: str, config_dict: dict) -> None:
 
     layout = [
         [sg.Text(version_string)],
-        [
-            sg.Button(
-                _t("config_gui.auto_upgrade_launch"), key="autoupgrade", size=(12, 2)
-            )
-        ],
+        new_version,
         [sg.Text("License: GNU GPLv3")],
         [sg.Multiline(license_content, size=(65, 20))],
         [sg.Button(_t("generic.accept"), key="exit")],
     ]
 
     window = sg.Window(
-        _t("generic.about"), layout, keep_on_top=True, element_justification="C"
+        _t("generic.about"), layout, keep_on_top=True, element_justification="C", finalize=True
     )
+
     while True:
         event, _ = window.read()
         if event in [sg.WIN_CLOSED, "exit"]:

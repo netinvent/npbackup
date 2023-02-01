@@ -98,19 +98,10 @@ def need_upgrade(upgrade_interval: int) -> bool:
     return False
 
 
-def auto_upgrader(upgrade_url: str, username: str, password: str) -> bool:
+def _check_new_version(upgrade_url: str, username: str, password: str) -> bool:
     """
-    Auto upgrade binary NPBackup distributions
-
-    We must check that we run a compiled binary first
-    We assume that we run a onefile nuitka binary
+    Check if we have a newer version of npbackup
     """
-    is_nuitka = "__compiled__" in globals()
-    if not is_nuitka:
-        logger.info(
-            "Auto upgrade will only upgrade compiled verions. Please use 'pip install --upgrade npbackup' instead"
-        )
-        return False
     logger.info("Upgrade server is %s", upgrade_url)
     requestor = Requestor(upgrade_url, username, password)
     requestor.create_session(authenticated=True)
@@ -148,6 +139,24 @@ def auto_upgrader(upgrade_url: str, username: str, password: str) -> bool:
                 )
                 return True
 
+def auto_upgrader(upgrade_url: str, username: str, password: str) -> bool:
+    """
+    Auto upgrade binary NPBackup distributions
+
+    We must check that we run a compiled binary first
+    We assume that we run a onefile nuitka binary
+    """
+    is_nuitka = "__compiled__" in globals()
+    if not is_nuitka:
+        logger.info(
+            "Auto upgrade will only upgrade compiled verions. Please use 'pip install --upgrade npbackup' instead"
+        )
+        return False
+    
+    if not _check_new_version(upgrade_url, username, password):
+        return False
+    requestor = Requestor(upgrade_url, username, password)
+    requestor.create_session(authenticated=True)
     platform_and_arch = "{}/{}".format(get_os(), os_arch()).lower()
 
     file_info = requestor.data_model("upgrades", id_record=platform_and_arch)
