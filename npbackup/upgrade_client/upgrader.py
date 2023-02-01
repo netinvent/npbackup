@@ -26,6 +26,7 @@ logger = getLogger(__intname__)
 
 UPGRADE_DEFER_TIME = 60  # Wait x seconds before we actually do the upgrade so current program could quit before being erased
 
+
 # RAW ofunctions.checksum import
 def sha256sum_data(data):
     # type: (bytes) -> str
