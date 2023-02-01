@@ -62,4 +62,5 @@ options:
   auto_upgrade_server_url:
   auto_upgrade_server_username:
   auto_upgrade_server_password:
-  auto_upgrade_interval: 10  # every 10 NPBackup runs, we'll try an autoupgrade
+  # every 10 NPBackup runs, we'll try an autoupgrade. Never set this lower than 2 since failed upgrades will prevent backups from succeeding
+  auto_upgrade_interval: 10
