@@ -51,10 +51,10 @@ def need_upgrade(upgrade_interval: int) -> bool:
     # file counter, local, home, or temp if not available
     counter_file = "npbackup.autoupgrade.log"
 
-    def _write_count(file: str, counter: int) -> bool:
+    def _write_count(file: str, count: int) -> bool:
         try:
             with open(file, "w") as fpw:
-                fpw.write(str(counter))
+                fpw.write(str(count))
                 return True
         except OSError:
             # We may not have write privileges, hence we need a backup plan
@@ -110,7 +110,7 @@ def auto_upgrader(upgrade_url: str, username: str, password: str) -> bool:
         logger.info(
             "Auto upgrade will only upgrade compiled verions. Please use 'pip install --upgrade npbackup' instead"
         )
-        return True
+        return False
     logger.info("Upgrade server is %s", upgrade_url)
     requestor = Requestor(upgrade_url, username, password)
     requestor.create_session(authenticated=True)
