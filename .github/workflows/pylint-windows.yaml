@@ -11,7 +11,7 @@ jobs:
         os: [windows-latest]
         # Don't use pypy on windows since it does not have pywin32 module
         # python-version: [3.5, 3.6, 3.7, 3.8, 3.9, "3.10"]
-        python-version: [3.9]
+        python-version: ["3.11"]
 
     steps:
     - uses: actions/checkout@v2
@@ -25,13 +25,13 @@ jobs:
         python -m pip install --upgrade setuptools
         if (Test-Path "npbackup/requirements.txt") { pip install -r npbackup/requirements.txt }
     - name: Lint with Pylint
-      if: ${{ matrix.python-version == '3.9' }}
+      if: ${{ matrix.python-version == '3.11' }}
       run: |
         python -m pip install pylint
         # Do not run pylint on python 3.3 because isort is not available for python 3.3, don't run on python 3.4 because pylint: disable=xxxx does not exist
         python -m pylint --disable=C,W,R --max-line-length=127 npbackup
     - name: Lint with flake8
-      if: ${{ matrix.python-version == '3.9' }}
+      if: ${{ matrix.python-version == '3.11' }}
       run: |
         python -m pip install flake8
         # stop the build if there are Python syntax errors or undefined names
@@ -40,7 +40,7 @@ jobs:
         python -m flake8 --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics npbackup
     - name: Lint with Black
       # Don't run on python < 3.6 since black does not exist there, run only once
-      if: ${{ matrix.python-version == '3.9' }}
+      if: ${{ matrix.python-version == '3.11' }}
       run: |
         pip install black
         python -m black --check npbackup

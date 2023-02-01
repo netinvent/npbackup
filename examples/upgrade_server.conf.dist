@@ -1,0 +1,18 @@
+# NPBackup upgrade server
+
+http_server:
+  listen: 0.0.0.0
+  port: 8080
+  username: upgrade_client
+  password: super_secret_password
+
+upgrades:
+  # Build dir should contain the following structure
+  # /VERSION
+  # VERSION is a file containing a single line with the currently built NPBackup version, example: 2.2.0
+  # /{platform}/{arch}/{binary}
+  # Current platforms are 'windows', 'linux'
+  # Current arches are 'x64', 'x86'
+  # In each folder there should be a npbackup or npbackup.exe binary depending on the platform
+  data_root: /path/to/build_dir
+
