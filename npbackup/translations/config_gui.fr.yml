@@ -8,7 +8,7 @@ fr:
   exclude_files: Fichiers d'exclusion
   exclude_case_ignore: Ignorer la casse aux exclusions
   windows_always: toujours actif pour Windows
-  exclude_cache_dirs: Exclude dossiers cache
+  exclude_cache_dirs: Exclure dossiers cache
   one_file_system: Ne pas suivre les points de montage
   pre_exec_command: Commande pré-sauvegarde
   maximum_exec_time: Temps maximal d'execution
