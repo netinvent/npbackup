@@ -7,10 +7,11 @@ __intname__ = "npbackup.gui.main"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023012501"
+__build__ = "2023020101"
 
 
 from typing import List, Optional, Tuple
+import sys
 import os
 from logging import getLogger
 import re
@@ -33,6 +34,7 @@ from npbackup.customization import (
 from npbackup.gui.config import config_gui
 from npbackup.core.runner import NPBackupRunner
 from npbackup.core.i18n_helper import _t
+from npbackup.core.upgrade_runner import run_upgrade
 
 
 logger = getLogger(__intname__)
@@ -42,7 +44,7 @@ logger = getLogger(__intname__)
 THREAD_SHARED_DICT = {}
 
 
-def _about_gui(version_string: str) -> None:
+def _about_gui(version_string: str, config_dict: dict) -> None:
     license_content = LICENSE_TEXT
     try:
         with open(LICENSE_FILE, "r") as file_handle:
@@ -52,16 +54,28 @@ def _about_gui(version_string: str) -> None:
 
     layout = [
         [sg.Text(version_string)],
+        [
+            sg.Button(_t("config_gui.auto_upgrade_launch"), key="autoupgrade", size=(12, 2))
+        ],
         [sg.Text("License: GNU GPLv3")],
         [sg.Multiline(license_content, size=(65, 20))],
         [sg.Button(_t("generic.accept"), key="exit")],
     ]
 
-    window = sg.Window(_t("generic.about"), layout, keep_on_top=True)
+    window = sg.Window(_t("generic.about"), layout, keep_on_top=True, element_justification='C')
     while True:
         event, _ = window.read()
         if event in [sg.WIN_CLOSED, "exit"]:
             break
+        elif event == "autoupgrade":
+            result = sg.PopupOKCancel(_t("config_gui.auto_ugprade_will_quit"), keep_on_top=True)
+            if result == 'OK':
+                logger.info("Running GUI initiated upgrade")
+                sub_result = run_upgrade(config_dict)
+                if sub_result:
+                    sys.exit(0)
+                else:
+                    sg.Popup(_t("config_gui.auto_upgrade_failed"))
     window.close()
 
 
@@ -574,7 +588,7 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
             except (TypeError, KeyError):
                 sg.PopupNoFrame(_t("main_gui.unknown_repo"))
         if event == "about":
-            _about_gui(version_string)
+            _about_gui(version_string, config_dict)
 
         # Update GUI on every window.read timeout = every minute or everytime an event happens, including the "uptodate" button
         current_state, snapshot_list = get_gui_data(config_dict)

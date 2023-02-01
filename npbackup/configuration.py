@@ -37,14 +37,16 @@ ENCRYPTED_OPTIONS = [
     {"section": "repo", "name": "password", "type": str},
     {"section": "prometheus", "name": "http_username", "type": str},
     {"section": "prometheus", "name": "http_password", "type": str},
-    {"section": "options", "name": "auto_upgrade_server_username", "type": str},
-    {"section": "options", "name": "auto_upgrade_server_password", "type": str},
+    {"section": "options", "name": "server_username", "type": str},
+    {"section": "options", "name": "server_password", "type": str},
 ]
 
 empty_config_dict = {"backup": {
+    "compression": "auto",
     "use_fs_snapshot": True,
     "ignore_cloud_files": True,
-    "exclude_cache_dirs": True,
+    "exclude_caches": True,
+    "priority": "low",
 }, "repo": {
     "minimum_backup_age": 86400
 }, "prometheus": {}, "env": {}, "options": {}}

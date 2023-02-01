@@ -4,6 +4,7 @@ fr:
   quit: Quitter
   configure: Configurer
   about: A propos
+  options: Options
 
   _yes: Oui
   _no: Non

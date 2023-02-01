@@ -50,3 +50,12 @@ en:
   configuration_saved: Configuration saved
   enter_backup_admin_password: Enter backup administrator password
   wrong_password: Wrong password
+
+  auto_upgrade: Auto upgrade
+  auto_upgrade_server_url: Server URL
+  auto_upgrade_server_username: Server username
+  auto_upgrade_server_password: Server password
+  auto_upgrade_interval: Auto upgrade interval
+  auto_upgrade_launch: Launch auto upgrade
+  auto_ugprade_will_quit: Warning, launching an upgrade procedure will quit this program without notice. You will have to wait 5 minutes before launching it again for the upgrade to complete
+  auto_upgrade_failed: Auto upgrade procedure failed, see logs for further details

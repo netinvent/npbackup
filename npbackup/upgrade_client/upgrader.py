@@ -170,11 +170,12 @@ def auto_upgrader(upgrade_url: str, username: str, password: str) -> bool:
     logger.info("Upgrade file written to %s", executable)
 
     log_file = os.path.join(tempfile.gettempdir(), file_info["filename"] + ".log")
+    logger.info("Logging upgrade to %s", log_file)
 
     # Actual upgrade process
     new_executable = os.path.join(CURRENT_DIR, os.path.basename(CURRENT_EXECUTABLE))
-    cmd = 'del "{}"; move "{}" "{}"; del "{}" > {}'.format(
-        CURRENT_EXECUTABLE, executable, new_executable, executable, log_file
+    cmd = 'del "{}" > "{}" && move "{}" "{}" >> "{}" && del "{}" >> "{}" && "{}" --upgrade-conf >> "{}"'.format(
+        CURRENT_EXECUTABLE, log_file, executable, log_file, new_executable, log_file, executable, log_file, new_executable, log_file
     )
     logger.info(
         "Launching upgrade. Current process will quit. Upgrade starts in %s seconds. Upgrade is done by OS logged in %s",

@@ -22,7 +22,7 @@ fr:
 
   backup_destination: Destination de sauvegarde
   maximum_backup_age: Age minimal d'une sauvegarde
-  backup_repo_uri: URL / chemin dépot de sauvegarde
+  backup_repo_uri: URL / chemin local dépot de sauvegarde
   backup_repo_password: Mot de passe dépot de sauvegarde
   upload_speed: Vitesse limite de téléversement (KB/s)
   download_speed: Vitesse limite de téléchargement (KB/s)
@@ -50,3 +50,12 @@ fr:
   configuration_saved: Configuration sauvegardée
   enter_backup_admin_password: Veuillez entrer le mot de passe administrateur de sauvegarde
   wrong_password: Mot de passe érroné
+
+  auto_upgrade: Mise à niveau
+  auto_upgrade_server_url: Serveur de mise à niveau
+  auto_upgrade_server_username: Nom d'utilisateur serveur
+  auto_upgrade_server_password: Mot de passe serveur
+  auto_upgrade_interval: Intervalle de mise à niveau
+  auto_upgrade_launch: Lancer une mise à niveau
+  auto_ugprade_will_quit: Attnetion, la procédure de mise à niveau va quitter ce programme sans notification. Vous devrez attendre 5 minutes pour laisser la procédure se terminer avant de relancer le programme
+  auto_upgrade_failed: Procédure de mise à niveau échouée, veuillez consulter les journaux pour plus de détails
