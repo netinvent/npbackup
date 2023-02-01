@@ -36,7 +36,15 @@ def sha256sum_data(data):
     return sha256.hexdigest()
 
 
-def auto_upgrade(upgrade_url: str, username: str, password: str) -> bool:
+def need_upgrade(upgrade_interval: int) -> bool:
+    """
+    Basic counter which allows an upgrade only every X times this is called so failed operations won't end in an endless upgrade loop
+    """
+    # file counter, local, home, or temp if not available
+    return True # WIP
+
+
+def auto_upgrader(upgrade_url: str, username: str, password: str) -> bool:
     """
     Auto upgrade binary NPBackup distributions
 
@@ -45,7 +53,7 @@ def auto_upgrade(upgrade_url: str, username: str, password: str) -> bool:
     """
     is_nuitka = "__compiled__" in globals()
     if not is_nuitka:
-        logger.info("No upgrade necessary")
+        logger.info("Auto upgrade will only upgrade compiled verions. Please use 'pip install --upgrade npbackup' instead")
         return True
     logger.info("Upgrade server is %s", upgrade_url)
     requestor = Requestor(upgrade_url, username, password)

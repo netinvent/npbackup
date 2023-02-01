@@ -39,7 +39,7 @@ from npbackup.gui.main import main_gui
 from npbackup.core.runner import NPBackupRunner
 from npbackup.core.i18n_helper import _t
 from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
-from npbackup.upgrade_client.upgrader import auto_upgrade
+from npbackup.upgrade_client.upgrader import auto_upgrader, need_upgrade
 
 del sys.path[0]
 
@@ -297,23 +297,34 @@ This is free software, and you are welcome to redistribute it under certain cond
                 logger.error("No configuration created via GUI")
                 sys.exit(7)
 
-    if args.auto_upgrade:
-        logger.info("Running user initiated auto upgrade")
+    # Try to perform an auto upgrade if needed
+    try:
+        auto_upgrade = config_dict['options']['auto_upgrade']
+    except KeyError:
+        auto_upgrade = True
+    try:
+        auto_upgrade_interval = config_dict['options']['auto_upgrade_interval']
+    except KeyError:
+        auto_upgrade_interval = 10
+
+    if (auto_upgrade and need_upgrade(auto_upgrade_interval)) or args.auto_upgrade:
         try:
-            upgrade_url = config_dict['options']['auto_upgrade_server_url']
-            username = config_dict['options']['auto_upgrade_server_username']
-            password = config_dict['options']['auto_upgrade_server_password']
+            auto_upgrade_upgrade_url = config_dict['options']['auto_upgrade_server_url']
+            auto_upgrade_username = config_dict['options']['auto_upgrade_server_username']
+            auto_upgrade_password = config_dict['options']['auto_upgrade_server_password']
         except KeyError as exc:
             logger.error("Missing auto upgrade info: %s", exc)
-            sys.exit(23)
         else:
-            result = auto_upgrade(upgrade_url=upgrade_url, username=username, password=password)
-            if result:
-                sys.exit(0)
+            if args.auto_upgrade:
+                logger.info("Running user initiated auto upgrade")
             else:
-                sys.exit(23)
-
-
+                logger.info("Running program initiated auto upgrade")
+            result = auto_upgrader(upgrade_url=auto_upgrade_upgrade_url, username=auto_upgrade_username, password=auto_upgrade_password)
+            if args.auto_upgrade:
+                if result:
+                    sys.exit(0)
+                else:
+                    sys.exit(23)
 
     dry_run = False
     if args.dry_run:
