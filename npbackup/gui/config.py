@@ -122,6 +122,15 @@ def config_gui(config_dict: dict, config_file: str):
         [
             sg.Text(
                 "{}\n({})".format(
+                    _t("config_gui.ignore_cloud_files"), _t("config_gui.windows_only")
+                ),
+                size=(30, 2),
+            ),
+            sg.Checkbox("", key="backup---ignore_cloud_files", size=(0, 1)),
+        ],
+        [
+            sg.Text(
+                "{}\n({})".format(
                     _t("config_gui.exclude_files"), _t("config_gui.one_per_line")
                 ),
                 size=(30, 2),

@@ -253,6 +253,13 @@ class NPBackupRunner:
             pass
         except ValueError:
             logger.warning("Bogus backup priority in config file.")
+        try:
+            if self.config_dict["backup"]["ignore_cloud_files"]:
+                self.restic_runner.ignore_cloud_files = self.config_dict["backup"]["ignore_cloud_files"]
+        except KeyError:
+            pass
+        except ValueError:
+            logger.warning("Bogus ignore_cloud_files value given")
 
         self.restic_runner.stdout = self.stdout
 
