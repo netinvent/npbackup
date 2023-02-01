@@ -610,7 +610,7 @@ class ResticRunner:
                 return backup_ts
             return False
         except IndexError as exc:
-            logger.debug("snapshot information missing:".format(exc))
+            logger.debug("snapshot information missing: {}".format(exc))
             logger.debug("Trace", exc_info=True)
             # No 'time' attribute in snapshot ?
             return None
