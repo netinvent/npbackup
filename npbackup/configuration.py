@@ -41,7 +41,13 @@ ENCRYPTED_OPTIONS = [
     {"section": "options", "name": "auto_upgrade_server_password", "type": str},
 ]
 
-empty_config_dict = {"backup": {}, "repo": {}, "prometheus": {}, "env": {}}
+empty_config_dict = {"backup": {
+    "use_fs_snapshot": True,
+    "ignore_cloud_files": True,
+    "exclude_cache_dirs": True,
+}, "repo": {
+    "minimum_backup_age": 86400
+}, "prometheus": {}, "env": {}, "options": {}}
 
 
 def decrypt_data(config_dict):
