@@ -41,15 +41,19 @@ ENCRYPTED_OPTIONS = [
     {"section": "options", "name": "server_password", "type": str},
 ]
 
-empty_config_dict = {"backup": {
-    "compression": "auto",
-    "use_fs_snapshot": True,
-    "ignore_cloud_files": True,
-    "exclude_caches": True,
-    "priority": "low",
-}, "repo": {
-    "minimum_backup_age": 86400
-}, "prometheus": {}, "env": {}, "options": {}}
+empty_config_dict = {
+    "backup": {
+        "compression": "auto",
+        "use_fs_snapshot": True,
+        "ignore_cloud_files": True,
+        "exclude_caches": True,
+        "priority": "low",
+    },
+    "repo": {"minimum_backup_age": 86400},
+    "prometheus": {},
+    "env": {},
+    "options": {},
+}
 
 
 def decrypt_data(config_dict):

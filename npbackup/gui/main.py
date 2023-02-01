@@ -55,21 +55,27 @@ def _about_gui(version_string: str, config_dict: dict) -> None:
     layout = [
         [sg.Text(version_string)],
         [
-            sg.Button(_t("config_gui.auto_upgrade_launch"), key="autoupgrade", size=(12, 2))
+            sg.Button(
+                _t("config_gui.auto_upgrade_launch"), key="autoupgrade", size=(12, 2)
+            )
         ],
         [sg.Text("License: GNU GPLv3")],
         [sg.Multiline(license_content, size=(65, 20))],
         [sg.Button(_t("generic.accept"), key="exit")],
     ]
 
-    window = sg.Window(_t("generic.about"), layout, keep_on_top=True, element_justification='C')
+    window = sg.Window(
+        _t("generic.about"), layout, keep_on_top=True, element_justification="C"
+    )
     while True:
         event, _ = window.read()
         if event in [sg.WIN_CLOSED, "exit"]:
             break
         elif event == "autoupgrade":
-            result = sg.PopupOKCancel(_t("config_gui.auto_ugprade_will_quit"), keep_on_top=True)
-            if result == 'OK':
+            result = sg.PopupOKCancel(
+                _t("config_gui.auto_ugprade_will_quit"), keep_on_top=True
+            )
+            if result == "OK":
                 logger.info("Running GUI initiated upgrade")
                 sub_result = run_upgrade(config_dict)
                 if sub_result:

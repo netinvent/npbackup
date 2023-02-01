@@ -20,12 +20,8 @@ logger = getLogger(__intname__)
 def run_upgrade(config_dict):
     try:
         auto_upgrade_upgrade_url = config_dict["options"]["server_url"]
-        auto_upgrade_username = config_dict["options"][
-            "server_username"
-        ]
-        auto_upgrade_password = config_dict["options"][
-            "server_password"
-        ]
+        auto_upgrade_username = config_dict["options"]["server_username"]
+        auto_upgrade_password = config_dict["options"]["server_password"]
     except KeyError as exc:
         logger.error("Missing auto upgrade info: %s, cannot launch auto upgrade", exc)
         return False

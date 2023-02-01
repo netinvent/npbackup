@@ -324,18 +324,57 @@ def config_gui(config_dict: dict, config_file: str):
     ]
 
     tab_group_layout = [
-        [sg.Tab(_t("config_gui.backup"), backup_col, font="helvetica 16", key="--tab-backup--", element_justification='C')],
-        [sg.Tab(_t("config_gui.backup_destination"),repo_col,  font="helvetica 16", key="--tab-repo--", element_justification='C')],
-        [sg.Tab(_t("config_gui.prometheus_config"), prometheus_col, font="helvetica 16", key="--tab-prometheus--", element_justification='C')],
-        [sg.Tab(_t("config_gui.environment_variables"), env_col, font="helvetica 16", key="--tab-env--", element_justification='C')],
-        [sg.Tab(_t("generic.options"), options_col, font="helvetica 16", key="--tab-options--", element_justification='C')],
+        [
+            sg.Tab(
+                _t("config_gui.backup"),
+                backup_col,
+                font="helvetica 16",
+                key="--tab-backup--",
+                element_justification="C",
+            )
+        ],
+        [
+            sg.Tab(
+                _t("config_gui.backup_destination"),
+                repo_col,
+                font="helvetica 16",
+                key="--tab-repo--",
+                element_justification="C",
+            )
+        ],
+        [
+            sg.Tab(
+                _t("config_gui.prometheus_config"),
+                prometheus_col,
+                font="helvetica 16",
+                key="--tab-prometheus--",
+                element_justification="C",
+            )
+        ],
+        [
+            sg.Tab(
+                _t("config_gui.environment_variables"),
+                env_col,
+                font="helvetica 16",
+                key="--tab-env--",
+                element_justification="C",
+            )
+        ],
+        [
+            sg.Tab(
+                _t("generic.options"),
+                options_col,
+                font="helvetica 16",
+                key="--tab-options--",
+                element_justification="C",
+            )
+        ],
     ]
 
     layout = [
         [sg.TabGroup(tab_group_layout, enable_events=True, key="--tabgroup--")],
         [sg.Column(buttons, element_justification="C")],
     ]
-
 
     window = sg.Window(
         "Configuration",
