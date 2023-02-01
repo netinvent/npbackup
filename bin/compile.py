@@ -17,8 +17,8 @@ import argparse
 import atexit
 from command_runner import command_runner
 
-ARCHES = ['x86', 'x64']
-AUDIENCES = ['public', 'private']
+ARCHES = ["x86", "x64"]
+AUDIENCES = ["public", "private"]
 
 # Insert parent dir as path se we get to use npbackup as package
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
@@ -38,6 +38,7 @@ from npbackup.path_helper import BASEDIR
 import glob
 
 del sys.path[0]
+
 
 def check_private_build(audience):
     private = False
@@ -64,31 +65,42 @@ def check_private_build(audience):
 
 
 def move_audience_files(audience):
-    for dir in [os.path.join(BASEDIR, os.pardir, 'examples'), BASEDIR]:
-        if audience == 'private':
-            possible_non_used_path = '_NOUSE_private_'
-            guessed_files = glob.glob(os.path.join(dir, '{}*'.format(possible_non_used_path)))
+    for dir in [os.path.join(BASEDIR, os.pardir, "examples"), BASEDIR]:
+        if audience == "private":
+            possible_non_used_path = "_NOUSE_private_"
+            guessed_files = glob.glob(
+                os.path.join(dir, "{}*".format(possible_non_used_path))
+            )
             for file in guessed_files:
                 os.rename(file, file.replace(possible_non_used_path, "_private_"))
-        elif audience == 'public':
-            possible_non_used_path = '_private_'
-            guessed_files = glob.glob(os.path.join(dir, '{}*'.format(possible_non_used_path)))
+        elif audience == "public":
+            possible_non_used_path = "_private_"
+            guessed_files = glob.glob(
+                os.path.join(dir, "{}*".format(possible_non_used_path))
+            )
             for file in guessed_files:
-                os.rename(file, file.replace(possible_non_used_path, "_NOUSE{}".format(possible_non_used_path)))
+                os.rename(
+                    file,
+                    file.replace(
+                        possible_non_used_path,
+                        "_NOUSE{}".format(possible_non_used_path),
+                    ),
+                )
 
 
 def get_conf_dist_file(audience):
-    if audience == 'private':
+    if audience == "private":
         file = "_private_npbackup.conf.dist"
     else:
         file = "npbackup.conf.dist"
     dist_conf_file_path = os.path.join(BASEDIR, os.pardir, "examples", file)
-    return  dist_conf_file_path
+    return dist_conf_file_path
 
 
 def have_nuitka_commercial():
     try:
         import nuitka.plugins.commercial
+
         print("Running with nuitka commercial")
         return True
     except ImportError:
@@ -106,7 +118,7 @@ def compile(arch, audience):
         restic_executable = "restic"
         platform = "linux"
 
-    PACKAGE_DIR = 'npbackup'
+    PACKAGE_DIR = "npbackup"
 
     check_private_build(audience)
     BUILDS_DIR = os.path.abspath(os.path.join(BASEDIR, os.pardir, "BUILDS"))
@@ -124,7 +136,10 @@ def compile(arch, audience):
     FILE_VERSION = _npbackup_version + ".0"
 
     file_description = "{} P{}-{}{}".format(
-        FILE_DESCRIPTION, sys.version_info[1], arch, "priv" if audience == 'private' else ''
+        FILE_DESCRIPTION,
+        sys.version_info[1],
+        arch,
+        "priv" if audience == "private" else "",
     )
 
     restic_source_file = get_restic_internal_binary(arch)
@@ -139,20 +154,22 @@ def compile(arch, audience):
 
     license_dest_file = os.path.join(PACKAGE_DIR, os.path.basename(LICENSE_FILE))
 
-    icon_file = os.path.join(PACKAGE_DIR, 'npbackup_icon.ico')
+    icon_file = os.path.join(PACKAGE_DIR, "npbackup_icon.ico")
 
     # Installer specific files, no need for a npbackup package directory here
 
     program_executable_path = os.path.join(OUTPUT_DIR, program_executable)
 
     dist_conf_file_source = get_conf_dist_file(audience)
-    dist_conf_file_dest = os.path.basename(dist_conf_file_source.replace('_private_', ''))
+    dist_conf_file_dest = os.path.basename(
+        dist_conf_file_source.replace("_private_", "")
+    )
 
     excludes_dir = "excludes"
     excludes_dir_source = os.path.join(BASEDIR, os.pardir, excludes_dir)
     excludes_dir_dest = excludes_dir
 
-    NUITKA_OPTIONS = '--enable-plugin=data-hiding' if have_nuitka_commercial() else ''
+    NUITKA_OPTIONS = "--enable-plugin=data-hiding" if have_nuitka_commercial() else ""
 
     EXE_OPTIONS = '--company-name="{}" --product-name="{}" --file-version="{}" --product-version="{}" --copyright="{}" --file-description="{}" --trademarks="{}"'.format(
         COMPANY_NAME,
@@ -199,7 +216,7 @@ def compile(arch, audience):
     )
     CMD = '{} -m nuitka --python-flag=no_docstrings --python-flag=-O {} {} --onefile --plugin-enable=tk-inter --include-data-file="{}"="{}" --include-data-file="{}"="{}" --include-data-dir="{}"="{}" --windows-icon-from-ico="{}" --windows-uac-admin --output-dir="{}" bin/NPBackupInstaller.py'.format(
         PYTHON_EXECUTABLE,
-        NUITKA_OPTIONS,        
+        NUITKA_OPTIONS,
         EXE_OPTIONS,
         program_executable_path,
         program_executable,
@@ -217,7 +234,7 @@ def compile(arch, audience):
         errors = True
     else:
         ## Create version file
-        with open(os.path.join(BUILDS_DIR, audience, 'VERSION'), 'w') as fh:
+        with open(os.path.join(BUILDS_DIR, audience, "VERSION"), "w") as fh:
             fh.write(npbackup_version)
 
     print("COMPILE ERRORS", errors)
@@ -233,32 +250,32 @@ class ArchAction(argparse.Action):
 
 class AudienceAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        if values not in AUDIENCES + ['all']:
+        if values not in AUDIENCES + ["all"]:
             print("Got value:", values)
             raise argparse.ArgumentError(self, "Not a valid audience")
-        setattr(namespace, self.dest, values)    
+        setattr(namespace, self.dest, values)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-    prog="npbackup compile.py", description="Compiler script for NPBackup"
+        prog="npbackup compile.py", description="Compiler script for NPBackup"
     )
 
     parser.add_argument(
-    "--arch",
-    type=str,
-    dest="arch",
-    default=None,
-    required=True,
-    action=ArchAction,
-    help="Target arch, x64 or x86",
+        "--arch",
+        type=str,
+        dest="arch",
+        default=None,
+        required=True,
+        action=ArchAction,
+        help="Target arch, x64 or x86",
     )
 
     parser.add_argument(
         "--audience",
         type=str,
         dest="audience",
-        default='private',
+        default="private",
         required=False,
         help="Target audience, private or public",
     )
@@ -266,13 +283,16 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Make sure we get out dev environment back when compilation ends / fails
-    atexit.register(move_audience_files, 'private',)
+    atexit.register(
+        move_audience_files,
+        "private",
+    )
     try:
-        if args.audience.lower() == 'all':
+        if args.audience.lower() == "all":
             audiences = AUDIENCES
         else:
             audiences = [args.audience]
-            
+
         for audience in audiences:
             move_audience_files(audience)
             compile(arch=args.arch, audience=audience)

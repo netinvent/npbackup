@@ -25,19 +25,21 @@ config_dict = configuration.load_config()
 logger = logging.getLogger()
 
 #### Create app
-#app = FastAPI()        # standard FastAPI initialization
-app = FastAPIOffline()  # Offline FastAPI initialization, allows /docs to not use online CDN
+# app = FastAPI()        # standard FastAPI initialization
+app = (
+    FastAPIOffline()
+)  # Offline FastAPI initialization, allows /docs to not use online CDN
 security = HTTPBasic()
 
 
 def get_current_username(credentials: HTTPBasicCredentials = Depends(security)):
     current_username_bytes = credentials.username.encode("utf8")
-    correct_username_bytes = config_dict['http_server']['username'].encode('utf-8')
+    correct_username_bytes = config_dict["http_server"]["username"].encode("utf-8")
     is_correct_username = secrets.compare_digest(
         current_username_bytes, correct_username_bytes
     )
     current_password_bytes = credentials.password.encode("utf8")
-    correct_password_bytes = config_dict['http_server']['password'].encode('utf-8')
+    correct_password_bytes = config_dict["http_server"]["password"].encode("utf-8")
     is_correct_password = secrets.compare_digest(
         current_password_bytes, correct_password_bytes
     )
@@ -51,26 +53,21 @@ def get_current_username(credentials: HTTPBasicCredentials = Depends(security)):
 
 
 @app.get("/")
-async def api_root(auth = Depends(get_current_username)):
+async def api_root(auth=Depends(get_current_username)):
     if crud.is_enabled():
         return {
             "app": __appname__,
-            }
-    else:
-        return {
-            "app": "Currently under maintenance"
         }
+    else:
+        return {"app": "Currently under maintenance"}
 
 
 @app.get("/current_version", response_model=CurrentVersion, status_code=200)
-async def current_version(auth = Depends(get_current_username)):
+async def current_version(auth=Depends(get_current_username)):
     try:
         result = crud.get_current_version()
         if not result:
-            raise HTTPException(
-                status_code=404,
-                detail="Not found"
-            )
+            raise HTTPException(status_code=404, detail="Not found")
         return result
     except HTTPException:
         raise
@@ -83,16 +80,13 @@ async def current_version(auth = Depends(get_current_username)):
 
 
 @app.get("/upgrades/{platform}/{arch}", response_model=FileSend, status_code=200)
-async def upgrades(platform: Platform, arch: Arch, auth = Depends(get_current_username)):
+async def upgrades(platform: Platform, arch: Arch, auth=Depends(get_current_username)):
 
     file = FileGet(platform=platform, arch=arch)
     try:
         result = crud.get_file(file)
         if not result:
-            raise HTTPException(
-                status_code=404,
-                detail="Not found"
-            )
+            raise HTTPException(status_code=404, detail="Not found")
         return result
     except HTTPException:
         raise
@@ -103,20 +97,16 @@ async def upgrades(platform: Platform, arch: Arch, auth = Depends(get_current_us
             detail="Cannot get file: {}".format(exc),
         )
 
+
 @app.get("/upgrades/{platform}/{arch}/data", status_code=200)
-async def download(platform: Platform, arch: Arch, auth = Depends(get_current_username)):
+async def download(platform: Platform, arch: Arch, auth=Depends(get_current_username)):
     file = FileGet(platform=platform, arch=arch)
     try:
         result = crud.get_file(file, content=True)
         if not result:
-            raise HTTPException(
-                status_code=404,
-                detail="Not found"
-            )
-        headers = {
-            "Content-Disposition": 'attachment; filename="npbackup"'
-        }
-        return  Response(content=result, media_type="application/dat", headers=headers)
+            raise HTTPException(status_code=404, detail="Not found")
+        headers = {"Content-Disposition": 'attachment; filename="npbackup"'}
+        return Response(content=result, media_type="application/dat", headers=headers)
     except HTTPException:
         raise
     except Exception as exc:
@@ -125,4 +115,3 @@ async def download(platform: Platform, arch: Arch, auth = Depends(get_current_us
             status_code=400,
             detail="Cannot get file: {}".format(exc),
         )
-

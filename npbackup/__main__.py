@@ -215,7 +215,9 @@ This is free software, and you are welcome to redistribute it under certain cond
     )
 
     parser.add_argument("--license", action="store_true", help=("Show license"))
-    parser.add_argument("--auto-upgrade", action="store_true", help=("Auto upgrade NPBackup"))
+    parser.add_argument(
+        "--auto-upgrade", action="store_true", help=("Auto upgrade NPBackup")
+    )
 
     args = parser.parse_args()
     if args.version:
@@ -299,19 +301,23 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     # Try to perform an auto upgrade if needed
     try:
-        auto_upgrade = config_dict['options']['auto_upgrade']
+        auto_upgrade = config_dict["options"]["auto_upgrade"]
     except KeyError:
         auto_upgrade = True
     try:
-        auto_upgrade_interval = config_dict['options']['auto_upgrade_interval']
+        auto_upgrade_interval = config_dict["options"]["auto_upgrade_interval"]
     except KeyError:
         auto_upgrade_interval = 10
 
     if (auto_upgrade and need_upgrade(auto_upgrade_interval)) or args.auto_upgrade:
         try:
-            auto_upgrade_upgrade_url = config_dict['options']['auto_upgrade_server_url']
-            auto_upgrade_username = config_dict['options']['auto_upgrade_server_username']
-            auto_upgrade_password = config_dict['options']['auto_upgrade_server_password']
+            auto_upgrade_upgrade_url = config_dict["options"]["auto_upgrade_server_url"]
+            auto_upgrade_username = config_dict["options"][
+                "auto_upgrade_server_username"
+            ]
+            auto_upgrade_password = config_dict["options"][
+                "auto_upgrade_server_password"
+            ]
         except KeyError as exc:
             logger.error("Missing auto upgrade info: %s", exc)
         else:
@@ -319,7 +325,11 @@ This is free software, and you are welcome to redistribute it under certain cond
                 logger.info("Running user initiated auto upgrade")
             else:
                 logger.info("Running program initiated auto upgrade")
-            result = auto_upgrader(upgrade_url=auto_upgrade_upgrade_url, username=auto_upgrade_username, password=auto_upgrade_password)
+            result = auto_upgrader(
+                upgrade_url=auto_upgrade_upgrade_url,
+                username=auto_upgrade_username,
+                password=auto_upgrade_password,
+            )
             if args.auto_upgrade:
                 if result:
                     sys.exit(0)

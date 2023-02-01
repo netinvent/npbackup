@@ -41,7 +41,7 @@ def need_upgrade(upgrade_interval: int) -> bool:
     Basic counter which allows an upgrade only every X times this is called so failed operations won't end in an endless upgrade loop
     """
     # file counter, local, home, or temp if not available
-    return True # WIP
+    return True  # WIP
 
 
 def auto_upgrader(upgrade_url: str, username: str, password: str) -> bool:
@@ -53,7 +53,9 @@ def auto_upgrader(upgrade_url: str, username: str, password: str) -> bool:
     """
     is_nuitka = "__compiled__" in globals()
     if not is_nuitka:
-        logger.info("Auto upgrade will only upgrade compiled verions. Please use 'pip install --upgrade npbackup' instead")
+        logger.info(
+            "Auto upgrade will only upgrade compiled verions. Please use 'pip install --upgrade npbackup' instead"
+        )
         return True
     logger.info("Upgrade server is %s", upgrade_url)
     requestor = Requestor(upgrade_url, username, password)
@@ -63,37 +65,45 @@ def auto_upgrader(upgrade_url: str, username: str, password: str) -> bool:
         logger.error("Cannot reach upgrade server")
         return False
     try:
-        if not server_ident['app'] == 'npbackup.upgrader':
+        if not server_ident["app"] == "npbackup.upgrader":
             logger.error("Current server is not a recognized NPBackup update server")
             return False
     except (KeyError, TypeError):
         logger.error("Current server is not a NPBackup update server")
         return False
 
-    result = requestor.data_model('current_version')
+    result = requestor.data_model("current_version")
     try:
-        online_version = result['version']
+        online_version = result["version"]
     except KeyError:
         logger.error("Upgrade server failed to provide proper version info")
         return False
     else:
         if online_version:
             if version.parse(online_version) > version.parse(npbackup_version):
-                logger.info("Current version %s is older than online version %s", npbackup_version, online_version)
+                logger.info(
+                    "Current version %s is older than online version %s",
+                    npbackup_version,
+                    online_version,
+                )
             else:
-                logger.info("Current version %s is up-to-date (online version %s)", npbackup_version, online_version)
+                logger.info(
+                    "Current version %s is up-to-date (online version %s)",
+                    npbackup_version,
+                    online_version,
+                )
                 return True
 
-    platform_and_arch = '{}/{}'.format(get_os(), os_arch()).lower()
+    platform_and_arch = "{}/{}".format(get_os(), os_arch()).lower()
 
-    file_info = requestor.data_model('upgrades', id_record=platform_and_arch)
+    file_info = requestor.data_model("upgrades", id_record=platform_and_arch)
     try:
-        sha256sum = file_info['sha256sum']
+        sha256sum = file_info["sha256sum"]
     except (KeyError, TypeError):
         logger.error("Cannot get file description")
         return False
-    
-    file_data = requestor.requestor('upgrades/' + platform_and_arch + '/data', raw=True)
+
+    file_data = requestor.requestor("upgrades/" + platform_and_arch + "/data", raw=True)
     if not file_data:
         logger.error("Cannot get update file")
         return False
@@ -101,19 +111,24 @@ def auto_upgrader(upgrade_url: str, username: str, password: str) -> bool:
     if sha256sum_data(file_data) != sha256sum:
         logger.error("Invalid checksum, won't upgrade")
         return False
-    
-    executable = os.path.join(tempfile.gettempdir(), file_info['filename'])
-    with open(executable, 'wb') as fh:
+
+    executable = os.path.join(tempfile.gettempdir(), file_info["filename"])
+    with open(executable, "wb") as fh:
         fh.write(file_data)
     logger.info("Upgrade file written to %s", executable)
 
-    log_file = os.path.join(tempfile.gettempdir(), file_info['filename'] + '.log')
+    log_file = os.path.join(tempfile.gettempdir(), file_info["filename"] + ".log")
 
     # Actual upgrade process
     new_executable = os.path.join(CURRENT_DIR, os.path.basename(CURRENT_EXECUTABLE))
-    cmd = "del \"{}\"; move \"{}\" \"{}\"; del \"{}\" > {}".format(CURRENT_EXECUTABLE, executable, new_executable, executable, log_file)
-    logger.info("Launching upgrade. Current process will quit. Upgrade starts in %s seconds. Upgrade is done by OS logged in %s", UPGRADE_DEFER_TIME, log_file)
+    cmd = 'del "{}"; move "{}" "{}"; del "{}" > {}'.format(
+        CURRENT_EXECUTABLE, executable, new_executable, executable, log_file
+    )
+    logger.info(
+        "Launching upgrade. Current process will quit. Upgrade starts in %s seconds. Upgrade is done by OS logged in %s",
+        UPGRADE_DEFER_TIME,
+        log_file,
+    )
     logger.debug(cmd)
     deferred_command(cmd, defer_time=UPGRADE_DEFER_TIME)
     return True
-

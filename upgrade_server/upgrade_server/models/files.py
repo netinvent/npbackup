@@ -28,11 +28,12 @@ class FileBase(BaseModel):
     arch: Arch
     platform: Platform
 
+
 class FileGet(FileBase):
     pass
+
 
 class FileSend(FileBase):
     sha256sum: constr(min_length=64, max_length=64)
     filename: str
     file_length: int
-
