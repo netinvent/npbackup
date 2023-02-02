@@ -41,13 +41,13 @@ def run_upgrade(config_dict):
         return False
 
     try:
-        host_identity = configuration.handle_variables(
+        host_identity = configuration.evaluate_variables(
             config_dict, config_dict["options"]["auto_upgrade_host_identity"]
         )
     except KeyError:
         host_identity = None
     try:
-        group = configuration.handle_variables(
+        group = configuration.evaluate_variables(
             config_dict, config_dict["options"]["auto_ugrade_group"]
         )
     except KeyError:

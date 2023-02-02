@@ -189,7 +189,7 @@ def has_random_variables(config_dict: dict) -> Tuple[bool, dict]:
     return is_modified, config_dict
 
 
-def handle_variables(config_dict: dict, value: str) -> str:
+def evaluate_variables(config_dict: dict, value: str) -> str:
     """
     Replaces various variables with their actual value in a string
     """
