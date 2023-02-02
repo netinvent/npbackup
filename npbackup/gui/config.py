@@ -22,6 +22,20 @@ from npbackup.path_helper import CURRENT_EXECUTABLE
 logger = getLogger(__intname__)
 
 
+def ask_backup_admin_password(config_dict) -> bool:
+    try:
+        backup_admin_password = config_dict['options']['backup_admin_password']
+    except KeyError:
+        backup_admin_password = configuration.DEFAULT_BACKUP_ADMIN_PASSWORD
+    if (
+        sg.PopupGetText(_t("config_gui.enter_backup_admin_password"))
+        == backup_admin_password
+    ):
+        return True
+    sg.PopupError(_t("config_gui.wrong_password"))
+    return False
+
+
 def config_gui(config_dict: dict, config_file: str):
     logger.info("Launching configuration GUI")
 
@@ -39,8 +53,12 @@ def config_gui(config_dict: dict, config_file: str):
             if config_dict[section] is None:
                 config_dict[section] = {}
             for entry in config_dict[section].keys():
+                # Don't bother to update admin password since we won't show it
+                if entry == "backup_admin_password":
+                    continue
                 try:
                     value = config_dict[section][entry]
+                    # Don't show sensible info unless unencrypted requested
                     if not unencrypted:
                         if entry in [
                             "http_username",
@@ -315,6 +333,14 @@ def config_gui(config_dict: dict, config_file: str):
             sg.Text(_t("config_gui.auto_upgrade_interval"), size=(30, 1)),
             sg.Input(key="options---interval", size=(50, 1)),
         ],
+        [sg.HorizontalSeparator(key='sep')],
+        [
+            sg.Text(_t("config_gui.enter_backup_admin_password"), size=(30, 1)),
+            sg.Input(key="backup_admin_password", size=(50, 1), password_char='*'),
+        ],
+        [
+            sg.Button(_t("generic.change"), key="change_backup_admin_password")
+        ]
     ]
 
     scheduled_task_col = [
@@ -427,13 +453,8 @@ def config_gui(config_dict: dict, config_file: str):
             logger.info("Configuration saved successfully.")
             break
         if event == _t("generic.decrypt"):
-            if (
-                sg.PopupGetText(_t("config_gui.enter_backup_admin_password"))
-                == configuration.ADMIN_PASSWORD
-            ):
+            if ask_backup_admin_password(config_dict):
                 update_gui(window, config_dict, unencrypted=True)
-            else:
-                sg.PopupError(_t("config_gui.wrong_password"))
         if event == "create_task":
             if os.name == 'nt':
                 result = create_scheduled_task(CURRENT_EXECUTABLE, values['scheduled_task_interval'])
@@ -443,5 +464,9 @@ def config_gui(config_dict: dict, config_file: str):
                     sg.PopupError(_t("config_gui.scheduled_task_creation_failure"))
             else:
                 sg.PopupError(_t("config_gui.scheduled_task_creation_failure"))
+        if event == "change_backup_admin_password":
+            if ask_backup_admin_password(config_dict):
+                config_dict['options']['backup_admin_password'] = values['backup_admin_password']
+                sg.Popup(_t("config_gui.password_updated_please_save"))
     window.close()
     return config_dict

@@ -110,7 +110,11 @@ def _check_new_version(upgrade_url: str, username: str, password: str) -> bool:
     """
     Check if we have a newer version of npbackup
     """
-    logger.info("Upgrade server is %s", upgrade_url)
+    if upgrade_url:
+        logger.info("Upgrade server is %s", upgrade_url)
+    else:
+        logger.debug("Upgrade server not set")
+        return False
     requestor = Requestor(upgrade_url, username, password)
     requestor.create_session(authenticated=True)
     server_ident = requestor.data_model()

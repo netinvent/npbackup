@@ -48,8 +48,9 @@ fr:
   no_binary: Impossible de trouver le coeur de sauvegarde. Merci d'installer le binaire restic depuis restic.net
 
   configuration_saved: Configuration sauvegardée
-  enter_backup_admin_password: Veuillez entrer le mot de passe administrateur de sauvegarde
+  enter_backup_admin_password: Mot de passe admin de sauvegarde
   wrong_password: Mot de passe érroné
+  password_updated_please_save: Mot de passe mis à jour. Veuillez enregistrer
 
   auto_upgrade: Mise à niveau
   auto_upgrade_server_url: Serveur de mise à niveau

@@ -3,6 +3,7 @@
     - Aupgrade client integrated into NPBackup, that can be called manually via --auto-upgrade or automatically run every n backups
     - Upgrade server which servers files and their metadata
   - Added a gui to create a scheduled task under Windows
+  - Added a gui to configure backup admin password (was compile time setting before)
   - Improved setup.py to provide launch scripts for both Linux and Windows platforms
   - Made windows cloud file filter optional (enabled by default)
   - Added default configuration settings

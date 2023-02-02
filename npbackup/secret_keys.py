@@ -19,4 +19,4 @@ __build__ = "2022120401"
 # print(generate_key(32))
 
 AES_KEY = b"\x9e\xbck\xe4\xc5nkT\x1e\xbf\xb5o\x06\xd3\xc6(\x0e:'i\x1bT\xb3\xf0\x1aC e\x9bd\xa5\xc6"
-ADMIN_PASSWORD = "NPBackup_00"
+DEFAULT_BACKUP_ADMIN_PASSWORD = "NPBackup_00"

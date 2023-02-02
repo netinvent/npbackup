@@ -48,8 +48,9 @@ en:
   np_binary: Cannot find backup backend. Please install restic binary from restic.net
 
   configuration_saved: Configuration saved
-  enter_backup_admin_password: Enter backup administrator password
+  enter_backup_admin_password: Backup admin password
   wrong_password: Wrong password
+  password_updated_please_save: Password updated. Please save
 
   auto_upgrade: Auto upgrade
   auto_upgrade_server_url: Server URL
