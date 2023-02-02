@@ -37,7 +37,10 @@ repo:
 prometheus:
   ## Supervision
   metrics: true
-  backup_job: ${HOSTNAME} # ${HOSTNAME} is a variable which can be replaced with a constant string
+   # ${HOSTNAME} is a variable
+   # ${RANDOM}[n] is a variable containing 'n' random alphanumeric char
+   # The following example allows to have multiple hosts with the same hostname
+  backup_job: ${HOSTNAME}-${RANDOM}
   # Prometheus metrics destination can be a http / https server with optional basic authentication (pushgateway), or a file path for node textfile collector to pickup
   destination: #  https://push.monitoring.example.tld/metrics/job/${BACKUP_JOB} where ${BACKUP_JOB} is defined in prometheus_backup_job
   # prometheus instance, becomes exported_instance when using a push gateway
@@ -65,3 +68,5 @@ options:
   # every 10 NPBackup runs, we'll try an autoupgrade. Never set this lower than 2 since failed upgrades will prevent backups from succeeding
   interval: 10
   backup_admin_password: NPBackup_00
+  # Available variables: ${HOSTNAME}, ${RANDOM}[n]
+  host_identity: ${HOSTNAME}-${RANDOM}[3]

@@ -7,14 +7,18 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023020101"
-__version__ = "1.5.0 for npbackup 2.2.0+"
+__build__ = "2023020102"
+__version__ = "1.6.0 for npbackup 2.2.0+"
 
+from typing import Tuple, Optional
 import sys
 from ruamel.yaml import YAML
 from logging import getLogger
+import re
 from cryptidy import symmetric_encryption as enc
+from ofunctions.random import random_string
 from npbackup.customization import ID_STRING
+
 
 # Try to import a private key, if not available, fallback to the default key
 try:
@@ -57,7 +61,7 @@ empty_config_dict = {
 }
 
 
-def decrypt_data(config_dict):
+def decrypt_data(config_dict: dict) -> dict:
     try:
         for option in ENCRYPTED_OPTIONS:
             try:
@@ -95,7 +99,7 @@ def decrypt_data(config_dict):
     return config_dict
 
 
-def encrypt_data(config_dict):
+def encrypt_data(config_dict: dict) -> dict:
     for option in ENCRYPTED_OPTIONS:
         try:
             if config_dict[option["section"]][option["name"]]:
@@ -121,7 +125,7 @@ def encrypt_data(config_dict):
     return config_dict
 
 
-def is_encrypted(config_dict):
+def is_encrypted(config_dict: dict) -> bool:
     try:
         is_enc = True
         for option in ENCRYPTED_OPTIONS:
@@ -142,29 +146,62 @@ def is_encrypted(config_dict):
         # NoneType
         return False
 
+def has_random_variables(config_dict: dict) -> Tuple[bool, dict]:
+    """
+    Replaces ${RANDOM}[n] with n random alphanumeric chars
+    """
+    is_modified = False
+    for section in config_dict.keys():
+        for entry in config_dict[section].keys():
+            if isinstance(config_dict[section][entry], str):
+                matches = re.search(r"\${RANDOM}\[(.*)\]", config_dict[section][entry])
+                print(matches)
+                if matches:
+                    try:
+                        char_quantity = int(matches.group(1))
+                    except (ValueError, TypeError):
+                        char_quantity = 1
+                    print(random_string(char_quantity))
+                    config_dict[section][entry] = re.sub(r"\${RANDOM}\[.*\]", random_string(char_quantity), config_dict[section][entry])
+                    is_modified = True
+    return is_modified, config_dict
 
-def load_config(config_file):
+
+def load_config(config_file: str) -> Optional[dict]:
     """
     Using ruamel.yaml preserves comments and order of yaml files
     """
-    logger.debug("Using configuration file {}".format(config_file))
-    with open(config_file, "r", encoding="utf-8") as file_handle:
-        # RoundTrip loader is default and preserves comments and ordering
-        yaml = YAML(typ="rt")
-        config_dict = yaml.load(file_handle)
-        if not is_encrypted(config_dict):
-            logger.info("Encrypting non encrypted data in configuration file")
-            config_dict = encrypt_data(config_dict)
-            save_config(config_file, config_dict)
+    try:
+        logger.debug("Using configuration file {}".format(config_file))
+        with open(config_file, "r", encoding="utf-8") as file_handle:
+            # RoundTrip loader is default and preserves comments and ordering
+            yaml = YAML(typ="rt")
+            config_dict = yaml.load(file_handle)
+            is_modified, config_dict = has_random_variables(config_dict)
+            if is_modified:
+                logger.info("Handling random variables in configuration files")
+                save_config(config_file, config_dict)
+            if not is_encrypted(config_dict):
+                logger.info("Encrypting non encrypted data in configuration file")
+                config_dict = encrypt_data(config_dict)
+                save_config(config_file, config_dict)
+            config_dict = decrypt_data(config_dict)
+            return config_dict
+    except OSError:
+        logger.critical("Cannot load configuration file from %s", config_file)
+        return None
+
+
+def save_config(config_file: str, config_dict: dict) -> bool:
+    try:
+        with open(config_file, "w", encoding="utf-8") as file_handle:
+            if not is_encrypted(config_dict):
+                config_dict = encrypt_data(config_dict)
+            yaml = YAML(typ="rt")
+            yaml.dump(config_dict, file_handle)
+        # Since we deal with global objects in ruamel.yaml, we need to decrypt after saving
         config_dict = decrypt_data(config_dict)
-        return config_dict
-
-
-def save_config(config_file, config_dict):
-    with open(config_file, "w", encoding="utf-8") as file_handle:
-        if not is_encrypted(config_dict):
-            config_dict = encrypt_data(config_dict)
-        yaml = YAML(typ="rt")
-        yaml.dump(config_dict, file_handle)
-    # Since we deal with global objects in ruamel.yaml, we need to decrypt after saving
-    config_dict = decrypt_data(config_dict)
+        return True
+    except OSError:
+        logger.critical("Cannot save configuartion file to %s", config_file)
+        return False
