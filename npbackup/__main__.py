@@ -310,6 +310,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         # Eg:
 
         logger.info("Upgrading configuration file to version %s", __version__)
+        """
         try:
             config_dict["options"]
         except KeyError:
@@ -320,6 +321,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         except KeyError:
             # Create new entry
             config_dict["options"]["how_many_fancy_options"] = "Yes !"
+        """
         configuration.save_config(CONFIG_FILE, config_dict)
         sys.exit(0)
 
