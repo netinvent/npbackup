@@ -6,6 +6,8 @@
   - Fix config fails when restic password is an int
   - Fix empty config files did not show a proper error message
   - Fix various config file malformation will break execution
+  - Fix backup hangs when no restic password is given (restic asks for password in backgroud job)
+  - Fix error message in logs when repo is not initialized
 
 ## v2.2.0 - rc1 - 02/02/2023
   - Added a full auto-upgrade solution:

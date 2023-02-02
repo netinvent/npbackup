@@ -123,6 +123,7 @@ class NPBackupRunner:
         self._minimim_backup_age = None
         self._exec_time = None
 
+        self.is_ready = False
         # Create an instance of restic wrapper
         self.create_restic_runner()
         # Configure that instance
@@ -197,13 +198,22 @@ class NPBackupRunner:
         return wrapper
 
     def create_restic_runner(self) -> None:
+        can_run = True
         try:
             repository = self.config_dict["repo"]["repository"]
+            if not repository:
+                raise KeyError
+        except (KeyError, AttributeError):
+            logger.error("Repo cannot be empty")
+            can_run = False
+        try:
             password = self.config_dict["repo"]["password"]
-        except KeyError as exc:
-            logger.error("Missing repo information: {}".format(exc))
-            return None
-
+            if not password:
+                raise KeyError
+        except (KeyError, AttributeError):
+            logger.error("Repo password cannot be empty")
+            can_run = False
+        self.is_ready = can_run
         self.restic_runner = ResticRunner(
             repository=repository,
             password=password,
@@ -219,7 +229,7 @@ class NPBackupRunner:
                 self.restic_runner.binary = binary
 
     def apply_config_to_restic_runner(self) -> None:
-        if not self.restic_runner:
+        if not self.is_ready:
             return None
         try:
             if self.config_dict["repo"]["upload_speed"]:
@@ -309,12 +319,16 @@ class NPBackupRunner:
 
     @exec_timer
     def list(self) -> Optional[dict]:
+        if not self.is_ready:
+            return False
         logger.info("Listing snapshots")
         snapshots = self.restic_runner.snapshots()
         return snapshots
 
     @exec_timer
     def find(self, path: str) -> bool:
+        if not self.is_ready:
+            return False
         logger.info("Searching for path {}".format(path))
         result = self.restic_runner.find(path=path)
         if result:
@@ -326,12 +340,21 @@ class NPBackupRunner:
 
     @exec_timer
     def ls(self, snapshot: str) -> Optional[dict]:
+        if not self.is_ready:
+            return False
         logger.info("Showing content of snapshot {}".format(snapshot))
         result = self.restic_runner.ls(snapshot)
         return result
 
     @exec_timer
     def check_recent_backups(self) -> bool:
+        """
+        Checks for backups in timespan
+        Returns True or False if found or not
+        Returns None if no information is available
+        """
+        if not self.is_ready:
+            return None
         logger.info(
             "Searching for a backup newer than {} ago.".format(
                 str(datetime.timedelta(minutes=self.minimum_backup_age))
@@ -345,13 +368,15 @@ class NPBackupRunner:
             logger.info("No recent backup found.")
         elif result is None:
             logger.error("Cannot connect to repository.")
-        return False
+        return result
 
     @exec_timer
     def backup(self, force: bool = False) -> bool:
         """
         Run backup after checking if no recent backup exists, unless force == True
         """
+        if not self.is_ready:
+            return False
         # Preflight checks
         try:
             paths = self.config_dict["backup"]["paths"]
@@ -509,6 +534,8 @@ class NPBackupRunner:
 
     @exec_timer
     def restore(self, snapshot: str, target: str, restore_includes: List[str]) -> bool:
+        if not self.is_ready:
+            return False
         logger.info("Launching restore to {}".format(target))
         result = self.restic_runner.restore(
             snapshot=snapshot,
@@ -519,12 +546,15 @@ class NPBackupRunner:
 
     @exec_timer
     def forget(self, snapshot: str) -> bool:
+        if not self.is_ready:
+            return False
         logger.info("Forgetting snapshot {}".format(snapshot))
         result = self.restic_runner.forget(snapshot)
         return result
 
     @exec_timer
     def raw(self, command: str) -> bool:
+        
         logger.info("Running raw command: {}".format(command))
         result = self.restic_runner.raw(command=command)
         return result

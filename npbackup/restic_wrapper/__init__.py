@@ -213,7 +213,6 @@ class ResticRunner:
                 priority=self._priority,
                 io_priority=self._priority,
             )
-
         # Don't keep protected environment variables in memory when not necessary
         self._remove_env()
 
@@ -242,6 +241,17 @@ class ResticRunner:
                 return True, output
             # TEMP-FIX-4155-END
         self.last_command_status = False
+        
+        # From here, we assume that we have errors
+        # Before going back to errors, let's analyze current output
+
+        # Cannot connect to repo (port ?)
+        #if re.match("Fatal: unable to open config file: Head .*: dial tcp .*: connect .*", output):
+        #    logger.error("Cannot connect to repo.")
+
+        #if re.match("Is there a repository at the following location\?", output):
+            # We did achieve to get to the repo
+
         if not errors_allowed and output:
             logger.error(output)
         return False, output
@@ -421,6 +431,8 @@ class ResticRunner:
         """
         Returns json list of snapshots
         """
+        if not self.is_init:
+            return None
         cmd = "list {} --json".format(obj)
         result, output = self.executor(cmd)
         if result:
@@ -435,6 +447,8 @@ class ResticRunner:
         """
         Returns json list of objects
         """
+        if not self.is_init:
+            return None
         cmd = "ls {} --json".format(snapshot)
         result, output = self.executor(cmd)
         if result and output:
@@ -458,6 +472,8 @@ class ResticRunner:
         """
         Returns json list of snapshots
         """
+        if not self.is_init:
+            return None
         cmd = "snapshots --json"
         result, output = self.executor(cmd)
         if result:
@@ -484,6 +500,8 @@ class ResticRunner:
         """
         Executes restic backup after interpreting all arguments
         """
+        if not self.is_init:
+            return None
         # make sure path is a list and does not have trailing slashes
         cmd = "backup {}".format(
             " ".join(['"{}"'.format(path.rstrip("/\\")) for path in paths])
@@ -535,6 +553,8 @@ class ResticRunner:
         """
         Returns find command
         """
+        if not self.is_init:
+            return None
         cmd = 'find "{}" --json'.format(path)
         result, output = self.executor(cmd)
         if result:
@@ -551,6 +571,8 @@ class ResticRunner:
         """
         Restore given snapshot to directory
         """
+        if not self.is_init:
+            return None
         case_ignore_param = ""
         # Always use case ignore excludes under windows
         if os.name == "nt":
@@ -570,6 +592,8 @@ class ResticRunner:
         """
         Execute forget command for given snapshot
         """
+        if not self.is_init:
+            return None
         cmd = "forget {}".format(snapshot)
         # We need to be verbose here since server errors will not stop client from deletion attempts
         verbose = self.verbose
@@ -586,6 +610,8 @@ class ResticRunner:
         """
         Execute plain restic command without any interpretation"
         """
+        if not self.is_init:
+            return None
         result, output = self.executor(command)
         if result:
             logger.info("successfully run raw command:\n{}".format(output))
@@ -601,11 +627,11 @@ class ResticRunner:
             returns False is too old snapshots exit
             returns None if no info available
         """
+        if not self.is_init:
+            return None
         try:
             snapshots = self.snapshots()
-            if self.last_command_status is False:
-                return None
-            if not snapshots:
+            if self.last_command_status is False or not snapshots:
                 return False
 
             tz_aware_timestamp = datetime.now(timezone.utc).astimezone()
