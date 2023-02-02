@@ -472,6 +472,9 @@ def config_gui(config_dict: dict, config_file: str):
         if event in (sg.WIN_CLOSED, "cancel"):
             break
         if event == "accept":
+            if not values['repo---password']:
+                sg.PopupError(_t("config_gui.repo_password_cannot_be_empty"))
+                continue
             config_dict = update_config_dict(values, config_dict)
             configuration.save_config(config_file, config_dict)
             sg.Popup(_t("config_gui.configuration_saved"), keep_on_top=True)

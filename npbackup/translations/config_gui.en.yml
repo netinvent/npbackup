@@ -50,6 +50,7 @@ en:
   np_binary: Cannot find backup backend. Please install restic binary from restic.net
 
   configuration_saved: Configuration saved
+  repo_password_cannot_be_empty: Password cannot be empty
   enter_backup_admin_password: Backup admin password
   wrong_password: Wrong password
   password_updated_please_save: Password updated. Please save
