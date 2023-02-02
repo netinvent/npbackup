@@ -46,6 +46,8 @@ Available in both CLI / GUI flavors for both system administrators and end users
 - Additional security
   - repository uri / password and http metrics identification is encrypted
 - yaml file configuration (or gui configuration)
+- Remote automatic self upgrade
+  - Included upgrade server
 
 ## About
 
