@@ -81,17 +81,17 @@ async def current_version(auth=Depends(get_current_username)):
 
 @app.get("/upgrades/{platform}/{arch}", response_model=FileSend, status_code=200)
 @app.get(
-    "/upgrades/{platform}/{arch}/{host_identity}",
+    "/upgrades/{platform}/{arch}/{auto_upgrade_host_identity}",
     response_model=FileSend,
     status_code=200,
 )
 @app.get(
-    "/upgrades/{platform}/{arch}/{host_identity}/{installed_version}",
+    "/upgrades/{platform}/{arch}/{auto_upgrade_host_identity}/{installed_version}",
     response_model=FileSend,
     status_code=200,
 )
 @app.get(
-    "/upgrades/{platform}/{arch}/{host_identity}/{installed_version}/{group}",
+    "/upgrades/{platform}/{arch}/{auto_upgrade_host_identity}/{installed_version}/{group}",
     response_model=FileSend,
     status_code=200,
 )
@@ -99,14 +99,14 @@ async def upgrades(
     request: Request,
     platform: Platform,
     arch: Arch,
-    host_identity: str = None,
+    auto_upgrade_host_identity: str = None,
     installed_version: str = None,
     group: str = None,
     auth=Depends(get_current_username),
 ):
     data = {
         "ip": request.client.host,
-        "host_identity": host_identity,
+        "auto_upgrade_host_identity": auto_upgrade_host_identity,
         "installed_version": installed_version,
         "group": group,
         "platform": platform.value,

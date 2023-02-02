@@ -19,33 +19,33 @@ from npbackup.__main__ import __version__ as npbackup_version
 logger = getLogger(__intname__)
 
 
-def check_new_version(config_dict):
+def check_new_version(config_dict: dict) -> bool:
     try:
-        upgrade_url = config_dict["options"]["server_url"]
-        username = config_dict["options"]["server_username"]
-        password = config_dict["options"]["server_password"]
+        upgrade_url = config_dict["options"]["auto_upgrade_server_url"]
+        username = config_dict["options"]["auto_upgrade_server_username"]
+        password = config_dict["options"]["auto_upgrade_server_password"]
     except KeyError as exc:
         logger.error("Missing auto upgrade info: %s, cannot launch auto upgrade", exc)
-        return False
+        return None
     else:
         return _check_new_version(upgrade_url, username, password)
 
 
 def run_upgrade(config_dict):
     try:
-        auto_upgrade_upgrade_url = config_dict["options"]["server_url"]
-        auto_upgrade_username = config_dict["options"]["server_username"]
-        auto_upgrade_password = config_dict["options"]["server_password"]
+        auto_upgrade_upgrade_url = config_dict["options"]["auto_upgrade_server_url"]
+        auto_upgrade_username = config_dict["options"]["auto_upgrade_server_username"]
+        auto_upgrade_password = config_dict["options"]["auto_upgrade_server_password"]
     except KeyError as exc:
         logger.error("Missing auto upgrade info: %s, cannot launch auto upgrade", exc)
         return False
 
     try:
-        host_identity = configuration.evaluate_variables(
+        auto_upgrade_host_identity = configuration.evaluate_variables(
             config_dict, config_dict["options"]["auto_upgrade_host_identity"]
         )
     except KeyError:
-        host_identity = None
+        auto_upgrade_host_identity = None
     try:
         group = configuration.evaluate_variables(
             config_dict, config_dict["options"]["auto_ugrade_group"]
@@ -57,7 +57,7 @@ def run_upgrade(config_dict):
         upgrade_url=auto_upgrade_upgrade_url,
         username=auto_upgrade_username,
         password=auto_upgrade_password,
-        host_identity=host_identity,
+        auto_upgrade_host_identity=auto_upgrade_host_identity,
         installed_version=npbackup_version,
         group=group,
     )

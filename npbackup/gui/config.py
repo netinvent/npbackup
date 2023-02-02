@@ -64,8 +64,8 @@ def config_gui(config_dict: dict, config_file: str):
                             "http_password",
                             "repository",
                             "password",
-                            "server_username",
-                            "server_password",
+                            "auto_upgrade_server_username",
+                            "auto_upgrade_server_password",
                         ]:
                             try:
                                 if config_dict[section][entry] is None:
@@ -331,15 +331,15 @@ def config_gui(config_dict: dict, config_file: str):
         ],
         [
             sg.Text(_t("config_gui.auto_upgrade_server_url"), size=(30, 1)),
-            sg.Input(key="options---server_url", size=(50, 1)),
+            sg.Input(key="options---auto_upgrade_server_url", size=(50, 1)),
         ],
         [
             sg.Text(_t("config_gui.auto_upgrade_server_username"), size=(30, 1)),
-            sg.Input(key="options---server_username", size=(50, 1)),
+            sg.Input(key="options---auto_upgrade_server_username", size=(50, 1)),
         ],
         [
             sg.Text(_t("config_gui.auto_upgrade_server_password"), size=(30, 1)),
-            sg.Input(key="options---server_password", size=(50, 1)),
+            sg.Input(key="options---auto_upgrade_server_password", size=(50, 1)),
         ],
         [
             sg.Text(_t("config_gui.auto_upgrade_interval"), size=(30, 1)),

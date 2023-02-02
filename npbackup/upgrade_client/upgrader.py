@@ -114,27 +114,27 @@ def _check_new_version(upgrade_url: str, username: str, password: str) -> bool:
         logger.info("Upgrade server is %s", upgrade_url)
     else:
         logger.debug("Upgrade server not set")
-        return False
+        return None
     requestor = Requestor(upgrade_url, username, password)
     requestor.create_session(authenticated=True)
     server_ident = requestor.data_model()
     if server_ident is False:
         logger.error("Cannot reach upgrade server")
-        return False
+        return None
     try:
         if not server_ident["app"] == "npbackup.upgrader":
             logger.error("Current server is not a recognized NPBackup update server")
-            return False
+            return None
     except (KeyError, TypeError):
         logger.error("Current server is not a NPBackup update server")
-        return False
+        return None
 
     result = requestor.data_model("current_version")
     try:
         online_version = result["version"]
     except KeyError:
         logger.error("Upgrade server failed to provide proper version info")
-        return False
+        return None
     else:
         if online_version:
             if version.parse(online_version) > version.parse(npbackup_version):
@@ -157,7 +157,7 @@ def auto_upgrader(
     upgrade_url: str,
     username: str,
     password: str,
-    host_identity: str = None,
+    auto_upgrade_host_identity: str = None,
     installed_version: str = None,
     group: str = None,
 ) -> bool:
@@ -181,7 +181,7 @@ def auto_upgrader(
     platform_and_arch = "{}/{}".format(get_os(), os_arch()).lower()
 
     try:
-        host_id = "{}/{}/{}".format(host_identity, installed_version, group)
+        host_id = "{}/{}/{}".format(auto_upgrade_host_identity, installed_version, group)
         id_record = "{}/{}".format(platform_and_arch, host_id)
     except TypeError:
         id_record = platform_and_arch

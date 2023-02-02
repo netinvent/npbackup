@@ -66,9 +66,9 @@ env:
 
 options:
   auto_upgrade: true
-  server_url:
-  server_username:
-  server_password:
+  auto_upgrade_server_url:
+  auto_upgrade_server_username:
+  auto_upgrade_server_password:
   # every 10 NPBackup runs, we'll try an autoupgrade. Never set this lower than 2 since failed upgrades will prevent backups from succeeding
   interval: 10
   backup_admin_password: NPBackup_00

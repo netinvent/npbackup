@@ -42,8 +42,8 @@ ENCRYPTED_OPTIONS = [
     {"section": "repo", "name": "password", "type": str},
     {"section": "prometheus", "name": "http_username", "type": str},
     {"section": "prometheus", "name": "http_password", "type": str},
-    {"section": "options", "name": "server_username", "type": str},
-    {"section": "options", "name": "server_password", "type": str},
+    {"section": "options", "name": "auto_upgrade_server_username", "type": str},
+    {"section": "options", "name": "auto_upgrade_server_password", "type": str},
     {"section": "options", "name": "backup_admin_password", "type": str},
 ]
 

@@ -46,22 +46,19 @@ THREAD_SHARED_DICT = {}
 
 def _about_gui(version_string: str, config_dict: dict) -> None:
     license_content = LICENSE_TEXT
-    try:
-        upgrade_server = config_dict["options"]["server_url"]
-    except KeyError:
-        upgrade_server = None
-    if upgrade_server:
-        if check_new_version(config_dict):
-            new_version = [
-                sg.Button(
-                    _t("config_gui.auto_upgrade_launch"),
-                    key="autoupgrade",
-                    size=(12, 2),
-                )
-            ]
-        else:
-            new_version = [sg.Text(_t("generic.is_uptodate"))]
-    else:
+    
+    result = check_new_version(config_dict)
+    if result:
+        new_version = [
+            sg.Button(
+                _t("config_gui.auto_upgrade_launch"),
+                key="autoupgrade",
+                size=(12, 2),
+            )
+        ]
+    elif result is False:
+        new_version = [sg.Text(_t("generic.is_uptodate"))]
+    elif result is None:
         new_version = [sg.Text(_t("config_gui.auto_upgrade_disabled"))]
     try:
         with open(LICENSE_FILE, "r") as file_handle:
