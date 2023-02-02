@@ -1,6 +1,11 @@
 ## v2.2.0 - rc2
+  - Upgrade client now sends its hostname, group and version information to server
+  - Add machine identification in configuration
+  - Add variable ${RANDOM}[n] to config file in order to distinguish non unique hostnames
+  - Refactor config variable handling
   - Fix config fails when restic password is an int
   - Fix empty config files did not show a proper error message
+  - Fix various config file malformation will break execution
 
 ## v2.2.0 - rc1 - 02/02/2023
   - Added a full auto-upgrade solution:
