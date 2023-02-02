@@ -80,21 +80,41 @@ async def current_version(auth=Depends(get_current_username)):
 
 
 @app.get("/upgrades/{platform}/{arch}", response_model=FileSend, status_code=200)
-@app.get("/upgrades/{platform}/{arch}/{host_identity}", response_model=FileSend, status_code=200)
-@app.get("/upgrades/{platform}/{arch}/{host_identity}/{installed_version}", response_model=FileSend, status_code=200)
-@app.get("/upgrades/{platform}/{arch}/{host_identity}/{installed_version}/{group}", response_model=FileSend, status_code=200)
-async def upgrades(request: Request, platform: Platform, arch: Arch, host_identity: str = None, installed_version: str = None, group: str = None, auth=Depends(get_current_username)):
+@app.get(
+    "/upgrades/{platform}/{arch}/{host_identity}",
+    response_model=FileSend,
+    status_code=200,
+)
+@app.get(
+    "/upgrades/{platform}/{arch}/{host_identity}/{installed_version}",
+    response_model=FileSend,
+    status_code=200,
+)
+@app.get(
+    "/upgrades/{platform}/{arch}/{host_identity}/{installed_version}/{group}",
+    response_model=FileSend,
+    status_code=200,
+)
+async def upgrades(
+    request: Request,
+    platform: Platform,
+    arch: Arch,
+    host_identity: str = None,
+    installed_version: str = None,
+    group: str = None,
+    auth=Depends(get_current_username),
+):
     data = {
         "ip": request.client.host,
         "host_identity": host_identity,
         "installed_version": installed_version,
         "group": group,
         "platform": platform.value,
-        "arch": arch.value
+        "arch": arch.value,
     }
 
     try:
-        crud.store_host_info(config_dict['upgrades']['statistics_file'], host_id = data)
+        crud.store_host_info(config_dict["upgrades"]["statistics_file"], host_id=data)
     except KeyError:
         logger.error("No statistics file set.")
 

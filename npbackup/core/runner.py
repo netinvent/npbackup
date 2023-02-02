@@ -554,7 +554,6 @@ class NPBackupRunner:
 
     @exec_timer
     def raw(self, command: str) -> bool:
-        
         logger.info("Running raw command: {}".format(command))
         result = self.restic_runner.raw(command=command)
         return result

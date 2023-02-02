@@ -53,7 +53,6 @@ logger = logger_get_logger()
 
 if __name__ == "__main__":
     try:
-
         server.run("upgrade_server.api:app", **server_args)
     except KeyboardInterrupt as exc:
         logger.error("Program interrupted by keyoard: {}".format(exc))

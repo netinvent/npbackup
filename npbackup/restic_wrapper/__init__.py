@@ -241,17 +241,9 @@ class ResticRunner:
                 return True, output
             # TEMP-FIX-4155-END
         self.last_command_status = False
-        
+
         # From here, we assume that we have errors
-        # Before going back to errors, let's analyze current output
-
-        # Cannot connect to repo (port ?)
-        #if re.match("Fatal: unable to open config file: Head .*: dial tcp .*: connect .*", output):
-        #    logger.error("Cannot connect to repo.")
-
-        #if re.match("Is there a repository at the following location\?", output):
-            # We did achieve to get to the repo
-
+        # We'll log them unless we tried to know if the repo is initialized
         if not errors_allowed and output:
             logger.error(output)
         return False, output
