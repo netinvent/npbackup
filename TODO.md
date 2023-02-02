@@ -1,8 +1,15 @@
 ## List of features that would be nice to have
 
+- Service mode instead of scheduler
+  - Windows service
+  - Included scheduler that does schedule backups and upgrades, no need for an upgrade counter file anymore
+- Fallback for upgrade server
+- Rewrite prometheus push server requests to have fallback option, to use requestor
 - Cube qemu plugin
 - Fallback server when primary repo is not available
-  - Shall we also include the recent backup job verification ?
+- Windows installer (NSIS ?)
+- Linux installer script
+- Shall we also include the recent backup job verification ?
     - Example of a bad remote repo path:
 
       Fatal: unable to open config file: Head "https:/user:***@bad.example.tld/user/config": dial tcp: lookup bad.example.tld: no such host
@@ -28,6 +35,4 @@ Is there a repository at the following location?
 rest:https://user:***@good.example.tld/user/
 
 
-- Linux installer script
-- Windows installer GUI
 
