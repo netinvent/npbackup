@@ -91,7 +91,7 @@ Main minimalistic interface allows to:
 ![image](img/restore_window_v2.1.0.png)
 Restore window allows to browse through backups and select what files to restore.
 
-![image](img/configuration_v2.1.0.png)
+![image](img/configuration_v2.2.0.png)
 Configuration allows to edit the YAML configuration files directly as end user
 
 **Security Note**
