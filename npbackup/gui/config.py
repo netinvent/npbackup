@@ -29,7 +29,7 @@ def ask_backup_admin_password(config_dict) -> bool:
         backup_admin_password = configuration.DEFAULT_BACKUP_ADMIN_PASSWORD
     if (
         sg.PopupGetText(_t("config_gui.enter_backup_admin_password"))
-        == backup_admin_password
+        == str(backup_admin_password)
     ):
         return True
     sg.PopupError(_t("config_gui.wrong_password"))
