@@ -173,13 +173,11 @@ def has_random_variables(config_dict: dict) -> Tuple[bool, dict]:
         for entry in config_dict[section].keys():
             if isinstance(config_dict[section][entry], str):
                 matches = re.search(r"\${RANDOM}\[(.*)\]", config_dict[section][entry])
-                print(matches)
                 if matches:
                     try:
                         char_quantity = int(matches.group(1))
                     except (ValueError, TypeError):
                         char_quantity = 1
-                    print(random_string(char_quantity))
                     config_dict[section][entry] = re.sub(
                         r"\${RANDOM}\[.*\]",
                         random_string(char_quantity),
