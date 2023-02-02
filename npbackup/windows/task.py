@@ -108,7 +108,7 @@ def create_scheduled_task(executable_path, interval_minutes: int):
     )
     # Create task file
     try:
-        with open(TEMP_TASKFILE, "w", encoding='unicode_escape') as file_handle:
+        with open(TEMP_TASKFILE, "w") as file_handle:
             file_handle.write(SCHEDULED_TASK_FILE_CONTENT)
     except OSError as exc:
         logger.error(
