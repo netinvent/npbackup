@@ -74,6 +74,12 @@ def need_upgrade(upgrade_interval: int) -> bool:
             logger.error("Bogus upgrade counter in %s", file)
             return None
 
+    try:
+        upgrade_interval = int(upgrade_interval)
+    except ValueError:
+        logger.error("Bogus upgrade interval given. Will not upgrade")
+        return False
+
     for file in [
         os.path.join(CURRENT_DIR, counter_file),
         os.path.join(tempfile.gettempdir(), counter_file),
