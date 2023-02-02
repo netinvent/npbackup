@@ -255,6 +255,7 @@ def config_gui(config_dict: dict, config_file: str):
     ]
 
     identity_col = [
+        [sg.Text(_t("config_gui.available_variables_id"))],
         [
             sg.Text(_t("config_gui.machine_id"), size=(30, 1)),
             sg.Input(key="identity---machine_id", size=(50, 1)),

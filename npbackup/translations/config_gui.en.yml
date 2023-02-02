@@ -29,7 +29,8 @@ en:
   backend_connections: Simultaneous repo connections
 
   prometheus_config: Prometheus configuration
-  available_variables: Available variables ${HOSTNAME}, ${BACKUP_JOB}, ${MACHINE_ID}, ${MACHINE_GROUP}
+  available_variables: Available variables ${HOSTNAME}, ${BACKUP_JOB}, ${MACHINE_ID}, ${MACHINE_GROUP}, ${RANDOM}[n]
+  available_variables_id: Available variables ${HOSTNAME}, ${RANDOM}[n] where n is the number of chars
   enable_prometheus: Enable prometheus metrics
   job_name: Job name (backup_job)
   metrics_destination: Metrics destination (URI / file)
