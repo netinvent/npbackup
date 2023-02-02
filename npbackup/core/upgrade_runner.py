@@ -26,7 +26,7 @@ def check_new_version(config_dict):
         logger.error("Missing auto upgrade info: %s, cannot launch auto upgrade", exc)
         return False
     else:
-        return _check_new_version(upgrade_url, username, password) 
+        return _check_new_version(upgrade_url, username, password)
 
 
 def run_upgrade(config_dict):

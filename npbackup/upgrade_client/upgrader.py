@@ -152,6 +152,7 @@ def _check_new_version(upgrade_url: str, username: str, password: str) -> bool:
                 )
                 return False
 
+
 def auto_upgrader(upgrade_url: str, username: str, password: str) -> bool:
     """
     Auto upgrade binary NPBackup distributions
@@ -165,7 +166,7 @@ def auto_upgrader(upgrade_url: str, username: str, password: str) -> bool:
             "Auto upgrade will only upgrade compiled verions. Please use 'pip install --upgrade npbackup' instead"
         )
         return False
-    
+
     if not _check_new_version(upgrade_url, username, password):
         return False
     requestor = Requestor(upgrade_url, username, password)
@@ -197,41 +198,43 @@ def auto_upgrader(upgrade_url: str, username: str, password: str) -> bool:
     logger.info("Logging upgrade to %s", log_file)
 
     # Actual upgrade process
-    backup_executable = CURRENT_EXECUTABLE + '.old'
+    backup_executable = CURRENT_EXECUTABLE + ".old"
 
     # Inplace upgrade script, gets executed after main program has exited
-    if os.name == 'nt':
-        cmd = \
-        f'echo "Launching upgrade" >> {log_file} 2>&1 && ' \
-        f'del /F /Q "{backup_executable}" >> NUL 2>&1 && ' \
-        f'echo "Renaming earlier executable from {CURRENT_EXECUTABLE} to {backup_executable}" >> {log_file} 2>&1 && ' \
-        f'move /Y "{CURRENT_EXECUTABLE}" "{backup_executable}" >> {log_file} 2>&1 && ' \
-        f'echo "Copying new executable from {downloaded_executable} to {CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && ' \
-        f'copy /Y "{downloaded_executable}" "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && ' \
-        f'del "{downloaded_executable}" >> {log_file} 2>&1 && ' \
-        f'echo "Loading new executable" >> {log_file} 2>&1 && ' \
-        f'"{CURRENT_EXECUTABLE}" --upgrade-conf >> {log_file} 2>&1 || ' \
-        f'echo "New executable failed. Rolling back" >> {log_file} 2>&1 && ' \
-        f'del /F /Q "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && ' \
-        f'move /Y "{backup_executable}" "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1'
+    if os.name == "nt":
+        cmd = (
+            f'echo "Launching upgrade" >> {log_file} 2>&1 && '
+            f'del /F /Q "{backup_executable}" >> NUL 2>&1 && '
+            f'echo "Renaming earlier executable from {CURRENT_EXECUTABLE} to {backup_executable}" >> {log_file} 2>&1 && '
+            f'move /Y "{CURRENT_EXECUTABLE}" "{backup_executable}" >> {log_file} 2>&1 && '
+            f'echo "Copying new executable from {downloaded_executable} to {CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && '
+            f'copy /Y "{downloaded_executable}" "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && '
+            f'del "{downloaded_executable}" >> {log_file} 2>&1 && '
+            f'echo "Loading new executable" >> {log_file} 2>&1 && '
+            f'"{CURRENT_EXECUTABLE}" --upgrade-conf >> {log_file} 2>&1 || '
+            f'echo "New executable failed. Rolling back" >> {log_file} 2>&1 && '
+            f'del /F /Q "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && '
+            f'move /Y "{backup_executable}" "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1'
+        )
     else:
-        cmd = \
-        f'echo "Launching upgrade" >> {log_file} 2>&1 && ' \
-        f'rm -f "{backup_executable}" >> /dev/null 2>&1 && ' \
-        f'echo "Renaming earlier executable from {CURRENT_EXECUTABLE} to {backup_executable}" >> {log_file} 2>&1 && ' \
-        f'mv -f "{CURRENT_EXECUTABLE}" "{backup_executable}" >> {log_file} 2>&1 && ' \
-        f'echo "Copying new executable from {downloaded_executable} to {CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && ' \
-        f'alias cp=cp && cp -f "{downloaded_executable}" "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && ' \
-        f'rm -f "{downloaded_executable}" >> {log_file} 2>&1 && ' \
-        f'echo "Loading new executable" >> {log_file} 2>&1 && ' \
-        f'"{CURRENT_EXECUTABLE}" --upgrade-conf >> {log_file} 2>&1 || ' \
-        f'echo "New executable failed. Rolling back" >> {log_file} 2>&1 && ' \
-        f'rm -f "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && ' \
-        f'mv -f "{backup_executable}" "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1'
+        cmd = (
+            f'echo "Launching upgrade" >> {log_file} 2>&1 && '
+            f'rm -f "{backup_executable}" >> /dev/null 2>&1 && '
+            f'echo "Renaming earlier executable from {CURRENT_EXECUTABLE} to {backup_executable}" >> {log_file} 2>&1 && '
+            f'mv -f "{CURRENT_EXECUTABLE}" "{backup_executable}" >> {log_file} 2>&1 && '
+            f'echo "Copying new executable from {downloaded_executable} to {CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && '
+            f'alias cp=cp && cp -f "{downloaded_executable}" "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && '
+            f'rm -f "{downloaded_executable}" >> {log_file} 2>&1 && '
+            f'echo "Loading new executable" >> {log_file} 2>&1 && '
+            f'"{CURRENT_EXECUTABLE}" --upgrade-conf >> {log_file} 2>&1 || '
+            f'echo "New executable failed. Rolling back" >> {log_file} 2>&1 && '
+            f'rm -f "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && '
+            f'mv -f "{backup_executable}" "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1'
+        )
 
     # We still need to unregister previous kill_childs function se we can actually make the upgrade happen
     atexit.unregister(kill_childs)
-    
+
     logger.info(
         "Launching upgrade. Current process will quit. Upgrade starts in %s seconds. Upgrade is done by OS logged in %s",
         UPGRADE_DEFER_TIME,

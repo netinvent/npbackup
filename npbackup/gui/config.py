@@ -24,7 +24,7 @@ logger = getLogger(__intname__)
 
 def ask_backup_admin_password(config_dict) -> bool:
     try:
-        backup_admin_password = config_dict['options']['backup_admin_password']
+        backup_admin_password = config_dict["options"]["backup_admin_password"]
     except KeyError:
         backup_admin_password = configuration.DEFAULT_BACKUP_ADMIN_PASSWORD
     if (
@@ -333,14 +333,12 @@ def config_gui(config_dict: dict, config_file: str):
             sg.Text(_t("config_gui.auto_upgrade_interval"), size=(30, 1)),
             sg.Input(key="options---interval", size=(50, 1)),
         ],
-        [sg.HorizontalSeparator(key='sep')],
+        [sg.HorizontalSeparator(key="sep")],
         [
             sg.Text(_t("config_gui.enter_backup_admin_password"), size=(30, 1)),
-            sg.Input(key="backup_admin_password", size=(50, 1), password_char='*'),
+            sg.Input(key="backup_admin_password", size=(50, 1), password_char="*"),
         ],
-        [
-            sg.Button(_t("generic.change"), key="change_backup_admin_password")
-        ]
+        [sg.Button(_t("generic.change"), key="change_backup_admin_password")],
     ]
 
     scheduled_task_col = [
@@ -348,11 +346,9 @@ def config_gui(config_dict: dict, config_file: str):
             sg.Text(_t("config_gui.create_scheduled_task_every")),
             sg.Input(key="scheduled_task_interval", size=(4, 1)),
             sg.Text(_t("generic.minutes")),
-            sg.Button(_t("generic.create"), key="create_task")
+            sg.Button(_t("generic.create"), key="create_task"),
         ],
-        [
-            sg.Text(_t("config_gui.scheduled_task_explanation"))
-        ]
+        [sg.Text(_t("config_gui.scheduled_task_explanation"))],
     ]
 
     buttons = [
@@ -456,8 +452,10 @@ def config_gui(config_dict: dict, config_file: str):
             if ask_backup_admin_password(config_dict):
                 update_gui(window, config_dict, unencrypted=True)
         if event == "create_task":
-            if os.name == 'nt':
-                result = create_scheduled_task(CURRENT_EXECUTABLE, values['scheduled_task_interval'])
+            if os.name == "nt":
+                result = create_scheduled_task(
+                    CURRENT_EXECUTABLE, values["scheduled_task_interval"]
+                )
                 if result:
                     sg.Popup(_t("config_gui.scheduled_task_creation_success"))
                 else:
@@ -466,7 +464,9 @@ def config_gui(config_dict: dict, config_file: str):
                 sg.PopupError(_t("config_gui.scheduled_task_creation_failure"))
         if event == "change_backup_admin_password":
             if ask_backup_admin_password(config_dict):
-                config_dict['options']['backup_admin_password'] = values['backup_admin_password']
+                config_dict["options"]["backup_admin_password"] = values[
+                    "backup_admin_password"
+                ]
                 sg.Popup(_t("config_gui.password_updated_please_save"))
     window.close()
     return config_dict

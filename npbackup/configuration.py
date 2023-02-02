@@ -39,7 +39,7 @@ ENCRYPTED_OPTIONS = [
     {"section": "prometheus", "name": "http_password", "type": str},
     {"section": "options", "name": "server_username", "type": str},
     {"section": "options", "name": "server_password", "type": str},
-    {"section": "options", "name": "backup_admin_password", "type": str}
+    {"section": "options", "name": "backup_admin_password", "type": str},
 ]
 
 empty_config_dict = {
@@ -53,9 +53,7 @@ empty_config_dict = {
     "repo": {"minimum_backup_age": 1440},
     "prometheus": {},
     "env": {},
-    "options": {
-        "backup_admin_password": DEFAULT_BACKUP_ADMIN_PASSWORD
-    },
+    "options": {"backup_admin_password": DEFAULT_BACKUP_ADMIN_PASSWORD},
 }
 
 
