@@ -23,7 +23,7 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install --upgrade setuptools
         if [ -f npbackup/requirements.txt ]; then pip install -r npbackup/requirements.txt; fi
-        if [ -f npbackup/upgrade_server/upgrade_server/requirements.txt ]; then pip install -r npbackup/upgrade_server/upgrade_server/requirements.txt; fi
+        if [ -f upgrade_server/upgrade_server/requirements.txt ]; then pip install -r upgrade_server/upgrade_server/requirements.txt; fi
     - name: Lint with Pylint
       if: ${{ matrix.python-version == '3.11' }}
       run: |
