@@ -49,7 +49,7 @@ empty_config_dict = {
         "exclude_caches": True,
         "priority": "low",
     },
-    "repo": {"minimum_backup_age": 86400},
+    "repo": {"minimum_backup_age": 1440},
     "prometheus": {},
     "env": {},
     "options": {},

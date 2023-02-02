@@ -293,7 +293,7 @@ class NPBackupRunner:
                 self.config_dict["repo"]["minimum_backup_age"]
             )
         except (KeyError, ValueError):
-            self.minimum_backup_age = 86400
+            self.minimum_backup_age = 1440
 
         self.restic_runner.verbose = self.verbose
         self.restic_runner.dry_run = self.dry_run
@@ -326,7 +326,7 @@ class NPBackupRunner:
     def check_recent_backups(self) -> bool:
         logger.info(
             "Searching for a backup newer than {} ago.".format(
-                str(datetime.timedelta(seconds=self.minimum_backup_age))
+                str(datetime.timedelta(minutes=self.minimum_backup_age))
             )
         )
         result = self.restic_runner.has_snapshot_timedelta(self.minimum_backup_age)

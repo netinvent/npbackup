@@ -21,7 +21,7 @@ en:
   additional_parameters: Additional parameters
 
   backup_destination: Backup destination
-  maximum_backup_age: Maximum backup age
+  minimum_backup_age: Minimum delay between two backups
   backup_repo_uri: backup repo URI / path
   backup_repo_password: Backup repo password
   upload_speed: Upload speed limit (KB/s)

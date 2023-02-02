@@ -573,11 +573,11 @@ class ResticRunner:
         logger.critical("Raw command failed.")
         return False, output
 
-    def has_snapshot_timedelta(self, delta: int = 86400) -> Optional[datetime]:
+    def has_snapshot_timedelta(self, delta: int = 1441) -> Optional[datetime]:
         """
-        Checks if a snapshot exists that is newer that delta seconds
-        Eg: if delta = -3600 we expect a snapshot newer than an hour ago, and return True if exists
-            if delta = +3600 we expect a snpashot newer than one hour in future (!), and return True if exists
+        Checks if a snapshot exists that is newer that delta minutes
+        Eg: if delta = -60 we expect a snapshot newer than an hour ago, and return True if exists
+            if delta = +60 we expect a snpashot newer than one hour in future (!), and return True if exists
             returns False is too old snapshots exit
             returns None if no info available
         """
@@ -596,10 +596,10 @@ class ResticRunner:
                     snapshot["time"],
                 ):
                     backup_ts = dateutil.parser.parse(snapshot["time"])
-                    snapshot_age_seconds = (
+                    snapshot_age_minutes = (
                         tz_aware_timestamp - backup_ts
-                    ).total_seconds()
-                    if delta - snapshot_age_seconds > 0:
+                    ).total_seconds() / 60
+                    if delta - snapshot_age_minutes > 0:
                         logger.debug(
                             "Recent snapshot {} of {} exists !".format(
                                 snapshot["short_id"], snapshot["time"]

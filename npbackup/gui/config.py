@@ -209,7 +209,7 @@ def config_gui(config_dict: dict, config_file: str):
         [
             sg.Text(
                 "{}\n({})".format(
-                    _t("config_gui.maximum_backup_age"), _t("generic.seconds")
+                    _t("config_gui.minimum_backup_age"), _t("generic.minutes")
                 ),
                 size=(30, 2),
             ),
