@@ -7,7 +7,7 @@ __intname__ = "npbackup.upgrade_client.upgrader"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2023020101"
+__build__ = "2023020201"
 
 
 from typing import Optional
@@ -15,8 +15,10 @@ import os
 from logging import getLogger
 import hashlib
 import tempfile
+import atexit
 from packaging import version
 from ofunctions.platform import get_os, os_arch
+from ofunctions.process import kill_childs
 from command_runner import deferred_command
 from npbackup.upgrade_client.requestor import Requestor
 from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
@@ -88,7 +90,7 @@ def need_upgrade(upgrade_interval: int) -> bool:
         if result:
             if count >= upgrade_interval:
                 # Reinitialize upgrade counter before we actually approve upgrades
-                if _write_count(file, 0):
+                if _write_count(file, 1):
                     logger.info("Auto upgrade has decided upgrade check is required")
                     return True
             break
@@ -131,13 +133,14 @@ def _check_new_version(upgrade_url: str, username: str, password: str) -> bool:
                     npbackup_version,
                     online_version,
                 )
+                return True
             else:
                 logger.info(
                     "Current version %s is up-to-date (online version %s)",
                     npbackup_version,
                     online_version,
                 )
-                return True
+                return False
 
 def auto_upgrader(upgrade_url: str, username: str, password: str) -> bool:
     """
@@ -175,28 +178,50 @@ def auto_upgrader(upgrade_url: str, username: str, password: str) -> bool:
         logger.error("Invalid checksum, won't upgrade")
         return False
 
-    executable = os.path.join(tempfile.gettempdir(), file_info["filename"])
-    with open(executable, "wb") as fh:
+    downloaded_executable = os.path.join(tempfile.gettempdir(), file_info["filename"])
+    with open(downloaded_executable, "wb") as fh:
         fh.write(file_data)
-    logger.info("Upgrade file written to %s", executable)
+    logger.info("Upgrade file written to %s", downloaded_executable)
 
     log_file = os.path.join(tempfile.gettempdir(), file_info["filename"] + ".log")
     logger.info("Logging upgrade to %s", log_file)
 
     # Actual upgrade process
-    new_executable = os.path.join(CURRENT_DIR, os.path.basename(CURRENT_EXECUTABLE))
-    cmd = 'del "{}" > "{}" && move "{}" "{}" >> "{}" && del "{}" >> "{}" && "{}" --upgrade-conf >> "{}"'.format(
-        CURRENT_EXECUTABLE,
-        log_file,
-        executable,
-        log_file,
-        new_executable,
-        log_file,
-        executable,
-        log_file,
-        new_executable,
-        log_file,
-    )
+    backup_executable = CURRENT_EXECUTABLE + '.old'
+
+    # Inplace upgrade script, gets executed after main program has exited
+    if os.name == 'nt':
+        cmd = \
+        f'echo "Launching upgrade" >> {log_file} 2>&1 && ' \
+        f'del /F /Q "{backup_executable}" >> NUL 2>&1 && ' \
+        f'echo "Renaming earlier executable from {CURRENT_EXECUTABLE} to {backup_executable}" >> {log_file} 2>&1 && ' \
+        f'move /Y "{CURRENT_EXECUTABLE}" "{backup_executable}" >> {log_file} 2>&1 && ' \
+        f'echo "Copying new executable from {downloaded_executable} to {CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && ' \
+        f'copy /Y "{downloaded_executable}" "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && ' \
+        f'del "{downloaded_executable}" >> {log_file} 2>&1 && ' \
+        f'echo "Loading new executable" >> {log_file} 2>&1 && ' \
+        f'"{CURRENT_EXECUTABLE}" --upgrade-conf >> {log_file} 2>&1 || ' \
+        f'echo "New executable failed. Rolling back" >> {log_file} 2>&1 && ' \
+        f'del /F /Q "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && ' \
+        f'move /Y "{backup_executable}" "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1'
+    else:
+        cmd = \
+        f'echo "Launching upgrade" >> {log_file} 2>&1 && ' \
+        f'rm -f "{backup_executable}" >> /dev/null 2>&1 && ' \
+        f'echo "Renaming earlier executable from {CURRENT_EXECUTABLE} to {backup_executable}" >> {log_file} 2>&1 && ' \
+        f'mv -f "{CURRENT_EXECUTABLE}" "{backup_executable}" >> {log_file} 2>&1 && ' \
+        f'echo "Copying new executable from {downloaded_executable} to {CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && ' \
+        f'alias cp=cp && cp -f "{downloaded_executable}" "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && ' \
+        f'rm -f "{downloaded_executable}" >> {log_file} 2>&1 && ' \
+        f'echo "Loading new executable" >> {log_file} 2>&1 && ' \
+        f'"{CURRENT_EXECUTABLE}" --upgrade-conf >> {log_file} 2>&1 || ' \
+        f'echo "New executable failed. Rolling back" >> {log_file} 2>&1 && ' \
+        f'rm -f "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && ' \
+        f'mv -f "{backup_executable}" "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1'
+
+    # We still need to unregister previous kill_childs function se we can actually make the upgrade happen
+    atexit.unregister(kill_childs)
+    
     logger.info(
         "Launching upgrade. Current process will quit. Upgrade starts in %s seconds. Upgrade is done by OS logged in %s",
         UPGRADE_DEFER_TIME,
