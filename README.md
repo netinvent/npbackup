@@ -78,6 +78,7 @@ The YAML configuration file encrypts sensible data so the end user doesn't have 
 ## Quickstart GUI
 
 Just run the npbackup executable and configure it.
+Prebuilt binaries can be found [here](https://github.com/netinvent/npbackup/releases)
 
 ![image](img/interface_v2.1.0.png)
 Main minimalistic interface allows to: 
