@@ -49,11 +49,14 @@ class ResticRunner:
         self._limit_download = None
         self._backend_connections = None
         self._priority = None
-        backend = self.repository.split(":")[0].upper()
-        if backend in ["REST", "S3", "B2", "SFTP", "SWIFT", "AZURE", "GZ", "RCLONE"]:
-            self._backend_type = backend.lower()
-        else:
-            self._backend_type = "local"
+        try:
+            backend = self.repository.split(":")[0].upper()
+            if backend in ["REST", "S3", "B2", "SFTP", "SWIFT", "AZURE", "GZ", "RCLONE"]:
+                self._backend_type = backend.lower()
+            else:
+                self._backend_type = "local"
+        except AttributeError:
+            self._backend_type = None
         self._ignore_cloud_files = True
         self._addition_parameters = None
         self._environment_variables = {}
@@ -73,9 +76,17 @@ class ResticRunner:
         Configures environment for repository & password
         """
         if self.password:
-            os.environ["RESTIC_PASSWORD"] = str(self.password)
+            try:
+                os.environ["RESTIC_PASSWORD"] = str(self.password)
+            except TypeError:
+                logger.error("Bogus restic password")
+                self.password = None
         if self.repository:
-            os.environ["RESTIC_REPOSITORY"] = str(self.repository)
+            try:
+                os.environ["RESTIC_REPOSITORY"] = str(self.repository)
+            except TypeError:
+                logger.error("Bogus restic repository")
+                self.repository = None
 
         for env_variable, value in self.environment_variables.items():
             os.environ[env_variable] = value

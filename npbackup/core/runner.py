@@ -292,7 +292,7 @@ class NPBackupRunner:
             self.minimum_backup_age = int(
                 self.config_dict["repo"]["minimum_backup_age"]
             )
-        except (KeyError, ValueError):
+        except (KeyError, ValueError, TypeError):
             self.minimum_backup_age = 1440
 
         self.restic_runner.verbose = self.verbose
