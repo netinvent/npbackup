@@ -15,7 +15,9 @@ en:
   minutes: minutes
   hours: hours
 
+  user: User
   group: Group
+  identity: Identity
 
   too_old: Too old
   up_to_date: Up to date

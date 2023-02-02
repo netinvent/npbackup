@@ -29,7 +29,7 @@ fr:
   backend_connections: Connexions simultanées au dépot
 
   prometheus_config: Configuration prometheus
-  explanation: Variables disponibles ${HOSTNAME}, ${BACKUP_JOB}
+  available_variables: Variables disponibles ${HOSTNAME}, ${BACKUP_JOB}, ${MACHINE_ID}, ${MACHINE_GROUP}
   enable_prometheus: Activer les métriques prometheus
   job_name: Nom du travail (backup_job)
   metrics_destination: Destination métriques (URI / fichier)
@@ -67,3 +67,7 @@ fr:
   scheduled_task_explanation: Uniquement sous Windows. Sous Linux, merci de créer une entrée crontab comme `npbackup --backup --config-file /etc/npbackup.conf`
   scheduled_task_creation_success: Tâche planifiée crée avec succès
   scheduled_task_creation_failure: Impossible de créer la tâche planifiée. Veuillez consulter les journaux pour plus de détails
+
+  machine_identification: Identification machine
+  machine_id: Identificateur machine
+  machine_group: Groupe machine

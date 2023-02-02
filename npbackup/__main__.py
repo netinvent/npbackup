@@ -10,7 +10,7 @@ __description__ = "NetPerfect Backup Client"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2023013102"
-__version__ = "2.2.0-rc1"
+__version__ = "2.2.0-rc2"
 
 
 import os
@@ -288,7 +288,7 @@ This is free software, and you are welcome to redistribute it under certain cond
             sys.exit(23)
 
     try:
-        config_dict = configuration.load_config(CONFIG_FILE)        
+        config_dict = configuration.load_config(CONFIG_FILE)
     except FileNotFoundError:
         config_dict = None
 
@@ -322,18 +322,11 @@ This is free software, and you are welcome to redistribute it under certain cond
         # Eg:
 
         logger.info("Upgrading configuration file to version %s", __version__)
-        """
         try:
-            config_dict["options"]
+            config_dict["identity"]
         except KeyError:
-            # Create new section
-            config_dict["options"] = {}
-        try:
-            config_dict["options"]["how_many_fancy_options"]
-        except KeyError:
-            # Create new entry
-            config_dict["options"]["how_many_fancy_options"] = "Yes !"
-        """
+            # Create new section identity, as per upgrade 2.2.0rc2
+            config_dict["identity"] = {"machine_id": "${HOSTNAME}"}
         configuration.save_config(CONFIG_FILE, config_dict)
         sys.exit(0)
 

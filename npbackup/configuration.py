@@ -15,6 +15,7 @@ import sys
 from ruamel.yaml import YAML
 from logging import getLogger
 import re
+import platform
 from cryptidy import symmetric_encryption as enc
 from ofunctions.random import random_string
 from npbackup.customization import ID_STRING
@@ -55,9 +56,21 @@ empty_config_dict = {
         "priority": "low",
     },
     "repo": {"minimum_backup_age": 1440},
-    "prometheus": {},
+    "identity": {
+        "machine_id": "${HOSTNAME}__${RANDOM}[4]",
+        "machine_group": "",
+    },
+    "prometheus": {
+        "instance": "${MACHINE_ID}",
+        "backup_job": "${MACHINE_ID}",
+        "group": "${MACHINE_GROUP}",
+    },
     "env": {},
-    "options": {"backup_admin_password": DEFAULT_BACKUP_ADMIN_PASSWORD},
+    "options": {
+        "backup_admin_password": DEFAULT_BACKUP_ADMIN_PASSWORD,
+        "auto_upgrade_host_identity": "${MACHINE_ID}",
+        "auto_upgrade_group": "${MACHINE_GROUP}",
+    },
 }
 
 
@@ -130,11 +143,15 @@ def is_encrypted(config_dict: dict) -> bool:
         is_enc = True
         for option in ENCRYPTED_OPTIONS:
             try:
-                if config_dict[option["section"]][option["name"]] and isinstance(
-                    config_dict[option["section"]][option["name"]],
-                    option["type"],
-                ) and not config_dict[option["section"]][option["name"]].startswith(
-                    ID_STRING
+                if (
+                    config_dict[option["section"]][option["name"]]
+                    and isinstance(
+                        config_dict[option["section"]][option["name"]],
+                        option["type"],
+                    )
+                    and not config_dict[option["section"]][option["name"]].startswith(
+                        ID_STRING
+                    )
                 ):
                     is_enc = False
             except (TypeError, KeyError):
@@ -146,9 +163,10 @@ def is_encrypted(config_dict: dict) -> bool:
         # NoneType
         return False
 
+
 def has_random_variables(config_dict: dict) -> Tuple[bool, dict]:
     """
-    Replaces ${RANDOM}[n] with n random alphanumeric chars
+    Replaces ${RANDOM}[n] with n random alphanumeric chars, directly in config_dict
     """
     is_modified = False
     for section in config_dict.keys():
@@ -162,9 +180,33 @@ def has_random_variables(config_dict: dict) -> Tuple[bool, dict]:
                     except (ValueError, TypeError):
                         char_quantity = 1
                     print(random_string(char_quantity))
-                    config_dict[section][entry] = re.sub(r"\${RANDOM}\[.*\]", random_string(char_quantity), config_dict[section][entry])
+                    config_dict[section][entry] = re.sub(
+                        r"\${RANDOM}\[.*\]",
+                        random_string(char_quantity),
+                        config_dict[section][entry],
+                    )
                     is_modified = True
     return is_modified, config_dict
+
+
+def handle_variables(config_dict: dict, value: str) -> str:
+    """
+    Replaces various variables with their actual value in a string
+    """
+    value = value.replace("${HOSTNAME}", platform.node())
+    try:
+        value.replace("${MACHINE_ID}", config_dict["identity"]["machine_id"])
+    except KeyError:
+        pass
+    try:
+        value.replace("${MACHINE_GROUP}", config_dict["identity"]["machine_group"])
+    except KeyError:
+        pass
+    try:
+        value.replace("${BACKUP_JOB}", config_dict["prometheus"]["backup_job"])
+    except KeyError:
+        pass
+    return value
 
 
 def load_config(config_file: str) -> Optional[dict]:

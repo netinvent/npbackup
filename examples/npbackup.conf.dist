@@ -33,25 +33,29 @@ repo:
   download_speed: 0    # in KiB, use 0 for unlimited download speed
   backend_connections: 0 # Fine tune simultaneous connections to backend, use 0 for standard configuration
 
+identity:
+  # ${HOSTNAME} is a variable containing the hostname as exposed by platform.node()
+  # ${RANDOM}[n] is a variable containing 'n' random alphanumeric char
+  machine_id: ${HOSTNAME}-${RANDOM}[n]
+  machine_group:
 
 prometheus:
   ## Supervision
   metrics: true
-   # ${HOSTNAME} is a variable
-   # ${RANDOM}[n] is a variable containing 'n' random alphanumeric char
-   # The following example allows to have multiple hosts with the same hostname
-  backup_job: ${HOSTNAME}-${RANDOM}
+  # Available variables: ${HOSTNAME}, ${RANDOM}[n], ${MACHINE_ID}, ${MACHINE_GROUP}, ${BACKUP_JOB}
+  backup_job: ${MACHINE_ID}
   # Prometheus metrics destination can be a http / https server with optional basic authentication (pushgateway), or a file path for node textfile collector to pickup
   destination: #  https://push.monitoring.example.tld/metrics/job/${BACKUP_JOB} where ${BACKUP_JOB} is defined in prometheus_backup_job
   # prometheus instance, becomes exported_instance when using a push gateway
-  instance: ${HOSTNAME}
+  # Available variables: ${HOSTNAME}, ${RANDOM}[n], ${MACHINE_ID}
+  instance: ${MACHINE_ID}
 
   # prometheus metrics upload password
   http_username:
   http_password:
 
   # Arbitrary group to filter later backups on
-  group:
+  group: ${MACHINE_GROUP}
 
   # Additional prometheus labels
   additional_labels:
@@ -68,5 +72,6 @@ options:
   # every 10 NPBackup runs, we'll try an autoupgrade. Never set this lower than 2 since failed upgrades will prevent backups from succeeding
   interval: 10
   backup_admin_password: NPBackup_00
-  # Available variables: ${HOSTNAME}, ${RANDOM}[n]
-  host_identity: ${HOSTNAME}-${RANDOM}[3]
+  # Available variables: ${HOSTNAME}, ${RANDOM}[n], ${MACHINE_ID}, ${MACHINE_GROUP}, ${BACKUP_JOB}
+  auto_upgrade_host_identity: ${MACHINE_ID}
+  auto_upgrade_group: ${MACHINE_GROUP}

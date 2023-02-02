@@ -153,7 +153,14 @@ def _check_new_version(upgrade_url: str, username: str, password: str) -> bool:
                 return False
 
 
-def auto_upgrader(upgrade_url: str, username: str, password: str) -> bool:
+def auto_upgrader(
+    upgrade_url: str,
+    username: str,
+    password: str,
+    host_identity: str = None,
+    installed_version: str = None,
+    group: str = None,
+) -> bool:
     """
     Auto upgrade binary NPBackup distributions
 
@@ -173,7 +180,13 @@ def auto_upgrader(upgrade_url: str, username: str, password: str) -> bool:
     requestor.create_session(authenticated=True)
     platform_and_arch = "{}/{}".format(get_os(), os_arch()).lower()
 
-    file_info = requestor.data_model("upgrades", id_record=platform_and_arch)
+    try:
+        host_id = "{}/{}/{}".format(host_identity, installed_version, group)
+        id_record = "{}/{}".format(platform_and_arch, host_id)
+    except TypeError:
+        id_record = platform_and_arch
+
+    file_info = requestor.data_model("upgrades", id_record=id_record)
     try:
         sha256sum = file_info["sha256sum"]
     except (KeyError, TypeError):

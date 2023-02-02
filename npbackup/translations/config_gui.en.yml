@@ -29,7 +29,7 @@ en:
   backend_connections: Simultaneous repo connections
 
   prometheus_config: Prometheus configuration
-  explanation: Available variables ${HOSTNAME}, ${BACKUP_JOB}
+  available_variables: Available variables ${HOSTNAME}, ${BACKUP_JOB}, ${MACHINE_ID}, ${MACHINE_GROUP}
   enable_prometheus: Enable prometheus metrics
   job_name: Job name (backup_job)
   metrics_destination: Metrics destination (URI / file)
@@ -67,3 +67,7 @@ en:
   scheduled_task_explanation: This is for Windows only. On Linux, please create a crontab entry with `npbackup --backup --config-file /etc/npbackup.conf`
   scheduled_task_creation_success: Scheduled task created successfuly
   scheduled_task_creation_failure: Scheduled task could not be created. See logs for further info
+
+  machine_identification: Machine identification
+  machine_id: Machine identifier
+  machine_group: Machine group

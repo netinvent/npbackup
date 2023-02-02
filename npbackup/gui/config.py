@@ -27,9 +27,8 @@ def ask_backup_admin_password(config_dict) -> bool:
         backup_admin_password = config_dict["options"]["backup_admin_password"]
     except KeyError:
         backup_admin_password = configuration.DEFAULT_BACKUP_ADMIN_PASSWORD
-    if (
-        sg.PopupGetText(_t("config_gui.enter_backup_admin_password"))
-        == str(backup_admin_password)
+    if sg.PopupGetText(_t("config_gui.enter_backup_admin_password")) == str(
+        backup_admin_password
     ):
         return True
     sg.PopupError(_t("config_gui.wrong_password"))
@@ -255,8 +254,19 @@ def config_gui(config_dict: dict, config_file: str):
         ],
     ]
 
+    identity_col = [
+        [
+            sg.Text(_t("config_gui.machine_id"), size=(30, 1)),
+            sg.Input(key="identity---machine_id", size=(50, 1)),
+        ],
+        [
+            sg.Text(_t("config_gui.machine_group"), size=(30, 1)),
+            sg.Input(key="identity---machine_group", size=(50, 1)),
+        ],
+    ]
+
     prometheus_col = [
-        [sg.Text(_t("config_gui.explanation"))],
+        [sg.Text(_t("config_gui.available_variables"))],
         [
             sg.Text(_t("config_gui.enable_prometheus"), size=(30, 1)),
             sg.Checkbox("", key="prometheus---metrics", size=(41, 1)),
@@ -313,6 +323,7 @@ def config_gui(config_dict: dict, config_file: str):
     ]
 
     options_col = [
+        [sg.Text(_t("config_gui.available_variables"))],
         [
             sg.Text(_t("config_gui.auto_upgrade"), size=(30, 1)),
             sg.Checkbox("", key="options---auto_upgrade", size=(41, 1)),
@@ -332,6 +343,14 @@ def config_gui(config_dict: dict, config_file: str):
         [
             sg.Text(_t("config_gui.auto_upgrade_interval"), size=(30, 1)),
             sg.Input(key="options---interval", size=(50, 1)),
+        ],
+        [
+            sg.Text(_t("generic.identity"), size=(30, 1)),
+            sg.Input(key="options---auto_upgrade_host_identity", size=(50, 1)),
+        ],
+        [
+            sg.Text(_t("generic.group"), size=(30, 1)),
+            sg.Input(key="options---auto_upgrade_group", size=(50, 1)),
         ],
         [sg.HorizontalSeparator(key="sep")],
         [
@@ -373,6 +392,15 @@ def config_gui(config_dict: dict, config_file: str):
             sg.Tab(
                 _t("config_gui.backup_destination"),
                 repo_col,
+                font="helvetica 16",
+                key="--tab-repo--",
+                element_justification="C",
+            )
+        ],
+        [
+            sg.Tab(
+                _t("config_gui.machine_identification"),
+                identity_col,
                 font="helvetica 16",
                 key="--tab-repo--",
                 element_justification="C",

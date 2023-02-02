@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023012701"
+__build__ = "2023020201"
 
 
 from typing import Optional, Callable, Union, List
@@ -15,7 +15,6 @@ import os
 from logging import getLogger
 import queue
 import datetime
-import platform
 from functools import wraps
 from command_runner import command_runner
 from ofunctions.platform import os_arch
@@ -24,6 +23,7 @@ from npbackup.restic_wrapper import ResticRunner
 from npbackup.core.restic_source_binary import get_restic_internal_binary
 from npbackup.path_helper import CURRENT_DIR, BASEDIR
 from npbackup.__main__ import __intname__ as NAME, __version__ as VERSION
+from npbackup import configuration
 
 
 logger = getLogger(__intname__)
@@ -31,20 +31,32 @@ logger = getLogger(__intname__)
 
 def metric_writer(config_dict: dict, restic_result: bool, result_string: str):
     try:
+        labels = {}
         if config_dict["prometheus"]["metrics"]:
-            # Evaluate variables
-            if config_dict["prometheus"]["instance"] == "${HOSTNAME}":
-                instance = platform.node()
-            else:
-                instance = config_dict["prometheus"]["instance"]
-            if config_dict["prometheus"]["backup_job"] == "${HOSTNAME}":
-                backup_job = platform.node()
-            else:
-                backup_job = config_dict["prometheus"]["backup_job"]
             try:
-                prometheus_group = config_dict["prometheus"]["group"]
+                labels["instance"] = configuration.evaluate_variables(
+                    config_dict, config_dict["prometheus"]["instance"]
+                )
             except (KeyError, AttributeError):
-                prometheus_group = None
+                labels["instance"] = None
+            try:
+                labels["backup_job"] = configuration.evaluate_variables(
+                    config_dict, config_dict["prometheus"]["backup_job"]
+                )
+            except (KeyError, AttributeError):
+                labels["backup_job"] = None
+            try:
+                labels["group"] = configuration.evaluate_variables(
+                    config_dict, config_dict["prometheus"]["group"]
+                )
+            except (KeyError, AttributeError):
+                labels["group"] = None
+            try:
+                destination = configuration.evaluate_variables(
+                    config_dict, config_dict["prometheus"]["destination"]
+                )
+            except (KeyError, AttributeError):
+                destination = None
             try:
                 prometheus_additional_labels = config_dict["prometheus"][
                     "additional_labels"
@@ -52,14 +64,10 @@ def metric_writer(config_dict: dict, restic_result: bool, result_string: str):
             except (KeyError, AttributeError):
                 prometheus_additional_labels = None
 
-            destination = config_dict["prometheus"]["destination"]
-            destination = destination.replace("${BACKUP_JOB}", backup_job)
-
             # Configure lables
-            labels = 'instance="{}",backup_job="{}"'.format(instance, backup_job)
-            if prometheus_group:
-                labels += ',group="{}"'.format(prometheus_group)
-
+            label_string = ",".join(
+                [f"{key}={value}" for key, value in labels.items() if value]
+            )
             try:
                 # Make sure we convert prometheus_additional_labels to list if only one label is given
                 if prometheus_additional_labels:
@@ -67,15 +75,15 @@ def metric_writer(config_dict: dict, restic_result: bool, result_string: str):
                         prometheus_additional_labels = [prometheus_additional_labels]
                     for additional_label in prometheus_additional_labels:
                         label, value = additional_label.split("=")
-                        labels += ',{}="{}"'.format(label.strip(), value.strip())
+                        label_string += ',{}="{}"'.format(label.strip(), value.strip())
             except (KeyError, AttributeError, TypeError, ValueError):
                 logger.error("Bogus additional labels defined in configuration.")
                 logger.debug("Trace:", exc_info=True)
 
-            labels += ',npversion="{}{}"'.format(NAME, VERSION)
+            label_string += ',npversion="{}{}"'.format(NAME, VERSION)
 
             errors, metrics = restic_output_2_metrics(
-                restic_result=restic_result, output=result_string, labels=labels
+                restic_result=restic_result, output=result_string, labels=label_string
             )
             if errors or not restic_result:
                 logger.error("Restic finished with errors.")

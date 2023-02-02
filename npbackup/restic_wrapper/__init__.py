@@ -51,7 +51,16 @@ class ResticRunner:
         self._priority = None
         try:
             backend = self.repository.split(":")[0].upper()
-            if backend in ["REST", "S3", "B2", "SFTP", "SWIFT", "AZURE", "GZ", "RCLONE"]:
+            if backend in [
+                "REST",
+                "S3",
+                "B2",
+                "SFTP",
+                "SWIFT",
+                "AZURE",
+                "GZ",
+                "RCLONE",
+            ]:
                 self._backend_type = backend.lower()
             else:
                 self._backend_type = "local"

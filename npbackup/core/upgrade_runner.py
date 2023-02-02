@@ -7,11 +7,13 @@ __intname__ = "npbackup.gui.core.upgrade_runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023011701"
+__build__ = "2023020201"
 
 
 from logging import getLogger
+from npbackup import configuration
 from npbackup.upgrade_client.upgrader import auto_upgrader, _check_new_version
+from npbackup.__main__ import __version__ as npbackup_version
 
 
 logger = getLogger(__intname__)
@@ -37,10 +39,26 @@ def run_upgrade(config_dict):
     except KeyError as exc:
         logger.error("Missing auto upgrade info: %s, cannot launch auto upgrade", exc)
         return False
-    else:
-        result = auto_upgrader(
-            upgrade_url=auto_upgrade_upgrade_url,
-            username=auto_upgrade_username,
-            password=auto_upgrade_password,
+
+    try:
+        host_identity = configuration.handle_variables(
+            config_dict, config_dict["options"]["auto_upgrade_host_identity"]
         )
-        return result
+    except KeyError:
+        host_identity = None
+    try:
+        group = configuration.handle_variables(
+            config_dict, config_dict["options"]["auto_ugrade_group"]
+        )
+    except KeyError:
+        group = None
+
+    result = auto_upgrader(
+        upgrade_url=auto_upgrade_upgrade_url,
+        username=auto_upgrade_username,
+        password=auto_upgrade_password,
+        host_identity=host_identity,
+        installed_version=npbackup_version,
+        group=group,
+    )
+    return result
