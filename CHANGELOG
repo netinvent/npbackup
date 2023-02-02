@@ -3,6 +3,7 @@
   - Add machine identification in configuration
   - Add variable ${RANDOM}[n] to config file in order to distinguish non unique hostnames
   - Refactor config variable handling
+  - Make backup state and upgrade state messages more coherent
   - Fix config fails when restic password is an int
   - Fix empty config files did not show a proper error message
   - Fix various config file malformation will break execution
