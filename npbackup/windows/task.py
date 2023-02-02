@@ -7,7 +7,7 @@ __intname__ = "npbackup.windows.task"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023012101"
+__build__ = "2023020201"
 
 
 import sys
@@ -36,6 +36,12 @@ TEMP_TASKFILE = os.path.join(tempfile.gettempdir(), "backup_task.xml")
 def create_scheduled_task(executable_path, interval_minutes: int):
     if os.name != "nt":
         logger.error("Can only create a scheduled task on Windows")
+        return False
+
+    try:
+        interval_minutes = int(interval_minutes)
+    except ValueError:
+        logger.error("Bogus interval given")
         return False
 
     executable_dir = os.path.dirname(executable_path)
