@@ -261,6 +261,9 @@ This is free software, and you are welcome to redistribute it under certain cond
     if args.config_gui:
         try:
             config_dict = configuration.load_config(CONFIG_FILE)
+            if not config_dict:
+                logger.error("Cannot load config file")
+                sys.exit(24)
         except FileNotFoundError:
             logger.warning(
                 'No configuration file found. Please use --config-file "path" to specify one or put a config file into current directory. Will create fresh config file in current directory.'
@@ -285,25 +288,34 @@ This is free software, and you are welcome to redistribute it under certain cond
             sys.exit(23)
 
     try:
-        config_dict = configuration.load_config(CONFIG_FILE)
+        config_dict = configuration.load_config(CONFIG_FILE)        
     except FileNotFoundError:
+        config_dict = None
+
+    if not config_dict:
         message = _t("config_gui.no_config_available")
         logger.error(message)
 
-        config_dict = configuration.empty_config_dict
-        # If no arguments are passed, assume we are launching the GUI
-        if len(sys.argv) == 1:
-            result = sg.Popup(
-                "{}\n\n{}".format(message, _t("config_gui.create_new_config")),
-                custom_text=(_t("generic._yes"), _t("generic._no")),
-            )
-            if result == _t("generic._yes"):
-                config_dict = config_gui(config_dict, CONFIG_FILE)
-                sg.Popup(_t("config_gui.saved_initial_config"))
-                sys.exit(6)
-            else:
-                logger.error("No configuration created via GUI")
-                sys.exit(7)
+        if config_dict is None:
+            config_dict = configuration.empty_config_dict
+            # If no arguments are passed, assume we are launching the GUI
+            if len(sys.argv) == 1:
+                result = sg.Popup(
+                    "{}\n\n{}".format(message, _t("config_gui.create_new_config")),
+                    custom_text=(_t("generic._yes"), _t("generic._no")),
+                )
+                if result == _t("generic._yes"):
+                    config_dict = config_gui(config_dict, CONFIG_FILE)
+                    sg.Popup(_t("config_gui.saved_initial_config"))
+                    sys.exit(6)
+                else:
+                    logger.error("No configuration created via GUI")
+                    sys.exit(7)
+        elif config_dict is False:
+            logger.info("Bogus config file %s", CONFIG_FILE)
+            if len(sys.argv) == 1:
+                sg.Popup(_t("config_gui.bogus_config_file", config_file=CONFIG_FILE))
+            sys.exit(7)
 
     if args.upgrade_conf:
         # Whatever we need to add here for future releases

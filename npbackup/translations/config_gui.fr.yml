@@ -41,6 +41,7 @@ fr:
   no_config_available: Aucun fichier de configuration trouvé. Merci d'utiliser --config-file "chemin" pour spécifier un fichier, ou copier un fichier de configuration a côté du binaire NPBackup.
   create_new_config: Souhaitez-vous créer une nouvelle configuration ?
   saved_initial_config: Si vous avez enregistré une configuration, vous pouvez à présent recharger le programme.
+  bogus_config_file: Fichier de configuration %{config_file} érroné
 
   environment_variables: Variables d'environnement
   format_equals: Format variable=valeur
@@ -61,7 +62,7 @@ fr:
   auto_ugprade_will_quit: Attnetion, la procédure de mise à niveau va quitter ce programme sans notification. Vous devrez attendre 5 minutes pour laisser la procédure se terminer avant de relancer le programme
   auto_upgrade_failed: Procédure de mise à niveau échouée, veuillez consulter les journaux pour plus de détails
   auto_upgrade_disabled: Mise à niveau automatique désactivée
-  
+
   create_scheduled_task_every: Créer une tâche planifiée toutes les
   scheduled_task_explanation: Uniquement sous Windows. Sous Linux, merci de créer une entrée crontab comme `npbackup --backup --config-file /etc/npbackup.conf`
   scheduled_task_creation_success: Tâche planifiée crée avec succès

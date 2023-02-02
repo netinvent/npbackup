@@ -61,9 +61,13 @@ def decrypt_data(config_dict):
     try:
         for option in ENCRYPTED_OPTIONS:
             try:
-                if config_dict[option["section"]][option["name"]] and config_dict[
-                    option["section"]
-                ][option["name"]].startswith(ID_STRING):
+                if (
+                    config_dict[option["section"]][option["name"]]
+                    and isinstance(config_dict[option["section"]][option["name"]], str)
+                    and config_dict[option["section"]][option["name"]].startswith(
+                        ID_STRING
+                    )
+                ):
                     (
                         _,
                         config_dict[option["section"]][option["name"]],
@@ -87,22 +91,29 @@ def decrypt_data(config_dict):
         logger.error(
             "Cannot decrypt this configuration file. No base64 encoded strings available."
         )
-        sys.exit(12)
+        return False
     return config_dict
 
 
 def encrypt_data(config_dict):
     for option in ENCRYPTED_OPTIONS:
         try:
-            if config_dict[option["section"]][option["name"]] and not config_dict[
-                option["section"]
-            ][option["name"]].startswith(ID_STRING):
-                config_dict[option["section"]][option["name"]] = enc.encrypt_message_hf(
-                    config_dict[option["section"]][option["name"]],
-                    AES_KEY,
-                    ID_STRING,
-                    ID_STRING,
-                ).decode("utf-8")
+            if config_dict[option["section"]][option["name"]]:
+                if isinstance(
+                    config_dict[option["section"]][option["name"]], str
+                ) and not config_dict[option["section"]][option["name"]].startswith(
+                    ID_STRING
+                ):
+                    config_dict[option["section"]][
+                        option["name"]
+                    ] = enc.encrypt_message_hf(
+                        config_dict[option["section"]][option["name"]],
+                        AES_KEY,
+                        ID_STRING,
+                        ID_STRING,
+                    ).decode(
+                        "utf-8"
+                    )
         except KeyError:
             logger.error(
                 "No {}:{} available.".format(option["section"], option["name"])
@@ -115,15 +126,16 @@ def is_encrypted(config_dict):
         is_enc = True
         for option in ENCRYPTED_OPTIONS:
             try:
-                if isinstance(
+                if config_dict[option["section"]][option["name"]] and isinstance(
                     config_dict[option["section"]][option["name"]],
                     option["type"],
                 ) and not config_dict[option["section"]][option["name"]].startswith(
                     ID_STRING
                 ):
                     is_enc = False
-            except KeyError:
+            except (TypeError, KeyError):
                 # Don't care about encryption on missing items
+                # TypeError happens on empty files
                 pass
         return is_enc
     except AttributeError:

@@ -41,6 +41,7 @@ en:
   no_config_available: No configuration file found. Please use --config-file "path" to specify one or copy a config file next to the NPBackup binary
   create_new_config: Would you like to create a new configuration ?
   saved_initial_config: If you saved your configuration, you may now reload this program
+  bogus_config_file: Bogus configuration file %{config_file} found
 
   environment_variables: Environment variables
   format_equals: Format variable=value
@@ -61,7 +62,7 @@ en:
   auto_ugprade_will_quit: Warning, launching an upgrade procedure will quit this program without notice. You will have to wait 5 minutes before launching it again for the upgrade to complete
   auto_upgrade_failed: Auto upgrade procedure failed, see logs for further details
   auto_upgrade_disabled: Auto upgrade is disabled
-  
+
   create_scheduled_task_every: Create scheduled task every
   scheduled_task_explanation: This is for Windows only. On Linux, please create a crontab entry with `npbackup --backup --config-file /etc/npbackup.conf`
   scheduled_task_creation_success: Scheduled task created successfuly

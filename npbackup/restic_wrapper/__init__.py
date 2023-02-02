@@ -73,9 +73,9 @@ class ResticRunner:
         Configures environment for repository & password
         """
         if self.password:
-            os.environ["RESTIC_PASSWORD"] = self.password
+            os.environ["RESTIC_PASSWORD"] = str(self.password)
         if self.repository:
-            os.environ["RESTIC_REPOSITORY"] = self.repository
+            os.environ["RESTIC_REPOSITORY"] = str(self.repository)
 
         for env_variable, value in self.environment_variables.items():
             os.environ[env_variable] = value

@@ -1,4 +1,8 @@
-## v2.2.0 - rc
+## v2.2.0 - rc2
+  - Fix config fails when restic password is an int
+  - Fix empty config files did not show a proper error message
+
+## v2.2.0 - rc1 - 02/02/2023
   - Added a full auto-upgrade solution:
     - Aupgrade client integrated into NPBackup, that can be called manually via --auto-upgrade or automatically run every n backups
     - Upgrade server which servers files and their metadata
