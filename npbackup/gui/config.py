@@ -10,11 +10,13 @@ __license__ = "GPL-3.0-only"
 __build__ = "2023020101"
 
 
-import sys
+import os
 from logging import getLogger
 import PySimpleGUI as sg
 import npbackup.configuration as configuration
 from npbackup.core.i18n_helper import _t
+from npbackup.windows.task import create_scheduled_task
+from npbackup.path_helper import CURRENT_EXECUTABLE
 
 
 logger = getLogger(__intname__)
@@ -315,6 +317,18 @@ def config_gui(config_dict: dict, config_file: str):
         ],
     ]
 
+    scheduled_task_col = [
+        [
+            sg.Text(_t("config_gui.create_scheduled_task_every")),
+            sg.Input(key="scheduled_task_interval", size=(4, 1)),
+            sg.Text(_t("generic.minutes")),
+            sg.Button(_t("generic.create"), key="create_task")
+        ],
+        [
+            sg.Text(_t("config_gui.scheduled_task_explanation"))
+        ]
+    ]
+
     buttons = [
         [
             sg.Text(" " * 135),
@@ -369,6 +383,15 @@ def config_gui(config_dict: dict, config_file: str):
                 element_justification="C",
             )
         ],
+        [
+            sg.Tab(
+                _t("generic.scheduled_task"),
+                scheduled_task_col,
+                font="helvetica 16",
+                key="--tab-scheduled_task--",
+                element_justification="C",
+            )
+        ],
     ]
 
     layout = [
@@ -411,5 +434,14 @@ def config_gui(config_dict: dict, config_file: str):
                 update_gui(window, config_dict, unencrypted=True)
             else:
                 sg.PopupError(_t("config_gui.wrong_password"))
+        if event == "create_task":
+            if os.name == 'nt':
+                result = create_scheduled_task(CURRENT_EXECUTABLE, values['scheduled_task_interval'])
+                if result:
+                    sg.Popup(_t("config_gui.scheduled_task_creation_success"))
+                else:
+                    sg.PopupError(_t("config_gui.scheduled_task_creation_failure"))
+            else:
+                sg.PopupError(_t("config_gui.scheduled_task_creation_failure"))
     window.close()
     return config_dict

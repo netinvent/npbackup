@@ -5,11 +5,14 @@ fr:
   configure: Configurer
   about: A propos
   options: Options
+  create: Créer
 
   _yes: Oui
   _no: Non
 
   seconds: secondes
+  minutes: minutes
+  hours: heures
 
   group: Groupe
 
@@ -30,3 +33,8 @@ fr:
   encrypt: Chiffrer
 
   is_uptodate: Logiciel à jour
+
+  succes: Succès
+  failure: Echec
+
+  scheduled_task: Tâche planifiée

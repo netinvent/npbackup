@@ -30,4 +30,4 @@ rest:https://user:***@good.example.tld/user/
 
 - Linux installer script
 - Windows installer GUI
-- Create task from GUI
+

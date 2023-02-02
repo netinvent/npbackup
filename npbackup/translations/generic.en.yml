@@ -5,11 +5,14 @@ en:
   configure: Configure
   about: About
   options: Options
+  create: Create
 
   _yes: Yes
   _no: No
 
   seconds: seconds
+  minutes: minutes
+  hours: hours
 
   group: Group
 
@@ -29,4 +32,9 @@ en:
   decrypt: Decrypt
   encrypt: Encrypt
 
-  is_uptodate: Program Uptodateu
+  is_uptodate: Program Uptodate
+
+  succes: Succes
+  failure: Failure
+
+  scheduled_task: Scheduled task
