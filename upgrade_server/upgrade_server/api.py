@@ -5,14 +5,14 @@ __intname__ = "npbackup.upgrade_server.api"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "202303101"
+__build__ = "202303102"
 __appname__ = "npbackup.upgrader"
 
 
 from typing import Literal
 import logging
 import secrets
-from fastapi import FastAPI, HTTPException, Response, Depends, status
+from fastapi import FastAPI, HTTPException, Response, Depends, status, Request
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi_offline import FastAPIOffline
 from upgrade_server.models.files import FileGet, FileSend, Platform, Arch
@@ -80,7 +80,23 @@ async def current_version(auth=Depends(get_current_username)):
 
 
 @app.get("/upgrades/{platform}/{arch}", response_model=FileSend, status_code=200)
-async def upgrades(platform: Platform, arch: Arch, auth=Depends(get_current_username)):
+@app.get("/upgrades/{platform}/{arch}/{host_identity}", response_model=FileSend, status_code=200)
+@app.get("/upgrades/{platform}/{arch}/{host_identity}/{installed_version}", response_model=FileSend, status_code=200)
+@app.get("/upgrades/{platform}/{arch}/{host_identity}/{installed_version}/{group}", response_model=FileSend, status_code=200)
+async def upgrades(request: Request, platform: Platform, arch: Arch, host_identity: str = None, installed_version: str = None, group: str = None, auth=Depends(get_current_username)):
+    data = {
+        "ip": request.client.host,
+        "host_identity": host_identity,
+        "installed_version": installed_version,
+        "group": group,
+        "platform": platform.value,
+        "arch": arch.value
+    }
+
+    try:
+        crud.store_host_info(config_dict['upgrades']['statistics_file'], host_id = data)
+    except KeyError:
+        logger.error("No statistics file set.")
 
     file = FileGet(platform=platform, arch=arch)
     try:

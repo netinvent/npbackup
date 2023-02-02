@@ -38,6 +38,15 @@ def is_enabled() -> bool:
     return not os.path.isfile("DISABLED")
 
 
+def store_host_info(destination: str, host_id: dict) -> None:
+    try:
+        data = ",".join(host_id.values()) + "\n"
+        with open(destination, 'a', encoding='utf-8') as fpw:
+            fpw.write(data)
+    except OSError:
+        logger.error("Cannot write statistics file")
+
+
 def get_current_version() -> Optional[CurrentVersion]:
     try:
         path = os.path.join(config_dict["upgrades"]["data_root"], "VERSION")
