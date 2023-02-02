@@ -46,7 +46,7 @@ THREAD_SHARED_DICT = {}
 
 def _about_gui(version_string: str, config_dict: dict) -> None:
     license_content = LICENSE_TEXT
-    
+
     result = check_new_version(config_dict)
     if result:
         new_version = [

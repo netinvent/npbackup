@@ -51,7 +51,7 @@ def get_current_version() -> Optional[CurrentVersion]:
     try:
         path = os.path.join(config_dict["upgrades"]["data_root"], "VERSION")
         if os.path.isfile(path):
-            with open(path, "r", encoding='utf-8') as fh:
+            with open(path, "r", encoding="utf-8") as fh:
                 ver = fh.readline()
                 return CurrentVersion(version=ver)
     except OSError:

@@ -181,7 +181,9 @@ def auto_upgrader(
     platform_and_arch = "{}/{}".format(get_os(), os_arch()).lower()
 
     try:
-        host_id = "{}/{}/{}".format(auto_upgrade_host_identity, installed_version, group)
+        host_id = "{}/{}/{}".format(
+            auto_upgrade_host_identity, installed_version, group
+        )
         id_record = "{}/{}".format(platform_and_arch, host_id)
     except TypeError:
         id_record = platform_and_arch
