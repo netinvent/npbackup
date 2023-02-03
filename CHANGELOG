@@ -1,5 +1,6 @@
 ## v2.2.0 - rc2
   - Upgrade client now sends its hostname, group and version information to server
+  - Add variable substitution in configuration
   - Add machine identification in configuration
   - Add variable ${RANDOM}[n] to config file in order to distinguish non unique hostnames
   - Refactor config variable handling
