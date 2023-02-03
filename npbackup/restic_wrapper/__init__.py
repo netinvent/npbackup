@@ -493,7 +493,7 @@ class ResticRunner:
         Executes restic backup after interpreting all arguments
         """
         if not self.is_init:
-            return None
+            return None, None
         # make sure path is a list and does not have trailing slashes
         cmd = "backup {}".format(
             " ".join(['"{}"'.format(path.rstrip("/\\")) for path in paths])
