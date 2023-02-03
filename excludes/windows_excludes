@@ -229,9 +229,9 @@
 
 
 # Dropbox, OneDrive, SkyDrive data directories (not excluded by default because of cryptolockers attacks)
-?:\Users\*\SkyDrive*
-?:\Users\*\Dropbox
-?:\Users\*\OneDrive
+#?:\Users\*\SkyDrive*
+#?:\Users\*\Dropbox
+#?:\Users\*\OneDrive
 
 # Dropbox config directory
 ?:\Users\*\AppData\Local\Dropbox
