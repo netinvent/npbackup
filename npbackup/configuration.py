@@ -7,8 +7,8 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023020102"
-__version__ = "1.6.0 for npbackup 2.2.0+"
+__build__ = "2023020301"
+__version__ = "1.6.1 for npbackup 2.2.0+"
 
 from typing import Tuple, Optional
 import sys
@@ -191,19 +191,23 @@ def evaluate_variables(config_dict: dict, value: str) -> str:
     """
     Replaces various variables with their actual value in a string
     """
-    value = value.replace("${HOSTNAME}", platform.node())
-    try:
-        value.replace("${MACHINE_ID}", config_dict["identity"]["machine_id"])
-    except KeyError:
-        pass
-    try:
-        value.replace("${MACHINE_GROUP}", config_dict["identity"]["machine_group"])
-    except KeyError:
-        pass
-    try:
-        value.replace("${BACKUP_JOB}", config_dict["prometheus"]["backup_job"])
-    except KeyError:
-        pass
+
+    # We need to make a loop to catch all nested variables
+    while "${MACHINE_ID}" in value or "${MACHINE_GROUP}" in value \
+        or "${BACKUP_JOB}" in value or "${HOSTNAME}" in value:
+        value = value.replace("${HOSTNAME}", platform.node())
+        try:
+            value = value.replace("${MACHINE_ID}", config_dict["identity"]["machine_id"])
+        except KeyError:
+            pass
+        try:
+            value = value.replace("${MACHINE_GROUP}", config_dict["identity"]["machine_group"])
+        except KeyError:
+            pass
+        try:
+            value = value.replace("${BACKUP_JOB}", config_dict["prometheus"]["backup_job"])
+        except KeyError:
+            pass   
     return value
 
 
