@@ -120,7 +120,7 @@ def config_gui(config_dict: dict, config_file: str):
             config_dict[section][entry] = value
         return config_dict
 
-    right_click_menu = ["", [_t("generic.decrypt")]]
+    right_click_menu = ["", [_t("config_gui.show_decrypted")]]
 
     backup_col = [
         [
@@ -480,7 +480,7 @@ def config_gui(config_dict: dict, config_file: str):
             sg.Popup(_t("config_gui.configuration_saved"), keep_on_top=True)
             logger.info("Configuration saved successfully.")
             break
-        if event == _t("generic.decrypt"):
+        if event == _t("config_gui.show_decrypted"):
             if ask_backup_admin_password(config_dict):
                 update_gui(window, config_dict, unencrypted=True)
         if event == "create_task":

@@ -73,3 +73,5 @@ en:
   machine_identification: Machine identification
   machine_id: Machine identifier
   machine_group: Machine group
+
+  show_decrypted: Show decrypted

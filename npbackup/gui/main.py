@@ -96,7 +96,7 @@ def _about_gui(version_string: str, config_dict: dict) -> None:
                 if sub_result:
                     sys.exit(0)
                 else:
-                    sg.Popup(_t("config_gui.auto_upgrade_failed"))
+                    sg.Popup(_t("config_gui.auto_upgrade_failed"), keep_on_top=True)
     window.close()
 
 
