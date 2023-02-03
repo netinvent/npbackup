@@ -5,7 +5,7 @@ __intname__ = "npbackup.upgrade_server.api"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "202303102"
+__build__ = "2023020301"
 __appname__ = "npbackup.upgrader"
 
 
@@ -63,7 +63,21 @@ async def api_root(auth=Depends(get_current_username)):
 
 
 @app.get("/current_version", response_model=CurrentVersion, status_code=200)
-async def current_version(auth=Depends(get_current_username)):
+async def current_version(request: Request, auth=Depends(get_current_username)):
+    data = {
+        "action": "check_version",
+        "ip": request.client.host,
+        "auto_upgrade_host_identity": '',
+        "installed_version": '',
+        "group": '',
+        "platform": '',
+        "arch": '',
+    }
+
+    try:
+        crud.store_host_info(config_dict["upgrades"]["statistics_file"], host_id=data)
+    except KeyError:
+        logger.error("No statistics file set.")
     try:
         result = crud.get_current_version()
         if not result:
@@ -105,6 +119,7 @@ async def upgrades(
     auth=Depends(get_current_username),
 ):
     data = {
+        "action": "get_file_info",
         "ip": request.client.host,
         "auto_upgrade_host_identity": auto_upgrade_host_identity,
         "installed_version": installed_version,
@@ -134,8 +149,34 @@ async def upgrades(
         )
 
 
-@app.get("/upgrades/{platform}/{arch}/data", status_code=200)
-async def download(platform: Platform, arch: Arch, auth=Depends(get_current_username)):
+@app.get(
+    "/download/{platform}/{arch}/{auto_upgrade_host_identity}/{installed_version}/{group}",
+    response_model=FileSend,
+    status_code=200,
+)
+async def download(
+    request: Request,
+    platform: Platform,
+    arch: Arch,
+    auto_upgrade_host_identity: str = None,
+    installed_version: str = None,
+    group: str = None,
+    auth=Depends(get_current_username),
+):
+    data = {
+        "action": "download_upgrade",
+        "ip": request.client.host,
+        "auto_upgrade_host_identity": auto_upgrade_host_identity,
+        "installed_version": installed_version,
+        "group": group,
+        "platform": platform.value,
+        "arch": arch.value,
+    }
+
+    try:
+        crud.store_host_info(config_dict["upgrades"]["statistics_file"], host_id=data)
+    except KeyError:
+        logger.error("No statistics file set.")
     file = FileGet(platform=platform, arch=arch)
     try:
         result = crud.get_file(file, content=True)

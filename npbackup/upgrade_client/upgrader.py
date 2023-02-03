@@ -168,7 +168,7 @@ def auto_upgrader(
     We assume that we run a onefile nuitka binary
     """
     is_nuitka = "__compiled__" in globals()
-    if not is_nuitka:
+    if is_nuitka:
         logger.info(
             "Auto upgrade will only upgrade compiled verions. Please use 'pip install --upgrade npbackup' instead"
         )
@@ -195,7 +195,7 @@ def auto_upgrader(
         logger.error("Cannot get file description")
         return False
 
-    file_data = requestor.requestor("upgrades/" + platform_and_arch + "/data", raw=True)
+    file_data = requestor.requestor("download/" + id_record, raw=True)
     if not file_data:
         logger.error("Cannot get update file")
         return False

@@ -7,13 +7,14 @@ __intname__ = "npbackup.upgrade_server.crud"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "202303101"
+__build__ = "2023020301"
 
 
 import os
 from typing import Optional, Union
 from logging import getLogger
 import hashlib
+from datetime import datetime
 from upgrade_server.models.files import FileGet, FileSend
 from upgrade_server.models.oper import CurrentVersion
 import upgrade_server.configuration as configuration
@@ -40,7 +41,7 @@ def is_enabled() -> bool:
 
 def store_host_info(destination: str, host_id: dict) -> None:
     try:
-        data = ",".join(host_id.values()) + "\n"
+        data = datetime.utcnow().isoformat() + ',' + ",".join([value if value else '' for value in host_id.values()]) + "\n"
         with open(destination, "a", encoding="utf-8") as fpw:
             fpw.write(data)
     except OSError:
