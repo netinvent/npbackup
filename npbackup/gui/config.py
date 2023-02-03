@@ -70,7 +70,7 @@ def config_gui(config_dict: dict, config_file: str):
                             try:
                                 if config_dict[section][entry] is None:
                                     continue
-                                if not config_dict[section][entry].startswith(
+                                if not str(config_dict[section][entry]).startswith(
                                     configuration.ID_STRING
                                 ):
                                     value = ENCRYPTED_DATA_PLACEHOLDER
