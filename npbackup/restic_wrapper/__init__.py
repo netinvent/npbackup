@@ -265,9 +265,9 @@ class ResticRunner:
             binary = "restic.exe"
             probe_paths = self.binary_search_paths + [
                 "",
-                os.path.join(os.environ.get("windir"), "SYSTEM32"),
-                os.environ.get("windir"),
-                os.path.join(os.environ.get("ProgramFiles"), "restic"),
+                os.path.join(os.environ.get("windir", ''), "SYSTEM32"),
+                os.environ.get("windir", ''),
+                os.path.join(os.environ.get("ProgramFiles", ''), "restic"),
             ]
         else:
             binary = "restic"
