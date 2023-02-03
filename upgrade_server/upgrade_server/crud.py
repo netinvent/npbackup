@@ -41,7 +41,12 @@ def is_enabled() -> bool:
 
 def store_host_info(destination: str, host_id: dict) -> None:
     try:
-        data = datetime.utcnow().isoformat() + ',' + ",".join([value if value else '' for value in host_id.values()]) + "\n"
+        data = (
+            datetime.utcnow().isoformat()
+            + ","
+            + ",".join([value if value else "" for value in host_id.values()])
+            + "\n"
+        )
         with open(destination, "a", encoding="utf-8") as fpw:
             fpw.write(data)
     except OSError:

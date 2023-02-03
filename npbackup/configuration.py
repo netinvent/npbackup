@@ -193,21 +193,31 @@ def evaluate_variables(config_dict: dict, value: str) -> str:
     """
 
     # We need to make a loop to catch all nested variables
-    while "${MACHINE_ID}" in value or "${MACHINE_GROUP}" in value \
-        or "${BACKUP_JOB}" in value or "${HOSTNAME}" in value:
+    while (
+        "${MACHINE_ID}" in value
+        or "${MACHINE_GROUP}" in value
+        or "${BACKUP_JOB}" in value
+        or "${HOSTNAME}" in value
+    ):
         value = value.replace("${HOSTNAME}", platform.node())
         try:
-            value = value.replace("${MACHINE_ID}", config_dict["identity"]["machine_id"])
+            value = value.replace(
+                "${MACHINE_ID}", config_dict["identity"]["machine_id"]
+            )
         except KeyError:
             pass
         try:
-            value = value.replace("${MACHINE_GROUP}", config_dict["identity"]["machine_group"])
+            value = value.replace(
+                "${MACHINE_GROUP}", config_dict["identity"]["machine_group"]
+            )
         except KeyError:
             pass
         try:
-            value = value.replace("${BACKUP_JOB}", config_dict["prometheus"]["backup_job"])
+            value = value.replace(
+                "${BACKUP_JOB}", config_dict["prometheus"]["backup_job"]
+            )
         except KeyError:
-            pass   
+            pass
     return value
 
 

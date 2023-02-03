@@ -67,11 +67,11 @@ async def current_version(request: Request, auth=Depends(get_current_username)):
     data = {
         "action": "check_version",
         "ip": request.client.host,
-        "auto_upgrade_host_identity": '',
-        "installed_version": '',
-        "group": '',
-        "platform": '',
-        "arch": '',
+        "auto_upgrade_host_identity": "",
+        "installed_version": "",
+        "group": "",
+        "platform": "",
+        "arch": "",
     }
 
     try:
