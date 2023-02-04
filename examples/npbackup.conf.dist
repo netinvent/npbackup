@@ -45,9 +45,10 @@ prometheus:
   # Available variables: ${HOSTNAME}, ${RANDOM}[n], ${MACHINE_ID}, ${MACHINE_GROUP}, ${BACKUP_JOB}
   backup_job: ${MACHINE_ID}
   # Prometheus metrics destination can be a http / https server with optional basic authentication (pushgateway), or a file path for node textfile collector to pickup
-  destination: #  https://push.monitoring.example.tld/metrics/job/${BACKUP_JOB} where ${BACKUP_JOB} is defined in prometheus_backup_job
+  # example: https://push.monitoring.example.tld/metrics/job/${BACKUP_JOB} where ${BACKUP_JOB} is defined in prometheus_backup_job
+  # example: /var/lib/prometheus/collector/mytextfile
+  destination: 
   # prometheus instance, becomes exported_instance when using a push gateway
-  # Available variables: ${HOSTNAME}, ${RANDOM}[n], ${MACHINE_ID}
   instance: ${MACHINE_ID}
 
   # prometheus metrics upload password
@@ -71,7 +72,8 @@ options:
   auto_upgrade_server_password:
   # every 10 NPBackup runs, we'll try an autoupgrade. Never set this lower than 2 since failed upgrades will prevent backups from succeeding
   interval: 10
-  backup_admin_password: NPBackup_00
   # Available variables: ${HOSTNAME}, ${RANDOM}[n], ${MACHINE_ID}, ${MACHINE_GROUP}, ${BACKUP_JOB}
   auto_upgrade_host_identity: ${MACHINE_ID}
   auto_upgrade_group: ${MACHINE_GROUP}
+
+  backup_admin_password: NPBackup_00
