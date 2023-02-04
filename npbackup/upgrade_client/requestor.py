@@ -92,6 +92,7 @@ class Requestor:
     def app_name(self, value: str):
         if isinstance(value, str):
             self._app_name = value.strip()
+            self.headers['Referer'] = self.app_name
         else:
             raise ValueError("Bogus app name")
 
@@ -103,6 +104,7 @@ class Requestor:
     def user_agent(self, value: str):
         if isinstance(value, str):
             self._user_agent = value.strip()
+            self.headers['User-Agent'] = self.user_agent
         else:
             raise ValueError("Bogus user agent")
 
@@ -414,8 +416,6 @@ class Requestor:
         if model:
             model = model.strip().strip("/")
 
-        if action == "create":
-            id_record = None
         if id_record:
             id_record = id_record.strip().strip("/")
 
@@ -423,12 +423,14 @@ class Requestor:
             raise ValueError(
                 "id may not start with [#] sign since it is reserved for pagination."
             )
-
-        if action != "create" and model and id_record:
+        if id_record:
             # Action is read, exists, update or delete
             model_endpoint = "{}/{}".format(model, id_record)
         else:
             model_endpoint = model
+
+        if data and isinstance(data, dict):
+            data = json.dumps(data)
 
         result = self.requestor(model_endpoint, action, data, json_output)
         return result
