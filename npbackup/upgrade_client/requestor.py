@@ -92,7 +92,7 @@ class Requestor:
     def app_name(self, value: str):
         if isinstance(value, str):
             self._app_name = value.strip()
-            self.headers['Referer'] = self.app_name
+            self.headers["Referer"] = self.app_name
         else:
             raise ValueError("Bogus app name")
 
@@ -104,7 +104,7 @@ class Requestor:
     def user_agent(self, value: str):
         if isinstance(value, str):
             self._user_agent = value.strip()
-            self.headers['User-Agent'] = self.user_agent
+            self.headers["User-Agent"] = self.user_agent
         else:
             raise ValueError("Bogus user agent")
 

@@ -116,7 +116,7 @@ def _check_new_version(upgrade_url: str, username: str, password: str) -> bool:
         logger.debug("Upgrade server not set")
         return None
     requestor = Requestor(upgrade_url, username, password)
-    requestor.app_name = 'npbackup' + npbackup_version
+    requestor.app_name = "npbackup" + npbackup_version
     requestor.user_agent = __intname__
     requestor.create_session(authenticated=True)
     server_ident = requestor.data_model()
