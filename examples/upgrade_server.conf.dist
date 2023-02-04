@@ -15,4 +15,6 @@ upgrades:
   # Current arches are 'x64', 'x86'
   # In each folder there should be a npbackup or npbackup.exe binary depending on the platform
   data_root: /path/to/build_dir
+  # We'll store a CSV containing backup clients that upgrade here
+  statistics_file: /path/to/file
 
