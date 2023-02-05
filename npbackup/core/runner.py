@@ -66,7 +66,7 @@ def metric_writer(config_dict: dict, restic_result: bool, result_string: str):
 
             # Configure lables
             label_string = ",".join(
-                [f"{key}=\"{value}\"" for key, value in labels.items() if value]
+                [f'{key}="{value}"' for key, value in labels.items() if value]
             )
             try:
                 # Make sure we convert prometheus_additional_labels to list if only one label is given

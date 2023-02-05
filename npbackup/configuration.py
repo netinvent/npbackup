@@ -141,12 +141,9 @@ def is_encrypted(config_dict: dict) -> bool:
         is_enc = True
         for option in ENCRYPTED_OPTIONS:
             try:
-                if (
+                if config_dict[option["section"]][option["name"]] and not str(
                     config_dict[option["section"]][option["name"]]
-                    and not str(config_dict[option["section"]][option["name"]]).startswith(
-                        ID_STRING
-                    )
-                ):
+                ).startswith(ID_STRING):
                     is_enc = False
             except (TypeError, KeyError):
                 # Don't care about encryption on missing items
