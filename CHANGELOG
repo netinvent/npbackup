@@ -1,3 +1,10 @@
+## v2.2.0 - rc3
+  - Auto minimize console window when run in GUI mode to not distract end user
+  - Trigger GUI refresh after configuration changes
+  - Main program now loads directly after first time GUI setup
+  - A popup is now shown on non-readable repos
+  - Various smaller fixes
+
 ## v2.2.0 - rc2
   - Upgrade client now sends its hostname, group and version information to server
   - Add variable substitution in configuration
