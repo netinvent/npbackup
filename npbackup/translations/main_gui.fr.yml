@@ -13,7 +13,7 @@ fr:
   only_include: Inclure seulement
   destination_folder: Dossier de destination
   backup_state: Etat de sauvegarde
-  backup_list_to: List des sauvegardes vers
+  backup_list_to: Liste des sauvegardes vers
   local_folder: Dossier local
   external_server: serveur externalisé
   launch_backup: Sauvegarder
