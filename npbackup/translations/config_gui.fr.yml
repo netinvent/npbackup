@@ -63,7 +63,7 @@ fr:
   auto_upgrade_launch: Lancer une mise à niveau
   auto_ugprade_will_quit: Attnetion, la procédure de mise à niveau va quitter ce programme sans notification. Vous devrez attendre 5 minutes pour laisser la procédure se terminer avant de relancer le programme
   auto_upgrade_failed: Procédure de mise à niveau échouée, veuillez consulter les journaux pour plus de détails
-  auto_upgrade_disabled: Mise à niveau automatique désactivée
+  auto_upgrade_disabled: Mise à niveau automatique désactivée ou serveur injoignable
 
   create_scheduled_task_every: Créer une tâche planifiée toutes les
   scheduled_task_explanation: Uniquement sous Windows. Sous Linux, merci de créer une entrée crontab comme `npbackup --backup --config-file /etc/npbackup.conf`
