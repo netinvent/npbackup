@@ -36,7 +36,7 @@ repo:
 identity:
   # ${HOSTNAME} is a variable containing the hostname as exposed by platform.node()
   # ${RANDOM}[n] is a variable containing 'n' random alphanumeric char
-  machine_id: ${HOSTNAME}-${RANDOM}[n]
+  machine_id: ${HOSTNAME}-${RANDOM}[4]
   machine_group:
 
 prometheus:
@@ -71,7 +71,7 @@ options:
   auto_upgrade_server_username:
   auto_upgrade_server_password:
   # every 10 NPBackup runs, we'll try an autoupgrade. Never set this lower than 2 since failed upgrades will prevent backups from succeeding
-  interval: 10
+  auto_upgrade_interval: 10
   # Available variables: ${HOSTNAME}, ${RANDOM}[n], ${MACHINE_ID}, ${MACHINE_GROUP}, ${BACKUP_JOB}
   auto_upgrade_host_identity: ${MACHINE_ID}
   auto_upgrade_group: ${MACHINE_GROUP}
