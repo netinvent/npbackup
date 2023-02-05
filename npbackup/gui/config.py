@@ -343,7 +343,7 @@ def config_gui(config_dict: dict, config_file: str):
         ],
         [
             sg.Text(_t("config_gui.auto_upgrade_interval"), size=(30, 1)),
-            sg.Input(key="options---interval", size=(50, 1)),
+            sg.Input(key="options---auto_upgrade_interval", size=(50, 1)),
         ],
         [
             sg.Text(_t("generic.identity"), size=(30, 1)),
