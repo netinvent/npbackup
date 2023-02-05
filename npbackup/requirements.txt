@@ -16,3 +16,4 @@ pyyaml  # Required for python-i18n which does not work with ruamel.yaml
 python-i18n
 # python-i18n local copy from https://github.com/Krutyi-4el/python-i18n:
 packaging
+pywin32; platform_system == "Windows"

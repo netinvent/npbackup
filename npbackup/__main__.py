@@ -10,7 +10,7 @@ __description__ = "NetPerfect Backup Client"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2023013102"
-__version__ = "2.2.0-rc2"
+__version__ = "2.2.0-rc3"
 
 
 import os
@@ -41,6 +41,7 @@ from npbackup.core.i18n_helper import _t
 from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
 from npbackup.upgrade_client.upgrader import need_upgrade
 from npbackup.core.upgrade_runner import run_upgrade
+from npbackup.gui.minimize_window import minimize_current_window
 
 del sys.path[0]
 
@@ -444,6 +445,9 @@ This is free software, and you are welcome to redistribute it under certain cond
         # EXIT_CODE 21 = current backup process already running
         sys.exit(21)
 
+    # When no argument is given, let's run the GUI
+    # Also, let's minimize the commandline window so the GUI user isn't distracted
+    minimize_current_window()
     logger.info("Running GUI")
     try:
         version_string = "{} v{} {}\n{}".format(
