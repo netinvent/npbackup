@@ -214,6 +214,8 @@ class NPBackupRunner:
             logger.error("Repo password cannot be empty")
             can_run = False
         self.is_ready = can_run
+        if not can_run:
+            return
         self.restic_runner = ResticRunner(
             repository=repository,
             password=password,
