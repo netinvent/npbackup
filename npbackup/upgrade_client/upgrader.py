@@ -170,7 +170,7 @@ def auto_upgrader(
     We assume that we run a onefile nuitka binary
     """
     is_nuitka = "__compiled__" in globals()
-    if is_nuitka:
+    if not is_nuitka:
         logger.info(
             "Auto upgrade will only upgrade compiled verions. Please use 'pip install --upgrade npbackup' instead"
         )
