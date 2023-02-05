@@ -27,8 +27,8 @@ backup:
 repo:
   repository: 
   password: 
-  ## Backup age, in seconds, which is the minimum time between two backups
-  minimum_backup_age: 86400
+  # Backup age, in minutes, which is the minimum time between two backups
+  minimum_backup_age: 1440
   upload_speed: 0      # in KiB, use 0 for unlimited upload speed
   download_speed: 0    # in KiB, use 0 for unlimited download speed
   backend_connections: 0 # Fine tune simultaneous connections to backend, use 0 for standard configuration
