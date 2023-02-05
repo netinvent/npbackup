@@ -20,7 +20,7 @@ def minimize_current_window():
     """
     Minimizes current commandline window in GUI mode
     """
-    if os.name == 'nt':
+    if os.name == "nt":
         current_executable = os.path.abspath(sys.argv[0])
         # console window will have the name of current executable
         hwndMain = win32gui.FindWindow(None, current_executable)

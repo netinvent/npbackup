@@ -597,7 +597,7 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
         if event == "configure":
             config_dict = config_gui(config_dict, config_file)
             # Make sure we trigger a GUI refresh when configuration is changed
-            event = 'state-button'
+            event = "state-button"
         if event == _t("generic.destination"):
             try:
                 if backend_type:
