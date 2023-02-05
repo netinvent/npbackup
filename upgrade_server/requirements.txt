@@ -1,4 +1,5 @@
 fastapi
 fastapi-offline>=1.5.0
-uvicorn
+#uvicorn
 pydantic
+ruamel.yaml
