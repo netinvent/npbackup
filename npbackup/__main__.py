@@ -308,7 +308,6 @@ This is free software, and you are welcome to redistribute it under certain cond
                 if result == _t("generic._yes"):
                     config_dict = config_gui(config_dict, CONFIG_FILE)
                     sg.Popup(_t("config_gui.saved_initial_config"))
-                    sys.exit(6)
                 else:
                     logger.error("No configuration created via GUI")
                     sys.exit(7)
