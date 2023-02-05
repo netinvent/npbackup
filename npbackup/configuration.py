@@ -116,9 +116,7 @@ def encrypt_data(config_dict: dict) -> dict:
     for option in ENCRYPTED_OPTIONS:
         try:
             if config_dict[option["section"]][option["name"]]:
-                if isinstance(
-                    config_dict[option["section"]][option["name"]], str
-                ) and not config_dict[option["section"]][option["name"]].startswith(
+                if not str(config_dict[option["section"]][option["name"]]).startswith(
                     ID_STRING
                 ):
                     config_dict[option["section"]][
@@ -145,11 +143,7 @@ def is_encrypted(config_dict: dict) -> bool:
             try:
                 if (
                     config_dict[option["section"]][option["name"]]
-                    and isinstance(
-                        config_dict[option["section"]][option["name"]],
-                        option["type"],
-                    )
-                    and not config_dict[option["section"]][option["name"]].startswith(
+                    and not str(config_dict[option["section"]][option["name"]]).startswith(
                         ID_STRING
                     )
                 ):
