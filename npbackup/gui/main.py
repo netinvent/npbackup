@@ -280,7 +280,7 @@ def ls_window(config: dict, snapshot: str) -> bool:
         )
     sg.PopupAnimated(None)
     backup_content, ls_result = thread.result()
-    if not backup_content:
+    if not backup_content or not ls_result:
         sg.PopupError(_t("main_gui.cannot_get_content"), keep_on_top=True)
         return False
 
@@ -596,6 +596,8 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
             ls_window(config_dict, snapshot=values["snapshot-list"][0])
         if event == "configure":
             config_dict = config_gui(config_dict, config_file)
+            # Make sure we trigger a GUI refresh when configuration is changed
+            event = 'state-button'
         if event == _t("generic.destination"):
             try:
                 if backend_type:
@@ -613,3 +615,5 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
         if event == "state-button":
             current_state, snapshot_list = get_gui_data(config_dict)
             _gui_update_state(window, current_state, snapshot_list)
+            if current_state is None:
+                sg.Popup(_t("main_gui.cannot_get_repo_status"))

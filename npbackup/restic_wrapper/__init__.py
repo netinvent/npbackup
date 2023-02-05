@@ -458,7 +458,7 @@ class ResticRunner:
             except json.decoder.JSONDecodeError:
                 logger.error("Returned data is not JSON:\n{}".format(output))
                 logger.debug("Trace:", exc_info=True)
-        return None
+        return result
 
     def snapshots(self) -> Optional[list]:
         """
@@ -474,6 +474,7 @@ class ResticRunner:
             except json.decoder.JSONDecodeError:
                 logger.error("Returned data is not JSON:\n{}".format(output))
                 logger.debug("Trace:", exc_info=True)
+                return False
         return None
 
     def backup(
@@ -623,7 +624,9 @@ class ResticRunner:
             return None
         try:
             snapshots = self.snapshots()
-            if self.last_command_status is False or not snapshots:
+            if self.last_command_status is False:
+                return None
+            if not snapshots:
                 return False
 
             tz_aware_timestamp = datetime.now(timezone.utc).astimezone()

@@ -2,6 +2,7 @@ en:
   loading_data_from_repo: Loading data from repo
   this_will_take_a_while: This will take a while
   cannot_get_content: Cannot get content
+  cannot_get_repo_status: Cannot get repo status
   creating_tree: Creating tree
   restore_to: Restore to
   restore: Restore
