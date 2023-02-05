@@ -1,0 +1,15 @@
+[Unit]
+Description=NPBackup upgrade server gunicorn service
+After=network.target
+
+[Service]
+#User=npbackup
+#Group=npbackup
+
+# Set this to whatever directory you installed the upgrade_server to
+ExecStart=/var/www/upgrades.stash.netperfect.eu/venv/bin/python3 /var/www/upgrades.stash.netperfect.eu/upgrade_server/upgrade_server.py --config-file=/etc/npbackup/upgrade_server.conf
+WorkingDirectory=/var/www/upgrades.stash.netperfect.eu/upgrade_server
+Environment="PYTHONPATH=/var/www/upgrades.stash.netperfect.eu/upgrade_server"
+
+[Install]
+WantedBy=multi-user.target
