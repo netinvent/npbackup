@@ -21,8 +21,10 @@ def minimize_current_window():
     if os.name == "nt":
         # pylint: disable=E0401 (import-error)
         import win32gui
+
         # pylint: disable=E0401 (import-error)
         import win32con
+
         current_executable = os.path.abspath(sys.argv[0])
         # console window will have the name of current executable
         hwndMain = win32gui.FindWindow(None, current_executable)
