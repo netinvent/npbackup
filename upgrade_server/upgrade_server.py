@@ -7,8 +7,8 @@ __intname__ = "npbackup.upgrade_server.upgrade_server"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023020501"
-__version__ = "1.3.0"
+__build__ = "2023020601"
+__version__ = "1.4.0"
 
 
 import sys
@@ -16,36 +16,53 @@ import os
 import multiprocessing
 from argparse import ArgumentParser
 from upgrade_server import configuration
-import upgrade_server.api
 from ofunctions.logger_utils import logger_get_logger
+import upgrade_server.api
 
 
-if __name__ == '__main__':
-    config_dict = configuration.load_config()
+if __name__ == "__main__":
+    _DEV = os.environ.get("_DEV", False)
+
+    parser = ArgumentParser(
+        prog="{} {} - {}".format(__intname__, __copyright__, __license__),
+        description="""NPBackup Upgrade server""",
+    )
+
+    parser.add_argument(
+        "--dev", action="store_true", help="Run with uvicorn in devel environment"
+    )
+
+    parser.add_argument(
+        "-c",
+        "--config-file",
+        dest="config_file",
+        type=str,
+        default=None,
+        required=False,
+        help="Path to upgrade_server.conf file",
+    )
+
+    args = parser.parse_args()
+    if args.dev:
+        _DEV = True
+
+    if args.config_file:
+        config_dict = configuration.load_config(args.config_file)
+    else:
+        config_dict = configuration.load_config()
+
     try:
         listen = config_dict["http_server"]["listen"]
-    except KeyError:
+    except (TypeError, KeyError):
         listen = None
     try:
         port = config_dict["http_server"]["port"]
-    except KeyError:
+    except (TypeError, KeyError):
         listen = None
-
-
-    _DEV = os.environ.get("_DEV", False)
-
-
-    parser = ArgumentParser(
-            prog="{} {} - {}".format(__intname__, __copyright__, __license__),
-            description="""NPBackup Upgrade server""",
-        )
-
-    parser.add_argument(
-            "--dev", action="store_true", help="Run with uvicorn"
-        )
 
     if _DEV:
         import uvicorn
+
         server_args = {
             "workers": 1,
             "log_level": "debug",
@@ -60,14 +77,18 @@ if __name__ == '__main__':
             """
             This class supersedes gunicorn's class in order to load config before launching the app
             """
+
             def __init__(self, app, options=None):
                 self.options = options or {}
                 self.application = app
                 super().__init__()
 
             def load_config(self):
-                config = {key: value for key, value in self.options.items()
-                        if key in self.cfg.settings and value is not None}
+                config = {
+                    key: value
+                    for key, value in self.options.items()
+                    if key in self.cfg.settings and value is not None
+                }
                 for key, value in config.items():
                     self.cfg.set(key.lower(), value)
 
@@ -76,13 +97,11 @@ if __name__ == '__main__':
 
         server_args = {
             "workers": (multiprocessing.cpu_count() * 2) + 1,
-            "bind": f'{listen}:{port}' if listen else "0.0.0.0:8080",
-            "worker_class": "uvicorn.workers.UvicornWorker"
+            "bind": f"{listen}:{port}" if listen else "0.0.0.0:8080",
+            "worker_class": "uvicorn.workers.UvicornWorker",
         }
 
-
     logger = logger_get_logger()
-
     try:
         if _DEV:
             uvicorn.run("upgrade_server.api:app", **server_args)

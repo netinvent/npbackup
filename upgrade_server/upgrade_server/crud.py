@@ -7,20 +7,37 @@ __intname__ = "npbackup.upgrade_server.crud"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023020301"
+__build__ = "2023020601"
 
 
 import os
 from typing import Optional, Union
 from logging import getLogger
 import hashlib
+from argparse import ArgumentParser
 from datetime import datetime
 from upgrade_server.models.files import FileGet, FileSend
 from upgrade_server.models.oper import CurrentVersion
 import upgrade_server.configuration as configuration
 
 
-config_dict = configuration.load_config()
+# Make sure we load given config files again
+parser = ArgumentParser()
+parser.add_argument(
+    "-c",
+    "--config-file",
+    dest="config_file",
+    type=str,
+    default=None,
+    required=False,
+    help="Path to upgrade_server.conf file",
+)
+args = parser.parse_args()
+if args.config_file:
+    config_dict = configuration.load_config(args.config_file)
+else:
+    config_dict = configuration.load_config()
+
 
 logger = getLogger(__intname__)
 
@@ -58,7 +75,7 @@ def get_current_version() -> Optional[CurrentVersion]:
         path = os.path.join(config_dict["upgrades"]["data_root"], "VERSION")
         if os.path.isfile(path):
             with open(path, "r", encoding="utf-8") as fh:
-                ver = fh.readline()
+                ver = fh.readline().strip()
                 return CurrentVersion(version=ver)
     except OSError:
         logger.error("Cannot get current version")

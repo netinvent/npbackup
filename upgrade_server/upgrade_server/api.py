@@ -1,18 +1,18 @@
-#! /usr/bin/env python3
 #  -*- coding: utf-8 -*-
 
 __intname__ = "npbackup.upgrade_server.api"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023020301"
+__build__ = "2023020601"
 __appname__ = "npbackup.upgrader"
 
 
-from typing import Literal
+from typing import Literal, Optional
 import logging
 import secrets
-from fastapi import FastAPI, HTTPException, Response, Depends, status, Request
+from argparse import ArgumentParser
+from fastapi import FastAPI, HTTPException, Response, Depends, status, Request, Header
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi_offline import FastAPIOffline
 from upgrade_server.models.files import FileGet, FileSend, Platform, Arch
@@ -21,7 +21,23 @@ import upgrade_server.crud as crud
 import upgrade_server.configuration as configuration
 
 
-config_dict = configuration.load_config()
+# Make sure we load given config files again
+parser = ArgumentParser()
+parser.add_argument(
+    "-c",
+    "--config-file",
+    dest="config_file",
+    type=str,
+    default=None,
+    required=False,
+    help="Path to upgrade_server.conf file",
+)
+args = parser.parse_args()
+if args.config_file:
+    config_dict = configuration.load_config(args.config_file)
+else:
+    config_dict = configuration.load_config()
+
 logger = logging.getLogger()
 
 #### Create app
@@ -63,10 +79,21 @@ async def api_root(auth=Depends(get_current_username)):
 
 
 @app.get("/current_version", response_model=CurrentVersion, status_code=200)
-async def current_version(request: Request, auth=Depends(get_current_username)):
+async def current_version(
+    request: Request,
+    x_real_ip: Optional[str] = Header(default=None),
+    x_forwarded_for: Optional[str] = Header(default=None),
+    auth=Depends(get_current_username),
+):
+    if x_real_ip:
+        client_ip = x_real_ip
+    elif x_forwarded_for:
+        client_ip = x_forwarded_for
+    else:
+        client_ip = request.client.host
     data = {
         "action": "check_version",
-        "ip": request.client.host,
+        "ip": client_ip,
         "auto_upgrade_host_identity": "",
         "installed_version": "",
         "group": "",
@@ -116,11 +143,19 @@ async def upgrades(
     auto_upgrade_host_identity: str = None,
     installed_version: str = None,
     group: str = None,
+    x_real_ip: Optional[str] = Header(default=None),
+    x_forwarded_for: Optional[str] = Header(default=None),
     auth=Depends(get_current_username),
 ):
+    if x_real_ip:
+        client_ip = x_real_ip
+    elif x_forwarded_for:
+        client_ip = x_forwarded_for
+    else:
+        client_ip = request.client.host
     data = {
         "action": "get_file_info",
-        "ip": request.client.host,
+        "ip": client_ip,
         "auto_upgrade_host_identity": auto_upgrade_host_identity,
         "installed_version": installed_version,
         "group": group,
