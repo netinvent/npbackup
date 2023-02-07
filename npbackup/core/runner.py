@@ -368,7 +368,7 @@ class NPBackupRunner:
         elif result is False:
             logger.info("No recent backup found.")
         elif result is None:
-            logger.error("Cannot connect to repository.")
+            logger.error("Cannot connect to repository or repository empty.")
         return result
 
     @exec_timer

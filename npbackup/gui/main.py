@@ -169,7 +169,7 @@ def _gui_update_state(window, current_state: bool, snapshot_list: List[str]) -> 
         )
     elif current_state is None:
         window["state-button"].Update(
-            _t("generic.not_connected"), button_color=("white", "darkgrey")
+            _t("generic.not_connected_yet"), button_color=("white", "darkgrey")
         )
     window["snapshot-list"].Update(snapshot_list)
 
