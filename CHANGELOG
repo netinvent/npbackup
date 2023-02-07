@@ -4,6 +4,9 @@
   - Main program now loads directly after first time GUI setup
   - A popup is now shown on non-readable repos
   - Various smaller fixes
+  - Support for --config-file parameter in upgrade_server
+  - Upgrade server now fetches the real client IP if behind a proxy
+  - Upgrade server systemd service file example
 
 ## v2.2.0 - rc2
   - Upgrade client now sends its hostname, group and version information to server
