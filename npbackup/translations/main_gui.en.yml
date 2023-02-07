@@ -29,4 +29,4 @@ en:
   run_as: run as
   identified_by: identified by
   unknown_repo: Repo format unknown
-  repository_not_confgiured: Repository not configured
+  repository_not_configured: Repository not configured
