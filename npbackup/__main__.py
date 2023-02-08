@@ -301,6 +301,7 @@ This is free software, and you are welcome to redistribute it under certain cond
             config_dict = configuration.empty_config_dict
             # If no arguments are passed, assume we are launching the GUI
             if len(sys.argv) == 1:
+                minimize_current_window()
                 result = sg.Popup(
                     "{}\n\n{}".format(message, _t("config_gui.create_new_config")),
                     custom_text=(_t("generic._yes"), _t("generic._no")),
