@@ -29,9 +29,9 @@ def ask_backup_admin_password(config_dict) -> bool:
             backup_admin_password = configuration.DEFAULT_BACKUP_ADMIN_PASSWORD
     except KeyError:
         backup_admin_password = configuration.DEFAULT_BACKUP_ADMIN_PASSWORD
-    if sg.PopupGetText(_t("config_gui.enter_backup_admin_password"), password_char='*') == str(
-        backup_admin_password
-    ):
+    if sg.PopupGetText(
+        _t("config_gui.enter_backup_admin_password"), password_char="*"
+    ) == str(backup_admin_password):
         return True
     sg.PopupError(_t("config_gui.wrong_password"))
     return False
@@ -484,7 +484,9 @@ def config_gui(config_dict: dict, config_file: str):
                 logger.info("Configuration saved successfully.")
                 break
             else:
-                sg.PopupError(_t("config_gui.cannot_save_configuration"), keep_on_top=True)
+                sg.PopupError(
+                    _t("config_gui.cannot_save_configuration"), keep_on_top=True
+                )
                 logger.info("Could not save configuration")
         if event == _t("config_gui.show_decrypted"):
             if ask_backup_admin_password(config_dict):
