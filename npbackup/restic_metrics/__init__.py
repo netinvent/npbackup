@@ -159,7 +159,9 @@ def restic_output_2_metrics(restic_result, output, labels=None):
                         )
                         errors = True
                 except IndexError as exc:
-                    logger.warning("Cannot parse restic log for added data: {}".format(exc))
+                    logger.warning(
+                        "Cannot parse restic log for added data: {}".format(exc)
+                    )
                     errors = True
 
             matches = re.match(
@@ -199,7 +201,9 @@ def restic_output_2_metrics(restic_result, output, labels=None):
                         errors = True
                 except IndexError as exc:
                     logger.error("Trace:", exc_info=True)
-                    logger.warning("Cannot parse restic log for repo size: {}".format(exc))
+                    logger.warning(
+                        "Cannot parse restic log for repo size: {}".format(exc)
+                    )
                     errors = True
             matches = re.match(
                 r"Failure|Fatal|Unauthorized|no such host|s there a repository at the following location\?",
