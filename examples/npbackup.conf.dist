@@ -76,4 +76,4 @@ options:
   auto_upgrade_host_identity: ${MACHINE_ID}
   auto_upgrade_group: ${MACHINE_GROUP}
 
-  backup_admin_password: NPBackup_00
+  backup_admin_password:
