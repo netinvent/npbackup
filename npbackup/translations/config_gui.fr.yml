@@ -50,10 +50,11 @@ fr:
   no_binary: Impossible de trouver le coeur de sauvegarde. Merci d'installer le binaire restic depuis restic.net
 
   configuration_saved: Configuration sauvegardée
+  cannot_save_configuration: Impossible d'enregistrer la configuration. Veuillez consulter les journaux pour plus de détails
   repo_password_cannot_be_empty: Le mot de passe du dépot ne peut être vide
   enter_backup_admin_password: Mot de passe admin de sauvegarde
   wrong_password: Mot de passe érroné
-  password_updated_please_save: Mot de passe mis à jour. Veuillez enregistrer
+  password_updated_please_save: Mot de passe mis à jour. Veuillez enregistrer la configuraiton
 
   auto_upgrade: Mise à niveau
   auto_upgrade_server_url: Serveur de mise à niveau

@@ -476,10 +476,14 @@ def config_gui(config_dict: dict, config_file: str):
                 sg.PopupError(_t("config_gui.repo_password_cannot_be_empty"))
                 continue
             config_dict = update_config_dict(values, config_dict)
-            configuration.save_config(config_file, config_dict)
-            sg.Popup(_t("config_gui.configuration_saved"), keep_on_top=True)
-            logger.info("Configuration saved successfully.")
-            break
+            result = configuration.save_config(config_file, config_dict)
+            if result:
+                sg.Popup(_t("config_gui.configuration_saved"), keep_on_top=True)
+                logger.info("Configuration saved successfully.")
+                break
+            else:
+                sg.Popup(_t("config_gui.cannot_save_configuration"), keep_on_top=True)
+                logger.info("Could not save configuration")
         if event == _t("config_gui.show_decrypted"):
             if ask_backup_admin_password(config_dict):
                 update_gui(window, config_dict, unencrypted=True)
