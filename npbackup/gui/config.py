@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.config"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023020101"
+__build__ = "2023020801"
 
 
 import os
@@ -25,6 +25,8 @@ logger = getLogger(__intname__)
 def ask_backup_admin_password(config_dict) -> bool:
     try:
         backup_admin_password = config_dict["options"]["backup_admin_password"]
+        if not backup_admin_password:
+            backup_admin_password = configuration.DEFAULT_BACKUP_ADMIN_PASSWORD
     except KeyError:
         backup_admin_password = configuration.DEFAULT_BACKUP_ADMIN_PASSWORD
     if sg.PopupGetText(_t("config_gui.enter_backup_admin_password")) == str(
