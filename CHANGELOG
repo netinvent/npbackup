@@ -1,3 +1,8 @@
+## v2.2.0 - rc4
+  - Add gui popup when config cannot be saved
+  - Make repo connection messages more clear
+  - Fix empty restic results will make prometheus metrics fail
+
 ## v2.2.0 - rc3
   - Auto minimize console window when run in GUI mode to not distract end user
   - Trigger GUI refresh after configuration changes
