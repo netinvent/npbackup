@@ -5,7 +5,7 @@
 
 # NPBackup
 
-A one fits all backup solution that solves modern problems with modern solutions
+A securre and efficient file backup solution that fits system administrators and end users self-care
 
 Available in both CLI / GUI flavors for both system administrators and end users
 
@@ -23,31 +23,35 @@ Available in both CLI / GUI flavors for both system administrators and end users
   - Google Cloud Storage
   - OpenStack Swift
   - Alibaba Cloud (Aliyun) Object Storage System (OSS)
+- Resume on interrupted backups
 - Full CLI interface for scheduled task usage
   - Checks for recent backups before launching a backup
-- Optional end user GUI
-  - Backup content view and restore
-  - Configuration interface
-  - Internationalization support (en, fr as of jan 2023)
+- End User GUI
+  - Backups create, list, viewer and restore
+  - Full configuration interface
+  - Internationalization support (en, fr as of feb 2023)
 - Performance
   - Backup process and IO priority settings
   - Upload / download speed limits
-  - Concurrency settings
-- Comes with complete exclusion lists for Linux and Windows files and folders
+  - Remote connectivity concurrency settings
+- Comes with full exclusion lists for Linux and Windows
 - First class prometheus support
+  - Restic results metric generatioion
   - Grafana dashboard included
   - node_exporter file collector support
   - Optional push gateway metrics uploading
 - First class Windows support
   - VSS snapshots
-  - Cloud file exclusions (reparse points)
+  - Automatic cloud file exclusions (reparse points)
   - Windows pre-built executables
   - Windows installer
 - Additional security
-  - repository uri / password and http metrics identification is encrypted
-- yaml file configuration (or gui configuration)
-- Remote automatic self upgrade
-  - Included upgrade server
+  - repository uri / password, http metrics and upgrade server passwords are AES-256 encrypted
+  - Encrypted data viewing requires additional password
+  - AES-256 keys can't be guessed in executables thanks to Nuitka Commercial compiler
+- Easy configuration via YAML file (or via GUI)
+- Remote automatic self upgrade capacity
+  - Included upgrade server ready to run in production
 
 ## About
 
