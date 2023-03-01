@@ -12,7 +12,6 @@ __version__ = "1.5.1"
 
 
 from typing import Tuple, List, Optional, Callable, Union
-import sys
 import os
 from logging import getLogger
 import re
