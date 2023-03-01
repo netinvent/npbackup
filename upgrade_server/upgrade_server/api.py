@@ -1,4 +1,7 @@
+#! /usr/bin/env python
 #  -*- coding: utf-8 -*-
+#
+# This file is part of npbackup
 
 __intname__ = "npbackup.upgrade_server.api"
 __author__ = "Orsiris de Jong"
