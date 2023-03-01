@@ -315,7 +315,6 @@ class NPBackupRunner:
             self.minimum_backup_age = 1440
 
         self.restic_runner.verbose = self.verbose
-        self.restic_runner.dry_run = self.dry_run
         self.restic_runner.stdout = self.stdout
 
     @exec_timer
@@ -498,6 +497,7 @@ class NPBackupRunner:
                     )
                 )
 
+        self.restic_runner.dry_run = self.dry_run
         result, result_string = self.restic_runner.backup(
             paths=paths,
             exclude_patterns=exclude_patterns,
@@ -508,7 +508,6 @@ class NPBackupRunner:
             use_fs_snapshot=use_fs_snapshot,
             tags=tags,
             additional_parameters=additional_parameters,
-            dry_run=self.dry_run,
         )
         logger.debug("Restic output:\n{}".format(result_string))
         metric_writer(self.config_dict, result, result_string)

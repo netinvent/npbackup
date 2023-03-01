@@ -181,6 +181,8 @@ class ResticRunner:
         start_time = datetime.utcnow()
         self._executor_finished = False
         _cmd = '"{}" {}{}'.format(self._binary, cmd, self.generic_arguments)
+        if self.dry_run:
+            _cmd += " --dry-run"
         logger.debug("Running command: [{}]".format(_cmd))
         self._make_env()
         if live_stream:
@@ -486,7 +488,6 @@ class ResticRunner:
         use_fs_snapshot: bool = False,
         tags: List[str] = [],
         one_file_system: bool = False,
-        dry_run: bool = False,
         additional_parameters: str = None,
     ) -> Tuple[bool, str]:
         """
@@ -524,8 +525,6 @@ class ResticRunner:
             tag = tag.strip()
             if tag:
                 cmd += " --tag {}".format(tag)
-        if dry_run:
-            cmd += " --dry-run"
         if additional_parameters:
             cmd += " {}".format(additional_parameters)
         result, output = self.executor(cmd, live_stream=True)
