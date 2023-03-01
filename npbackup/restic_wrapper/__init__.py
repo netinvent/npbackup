@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023012701"
-__version__ = "1.5.0"
+__build__ = "2023030101"
+__version__ = "1.5.1"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -182,6 +182,8 @@ class ResticRunner:
         start_time = datetime.utcnow()
         self._executor_finished = False
         _cmd = '"{}" {}{}'.format(self._binary, cmd, self.generic_arguments)
+        if self.dry_run:
+            _cmd += " --dry-run"
         logger.debug("Running command: [{}]".format(_cmd))
         self._make_env()
         if live_stream:
@@ -487,7 +489,6 @@ class ResticRunner:
         use_fs_snapshot: bool = False,
         tags: List[str] = [],
         one_file_system: bool = False,
-        dry_run: bool = False,
         additional_parameters: str = None,
     ) -> Tuple[bool, str]:
         """
@@ -523,8 +524,6 @@ class ResticRunner:
                 logger.warning(
                     "Parameter --use-fs-snapshot was given, which is only compatible with Windows"
                 )
-        if dry_run:
-            cmd += " --dry-run"
         if additional_parameters:
             cmd += " {}".format(additional_parameters)
         result, output = self.executor(cmd, live_stream=True)
