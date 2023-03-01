@@ -58,7 +58,7 @@ if __name__ == "__main__":
     try:
         port = config_dict["http_server"]["port"]
     except (TypeError, KeyError):
-        listen = None
+        port = None
 
     if _DEV:
         import uvicorn
