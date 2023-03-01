@@ -510,8 +510,6 @@ class ResticRunner:
             cmd += " --{}exclude-file {}".format(case_ignore_param, exclude_file)
         if exclude_caches:
             cmd += " --exclude-caches"
-        for tag in tags:
-            cmd += " --tag {}".format(tag)
         if one_file_system:
             cmd += " --one-file-system"
         if use_fs_snapshot:
@@ -522,6 +520,10 @@ class ResticRunner:
                 logger.warning(
                     "Parameter --use-fs-snapshot was given, which is only compatible with Windows"
                 )
+        for tag in tags:
+            tag = tag.strip()
+            if tag:
+                cmd += " --tag {}".format(tag)
         if dry_run:
             cmd += " --dry-run"
         if additional_parameters:
