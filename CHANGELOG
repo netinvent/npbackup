@@ -1,10 +1,14 @@
-## v2.2.0 - rc4
+## v2.2.0 - rc5 - 01/03/2023
+  - Fixed bogus restic command line when empty tag lines were given
+  - Make sure the no config dialog stays on top
+
+## v2.2.0 - rc4 - 08/02/2023
   - Add gui popup when config cannot be saved
   - Make repo connection messages more clear
   - Remove default backup admin password from config
   - Fix empty restic results will make prometheus metrics fail
 
-## v2.2.0 - rc3
+## v2.2.0 - rc3 - 07/02/2023
   - Auto minimize console window when run in GUI mode to not distract end user
   - Trigger GUI refresh after configuration changes
   - Main program now loads directly after first time GUI setup
@@ -14,7 +18,7 @@
   - Upgrade server now fetches the real client IP if behind a proxy
   - Upgrade server systemd service file example
 
-## v2.2.0 - rc2
+## v2.2.0 - rc2 - 03/02/2023
   - Upgrade client now sends its hostname, group and version information to server
   - Add variable substitution in configuration
   - Add machine identification in configuration
