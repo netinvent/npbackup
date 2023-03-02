@@ -7,7 +7,7 @@ __intname__ = "npbackup.upgrade_client.upgrader"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2023020201"
+__build__ = "2023030201"
 
 
 from typing import Optional
@@ -17,7 +17,7 @@ import hashlib
 import tempfile
 import atexit
 from packaging import version
-from ofunctions.platform import get_os, os_arch
+from ofunctions.platform import get_os, python_arch
 from ofunctions.process import kill_childs
 from command_runner import deferred_command
 from npbackup.upgrade_client.requestor import Requestor
@@ -180,7 +180,9 @@ def auto_upgrader(
         return False
     requestor = Requestor(upgrade_url, username, password)
     requestor.create_session(authenticated=True)
-    platform_and_arch = "{}/{}".format(get_os(), os_arch()).lower()
+
+    # We'll check python_arch instead of os_arch since we build 32 bit python executables for compat reasons
+    platform_and_arch = "{}/{}".format(get_os(), python_arch()).lower()
 
     try:
         host_id = "{}/{}/{}".format(
