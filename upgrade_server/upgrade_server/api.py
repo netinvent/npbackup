@@ -7,7 +7,7 @@ __intname__ = "npbackup.upgrade_server.api"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023020601"
+__build__ = "2023030201"
 __appname__ = "npbackup.upgrader"
 
 
@@ -86,6 +86,7 @@ async def current_version(
     request: Request,
     x_real_ip: Optional[str] = Header(default=None),
     x_forwarded_for: Optional[str] = Header(default=None),
+    referer: Optional[str] = Header(default=None),
     auth=Depends(get_current_username),
 ):
     if x_real_ip:
@@ -98,7 +99,7 @@ async def current_version(
         "action": "check_version",
         "ip": client_ip,
         "auto_upgrade_host_identity": "",
-        "installed_version": "",
+        "installed_version": referer,
         "group": "",
         "platform": "",
         "arch": "",
