@@ -13,7 +13,9 @@ requests
 ruamel.yaml
 psutil
 pyyaml  # Required for python-i18n which does not work with ruamel.yaml
-python-i18n
-# python-i18n local copy from https://github.com/Krutyi-4el/python-i18n:
+# Replaced python-i18n with a fork that prevents boolean keys from being interpreted
+# python-i18n
+# python-i18n local copy from https://github.com/Krutyi-4el/python-i18n
+https://github.com/Krutyi-4el/python-i18n/archive/master.zip
 packaging
 pywin32; platform_system == "Windows"
