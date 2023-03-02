@@ -305,7 +305,7 @@ This is free software, and you are welcome to redistribute it under certain cond
                 result = sg.Popup(
                     "{}\n\n{}".format(message, _t("config_gui.create_new_config")),
                     custom_text=(_t("generic._yes"), _t("generic._no")),
-                    keep_on_top=True
+                    keep_on_top=True,
                 )
                 if result == _t("generic._yes"):
                     config_dict = config_gui(config_dict, CONFIG_FILE)
