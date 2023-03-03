@@ -7,7 +7,7 @@ __intname__ = "npbackup.upgrade_server.api"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023030201"
+__build__ = "2023030301"
 __appname__ = "npbackup.upgrader"
 
 
@@ -200,11 +200,19 @@ async def download(
     auto_upgrade_host_identity: str = None,
     installed_version: str = None,
     group: str = None,
+    x_real_ip: Optional[str] = Header(default=None),
+    x_forwarded_for: Optional[str] = Header(default=None),
     auth=Depends(get_current_username),
 ):
+    if x_real_ip:
+        client_ip = x_real_ip
+    elif x_forwarded_for:
+        client_ip = x_forwarded_for
+    else:
+        client_ip = request.client.host
     data = {
         "action": "download_upgrade",
-        "ip": request.client.host,
+        "ip": client_ip,
         "auto_upgrade_host_identity": auto_upgrade_host_identity,
         "installed_version": installed_version,
         "group": group,
