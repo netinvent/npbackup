@@ -1,9 +1,10 @@
-## v2.2.0 - rc5 - 02/03/2023
+## v2.2.0 - rc5 - 03/03/2023
   - Fixed bogus restic command line when empty tag lines were given
   - Make sure the no config dialog stays on top
   - Make sure upgrade client checks current python arch instead of os arch
   - Make upgrade client catch referrer for /current_version calls
   - Upgrade python-i18n to a maintained version
+  - Make sure we get the real IP when client downloads an upgrade and server is behind proxy server
 
 ## v2.2.0 - rc4 - 08/02/2023
   - Add gui popup when config cannot be saved
