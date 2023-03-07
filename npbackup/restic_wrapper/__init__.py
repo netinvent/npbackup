@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023012701"
-__version__ = "1.5.0"
+__build__ = "2023030701"
+__version__ = "1.5.1"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -522,8 +522,8 @@ class ResticRunner:
                     "Parameter --use-fs-snapshot was given, which is only compatible with Windows"
                 )
         for tag in tags:
-            tag = tag.strip()
             if tag:
+                tag = tag.strip()
                 cmd += " --tag {}".format(tag)
         if additional_parameters:
             cmd += " {}".format(additional_parameters)
