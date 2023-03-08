@@ -1,3 +1,7 @@
+## v2.2.0 - rc6 - 07/03/2023
+  - Fixup bogus restic command line when empty tag lines were given
+  - Added missing default value for ignoring cloud files in the example configuration
+
 ## v2.2.0 - rc5 - 03/03/2023
   - Fixed bogus restic command line when empty tag lines were given
   - Make sure the no config dialog stays on top
