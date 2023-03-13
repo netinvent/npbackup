@@ -98,15 +98,13 @@ package_data = {
     '': ['translations/*.yml']
 }
 
-binary_suffix = "%d" % sys.version_info[0]
-
-if os.name == "nt":
-    scripts = ["misc/npbackup.cmd"]
-    console_scripts = []
-else:
-    scripts = []
-    console_scripts = [
-        "npbackup%s = npbackup.npbackup:main" % binary_suffix,
+#if os.name == "nt":
+scripts = ["misc/npbackup.cmd"]
+#    console_scripts = []
+#else:
+#    scripts = []
+console_scripts = [
+        "npbackup = npbackup.__main__:main"
     ]
 
 setuptools.setup(
@@ -163,8 +161,8 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     python_requires=">=3.6",
     scripts=scripts,
-        entry_points={
-            "console_scripts": console_scripts,
+    entry_points={
+        "console_scripts": console_scripts,
     },
     # As we do version specific hacks for installed inline copies, make the
     # wheel version and platform specific.
