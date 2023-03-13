@@ -324,9 +324,9 @@ This is free software, and you are welcome to redistribute it under certain cond
                     logger.info("Seems to be a headless server.")
                     parser.print_help(sys.stderr)
                     sys.exit(1)
-        elif config_dict is False:
-            logger.info("Bogus config file %s", CONFIG_FILE)
-            if len(sys.argv) == 1:
+            sys.exit(7)
+        elif not config_dict:
+            if len(sys.argv) == 1 and not _NO_GUI:
                 sg.Popup(_t("config_gui.bogus_config_file", config_file=CONFIG_FILE))
             sys.exit(7)
 
