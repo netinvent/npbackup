@@ -7,8 +7,8 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023020301"
-__version__ = "1.6.1 for npbackup 2.2.0+"
+__build__ = "2023031301"
+__version__ = "1.6.2 for npbackup 2.2.0+"
 
 from typing import Tuple, Optional
 import sys
@@ -53,23 +53,42 @@ empty_config_dict = {
         "use_fs_snapshot": True,
         "ignore_cloud_files": True,
         "exclude_caches": True,
+        "exclude_case_ingore": False,
+        "one_file_system": True,
         "priority": "low",
     },
-    "repo": {"minimum_backup_age": 1440},
+    "repo": {
+        "repository": "",
+        "password": "",
+        "minimum_backup_age": 1440,
+        "upload_speed": 0,
+        "download_speed": 0,
+        "backend_connections": 0
+    },
     "identity": {
         "machine_id": "${HOSTNAME}__${RANDOM}[4]",
         "machine_group": "",
     },
     "prometheus": {
+        "metrics": False,
         "instance": "${MACHINE_ID}",
         "backup_job": "${MACHINE_ID}",
         "group": "${MACHINE_GROUP}",
+        "destination": '',
+        "http_username": '',
+        "http_password": '',
+        "additional_labels": '',
     },
     "env": {},
     "options": {
-        "backup_admin_password": DEFAULT_BACKUP_ADMIN_PASSWORD,
+        "auto_upgrade": True,
+        "auto_upgrade_interval": 10,
+        "auto_upgrade_server_url": '',
+        "auto_upgrade_server_username": '',
+        "auto_upgrade_server_password": '',
         "auto_upgrade_host_identity": "${MACHINE_ID}",
         "auto_upgrade_group": "${MACHINE_GROUP}",
+        "backup_admin_password": DEFAULT_BACKUP_ADMIN_PASSWORD,
     },
 }
 
