@@ -23,10 +23,12 @@ import tempfile
 import pidfile
 import ofunctions.logger_utils
 from ofunctions.process import kill_childs
+
 # This is needed so we get no GUI version messages
 try:
     import PySimpleGUI as sg
     import _tkinter
+
     _NO_GUI = False
 except ImportError:
     _NO_GUI = True
@@ -44,10 +46,12 @@ from npbackup.core.i18n_helper import _t
 from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
 from npbackup.upgrade_client.upgrader import need_upgrade
 from npbackup.core.upgrade_runner import run_upgrade
+
 if not _NO_GUI:
     from npbackup.gui.config import config_gui
     from npbackup.gui.main import main_gui
     from npbackup.gui.minimize_window import minimize_current_window
+
     sg.theme(PYSIMPLEGUI_THEME)
     sg.SetOptions(icon=OEM_ICON)
 
