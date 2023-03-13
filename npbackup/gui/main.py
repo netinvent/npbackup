@@ -61,7 +61,7 @@ def _about_gui(version_string: str, config_dict: dict) -> None:
     elif result is None:
         new_version = [sg.Text(_t("config_gui.auto_upgrade_disabled"))]
     try:
-        with open(LICENSE_FILE, "r") as file_handle:
+        with open(LICENSE_FILE, "r", encoding="utf-8") as file_handle:
             license_content = file_handle.read()
     except OSError:
         logger.info("Could not read license file.")

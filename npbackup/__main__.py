@@ -239,7 +239,7 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     if args.license:
         try:
-            with open(LICENSE_FILE, "r", "utf-8") as file_handle:
+            with open(LICENSE_FILE, "r", encoding="utf-8") as file_handle:
                 print(file_handle.read())
         except OSError:
             print(LICENSE_TEXT)
