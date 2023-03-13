@@ -158,7 +158,7 @@ def get_gui_data(config_dict: dict) -> Tuple[bool, List[str]]:
             message=_t("main_gui.loading_data_from_repo"),
             time_between_frames=50,
             background_color=GUI_LOADER_COLOR,
-            text_color=GUI_LOADER_TEXT_COLOR
+            text_color=GUI_LOADER_TEXT_COLOR,
         )
     sg.PopupAnimated(None)
     return thread.result()
@@ -283,7 +283,7 @@ def ls_window(config: dict, snapshot: str) -> bool:
             ),
             time_between_frames=150,
             background_color=GUI_LOADER_COLOR,
-            text_color=GUI_LOADER_TEXT_COLOR
+            text_color=GUI_LOADER_TEXT_COLOR,
         )
     sg.PopupAnimated(None)
     backup_content, ls_result = thread.result()
@@ -298,7 +298,7 @@ def ls_window(config: dict, snapshot: str) -> bool:
         message="{}...".format(_t("main_gui.creating_tree")),
         time_between_frames=1,
         background_color=GUI_LOADER_COLOR,
-        text_color=GUI_LOADER_TEXT_COLOR
+        text_color=GUI_LOADER_TEXT_COLOR,
     )
     sleep(0.01)
     sg.PopupAnimated(
@@ -306,7 +306,7 @@ def ls_window(config: dict, snapshot: str) -> bool:
         message="{}...".format(_t("main_gui.creating_tree")),
         time_between_frames=1,
         background_color=GUI_LOADER_COLOR,
-        text_color=GUI_LOADER_TEXT_COLOR
+        text_color=GUI_LOADER_TEXT_COLOR,
     )
     # We get a thread result, hence pylint will complain the thread isn't a tuple
     # pylint: disable=E1101 (no-member)
@@ -318,7 +318,7 @@ def ls_window(config: dict, snapshot: str) -> bool:
             message="{}...".format(_t("main_gui.creating_tree")),
             time_between_frames=150,
             background_color=GUI_LOADER_COLOR,
-            text_color=GUI_LOADER_TEXT_COLOR
+            text_color=GUI_LOADER_TEXT_COLOR,
         )
     sg.PopupAnimated(None)
     treedata = thread.result()
@@ -421,7 +421,7 @@ def restore_window(
                     message="{}...".format(_t("main_gui.restore_in_progress")),
                     time_between_frames=50,
                     background_color=GUI_LOADER_COLOR,
-                    text_color=GUI_LOADER_TEXT_COLOR
+                    text_color=GUI_LOADER_TEXT_COLOR,
                 )
             sg.PopupAnimated(None)
 
@@ -488,7 +488,8 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
                             [[sg.Image(data=OEM_LOGO)]], vertical_alignment="top"
                         ),
                         sg.Column(
-                            [   [sg.Text(OEM_STRING, font="Arial 14")],
+                            [
+                                [sg.Text(OEM_STRING, font="Arial 14")],
                                 [sg.Text("{}: ".format(_t("main_gui.backup_state")))],
                                 [
                                     sg.Button(
@@ -525,7 +526,7 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
     ]
 
     window = sg.Window(
-        'npbackup',
+        "npbackup",
         layout,
         default_element_size=(12, 1),
         text_justification="r",
@@ -582,7 +583,7 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
                     message="{}...".format(_t("main_gui.backup_in_progress")),
                     time_between_frames=50,
                     background_color=GUI_LOADER_COLOR,
-                    text_color=GUI_LOADER_TEXT_COLOR
+                    text_color=GUI_LOADER_TEXT_COLOR,
                 )
             sg.PopupAnimated(None)
             result = thread.result()
