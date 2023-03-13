@@ -461,7 +461,7 @@ def config_gui(config_dict: dict, config_file: str):
         no_titlebar=False,
         grab_anywhere=True,
         keep_on_top=False,
-        alpha_channel=0.9,
+        alpha_channel=1.0,
         default_button_element_size=(12, 1),
         right_click_menu=right_click_menu,
         finalize=True,
