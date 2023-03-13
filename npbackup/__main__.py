@@ -9,8 +9,8 @@ __site__ = "https://www.netperfect.fr/npbackup"
 __description__ = "NetPerfect Backup Client"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023030101"
-__version__ = "2.2.0-rc5"
+__build__ = "2023031301"
+__version__ = "2.2.0-rc6"
 
 
 import os
@@ -23,8 +23,13 @@ import tempfile
 import pidfile
 import ofunctions.logger_utils
 from ofunctions.process import kill_childs
-import PySimpleGUI as sg
-
+# This is needed so we get no GUI version messages
+try:
+    import PySimpleGUI as sg
+    import _tkinter
+    _NO_GUI = False
+except ImportError:
+    _NO_GUI = True
 
 from npbackup.customization import (
     PYSIMPLEGUI_THEME,
@@ -34,14 +39,18 @@ from npbackup.customization import (
 )
 from npbackup import configuration
 from npbackup.windows.task import create_scheduled_task
-from npbackup.gui.config import config_gui
-from npbackup.gui.main import main_gui
 from npbackup.core.runner import NPBackupRunner
 from npbackup.core.i18n_helper import _t
 from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
 from npbackup.upgrade_client.upgrader import need_upgrade
 from npbackup.core.upgrade_runner import run_upgrade
-from npbackup.gui.minimize_window import minimize_current_window
+if not _NO_GUI:
+    from npbackup.gui.config import config_gui
+    from npbackup.gui.main import main_gui
+    from npbackup.gui.minimize_window import minimize_current_window
+    sg.theme(PYSIMPLEGUI_THEME)
+    sg.SetOptions(icon=OEM_ICON)
+
 
 del sys.path[0]
 
@@ -61,9 +70,6 @@ PID_FILE = os.path.join(tempfile.gettempdir(), "{}.pid".format(__intname__))
 
 
 logger = ofunctions.logger_utils.logger_get_logger(LOG_FILE)
-
-sg.theme(PYSIMPLEGUI_THEME)
-sg.SetOptions(icon=OEM_ICON)
 
 
 def execution_logs(start_time: datetime) -> None:
@@ -297,22 +303,27 @@ This is free software, and you are welcome to redistribute it under certain cond
         message = _t("config_gui.no_config_available")
         logger.error(message)
 
-        if config_dict is None:
+        if config_dict is None and not _NO_GUI:
             config_dict = configuration.empty_config_dict
             # If no arguments are passed, assume we are launching the GUI
             if len(sys.argv) == 1:
                 minimize_current_window()
-                result = sg.Popup(
-                    "{}\n\n{}".format(message, _t("config_gui.create_new_config")),
-                    custom_text=(_t("generic._yes"), _t("generic._no")),
-                    keep_on_top=True,
-                )
-                if result == _t("generic._yes"):
-                    config_dict = config_gui(config_dict, CONFIG_FILE)
-                    sg.Popup(_t("config_gui.saved_initial_config"))
-                else:
-                    logger.error("No configuration created via GUI")
-                    sys.exit(7)
+                try:
+                    result = sg.Popup(
+                        "{}\n\n{}".format(message, _t("config_gui.create_new_config")),
+                        custom_text=(_t("generic._yes"), _t("generic._no")),
+                        keep_on_top=True,
+                    )
+                    if result == _t("generic._yes"):
+                        config_dict = config_gui(config_dict, CONFIG_FILE)
+                        sg.Popup(_t("config_gui.saved_initial_config"))
+                    else:
+                        logger.error("No configuration created via GUI")
+                        sys.exit(7)
+                except _tkinter.TclError:
+                    logger.info("Seems to be a headless server.")
+                    parser.print_help(sys.stderr)
+                    sys.exit(1)
         elif config_dict is False:
             logger.info("Bogus config file %s", CONFIG_FILE)
             if len(sys.argv) == 1:
@@ -446,20 +457,28 @@ This is free software, and you are welcome to redistribute it under certain cond
         # EXIT_CODE 21 = current backup process already running
         sys.exit(21)
 
-    # When no argument is given, let's run the GUI
-    # Also, let's minimize the commandline window so the GUI user isn't distracted
-    minimize_current_window()
-    logger.info("Running GUI")
-    try:
-        version_string = "{} v{} {}\n{}".format(
-            __intname__, __version__, __build__, __copyright__
-        )
-        with pidfile.PIDFile(PID_FILE):
-            main_gui(config_dict, CONFIG_FILE, version_string)
-    except pidfile.AlreadyRunningError:
-        logger.warning("Backup GUI already running. Will not continue")
-        # EXIT_CODE 21 = current backup process already running
-        sys.exit(21)
+    if not _NO_GUI:
+        # When no argument is given, let's run the GUI
+        # Also, let's minimize the commandline window so the GUI user isn't distracted
+        minimize_current_window()
+        logger.info("Running GUI")
+        try:
+            version_string = "{} v{} {}\n{}".format(
+                __intname__, __version__, __build__, __copyright__
+            )
+            with pidfile.PIDFile(PID_FILE):
+                try:
+                    main_gui(config_dict, CONFIG_FILE, version_string)
+                except _tkinter.TclError:
+                    logger.info("Seems to be a headless server.")
+                    parser.print_help(sys.stderr)
+                    sys.exit(1)
+        except pidfile.AlreadyRunningError:
+            logger.warning("Backup GUI already running. Will not continue")
+            # EXIT_CODE 21 = current backup process already running
+            sys.exit(21)
+    else:
+        parser.print_help(sys.stderr)
 
 
 def main():
