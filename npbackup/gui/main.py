@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.main"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023031301"
+__build__ = "2023032001"
 
 
 from typing import List, Optional, Tuple
@@ -195,7 +195,7 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
     ]
     """
     treedata = sg.TreeData()
-
+    count = 0
     # First entry of list of list should be the snapshot description and can be discarded
     # Since we use an iter now, first result was discarded by ls_window function already
     # ls_result.pop(0)
@@ -209,7 +209,9 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
         parent = os.path.dirname(entry["path"])
 
         # Make sure we normalize mtime, and remove microseconds
-        mtime = dateutil.parser.parse(entry["mtime"]).strftime("%Y-%m-%d %H:%M:%S")
+        # dateutil.parser.parse is *really* cpu hungry, let's replace it with a dumb alternative
+        #mtime = dateutil.parser.parse(entry["mtime"]).strftime("%Y-%m-%d %H:%M:%S")
+        mtime = str(entry["mtime"])[0:19]
         if entry["type"] == "dir" and entry["path"] not in treedata.tree_dict:
             treedata.Insert(
                 parent=parent,
@@ -227,6 +229,12 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
                 values=[size, mtime],
                 icon=FILE_ICON,
             )
+        # Since the thread is heavily CPU bound, let's add a minimal
+        # arbitrary sleep time to let GUI update
+        # In a 130k entry scenario, this added less than a second on a 25 second run
+        count += 1
+        if not count % 1000:
+            sleep(0.0001)
     return treedata
 
 
@@ -281,7 +289,7 @@ def ls_window(config: dict, snapshot: str) -> bool:
                 _t("main_gui.loading_data_from_repo"),
                 _t("main_gui.this_will_take_a_while"),
             ),
-            time_between_frames=150,
+            time_between_frames=50,
             background_color=GUI_LOADER_COLOR,
             text_color=GUI_LOADER_TEXT_COLOR,
         )
@@ -291,23 +299,10 @@ def ls_window(config: dict, snapshot: str) -> bool:
         sg.PopupError(_t("main_gui.cannot_get_content"), keep_on_top=True)
         return False
 
-    # Preload animation before thread so we don't have to deal with slow initial drawing due to cpu usage of thread
-    # This is an arbitrary way to make sure we get to see the popup
-    sg.PopupAnimated(
-        LOADER_ANIMATION,
-        message="{}...".format(_t("main_gui.creating_tree")),
-        time_between_frames=1,
-        background_color=GUI_LOADER_COLOR,
-        text_color=GUI_LOADER_TEXT_COLOR,
-    )
-    sleep(0.01)
-    sg.PopupAnimated(
-        LOADER_ANIMATION,
-        message="{}...".format(_t("main_gui.creating_tree")),
-        time_between_frames=1,
-        background_color=GUI_LOADER_COLOR,
-        text_color=GUI_LOADER_TEXT_COLOR,
-    )
+    # The following thread is cpu intensive, so the GUI will update sluggerish
+    # In the thread, we added a sleep argument every 1000 iters so we get to update
+    # the GUI. Earlier fix was to preload animation
+
     # We get a thread result, hence pylint will complain the thread isn't a tuple
     # pylint: disable=E1101 (no-member)
     thread = _make_treedata_from_json(ls_result)
@@ -316,7 +311,7 @@ def ls_window(config: dict, snapshot: str) -> bool:
         sg.PopupAnimated(
             LOADER_ANIMATION,
             message="{}...".format(_t("main_gui.creating_tree")),
-            time_between_frames=150,
+            time_between_frames=50,
             background_color=GUI_LOADER_COLOR,
             text_color=GUI_LOADER_TEXT_COLOR,
         )
