@@ -100,18 +100,22 @@ Just run the npbackup executable and configure it.
 Prebuilt binaries can be found [here](https://github.com/netinvent/npbackup/releases)
 
 ![image](img/interface_v2.2.0.png)
+
 Main minimalistic interface allows to: 
  - List current backups
  - Launch a manual backup
  - See if last backup is recent enough
 
 ![image](img/restore_window_v2.2.0.png)
+
 Restore window allows to browse through backups and select what files to restore.
 
 ![image](img/configuration_v2.2.0.png)
+
 Configuration allows to edit the YAML configuration files directly as end user
 
 ![image](img/backup_window_v2.2.0.png)
+
 Backup process is interactive when GUI is used
 
 **Security Note**
