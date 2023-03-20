@@ -60,10 +60,21 @@ So, a new backup solution out of nowhere, packed with too much features for it's
 NPBackup relies on the well known [restic](https://restic.net) backup program, which has been battle proven for years.
 While restic is a fanstastic program, NPBackup tries to complete restic in order to offer a broader user experience.
 
-## Quickstart CLI
+## Quickstart
 
-On Windows, use `NPBackupInstaller.exe` to install NPBackup into program files.
-On Linux, just copy `npbackup` to `/usr/local/bin` or use `pip install npbackup`
+You may install npbackup via PyPI or use the pre-built executables.
+
+### Prebuilt executables
+On linux, copy `npbackup` executable to `/usr/local/bin` and make it executable via `chmod +x /usr/local/bin/npbackup`
+On Windows, you can directly execute `npbackup.exe` or use `NPBackupInstaller.exe` to install NPBackup into program files.
+
+### PyPI installation
+
+If you don't want to use the pre-built executables, you can install via pip with `pip install npbackup`
+
+Note that if you want to use the GUI, you'll also need to install tkinter via `yum install python-tkinter` or `apt install python3-tk`.
+
+### Setup
 
 Copy the example config from model `examples/npbackup.conf.dist` into the directory where npbackup is installed.
 
