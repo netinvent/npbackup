@@ -1,4 +1,8 @@
+## Master
+  - Highly optimize tree window creation times (x3.5) by replacing dateutil.parser.parse()
+
 ## v2.2.0 - rc7 - 20/03/2023
+  - New default theme
   - Cosmetic fixes
 
 ## v2.2.0 - rc6 - 13/03/2023
