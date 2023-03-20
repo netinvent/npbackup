@@ -70,7 +70,9 @@ On Windows, you can directly execute `npbackup.exe` or use `NPBackupInstaller.ex
 
 ### PyPI installation
 
-If you don't want to use the pre-built executables, you can install via pip with `pip install npbackup`
+If you don't want to use the pre-built executables, you can install via pip with `pip install npbackup`.
+
+Python requirement: 3.6+
 
 Note that if you want to use the GUI, you'll also need to install tkinter via `yum install python-tkinter` or `apt install python3-tk`.
 
