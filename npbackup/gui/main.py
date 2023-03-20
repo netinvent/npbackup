@@ -210,7 +210,7 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
 
         # Make sure we normalize mtime, and remove microseconds
         # dateutil.parser.parse is *really* cpu hungry, let's replace it with a dumb alternative
-        #mtime = dateutil.parser.parse(entry["mtime"]).strftime("%Y-%m-%d %H:%M:%S")
+        # mtime = dateutil.parser.parse(entry["mtime"]).strftime("%Y-%m-%d %H:%M:%S")
         mtime = str(entry["mtime"])[0:19]
         if entry["type"] == "dir" and entry["path"] not in treedata.tree_dict:
             treedata.Insert(
