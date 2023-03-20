@@ -531,7 +531,7 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
         default_element_size=(12, 1),
         text_justification="r",
         auto_size_text=True,
-        auto_size_buttons=False,
+        auto_size_buttons=True,
         no_titlebar=False,
         grab_anywhere=False,
         keep_on_top=False,
