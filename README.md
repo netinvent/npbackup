@@ -111,6 +111,9 @@ Restore window allows to browse through backups and select what files to restore
 ![image](img/configuration_v2.2.0.png)
 Configuration allows to edit the YAML configuration files directly as end user
 
+![image](img/backup_window_v2.2.0.png)
+Backup process is interactive when GUI is used
+
 **Security Note**
 Please note that right clicking on "<encrypted data>" in the configuration GUI will allow to decrypt that data, by prompting a backup admin password.
 That password is set at compile-time and should be different depending on the organization.
