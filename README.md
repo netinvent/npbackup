@@ -99,13 +99,13 @@ The YAML configuration file encrypts sensible data so the end user doesn't have 
 Just run the npbackup executable and configure it.
 Prebuilt binaries can be found [here](https://github.com/netinvent/npbackup/releases)
 
-![image](img/interface_v2.1.0.png)
+![image](img/interface_v2.2.0.png)
 Main minimalistic interface allows to: 
  - List current backups
  - Launch a manual backup
  - See if last backup is recent enough
 
-![image](img/restore_window_v2.1.0.png)
+![image](img/restore_window_v2.2.0.png)
 Restore window allows to browse through backups and select what files to restore.
 
 ![image](img/configuration_v2.2.0.png)
@@ -143,7 +143,7 @@ On servers, we'll configure a prometheus file that gets written on each backup, 
 On laptops, since we might be away from our usual network, we'll push the backup metrics to a remote push gateway which laters gets collected by prometheus itself.
 
 The current NPBackup dashboard:
-![image](img/grafana_dashboard.png)
+![image](img/grafana_dashboard_2.2.0.png)
 
 ## End user expericence
 
