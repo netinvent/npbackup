@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023031301"
+__build__ = "2023031701"
 __version__ = "1.6.2 for npbackup 2.2.0+"
 
 from typing import Tuple, Optional
@@ -53,7 +53,7 @@ empty_config_dict = {
         "use_fs_snapshot": True,
         "ignore_cloud_files": True,
         "exclude_caches": True,
-        "exclude_case_ingore": False,
+        "exclude_case_ignore": False,
         "one_file_system": True,
         "priority": "low",
     },
