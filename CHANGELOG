@@ -1,9 +1,10 @@
-## v2.2.0 - rc8 - 21/03/2023
+## v2.2.0 - rc8 - 22/03/2023
   - Highly optimize tree window creation times (x3.5) by replacing dateutil.parser.parse()
   - Fix missing locale might fail on certain linux builds
   - Don't build NPBackupInstaller on non Windows platforms
   - Add --gui-status parameter and more GUI related info
   - Make translation manager more resilient
+  - Add an inline copy of maintained python-i18n to deal with portability issues (see requirements.txt for more)
 
 ## v2.2.0 - rc7 - 20/03/2023
   - New look and feel
