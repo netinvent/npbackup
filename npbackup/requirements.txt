@@ -15,6 +15,7 @@ psutil
 pyyaml  # Required for python-i18n which does not work with ruamel.yaml
 # python-i18n
 # Replaced python-i18n with a fork that prevents boolean keys from being interpreted
+# Also fixes some portability issues (still boolean key name issues) encountered when compiling on Centos 7 and executing on Almalinux 9
 # python-i18n@https://github.com/Krutyi-4el/python-i18n/archive/master.zip
 # python-i18n @ git+https://github.com/Krutyi-4el/python-i18n.git@0.6.0#8999a0d380be8a08beed785e46fbb31dfc03c605
 # Since PyPI and twine don't allow usage of direct references (git addresses)
