@@ -5,9 +5,7 @@
 
 # NPBackup
 
-A securre and efficient file backup solution that fits system administrators and end users self-care
-
-Available in both CLI / GUI flavors for both system administrators and end users
+A secure and efficient file backup solution that fits both system administrators (CLI) and end users (GUI)
 
 ## Features
 
@@ -58,7 +56,7 @@ Available in both CLI / GUI flavors for both system administrators and end users
 So, a new backup solution out of nowhere, packed with too much features for it's own good ? Not really !
 
 NPBackup relies on the well known [restic](https://restic.net) backup program, which has been battle proven for years.
-While restic is a fanstastic program, NPBackup tries to complete restic in order to offer a broader user experience.
+While restic is a fanstastic program, NPBackup expands restic by offering a wider set of features.
 
 ## Quickstart
 
