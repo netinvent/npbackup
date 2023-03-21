@@ -28,9 +28,10 @@ from ofunctions.process import kill_childs
 try:
     import PySimpleGUI as sg
     import _tkinter
-
+    _NO_GUI_ERROR = None
     _NO_GUI = False
-except ImportError:
+except ImportError as exc:
+    _NO_GUI_ERROR = str(exc)
     _NO_GUI = True
 
 from npbackup.customization import (
@@ -235,18 +236,30 @@ This is free software, and you are welcome to redistribute it under certain cond
         action="store_true",
         help="Add new configuration elements after upgrade",
     )
+    parser.add_argument(
+        "--gui-status",
+        action="store_true",
+        help="Show status of required modules for GUI to work"
+    )
 
     args = parser.parse_args()
+    
+    version_string = "{} v{} {} - {}".format(__intname__, __version__, __build__, 'GUI disabled' if _NO_GUI else 'GUI enabled')
     if args.version:
-        print("{} v{} {}".format(__intname__, __version__, __build__))
+        print(version_string)
         sys.exit(0)
 
+    logger.info(version_string)
     if args.license:
         try:
             with open(LICENSE_FILE, "r", encoding="utf-8") as file_handle:
                 print(file_handle.read())
         except OSError:
             print(LICENSE_TEXT)
+        sys.exit(0)
+
+    if args.gui_status:
+        logger.info("Can run GUI: {}, errors={}".format(not _NO_GUI, _NO_GUI_ERROR))
         sys.exit(0)
 
     if args.debug or os.environ.get("_DEBUG", "False").capitalize() == "True":
@@ -284,7 +297,6 @@ This is free software, and you are welcome to redistribute it under certain cond
         config_dict = config_gui(config_dict, CONFIG_FILE)
         sys.exit(0)
 
-    logger.info("{} v{}".format(__intname__, __version__))
     if args.create_scheduled_task:
         try:
             result = create_scheduled_task(
@@ -324,8 +336,8 @@ This is free software, and you are welcome to redistribute it under certain cond
                     else:
                         logger.error("No configuration created via GUI")
                         sys.exit(7)
-                except _tkinter.TclError:
-                    logger.info("Seems to be a headless server.")
+                except _tkinter.TclError as exc:
+                    logger.info("Tkinter error: \"{}\". Is this a headless server ?".format(exc))
                     parser.print_help(sys.stderr)
                     sys.exit(1)
             sys.exit(7)
@@ -473,8 +485,8 @@ This is free software, and you are welcome to redistribute it under certain cond
             with pidfile.PIDFile(PID_FILE):
                 try:
                     main_gui(config_dict, CONFIG_FILE, version_string)
-                except _tkinter.TclError:
-                    logger.info("Seems to be a headless server.")
+                except _tkinter.TclError as exc:
+                    logger.info("Tkinter error: \"{}\". Is this a headless server ?".format(exc))
                     parser.print_help(sys.stderr)
                     sys.exit(1)
         except pidfile.AlreadyRunningError:
