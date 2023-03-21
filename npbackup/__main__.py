@@ -28,6 +28,7 @@ from ofunctions.process import kill_childs
 try:
     import PySimpleGUI as sg
     import _tkinter
+
     _NO_GUI_ERROR = None
     _NO_GUI = False
 except ImportError as exc:
@@ -239,12 +240,17 @@ This is free software, and you are welcome to redistribute it under certain cond
     parser.add_argument(
         "--gui-status",
         action="store_true",
-        help="Show status of required modules for GUI to work"
+        help="Show status of required modules for GUI to work",
     )
 
     args = parser.parse_args()
-    
-    version_string = "{} v{} {} - {}".format(__intname__, __version__, __build__, 'GUI disabled' if _NO_GUI else 'GUI enabled')
+
+    version_string = "{} v{} {} - {}".format(
+        __intname__,
+        __version__,
+        __build__,
+        "GUI disabled" if _NO_GUI else "GUI enabled",
+    )
     if args.version:
         print(version_string)
         sys.exit(0)
@@ -337,7 +343,9 @@ This is free software, and you are welcome to redistribute it under certain cond
                         logger.error("No configuration created via GUI")
                         sys.exit(7)
                 except _tkinter.TclError as exc:
-                    logger.info("Tkinter error: \"{}\". Is this a headless server ?".format(exc))
+                    logger.info(
+                        'Tkinter error: "{}". Is this a headless server ?'.format(exc)
+                    )
                     parser.print_help(sys.stderr)
                     sys.exit(1)
             sys.exit(7)
@@ -486,7 +494,9 @@ This is free software, and you are welcome to redistribute it under certain cond
                 try:
                     main_gui(config_dict, CONFIG_FILE, version_string)
                 except _tkinter.TclError as exc:
-                    logger.info("Tkinter error: \"{}\". Is this a headless server ?".format(exc))
+                    logger.info(
+                        'Tkinter error: "{}". Is this a headless server ?'.format(exc)
+                    )
                     parser.print_help(sys.stderr)
                     sys.exit(1)
         except pidfile.AlreadyRunningError:
