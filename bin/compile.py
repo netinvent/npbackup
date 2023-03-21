@@ -7,8 +7,8 @@ __intname__ = "npbackup.compile-and-package-for-windows"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023013101"
-__version__ = "1.5.0"
+__build__ = "2023032101"
+__version__ = "1.5.1"
 
 
 import sys
@@ -201,41 +201,42 @@ def compile(arch, audience):
     if exit_code != 0:
         errors = True
 
-    # installer compilation
-    _installer_version = installer_version.split("-")[0]
-    PRODUCT_VERSION = _installer_version + ".0"
-    FILE_VERSION = _installer_version + ".0"
-    EXE_OPTIONS = '--company-name="{}" --product-name="{}" --file-version="{}" --product-version="{}" --copyright="{}" --file-description="{}" --trademarks="{}"'.format(
-        COMPANY_NAME,
-        PRODUCT_NAME,
-        FILE_VERSION,
-        PRODUCT_VERSION,
-        COPYRIGHT,
-        file_description,
-        TRADEMARKS,
-    )
-    CMD = '{} -m nuitka --python-flag=no_docstrings --python-flag=-O {} {} --onefile --plugin-enable=tk-inter --include-data-file="{}"="{}" --include-data-file="{}"="{}" --include-data-dir="{}"="{}" --windows-icon-from-ico="{}" --windows-uac-admin --output-dir="{}" bin/NPBackupInstaller.py'.format(
-        PYTHON_EXECUTABLE,
-        NUITKA_OPTIONS,
-        EXE_OPTIONS,
-        program_executable_path,
-        program_executable,
-        dist_conf_file_source,
-        dist_conf_file_dest,
-        excludes_dir_source,
-        excludes_dir_dest,
-        icon_file,
-        OUTPUT_DIR,
-    )
+    # windows installer compilation
+    if os.name == "nt":
+        _installer_version = installer_version.split("-")[0]
+        PRODUCT_VERSION = _installer_version + ".0"
+        FILE_VERSION = _installer_version + ".0"
+        EXE_OPTIONS = '--company-name="{}" --product-name="{}" --file-version="{}" --product-version="{}" --copyright="{}" --file-description="{}" --trademarks="{}"'.format(
+            COMPANY_NAME,
+            PRODUCT_NAME,
+            FILE_VERSION,
+            PRODUCT_VERSION,
+            COPYRIGHT,
+            file_description,
+            TRADEMARKS,
+        )
+        CMD = '{} -m nuitka --python-flag=no_docstrings --python-flag=-O {} {} --onefile --plugin-enable=tk-inter --include-data-file="{}"="{}" --include-data-file="{}"="{}" --include-data-dir="{}"="{}" --windows-icon-from-ico="{}" --windows-uac-admin --output-dir="{}" bin/NPBackupInstaller.py'.format(
+            PYTHON_EXECUTABLE,
+            NUITKA_OPTIONS,
+            EXE_OPTIONS,
+            program_executable_path,
+            program_executable,
+            dist_conf_file_source,
+            dist_conf_file_dest,
+            excludes_dir_source,
+            excludes_dir_dest,
+            icon_file,
+            OUTPUT_DIR,
+        )
 
-    print(CMD)
-    exit_code, output = command_runner(CMD, timeout=0, live_output=True)
-    if exit_code != 0:
-        errors = True
-    else:
-        ## Create version file
-        with open(os.path.join(BUILDS_DIR, audience, "VERSION"), "w") as fh:
-            fh.write(npbackup_version)
+        print(CMD)
+        exit_code, output = command_runner(CMD, timeout=0, live_output=True)
+        if exit_code != 0:
+            errors = True
+        else:
+            ## Create version file
+            with open(os.path.join(BUILDS_DIR, audience, "VERSION"), "w") as fh:
+                fh.write(npbackup_version)
 
     print("COMPILE ERRORS", errors)
 
