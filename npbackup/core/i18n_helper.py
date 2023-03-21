@@ -51,5 +51,3 @@ def _t(*args, **kwargs):
         logger.error("Arguments: {}".format(*args))
         if len(args) > 0:
             return args[0]
-
-
