@@ -31,7 +31,7 @@ except (ValueError, AttributeError):
     try:
         _locale, _ = _locale.split("-")
     except (ValueError, AttributeError):
-        pass
+        _locale = "en"
 
 try:
     i18n.load_path.append(TRANSLATIONS_DIR)
@@ -46,3 +46,10 @@ def _t(*args, **kwargs):
         return i18n.t(*args, **kwargs)
     except OSError as exc:
         logger.error("Translation not found in {}: {}".format(TRANSLATIONS_DIR, exc))
+    except TypeError as exc:
+        logger.error("Translation failed: {}".format(exc))
+        logger.error("Arguments: {}".format(*args))
+        if len(args) > 0:
+            return args[0]
+
+
