@@ -7,7 +7,7 @@ __intname__ = "npbackup.core.i18n_helper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2023012201"
+__build__ = "2023032101"
 
 
 import os
@@ -27,10 +27,10 @@ TRANSLATIONS_DIR = os.path.join(BASEDIR, "translations")
 _locale = os.environ.get("NPBACKUP_LOCALE", getdefaultlocale()[0])
 try:
     _locale, _ = _locale.split("_")
-except ValueError:
+except (ValueError, AttributeError):
     try:
         _locale, _ = _locale.split("-")
-    except ValueError:
+    except (ValueError, AttributeError):
         pass
 
 try:
