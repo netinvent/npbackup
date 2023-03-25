@@ -331,7 +331,7 @@ def ls_window(config: dict, snapshot: str) -> bool:
                 col0_width=80,
                 key="-TREE-",
                 show_expanded=False,
-                enable_events=True,
+                enable_events=False,
                 expand_x=True,
                 expand_y=True,
                 vertical_scroll_only=False,
