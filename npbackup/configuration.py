@@ -7,8 +7,8 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023031701"
-__version__ = "1.6.2 for npbackup 2.2.0+"
+__build__ = "2023032501"
+__version__ = "1.6.3 for npbackup 2.2.0+"
 
 from typing import Tuple, Optional
 import sys
@@ -88,7 +88,6 @@ empty_config_dict = {
         "auto_upgrade_server_password": "",
         "auto_upgrade_host_identity": "${MACHINE_ID}",
         "auto_upgrade_group": "${MACHINE_GROUP}",
-        "backup_admin_password": DEFAULT_BACKUP_ADMIN_PASSWORD,
     },
 }
 
