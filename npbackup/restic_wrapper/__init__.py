@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023030701"
-__version__ = "1.5.1"
+__build__ = "2023032501"
+__version__ = "1.5.2"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -74,6 +74,8 @@ class ResticRunner:
         )
         self._executor_finished = False  # Internal value to check whether executor is done, accessed via self.executor_finished property
         self._stdout = None  # Optional outputs when command is run as thread
+
+        self.binary_is_executable = False
 
     def on_exit(self) -> bool:
         self._executor_finished = True
@@ -166,6 +168,16 @@ class ResticRunner:
     def exec_time(self, value: int):
         self._exec_time = value
 
+    def _make_binary_executable(self):
+        if self.binary_is_executable:
+            return True
+        try:
+            os.chmod(self._binary)
+            self.binary_is_executable = True
+        except OSError as exc:
+            logger.error("Cannot make \"{}\" executable: {}".format(self._binary, exc))
+            return False
+
     def executor(
         self,
         cmd: str,
@@ -178,6 +190,9 @@ class ResticRunner:
         When using live_stream, we'll have command_runner fill stdout queue, which is useful for interactive GUI programs, but slower, especially for ls operation
 
         """
+        # Make sure binary is executable first (workaround for https://github.com/Nuitka/Nuitka/issues/1656#issuecomment-1483819959)
+        self._make_binary_executable()
+
         start_time = datetime.utcnow()
         self._executor_finished = False
         _cmd = '"{}" {}{}'.format(self._binary, cmd, self.generic_arguments)
