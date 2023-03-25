@@ -58,8 +58,6 @@ if not _NO_GUI:
     sg.SetOptions(icon=OEM_ICON)
 
 
-del sys.path[0]
-
 # Nuitka compat, see https://stackoverflow.com/a/74540217
 try:
     # pylint: disable=W0611 (unused-import)
