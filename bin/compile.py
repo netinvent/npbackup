@@ -100,7 +100,6 @@ def get_conf_dist_file(audience):
 def have_nuitka_commercial():
     try:
         import nuitka.plugins.commercial
-
         print("Running with nuitka commercial")
         return True
     except ImportError:
@@ -120,7 +119,6 @@ def compile(arch, audience):
 
     PACKAGE_DIR = "npbackup"
 
-    check_private_build(audience)
     BUILDS_DIR = os.path.abspath(os.path.join(BASEDIR, os.pardir, "BUILDS"))
     OUTPUT_DIR = os.path.join(BUILDS_DIR, audience, platform, arch)
 
@@ -145,7 +143,7 @@ def compile(arch, audience):
     restic_source_file = get_restic_internal_binary(arch)
     if not restic_source_file:
         print("Cannot find restic source file.")
-        return
+        return False
     restic_dest_file = os.path.join(PACKAGE_DIR, restic_executable)
 
     translations_dir = "translations"
@@ -295,8 +293,15 @@ if __name__ == "__main__":
             audiences = [args.audience]
 
         for audience in audiences:
+            if audience not in AUDIENCES:
+                print("Bogus audience given")
+                sys.exit(4)
             move_audience_files(audience)
+            private_build = check_private_build(audience)
+            if private_build and audience != "private":
+                print("ERROR: Requested private build but no private data available")
+                continue
             compile(arch=args.arch, audience=audience)
-            check_private_build(audience)
+            print("MADE {} build".format('PRIVATE' if private_build else 'PUBLIC'))
     except Exception:
         print("COMPILATION FAILED")
