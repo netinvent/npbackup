@@ -76,6 +76,7 @@ def parse_requirements(filename):
             )
         )
 
+
 # With this, we can enforce a binary package.
 class BinaryDistribution(setuptools.Distribution):
     """Distribution which always forces a binary package with platform name"""
@@ -86,26 +87,22 @@ class BinaryDistribution(setuptools.Distribution):
 
 
 package_path = os.path.abspath(PACKAGE_NAME)
-for path in ['__main__.py', PACKAGE_NAME + '.py']:
+for path in ["__main__.py", PACKAGE_NAME + ".py"]:
     package_file = os.path.join(package_path, "__main__.py")
-    if  os.path.isfile(package_file):
+    if os.path.isfile(package_file):
         break
 metadata = get_metadata(package_file)
 requirements = parse_requirements(os.path.join(package_path, "requirements.txt"))
 long_description = _read_file("README.md")
 
-package_data = {
-    '': ['translations/*.yml']
-}
+package_data = {"": ["translations/*.yml"]}
 
-#if os.name == "nt":
+# if os.name == "nt":
 scripts = ["misc/npbackup.cmd"]
 #    console_scripts = []
-#else:
+# else:
 #    scripts = []
-console_scripts = [
-        "npbackup = npbackup.__main__:main"
-    ]
+console_scripts = ["npbackup = npbackup.__main__:main"]
 
 setuptools.setup(
     name=PACKAGE_NAME,
@@ -166,5 +163,5 @@ setuptools.setup(
     },
     # As we do version specific hacks for installed inline copies, make the
     # wheel version and platform specific.
-    #distclass=BinaryDistribution,
+    # distclass=BinaryDistribution,
 )
