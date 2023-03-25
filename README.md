@@ -165,8 +165,15 @@ This ensures that end users can restore data without the need to know any passwo
 
 In order to fully protect the AES key that is needed to support NPBackup, one can compile the program with Nuitka.
 Compiling needs restic binary for the target platform in `RESTIC_SOURCE_FILES` folder, files must be named `restic_{version}_{platform}_{arch}[.extension]` like provided by restic.net or [github](github.com/restic/restic)
-Compile options are available in `compile.py`. Nevertheless, you should probably go for the official binaries.
-Also, We maintain a special 32 bit binary for Windows 7 which allows to backup those old machines until they get replaced.
+Linux binaries need to be made executable in the `RESTIC_SOURCE_FILES` folder.
+
+You'll need to change the default AES key in `secrets.py`, see the documentation in the file itself.
+
+Compile options are available in `compile.py`.
+
+We maintain a special 32 bit binary for Windows 7 which allows to backup those old machines until they get replaced.
+
+We also compile our linux target on RHEL 7 in order to be compatible with reasonably old distributions (>= glibc 2.17).
 
 ## Smart shield, antivirus and reputation
 
