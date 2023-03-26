@@ -341,7 +341,7 @@ if __name__ == "__main__":
             if private_build and audience != "private":
                 print("ERROR: Requested private build but no private data available")
                 continue
-            #compile(arch=args.arch, audience=audience)
+            compile(arch=args.arch, audience=audience)
             print("MADE {} build".format('PRIVATE' if private_build else 'PUBLIC'))
     except Exception:
         print("COMPILATION FAILED")
