@@ -3,7 +3,7 @@
 #
 # This file is part of npbackup
 
-__intname__ = "npbackup.compile-and-package-for-windows"
+__intname__ = "npbackup.compile"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
