@@ -1,5 +1,5 @@
 command_runner>=1.5.0
-cryptidy>=1.2.0
+cryptidy>=1.2.1
 python-dateutil
 ofunctions.logger_utils>=2.3.0
 ofunctions.misc>=1.5.2
