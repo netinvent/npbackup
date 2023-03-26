@@ -76,7 +76,7 @@ def get_metadata(package_file):
 
 
 def check_private_build(audience):
-    private = False
+    private = None
     try:
         import npbackup._private_secret_keys
         print("WARNING: Building with private secret key")
@@ -86,14 +86,17 @@ def check_private_build(audience):
             import npbackup.secret_keys
 
             print("Building with default secret key")
+            private = False
         except ImportError:
             print("Cannot find secret keys")
             sys.exit()
 
     dist_conf_file_path = get_conf_dist_file(audience)
-    if "_private" in dist_conf_file_path:
+    if dist_conf_file_path and "_private" in dist_conf_file_path:
         print("WARNING: Building with a private conf.dist file")
-        private = True
+        if audience != "private":
+            print("ERROR: public build uses private conf.dist file")
+            sys.exit(6)
 
     return private
 
@@ -131,6 +134,9 @@ def get_conf_dist_file(audience):
     else:
         file = "npbackup.conf.dist"
     dist_conf_file_path = os.path.join(BASEDIR, os.pardir, "examples", file)
+    if not os.path.isfile(dist_conf_file_path):
+        print("DIST CONF FILE NOT FOUND: {}".format(dist_conf_file_path))
+        return None
     return dist_conf_file_path
 
 
@@ -196,6 +202,9 @@ def compile(arch, audience):
     program_executable_path = os.path.join(OUTPUT_DIR, program_executable)
 
     dist_conf_file_source = get_conf_dist_file(audience)
+    if not dist_conf_file_source:
+        print("Stopped {} compilation".format(audience))
+        return
     dist_conf_file_dest = os.path.basename(
         dist_conf_file_source.replace("_private_", "")
     )
@@ -274,6 +283,7 @@ def compile(arch, audience):
                 fh.write(npbackup_version)
 
     print("COMPILE ERRORS", errors)
+    return not errors
 
 
 class ArchAction(argparse.Action):
@@ -330,9 +340,6 @@ if __name__ == "__main__":
             audiences = [args.audience]
 
         for audience in audiences:
-            if audience not in AUDIENCES:
-                print("Bogus audience given")
-                sys.exit(4)
             move_audience_files(audience)
             npbackup_version = get_metadata(os.path.join(BASEDIR, "__main__.py"))["version"]
             installer_version = get_metadata(os.path.join(BASEDIR, os.pardir, "bin", "NPBackupInstaller.py"))["version"]
@@ -341,8 +348,9 @@ if __name__ == "__main__":
             if private_build and audience != "private":
                 print("ERROR: Requested private build but no private data available")
                 continue
-            compile(arch=args.arch, audience=audience)
-            print("MADE {} build".format('PRIVATE' if private_build else 'PUBLIC'))
+            result = compile(arch=args.arch, audience=audience)
+            if result:
+                print("MADE {} build".format('PRIVATE' if private_build else 'PUBLIC'))
     except Exception:
         print("COMPILATION FAILED")
         raise
