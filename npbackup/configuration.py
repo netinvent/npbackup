@@ -25,11 +25,12 @@ from npbackup.customization import ID_STRING
 try:
     from npbackup._private_secret_keys import AES_KEY, DEFAULT_BACKUP_ADMIN_PASSWORD
     from npbackup._private_revac import revac
-
     AES_KEY = revac(AES_KEY)
+    IS_PRIV_BUILD = True
 except ImportError:
     try:
         from npbackup.secret_keys import AES_KEY, DEFAULT_BACKUP_ADMIN_PASSWORD
+        IS_PRIV_BUILD = False
     except ImportError:
         print("No secret_keys file. Please read documentation.")
         sys.exit(1)
@@ -270,3 +271,7 @@ def save_config(config_file: str, config_dict: dict) -> bool:
     except OSError:
         logger.critical("Cannot save configuartion file to %s", config_file)
         return False
+
+
+def is_priv_build() -> bool:
+    return IS_PRIV_BUILD
