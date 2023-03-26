@@ -7,8 +7,8 @@ __intname__ = "npbackup.compile-and-package-for-windows"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023032101"
-__version__ = "1.5.1"
+__build__ = "2023032501"
+__version__ = "1.6.0"
 
 
 import sys
@@ -23,8 +23,7 @@ AUDIENCES = ["public", "private"]
 # Insert parent dir as path se we get to use npbackup as package
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
 
-from npbackup.__main__ import __version__ as npbackup_version
-from bin.NPBackupInstaller import __version__ as installer_version
+
 from npbackup.customization import (
     COMPANY_NAME,
     TRADEMARKS,
@@ -40,11 +39,46 @@ import glob
 del sys.path[0]
 
 
+def _read_file(filename):
+    here = os.path.abspath(os.path.dirname(__file__))
+    if sys.version_info[0] < 3:
+        # With python 2.7, open has no encoding parameter, resulting in TypeError
+        # Fix with io.open (slow but works)
+        from io import open as io_open
+
+        try:
+            with io_open(
+                os.path.join(here, filename), "r", encoding="utf-8"
+            ) as file_handle:
+                return file_handle.read()
+        except IOError:
+            # Ugly fix for missing requirements.txt file when installing via pip under Python 2
+            return ""
+    else:
+        with open(os.path.join(here, filename), "r", encoding="utf-8") as file_handle:
+            return file_handle.read()
+
+def get_metadata(package_file):
+    """
+    Read metadata from package file
+    """
+
+    _metadata = {}
+
+    for line in _read_file(package_file).splitlines():
+        if line.startswith("__version__") or line.startswith("__description__"):
+            delim = "="
+            _metadata[line.split(delim)[0].strip().strip("__")] = (
+                line.split(delim)[1].strip().strip("'\"")
+            )
+    return _metadata
+
+
+
 def check_private_build(audience):
     private = False
     try:
         import npbackup._private_secret_keys
-
         print("WARNING: Building with private secret key")
         private = True
     except ImportError:
@@ -72,20 +106,23 @@ def move_audience_files(audience):
                 os.path.join(dir, "{}*".format(possible_non_used_path))
             )
             for file in guessed_files:
-                os.rename(file, file.replace(possible_non_used_path, "_private_"))
+                new_file = file.replace(possible_non_used_path, "_private_")
+                os.rename(file, new_file)
         elif audience == "public":
             possible_non_used_path = "_private_"
             guessed_files = glob.glob(
                 os.path.join(dir, "{}*".format(possible_non_used_path))
             )
             for file in guessed_files:
-                os.rename(
-                    file,
-                    file.replace(
+                new_file = file.replace(
                         possible_non_used_path,
                         "_NOUSE{}".format(possible_non_used_path),
-                    ),
+                    )
+                os.rename(
+                    file, new_file
                 )
+        else:
+            raise "Bogus audience"
 
 
 def get_conf_dist_file(audience):
@@ -297,11 +334,15 @@ if __name__ == "__main__":
                 print("Bogus audience given")
                 sys.exit(4)
             move_audience_files(audience)
+            npbackup_version = get_metadata(os.path.join(BASEDIR, "__main__.py"))["version"]
+            installer_version = get_metadata(os.path.join(BASEDIR, os.pardir, "bin", "NPBackupInstaller.py"))["version"]
+
             private_build = check_private_build(audience)
             if private_build and audience != "private":
                 print("ERROR: Requested private build but no private data available")
                 continue
-            compile(arch=args.arch, audience=audience)
+            #compile(arch=args.arch, audience=audience)
             print("MADE {} build".format('PRIVATE' if private_build else 'PUBLIC'))
     except Exception:
         print("COMPILATION FAILED")
+        raise
