@@ -118,7 +118,9 @@ def decrypt_data(config_dict: dict) -> dict:
                 )
     except ValueError as exc:
         logger.error(
-            "Cannot decrypt this configuration file. Has the AES key changed ? {}".format(exc)
+            "Cannot decrypt this configuration file. Has the AES key changed ? {}".format(
+                exc
+            )
         )
         logger.debug("Trace:", exc_info=True)
         sys.exit(11)
