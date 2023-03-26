@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023032501"
+__build__ = "2023032601"
 __version__ = "1.6.3 for npbackup 2.2.0+"
 
 from typing import Tuple, Optional
@@ -116,11 +116,11 @@ def decrypt_data(config_dict: dict) -> dict:
                 logger.error(
                     "No {}:{} available.".format(option["section"], option["name"])
                 )
-    except ValueError:
+    except ValueError as exc:
         logger.error(
-            "Cannot decrypt this configuration file. Has the AES key changed ?",
-            exc_info=True,
+            "Cannot decrypt this configuration file. Has the AES key changed ? {}".format(exc)
         )
+        logger.debug("Trace:", exc_info=True)
         sys.exit(11)
     except TypeError:
         logger.error(
