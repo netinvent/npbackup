@@ -250,7 +250,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         "-P{}".format(sys.version_info[1]),
         __build__,
         "GUI disabled" if _NO_GUI else "GUI enabled",
-        __copyright__
+        __copyright__,
     )
     if args.version:
         print(version_string)
