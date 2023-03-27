@@ -22,7 +22,7 @@ AES_KEY = b"\xc3T\xdci\xe3[s\x87o\x96\x8f\xe5\xee.>\xf1,\x94\x8d\xfe\x0f\xea\x11
 DEFAULT_BACKUP_ADMIN_PASSWORD = "NPBackup_00"
 
 """
-If someday we need to change the AES_KEY, copy it's content to OLD_AES_KEY and generate a new one
-Keeping OLD_AES_KEY allows to migrate from old configuration files to new ones
+If someday we need to change the AES_KEY, copy it's content to EARLIER_AES_KEY and generate a new one
+Keeping EARLIER_AES_KEY allows to migrate from old configuration files to new ones
 """
 EARLIER_AES_KEY = b"\x9e\xbck\xe4\xc5nkT\x1e\xbf\xb5o\x06\xd3\xc6(\x0e:'i\x1bT\xb3\xf0\x1aC e\x9bd\xa5\xc6"
