@@ -6,4 +6,4 @@ cd /opt/npbackup
 
 export PYTHONPATH=/opt/npbackup
 
-/opt/npbackup/venv/bin/python bin/compile.py --arch x64 --audience all
+/opt/npbackup/venv/bin/python bin/compile.py --audience all

@@ -8,7 +8,7 @@ __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2023032601"
-__version__ = "1.6.1"
+__version__ = "1.6.2"
 
 
 import sys
@@ -17,7 +17,6 @@ import argparse
 import atexit
 from command_runner import command_runner
 
-ARCHES = ["x86", "x64"]
 AUDIENCES = ["public", "private"]
 
 # Insert parent dir as path se we get to use npbackup as package
@@ -288,14 +287,6 @@ def compile(arch, audience):
     return not errors
 
 
-class ArchAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        if values not in ARCHES:
-            print("Got value:", values)
-            raise argparse.ArgumentError(self, "Not a valid arch")
-        setattr(namespace, self.dest, values)
-
-
 class AudienceAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if values not in AUDIENCES + ["all"]:
@@ -307,16 +298,6 @@ class AudienceAction(argparse.Action):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog="npbackup compile.py", description="Compiler script for NPBackup"
-    )
-
-    parser.add_argument(
-        "--arch",
-        type=str,
-        dest="arch",
-        default=None,
-        required=True,
-        action=ArchAction,
-        help="Target arch, x64 or x86",
     )
 
     parser.add_argument(
@@ -336,6 +317,7 @@ if __name__ == "__main__":
         "private",
     )
     try:
+        errors = False
         if args.audience.lower() == "all":
             audiences = AUDIENCES
         else:
@@ -350,9 +332,18 @@ if __name__ == "__main__":
             if private_build and audience != "private":
                 print("ERROR: Requested private build but no private data available")
                 continue
-            result = compile(arch=args.arch, audience=audience)
+            python_arch = "x64" if sys.maxsize > 2**32 else "x86"
+            result = compile(arch=python_arch, audience=audience)
+            build_type = 'private' if private_build else 'public'
             if result:
-                print("MADE {} build".format('PRIVATE' if private_build else 'PUBLIC'))
+                print("SUCCESS: MADE {} build for audience {}".format(build_type, audience))
+            else:
+                print("ERROR: Failed making {} build for audience {}".format(build_type, audience))
+                errors = True
+        if errors:
+            print("ERRORS IN BUILD PROCESS")
+        else:
+            print("SUCCESS BUILDING")
     except Exception:
         print("COMPILATION FAILED")
         raise

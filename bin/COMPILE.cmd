@@ -11,8 +11,8 @@ cd C:\GIT\npbackup
 :: Make sure we add npbackup in python path so bin and npbackup subfolders become packages
 SET PYTHONPATH=c:\GIT\npbackup
 
-"%PYTHON64%" bin\compile.py --arch x64 --audience all
-"%PYTHON32%" bin\compile.py --arch x86 --audience all
+"%PYTHON64%" bin\compile.py --audience all
+"%PYTHON32%" bin\compile.py --audience all
 
 
 
