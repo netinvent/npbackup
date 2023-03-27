@@ -8,29 +8,42 @@ __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2023032601"
-__version__ = "1.6.3 for npbackup 2.2.0+"
+__version__ = "1.7.0 for npbackup 2.2.0+"
 
 from typing import Tuple, Optional
 import sys
+import os
 from ruamel.yaml import YAML
 from logging import getLogger
 import re
 import platform
 from cryptidy import symmetric_encryption as enc
 from ofunctions.random import random_string
+from npbackup.path_helper import BASEDIR
 from npbackup.customization import ID_STRING
 
 
+sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
+
 # Try to import a private key, if not available, fallback to the default key
 try:
-    from npbackup._private_secret_keys import AES_KEY, DEFAULT_BACKUP_ADMIN_PASSWORD
-    from npbackup._private_revac import revac
+    from PRIVATE._private_secret_keys import AES_KEY, DEFAULT_BACKUP_ADMIN_PASSWORD
+    from PRIVATE._private_revac import revac
     AES_KEY = revac(AES_KEY)
     IS_PRIV_BUILD = True
+    try:
+        from PRIVATE._private_secret_keys import OLD_AES_KEY
+        OLD_AES_KEY = revac(OLD_AES_KEY)
+    except ImportError:
+        OLD_AES_KEY = None
 except ImportError:
     try:
         from npbackup.secret_keys import AES_KEY, DEFAULT_BACKUP_ADMIN_PASSWORD
         IS_PRIV_BUILD = False
+        try:
+            from npbackup.secret_keys import OLD_AES_KEY
+        except ImportError:
+            OLD_AES_KEY = None
     except ImportError:
         print("No secret_keys file. Please read documentation.")
         sys.exit(1)
@@ -94,6 +107,8 @@ empty_config_dict = {
 
 
 def decrypt_data(config_dict: dict) -> dict:
+    if not config_dict:
+        return None
     try:
         for option in ENCRYPTED_OPTIONS:
             try:
@@ -124,12 +139,13 @@ def decrypt_data(config_dict: dict) -> dict:
             )
         )
         logger.debug("Trace:", exc_info=True)
-        sys.exit(11)
-    except TypeError:
-        logger.error(
-            "Cannot decrypt this configuration file. No base64 encoded strings available."
-        )
         return False
+    except TypeError as exc:
+        logger.error(
+            "Cannot decrypt this configuration file. No base64 encoded strings available: {}.".format(exc)
+        )
+        logger.debug("Trace:", exc_info=True)
+        return None
     return config_dict
 
 
@@ -233,25 +249,57 @@ def evaluate_variables(config_dict: dict, value: str) -> str:
     return value
 
 
+def update_encryption(config_file: str) -> Optional[dict]:
+    """
+    If we changed AES KEY, let's use the old key to update the config file
+    """
+
+
 def load_config(config_file: str) -> Optional[dict]:
     """
     Using ruamel.yaml preserves comments and order of yaml files
     """
+    global AES_KEY
+    global OLD_AES_KEY
+
     try:
         logger.debug("Using configuration file {}".format(config_file))
         with open(config_file, "r", encoding="utf-8") as file_handle:
             # RoundTrip loader is default and preserves comments and ordering
             yaml = YAML(typ="rt")
             config_dict = yaml.load(file_handle)
+
+            config_file_needs_save = False
+            # Check modifications before decrypting since ruamel object is a pointer !!!
             is_modified, config_dict = has_random_variables(config_dict)
             if is_modified:
                 logger.info("Handling random variables in configuration files")
-                save_config(config_file, config_dict)
+                config_file_needs_save = True
             if not is_encrypted(config_dict):
                 logger.info("Encrypting non encrypted data in configuration file")
-                config_dict = encrypt_data(config_dict)
+                config_file_needs_save = True
+                
+            config_dict_decrypted = decrypt_data(config_dict)
+            if config_dict_decrypted == False:
+                if OLD_AES_KEY:
+                    new_aes_key = AES_KEY
+                    AES_KEY = OLD_AES_KEY
+                    logger.info("Trying to migrate encryption key")
+                    config_dict_decrypted = decrypt_data(config_dict)
+                    if config_dict_decrypted is not False:
+                        AES_KEY = new_aes_key
+                        logger.info("Migrated encryption")
+                        config_file_needs_save = True
+                        new_aes_key = None
+                        OLD_AES_KEY = None
+                    else:
+                        logger.critical("Cannot decrypt config file.")
+                        sys.exit(12)
+                else:
+                    sys.exit(11)
+            if config_file_needs_save:
+                logger.info("Updating config file")
                 save_config(config_file, config_dict)
-            config_dict = decrypt_data(config_dict)
             return config_dict
     except OSError:
         logger.critical("Cannot load configuration file from %s", config_file)
