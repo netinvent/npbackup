@@ -243,10 +243,10 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     args = parser.parse_args()
 
-    version_string = "{} v{}-{} {} - {}".format(
+    version_string = "{} v{}{} {} - {}".format(
         __intname__,
         __version__,
-        "PRIV" if configuration.IS_PRIV_BUILD else "PUB",
+        "-PRIV" if configuration.IS_PRIV_BUILD else "",
         __build__,
         "GUI disabled" if _NO_GUI else "GUI enabled",
     )
