@@ -33,20 +33,20 @@ try:
     AES_KEY = obfuscation(AES_KEY)
     IS_PRIV_BUILD = True
     try:
-        from PRIVATE._private_secret_keys import OLD_AES_KEY
+        from PRIVATE._private_secret_keys import EARLIER_AES_KEY
 
-        OLD_AES_KEY = obfuscation(OLD_AES_KEY)
+        EARLIER_AES_KEY = obfuscation(EARLIER_AES_KEY)
     except ImportError:
-        OLD_AES_KEY = None
+        EARLIER_AES_KEY = None
 except ImportError:
     try:
         from npbackup.secret_keys import AES_KEY, DEFAULT_BACKUP_ADMIN_PASSWORD
 
         IS_PRIV_BUILD = False
         try:
-            from npbackup.secret_keys import OLD_AES_KEY
+            from npbackup.secret_keys import EARLIER_AES_KEY
         except ImportError:
-            OLD_AES_KEY = None
+            EARLIER_AES_KEY = None
     except ImportError:
         print("No secret_keys file. Please read documentation.")
         sys.exit(1)
@@ -254,18 +254,12 @@ def evaluate_variables(config_dict: dict, value: str) -> str:
     return value
 
 
-def update_encryption(config_file: str) -> Optional[dict]:
-    """
-    If we changed AES KEY, let's use the old key to update the config file
-    """
-
-
 def load_config(config_file: str) -> Optional[dict]:
     """
     Using ruamel.yaml preserves comments and order of yaml files
     """
     global AES_KEY
-    global OLD_AES_KEY
+    global EARLIER_AES_KEY
 
     try:
         logger.debug("Using configuration file {}".format(config_file))
@@ -286,9 +280,9 @@ def load_config(config_file: str) -> Optional[dict]:
 
             config_dict_decrypted = decrypt_data(config_dict)
             if config_dict_decrypted == False:
-                if OLD_AES_KEY:
+                if EARLIER_AES_KEY:
                     new_aes_key = AES_KEY
-                    AES_KEY = OLD_AES_KEY
+                    AES_KEY = EARLIER_AES_KEY
                     logger.info("Trying to migrate encryption key")
                     config_dict_decrypted = decrypt_data(config_dict)
                     if config_dict_decrypted is not False:
@@ -296,7 +290,7 @@ def load_config(config_file: str) -> Optional[dict]:
                         logger.info("Migrated encryption")
                         config_file_needs_save = True
                         new_aes_key = None
-                        OLD_AES_KEY = None
+                        EARLIER_AES_KEY = None
                     else:
                         logger.critical("Cannot decrypt config file.")
                         sys.exit(12)
