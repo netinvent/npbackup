@@ -28,17 +28,20 @@ sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), ".."
 # Try to import a private key, if not available, fallback to the default key
 try:
     from PRIVATE._private_secret_keys import AES_KEY, DEFAULT_BACKUP_ADMIN_PASSWORD
-    from PRIVATE._private_revac import revac
-    AES_KEY = revac(AES_KEY)
+    from PRIVATE._private_obfuscation import obfuscation
+
+    AES_KEY = obfuscation(AES_KEY)
     IS_PRIV_BUILD = True
     try:
         from PRIVATE._private_secret_keys import OLD_AES_KEY
-        OLD_AES_KEY = revac(OLD_AES_KEY)
+
+        OLD_AES_KEY = obfuscation(OLD_AES_KEY)
     except ImportError:
         OLD_AES_KEY = None
 except ImportError:
     try:
         from npbackup.secret_keys import AES_KEY, DEFAULT_BACKUP_ADMIN_PASSWORD
+
         IS_PRIV_BUILD = False
         try:
             from npbackup.secret_keys import OLD_AES_KEY
@@ -142,7 +145,9 @@ def decrypt_data(config_dict: dict) -> dict:
         return False
     except TypeError as exc:
         logger.error(
-            "Cannot decrypt this configuration file. No base64 encoded strings available: {}.".format(exc)
+            "Cannot decrypt this configuration file. No base64 encoded strings available: {}.".format(
+                exc
+            )
         )
         logger.debug("Trace:", exc_info=True)
         return None
@@ -278,7 +283,7 @@ def load_config(config_file: str) -> Optional[dict]:
             if not is_encrypted(config_dict):
                 logger.info("Encrypting non encrypted data in configuration file")
                 config_file_needs_save = True
-                
+
             config_dict_decrypted = decrypt_data(config_dict)
             if config_dict_decrypted == False:
                 if OLD_AES_KEY:
