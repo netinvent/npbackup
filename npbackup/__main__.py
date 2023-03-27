@@ -243,12 +243,14 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     args = parser.parse_args()
 
-    version_string = "{} v{}{} {} - {}".format(
+    version_string = "{} v{}{}{} {} - {} - {}".format(
         __intname__,
         __version__,
         "-PRIV" if configuration.IS_PRIV_BUILD else "",
+        "-P{}".format(sys.version_info[1]),
         __build__,
         "GUI disabled" if _NO_GUI else "GUI enabled",
+        __copyright__
     )
     if args.version:
         print(version_string)
@@ -492,9 +494,6 @@ This is free software, and you are welcome to redistribute it under certain cond
         minimize_current_window()
         logger.info("Running GUI")
         try:
-            version_string = "{} v{} {}\n{}".format(
-                __intname__, __version__, __build__, __copyright__
-            )
             with pidfile.PIDFile(PID_FILE):
                 try:
                     main_gui(config_dict, CONFIG_FILE, version_string)
