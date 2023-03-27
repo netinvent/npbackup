@@ -84,10 +84,10 @@ def check_private_build(audience):
         try:
             import npbackup.secret_keys
 
-            print("Building with default secret key")
+            print("INFO: Building with default secret key")
             private = False
         except ImportError:
-            print("Cannot find secret keys")
+            print("ERROR: Cannot find secret keys")
             sys.exit()
 
     dist_conf_file_path = get_conf_dist_file(audience)
