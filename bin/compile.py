@@ -78,7 +78,7 @@ def check_private_build(audience):
     private = None
     try:
         import PRIVATE._private_secret_keys
-        print("WARNING: Building with private secret key")
+        print("INFO: Building with private secret key")
         private = True
     except ImportError:
         try:
@@ -92,7 +92,7 @@ def check_private_build(audience):
 
     dist_conf_file_path = get_conf_dist_file(audience)
     if dist_conf_file_path and "_private" in dist_conf_file_path:
-        print("WARNING: Building with a private conf.dist file")
+        print("INFO: Building with a private conf.dist file")
         if audience != "private":
             print("ERROR: public build uses private conf.dist file")
             sys.exit(6)
@@ -101,7 +101,7 @@ def check_private_build(audience):
 
 
 def move_audience_files(audience):
-    for dir in [os.path.join(BASEDIR, os.pardir, "examples"), BASEDIR]:
+    for dir in [os.path.join(BASEDIR, os.pardir, "PRIVATE"), BASEDIR]:
         if audience == "private":
             possible_non_used_path = "_NOUSE_private_"
             guessed_files = glob.glob(
