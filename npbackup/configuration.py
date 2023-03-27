@@ -19,7 +19,6 @@ import re
 import platform
 from cryptidy import symmetric_encryption as enc
 from ofunctions.random import random_string
-from npbackup.path_helper import BASEDIR
 from npbackup.customization import ID_STRING
 
 
