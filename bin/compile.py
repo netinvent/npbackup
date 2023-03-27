@@ -7,8 +7,8 @@ __intname__ = "npbackup.compile"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023032501"
-__version__ = "1.6.0"
+__build__ = "2023032601"
+__version__ = "1.6.1"
 
 
 import sys
@@ -187,6 +187,8 @@ def compile(arch, audience):
     if not restic_source_file:
         print("Cannot find restic source file.")
         return False
+    else:
+        os.chmod(restic_source_file, 0o775)
     restic_dest_file = os.path.join(PACKAGE_DIR, restic_executable)
 
     translations_dir = "translations"
