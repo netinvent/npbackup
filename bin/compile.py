@@ -8,7 +8,7 @@ __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2023032601"
-__version__ = "1.6.2"
+__version__ = "1.7.0"
 
 
 import sys
@@ -77,7 +77,7 @@ def get_metadata(package_file):
 def check_private_build(audience):
     private = None
     try:
-        import npbackup._private_secret_keys
+        import PRIVATE._private_secret_keys
         print("WARNING: Building with private secret key")
         private = True
     except ImportError:
@@ -129,10 +129,9 @@ def move_audience_files(audience):
 
 def get_conf_dist_file(audience):
     if audience == "private":
-        file = "_private_npbackup.conf.dist"
+        dist_conf_file_path = os.path.join(BASEDIR, os.pardir, "PRIVATE", "_private_npbackup.conf.dist")
     else:
-        file = "npbackup.conf.dist"
-    dist_conf_file_path = os.path.join(BASEDIR, os.pardir, "examples", file)
+        dist_conf_file_path = os.path.join(BASEDIR, os.pardir, "examples", "npbackup.conf.dist")
     if not os.path.isfile(dist_conf_file_path):
         print("DIST CONF FILE NOT FOUND: {}".format(dist_conf_file_path))
         return None
@@ -246,7 +245,7 @@ def compile(arch, audience):
     if exit_code != 0:
         errors = True
 
-    # windows installer compilation
+    # windows only installer compilation
     if os.name == "nt":
         _installer_version = installer_version.split("-")[0]
         PRODUCT_VERSION = _installer_version + ".0"
@@ -330,7 +329,12 @@ if __name__ == "__main__":
 
             private_build = check_private_build(audience)
             if private_build and audience != "private":
+                print("ERROR: Requested public build but private data available")
+                errors = True
+                continue
+            elif not private_build and audience != "public":
                 print("ERROR: Requested private build but no private data available")
+                errors = True
                 continue
             python_arch = "x64" if sys.maxsize > 2**32 else "x86"
             result = compile(arch=python_arch, audience=audience)
