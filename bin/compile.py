@@ -90,6 +90,12 @@ def check_private_build(audience):
             print("ERROR: Cannot find secret keys")
             sys.exit()
 
+    # Drop private files if exist in memory
+    try:
+        del PRIVATE._private_secret_keys
+    except Exception:
+        pass
+
     dist_conf_file_path = get_conf_dist_file(audience)
     if dist_conf_file_path and "_private" in dist_conf_file_path:
         print("INFO: Building with a private conf.dist file")
