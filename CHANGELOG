@@ -1,8 +1,9 @@
-## v2.2.0 - rc9 - 26/03/2023
+## v2.2.0 - rc9 - 28/03/2023
   - Allow AES key rotation by keeping old key and updating encryption on config loading
   - Make sure restic binary is executable for Nuitka builds
   - Improve compiler script
   - Add messages when no tcl/tk exists in GUI mode
+  - Switch to i18nice fork of python-i18n
 
 ## v2.2.0 - rc8 - 22/03/2023
   - Highly optimize tree window creation times (x3.5) by replacing dateutil.parser.parse()
