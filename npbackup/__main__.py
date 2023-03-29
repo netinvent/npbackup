@@ -22,6 +22,7 @@ from datetime import datetime
 import tempfile
 import pidfile
 import ofunctions.logger_utils
+from ofunctions.platform import python_arch
 from ofunctions.process import kill_childs
 
 # This is needed so we get no GUI version messages
@@ -243,11 +244,12 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     args = parser.parse_args()
 
-    version_string = "{} v{}{}{} {} - {} - {}".format(
+    version_string = "{} v{}{}{}-{} {} - {} - {}".format(
         __intname__,
         __version__,
         "-PRIV" if configuration.IS_PRIV_BUILD else "",
         "-P{}".format(sys.version_info[1]),
+        python_arch(),
         __build__,
         "GUI disabled" if _NO_GUI else "GUI enabled",
         __copyright__,
