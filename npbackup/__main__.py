@@ -43,7 +43,6 @@ from npbackup.customization import (
     LICENSE_FILE,
 )
 from npbackup import configuration
-from npbackup.windows.task import create_scheduled_task
 from npbackup.core.runner import NPBackupRunner
 from npbackup.core.i18n_helper import _t
 from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
@@ -57,6 +56,9 @@ if not _NO_GUI:
 
     sg.theme(PYSIMPLEGUI_THEME)
     sg.SetOptions(icon=OEM_ICON)
+
+if os.name == 'nt':
+    from npbackup.windows.task import create_scheduled_task
 
 
 # Nuitka compat, see https://stackoverflow.com/a/74540217

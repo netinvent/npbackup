@@ -238,9 +238,12 @@ def compile(arch, audience, no_gui=False):
         NUITKA_OPTIONS += " --onefile-tempdir-spec=/var/tmp"
 
     if no_gui:
-        NUITKA_OPTIONS += " --plugin-disable=tk-inter --nofollow-import-to=PySimpleGUI"
+        NUITKA_OPTIONS += " --plugin-disable=tk-inter --nofollow-import-to=PySimpleGUI --nofollow-import-to=_tkinter --nofollow-import-to=npbackup.gui"
     else:
         NUITKA_OPTIONS += " --plugin-enable=tk-inter"
+
+    if os.name != "nt":
+        NUITKA_OPTIONS += " --nofollow-import-to=npbackup.windows"
 
     EXE_OPTIONS = '--company-name="{}" --product-name="{}" --file-version="{}" --product-version="{}" --copyright="{}" --file-description="{}" --trademarks="{}"'.format(
         COMPANY_NAME,
