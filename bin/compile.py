@@ -7,8 +7,18 @@ __intname__ = "npbackup.compile"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023032801"
-__version__ = "1.7.0"
+__build__ = "2023032901"
+__version__ = "1.8.0"
+
+
+"""
+Nuitka compilation script tested for
+ - windows 32 bits (Vista+)
+ - windows 64 bits
+ - Linux i386
+ - Linux i686
+ - Linux armv71
+"""
 
 
 import sys
@@ -16,6 +26,7 @@ import os
 import argparse
 import atexit
 from command_runner import command_runner
+from ofunctions.platform import python_arch
 
 AUDIENCES = ["public", "private"]
 
@@ -342,8 +353,7 @@ if __name__ == "__main__":
                 print("ERROR: Requested private build but no private data available")
                 errors = True
                 continue
-            python_arch = "x64" if sys.maxsize > 2**32 else "x86"
-            result = compile(arch=python_arch, audience=audience)
+            result = compile(arch=python_arch(), audience=audience)
             build_type = 'private' if private_build else 'public'
             if result:
                 print("SUCCESS: MADE {} build for audience {}".format(build_type, audience))
