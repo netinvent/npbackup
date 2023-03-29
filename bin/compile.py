@@ -7,8 +7,8 @@ __intname__ = "npbackup.compile"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023032901"
-__version__ = "1.8.1"
+__build__ = "2023033001"
+__version__ = "1.8.2"
 
 
 """

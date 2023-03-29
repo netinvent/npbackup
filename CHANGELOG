@@ -1,4 +1,4 @@
-## v2.2.0 - rc10 - 29/03/2023
+## v2.2.0 - rc10 - 30/03/2023
   - Add arm/arm64 compilation support
   - Add an option to disable GUI compilation
 
