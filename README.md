@@ -177,6 +177,9 @@ We maintain a special 32 bit binary for Windows 7 which allows to backup those o
 
 We also compile our linux target on RHEL 7 in order to be compatible with reasonably old distributions (>= glibc 2.17).
 
+arm and arm64 builds are compiled on Debian stretch for use with glibc > 2.24.
+Additionnaly, arm builds are compiled without GUI support since they're supposed to fit on smaller devices like NAS / Raspberries.
+
 ## Smart shield, antivirus and reputation
 
 Official binaries for Windows provided by NetInvent are signed with a certificate, allowing to gain trust and reputation in antivirus analysis.
