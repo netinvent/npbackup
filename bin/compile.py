@@ -325,7 +325,7 @@ if __name__ == "__main__":
         "--audience",
         type=str,
         dest="audience",
-        default="private",
+        default="public",
         required=False,
         help="Target audience, private or public",
     )
