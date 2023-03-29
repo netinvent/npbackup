@@ -165,7 +165,7 @@ def have_nuitka_commercial():
         return False
 
 
-def compile(arch, audience):
+def compile(arch, audience, no_gui=False):
     if os.name == "nt":
         program_executable = "npbackup.exe"
         restic_executable = "restic.exe"
@@ -237,6 +237,11 @@ def compile(arch, audience):
     if "arm" in arch:
         NUITKA_OPTIONS += " --onefile-temp-spec=/var/tmp"
 
+    if no_gui:
+        NUITKA_OPTIONS += " --plugin-disable=tk-inter --nofollow-import-to=PySimpleGUI"
+    else:
+        NUITKA_OPTIONS += " --plugin-enable=tk-inter"
+
     EXE_OPTIONS = '--company-name="{}" --product-name="{}" --file-version="{}" --product-version="{}" --copyright="{}" --file-description="{}" --trademarks="{}"'.format(
         COMPANY_NAME,
         PRODUCT_NAME,
@@ -247,7 +252,7 @@ def compile(arch, audience):
         TRADEMARKS,
     )
 
-    CMD = '{} -m nuitka --python-flag=no_docstrings --python-flag=-O {} {} --onefile --plugin-enable=tk-inter --include-data-dir="{}"="{}" --include-data-file="{}"="{}" --include-data-file="{}"="{}" --windows-icon-from-ico="{}" --output-dir="{}" bin/npbackup'.format(
+    CMD = '{} -m nuitka --python-flag=no_docstrings --python-flag=-O {} {} --onefile --include-data-dir="{}"="{}" --include-data-file="{}"="{}" --include-data-file="{}"="{}" --windows-icon-from-ico="{}" --output-dir="{}" bin/npbackup'.format(
         PYTHON_EXECUTABLE,
         NUITKA_OPTIONS,
         EXE_OPTIONS,
@@ -281,7 +286,7 @@ def compile(arch, audience):
             file_description,
             TRADEMARKS,
         )
-        CMD = '{} -m nuitka --python-flag=no_docstrings --python-flag=-O {} {} --onefile --plugin-enable=tk-inter --include-data-file="{}"="{}" --include-data-file="{}"="{}" --include-data-dir="{}"="{}" --windows-icon-from-ico="{}" --windows-uac-admin --output-dir="{}" bin/NPBackupInstaller.py'.format(
+        CMD = '{} -m nuitka --python-flag=no_docstrings --python-flag=-O {} {} --onefile --include-data-file="{}"="{}" --include-data-file="{}"="{}" --include-data-dir="{}"="{}" --windows-icon-from-ico="{}" --windows-uac-admin --output-dir="{}" bin/NPBackupInstaller.py'.format(
             PYTHON_EXECUTABLE,
             NUITKA_OPTIONS,
             EXE_OPTIONS,
@@ -330,6 +335,13 @@ if __name__ == "__main__":
         help="Target audience, private or public",
     )
 
+    parser.add_argument(
+        "--no-gui",
+        action="store_true",
+        default=False,
+        help="Don't compile GUI support"
+    )
+
     args = parser.parse_args()
 
     # Make sure we get out dev environment back when compilation ends / fails
@@ -358,7 +370,7 @@ if __name__ == "__main__":
                 print("ERROR: Requested private build but no private data available")
                 errors = True
                 continue
-            result = compile(arch=python_arch(), audience=audience)
+            result = compile(arch=python_arch(), audience=audience, no_gui=args.no_gui)
             build_type = 'private' if private_build else 'public'
             if result:
                 print("SUCCESS: MADE {} build for audience {}".format(build_type, audience))
