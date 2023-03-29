@@ -366,13 +366,13 @@ class ResticRunner:
         if self._binary:
             _cmd = "{} version".format(self._binary)
             exit_code, output = command_runner(
-                    _cmd,
-                    timeout=60,
-                    split_streams=False,
-                    encoding="utf-8",
-                    priority=self._priority,
-                    io_priority=self._priority,
-                )
+                _cmd,
+                timeout=60,
+                split_streams=False,
+                encoding="utf-8",
+                priority=self._priority,
+                io_priority=self._priority,
+            )
             if exit_code == 0:
                 return output
             else:
