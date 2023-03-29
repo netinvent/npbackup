@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023030701"
-__version__ = "1.5.1"
+__build__ = "2023032901"
+__version__ = "1.6.0"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -360,6 +360,26 @@ class ResticRunner:
         if not os.path.isfile(value):
             raise ValueError("Non existent binary given: {}".format(value))
         self._binary = value
+
+    @property
+    def binary_version(self) -> Optional[str]:
+        if self._binary:
+            _cmd = "{} version".format(self._binary)
+            exit_code, output = command_runner(
+                    _cmd,
+                    timeout=60,
+                    split_streams=False,
+                    encoding="utf-8",
+                    priority=self._priority,
+                    io_priority=self._priority,
+                )
+            if exit_code == 0:
+                return output
+            else:
+                logger.error("Cannot get backend version: {}".format(output))
+        else:
+            logger.error("Cannot get backend version: No binary defined.")
+        return None
 
     @property
     def generic_arguments(self):

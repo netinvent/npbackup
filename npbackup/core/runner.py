@@ -129,6 +129,11 @@ class NPBackupRunner:
         self.apply_config_to_restic_runner()
 
     @property
+    def backend_version(self):
+        if self.restic_runner:
+            return self.restic_runner.binary_version
+
+    @property
     def dry_run(self):
         return self._dry_run
 
