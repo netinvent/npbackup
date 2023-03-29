@@ -8,7 +8,7 @@ __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2023032901"
-__version__ = "1.8.0"
+__version__ = "1.8.1"
 
 
 """
@@ -230,7 +230,12 @@ def compile(arch, audience):
     excludes_dir_source = os.path.join(BASEDIR, os.pardir, excludes_dir)
     excludes_dir_dest = excludes_dir
 
-    NUITKA_OPTIONS = "--enable-plugin=data-hiding" if have_nuitka_commercial() else ""
+    NUTKA_OPTIONS = ""
+    NUITKA_OPTIONS += " --enable-plugin=data-hiding" if have_nuitka_commercial() else ""
+    
+    # Stupid fix for synology RS816 where /tmp is mounted with `noexec`.
+    if "arm" in arch:
+        NUITKA_OPTIONS += " --onefile-temp-spec=/var/tmp"
 
     EXE_OPTIONS = '--company-name="{}" --product-name="{}" --file-version="{}" --product-version="{}" --copyright="{}" --file-description="{}" --trademarks="{}"'.format(
         COMPANY_NAME,
