@@ -235,7 +235,7 @@ def compile(arch, audience, no_gui=False):
     
     # Stupid fix for synology RS816 where /tmp is mounted with `noexec`.
     if "arm" in arch:
-        NUITKA_OPTIONS += " --onefile-temp-spec=/var/tmp"
+        NUITKA_OPTIONS += " --onefile-tempdir-spec=/var/tmp"
 
     if no_gui:
         NUITKA_OPTIONS += " --plugin-disable=tk-inter --nofollow-import-to=PySimpleGUI"
