@@ -230,7 +230,7 @@ def compile(arch, audience):
     excludes_dir_source = os.path.join(BASEDIR, os.pardir, excludes_dir)
     excludes_dir_dest = excludes_dir
 
-    NUTKA_OPTIONS = ""
+    NUITKA_OPTIONS = ""
     NUITKA_OPTIONS += " --enable-plugin=data-hiding" if have_nuitka_commercial() else ""
     
     # Stupid fix for synology RS816 where /tmp is mounted with `noexec`.
