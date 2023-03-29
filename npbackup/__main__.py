@@ -57,7 +57,7 @@ if not _NO_GUI:
     sg.theme(PYSIMPLEGUI_THEME)
     sg.SetOptions(icon=OEM_ICON)
 
-if os.name == 'nt':
+if os.name == "nt":
     from npbackup.windows.task import create_scheduled_task
 
 
