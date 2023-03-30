@@ -7,6 +7,8 @@
 
 A secure and efficient file backup solution that fits both system administrators (CLI) and end users (GUI)
 
+Works on **Linux** x64, and arm/arm64 based **NAS** solutions, and **Windows**.
+
 ## Features
 
 - Data deduplication and fast zstd compression
