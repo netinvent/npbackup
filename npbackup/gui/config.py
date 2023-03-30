@@ -15,9 +15,10 @@ from logging import getLogger
 import PySimpleGUI as sg
 import npbackup.configuration as configuration
 from npbackup.core.i18n_helper import _t
-from npbackup.windows.task import create_scheduled_task
 from npbackup.path_helper import CURRENT_EXECUTABLE
 
+if os.name == "nt":
+    from npbackup.windows.task import create_scheduled_task
 
 logger = getLogger(__intname__)
 
