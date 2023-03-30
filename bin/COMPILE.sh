@@ -2,18 +2,19 @@
 
 # This is an example compiler script
 
-machine="$(printf %.3s "$(uname -m)")"
+machine="$(uname -m)"
 
 cd /opt/npbackup
 
 OLD_PYTHONPATH="$PYTHONPATH"
 export PYTHONPATH=/opt/npbackup
 
-if [ "$machine" = "arm" ]; then
+if [ "$(printf %.3s $machine)" = "arm" ] || [ "$machine" = "aarch64" ]; then
         opts=" --no-gui"
         echo "BUILDING WITHOUT GUI because arm detected"
 else
         otps=""
+        echo "BUILDING WITH GUI"
 fi
 
 /opt/npbackup/venv/bin/python bin/compile.py --audience all $opts
