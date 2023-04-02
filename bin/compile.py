@@ -8,7 +8,7 @@ __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2023033001"
-__version__ = "1.8.2"
+__version__ = "1.8.3"
 
 
 """
@@ -26,7 +26,7 @@ import os
 import argparse
 import atexit
 from command_runner import command_runner
-from ofunctions.platform import python_arch
+from ofunctions.platform import python_arch, get_os
 
 AUDIENCES = ["public", "private"]
 
@@ -145,10 +145,11 @@ def move_audience_files(audience):
 
 
 def get_conf_dist_file(audience):
+    platform = get_os().lower()
     if audience == "private":
-        dist_conf_file_path = os.path.join(BASEDIR, os.pardir, "PRIVATE", "_private_npbackup.conf.dist")
+        dist_conf_file_path = os.path.join(BASEDIR, os.pardir, "PRIVATE", "_private_npbackup.{}.conf.dist".format(platform))
     else:
-        dist_conf_file_path = os.path.join(BASEDIR, os.pardir, "examples", "npbackup.conf.dist")
+        dist_conf_file_path = os.path.join(BASEDIR, os.pardir, "examples", "npbackup.{}.conf.dist".format(platform))
     if not os.path.isfile(dist_conf_file_path):
         print("DIST CONF FILE NOT FOUND: {}".format(dist_conf_file_path))
         return None
