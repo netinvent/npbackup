@@ -378,7 +378,7 @@ class ResticRunner:
                 io_priority=self._priority,
             )
             if exit_code == 0:
-                return output
+                return output.strip()
             else:
                 logger.error("Cannot get backend version: {}".format(output))
         else:
