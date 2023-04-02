@@ -26,7 +26,8 @@ logger = getLogger(__intname__)
 
 # Arbitrary timeout for init / init checks.
 # If init takes more than a minute, we really have a problem
-INIT_TIMEOUT=60
+INIT_TIMEOUT = 60
+
 
 class ResticRunner:
     def __init__(
@@ -414,7 +415,9 @@ class ResticRunner:
         cmd = "init --repository-version {} --compression {}".format(
             repository_version, compression
         )
-        result, output = self.executor(cmd, errors_allowed=errors_allowed, timeout=INIT_TIMEOUT)
+        result, output = self.executor(
+            cmd, errors_allowed=errors_allowed, timeout=INIT_TIMEOUT
+        )
         if result:
             if re.search(
                 r"created restic repository ([a-z0-9]+) at .+", output, re.IGNORECASE
