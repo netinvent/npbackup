@@ -226,7 +226,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Create task that runs every n minutes",
+        help="Create task that runs every n minutes on Windows",
     )
 
     parser.add_argument("--license", action="store_true", help="Show license")
