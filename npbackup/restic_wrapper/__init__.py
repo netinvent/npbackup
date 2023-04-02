@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023032901"
-__version__ = "1.6.0"
+__build__ = "2023040201"
+__version__ = "1.6.1"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -24,6 +24,9 @@ from command_runner import command_runner
 
 logger = getLogger(__intname__)
 
+# Arbitrary timeout for init / init checks.
+# If init takes more than a minute, we really have a problem
+INIT_TIMEOUT=60
 
 class ResticRunner:
     def __init__(
@@ -170,6 +173,7 @@ class ResticRunner:
         self,
         cmd: str,
         errors_allowed: bool = False,
+        timeout: int = None,
         live_stream=False,
     ) -> Tuple[bool, str]:
         """
@@ -188,7 +192,7 @@ class ResticRunner:
         if live_stream:
             exit_code, output = command_runner(
                 _cmd,
-                timeout=None,
+                timeout=timeout,
                 split_streams=False,
                 encoding="utf-8",
                 live_output=self.verbose,
@@ -203,7 +207,7 @@ class ResticRunner:
         else:
             exit_code, output = command_runner(
                 _cmd,
-                timeout=None,
+                timeout=timeout,
                 split_streams=False,
                 encoding="utf-8",
                 live_output=self.verbose,
@@ -410,7 +414,7 @@ class ResticRunner:
         cmd = "init --repository-version {} --compression {}".format(
             repository_version, compression
         )
-        result, output = self.executor(cmd, errors_allowed=errors_allowed)
+        result, output = self.executor(cmd, errors_allowed=errors_allowed, timeout=INIT_TIMEOUT)
         if result:
             if re.search(
                 r"created restic repository ([a-z0-9]+) at .+", output, re.IGNORECASE
