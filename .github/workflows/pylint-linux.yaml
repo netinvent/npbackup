@@ -41,7 +41,7 @@ jobs:
         python -m flake8 --count --select=E9,F63,F7,F82 --show-source --statistics upgrade_server/upgrade_server
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         python -m flake8 --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics npbackup
-        python -m flake8 --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics ugrade_server
+        python -m flake8 --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics upgrade_server
     - name: Lint with Black
       # Don't run on python < 3.6 since black does not exist there, run only once
       if: ${{ matrix.python-version == '3.11' }}
