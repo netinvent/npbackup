@@ -7,7 +7,7 @@ __intname__ = "npbackup.upgrade_client.upgrader"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2023030201"
+__build__ = "20263040401"
 
 
 from typing import Optional
@@ -244,6 +244,8 @@ def auto_upgrader(
             f'echo "Copying new executable from {downloaded_executable} to {CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && '
             f'alias cp=cp && cp -f "{downloaded_executable}" "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && '
             f'rm -f "{downloaded_executable}" >> {log_file} 2>&1 && '
+            f'echo "Adding executable bit to new executable" >> {log_file} 2>&1 && '
+            f'chmod +x {CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && '
             f'echo "Loading new executable" >> {log_file} 2>&1 && '
             f'"{CURRENT_EXECUTABLE}" --upgrade-conf >> {log_file} 2>&1 || '
             f'echo "New executable failed. Rolling back" >> {log_file} 2>&1 && '
