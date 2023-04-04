@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.config"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023020802"
+__build__ = "2023040401"
 
 
 import os
@@ -16,6 +16,7 @@ import PySimpleGUI as sg
 import npbackup.configuration as configuration
 from npbackup.core.i18n_helper import _t
 from npbackup.path_helper import CURRENT_EXECUTABLE
+from npbackup.core.nuitka_helper import IS_COMPILED
 
 if os.name == "nt":
     from npbackup.windows.task import create_scheduled_task
@@ -24,6 +25,9 @@ logger = getLogger(__intname__)
 
 
 def ask_backup_admin_password(config_dict) -> bool:
+    if not IS_COMPILED:
+        sg.PopupError(_t("config_gui.not_allowed_on_not_compiled"))
+        return False
     try:
         backup_admin_password = config_dict["options"]["backup_admin_password"]
         if not backup_admin_password:

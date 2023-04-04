@@ -76,3 +76,4 @@ en:
   machine_group: Machine group
 
   show_decrypted: Show decrypted
+  not_allowed_on_not_compiled: Using this option is not allowed on non compiled or non private builds

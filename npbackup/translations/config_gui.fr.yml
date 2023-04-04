@@ -76,3 +76,4 @@ fr:
   machine_group: Groupe machine
 
   show_decrypted: Voir déchiffré
+    not_allowed_on_not_compiled: Cette option n'est pas permise sur une version non compilée ou non privée
