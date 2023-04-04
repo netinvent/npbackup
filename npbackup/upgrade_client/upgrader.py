@@ -22,6 +22,7 @@ from ofunctions.process import kill_childs
 from command_runner import deferred_command
 from npbackup.upgrade_client.requestor import Requestor
 from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
+from npbackup.core.nuitka_helper import IS_COMPILED
 from npbackup.__main__ import __version__ as npbackup_version
 
 logger = getLogger(__intname__)
@@ -169,8 +170,7 @@ def auto_upgrader(
     We must check that we run a compiled binary first
     We assume that we run a onefile nuitka binary
     """
-    is_nuitka = "__compiled__" in globals()
-    if not is_nuitka:
+    if not IS_COMPILED:
         logger.info(
             "Auto upgrade will only upgrade compiled verions. Please use 'pip install --upgrade npbackup' instead"
         )

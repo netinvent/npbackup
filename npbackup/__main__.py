@@ -46,6 +46,7 @@ from npbackup import configuration
 from npbackup.core.runner import NPBackupRunner
 from npbackup.core.i18n_helper import _t
 from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
+from npbackup.core.nuitka_helper import IS_COMPILED
 from npbackup.upgrade_client.upgrader import need_upgrade
 from npbackup.core.upgrade_runner import run_upgrade
 
@@ -272,8 +273,7 @@ This is free software, and you are welcome to redistribute it under certain cond
     if args.gui_status:
         logger.info("Can run GUI: {}, errors={}".format(not _NO_GUI, _NO_GUI_ERROR))
         # Don't bother to talk about package manager when compiled with Nuitka
-        is_nuitka = "__compiled__" in globals()
-        if _NO_GUI and not is_nuitka:
+        if _NO_GUI and not IS_COMPILED:
             logger.info(
                 'You need tcl/tk 8.6+ and python-tkinter installed for GUI to work. Please use your package manager (example "yum install python-tkinter" or "apt install python3-tk") to install missing dependencies.'
             )
