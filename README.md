@@ -7,7 +7,7 @@
 
 A secure and efficient file backup solution that fits both system administrators (CLI) and end users (GUI)
 
-Works on **Linux** x64, and arm/arm64 based **NAS** solutions, and **Windows**.
+Works on **Linux** x64, and arm/arm64 based **NAS** solutions, and **Windows** x64 and x86.
 
 ## Features
 
