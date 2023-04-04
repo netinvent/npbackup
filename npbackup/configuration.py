@@ -113,19 +113,22 @@ empty_config_dict = {
 }
 
 
-def decrypt_data(config_dict: dict, encrypted_options: List[dict], non_encrypted_data_is_fatal: bool = True) -> dict:
+def decrypt_data(
+    config_dict: dict,
+    encrypted_options: List[dict],
+    non_encrypted_data_is_fatal: bool = True,
+) -> dict:
     if not config_dict:
         return None
     try:
         for option in encrypted_options:
             try:
-
-
-                if (
-                    config_dict[option["section"]][option["name"]]
-                    and isinstance(config_dict[option["section"]][option["name"]], str)
+                if config_dict[option["section"]][option["name"]] and isinstance(
+                    config_dict[option["section"]][option["name"]], str
                 ):
-                    if config_dict[option["section"]][option["name"]].startswith(ID_STRING):
+                    if config_dict[option["section"]][option["name"]].startswith(
+                        ID_STRING
+                    ):
                         (
                             _,
                             config_dict[option["section"]][option["name"]],
@@ -137,7 +140,11 @@ def decrypt_data(config_dict: dict, encrypted_options: List[dict], non_encrypted
                         )
                     else:
                         if non_encrypted_data_is_fatal:
-                            logger.critical("SECURITY BREACH: Config file was altered in {}:{}".format(option["section"], option["name"]))
+                            logger.critical(
+                                "SECURITY BREACH: Config file was altered in {}:{}".format(
+                                    option["section"], option["name"]
+                                )
+                            )
                             sys.exit(99)
             except KeyError:
                 logger.error(
@@ -286,13 +293,19 @@ def load_config(config_file: str) -> Optional[dict]:
                 logger.info("Encrypting non encrypted data in configuration file")
                 config_file_needs_save = True
 
-            config_dict_decrypted = decrypt_data(config_dict, ENCRYPTED_OPTIONS, non_encrypted_data_is_fatal=False)
+            config_dict_decrypted = decrypt_data(
+                config_dict, ENCRYPTED_OPTIONS, non_encrypted_data_is_fatal=False
+            )
             if config_dict_decrypted == False:
                 if EARLIER_AES_KEY:
                     new_aes_key = AES_KEY
                     AES_KEY = EARLIER_AES_KEY
                     logger.info("Trying to migrate encryption key")
-                    config_dict_decrypted = decrypt_data(config_dict, ENCRYPTED_OPTIONS, non_encrypted_data_is_fatal=False)
+                    config_dict_decrypted = decrypt_data(
+                        config_dict,
+                        ENCRYPTED_OPTIONS,
+                        non_encrypted_data_is_fatal=False,
+                    )
                     if config_dict_decrypted is not False:
                         AES_KEY = new_aes_key
                         logger.info("Migrated encryption")
@@ -307,9 +320,11 @@ def load_config(config_file: str) -> Optional[dict]:
             if config_file_needs_save:
                 logger.info("Updating config file")
                 save_config(config_file, config_dict)
-            
+
             # Decrypt potential admin password separately
-            config_dict_decrypted = decrypt_data(config_dict, ENCRYPTED_OPTIONS_SECURE, non_encrypted_data_is_fatal=True)
+            config_dict_decrypted = decrypt_data(
+                config_dict, ENCRYPTED_OPTIONS_SECURE, non_encrypted_data_is_fatal=True
+            )
             return config_dict
     except OSError:
         logger.critical("Cannot load configuration file from %s", config_file)
@@ -320,12 +335,18 @@ def save_config(config_file: str, config_dict: dict) -> bool:
     try:
         with open(config_file, "w", encoding="utf-8") as file_handle:
             if not is_encrypted(config_dict):
-                config_dict = encrypt_data(config_dict, ENCRYPTED_OPTIONS + ENCRYPTED_OPTIONS_SECURE)
+                config_dict = encrypt_data(
+                    config_dict, ENCRYPTED_OPTIONS + ENCRYPTED_OPTIONS_SECURE
+                )
             yaml = YAML(typ="rt")
             yaml.dump(config_dict, file_handle)
         # Since we deal with global objects in ruamel.yaml, we need to decrypt after saving
-        config_dict = decrypt_data(config_dict, ENCRYPTED_OPTIONS, non_encrypted_data_is_fatal=False)
-        config_dict = decrypt_data(config_dict, ENCRYPTED_OPTIONS_SECURE, non_encrypted_data_is_fatal=True)
+        config_dict = decrypt_data(
+            config_dict, ENCRYPTED_OPTIONS, non_encrypted_data_is_fatal=False
+        )
+        config_dict = decrypt_data(
+            config_dict, ENCRYPTED_OPTIONS_SECURE, non_encrypted_data_is_fatal=True
+        )
         return True
     except OSError:
         logger.critical("Cannot save configuartion file to %s", config_file)
