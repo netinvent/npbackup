@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.upgrade_runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023020201"
+__build__ = "2023040401"
 
 
 from logging import getLogger
@@ -48,7 +48,7 @@ def run_upgrade(config_dict):
         auto_upgrade_host_identity = None
     try:
         group = configuration.evaluate_variables(
-            config_dict, config_dict["options"]["auto_ugrade_group"]
+            config_dict, config_dict["options"]["auto_upgrade_group"]
         )
     except KeyError:
         group = None
