@@ -1,3 +1,12 @@
+## master
+  - Add default 1 minute timeout for init operations
+  - Fix auto_upgrade_group wasn't transmitted to server
+  - Make sure new binary is set as executable in linux upgrade
+  - *SECURITY* Show unencrypted is only allowed on compiled builds where default AES KEY is not used
+    - This prevents a password injection from another conf file
+  - *SECURITY* Prevent raw password update in config file
+
+
 ## v2.2.0 - rc10 - 30/03/2023
   - Add arm/arm64 compilation support
   - Add an option to disable GUI compilation
