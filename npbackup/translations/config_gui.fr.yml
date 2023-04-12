@@ -47,6 +47,7 @@ fr:
   environment_variables: Variables d'environnement
   format_equals: Format variable=valeur
 
+  no_runner: Impossible de se connecter au backend. Verifier les logs
   no_binary: Impossible de trouver le coeur de sauvegarde. Merci d'installer le binaire restic depuis restic.net
 
   configuration_saved: Configuration sauvegardée

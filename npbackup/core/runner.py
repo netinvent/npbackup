@@ -124,7 +124,8 @@ class NPBackupRunner:
 
         self.is_ready = False
         # Create an instance of restic wrapper
-        self.create_restic_runner()
+        if not self.create_restic_runner():
+            raise ValueError("Cannot create backend runner")
         # Configure that instance
         self.apply_config_to_restic_runner()
 
@@ -219,7 +220,7 @@ class NPBackupRunner:
             can_run = False
         self.is_ready = can_run
         if not can_run:
-            return
+            return None
         self.restic_runner = ResticRunner(
             repository=repository,
             password=password,
@@ -385,6 +386,7 @@ class NPBackupRunner:
         # Preflight checks
         try:
             paths = self.config_dict["backup"]["paths"]
+            paths = [path.strip() for path in paths]
         except KeyError:
             logger.error("No backup paths defined.")
             return False
@@ -393,6 +395,10 @@ class NPBackupRunner:
         try:
             if not isinstance(paths, list):
                 paths = [paths]
+            for path in paths:
+                if path == self.config_dict["repo"]["repository"]:
+                    logger.critical("Rayan error 40: You cannot backup destination in destination path. No inception allowed !")
+                    return False
         except KeyError:
             logger.error("No backup source path given.")
             return False

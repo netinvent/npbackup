@@ -47,7 +47,8 @@ en:
   environment_variables: Environment variables
   format_equals: Format variable=value
 
-  np_binary: Cannot find backup backend. Please install restic binary from restic.net
+  no_runner: Cannot connect to backend. Please see logs
+  no_binary: Cannot find backup backend. Please install restic binary from restic.net
 
   configuration_saved: Configuration saved
   cannot_save_configuration: Could not save configuration. See logs for further info
