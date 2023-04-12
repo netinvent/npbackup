@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023040201"
-__version__ = "1.6.1"
+__build__ = "2023040601"
+__version__ = "1.6.2"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -36,8 +36,8 @@ class ResticRunner:
         password: str,
         binary_search_paths: List[str] = None,
     ) -> None:
-        self.repository = repository
-        self.password = password
+        self.repository = str(repository).strip()
+        self.password = str(password).strip()
         self._verbose = False
         self._dry_run = False
         self._stdout = None
