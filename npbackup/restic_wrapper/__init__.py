@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023040601"
-__version__ = "1.6.2"
+__build__ = "2023041201"
+__version__ = "1.6.3"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -89,6 +89,9 @@ class ResticRunner:
         """
         if self.password:
             try:
+                if self._backend_type == "local":
+                    self.password = os.path.expanduser(self.password)
+                    self.password = os.path.expandvars(self.password)
                 os.environ["RESTIC_PASSWORD"] = str(self.password)
             except TypeError:
                 logger.error("Bogus restic password")
