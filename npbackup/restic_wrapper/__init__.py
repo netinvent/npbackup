@@ -89,15 +89,15 @@ class ResticRunner:
         """
         if self.password:
             try:
-                if self._backend_type == "local":
-                    self.password = os.path.expanduser(self.password)
-                    self.password = os.path.expandvars(self.password)
                 os.environ["RESTIC_PASSWORD"] = str(self.password)
             except TypeError:
                 logger.error("Bogus restic password")
                 self.password = None
         if self.repository:
             try:
+                if self._backend_type == "local":
+                    self.repository = os.path.expanduser(self.repository)
+                    self.repository = os.path.expandvars(self.repository)
                 os.environ["RESTIC_REPOSITORY"] = str(self.repository)
             except TypeError:
                 logger.error("Bogus restic repository")
