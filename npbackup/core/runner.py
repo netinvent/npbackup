@@ -119,20 +119,20 @@ class NPBackupRunner:
         self._verbose = False
         self._stdout = None
         self.restic_runner = None
-        self._minimim_backup_age = None
+        self.minimum_backup_age = None
         self._exec_time = None
 
         self.is_ready = False
         # Create an instance of restic wrapper
-        if not self.create_restic_runner():
-            raise ValueError("Cannot create backend runner")
+        self.create_restic_runner()
         # Configure that instance
         self.apply_config_to_restic_runner()
 
     @property
-    def backend_version(self):
-        if self.restic_runner:
+    def backend_version(self) -> bool:
+        if self.is_ready:
             return self.restic_runner.binary_version
+        return None
 
     @property
     def dry_run(self):
@@ -173,8 +173,10 @@ class NPBackupRunner:
         self.apply_config_to_restic_runner()
 
     @property
-    def has_binary(self):
-        return True if self.restic_runner.binary else False
+    def has_binary(self) -> bool:
+        if self.is_ready:
+            return True if self.restic_runner.binary else False
+        return False
 
     @property
     def exec_time(self):

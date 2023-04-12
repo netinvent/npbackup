@@ -403,13 +403,10 @@ This is free software, and you are welcome to redistribute it under certain cond
     if args.dry_run:
         dry_run = True
 
-    try:
-        npbackup_runner = NPBackupRunner(config_dict=config_dict)
-        npbackup_runner.dry_run = dry_run
-        npbackup_runner.verbose = _VERBOSE
-        logger.info("Backend: {}".format(npbackup_runner.backend_version))
-    except ValueError:
-        logger.critical("Cannot create backend")
+    npbackup_runner = NPBackupRunner(config_dict=config_dict)
+    npbackup_runner.dry_run = dry_run
+    npbackup_runner.verbose = _VERBOSE
+    logger.info("Backend: {}".format(npbackup_runner.backend_version))
 
     if args.check:
         if npbackup_runner.check_recent_backups():
