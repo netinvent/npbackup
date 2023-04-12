@@ -75,7 +75,7 @@ def _about_gui(version_string: str, config_dict: dict) -> None:
         [sg.Text(version_string)],
         new_version,
         [sg.Text("License: GNU GPLv3")],
-        [sg.Multiline(license_content, size=(65, 20))],
+        [sg.Multiline(license_content, size=(65, 20), disabled=True)],
         [sg.Button(_t("generic.accept"), key="exit")],
     ]
 
