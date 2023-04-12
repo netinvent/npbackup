@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023032601"
+__build__ = "2023041201"
 __version__ = "1.7.0 for npbackup 2.2.0+"
 
 from typing import Tuple, Optional, List
@@ -252,19 +252,20 @@ def evaluate_variables(config_dict: dict, value: str) -> str:
             value = value.replace(
                 "${MACHINE_ID}", config_dict["identity"]["machine_id"]
             )
-        except KeyError:
+        # TypeError may happen if config_dict[x][y] is None
+        except (KeyError, TypeError):
             pass
         try:
             value = value.replace(
                 "${MACHINE_GROUP}", config_dict["identity"]["machine_group"]
             )
-        except KeyError:
+        except (KeyError, TypeError):
             pass
         try:
             value = value.replace(
                 "${BACKUP_JOB}", config_dict["prometheus"]["backup_job"]
             )
-        except KeyError:
+        except (KeyError, TypeError):
             pass
     return value
 
