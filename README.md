@@ -196,8 +196,16 @@ Additionnaly, arm builds are compiled without GUI support since they're supposed
 
 ## Smart shield, antivirus and reputation
 
-Official binaries for Windows provided by NetInvent are signed with a certificate, allowing to gain trust and reputation in antivirus analysis.
-Also, official binaries are compiled using Nuitka Commercial grade, which is more secure in storing secrets.
+Official binaries for Windows provided by NetInvent are signed with a certificate, allowing to gain trust and reputation in antivirus analysis.  
+Also, official binaries are compiled using Nuitka Commercial grade, which is more secure in storing secrets.  
+
+Pre-compiled builds for Windows have been code signed with NetInvent's EV certificate, using [windows_tools.signtool](github.com/netinvent/windows_tools)  
+Signing on a Windows machine with Windows SDK installed:
+```
+from windows_tools.signtool import SignTool
+signer = SignTool()
+signer.sign(r"c:\path\to\executable", bitness=64)
+```
 
 ## Misc
 
@@ -210,3 +218,9 @@ On Windows:
 ```
 set NPBACKUP_LOCALE=en
 ```
+
+## Special thanks
+
+- Thanks to the Restic Team without which this program would not be possible
+- Thanks to https://github.com/Krutyi-4el who packaged i18nice internationalization for us
+- Special thanks to the BTS SIO 2nd year class of 2022 at Lycee Marillac / Perpignan who volunteered as GUI Q&A team
