@@ -25,6 +25,7 @@ logger = getLogger(__intname__)
 
 
 def ask_backup_admin_password(config_dict) -> bool:
+    # NPF-SEC-00001 SECURITY-ADMIN-BACKUP-PASSWORD ONLY AVAILABLE ON PRIVATE COMPILED BUILDS
     if not IS_COMPILED or not configuration.IS_PRIV_BUILD:
         sg.PopupError(_t("config_gui.not_allowed_on_not_compiled"))
         return False

@@ -187,9 +187,11 @@ def encrypt_data(config_dict: dict, encrypted_options: List[dict]) -> dict:
                         "utf-8"
                     )
         except KeyError:
-            logger.error(
-                "No {}:{} available.".format(option["section"], option["name"])
-            )
+            # NPF-SEC-00001 SECURITY-ADMIN-BACKUP-PASSWORD ONLY AVAILABLE ON PRIVATE COMPILED BUILDS
+            if not option["name"] == "backup_admin_password":
+                logger.error(
+                    "No {}:{} available.".format(option["section"], option["name"])
+                )
     return config_dict
 
 
