@@ -120,11 +120,18 @@ Configuration allows to edit the YAML configuration files directly as end user
 
 Backup process is interactive when GUI is used
 
-**Security Note**
+**Security**
+NPBackup' security model relies on symmetric encryption of all sensible data that allows to access a repository.  
+In order to achieve this, NPBackup contains an AES-KEY that can be set:
+ - at compile time
+ - at run time via an AES-KEY file
+
 Please note that right clicking on "<encrypted data>" in the configuration GUI will allow to decrypt that data, by prompting a backup admin password.
 That password is set at compile-time and should be different depending on the organization.
 
 This allows a system admin to see repo URI and passwords, without leaving this information available on the computer.
+
+The configuration file should never be world readable, as one could change the backup admin password, allowing to decrypt other parts of the conf file.
 
 ## The difficulty of laptop backups
 
@@ -160,10 +167,15 @@ While admin user experience is important, NPBackup also offers a GUI for end use
 
 ## Security
 
-NPBackup inherits all security measures of restic (AES-256 client side encryption including metadata), append only mode REST server backend.
+NPBackup inherits all security measures of it's backup backend (currently restic with AES-256 client side encryption including metadata), append only mode REST server backend.
 
-On top of those, NPBackup itself encrypts sensible information like the repo uri and password, as well as the metrics http username and password.
+On top of those, NPBackup itself encrypts sensible information like the repo uri and password, as well as the metrics http username and password.  
 This ensures that end users can restore data without the need to know any password, without compromising a secret. Note that in order to use this function, one needs to use the compiled version of NPBackup, so AES-256 keys are never exposed. Internally, NPBackup never directly uses the AES-256 key, so even a memory dump won't be enough to get the key.
+
+## Upgrade server
+
+NPBackup comes with integrated auto upgrade function that will run regardless of program failures, in order to lessen the maintenance burden.  
+The upgrade server runs a python asgi web server with integrated HTTP basic authentication, that can further be put behind an SSL proxy like HaProxy.
 
 ## Compilation
 
