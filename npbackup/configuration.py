@@ -20,7 +20,7 @@ import platform
 from cryptidy import symmetric_encryption as enc
 from ofunctions.random import random_string
 from npbackup.customization import ID_STRING
-from core.nuitka_helper import IS_COMPILED
+from npbackup.core.nuitka_helper import IS_COMPILED
 
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
