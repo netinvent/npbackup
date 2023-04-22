@@ -1,4 +1,4 @@
-## master
+## v2.2.0 - rc11 - 24/04/2023
   - Add default 1 minute timeout for init operations
   - Fix auto_upgrade_group wasn't transmitted to server
   - Make sure new binary is set as executable in linux upgrade
@@ -10,6 +10,7 @@
   - Fix empty data is shown as encrypted
   - Enforce repository and passwords to be strings, also remove trailing and ending spaces
   - Add warning when source and destination are the same path
+  - Compiled with newer Nuitka 1.5.6+ that leverages lesser virus detection issues
 
 ## v2.2.0 - rc10 - 30/03/2023
   - Add arm/arm64 compilation support
