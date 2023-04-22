@@ -388,15 +388,16 @@ class NPBackupRunner:
         # Preflight checks
         try:
             paths = self.config_dict["backup"]["paths"]
-            paths = [path.strip() for path in paths]
         except KeyError:
             logger.error("No backup paths defined.")
             return False
 
-        # Make sure we convert paths to list if only one path is given
+        # Make sure we convert paths to list if only one path is give
+        # Also make sure we remove trailing and ending spaces
         try:
             if not isinstance(paths, list):
                 paths = [paths]
+            paths = [path.strip() for path in paths]
             for path in paths:
                 if path == self.config_dict["repo"]["repository"]:
                     logger.critical(
