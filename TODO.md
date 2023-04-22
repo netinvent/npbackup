@@ -9,7 +9,3 @@
 - Fallback server when primary repo is not available
 - Windows installer (NSIS ?)
 - Linux installer script
-- Having wrong repo password should trigger a GUI error
-
-
-
