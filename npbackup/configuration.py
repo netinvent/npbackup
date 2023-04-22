@@ -149,7 +149,12 @@ def decrypt_data(
                             sys.exit(99)
             except KeyError:
                 # NPF-SEC-00001 SECURITY-ADMIN-BACKUP-PASSWORD ONLY AVAILABLE ON PRIVATE COMPILED BUILDS
-                if not option["section"] == "options" and not option["name"] == "backup_admin_password" and IS_COMPILED and IS_PRIV_BUILD:
+                if (
+                    not option["section"] == "options"
+                    and not option["name"] == "backup_admin_password"
+                    and IS_COMPILED
+                    and IS_PRIV_BUILD
+                ):
                     logger.error(
                         "No {}:{} available.".format(option["section"], option["name"])
                     )
@@ -191,7 +196,12 @@ def encrypt_data(config_dict: dict, encrypted_options: List[dict]) -> dict:
                     )
         except KeyError:
             # NPF-SEC-00001 SECURITY-ADMIN-BACKUP-PASSWORD ONLY AVAILABLE ON PRIVATE COMPILED BUILDS
-            if not option["section"] == "options" and not option["name"] == "backup_admin_password" and IS_COMPILED and IS_PRIV_BUILD:
+            if (
+                not option["section"] == "options"
+                and not option["name"] == "backup_admin_password"
+                and IS_COMPILED
+                and IS_PRIV_BUILD
+            ):
                 logger.error(
                     "No {}:{} available.".format(option["section"], option["name"])
                 )

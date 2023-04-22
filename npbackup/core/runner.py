@@ -399,7 +399,9 @@ class NPBackupRunner:
                 paths = [paths]
             for path in paths:
                 if path == self.config_dict["repo"]["repository"]:
-                    logger.critical("You cannot backup source into it's own path. No inception allowed !")
+                    logger.critical(
+                        "You cannot backup source into it's own path. No inception allowed !"
+                    )
                     return False
         except KeyError:
             logger.error("No backup source path given.")

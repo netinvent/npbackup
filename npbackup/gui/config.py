@@ -76,7 +76,10 @@ def config_gui(config_dict: dict, config_file: str):
                             "auto_upgrade_server_password",
                         ]:
                             try:
-                                if config_dict[section][entry] is None or config_dict[section][entry] == "":
+                                if (
+                                    config_dict[section][entry] is None
+                                    or config_dict[section][entry] == ""
+                                ):
                                     continue
                                 if not str(config_dict[section][entry]).startswith(
                                     configuration.ID_STRING
