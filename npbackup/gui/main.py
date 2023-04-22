@@ -151,7 +151,7 @@ def get_gui_data(config_dict: dict) -> Tuple[bool, List[str]]:
         sg.Popup(_t("config_gui.no_runner"))
         return None, None
     if not runner.is_ready:
-        sg.Popup(_t("config_gui.no_runner"))
+        sg.Popup(_t("config_gui.runner_not_configured"))
         return None, None
     if not runner.has_binary:
         sg.Popup(_t("config_gui.no_binary"))

@@ -48,6 +48,7 @@ en:
   format_equals: Format variable=value
 
   no_runner: Cannot connect to backend. Please see logs
+  runner_not_configured: Backend not configured properly. Please see logs
   no_binary: Cannot find backup backend. Please install restic binary from restic.net
 
   configuration_saved: Configuration saved
