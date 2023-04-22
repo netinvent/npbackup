@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.config"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023040401"
+__build__ = "2023042201"
 
 
 import os
@@ -76,7 +76,7 @@ def config_gui(config_dict: dict, config_file: str):
                             "auto_upgrade_server_password",
                         ]:
                             try:
-                                if config_dict[section][entry] is None:
+                                if config_dict[section][entry] is None or config_dict[section][entry] == "":
                                     continue
                                 if not str(config_dict[section][entry]).startswith(
                                     configuration.ID_STRING
