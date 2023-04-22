@@ -5,7 +5,11 @@
   - *SECURITY* Show unencrypted is only allowed on compiled builds where default AES KEY is not used
     - This prevents a password injection from another conf file
   - *SECURITY* Prevent raw password update in config file
-
+  - Fix empty password makes GUI fail
+  - Fix empty password makes CLI fail
+  - Fix empty data is shown as encrypted
+  - Enforce repository and passwords to be strings, also remove trailing and ending spaces
+  - Add warning when source and destination are the same path
 
 ## v2.2.0 - rc10 - 30/03/2023
   - Add arm/arm64 compilation support
