@@ -20,6 +20,7 @@ import platform
 from cryptidy import symmetric_encryption as enc
 from ofunctions.random import random_string
 from npbackup.customization import ID_STRING
+from core.nuitka_helper import IS_COMPILED
 
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
@@ -147,9 +148,11 @@ def decrypt_data(
                             )
                             sys.exit(99)
             except KeyError:
-                logger.error(
-                    "No {}:{} available.".format(option["section"], option["name"])
-                )
+                # NPF-SEC-00001 SECURITY-ADMIN-BACKUP-PASSWORD ONLY AVAILABLE ON PRIVATE COMPILED BUILDS
+                if not option["section"] == "options" and not option["name"] == "backup_admin_password" and IS_COMPILED and IS_PRIV_BUILD:
+                    logger.error(
+                        "No {}:{} available.".format(option["section"], option["name"])
+                    )
     except ValueError as exc:
         logger.error(
             "Cannot decrypt this configuration file. Has the AES key changed ? {}".format(
@@ -188,7 +191,7 @@ def encrypt_data(config_dict: dict, encrypted_options: List[dict]) -> dict:
                     )
         except KeyError:
             # NPF-SEC-00001 SECURITY-ADMIN-BACKUP-PASSWORD ONLY AVAILABLE ON PRIVATE COMPILED BUILDS
-            if not option["name"] == "backup_admin_password":
+            if not option["section"] == "options" and not option["name"] == "backup_admin_password" and IS_COMPILED and IS_PRIV_BUILD:
                 logger.error(
                     "No {}:{} available.".format(option["section"], option["name"])
                 )
