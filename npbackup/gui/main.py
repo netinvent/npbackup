@@ -252,8 +252,12 @@ def _ls_window(config: dict, snapshot_id: str) -> Future:
     if not result:
         return result, None
 
-    # Since ls returns an iter now, we need to use next
-    snapshot_id = next(result)
+    try:
+        # Since ls returns an iter now, we need to use next
+        snapshot_id = next(result)
+    # Exception that happens when restic cannot successfully get snapshot content
+    except StopIteration:
+        return None, None
     try:
         snap_date = dateutil.parser.parse(snapshot_id["time"])
     except (KeyError, IndexError):

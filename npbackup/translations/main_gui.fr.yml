@@ -1,7 +1,7 @@
 fr:
   loading_data_from_repo: Chargement d'informations depuis le dépot
   this_will_take_a_while: Cela prendra quelques instants
-  cannot_get_content: Impossible d'obtenir le contenu
+  cannot_get_content: Impossible d'obtenir le contenu. Veuillez vérifier les journaux
   cannot_get_repo_status: Impossible d'obtenir l'état du dépot
   creating_tree: Création de l'arborescence
   restore_to: Restaurer vers
@@ -9,7 +9,7 @@ fr:
   restoration: Restauration
   restore_in_progress: Restauration en cours
   restore_done: Restauration terminée en %{seconds} secondes
-  restore_failed: Restauration échouée en %{seconds} secondes, veuillez vérifier les journaux
+  restore_failed: Restauration échouée en %{seconds} secondes. veuillez vérifier les journaux
   select_folder: Veuillez sélectionner un dossier
   only_include: Inclure seulement
   destination_folder: Dossier de destination
@@ -24,7 +24,7 @@ fr:
   backup_activity: Activité de sauvegarde
   backup_in_progress: Sauvegarde en cours
   backup_done: Sauvegarde terminée en %{seconds} secondes
-  backup_failed: Sauvegarde échouée en %{seconds} secondes, veuillez vérifier les journaux
+  backup_failed: Sauvegarde échouée en %{seconds} secondes. veuillez vérifier les journaux
   select_backup: Veuillez sélectionner une sauvegarde
   run_as: faite en tant que
   identified_by: identifiée en tant que
