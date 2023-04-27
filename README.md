@@ -80,7 +80,8 @@ Note that if you want to use the GUI, you'll also need to install tkinter via `y
 
 ### Setup
 
-Copy the example config from model `examples/npbackup.conf.dist` into the directory where npbackup is installed.
+Copy the example config from model `examples/npbackup.conf.dist` into the directory where npbackup is installed.  
+Also copy the `excludes` directory if you plan to use the prefilled bigger exclusion lists for your backups.
 
 You can adjust the parameters directly in the file, or via a config GUI by launching `npbackup --config-file=npbackup.conf --config-gui`
 
