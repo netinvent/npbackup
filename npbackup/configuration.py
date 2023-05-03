@@ -158,7 +158,7 @@ def decrypt_data(
                     and IS_COMPILED
                     and IS_PRIV_BUILD
                 ):
-                    logger.error(
+                    logger.info(
                         "No {}:{} available.".format(option["section"], option["name"])
                     )
     except ValueError as exc:
