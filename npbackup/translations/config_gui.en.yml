@@ -24,6 +24,7 @@ en:
   minimum_backup_age: Minimum delay between two backups
   backup_repo_uri: backup repo URI / path
   backup_repo_password: Backup repo password
+  backup_repo_password_command: Command that returns backup repo password
   upload_speed: Upload speed limit (KB/s)
   download_speed: Download speed limit (KB/s)
   backend_connections: Simultaneous repo connections
