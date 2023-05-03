@@ -137,7 +137,7 @@ def config_gui(config_dict: dict, config_file: str):
 
     backup_col = [
         [
-            sg.Text(_t("config_gui.compression"), size=(30, 1)),
+            sg.Text(_t("config_gui.compression"), size=(40, 1)),
             sg.Combo(["auto", "max", "off"], key="backup---compression", size=(48, 1)),
         ],
         [
@@ -145,7 +145,7 @@ def config_gui(config_dict: dict, config_file: str):
                 "{}\n({})".format(
                     _t("config_gui.backup_paths"), _t("config_gui.one_per_line")
                 ),
-                size=(30, 2),
+                size=(40, 2),
             ),
             sg.Multiline(key="backup---paths", size=(48, 4)),
         ],
@@ -154,7 +154,7 @@ def config_gui(config_dict: dict, config_file: str):
                 "{}\n({})".format(
                     _t("config_gui.use_fs_snapshot"), _t("config_gui.windows_only")
                 ),
-                size=(30, 2),
+                size=(40, 2),
             ),
             sg.Checkbox("", key="backup---use_fs_snapshot", size=(41, 1)),
         ],
@@ -163,7 +163,7 @@ def config_gui(config_dict: dict, config_file: str):
                 "{}\n({})".format(
                     _t("config_gui.ignore_cloud_files"), _t("config_gui.windows_only")
                 ),
-                size=(30, 2),
+                size=(40, 2),
             ),
             sg.Checkbox("", key="backup---ignore_cloud_files", size=(41, 1)),
         ],
@@ -172,7 +172,7 @@ def config_gui(config_dict: dict, config_file: str):
                 "{}\n({})".format(
                     _t("config_gui.exclude_files"), _t("config_gui.one_per_line")
                 ),
-                size=(30, 2),
+                size=(40, 2),
             ),
             sg.Multiline(key="backup---exclude_files", size=(48, 4)),
         ],
@@ -182,55 +182,55 @@ def config_gui(config_dict: dict, config_file: str):
                     _t("config_gui.exclude_case_ignore"),
                     _t("config_gui.windows_always"),
                 ),
-                size=(30, 2),
+                size=(40, 2),
             ),
             sg.Checkbox("", key="backup---exclude_case_ignore", size=(41, 1)),
         ],
         [
-            sg.Text(_t("config_gui.exclude_cache_dirs"), size=(30, 1)),
+            sg.Text(_t("config_gui.exclude_cache_dirs"), size=(40, 1)),
             sg.Checkbox("", key="backup---exclude_caches", size=(41, 1)),
         ],
         [
-            sg.Text(_t("config_gui.one_file_system"), size=(30, 1)),
+            sg.Text(_t("config_gui.one_file_system"), size=(40, 1)),
             sg.Checkbox("", key="backup---one_file_system", size=(41, 1)),
         ],
         [
-            sg.Text(_t("config_gui.pre_exec_command"), size=(30, 1)),
+            sg.Text(_t("config_gui.pre_exec_command"), size=(40, 1)),
             sg.Input(key="backup---pre_exec_command", size=(50, 1)),
         ],
         [
-            sg.Text(_t("config_gui.maximum_exec_time"), size=(30, 1)),
+            sg.Text(_t("config_gui.maximum_exec_time"), size=(40, 1)),
             sg.Input(key="backup---pre_exec_timeout", size=(50, 1)),
         ],
         [
-            sg.Text(_t("config_gui.exec_failure_is_fatal"), size=(30, 1)),
+            sg.Text(_t("config_gui.exec_failure_is_fatal"), size=(40, 1)),
             sg.Checkbox("", key="backup---pre_exec_failure_is_fatal", size=(41, 1)),
         ],
         [
-            sg.Text(_t("config_gui.post_exec_command"), size=(30, 1)),
+            sg.Text(_t("config_gui.post_exec_command"), size=(40, 1)),
             sg.Input(key="backup---post_exec_command", size=(50, 1)),
         ],
         [
-            sg.Text(_t("config_gui.maximum_exec_time"), size=(30, 1)),
+            sg.Text(_t("config_gui.maximum_exec_time"), size=(40, 1)),
             sg.Input(key="backup---post_exec_timeout", size=(50, 1)),
         ],
         [
-            sg.Text(_t("config_gui.exec_failure_is_fatal"), size=(30, 1)),
+            sg.Text(_t("config_gui.exec_failure_is_fatal"), size=(40, 1)),
             sg.Checkbox("", key="backup---post_exec_failure_is_fatal", size=(41, 1)),
         ],
         [
             sg.Text(
                 "{}\n({})".format(_t("config_gui.tags"), _t("config_gui.one_per_line")),
-                size=(30, 2),
+                size=(40, 2),
             ),
             sg.Multiline(key="backup---tags", size=(48, 2)),
         ],
         [
-            sg.Text(_t("config_gui.backup_priority"), size=(30, 1)),
+            sg.Text(_t("config_gui.backup_priority"), size=(40, 1)),
             sg.Combo(["low", "normal", "high"], key="backup---priority", size=(48, 1)),
         ],
         [
-            sg.Text(_t("config_gui.additional_parameters"), size=(30, 1)),
+            sg.Text(_t("config_gui.additional_parameters"), size=(40, 1)),
             sg.Input(key="backup---additional_parameters", size=(50, 1)),
         ],
     ]
@@ -241,32 +241,32 @@ def config_gui(config_dict: dict, config_file: str):
                 "{}\n({})".format(
                     _t("config_gui.minimum_backup_age"), _t("generic.minutes")
                 ),
-                size=(30, 2),
+                size=(40, 2),
             ),
             sg.Input(key="repo---minimum_backup_age", size=(50, 1)),
         ],
         [
-            sg.Text(_t("config_gui.backup_repo_uri"), size=(30, 1)),
+            sg.Text(_t("config_gui.backup_repo_uri"), size=(40, 1)),
             sg.Input(key="repo---repository", size=(50, 1)),
         ],
         [
-            sg.Text(_t("config_gui.backup_repo_password"), size=(30, 1)),
+            sg.Text(_t("config_gui.backup_repo_password"), size=(40, 1)),
             sg.Input(key="repo---password", size=(50, 1)),
         ],
         [
-            sg.Text(_t("config.gui.backup_repo_password_command"), size=(30, 1)),
+            sg.Text(_t("config.gui.backup_repo_password_command"), size=(40, 1)),
             sg.Input(key="repo---password_command", size=(50, 1)),
         ],
         [
-            sg.Text(_t("config_gui.upload_speed"), size=(30, 1)),
+            sg.Text(_t("config_gui.upload_speed"), size=(40, 1)),
             sg.Input(key="repo---upload_speed", size=(50, 1)),
         ],
         [
-            sg.Text(_t("config_gui.download_speed"), size=(30, 1)),
+            sg.Text(_t("config_gui.download_speed"), size=(40, 1)),
             sg.Input(key="repo---download_speed", size=(50, 1)),
         ],
         [
-            sg.Text(_t("config_gui.backend_connections"), size=(30, 1)),
+            sg.Text(_t("config_gui.backend_connections"), size=(40, 1)),
             sg.Input(key="repo---backend_connections", size=(50, 1)),
         ],
     ]
@@ -274,11 +274,11 @@ def config_gui(config_dict: dict, config_file: str):
     identity_col = [
         [sg.Text(_t("config_gui.available_variables_id"))],
         [
-            sg.Text(_t("config_gui.machine_id"), size=(30, 1)),
+            sg.Text(_t("config_gui.machine_id"), size=(40, 1)),
             sg.Input(key="identity---machine_id", size=(50, 1)),
         ],
         [
-            sg.Text(_t("config_gui.machine_group"), size=(30, 1)),
+            sg.Text(_t("config_gui.machine_group"), size=(40, 1)),
             sg.Input(key="identity---machine_group", size=(50, 1)),
         ],
     ]
@@ -286,31 +286,31 @@ def config_gui(config_dict: dict, config_file: str):
     prometheus_col = [
         [sg.Text(_t("config_gui.available_variables"))],
         [
-            sg.Text(_t("config_gui.enable_prometheus"), size=(30, 1)),
+            sg.Text(_t("config_gui.enable_prometheus"), size=(40, 1)),
             sg.Checkbox("", key="prometheus---metrics", size=(41, 1)),
         ],
         [
-            sg.Text(_t("config_gui.job_name"), size=(30, 1)),
+            sg.Text(_t("config_gui.job_name"), size=(40, 1)),
             sg.Input(key="prometheus---backup_job", size=(50, 1)),
         ],
         [
-            sg.Text(_t("config_gui.metrics_destination"), size=(30, 1)),
+            sg.Text(_t("config_gui.metrics_destination"), size=(40, 1)),
             sg.Input(key="prometheus---destination", size=(50, 1)),
         ],
         [
-            sg.Text(_t("config_gui.metrics_username"), size=(30, 1)),
+            sg.Text(_t("config_gui.metrics_username"), size=(40, 1)),
             sg.Input(key="prometheus---http_username", size=(50, 1)),
         ],
         [
-            sg.Text(_t("config_gui.metrics_password"), size=(30, 1)),
+            sg.Text(_t("config_gui.metrics_password"), size=(40, 1)),
             sg.Input(key="prometheus---http_password", size=(50, 1)),
         ],
         [
-            sg.Text(_t("config_gui.instance"), size=(30, 1)),
+            sg.Text(_t("config_gui.instance"), size=(40, 1)),
             sg.Input(key="prometheus---instance", size=(50, 1)),
         ],
         [
-            sg.Text(_t("generic.group"), size=(30, 1)),
+            sg.Text(_t("generic.group"), size=(40, 1)),
             sg.Input(key="prometheus---group", size=(50, 1)),
         ],
         [
@@ -320,7 +320,7 @@ def config_gui(config_dict: dict, config_file: str):
                     _t("config_gui.one_per_line"),
                     _t("config_gui.format_equals"),
                 ),
-                size=(30, 3),
+                size=(40, 3),
             ),
             sg.Multiline(key="prometheus---additional_labels", size=(48, 3)),
         ],
@@ -334,7 +334,7 @@ def config_gui(config_dict: dict, config_file: str):
                     _t("config_gui.one_per_line"),
                     _t("config_gui.format_equals"),
                 ),
-                size=(30, 3),
+                size=(40, 3),
             ),
             sg.Multiline(key="env---variables", size=(48, 3)),
         ],
@@ -343,36 +343,36 @@ def config_gui(config_dict: dict, config_file: str):
     options_col = [
         [sg.Text(_t("config_gui.available_variables"))],
         [
-            sg.Text(_t("config_gui.auto_upgrade"), size=(30, 1)),
+            sg.Text(_t("config_gui.auto_upgrade"), size=(40, 1)),
             sg.Checkbox("", key="options---auto_upgrade", size=(41, 1)),
         ],
         [
-            sg.Text(_t("config_gui.auto_upgrade_server_url"), size=(30, 1)),
+            sg.Text(_t("config_gui.auto_upgrade_server_url"), size=(40, 1)),
             sg.Input(key="options---auto_upgrade_server_url", size=(50, 1)),
         ],
         [
-            sg.Text(_t("config_gui.auto_upgrade_server_username"), size=(30, 1)),
+            sg.Text(_t("config_gui.auto_upgrade_server_username"), size=(40, 1)),
             sg.Input(key="options---auto_upgrade_server_username", size=(50, 1)),
         ],
         [
-            sg.Text(_t("config_gui.auto_upgrade_server_password"), size=(30, 1)),
+            sg.Text(_t("config_gui.auto_upgrade_server_password"), size=(40, 1)),
             sg.Input(key="options---auto_upgrade_server_password", size=(50, 1)),
         ],
         [
-            sg.Text(_t("config_gui.auto_upgrade_interval"), size=(30, 1)),
+            sg.Text(_t("config_gui.auto_upgrade_interval"), size=(40, 1)),
             sg.Input(key="options---auto_upgrade_interval", size=(50, 1)),
         ],
         [
-            sg.Text(_t("generic.identity"), size=(30, 1)),
+            sg.Text(_t("generic.identity"), size=(40, 1)),
             sg.Input(key="options---auto_upgrade_host_identity", size=(50, 1)),
         ],
         [
-            sg.Text(_t("generic.group"), size=(30, 1)),
+            sg.Text(_t("generic.group"), size=(40, 1)),
             sg.Input(key="options---auto_upgrade_group", size=(50, 1)),
         ],
         [sg.HorizontalSeparator(key="sep")],
         [
-            sg.Text(_t("config_gui.enter_backup_admin_password"), size=(30, 1)),
+            sg.Text(_t("config_gui.enter_backup_admin_password"), size=(40, 1)),
             sg.Input(key="backup_admin_password", size=(50, 1), password_char="*"),
         ],
         [sg.Button(_t("generic.change"), key="change_backup_admin_password")],
