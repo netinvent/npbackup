@@ -28,6 +28,7 @@ backup:
 repo:
   repository: 
   password: 
+  password_command: 
   # Backup age, in minutes, which is the minimum time between two backups
   minimum_backup_age: 1440
   upload_speed: 0      # in KiB, use 0 for unlimited upload speed

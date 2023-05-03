@@ -111,6 +111,8 @@ class NPBackupRunner:
     """
     Wraps ResticRunner into a class that is usable by NPBackup
     """
+    # NPF-SEC-00002: password commands, pre_exec and post_exec commands will be executed with npbackup privileges
+    # This can lead to a problem when the config file can be written by users other than npbackup
 
     def __init__(self, config_dict):
         self.config_dict = config_dict
@@ -214,12 +216,27 @@ class NPBackupRunner:
             logger.error("Repo cannot be empty")
             can_run = False
         try:
-            password = self.config_dict["repo"]["password"]
-            if not password:
-                raise KeyError
+            password = self.config_dict["repo"]["password"]  
         except (KeyError, AttributeError):
             logger.error("Repo password cannot be empty")
             can_run = False
+        if not password or password == "":
+            try:
+                password_command = self.config_dict["repo"]["password_command"]
+                if password_command and password_command != "":
+                    exit_code, output = command_runner(password_command, shell=True, timeout=30)
+                    if exit_code != 0 or output == "":
+                        logger.error("Password command failed to produce output:\n{}".format(output))
+                        can_run = False
+                    else:
+                        password = output
+                else:
+                    logger.error("No password nor password command given. Repo password cannot be empty")
+                    can_run = False
+            except KeyError:
+                logger.error("No password nor password command given. Repo password cannot be empty")
+                can_run = False
+        print(password)
         self.is_ready = can_run
         if not can_run:
             return None

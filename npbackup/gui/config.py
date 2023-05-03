@@ -66,12 +66,14 @@ def config_gui(config_dict: dict, config_file: str):
                 try:
                     value = config_dict[section][entry]
                     # Don't show sensible info unless unencrypted requested
+                    # TODO: Refactor this to use ENCRYPTED_OPTIONS from configuration
                     if not unencrypted:
                         if entry in [
                             "http_username",
                             "http_password",
                             "repository",
                             "password",
+                            "password_command",
                             "auto_upgrade_server_username",
                             "auto_upgrade_server_password",
                         ]:
@@ -250,6 +252,10 @@ def config_gui(config_dict: dict, config_file: str):
         [
             sg.Text(_t("config_gui.backup_repo_password"), size=(30, 1)),
             sg.Input(key="repo---password", size=(50, 1)),
+        ],
+        [
+            sg.Text(_t("config.gui.backup_repo_password_command"), size=(30, 1)),
+            sg.Input(key="repo---password_command", size=(50, 1))
         ],
         [
             sg.Text(_t("config_gui.upload_speed"), size=(30, 1)),
@@ -483,7 +489,7 @@ def config_gui(config_dict: dict, config_file: str):
         if event in (sg.WIN_CLOSED, "cancel"):
             break
         if event == "accept":
-            if not values["repo---password"]:
+            if not values["repo---password"] and not values["repo---password_command"]:
                 sg.PopupError(_t("config_gui.repo_password_cannot_be_empty"))
                 continue
             config_dict = update_config_dict(values, config_dict)

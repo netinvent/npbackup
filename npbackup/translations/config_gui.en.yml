@@ -53,7 +53,7 @@ en:
 
   configuration_saved: Configuration saved
   cannot_save_configuration: Could not save configuration. See logs for further info
-  repo_password_cannot_be_empty: Password cannot be empty
+  repo_password_cannot_be_empty: Repo password or password command cannot be empty
   enter_backup_admin_password: Backup admin password
   wrong_password: Wrong password
   password_updated_please_save: Password updated. Please save configuration

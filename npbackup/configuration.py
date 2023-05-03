@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023041201"
+__build__ = "2023050301"
 __version__ = "1.7.0 for npbackup 2.2.0+"
 
 from typing import Tuple, Optional, List
@@ -54,9 +54,11 @@ except ImportError:
 
 logger = getLogger(__name__)
 
+# NPF-SEC-00003: Avoid password command divulgation
 ENCRYPTED_OPTIONS = [
     {"section": "repo", "name": "repository", "type": str},
     {"section": "repo", "name": "password", "type": str},
+    {"section": "repo", "name": "password_command", "type": str},
     {"section": "prometheus", "name": "http_username", "type": str},
     {"section": "prometheus", "name": "http_password", "type": str},
     {"section": "options", "name": "auto_upgrade_server_username", "type": str},
@@ -82,6 +84,7 @@ empty_config_dict = {
     "repo": {
         "repository": "",
         "password": "",
+        "password_command": "",
         "minimum_backup_age": 1440,
         "upload_speed": 0,
         "download_speed": 0,
