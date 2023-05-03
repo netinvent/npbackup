@@ -1,3 +1,9 @@
+## 2.2.0 - rc12 - 03/05/2023
+  - Add grafana dashboard to examples directory
+  - Implement password command functionality
+  - Compiled with newer Nuitka commercial 1.5.7
+  - Added windows executable signature script
+
 ## v2.2.0 - rc11 - 24/04/2023
   - Add default 1 minute timeout for init operations
   - Fix auto_upgrade_group wasn't transmitted to server
