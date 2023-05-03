@@ -255,7 +255,7 @@ def config_gui(config_dict: dict, config_file: str):
         ],
         [
             sg.Text(_t("config.gui.backup_repo_password_command"), size=(30, 1)),
-            sg.Input(key="repo---password_command", size=(50, 1))
+            sg.Input(key="repo---password_command", size=(50, 1)),
         ],
         [
             sg.Text(_t("config_gui.upload_speed"), size=(30, 1)),

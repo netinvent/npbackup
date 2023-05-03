@@ -68,6 +68,7 @@ def _read_file(filename):
         with open(os.path.join(here, filename), "r", encoding="utf-8") as file_handle:
             return file_handle.read()
 
+
 def get_metadata(package_file):
     """
     Read metadata from package file
@@ -84,11 +85,11 @@ def get_metadata(package_file):
     return _metadata
 
 
-
 def check_private_build(audience):
     private = None
     try:
         import PRIVATE._private_secret_keys
+
         print("INFO: Building with private secret key")
         private = True
     except ImportError:
@@ -134,12 +135,10 @@ def move_audience_files(audience):
             )
             for file in guessed_files:
                 new_file = file.replace(
-                        possible_non_used_path,
-                        "_NOUSE{}".format(possible_non_used_path),
-                    )
-                os.rename(
-                    file, new_file
+                    possible_non_used_path,
+                    "_NOUSE{}".format(possible_non_used_path),
                 )
+                os.rename(file, new_file)
         else:
             raise "Bogus audience"
 
@@ -147,9 +146,16 @@ def move_audience_files(audience):
 def get_conf_dist_file(audience):
     platform = get_os().lower()
     if audience == "private":
-        dist_conf_file_path = os.path.join(BASEDIR, os.pardir, "PRIVATE", "_private_npbackup.{}.conf.dist".format(platform))
+        dist_conf_file_path = os.path.join(
+            BASEDIR,
+            os.pardir,
+            "PRIVATE",
+            "_private_npbackup.{}.conf.dist".format(platform),
+        )
     else:
-        dist_conf_file_path = os.path.join(BASEDIR, os.pardir, "examples", "npbackup.{}.conf.dist".format(platform))
+        dist_conf_file_path = os.path.join(
+            BASEDIR, os.pardir, "examples", "npbackup.{}.conf.dist".format(platform)
+        )
     if not os.path.isfile(dist_conf_file_path):
         print("DIST CONF FILE NOT FOUND: {}".format(dist_conf_file_path))
         return None
@@ -159,6 +165,7 @@ def get_conf_dist_file(audience):
 def have_nuitka_commercial():
     try:
         import nuitka.plugins.commercial
+
         print("Running with nuitka commercial")
         return True
     except ImportError:
@@ -233,7 +240,7 @@ def compile(arch, audience, no_gui=False):
 
     NUITKA_OPTIONS = ""
     NUITKA_OPTIONS += " --enable-plugin=data-hiding" if have_nuitka_commercial() else ""
-    
+
     # Stupid fix for synology RS816 where /tmp is mounted with `noexec`.
     if "arm" in arch:
         NUITKA_OPTIONS += " --onefile-tempdir-spec=/var/tmp"
@@ -340,10 +347,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--no-gui",
-        action="store_true",
-        default=False,
-        help="Don't compile GUI support"
+        "--no-gui", action="store_true", default=False, help="Don't compile GUI support"
     )
 
     args = parser.parse_args()
@@ -362,8 +366,12 @@ if __name__ == "__main__":
 
         for audience in audiences:
             move_audience_files(audience)
-            npbackup_version = get_metadata(os.path.join(BASEDIR, "__main__.py"))["version"]
-            installer_version = get_metadata(os.path.join(BASEDIR, os.pardir, "bin", "NPBackupInstaller.py"))["version"]
+            npbackup_version = get_metadata(os.path.join(BASEDIR, "__main__.py"))[
+                "version"
+            ]
+            installer_version = get_metadata(
+                os.path.join(BASEDIR, os.pardir, "bin", "NPBackupInstaller.py")
+            )["version"]
 
             private_build = check_private_build(audience)
             if private_build and audience != "private":
@@ -375,11 +383,19 @@ if __name__ == "__main__":
                 errors = True
                 continue
             result = compile(arch=python_arch(), audience=audience, no_gui=args.no_gui)
-            build_type = 'private' if private_build else 'public'
+            build_type = "private" if private_build else "public"
             if result:
-                print("SUCCESS: MADE {} build for audience {}".format(build_type, audience))
+                print(
+                    "SUCCESS: MADE {} build for audience {}".format(
+                        build_type, audience
+                    )
+                )
             else:
-                print("ERROR: Failed making {} build for audience {}".format(build_type, audience))
+                print(
+                    "ERROR: Failed making {} build for audience {}".format(
+                        build_type, audience
+                    )
+                )
                 errors = True
         if errors:
             print("ERRORS IN BUILD PROCESS")
