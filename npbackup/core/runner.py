@@ -236,7 +236,6 @@ class NPBackupRunner:
             except KeyError:
                 logger.error("No password nor password command given. Repo password cannot be empty")
                 can_run = False
-        print(password)
         self.is_ready = can_run
         if not can_run:
             return None
