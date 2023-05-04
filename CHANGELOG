@@ -1,3 +1,11 @@
+## master
+
+  - Make sure all multiline entries in config files are processed as lists
+  - Add exclude-patterns to GUI (was present in CLI version already)
+  - Make sure we always quote exclusions patterns or files
+  - Updated internal restic binary to 0.15.2 compiled with go1.20.3
+  - *SECURITY* Don't log password command, even in debug mode
+
 ## 2.2.0 - rc12 - 03/05/2023
   - Add grafana dashboard to examples directory
   - Implement password command functionality
