@@ -11,6 +11,7 @@ In order to avoid a potential attack, the config file has to be world readable o
 # NPF-SEC-00003: Avoid password command divulgation
 
 Password command is encrypted in order to avoid it's divulgation if config file is world readable.
+Password command is also not logged.
 
 # NPF-SEC-00004: Client should never know the repo password
 

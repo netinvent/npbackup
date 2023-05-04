@@ -12,7 +12,7 @@ __build__ = "2023020201"
 
 from typing import Optional, Callable, Union, List
 import os
-from logging import getLogger
+import logging
 import queue
 import datetime
 from functools import wraps
@@ -26,7 +26,7 @@ from npbackup.__main__ import __intname__ as NAME, __version__ as VERSION
 from npbackup import configuration
 
 
-logger = getLogger(__intname__)
+logger = logging.getLogger(__intname__)
 
 
 def metric_writer(config_dict: dict, restic_result: bool, result_string: str):
@@ -224,15 +224,23 @@ class NPBackupRunner:
             try:
                 password_command = self.config_dict["repo"]["password_command"]
                 if password_command and password_command != "":
+                    # NPF-SEC-00003: Avoid password command divulgation
+                    cr_logger = logging.getLogger("command_runner")
+                    cr_loglevel = cr_logger.getEffectiveLevel()
+                    cr_logger.setLevel(logging.ERROR)
                     exit_code, output = command_runner(
                         password_command, shell=True, timeout=30
                     )
+                    cr_logger.setLevel(cr_loglevel)
                     if exit_code != 0 or output == "":
                         logger.error(
                             "Password command failed to produce output:\n{}".format(
                                 output
                             )
                         )
+                        can_run = False
+                    elif '\n' in output.strip():
+                        logger.error("Password command returned multiline content instead of a string")
                         can_run = False
                     else:
                         password = output
@@ -329,8 +337,9 @@ class NPBackupRunner:
         try:
             if env_variables:
                 for env_variable in env_variables:
-                    key, value = env_variable.split("=")
-                    expanded_env_vars[key.strip()] = value.strip()
+                    if env_variable:
+                        key, value = env_variable.split("=")
+                        expanded_env_vars[key.strip()] = value.strip()
         except (KeyError, AttributeError, TypeError, ValueError):
             logger.error("Bogus environment variables defined in configuration.")
             logger.debug("Trace:", exc_info=True)
