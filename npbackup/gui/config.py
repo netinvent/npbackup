@@ -170,6 +170,15 @@ def config_gui(config_dict: dict, config_file: str):
         [
             sg.Text(
                 "{}\n({})".format(
+                    _t("config_gui.exclude_patterns"), _t("config_gui.one_per_line")
+                ),
+                size=(40, 2),
+            ),
+            sg.Multiline(key="backup---exclude_patterns", size=(48, 4)),
+        ],
+        [
+            sg.Text(
+                "{}\n({})".format(
                     _t("config_gui.exclude_files"), _t("config_gui.one_per_line")
                 ),
                 size=(40, 2),

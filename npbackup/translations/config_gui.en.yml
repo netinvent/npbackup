@@ -6,7 +6,8 @@ en:
   use_fs_snapshot: Use VSS snapshots
   ignore_cloud_files: Ignore in-cloud files
   windows_only: Windows only
-  exclude_files: Exclude files
+  exclude_patterns: Exclude patterns
+  exclude_files: Files containing exclusions
   exclude_case_ignore: Ignore case for excludes
   windows_always: always enabled for Windows
   exclude_cache_dirs: Exclude cache dirs
