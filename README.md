@@ -1,7 +1,8 @@
 [![License](https://img.shields.io/badge/license-GPLv3-blu.svg)](https://opensource.org/licenses/GPL-3.0)
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/netinvent/npbackup.svg)](http://isitmaintained.com/project/netinvent/npbackup "Percentage of issues still open")
 [![GitHub Release](https://img.shields.io/github/release/netinvent/npbackup.svg?label=Latest)](https://github.com/netinvent/npbackup/releases/latest)
-
+![Windows linter](https://github.com/netinvent/npbackup/actions/workflows/pylint-windows.yaml/badge.svg)
+![Linux linter](https://github.com/netinvent/npbackup/actions/workflows/pylint-linux.yaml/badge.svg)
 
 # NPBackup
 
