@@ -61,6 +61,8 @@ def metric_writer(config_dict: dict, restic_result: bool, result_string: str):
                 prometheus_additional_labels = config_dict["prometheus"][
                     "additional_labels"
                 ]
+                if not isinstance(prometheus_additional_labels, list):
+                    prometheus_additional_labels = [prometheus_additional_labels]
             except (KeyError, AttributeError):
                 prometheus_additional_labels = None
 
@@ -69,10 +71,7 @@ def metric_writer(config_dict: dict, restic_result: bool, result_string: str):
                 [f'{key}="{value}"' for key, value in labels.items() if value]
             )
             try:
-                # Make sure we convert prometheus_additional_labels to list if only one label is given
                 if prometheus_additional_labels:
-                    if not isinstance(prometheus_additional_labels, list):
-                        prometheus_additional_labels = [prometheus_additional_labels]
                     for additional_label in prometheus_additional_labels:
                         label, value = additional_label.split("=")
                         label_string += ',{}="{}"'.format(label.strip(), value.strip())
@@ -321,15 +320,14 @@ class NPBackupRunner:
 
         try:
             env_variables = self.config_dict["env"]["variables"]
+            if not isinstance(env_variables, list):
+                env_variables = [env_variables]
         except KeyError:
             env_variables = None
 
         expanded_env_vars = {}
         try:
             if env_variables:
-                # Make sure we convert env_variables to list if only one label is given
-                if not isinstance(env_variables, list):
-                    env_variables = [env_variables]
                 for env_variable in env_variables:
                     key, value = env_variable.split("=")
                     expanded_env_vars[key.strip()] = value.strip()
@@ -438,10 +436,14 @@ class NPBackupRunner:
         # MSWindows does not support one-file-system option
         try:
             exclude_patterns = self.config_dict["backup"]["exclude_patterns"]
+            if not isinstance(exclude_patterns, list):
+                exclude_patterns = [exclude_patterns]
         except KeyError:
             exclude_patterns = []
         try:
             exclude_files = self.config_dict["backup"]["exclude_files"]
+            if not isinstance(exclude_files, list):
+                exclude_files = [exclude_files]
         except KeyError:
             exclude_files = []
         try:
