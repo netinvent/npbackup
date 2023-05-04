@@ -536,9 +536,9 @@ class ResticRunner:
             case_ignore_param = "i"
 
         for exclude_pattern in exclude_patterns:
-            cmd += " --{}exclude \"{}\"".format(case_ignore_param, exclude_pattern)
+            cmd += ' --{}exclude "{}"'.format(case_ignore_param, exclude_pattern)
         for exclude_file in exclude_files:
-            cmd += " --{}exclude-file \"{}\"".format(case_ignore_param, exclude_file)
+            cmd += ' --{}exclude-file "{}"'.format(case_ignore_param, exclude_file)
         if exclude_caches:
             cmd += " --exclude-caches"
         if one_file_system:

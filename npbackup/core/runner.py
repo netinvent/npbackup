@@ -239,8 +239,10 @@ class NPBackupRunner:
                             )
                         )
                         can_run = False
-                    elif '\n' in output.strip():
-                        logger.error("Password command returned multiline content instead of a string")
+                    elif "\n" in output.strip():
+                        logger.error(
+                            "Password command returned multiline content instead of a string"
+                        )
                         can_run = False
                     else:
                         password = output
