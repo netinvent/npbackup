@@ -47,6 +47,7 @@ prometheus:
   # Available variables: ${HOSTNAME}, ${RANDOM}[n], ${MACHINE_ID}, ${MACHINE_GROUP}, ${BACKUP_JOB}
   backup_job: ${MACHINE_ID}
   # Prometheus metrics destination can be a http / https server with optional basic authentication (pushgateway), or a file path for node textfile collector to pickup
+  # example: https://push.monitoring.example.tld/metrics/job/npbackup
   # example: https://push.monitoring.example.tld/metrics/job/${BACKUP_JOB} where ${BACKUP_JOB} is defined in prometheus_backup_job
   # example: /var/lib/prometheus/collector/mytextfile
   destination: 
