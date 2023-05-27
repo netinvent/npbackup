@@ -77,9 +77,13 @@ def metric_writer(config_dict: dict, restic_result: bool, result_string: str):
             try:
                 if prometheus_additional_labels:
                     for additional_label in prometheus_additional_labels:
-                        label, value = additional_label.split("=")
-                        label_string += ',{}="{}"'.format(label.strip(), value.strip())
-            except (KeyError, AttributeError, TypeError, ValueError):
+                        if additional_label:
+                            try:
+                                label, value = additional_label.split("=")
+                                label_string += ',{}="{}"'.format(label.strip(), value.strip())
+                            except ValueError:
+                                logger.error("Bogus additional label \"{}\" defined in configuration.".format(additional_label))
+            except (KeyError, AttributeError, TypeError):
                 logger.error("Bogus additional labels defined in configuration.")
                 logger.debug("Trace:", exc_info=True)
 
