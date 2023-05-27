@@ -76,7 +76,7 @@ def config_gui(config_dict: dict, config_file: str):
                             "password_command",
                             "auto_upgrade_server_username",
                             "auto_upgrade_server_password",
-                            "encrypted_variables"
+                            "encrypted_variables",
                         ]:
                             try:
                                 if (

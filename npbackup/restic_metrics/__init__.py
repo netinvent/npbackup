@@ -241,7 +241,12 @@ def upload_metrics(destination, authentication, no_cert_verify, metrics):
             data += "{}\n".format(metric)
         logger.debug("metrics:\n{}".format(data))
         result = requests.post(
-            destination, headers=headers, data=data, auth=authentication, timeout=4, verify=not no_cert_verify
+            destination,
+            headers=headers,
+            data=data,
+            auth=authentication,
+            timeout=4,
+            verify=not no_cert_verify,
         )
         if result.status_code == 200:
             logger.info("Metrics pushed succesfully.")

@@ -80,9 +80,15 @@ def metric_writer(config_dict: dict, restic_result: bool, result_string: str):
                         if additional_label:
                             try:
                                 label, value = additional_label.split("=")
-                                label_string += ',{}="{}"'.format(label.strip(), value.strip())
+                                label_string += ',{}="{}"'.format(
+                                    label.strip(), value.strip()
+                                )
                             except ValueError:
-                                logger.error("Bogus additional label \"{}\" defined in configuration.".format(additional_label))
+                                logger.error(
+                                    'Bogus additional label "{}" defined in configuration.'.format(
+                                        additional_label
+                                    )
+                                )
             except (KeyError, AttributeError, TypeError):
                 logger.error("Bogus additional labels defined in configuration.")
                 logger.debug("Trace:", exc_info=True)
@@ -360,11 +366,14 @@ class NPBackupRunner:
                             key, value = env_variable.split("=")
                             expanded_env_vars[key.strip()] = value.strip()
                         except ValueError:
-                            logger.error("Bogus environment variable \"{}\" defined in configuration.".format(env_variable))
+                            logger.error(
+                                'Bogus environment variable "{}" defined in configuration.'.format(
+                                    env_variable
+                                )
+                            )
         except (KeyError, AttributeError, TypeError):
             logger.error("Bogus environment variables defined in configuration.")
             logger.debug("Trace:", exc_info=True)
-
 
         try:
             self.restic_runner.environment_variables = expanded_env_vars

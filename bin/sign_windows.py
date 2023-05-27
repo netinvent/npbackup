@@ -28,4 +28,6 @@ for audience in audiences:
             exe_path = os.path.join(basepath, audience, "windows", arch, binary)
             result = signer.sign(exe_path, bitness=arch)
             if not result:
-                raise EnvironmentError("Could not sign executable ! Is the PKI key connected ?")
+                raise EnvironmentError(
+                    "Could not sign executable ! Is the PKI key connected ?"
+                )
