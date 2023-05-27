@@ -61,7 +61,7 @@ ENCRYPTED_OPTIONS = [
     {"section": "repo", "name": "password_command", "type": str},
     {"section": "prometheus", "name": "http_username", "type": str},
     {"section": "prometheus", "name": "http_password", "type": str},
-    {"section": "env", "name": "encrypted_variables", "type": list},
+    {"section": "env", "name": "encrypted_variables", "type": str},
     {"section": "options", "name": "auto_upgrade_server_username", "type": str},
     {"section": "options", "name": "auto_upgrade_server_password", "type": str},
 ]
@@ -162,22 +162,19 @@ def decrypt_data(
                     logger.info(
                         "No {}:{} available.".format(option["section"], option["name"])
                     )
-    except ValueError as exc:
-        logger.error(
-            "Cannot decrypt this configuration file. Has the AES key changed ? {}".format(
-                exc
-            )
-        )
+            except ValueError as exc:
+                logger.error(
+                    "Cannot decrypt this configuration file for option \"{}\". Has the AES key changed ? {}".format(option,
+                        exc
+                    )
+                )
+                logger.debug("Trace:", exc_info=True)
+                return False
+    except TypeError:
+        logger.error("Cannot decrypt this configuration file. No base64 encoded strings available.")
         logger.debug("Trace:", exc_info=True)
-        return False
-    except TypeError as exc:
-        logger.error(
-            "Cannot decrypt this configuration file. No base64 encoded strings available: {}.".format(
-                exc
-            )
-        )
-        logger.debug("Trace:", exc_info=True)
-        return None
+        logger.critical("Won't run with a non properly encrypted config file.")
+        sys.exit(98)
     return config_dict
 
 
