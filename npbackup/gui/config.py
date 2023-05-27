@@ -350,7 +350,7 @@ def config_gui(config_dict: dict, config_file: str):
                 ),
                 size=(40, 3),
             ),
-            sg.Multiline(key="env---variables", size=(48, 3)),
+            sg.Multiline(key="env---variables", size=(48, 5)),
         ],
         [
             sg.Text(
@@ -361,7 +361,7 @@ def config_gui(config_dict: dict, config_file: str):
                 ),
                 size=(40, 3),
             ),
-            sg.Multiline(key="env---encrypted_variables", size=(48, 3)),
+            sg.Multiline(key="env---encrypted_variables", size=(48, 5)),
         ],
     ]
 
