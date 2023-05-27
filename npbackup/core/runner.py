@@ -433,7 +433,9 @@ class NPBackupRunner:
                 str(datetime.timedelta(minutes=self.minimum_backup_age))
             )
         )
+        self.restic_runner.verbose = False
         result = self.restic_runner.has_snapshot_timedelta(self.minimum_backup_age)
+        self.restic_runner.verbose = self.verbose
         if result:
             logger.info("Most recent backup is from {}".format(result))
             return result
@@ -554,11 +556,13 @@ class NPBackupRunner:
             additional_parameters = None
 
         # Check if backup is required
+        self.restic_runner.verbose = False
         if not self.restic_runner.is_init:
             self.restic_runner.init()
         if self.check_recent_backups() and not force:
             logger.info("No backup necessary.")
             return True
+        self.restic_runner.verbose = self.verbose
 
         # Run backup here
         logger.info("Running backup of {}".format(paths))
