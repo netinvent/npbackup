@@ -164,14 +164,16 @@ def decrypt_data(
                     )
             except ValueError as exc:
                 logger.error(
-                    "Cannot decrypt this configuration file for option \"{}\". Has the AES key changed ? {}".format(option,
-                        exc
+                    'Cannot decrypt this configuration file for option "{}". Has the AES key changed ? {}'.format(
+                        option, exc
                     )
                 )
                 logger.debug("Trace:", exc_info=True)
                 return False
     except TypeError:
-        logger.error("Cannot decrypt this configuration file. No base64 encoded strings available.")
+        logger.error(
+            "Cannot decrypt this configuration file. No base64 encoded strings available."
+        )
         logger.debug("Trace:", exc_info=True)
         logger.critical("Won't run with a non properly encrypted config file.")
         sys.exit(98)
