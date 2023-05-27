@@ -6,8 +6,8 @@ __intname__ = "restic_metrics"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 Orsiris de Jong - NetInvent"
 __licence__ = "BSD-3-Clause"
-__version__ = "1.4.3"
-__build__ = "2023020701"
+__version__ = "1.4.4"
+__build__ = "2023052701"
 __description__ = (
     "Converts restic command line output to a text file node_exporter can scrape"
 )
@@ -229,7 +229,7 @@ def restic_output_2_metrics(restic_result, output, labels=None):
     return errors, metrics
 
 
-def upload_metrics(destination, authentication, metrics):
+def upload_metrics(destination, authentication, no_cert_verify, metrics):
     try:
         headers = {
             "X-Requested-With": "{} {}".format(__intname__, __version__),
@@ -241,7 +241,7 @@ def upload_metrics(destination, authentication, metrics):
             data += "{}\n".format(metric)
         logger.debug("metrics:\n{}".format(data))
         result = requests.post(
-            destination, headers=headers, data=data, auth=authentication, timeout=4
+            destination, headers=headers, data=data, auth=authentication, timeout=4, verify=not no_cert_verify
         )
         if result.status_code == 200:
             logger.info("Metrics pushed succesfully.")

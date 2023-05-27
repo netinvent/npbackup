@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023020201"
+__build__ = "2023052701"
 
 
 from typing import Optional, Callable, Union, List
@@ -58,6 +58,10 @@ def metric_writer(config_dict: dict, restic_result: bool, result_string: str):
             except (KeyError, AttributeError):
                 destination = None
             try:
+                no_cert_verify = config_dict["prometheus"]["no_cert_verify"]
+            except (KeyError, AttributeError):
+                no_cert_verify = False
+            try:
                 prometheus_additional_labels = config_dict["prometheus"][
                     "additional_labels"
                 ]
@@ -99,7 +103,7 @@ def metric_writer(config_dict: dict, restic_result: bool, result_string: str):
                 except KeyError:
                     logger.info("No metrics authentication present.")
                     authentication = None
-                upload_metrics(destination, authentication, metrics)
+                upload_metrics(destination, authentication, no_cert_verify, metrics)
     except KeyError as exc:
         logger.info("Metrics not configured: {}".format(exc))
     except OSError as exc:

@@ -36,6 +36,7 @@ en:
   enable_prometheus: Enable prometheus metrics
   job_name: Job name (backup_job)
   metrics_destination: Metrics destination (URI / file)
+  no_cert_verify: Do not verify SSL certificate
   metrics_username: HTTP metrics username
   metrics_password: HTTP metrics password
   instance: Prometheus instance

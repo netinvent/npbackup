@@ -1,5 +1,6 @@
 ## master
 
+  - Add SSL certificate verification bypass for prometheus metrics
   - Make sure all multiline entries in config files are processed as lists
   - Add exclude-patterns to GUI (was present in CLI version already)
   - Make sure we always quote exclusions patterns or files

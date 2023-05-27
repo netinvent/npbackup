@@ -307,6 +307,10 @@ def config_gui(config_dict: dict, config_file: str):
             sg.Input(key="prometheus---destination", size=(50, 1)),
         ],
         [
+            sg.Text(_t("config_gui.no_cert_verify"), size=(40, 1)),
+            sg.Checkbox("", key="prometheus---no_cert_verify", size=(41, 1)),
+        ],
+        [
             sg.Text(_t("config_gui.metrics_username"), size=(40, 1)),
             sg.Input(key="prometheus---http_username", size=(50, 1)),
         ],
