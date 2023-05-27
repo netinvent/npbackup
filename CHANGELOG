@@ -1,5 +1,6 @@
-## master
+## 2.2.0 - 27/05/2023
 
+  - Add encrypted environment variables support
   - Add SSL certificate verification bypass for prometheus metrics
   - Make sure all multiline entries in config files are processed as lists
   - Add exclude-patterns to GUI (was present in CLI version already)

@@ -47,6 +47,7 @@ fr:
   saved_initial_config: Si vous avez enregistré une configuration, vous pouvez à présent recharger le programme.
   bogus_config_file: Fichier de configuration %{config_file} érroné
 
+  encrypted_environment_variables: Variables d'envrionnement chiffrées (ie TOKENS etc)
   environment_variables: Variables d'environnement
   format_equals: Format variable=valeur
 

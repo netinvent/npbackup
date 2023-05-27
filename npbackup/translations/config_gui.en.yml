@@ -47,6 +47,7 @@ en:
   saved_initial_config: If you saved your configuration, you may now reload this program
   bogus_config_file: Bogus configuration file %{config_file} found
 
+  encrypted_environment_variables: Encrypted envrionment variables (ie TOKENS etc)
   environment_variables: Environment variables
   format_equals: Format variable=value
 

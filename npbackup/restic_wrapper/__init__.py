@@ -104,6 +104,7 @@ class ResticRunner:
                 self.repository = None
 
         for env_variable, value in self.environment_variables.items():
+            logger.warning("Setting envrionment variable \"{}\"".format(env_variable))
             os.environ[env_variable] = value
 
     def _remove_env(self) -> None:

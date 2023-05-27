@@ -61,6 +61,7 @@ ENCRYPTED_OPTIONS = [
     {"section": "repo", "name": "password_command", "type": str},
     {"section": "prometheus", "name": "http_username", "type": str},
     {"section": "prometheus", "name": "http_password", "type": str},
+    {"section": "env", "name": "encrypted_variables", "type": list},
     {"section": "options", "name": "auto_upgrade_server_username", "type": str},
     {"section": "options", "name": "auto_upgrade_server_password", "type": str},
 ]

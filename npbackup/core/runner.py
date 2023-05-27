@@ -341,18 +341,30 @@ class NPBackupRunner:
             if not isinstance(env_variables, list):
                 env_variables = [env_variables]
         except KeyError:
-            env_variables = None
+            env_variables = []
+        try:
+            encrypted_env_variables = self.config_dict["env"]["encrypted_variables"]
+            if not isinstance(encrypted_env_variables, list):
+                encrypted_env_variables = [encrypted_env_variables]
+        except KeyError:
+            encrypted_env_variables = []
+
+        env_variables += encrypted_env_variables
 
         expanded_env_vars = {}
         try:
             if env_variables:
                 for env_variable in env_variables:
                     if env_variable:
-                        key, value = env_variable.split("=")
-                        expanded_env_vars[key.strip()] = value.strip()
-        except (KeyError, AttributeError, TypeError, ValueError):
+                        try:
+                            key, value = env_variable.split("=")
+                            expanded_env_vars[key.strip()] = value.strip()
+                        except ValueError:
+                            logger.error("Bogus environment variable \"{}\" defined in configuration.".format(env_variable))
+        except (KeyError, AttributeError, TypeError):
             logger.error("Bogus environment variables defined in configuration.")
             logger.debug("Trace:", exc_info=True)
+
 
         try:
             self.restic_runner.environment_variables = expanded_env_vars

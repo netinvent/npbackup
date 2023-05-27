@@ -76,6 +76,7 @@ def config_gui(config_dict: dict, config_file: str):
                             "password_command",
                             "auto_upgrade_server_username",
                             "auto_upgrade_server_password",
+                            "encrypted_variables"
                         ]:
                             try:
                                 if (
@@ -350,6 +351,17 @@ def config_gui(config_dict: dict, config_file: str):
                 size=(40, 3),
             ),
             sg.Multiline(key="env---variables", size=(48, 3)),
+        ],
+        [
+            sg.Text(
+                "{}\n({}\n{})".format(
+                    _t("config_gui.encrypted_environment_variables"),
+                    _t("config_gui.one_per_line"),
+                    _t("config_gui.format_equals"),
+                ),
+                size=(40, 3),
+            ),
+            sg.Multiline(key="env---encrypted_variables", size=(48, 3)),
         ],
     ]
 
