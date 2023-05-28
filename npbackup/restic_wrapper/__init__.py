@@ -555,9 +555,11 @@ class ResticRunner:
             case_ignore_param = "i"
 
         for exclude_pattern in exclude_patterns:
-            cmd += ' --{}exclude "{}"'.format(case_ignore_param, exclude_pattern)
+            if exclude_pattern:
+                cmd += ' --{}exclude "{}"'.format(case_ignore_param, exclude_pattern)
         for exclude_file in exclude_files:
-            cmd += ' --{}exclude-file "{}"'.format(case_ignore_param, exclude_file)
+            if exclude_file:
+                cmd += ' --{}exclude-file "{}"'.format(case_ignore_param, exclude_file)
         if exclude_caches:
             cmd += " --exclude-caches"
         if one_file_system:
@@ -622,7 +624,8 @@ class ResticRunner:
         cmd = 'restore "{}" --target "{}"'.format(snapshot, target)
         if includes:
             for include in includes:
-                cmd += ' --{}include "{}"'.format(case_ignore_param, include)
+                if include:
+                    cmd += ' --{}include "{}"'.format(case_ignore_param, include)
         result, output = self.executor(cmd)
         if result:
             logger.info("successfully restored data.")
