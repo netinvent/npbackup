@@ -186,7 +186,7 @@ def config_gui(config_dict: dict, config_file: str):
                 list(combo_boxes["source_type"].values()),
                 key="backup---source_type",
                 size=(48, 1),
-            ),  # WIP
+            ),
         ],
         [
             sg.Text(
