@@ -206,8 +206,8 @@ class ResticRunner:
                 stop_on=self.stop_on,
                 on_exit=self.on_exit,
                 method="poller",
-                priority=self._priority,
-                io_priority=self._priority,
+                priority=self.priority,
+                io_priority=self.priority,
             )
         else:
             exit_code, output = command_runner(
