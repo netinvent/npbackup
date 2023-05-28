@@ -468,7 +468,7 @@ class NPBackupRunner:
         except KeyError:
             logger.error("No backup source given.")
             return False
-        
+
         try:
             source_type = self.config_dict["backup"]["source_type"]
         except KeyError:
@@ -564,7 +564,7 @@ class NPBackupRunner:
         self.restic_runner.verbose = self.verbose
 
         # Run backup here
-        if source_type not in ['folder_list', None]:
+        if source_type not in ["folder_list", None]:
             logger.info("Running backup of files in {} list".format(paths))
         else:
             logger.info("Running backup of {}".format(paths))

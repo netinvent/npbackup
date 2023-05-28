@@ -525,7 +525,7 @@ class ResticRunner:
         """
         if not self.is_init:
             return None, None
-        
+
         # Handle various source types
         if source_type in ["files_from", "files_from_verbatim", "files_from_raw"]:
             cmd = "backup"
@@ -538,9 +538,9 @@ class ResticRunner:
             else:
                 logger.error("Bogus source type given")
                 return False, ""
-            
+
             for path in paths:
-                cmd += " {} \"{}\"".format(source_parameter, path)
+                cmd += ' {} "{}"'.format(source_parameter, path)
         else:
             # make sure path is a list and does not have trailing slashes
             cmd = "backup {}".format(

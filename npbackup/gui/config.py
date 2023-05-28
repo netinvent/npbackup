@@ -55,22 +55,22 @@ def config_gui(config_dict: dict, config_file: str):
     )
 
     combo_boxes = {
-        'compression': {
+        "compression": {
             "auto": _t("config_gui.auto"),
             "max": _t("config_gui.max"),
-            "off": _t("config_gui.off")
+            "off": _t("config_gui.off"),
         },
-        'source_type': {
+        "source_type": {
             "folder_list": _t("config_gui.folder_list"),
             "files_from": _t("config_gui.files_from"),
             "files_from_verbatim": _t("config_gui.files_from_verbatim"),
-            "files_from_raw": _t("config_gui.files_from_raw")
+            "files_from_raw": _t("config_gui.files_from_raw"),
         },
-        'priority': {
+        "priority": {
             "low": _t("config_gui.low"),
             "normal": _t("config_gui.normal"),
-            "high": _t("config_gui.high")
-        }
+            "high": _t("config_gui.high"),
+        },
     }
 
     ENCRYPTED_DATA_PLACEHOLDER = "<{}>".format(_t("config_gui.encrypted_data"))
@@ -165,7 +165,11 @@ def config_gui(config_dict: dict, config_file: str):
     backup_col = [
         [
             sg.Text(_t("config_gui.compression"), size=(40, 1)),
-            sg.Combo(list(combo_boxes['compression'].values()), key="backup---compression", size=(48, 1)),
+            sg.Combo(
+                list(combo_boxes["compression"].values()),
+                key="backup---compression",
+                size=(48, 1),
+            ),
         ],
         [
             sg.Text(
@@ -178,7 +182,11 @@ def config_gui(config_dict: dict, config_file: str):
         ],
         [
             sg.Text(_t("config_gui.source_type"), size=(40, 1)),
-            sg.Combo(list(combo_boxes['source_type'].values()), key="backup---source_type", size=(48, 1)), #WIP
+            sg.Combo(
+                list(combo_boxes["source_type"].values()),
+                key="backup---source_type",
+                size=(48, 1),
+            ),  # WIP
         ],
         [
             sg.Text(
@@ -267,7 +275,11 @@ def config_gui(config_dict: dict, config_file: str):
         ],
         [
             sg.Text(_t("config_gui.backup_priority"), size=(40, 1)),
-            sg.Combo(list(combo_boxes['priority'].values()), key="backup---priority", size=(48, 1)),
+            sg.Combo(
+                list(combo_boxes["priority"].values()),
+                key="backup---priority",
+                size=(48, 1),
+            ),
         ],
         [
             sg.Text(_t("config_gui.additional_parameters"), size=(40, 1)),
