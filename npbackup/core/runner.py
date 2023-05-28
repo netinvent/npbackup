@@ -318,12 +318,6 @@ class NPBackupRunner:
         except ValueError:
             logger.error("Bogus backend connections value given.")
         try:
-            self.restic_runner.additional_parameters = self.config_dict["backup"][
-                "additional_parameters"
-            ]
-        except KeyError:
-            pass
-        try:
             if self.config_dict["backup"]["priority"]:
                 self.restic_runner.priority = self.config_dict["backup"]["priority"]
         except KeyError:

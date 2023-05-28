@@ -406,8 +406,6 @@ class ResticRunner:
             )
         if self.verbose:
             args += " -vv"
-        if self.additional_parameters:
-            args += " {}".format(self.additional_parameters)
         return args
 
     def init(
