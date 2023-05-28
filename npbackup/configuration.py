@@ -7,8 +7,8 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023050301"
-__version__ = "1.7.0 for npbackup 2.2.0+"
+__build__ = "2023052801"
+__version__ = "1.7.1 for npbackup 2.2.0+"
 
 from typing import Tuple, Optional, List
 import sys
@@ -259,12 +259,16 @@ def evaluate_variables(config_dict: dict, value: str) -> str:
     """
 
     # We need to make a loop to catch all nested variables
+    # but we also need a max recursion limit
+    # If each variable has two sub variables, we'd have max 4x2x2 loops
+    count = 0
+    maxcount = 4*2*2
     while (
         "${MACHINE_ID}" in value
         or "${MACHINE_GROUP}" in value
         or "${BACKUP_JOB}" in value
         or "${HOSTNAME}" in value
-    ):
+    ) and count <= maxcount:
         value = value.replace("${HOSTNAME}", platform.node())
         try:
             value = value.replace(
@@ -285,6 +289,7 @@ def evaluate_variables(config_dict: dict, value: str) -> str:
             )
         except (KeyError, TypeError):
             pass
+        count += 1
     return value
 
 
