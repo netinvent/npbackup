@@ -83,3 +83,20 @@ en:
 
   show_decrypted: Show decrypted
   not_allowed_on_not_compiled: Using this option is not allowed on non compiled or non private builds
+
+  # compression
+  auto: Automatic
+  max: Maximum
+  off: Disabled
+
+  # priorities
+  low: Low
+  normal: Normal
+  high: High
+
+  # source types
+  source_type: Sources type
+  folder_list: Folder list
+  files_from: Files from list
+  files_from_verbatim: Files from verbatim list
+  files_from_raw: Files from raw list

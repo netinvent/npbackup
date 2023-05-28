@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023041201"
-__version__ = "1.6.3"
+__build__ = "20230522801"
+__version__ = "1.7.0"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -512,6 +512,7 @@ class ResticRunner:
     def backup(
         self,
         paths: List[str],
+        source_type: str,
         exclude_patterns: List[str] = [],
         exclude_files: List[str] = [],
         exclude_case_ignore: bool = False,
@@ -526,10 +527,27 @@ class ResticRunner:
         """
         if not self.is_init:
             return None, None
-        # make sure path is a list and does not have trailing slashes
-        cmd = "backup {}".format(
-            " ".join(['"{}"'.format(path.rstrip("/\\")) for path in paths])
-        )
+        
+        # Handle various source types
+        if source_type in ["files_from", "files_from_verbatim", "files_from_raw"]:
+            cmd = "backup"
+            if source_type == "files_from":
+                source_parameter = "--files-from"
+            elif source_type == "files_from_verbatim":
+                source_parameter = "--files-from-verbatim"
+            elif source_type == "files_from_raw":
+                source_parameter = "--files-from-raw"
+            else:
+                logger.error("Bogus source type given")
+                return False, ""
+            
+            for path in paths:
+                cmd += " {} \"{}\"".format(source_parameter, path)
+        else:
+            # make sure path is a list and does not have trailing slashes
+            cmd = "backup {}".format(
+                " ".join(['"{}"'.format(path.rstrip("/\\")) for path in paths])
+            )
 
         case_ignore_param = ""
         # Always use case ignore excludes under windows

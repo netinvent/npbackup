@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023052701"
+__build__ = "2023052801"
 
 
 from typing import Optional, Callable, Union, List
@@ -472,8 +472,13 @@ class NPBackupRunner:
                     )
                     return False
         except KeyError:
-            logger.error("No backup source path given.")
+            logger.error("No backup source given.")
             return False
+        
+        try:
+            source_type = self.config_dict["backup"]["source_type"]
+        except KeyError:
+            source_type = None
 
         # MSWindows does not support one-file-system option
         try:
@@ -565,7 +570,10 @@ class NPBackupRunner:
         self.restic_runner.verbose = self.verbose
 
         # Run backup here
-        logger.info("Running backup of {}".format(paths))
+        if source_type not in ['folder_list', None]:
+            logger.info("Running backup of files in {} list".format(paths))
+        else:
+            logger.info("Running backup of {}".format(paths))
 
         if pre_exec_command:
             exit_code, output = command_runner(
@@ -589,6 +597,7 @@ class NPBackupRunner:
         self.restic_runner.dry_run = self.dry_run
         result, result_string = self.restic_runner.backup(
             paths=paths,
+            source_type=source_type,
             exclude_patterns=exclude_patterns,
             exclude_files=exclude_files,
             exclude_case_ignore=exclude_case_ignore,

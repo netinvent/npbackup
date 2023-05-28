@@ -83,3 +83,20 @@ fr:
 
   show_decrypted: Voir déchiffré
   not_allowed_on_not_compiled: Cette option n'est pas permise sur une version non compilée ou non privée
+
+  # compression
+  auto: Automatique
+  max: Maximale
+  off: Aucune
+
+  # priorities
+  low: Basse
+  normal: Normale
+  high: Haute
+
+  # source types
+  source_type: Type de sources
+  folder_list: Liste de dossiers
+  files_from: Liste fichiers depuis un fichier
+  files_from_verbatim: Liste fichiers depuis un fichier "exact"
+  files_from_raw: Liste fichiers depuis un fichier "raw"

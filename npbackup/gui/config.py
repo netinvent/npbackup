@@ -14,6 +14,7 @@ import os
 from logging import getLogger
 import PySimpleGUI as sg
 import npbackup.configuration as configuration
+from ofunctions.misc import get_key_from_value
 from npbackup.core.i18n_helper import _t
 from npbackup.path_helper import CURRENT_EXECUTABLE
 from npbackup.core.nuitka_helper import IS_COMPILED
@@ -52,6 +53,25 @@ def config_gui(config_dict: dict, config_file: str):
         suppress_error_popups=True,
         suppress_key_guessing=True,
     )
+
+    combo_boxes = {
+        'compression': {
+            "auto": _t("config_gui.auto"),
+            "max": _t("config_gui.max"),
+            "off": _t("config_gui.off")
+        },
+        'source_type': {
+            "folder_list": _t("config_gui.folder_list"),
+            "files_from": _t("config_gui.files_from"),
+            "files_from_verbatim": _t("config_gui.files_from_verbatim"),
+            "files_from_raw": _t("config_gui.files_from_raw")
+        },
+        'priority': {
+            "low": _t("config_gui.low"),
+            "normal": _t("config_gui.normal"),
+            "high": _t("config_gui.high")
+        }
+    }
 
     ENCRYPTED_DATA_PLACEHOLDER = "<{}>".format(_t("config_gui.encrypted_data"))
 
@@ -95,7 +115,10 @@ def config_gui(config_dict: dict, config_file: str):
                         value = "\n".join(value)
                     # window keys are section---entry
                     key = "{}---{}".format(section, entry)
-                    window[key].Update(value)
+                    if entry in combo_boxes:
+                        window[key].Update(combo_boxes[entry][value])
+                    else:
+                        window[key].Update(value)
                 except KeyError:
                     logger.error("No GUI equivalent for {}.".format(entry))
                 except TypeError as exc:
@@ -110,8 +133,11 @@ def config_gui(config_dict: dict, config_file: str):
             except ValueError:
                 # Don't bother with keys that don't begin with "---"
                 continue
+            # Handle combo boxes first to transform translation into key
+            if entry in combo_boxes:
+                value = get_key_from_value(combo_boxes[entry], value)
             # check whether we need to split into list
-            if not isinstance(value, bool):
+            elif not isinstance(value, bool):
                 result = value.split("\n")
                 if len(result) > 1:
                     value = result
@@ -139,7 +165,7 @@ def config_gui(config_dict: dict, config_file: str):
     backup_col = [
         [
             sg.Text(_t("config_gui.compression"), size=(40, 1)),
-            sg.Combo(["auto", "max", "off"], key="backup---compression", size=(48, 1)),
+            sg.Combo(list(combo_boxes['compression'].values()), key="backup---compression", size=(48, 1)),
         ],
         [
             sg.Text(
@@ -149,6 +175,10 @@ def config_gui(config_dict: dict, config_file: str):
                 size=(40, 2),
             ),
             sg.Multiline(key="backup---paths", size=(48, 4)),
+        ],
+        [
+            sg.Text(_t("config_gui.source_type"), size=(40, 1)),
+            sg.Combo(list(combo_boxes['source_type'].values()), key="backup---source_type", size=(48, 1)), #WIP
         ],
         [
             sg.Text(
@@ -237,7 +267,7 @@ def config_gui(config_dict: dict, config_file: str):
         ],
         [
             sg.Text(_t("config_gui.backup_priority"), size=(40, 1)),
-            sg.Combo(["low", "normal", "high"], key="backup---priority", size=(48, 1)),
+            sg.Combo(list(combo_boxes['priority'].values()), key="backup---priority", size=(48, 1)),
         ],
         [
             sg.Text(_t("config_gui.additional_parameters"), size=(40, 1)),
@@ -425,7 +455,7 @@ def config_gui(config_dict: dict, config_file: str):
         [
             sg.Tab(
                 _t("config_gui.backup"),
-                backup_col,
+                [[sg.Column(backup_col, scrollable=True, vertical_scroll_only=True)]],
                 font="helvetica 16",
                 key="--tab-backup--",
                 element_justification="C",
