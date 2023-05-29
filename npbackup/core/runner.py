@@ -349,10 +349,11 @@ class NPBackupRunner:
         except KeyError:
             encrypted_env_variables = []
 
+        env_variables += encrypted_env_variables
         expanded_env_vars = {}
         try:
             if env_variables:
-                for env_variable in env_variables + encrypted_env_variables:
+                for env_variable in env_variables:
                     if env_variable:
                         try:
                             key, value = env_variable.split("=")
