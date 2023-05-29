@@ -13,6 +13,7 @@ backup:
   one_file_system: true
   ## Paths can contain multiple values, one per line, without quotation marks
   paths: path_to_directory
+  source_type: folder_list  # folder_list|files_from|files_from_verbatim|files_from_raw
   use_fs_snapshot: true  # Use VSS snapshot on Windows (needs administrator rights), will fallback to non VSS on failure
   ignore_cloud_files: false  # Don't complain when pointers to files in cloud (onedrive, nextcloud...) cannot be backed up
   pre_exec_command: ''
@@ -51,6 +52,7 @@ prometheus:
   # example: https://push.monitoring.example.tld/metrics/job/${BACKUP_JOB} where ${BACKUP_JOB} is defined in prometheus_backup_job
   # example: /var/lib/prometheus/collector/mytextfile
   destination: 
+  no_cert_verify: False
   # prometheus instance, becomes exported_instance when using a push gateway
   instance: ${MACHINE_ID}
 
