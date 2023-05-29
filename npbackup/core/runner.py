@@ -99,21 +99,25 @@ def metric_writer(config_dict: dict, restic_result: bool, result_string: str):
             )
             if errors or not restic_result:
                 logger.error("Restic finished with errors.")
-            if destination.lower().startswith("file://"):
-                destination = destination[len("file://") :]
-                with open(destination, "w") as file_handle:
-                    for metric in metrics:
-                        file_handle.write(metric + "\n")
-            if destination.lower().startswith("http"):
-                try:
-                    authentication = (
-                        config_dict["prometheus"]["http_username"],
-                        config_dict["prometheus"]["http_password"],
-                    )
-                except KeyError:
-                    logger.info("No metrics authentication present.")
-                    authentication = None
-                upload_metrics(destination, authentication, no_cert_verify, metrics)
+            if destination:
+                logger.debug("Uploading metrics to {}".format(destination))
+                if destination.lower().startswith("http"):
+                    try:
+                        authentication = (
+                            config_dict["prometheus"]["http_username"],
+                            config_dict["prometheus"]["http_password"],
+                        )
+                    except KeyError:
+                        logger.info("No metrics authentication present.")
+                        authentication = None
+                    upload_metrics(destination, authentication, no_cert_verify, metrics)
+                else:
+                    try:
+                        with open(destination, "w") as file_handle:
+                            for metric in metrics:
+                                file_handle.write(metric + "\n")
+                    except OSError as exc:
+                        logger.error("Cannot write metrics file {}: {}".format(destination, exc))
     except KeyError as exc:
         logger.info("Metrics not configured: {}".format(exc))
     except OSError as exc:
