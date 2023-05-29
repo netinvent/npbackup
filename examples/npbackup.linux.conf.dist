@@ -46,10 +46,10 @@ prometheus:
   ## Supervision
   metrics: true
   # Available variables: ${HOSTNAME}, ${RANDOM}[n], ${MACHINE_ID}, ${MACHINE_GROUP}, ${BACKUP_JOB}
+  # Since you probably want the backup_job to be the job posted to pushgateway, name it without non URL encoded characters
   backup_job: ${MACHINE_ID}
   # Prometheus metrics destination can be a http / https server with optional basic authentication (pushgateway), or a file path for node textfile collector to pickup
-  # example: https://push.monitoring.example.tld/metrics/job/npbackup
-  # example: https://push.monitoring.example.tld/metrics/job/${BACKUP_JOB} where ${BACKUP_JOB} is defined in prometheus_backup_job
+  # example: https://push.monitoring.example.tld/metrics/job/${BACKUP_JOB} where ${BACKUP_JOB} is defined in backup_job above
   # example: /var/lib/prometheus/collector/mytextfile
   destination: 
   no_cert_verify: False
