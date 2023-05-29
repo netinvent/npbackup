@@ -262,7 +262,7 @@ def evaluate_variables(config_dict: dict, value: str) -> str:
     # but we also need a max recursion limit
     # If each variable has two sub variables, we'd have max 4x2x2 loops
     count = 0
-    maxcount = 4*2*2
+    maxcount = 4 * 2 * 2
     while (
         "${MACHINE_ID}" in value
         or "${MACHINE_GROUP}" in value
