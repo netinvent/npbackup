@@ -117,7 +117,9 @@ def metric_writer(config_dict: dict, restic_result: bool, result_string: str):
                             for metric in metrics:
                                 file_handle.write(metric + "\n")
                     except OSError as exc:
-                        logger.error("Cannot write metrics file {}: {}".format(destination, exc))
+                        logger.error(
+                            "Cannot write metrics file {}: {}".format(destination, exc)
+                        )
     except KeyError as exc:
         logger.info("Metrics not configured: {}".format(exc))
     except OSError as exc:
