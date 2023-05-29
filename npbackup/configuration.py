@@ -270,25 +270,28 @@ def evaluate_variables(config_dict: dict, value: str) -> str:
         or "${HOSTNAME}" in value
     ) and count <= maxcount:
         value = value.replace("${HOSTNAME}", platform.node())
+
         try:
-            value = value.replace(
-                "${MACHINE_ID}", config_dict["identity"]["machine_id"]
-            )
+            new_value = config_dict["identity"]["machine_id"]
         # TypeError may happen if config_dict[x][y] is None
         except (KeyError, TypeError):
-            pass
+            new_value = None
+        value = value.replace("${MACHINE_ID}", new_value if new_value else "")
+
         try:
-            value = value.replace(
-                "${MACHINE_GROUP}", config_dict["identity"]["machine_group"]
-            )
+            new_value = config_dict["identity"]["machine_group"]
+        # TypeError may happen if config_dict[x][y] is None
         except (KeyError, TypeError):
-            pass
+            new_value = None
+        value = value.replace("${MACHINE_GROUP}", new_value if new_value else "")
+
         try:
-            value = value.replace(
-                "${BACKUP_JOB}", config_dict["prometheus"]["backup_job"]
-            )
+            new_value = config_dict["prometheus"]["backup_job"]
+        # TypeError may happen if config_dict[x][y] is None
         except (KeyError, TypeError):
-            pass
+            new_value = None
+        value = value.replace("${BACKUP_JOB}", new_value if new_value else "")
+
         count += 1
     return value
 
