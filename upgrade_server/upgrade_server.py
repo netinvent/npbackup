@@ -60,10 +60,9 @@ if __name__ == "__main__":
     except (TypeError, KeyError):
         port = None
 
-
     logger = logger_get_logger()
     # Cannot run gunicorn on Windows
-    if _DEV or os.name == 'nt':
+    if _DEV or os.name == "nt":
         logger.info("Running dev version")
         import uvicorn
 
@@ -106,7 +105,7 @@ if __name__ == "__main__":
         }
 
     try:
-        if _DEV or os.name == 'nt':
+        if _DEV or os.name == "nt":
             uvicorn.run("upgrade_server.api:app", **server_args)
         else:
             StandaloneApplication(upgrade_server.api.app, server_args).run()
