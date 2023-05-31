@@ -406,8 +406,11 @@ This is free software, and you are welcome to redistribute it under certain cond
     npbackup_runner = NPBackupRunner(config_dict=config_dict)
     npbackup_runner.dry_run = dry_run
     npbackup_runner.verbose = _VERBOSE
+    if npbackup_runner.backend_version:
+        logger.critical("No backend available. Cannot continue")
+        sys.exit(25)
     logger.info("Backend: {}".format(npbackup_runner.backend_version))
-
+    
     if args.check:
         if npbackup_runner.check_recent_backups():
             sys.exit(0)
