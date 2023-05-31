@@ -4,3 +4,4 @@ uvicorn[standard]
 gunicorn
 pydantic
 ruamel.yaml
+ofunctions.logger_utils>=2.4.0
