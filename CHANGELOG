@@ -1,5 +1,9 @@
 ## 2.2.0 - 27/05/2023
 
+  - Fix potential deadlock in evaluate variables
+  - Fix additionnal parameters should only apply for backup operations
+  - Fix unnecessary exclude statements when no exclusions are given
+  - Added source types (--files-from, --files-from-verbatim and --files-from-raw equivalent)
   - Add encrypted environment variables support
   - Add SSL certificate verification bypass for prometheus metrics
   - Make sure all multiline entries in config files are processed as lists
