@@ -7,7 +7,7 @@ __intname__ = "npbackup.compile"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023033001"
+__build__ = "2023061101"
 __version__ = "1.8.3"
 
 
@@ -178,6 +178,10 @@ def compile(arch, audience, no_gui=False):
         program_executable = "npbackup.exe"
         restic_executable = "restic.exe"
         platform = "windows"
+    elif sys.platform.lower() == "darwin":
+        platform = "darwin"
+        program_executable = "npbackup"
+        restic_executable = "restic"
     else:
         program_executable = "npbackup"
         restic_executable = "restic"
