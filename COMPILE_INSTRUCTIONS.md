@@ -7,7 +7,7 @@ This document explains how to compile NPBackup from scratch, including setting u
 NPBackup will need a working Python 3.6+ interpreter, which is out of scope of this document.  
 - On Windows, you should download and install python from [Python official website](https://www.python.org)
 - On Linux, you should probably install python using your distribution's package manager, ex `yum install python3` or `apt install python`
-- On MacOS, you should probably use [brew](https://brew.sh)
+- On macOS, you should probably use [brew](https://brew.sh) to install python, `brew install python3`
 
 Please bear in mind that the python interpreter bitness will decide which executable bitness you'll have, eg if you want windows x64 executables, you'll need to download python x64.
 
@@ -18,7 +18,11 @@ For the rest of this manual, we'll assume the you use:
 - On Linux:
   - `python3` as python interpreter
   - `/opt/npbackup` as folder containing the NPBackup sources you downloaded and extracted / cloned from git
-- On MacOS: ?
+- On macOS:
+  - `~/npbackup` as folder containing the NPBackup sources you downloaded and extracted / cloned from git
+  - as python interpreter
+    - Intel: `/usr/local/bin/python3`
+    - ARM: `/opt/homebrew/bin/python3`
 
 You may also use a python virtual environement (venv) to have a python "sub interpreter", but this is out of scope here too.
 
@@ -28,19 +32,25 @@ You can install them all toghether by running `python -m pip install -r path/to/
 Examples:
 - On Windows: `C:\python310-64\python.exe -m pip install -r c:\npbackup\npbackup\requirements.txt`
 - On Linux: `python3 -m pip install -r /opt/npbackup/npbackup/requirements.txt`
-- On MacOS: ?
-
+- On macOS:
+  - Intel: `/usr/local/bin/python3 -m pip install -r ~/npbackup/npbackup/requirements.txt`
+  - ARM: `/opt/homebrew/bin/python3 -m pip install -r ~/npbackup/npbackup/requirements.txt`
 
 You will also need to install the [Nuitka Python compiler](https://www.nuitka.net). Pre-built executables are built with the commercial version of Nuitka, which has multiple advantages over the open source version, but the latter will suffice for a working build.
 
 Example:
 - On Windows: `C:\python310-64\python.exe -m pip install nuitka`
-- On Linux: `python3 -m pip instlal nuitka`
-- On MacOS: ?
+- On Linux: `python3 -m pip install nuitka`
+- On macOS:
+  - Intel: `/usr/local/bin/python3 -m pip install nuitka`
+  - ARM: `/opt/homebrew/bin/python3 -m pip install nuitka`
 
 ## Additional requirements
 
-On Linux (and probably MacOS X), in order to get the GUI working, you will need to install tcl/tk 8.6 using `yum install python-tkinter` or `apt install python3-tk` or whatever package manager you're using.  
+On Linux and macOS, in order to get the GUI working, you will need to install tcl/tk 8.6 using
+- On Linux, `yum install python-tkinter` or `apt install python3-tk` or whatever package manager you're using.
+- On macOS, `brew install tcl-tk python-tk`
+
 You can still use NPBackup in CLI mode without tcl/tk.
 
 Keep in mind that linux built executables will only work on machines with equivalent or newer glibc version. You should always try to build NPBackup on the oldest working machine so your builds will work everywhere (I build on RHEL 7).
@@ -53,14 +63,16 @@ Easiest way to achieve this is by launching the following:
 Example:
 - On Windows: `c:\Python310-64\python.exe -c "from cryptidy.symmetric_encryption import generate_key; print(generate_key())"`
 - On Linux: `python3 -c "from cryptidy.symmetric_encryption import generate_key; print(generate_key())"`
-- On MacOS: ?
+- On macOS:
+  - Intel: `/usr/local/bin/python3 -c "from cryptidy.symmetric_encryption import generate_key; print(generate_key())"`
+  - ARM: `/opt/homebrew/bin/python3 -c "from cryptidy.symmetric_encryption import generate_key; print(generate_key())"`
 
 The output of the above command should be something like `b'\xa1JP\r\xff\x11u>?V\x15\xa1\xfd\xaa&tD\xdd\xf9\xde\x07\x93\xd4\xdd\x87R\xd0eb\x10=/'`
 
 Now copy that string into the file `npbackup/secret_keys.py`, which should look like:
 ```
 AES_KEY = b'\xa1JP\r\xff\x11u>?V\x15\xa1\xfd\xaa&tD\xdd\xf9\xde\x07\x93\xd4\xdd\x87R\xd0eb\x10=/'
-DEFAULT_BACKUP_ADMIN_PASSWORD = "MySuperSecretPassword123
+DEFAULT_BACKUP_ADMIN_PASSWORD = "MySuperSecretPassword123"
 ```
 
 Note that we also changed the default backup admin password, which is used to see unencrypted configurations in the GUI.
@@ -83,11 +95,29 @@ export PYTHONPATH=/opt/npbackup
 python3 bin/compile.py --audience private
 ```
 
+On macOS Intel, run the following commands after adjusting the paths:
+```
+cd ~/npbackup
+export PYTHONPATH=~/npbackup
+export TCL_LIBRARY=/usr/local/lib/tcl8.6
+export TK_LIBRARY=/usr/local/lib/tcl8.6
+/usr/local/bin/python3 bin/compile.py --audience private
+```
+
+On macOS ARM, run the following commands after adjusting the paths:
+```
+cd ~/npbackup
+export PYTHONPATH=~/npbackup
+export TCL_LIBRARY=/opt/homebrew/lib/tcl8.6
+export TK_LIBRARY=/opt/homebrew/lib/tcl8.6
+/opt/homebrew/bin/python3 bin/compile.py --audience private
+```
+
 If you need to compile for headless machines (arm/arm64), you can give the `--no-gui` parameter to `compile.py`.  
 
 Target binaries will be found in `BUILDS/{audience}/{platform}/{arch}/npbackup.bin` where:
 - audience is [private|public]
-- platform is [linux|windows]
+- platform is [linux|windows|darwin]
 - arch is [x86|x64|arm|arm64]
 
 ## Cross compilation
