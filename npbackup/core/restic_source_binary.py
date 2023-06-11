@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.restic_source_binary"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023032901"
+__build__ = "2023061101"
 
 
 import os
@@ -26,6 +26,11 @@ def get_restic_internal_binary(arch):
                 binary = "restic_*_windows_amd64.exe"
             else:
                 binary = "restic_*_windows_386.exe"
+        elif os.name == "darwin":
+            if arch == "arm64":
+                binary = "restic_*_darwin_arm64"
+            else:
+                binary = "restic_*_darwin_amd64"
         else:
             if arch == "arm":
                 binary = "restic_*_linux_arm"
