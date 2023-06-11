@@ -23,3 +23,4 @@ pyyaml  # Required for python-i18n / i18nice which does not work with ruamel.yam
 i18nice>=0.6.2
 packaging
 pywin32; platform_system == "Windows"
+imageio; platform_system == "Darwin"
