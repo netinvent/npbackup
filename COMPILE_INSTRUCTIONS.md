@@ -45,6 +45,11 @@ Example:
   - Intel: `/usr/local/bin/python3 -m pip install nuitka`
   - ARM: `/opt/homebrew/bin/python3 -m pip install nuitka`
 
+## Backup backend
+
+NPBackup relies on the excellent [restic](https://restic.net) backup program.  
+In order for NPBackup to work, you'll need to download restic binaries from [the restic repo](https://github.com/restic/restic/releases/) into `npbackup/RESTIC_SOURCE_FILES` and uncompress them. On Windows, you'll probably want something that can uncompress bzip2 files, like 7zip or [7zip-zstd](https://github.com/mcmilk/7-Zip-zstd). On Linux, your standard `bzip2 -d` command will do. Please keep all restic binaries at the root of the source folder, without any subfolders.
+
 ## Additional requirements
 
 On Linux and macOS, in order to get the GUI working, you will need to install tcl/tk 8.6 using
@@ -54,6 +59,8 @@ On Linux and macOS, in order to get the GUI working, you will need to install tc
 You can still use NPBackup in CLI mode without tcl/tk.
 
 Keep in mind that linux built executables will only work on machines with equivalent or newer glibc version. You should always try to build NPBackup on the oldest working machine so your builds will work everywhere (I build on RHEL 7).
+
+
 
 ## Setup security
 
@@ -143,3 +150,7 @@ chroot /chroots/stretch-arm64 qemu-aarch64-static /bin/bash
 ```
 
 Once you're in the chroot, install and compile as for any other linux platform.
+
+## Troubleshooting
+
+Compiled without working GUI ? Launch the program with `--gui-status` in order to get more information.
