@@ -9,6 +9,7 @@
   - Updated internal restic binary to 0.16.0 compiled with go1.20.6
   - Compiled with newer Nuitka 1.7.10 that allows use of Python 3.11
   - Updated python to version 3.11 for Windows x64 targets
+  - Basic MacOS X compile support
 
 ## 2.2.0 - rtm - 03/06/2023
   - Fix potential deadlock in evaluate variables
