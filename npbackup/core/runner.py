@@ -29,7 +29,9 @@ from npbackup import configuration
 logger = logging.getLogger(__intname__)
 
 
-def metric_writer(config_dict: dict, restic_result: bool, result_string: str, dry_run: bool):
+def metric_writer(
+    config_dict: dict, restic_result: bool, result_string: str, dry_run: bool
+):
     try:
         labels = {}
         if config_dict["prometheus"]["metrics"]:
@@ -111,7 +113,9 @@ def metric_writer(config_dict: dict, restic_result: bool, result_string: str, dr
                         logger.info("No metrics authentication present.")
                         authentication = None
                     if not dry_run:
-                        upload_metrics(destination, authentication, no_cert_verify, metrics)
+                        upload_metrics(
+                            destination, authentication, no_cert_verify, metrics
+                        )
                     else:
                         logger.info("Not uploading metrics in dry run mode")
                 else:
@@ -612,7 +616,9 @@ class NPBackupRunner:
             additional_parameters=additional_parameters,
         )
         logger.debug("Restic output:\n{}".format(result_string))
-        metric_writer(self.config_dict, result, result_string, self.restic_runner.dry_run)
+        metric_writer(
+            self.config_dict, result, result_string, self.restic_runner.dry_run
+        )
 
         if post_exec_command:
             exit_code, output = command_runner(

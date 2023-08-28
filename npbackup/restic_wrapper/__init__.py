@@ -108,16 +108,16 @@ class ResticRunner:
             os.environ[env_variable] = value
 
         # Configure default cpu usage when not specifically set
-        if not 'GOMAXPROCS' in self.environment_variables:
+        if not "GOMAXPROCS" in self.environment_variables:
             nb_cores = os.cpu_count()
-            if nb_cores < 2 :
+            if nb_cores < 2:
                 gomaxprocs = nb_cores
             elif 2 <= nb_cores <= 4:
                 gomaxprocs = nb_cores - 1
             elif nb_cores > 4:
                 gomaxprocs = nb_cores - 2
             logger.debug("Setting GOMAXPROCS to {}".format(gomaxprocs))
-            os.environ['GOMAXPROCS'] = str(gomaxprocs)
+            os.environ["GOMAXPROCS"] = str(gomaxprocs)
 
     def _remove_env(self) -> None:
         """
@@ -342,14 +342,13 @@ class ResticRunner:
             if value > 0:
                 self._backend_connections = value
             elif value == 0:
-                if self._backend_type == 'local':
+                if self._backend_type == "local":
                     self._backend_connections = 2
                 else:
                     self._backend_connections = 8
 
         except TypeError:
             logger.warning("Bogus backend_connections value given.")
-
 
     @property
     def additional_parameters(self):
