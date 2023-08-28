@@ -1,5 +1,16 @@
-## 2.2.0 - rtm - 03/06/2023
+## Current master
 
+  ! Add --read-concurrency for better backup parallelism on NVME drives
+  ! Configure default backend connections to more than defaults (5 for remote, 2 for local)
+  ! Set restic cpu usage (GOMAXPROCS env variable to n-1 core ?)
+
+## 2.2.1 - 28/08/2023
+  - Added snapshot deletion option in GUI
+  - Updated internal restic binary to 0.16.0 compiled with go1.20.6
+  - Compiled with newer Nuitka 1.7.10 that allows use of Python 3.11
+  - Updated python to version 3.11 for Windows x64 targets
+
+## 2.2.0 - rtm - 03/06/2023
   - Fix potential deadlock in evaluate variables
   - Fix additionnal parameters should only apply for backup operations
   - Fix unnecessary exclude statements when no exclusions are given
