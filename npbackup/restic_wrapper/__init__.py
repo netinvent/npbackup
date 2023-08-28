@@ -8,7 +8,7 @@ __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2023082801"
-__version__ = "1.7.1"
+__version__ = "1.7.2"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -248,18 +248,18 @@ class ResticRunner:
             # TEMP-FIX-4155, since we don't have reparse point support for Windows, see https://github.com/restic/restic/issues/4155, we have to filter manually for cloud errors which should not affect backup result
             # exit_code = 3 when errors are present but snapshot could be created
             # Since errors are always shown, we don't need restic --verbose option explicitly
-            cloud_error = True
+
+            # We enhanced the error detection with :.*cloud.* since Windows can't have ':' in filename, it should be safe to use
+            is_cloud_error = True
             for line in output.split("\n"):
                 if re.match("error", line, re.IGNORECASE):
-                    if re.match(
-                        r"error: read .*: The cloud operation is not supported on a read-only volume\.|error: read .*: The media is write protected\.|error: read .*:cloud",
+                    if not re.match(
+                        r"error: read .*: The cloud operation is not supported on a read-only volume\.|error: read .*: The media is write protected\.|error: read .*:.*cloud.*",
                         line,
                         re.IGNORECASE,
                     ):
-                        cloud_error = True
-                    else:
-                        cloud_error = False
-            if cloud_error is True:
+                        is_cloud_error = False
+            if is_cloud_error is True:
                 return True, output
             # TEMP-FIX-4155-END
         self.last_command_status = False
