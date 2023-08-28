@@ -2,7 +2,7 @@
 
 :: This is an example compiler script
 
-SET PYTHON64=c:\python310-64\python.exe
+SET PYTHON64=c:\python311-64\python.exe
 SET PYTHON32=c:\python37-32\python.exe
 
 
