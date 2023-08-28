@@ -38,6 +38,10 @@ en:
   is_uptodate: Program Up to date
 
   succes: Succes
+  successfully: successfully
   failure: Failure
 
   scheduled_task: Scheduled task
+
+  delete: Delete
+  deleted: deleted
