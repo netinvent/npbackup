@@ -38,6 +38,10 @@ fr:
   is_uptodate: Logiciel à jour
 
   succes: Succès
+  successfully: avec succès
   failure: Echec
 
   scheduled_task: Tâche planifiée
+
+  delete: Supprimer
+  deleted: éffacé
