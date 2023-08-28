@@ -244,6 +244,11 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
             sleep(0.0001)
     return treedata
 
+@threaded
+def _delete_backup(config: dict, snapshot_id: str) -> Future:
+    runner = NPBackupRunner(config_dict=config)
+    result = runner.forget(snapshot=snapshot_id)
+    return result
 
 @threaded
 def _ls_window(config: dict, snapshot_id: str) -> Future:
@@ -287,6 +292,31 @@ def _ls_window(config: dict, snapshot_id: str) -> Future:
     return backup_content, result
 
 
+def delete_backup(config: dict, snapshot: str) -> bool:
+    snapshot_id = re.match(r".*\[ID (.*)\].*", snapshot).group(1)
+    # We get a thread result, hence pylint will complain the thread isn't a tuple
+    # pylint: disable=E1101 (no-member)
+    thread = _delete_backup(config, snapshot_id)
+
+    while not thread.done() and not thread.cancelled():
+        sg.PopupAnimated(
+            LOADER_ANIMATION,
+            message="{}. {}".format(
+                _t("main_gui.execute_operation"),
+                _t("main_gui.this_will_take_a_while"),
+            ),
+            time_between_frames=50,
+            background_color=GUI_LOADER_COLOR,
+            text_color=GUI_LOADER_TEXT_COLOR,
+        )
+    sg.PopupAnimated(None)
+    result = thread.result()
+    if not result:
+        sg.PopupError(_t("main_gui.delete_failed"), keep_on_top=True)
+        return False
+    else:
+        sg.Popup("{} {} {}".format(snapshot, _t("generic.deleted"), _t("generic.successfully")))
+        
 def ls_window(config: dict, snapshot: str) -> bool:
     snapshot_id = re.match(r".*\[ID (.*)\].*", snapshot).group(1)
     # We get a thread result, hence pylint will complain the thread isn't a tuple
@@ -521,6 +551,7 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
                     [
                         sg.Button(_t("main_gui.launch_backup"), key="launch-backup"),
                         sg.Button(_t("main_gui.see_content"), key="see-content"),
+                        sg.Button(_t("generic.delete"), key="delete"),
                         sg.Button(_t("generic.configure"), key="configure"),
                         sg.Button(_t("generic.about"), key="about"),
                         sg.Button(_t("generic.quit"), key="exit"),
@@ -614,6 +645,13 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
                 sg.Popup(_t("main_gui.select_backup"), keep_on_top=True)
                 continue
             ls_window(config_dict, snapshot=values["snapshot-list"][0])
+        if event == "delete":
+            if not values["snapshot-list"]:
+                sg.Popup(_t("main_gui.select_backup"), keep_on_top=True)
+                continue
+            delete_backup(config_dict, snapshot=values["snapshot-list"][0])
+            # Make sure we trigger a GUI refresh after deletions
+            event = "state-button"          
         if event == "configure":
             config_dict = config_gui(config_dict, config_file)
             # Make sure we trigger a GUI refresh when configuration is changed

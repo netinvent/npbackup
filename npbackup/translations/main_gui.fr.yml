@@ -30,3 +30,5 @@ fr:
   identified_by: identifiée en tant que
   unknown_repo: Format de dépot inconnu
   repository_not_configured: Dépot non configuré
+  execute_operation: Opération en cours
+  delete_failed: Suppression impossible. Veuillez vérifier les journaux
