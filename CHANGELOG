@@ -1,11 +1,11 @@
 ## Current master
 
-  ! Add --read-concurrency for better backup parallelism on NVME drives
-  ! Configure default backend connections to more than defaults (5 for remote, 2 for local)
-  ! Set restic cpu usage (GOMAXPROCS env variable to n-1 core ?)
+  ! Add --read-concurrency for better backup parallelism on NVME drives (already default to 2 in 0.16.0)
 
 ## 2.2.1 - 28/08/2023
   - Added snapshot deletion option in GUI
+  - Configured default backend connections to 2 for local, 8 for remote when default value '0' is given
+  - Fine adjust GOMAXPROCS environment variable (n for 1 core, n-1 for 2-4 cores, n-2 for 5+ cores)
   - Updated internal restic binary to 0.16.0 compiled with go1.20.6
   - Compiled with newer Nuitka 1.7.10 that allows use of Python 3.11
   - Updated python to version 3.11 for Windows x64 targets

@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "20230522801"
-__version__ = "1.7.0"
+__build__ = "2023082801"
+__version__ = "1.7.1"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -106,6 +106,18 @@ class ResticRunner:
         for env_variable, value in self.environment_variables.items():
             logger.debug('Setting envrionment variable "{}"'.format(env_variable))
             os.environ[env_variable] = value
+
+        # Configure default cpu usage when not specifically set
+        if not 'GOMAXPROCS' in self.environment_variables:
+            nb_cores = os.cpu_count()
+            if nb_cores < 2 :
+                gomaxprocs = nb_cores
+            elif 2 <= nb_cores <= 4:
+                gomaxprocs = nb_cores - 1
+            elif nb_cores > 4:
+                gomaxprocs = nb_cores - 2
+            logger.debug("Setting GOMAXPROCS to {}".format(gomaxprocs))
+            os.environ['GOMAXPROCS'] = str(gomaxprocs)
 
     def _remove_env(self) -> None:
         """
@@ -240,7 +252,7 @@ class ResticRunner:
             for line in output.split("\n"):
                 if re.match("error", line, re.IGNORECASE):
                     if re.match(
-                        r".*: The cloud operation is not supported on a read-only volume\.|.*: The media is write protected\.",
+                        r"error: read .*: The cloud operation is not supported on a read-only volume\.|error: read .*: The media is write protected\.|error: read .*:cloud",
                         line,
                         re.IGNORECASE,
                     ):
@@ -329,8 +341,15 @@ class ResticRunner:
             value = int(value)
             if value > 0:
                 self._backend_connections = value
+            elif value == 0:
+                if self._backend_type == 'local':
+                    self._backend_connections = 2
+                else:
+                    self._backend_connections = 8
+
         except TypeError:
             logger.warning("Bogus backend_connections value given.")
+
 
     @property
     def additional_parameters(self):
