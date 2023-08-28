@@ -4,6 +4,7 @@
 
 ## 2.2.1 - 28/08/2023
   - Added snapshot deletion option in GUI
+  - Fix ignore_cloud_files parameter did not work on some non systems (still an issue, see https://github.com/restic/restic/issues/4155)
   - Configured default backend connections to 2 for local, 8 for remote when default value '0' is given
   - Fine adjust GOMAXPROCS environment variable (n for 1 core, n-1 for 2-4 cores, n-2 for 5+ cores)
   - Updated internal restic binary to 0.16.0 compiled with go1.20.6
