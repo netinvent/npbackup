@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.main"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023032001"
+__build__ = "2023082801"
 
 
 from typing import List, Optional, Tuple
@@ -244,11 +244,13 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
             sleep(0.0001)
     return treedata
 
+
 @threaded
 def _delete_backup(config: dict, snapshot_id: str) -> Future:
     runner = NPBackupRunner(config_dict=config)
     result = runner.forget(snapshot=snapshot_id)
     return result
+
 
 @threaded
 def _ls_window(config: dict, snapshot_id: str) -> Future:
@@ -315,8 +317,13 @@ def delete_backup(config: dict, snapshot: str) -> bool:
         sg.PopupError(_t("main_gui.delete_failed"), keep_on_top=True)
         return False
     else:
-        sg.Popup("{} {} {}".format(snapshot, _t("generic.deleted"), _t("generic.successfully")))
-        
+        sg.Popup(
+            "{} {} {}".format(
+                snapshot, _t("generic.deleted"), _t("generic.successfully")
+            )
+        )
+
+
 def ls_window(config: dict, snapshot: str) -> bool:
     snapshot_id = re.match(r".*\[ID (.*)\].*", snapshot).group(1)
     # We get a thread result, hence pylint will complain the thread isn't a tuple
@@ -651,7 +658,7 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
                 continue
             delete_backup(config_dict, snapshot=values["snapshot-list"][0])
             # Make sure we trigger a GUI refresh after deletions
-            event = "state-button"          
+            event = "state-button"
         if event == "configure":
             config_dict = config_gui(config_dict, config_file)
             # Make sure we trigger a GUI refresh when configuration is changed
