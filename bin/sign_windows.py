@@ -12,7 +12,10 @@ __version__ = "1.0.0"
 
 
 import os
-from windows_tools.signtool import SignTool
+try:
+    from windows_tools.signtool import SignTool
+except ImportError:
+    print("This tool needs windows_tools.signtool >= 0.3.1")
 
 
 basepath = r"C:\GIT\npbackup\BUILDS"
