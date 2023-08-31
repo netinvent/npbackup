@@ -24,21 +24,25 @@ import pidfile
 import ofunctions.logger_utils
 from ofunctions.platform import python_arch
 from ofunctions.process import kill_childs
+from npbackup.globvars import Globvars
+
 
 # This is needed so we get no GUI version messages
-try:
-    import PySimpleGUI as sg
-    import _tkinter
-
-    _NO_GUI_ERROR = None
-    _NO_GUI = False
-except ImportError as exc:
-    _NO_GUI_ERROR = str(exc)
-    _NO_GUI = True
-
+if Globvars.GUI:
+    try:
+        import PySimpleGUI as sg
+        import _tkinter
+    except ImportError as exc:
+        if not IS_COMPILED:
+            print(str(exc))
+        else:
+            print("Missing packages in binary.")
+        sys.exit(1)
+    from npbackup.customization import (
+        PYSIMPLEGUI_THEME,
+        OEM_ICON,
+    )
 from npbackup.customization import (
-    PYSIMPLEGUI_THEME,
-    OEM_ICON,
     LICENSE_TEXT,
     LICENSE_FILE,
 )
@@ -50,7 +54,7 @@ from npbackup.core.nuitka_helper import IS_COMPILED
 from npbackup.upgrade_client.upgrader import need_upgrade
 from npbackup.core.upgrade_runner import run_upgrade
 
-if not _NO_GUI:
+if Globvars.GUI:
     from npbackup.gui.config import config_gui
     from npbackup.gui.operations import operations_gui
     from npbackup.gui.main import main_gui
@@ -246,23 +250,16 @@ This is free software, and you are welcome to redistribute it under certain cond
         action="store_true",
         help="Add new configuration elements after upgrade",
     )
-    parser.add_argument(
-        "--gui-status",
-        action="store_true",
-        help="Show status of required modules for GUI to work",
-    )
-
 
     args = parser.parse_args()
 
-    version_string = "{} v{}{}{}-{} {} - {} - {}".format(
+    version_string = "{} v{}{}{}-{} {} - {}".format(
         __intname__,
         __version__,
         "-PRIV" if configuration.IS_PRIV_BUILD else "",
         "-P{}".format(sys.version_info[1]),
         python_arch(),
         __build__,
-        "GUI disabled" if _NO_GUI else "GUI enabled",
         __copyright__,
     )
     if args.version:
@@ -276,15 +273,6 @@ This is free software, and you are welcome to redistribute it under certain cond
                 print(file_handle.read())
         except OSError:
             print(LICENSE_TEXT)
-        sys.exit(0)
-
-    if args.gui_status:
-        logger.info("Can run GUI: {}, errors={}".format(not _NO_GUI, _NO_GUI_ERROR))
-        # Don't bother to talk about package manager when compiled with Nuitka
-        if _NO_GUI and not IS_COMPILED:
-            logger.info(
-                'You need tcl/tk 8.6+ and python-tkinter installed for GUI to work. Please use your package manager (example "yum install python-tkinter" or "apt install python3-tk") to install missing dependencies.'
-            )
         sys.exit(0)
 
     if args.debug or os.environ.get("_DEBUG", "False").capitalize() == "True":
@@ -347,7 +335,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         message = _t("config_gui.no_config_available")
         logger.error(message)
 
-        if config_dict is None and not _NO_GUI:
+        if config_dict is None and Globvars.GUI:
             config_dict = configuration.empty_config_dict
             # If no arguments are passed, assume we are launching the GUI
             if len(sys.argv) == 1:
@@ -372,7 +360,7 @@ This is free software, and you are welcome to redistribute it under certain cond
                     sys.exit(1)
             sys.exit(7)
         elif not config_dict:
-            if len(sys.argv) == 1 and not _NO_GUI:
+            if len(sys.argv) == 1 and Globvars.GUI:
                 sg.Popup(_t("config_gui.bogus_config_file", config_file=CONFIG_FILE))
             sys.exit(7)
 
@@ -507,7 +495,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         # EXIT_CODE 21 = current backup process already running
         sys.exit(21)
 
-    if not _NO_GUI:
+    if Globvars.GUI:
         # When no argument is given, let's run the GUI
         # Also, let's minimize the commandline window so the GUI user isn't distracted
         minimize_current_window()
