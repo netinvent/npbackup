@@ -760,7 +760,8 @@ class ResticRunner:
                 return False, datetime(1,1,1,0,0)
 
             tz_aware_timestamp = datetime.now(timezone.utc).astimezone()
-            has_recent_snapshot = False
+            # Begin with most recent snapshot
+            snapshots.reverse()
             for snapshot in snapshots:
                 if re.match(
                     r"[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]\..*\+[0-2][0-9]:[0-9]{2}",
@@ -776,9 +777,7 @@ class ResticRunner:
                                 snapshot["short_id"], snapshot["time"]
                             )
                         )
-                        has_recent_snapshot = True
-            if has_recent_snapshot:
-                return True, backup_ts
+                        return True, backup_ts
             return False, backup_ts
         except IndexError as exc:
             logger.debug("snapshot information missing: {}".format(exc))
