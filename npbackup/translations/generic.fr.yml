@@ -43,8 +43,9 @@ fr:
 
   scheduled_task: Tâche planifiée
 
-  delete: Supprimer
-  deleted: éffacé
+  forget: Oublier
+  forgotten: oublié
+  forgetting: Oubli de 
 
   no_snapshots: Aucun instantané
 

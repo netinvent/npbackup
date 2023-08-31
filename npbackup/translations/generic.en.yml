@@ -43,8 +43,9 @@ en:
 
   scheduled_task: Scheduled task
 
-  delete: Delete
-  deleted: deleted
+  forget: Forget
+  forgotten: Forgotten
+  forgetting: Forgetting
 
   no_snapshots: No snapshots
 

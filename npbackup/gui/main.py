@@ -127,17 +127,10 @@ def _get_gui_data(config_dict: dict) -> Future:
                 snapshot_tags = " [TAGS: {}]".format(snapshot["tags"])
             except KeyError:
                 snapshot_tags = ""
-            snapshot_list.append(
-                "{} {} {} {}@{}{} [ID: {}]".format(
-                    _t("main_gui.backup_from"),
-                    snapshot_date,
-                    _t("main_gui.run_as"),
-                    snapshot_username,
-                    snapshot_hostname,
-                    snapshot_tags,
-                    snapshot_id,
-                )
-            )
+            snapshot_list.append([
+                snapshot_id, snapshot_date, snapshot_hostname, snapshot_username, snapshot_tags
+            ])
+            
 
     return current_state, backup_tz, snapshot_list
 
@@ -196,8 +189,8 @@ def _gui_update_state(window, current_state: bool, backup_tz: Optional[datetime]
         window["state-button"].Update(
             _t("generic.not_connected_yet"), button_color=GUI_STATE_UNKNOWN_BUTTON
         )
-    window["snapshot-list"].Update(snapshot_list)
 
+    window["snapshot-list"].Update(snapshot_list)
 
 @threaded
 def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
@@ -258,7 +251,7 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
 
 
 @threaded
-def _delete_backup(config: dict, snapshot_id: str) -> Future:
+def _forget_snapshot(config: dict, snapshot_id: str) -> Future:
     runner = NPBackupRunner(config_dict=config)
     result = runner.forget(snapshot=snapshot_id)
     return result
@@ -306,38 +299,41 @@ def _ls_window(config: dict, snapshot_id: str) -> Future:
     return backup_content, result
 
 
-def delete_backup(config: dict, snapshot: str) -> bool:
-    snapshot_id = re.match(r".*\[ID: (.*)\].*", snapshot).group(1)
-    # We get a thread result, hence pylint will complain the thread isn't a tuple
-    # pylint: disable=E1101 (no-member)
-    thread = _delete_backup(config, snapshot_id)
+def forget_snapshot(config: dict, snapshot_ids: List[str]) -> bool:
+    batch_result = True
+    for snapshot_id in snapshot_ids:
+        # We get a thread result, hence pylint will complain the thread isn't a tuple
+        # pylint: disable=E1101 (no-member)
+        thread = _forget_snapshot(config, snapshot_id)
 
-    while not thread.done() and not thread.cancelled():
-        sg.PopupAnimated(
-            LOADER_ANIMATION,
-            message="{}. {}".format(
-                _t("main_gui.execute_operation"),
-                _t("main_gui.this_will_take_a_while"),
-            ),
-            time_between_frames=50,
-            background_color=GUI_LOADER_COLOR,
-            text_color=GUI_LOADER_TEXT_COLOR,
-        )
-    sg.PopupAnimated(None)
-    result = thread.result()
-    if not result:
-        sg.PopupError(_t("main_gui.delete_failed"), keep_on_top=True)
+        while not thread.done() and not thread.cancelled():
+            sg.PopupAnimated(
+                LOADER_ANIMATION,
+                message="{} {}. {}".format(
+                    _t("generic.forgetting"),
+                    snapshot_id,
+                    _t("main_gui.this_will_take_a_while"),
+                ),
+                time_between_frames=50,
+                background_color=GUI_LOADER_COLOR,
+                text_color=GUI_LOADER_TEXT_COLOR,
+            )
+        sg.PopupAnimated(None)
+        result = thread.result()
+        if not result:
+            batch_result = result
+    if not batch_result:
+        sg.PopupError(_t("main_gui.forget_failed"), keep_on_top=True)
         return False
     else:
         sg.Popup(
             "{} {} {}".format(
-                snapshot, _t("generic.deleted"), _t("generic.successfully")
+                snapshot_ids, _t("generic.forgotten"), _t("generic.successfully")
             )
         )
 
 
-def ls_window(config: dict, snapshot: str) -> bool:
-    snapshot_id = re.match(r".*\[ID: (.*)\].*", snapshot).group(1)
+def ls_window(config: dict, snapshot_id: str) -> bool:
     # We get a thread result, hence pylint will complain the thread isn't a tuple
     # pylint: disable=E1101 (no-member)
     thread = _ls_window(config, snapshot_id)
@@ -516,6 +512,7 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
     backend_type, repo_uri = get_anon_repo_uri(config_dict["repo"]["repository"])
 
     right_click_menu = ["", [_t("generic.destination")]]
+    headings = ['ID', 'Date', 'Hostname', 'User', 'Tags']
 
     layout = [
         [
@@ -549,11 +546,11 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
                             )
                         )
                     ],
-                    [sg.Listbox(values=[], key="snapshot-list", size=(80, 15))],
+                    [sg.Table(values=[[]], headings=headings, auto_size_columns=False, key="snapshot-list", select_mode='extended')],
                     [
                         sg.Button(_t("main_gui.launch_backup"), key="launch-backup"),
                         sg.Button(_t("main_gui.see_content"), key="see-content"),
-                        sg.Button(_t("generic.delete"), key="delete"),
+                        sg.Button(_t("generic.forget"), key="forget"),
                         sg.Button(_t("main_gui.operations"), key="operations"),
                         sg.Button(_t("generic.configure"), key="configure"),
                         sg.Button(_t("generic.about"), key="about"),
@@ -647,13 +644,20 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
             if not values["snapshot-list"]:
                 sg.Popup(_t("main_gui.select_backup"), keep_on_top=True)
                 continue
-            ls_window(config_dict, snapshot=values["snapshot-list"][0])
-        if event == "delete":
+            if len(values["snapshot-list"] > 1):
+                sg.Popup(_t("main_gui.select_only_one_snapshot"))
+                continue
+            snapshot_to_see = snapshot_list[values["snapshot-list"][0]][0]
+            ls_window(config_dict, snapshot_to_see)
+        if event == "forget":
             if not values["snapshot-list"]:
                 sg.Popup(_t("main_gui.select_backup"), keep_on_top=True)
                 continue
-            delete_backup(config_dict, snapshot=values["snapshot-list"][0])
-            # Make sure we trigger a GUI refresh after deletions
+            snapshots_to_forget = []
+            for row in values["snapshot-list"]:
+                snapshots_to_forget.append(snapshot_list[row][0])
+            forget_snapshot(config_dict, snapshots_to_forget)
+            # Make sure we trigger a GUI refresh after forgetting snapshots
             event = "state-button"
         if event == "operations":
             config_dict = operations_gui(config_dict, config_file)
