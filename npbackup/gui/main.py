@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.main"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023082801"
+__build__ = "2023083101"
 
 
 from typing import List, Optional, Tuple
@@ -15,6 +15,7 @@ import sys
 import os
 from logging import getLogger
 import re
+from datetime import datetime
 import dateutil
 import queue
 from time import sleep
@@ -37,6 +38,7 @@ from npbackup.customization import (
     LICENSE_FILE,
 )
 from npbackup.gui.config import config_gui
+from npbackup.gui.operations import operations_gui
 from npbackup.core.runner import NPBackupRunner
 from npbackup.core.i18n_helper import _t
 from npbackup.core.upgrade_runner import run_upgrade, check_new_version
@@ -109,7 +111,7 @@ def _about_gui(version_string: str, config_dict: dict) -> None:
 def _get_gui_data(config_dict: dict) -> Future:
     runner = NPBackupRunner(config_dict=config_dict)
     snapshots = runner.list()
-    current_state = runner.check_recent_backups()
+    current_state, backup_tz = runner.check_recent_backups()
     snapshot_list = []
     if snapshots:
         snapshots.reverse()  # Let's show newer snapshots first
@@ -120,18 +122,20 @@ def _get_gui_data(config_dict: dict) -> Future:
             snapshot_username = snapshot["username"]
             snapshot_hostname = snapshot["hostname"]
             snapshot_id = snapshot["short_id"]
+            snapshot_tags = snapshot["tags"]
             snapshot_list.append(
-                "{} {} {} {}@{} [ID {}]".format(
+                "{} {} {} {}@{} [TAGS {}] [ID {}]".format(
                     _t("main_gui.backup_from"),
                     snapshot_date,
                     _t("main_gui.run_as"),
                     snapshot_username,
                     snapshot_hostname,
+                    snapshot_tags,
                     snapshot_id,
                 )
             )
 
-    return current_state, snapshot_list
+    return current_state, backup_tz, snapshot_list
 
 
 def get_gui_data(config_dict: dict) -> Tuple[bool, List[str]]:
@@ -171,14 +175,18 @@ def get_gui_data(config_dict: dict) -> Tuple[bool, List[str]]:
     return thread.result()
 
 
-def _gui_update_state(window, current_state: bool, snapshot_list: List[str]) -> None:
+def _gui_update_state(window, current_state: bool, backup_tz: Optional[datetime], snapshot_list: List[str]) -> None:
     if current_state:
+        window["state-button"].Update("{}: {}".format(
+            _t("generic.up_to_date"), backup_tz), button_color=GUI_STATE_OK_BUTTON
+        )
+    elif current_state is False and backup_tz == datetime(1,1,1,0,0):
         window["state-button"].Update(
-            _t("generic.up_to_date"), button_color=GUI_STATE_OK_BUTTON
+            _t("generic.no_snapshots"), button_color=GUI_STATE_OLD_BUTTON
         )
     elif current_state is False:
-        window["state-button"].Update(
-            _t("generic.too_old"), button_color=GUI_STATE_OLD_BUTTON
+        window["state-button"].Update("{}: {}".format(
+            _t("generic.too_old"), backup_tz), button_color=GUI_STATE_OLD_BUTTON
         )
     elif current_state is None:
         window["state-button"].Update(
@@ -511,7 +519,7 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
             "SFTP",
             "SWIFT",
             "AZURE",
-            "GZ",
+            "GS",
             "RCLONE",
         ]:
             backup_destination = "{} {}".format(
@@ -559,6 +567,7 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
                         sg.Button(_t("main_gui.launch_backup"), key="launch-backup"),
                         sg.Button(_t("main_gui.see_content"), key="see-content"),
                         sg.Button(_t("generic.delete"), key="delete"),
+                        sg.Button(_t("main_gui.operations"), key="operations"),
                         sg.Button(_t("generic.configure"), key="configure"),
                         sg.Button(_t("generic.about"), key="about"),
                         sg.Button(_t("generic.quit"), key="exit"),
@@ -586,8 +595,8 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
     )
 
     window.read(timeout=1)
-    current_state, snapshot_list = get_gui_data(config_dict)
-    _gui_update_state(window, current_state, snapshot_list)
+    current_state, backup_tz, snapshot_list = get_gui_data(config_dict)
+    _gui_update_state(window, current_state, backup_tz, snapshot_list)
     while True:
         event, values = window.read(timeout=60000)
 
@@ -635,8 +644,8 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
                 exec_time = THREAD_SHARED_DICT["exec_time"]
             except KeyError:
                 exec_time = "N/A"
-            current_state, snapshot_list = get_gui_data(config_dict)
-            _gui_update_state(window, current_state, snapshot_list)
+            current_state, backup_tz, snapshot_list = get_gui_data(config_dict)
+            _gui_update_state(window, current_state, backup_tz, snapshot_list)
             if not result:
                 sg.PopupError(
                     _t("main_gui.backup_failed", seconds=exec_time), keep_on_top=True
@@ -659,6 +668,9 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
             delete_backup(config_dict, snapshot=values["snapshot-list"][0])
             # Make sure we trigger a GUI refresh after deletions
             event = "state-button"
+        if event == "operations":
+            config_dict = operations_gui(config_dict, config_file)
+            event = "state-button"
         if event == "configure":
             config_dict = config_gui(config_dict, config_file)
             # Make sure we trigger a GUI refresh when configuration is changed
@@ -678,7 +690,7 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
         if event == "about":
             _about_gui(version_string, config_dict)
         if event == "state-button":
-            current_state, snapshot_list = get_gui_data(config_dict)
-            _gui_update_state(window, current_state, snapshot_list)
+            current_state, backup_tz, snapshot_list = get_gui_data(config_dict)
+            _gui_update_state(window, current_state, backup_tz, snapshot_list)
             if current_state is None:
                 sg.Popup(_t("main_gui.cannot_get_repo_status"))

@@ -45,3 +45,7 @@ fr:
 
   delete: Supprimer
   deleted: éffacé
+
+  no_snapshots: Aucun instantané
+
+  are_you_sure: Etes-vous sûr ?

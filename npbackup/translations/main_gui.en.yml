@@ -31,4 +31,5 @@ en:
   unknown_repo: Repo format unknown
   repository_not_configured: Repository not configured
   execute_operation: Executing operation
-  delete failed: Deletion failed. Please check the logs
+  delete_failed: Deletion failed. Please check the logs
+  operations: Operations

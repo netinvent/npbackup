@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023082801"
-__version__ = "1.7.2"
+__build__ = "2023083101"
+__version__ = "1.8.0"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -561,7 +561,8 @@ class ResticRunner:
                 cmd += ' {} "{}"'.format(source_parameter, path)
         else:
             # make sure path is a list and does not have trailing slashes
-            cmd = "backup {}".format(
+            # We don't need to scan files for ETA, so let's add --no-scan
+            cmd = "backup --no-scan {}".format(
                 " ".join(['"{}"'.format(path.rstrip("/\\")) for path in paths])
             )
 
@@ -575,7 +576,10 @@ class ResticRunner:
                 cmd += ' --{}exclude "{}"'.format(case_ignore_param, exclude_pattern)
         for exclude_file in exclude_files:
             if exclude_file:
-                cmd += ' --{}exclude-file "{}"'.format(case_ignore_param, exclude_file)
+                if os.path.isfile(exclude_file):
+                    cmd += ' --{}exclude-file "{}"'.format(case_ignore_param, exclude_file)
+                else:
+                    logger.error("Exclude file \"{}\" not found".format(exclude_file))
         if exclude_caches:
             cmd += " --exclude-caches"
         if one_file_system:
@@ -649,23 +653,78 @@ class ResticRunner:
         logger.critical("Data not restored: {}".format(output))
         return False
 
-    def forget(self, snapshot: str) -> bool:
+    def forget(self, snapshot: Optional[str] = None, policy: Optional[dict] = None) -> bool:
         """
         Execute forget command for given snapshot
         """
         if not self.is_init:
             return None
-        cmd = "forget {}".format(snapshot)
+        if not snapshot and not policy:
+            logger.error("No valid snapshot or policy defined for pruning")
+            return False
+        
+        if snapshot:
+            cmd = "forget {}".format(snapshot)
+        if policy:
+            cmd = "format {}".format(policy) # TODO # WIP
         # We need to be verbose here since server errors will not stop client from deletion attempts
         verbose = self.verbose
         self.verbose = True
         result, output = self.executor(cmd)
         self.verbose = verbose
         if result:
-            logger.info("successfully forgot snapshot.")
+            logger.info("successfully forgot snapshots")
             return True
-        logger.critical("Could not forge snapshot: {}".format(output))
+        logger.critical("Forget failed:\n{}".format(output))
         return False
+    
+    def prune(self) -> bool:
+        """
+        Prune forgotten snapshots
+        """
+        if not self.is_init:
+            return None
+        cmd = "prune"
+        verbose = self.verbose
+        self.verbose = True
+        result, output = self.executor(cmd)
+        self.verbose = verbose
+        if result:
+            logger.info("Successfully pruned repository:\n{}".format(output))
+            return True
+        logger.critical("Could not prune repository:\n{}".format(output))
+        return False
+    
+    def check(self, read_data: bool = True) -> bool:
+        """
+        Check current repo status
+        """
+        if not self.is_init:
+            return None
+        cmd = "check{}".format(' --read-data' if read_data else '')
+        result, output  = self.executor(cmd)
+        if result:
+            logger.info("Repo checked successfully.")
+            return True
+        logger.critical("Repo check failed:\n {}".format(output))
+        return False
+    
+    def repair(self, order: str) -> bool:
+        """
+        Check current repo status
+        """
+        if not self.is_init:
+            return None
+        if order not in ['index', 'snapshots']:
+            logger.error("Bogus repair order given: {}".format(order))
+        cmd = "repair {}".format(order)
+        result, output  = self.executor(cmd)
+        if result:
+            logger.info("Repo successfully repaired:\n{}".format(output))
+            return True
+        logger.critical("Repo repair failed:\n {}".format(output))
+        return False
+
 
     def raw(self, command: str) -> Tuple[bool, str]:
         """
@@ -680,22 +739,25 @@ class ResticRunner:
         logger.critical("Raw command failed.")
         return False, output
 
-    def has_snapshot_timedelta(self, delta: int = 1441) -> Optional[datetime]:
+    def has_snapshot_timedelta(self, delta: int = 1441) -> Tuple[bool, Optional[datetime]]:
         """
         Checks if a snapshot exists that is newer that delta minutes
         Eg: if delta = -60 we expect a snapshot newer than an hour ago, and return True if exists
-            if delta = +60 we expect a snpashot newer than one hour in future (!), and return True if exists
-            returns False is too old snapshots exit
-            returns None if no info available
+            if delta = +60 we expect a snpashot newer than one hour in future (!)
+            
+            returns True, datetime if exists
+            returns False, datetime if exists but too old
+            returns False, datetime = 0001-01-01T00:00:00 if no snapshots found
+            Returns None, None on error
         """
         if not self.is_init:
             return None
         try:
             snapshots = self.snapshots()
             if self.last_command_status is False:
-                return None
+                return None, None
             if not snapshots:
-                return False
+                return False, datetime(1,1,1,0,0)
 
             tz_aware_timestamp = datetime.now(timezone.utc).astimezone()
             has_recent_snapshot = False
@@ -716,10 +778,10 @@ class ResticRunner:
                         )
                         has_recent_snapshot = True
             if has_recent_snapshot:
-                return backup_ts
-            return False
+                return True, backup_ts
+            return False, backup_ts
         except IndexError as exc:
             logger.debug("snapshot information missing: {}".format(exc))
             logger.debug("Trace", exc_info=True)
             # No 'time' attribute in snapshot ?
-            return None
+            return None, None

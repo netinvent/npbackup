@@ -1,0 +1,11 @@
+en:
+  configured_repositories: Configured repositories
+  quick_check: Quick check
+  full_check: Full check
+  forget_using_retention_policy: Forget using retention polic
+  standard_prune: Normal prune operation
+  max_prune: Prune with maximum efficiency
+  apply_to_all: Apply to all repos ?
+  add_repo: Add repo
+  edit_repo: Edit repo
+  remove_repo: Remove repo

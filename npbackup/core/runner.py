@@ -7,14 +7,14 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023052801"
+__build__ = "2023083101"
 
 
 from typing import Optional, Callable, Union, List
 import os
 import logging
 import queue
-import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 from command_runner import command_runner
 from ofunctions.platform import os_arch
@@ -141,21 +141,24 @@ class NPBackupRunner:
     # NPF-SEC-00002: password commands, pre_exec and post_exec commands will be executed with npbackup privileges
     # This can lead to a problem when the config file can be written by users other than npbackup
 
-    def __init__(self, config_dict):
-        self.config_dict = config_dict
+    def __init__(self, config_dict: Optional[dict] = None):
+        if config_dict:
+            self.config_dict = config_dict
 
-        self._dry_run = False
-        self._verbose = False
-        self._stdout = None
-        self.restic_runner = None
-        self.minimum_backup_age = None
-        self._exec_time = None
+            self._dry_run = False
+            self._verbose = False
+            self._stdout = None
+            self.restic_runner = None
+            self.minimum_backup_age = None
+            self._exec_time = None
 
-        self.is_ready = False
-        # Create an instance of restic wrapper
-        self.create_restic_runner()
-        # Configure that instance
-        self.apply_config_to_restic_runner()
+            self.is_ready = False
+            # Create an instance of restic wrapper
+            self.create_restic_runner()
+            # Configure that instance
+            self.apply_config_to_restic_runner()
+        else:
+            self.is_ready = False
 
     @property
     def backend_version(self) -> bool:
@@ -224,10 +227,10 @@ class NPBackupRunner:
         """
 
         def wrapper(self, *args, **kwargs):
-            start_time = datetime.datetime.utcnow()
+            start_time = datetime.utcnow()
             # pylint: disable=E1102 (not-callable)
             result = fn(self, *args, **kwargs)
-            self.exec_time = (datetime.datetime.utcnow() - start_time).total_seconds()
+            self.exec_time = (datetime.utcnow() - start_time).total_seconds()
             logger.info("Runner took {} seconds".format(self.exec_time))
             return result
 
@@ -438,20 +441,21 @@ class NPBackupRunner:
             return None
         logger.info(
             "Searching for a backup newer than {} ago.".format(
-                str(datetime.timedelta(minutes=self.minimum_backup_age))
+                str(timedelta(minutes=self.minimum_backup_age))
             )
         )
         self.restic_runner.verbose = False
-        result = self.restic_runner.has_snapshot_timedelta(self.minimum_backup_age)
+        result, backup_tz = self.restic_runner.has_snapshot_timedelta(self.minimum_backup_age)
         self.restic_runner.verbose = self.verbose
         if result:
-            logger.info("Most recent backup is from {}".format(result))
-            return result
+            logger.info("Most recent backup is from {}".format(backup_tz))
+        elif result is False and backup_tz == datetime(1,1,1,0,0):
+            logger.info("No snapshots found in repo.")
         elif result is False:
-            logger.info("No recent backup found.")
+            logger.info("No recent backup found. Newest is from {}".format(backup_tz))
         elif result is None:
             logger.error("Cannot connect to repository or repository empty.")
-        return result
+        return result, backup_tz
 
     @exec_timer
     def backup(self, force: bool = False) -> bool:
@@ -657,11 +661,39 @@ class NPBackupRunner:
         if not self.is_ready:
             return False
         logger.info("Forgetting snapshot {}".format(snapshot))
-        result = self.restic_runner.forget(snapshot)
+        result= self.restic_runner.forget(snapshot)
         return result
-
+    
+    @exec_timer
+    def check(self, read_data: bool = True) -> bool:
+        if not self.is_ready:
+            return False
+        logger.info("Checking repository")
+        result = self.restic_runner.check(read_data)
+        return result
+    
+    @exec_timer
+    def prune(self) -> bool:
+        if not self.is_ready:
+            return False
+        logger.info("Pruning snapshots")
+        result = self.restic_runner.prune()
+        return result
+    
+    @exec_timer
+    def repair(self, order: str) -> bool:
+        if not self.is_ready:
+            return False
+        logger.info("Repairing {} in repo".format(order))
+        result = self.restic_runner.repair(order)
+        return result
+    
     @exec_timer
     def raw(self, command: str) -> bool:
         logger.info("Running raw command: {}".format(command))
         result = self.restic_runner.raw(command=command)
         return result
+
+    def group_runner(self, operations_config: dict, result_queue: Optional[queue.Queue]) -> bool:
+        print(operations_config)
+        print('run to the hills')

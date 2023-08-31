@@ -73,7 +73,7 @@ fr:
   auto_upgrade_disabled: Mise à niveau automatique désactivée ou serveur injoignable
 
   create_scheduled_task_every: Créer une tâche planifiée toutes les
-  scheduled_task_explanation: Uniquement sous Windows. Sous Linux, merci de créer une entrée crontab comme `npbackup --backup --config-file /etc/npbackup.conf`
+  scheduled_task_explanation: Sous Linux, merci de créer une entrée crontab comme `npbackup --backup --config-file /etc/npbackup.conf`
   scheduled_task_creation_success: Tâche planifiée crée avec succès
   scheduled_task_creation_failure: Impossible de créer la tâche planifiée. Veuillez consulter les journaux pour plus de détails
 

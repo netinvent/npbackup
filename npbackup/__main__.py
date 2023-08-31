@@ -9,8 +9,8 @@ __site__ = "https://www.netperfect.fr/npbackup"
 __description__ = "NetPerfect Backup Client"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023082801"
-__version__ = "2.2.1"
+__build__ = "2023083101"
+__version__ = "2.3.0-dev"
 
 
 import os
@@ -52,6 +52,7 @@ from npbackup.core.upgrade_runner import run_upgrade
 
 if not _NO_GUI:
     from npbackup.gui.config import config_gui
+    from npbackup.gui.operations import operations_gui
     from npbackup.gui.main import main_gui
     from npbackup.gui.minimize_window import minimize_current_window
 
@@ -156,6 +157,12 @@ This is free software, and you are welcome to redistribute it under certain cond
     )
 
     parser.add_argument(
+        "--operations-gui",
+        action="store_true",
+        help="Show operations GUI"
+    )
+
+    parser.add_argument(
         "-l", "--list", action="store_true", help="Show current snapshots"
     )
 
@@ -245,6 +252,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Show status of required modules for GUI to work",
     )
 
+
     args = parser.parse_args()
 
     version_string = "{} v{}{}{}-{} {} - {} - {}".format(
@@ -299,7 +307,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         CONFIG_FILE = args.config_file
 
     # Program entry
-    if args.config_gui:
+    if args.config_gui or args.operations_gui:
         try:
             config_dict = configuration.load_config(CONFIG_FILE)
             if not config_dict:
@@ -311,7 +319,10 @@ This is free software, and you are welcome to redistribute it under certain cond
             )
             config_dict = configuration.empty_config_dict
 
-        config_dict = config_gui(config_dict, CONFIG_FILE)
+        if args.config_gui:
+            config_dict = config_gui(config_dict, CONFIG_FILE)
+        if args.operations_gui:
+            config_dict = operations_gui(config_dict, CONFIG_FILE)
         sys.exit(0)
 
     if args.create_scheduled_task:
