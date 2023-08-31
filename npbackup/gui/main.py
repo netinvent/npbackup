@@ -122,9 +122,12 @@ def _get_gui_data(config_dict: dict) -> Future:
             snapshot_username = snapshot["username"]
             snapshot_hostname = snapshot["hostname"]
             snapshot_id = snapshot["short_id"]
-            snapshot_tags = snapshot["tags"]
+            try:
+                snapshot_tags = " [TAGS: {}]".format(snapshot["tags"])
+            except KeyError:
+                snapshot_tags = ""
             snapshot_list.append(
-                "{} {} {} {}@{} [TAGS {}] [ID {}]".format(
+                "{} {} {} {}@{}{} [ID: {}]".format(
                     _t("main_gui.backup_from"),
                     snapshot_date,
                     _t("main_gui.run_as"),
@@ -303,7 +306,7 @@ def _ls_window(config: dict, snapshot_id: str) -> Future:
 
 
 def delete_backup(config: dict, snapshot: str) -> bool:
-    snapshot_id = re.match(r".*\[ID (.*)\].*", snapshot).group(1)
+    snapshot_id = re.match(r".*\[ID: (.*)\].*", snapshot).group(1)
     # We get a thread result, hence pylint will complain the thread isn't a tuple
     # pylint: disable=E1101 (no-member)
     thread = _delete_backup(config, snapshot_id)
@@ -333,7 +336,7 @@ def delete_backup(config: dict, snapshot: str) -> bool:
 
 
 def ls_window(config: dict, snapshot: str) -> bool:
-    snapshot_id = re.match(r".*\[ID (.*)\].*", snapshot).group(1)
+    snapshot_id = re.match(r".*\[ID: (.*)\].*", snapshot).group(1)
     # We get a thread result, hence pylint will complain the thread isn't a tuple
     # pylint: disable=E1101 (no-member)
     thread = _ls_window(config, snapshot_id)
