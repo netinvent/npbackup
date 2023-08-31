@@ -39,6 +39,7 @@ from npbackup.customization import (
 )
 from npbackup.gui.config import config_gui
 from npbackup.gui.operations import operations_gui
+from npbackup.gui.helpers import get_anon_repo_uri
 from npbackup.core.runner import NPBackupRunner
 from npbackup.core.i18n_helper import _t
 from npbackup.core.upgrade_runner import run_upgrade, check_new_version
@@ -512,24 +513,7 @@ def _gui_backup(config_dict, stdout) -> Future:
 
 def main_gui(config_dict: dict, config_file: str, version_string: str):
     backup_destination = _t("main_gui.local_folder")
-    backend_type = None
-    try:
-        backend_type = config_dict["repo"]["repository"].split(":")[0].upper()
-        if backend_type in [
-            "REST",
-            "S3",
-            "B2",
-            "SFTP",
-            "SWIFT",
-            "AZURE",
-            "GS",
-            "RCLONE",
-        ]:
-            backup_destination = "{} {}".format(
-                _t("main_gui.external_server"), backend_type
-            )
-    except (KeyError, AttributeError, TypeError):
-        pass
+    backend_type, repo_uri = get_anon_repo_uri(config_dict["repo"]["repository"])
 
     right_click_menu = ["", [_t("generic.destination")]]
 
@@ -560,8 +544,8 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
                     ],
                     [
                         sg.Text(
-                            "{} {}".format(
-                                _t("main_gui.backup_list_to"), backup_destination
+                            "{} {} {}".format(
+                                _t("main_gui.backup_list_to"), backend_type, repo_uri
                             )
                         )
                     ],

@@ -12,13 +12,13 @@ __build__ = "2023083101"
 
 from typing import Tuple
 from logging import getLogger
-import re
 import queue
 import PySimpleGUI as sg
 import npbackup.configuration as configuration
 from ofunctions.threading import threaded, Future
 from npbackup.core.runner import NPBackupRunner
 from npbackup.core.i18n_helper import _t
+from npbackup.gui.helpers import get_anon_repo_uri
 from npbackup.customization import (
     OEM_STRING,
     OEM_LOGO,
@@ -42,42 +42,20 @@ def add_repo(config_dict: dict) -> dict:
     pass
 
 
-def get_friendly_repo_name(repository: str) -> Tuple[str, str]:
-    backend_type = repository.split(":")[0].upper()
-    if backend_type.upper() in ["REST", "SFTP"]:
-        # Filter out user / password
-        res = re.match(r"(sftp|rest).*:\/\/(.*):?(.*)@(.*)", repository, re.IGNORECASE)
-        if res:
-            backend_uri = res.group(1) + res.group(2) + res.group(4)
-            backend_uri = repository
-    elif backend_type.upper() in [
-                "S3",
-                "B2",
-                "SWIFT",
-                "AZURE",
-                "GS",
-                "RCLONE",
-            ]:
-        backend_uri = repository
-    else:
-        backend_type = 'LOCAL'
-        backend_uri = repository
-    return backend_type, backend_uri
-
 def gui_update_state(window, config_dict: dict) -> list:
     repo_list = []
     try:
         for repo_name in config_dict['repos']:
             if config_dict['repos'][repo_name]['repository'] and config_dict['repos'][repo_name]['password']:
-                backend_type, repo = get_friendly_repo_name(config_dict['repos'][repo_name]['repository'])
-                repo_list.append("[{}] {}".format(backend_type, repo))
+                backend_type, repo_uri = get_anon_repo_uri(config_dict['repos'][repo_name]['repository'])
+                repo_list.append("[{}] {}".format(backend_type, repo_uri))
             else:
                 logger.warning("Incomplete operations repo {}".format(repo_name))
     except KeyError:
         logger.info("No operations repos configured")
     if config_dict['repo']['repository'] and config_dict['repo']['password']:
-        backend_type, repo = get_friendly_repo_name(config_dict['repo']['repository'])
-        repo_list.append("[{}] {}".format(backend_type, repo))
+        backend_type, repo_uri = get_anon_repo_uri(config_dict['repo']['repository'])
+        repo_list.append("[{}] {}".format(backend_type, reporepo_uri))
     window['repo-list'].update(repo_list)
     return repo_list
 
@@ -170,6 +148,6 @@ def operations_gui(config_dict: dict, config_file: str) -> dict:
             runner.group_runner(repos, result_queue)
         if event == 'state-update':
             full_repo_list = gui_update_state(window, config_dict)
-
+    window.close()
 
     return config_dict
