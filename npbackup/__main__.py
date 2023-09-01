@@ -58,7 +58,6 @@ if Globvars.GUI:
     from npbackup.gui.config import config_gui
     from npbackup.gui.operations import operations_gui
     from npbackup.gui.main import main_gui
-    from npbackup.gui.minimize_window import minimize_current_window
 
     sg.theme(PYSIMPLEGUI_THEME)
     sg.SetOptions(icon=OEM_ICON)
@@ -153,18 +152,19 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Path to alternative configuration file",
     )
 
-    parser.add_argument(
-        "--config-gui",
-        action="store_true",
-        default=False,
-        help="Show configuration GUI",
-    )
+    if Globvars.GUI:
+        parser.add_argument(
+            "--config-gui",
+            action="store_true",
+            default=False,
+            help="Show configuration GUI",
+        )
 
-    parser.add_argument(
-        "--operations-gui",
-        action="store_true",
-        help="Show operations GUI"
-    )
+        parser.add_argument(
+            "--operations-gui",
+            action="store_true",
+            help="Show operations GUI"
+        )
 
     parser.add_argument(
         "-l", "--list", action="store_true", help="Show current snapshots"
@@ -295,7 +295,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         CONFIG_FILE = args.config_file
 
     # Program entry
-    if args.config_gui or args.operations_gui:
+    if Globvars.GUI and (args.config_gui or args.operations_gui):
         try:
             config_dict = configuration.load_config(CONFIG_FILE)
             if not config_dict:
@@ -339,7 +339,6 @@ This is free software, and you are welcome to redistribute it under certain cond
             config_dict = configuration.empty_config_dict
             # If no arguments are passed, assume we are launching the GUI
             if len(sys.argv) == 1:
-                minimize_current_window()
                 try:
                     result = sg.Popup(
                         "{}\n\n{}".format(message, _t("config_gui.create_new_config")),
@@ -359,6 +358,7 @@ This is free software, and you are welcome to redistribute it under certain cond
                     parser.print_help(sys.stderr)
                     sys.exit(1)
             sys.exit(7)
+
         elif not config_dict:
             if len(sys.argv) == 1 and Globvars.GUI:
                 sg.Popup(_t("config_gui.bogus_config_file", config_file=CONFIG_FILE))
@@ -496,10 +496,6 @@ This is free software, and you are welcome to redistribute it under certain cond
         sys.exit(21)
 
     if Globvars.GUI:
-        # When no argument is given, let's run the GUI
-        # Also, let's minimize the commandline window so the GUI user isn't distracted
-        minimize_current_window()
-        logger.info("Running GUI")
         try:
             with pidfile.PIDFile(PID_FILE):
                 try:
