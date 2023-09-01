@@ -445,11 +445,13 @@ class NPBackupRunner:
             )
         )
         self.restic_runner.verbose = False
-        result, backup_tz = self.restic_runner.has_snapshot_timedelta(self.minimum_backup_age)
+        result, backup_tz = self.restic_runner.has_snapshot_timedelta(
+            self.minimum_backup_age
+        )
         self.restic_runner.verbose = self.verbose
         if result:
             logger.info("Most recent backup is from {}".format(backup_tz))
-        elif result is False and backup_tz == datetime(1,1,1,0,0):
+        elif result is False and backup_tz == datetime(1, 1, 1, 0, 0):
             logger.info("No snapshots found in repo.")
         elif result is False:
             logger.info("No recent backup found. Newest is from {}".format(backup_tz))
@@ -661,9 +663,9 @@ class NPBackupRunner:
         if not self.is_ready:
             return False
         logger.info("Forgetting snapshot {}".format(snapshot))
-        result= self.restic_runner.forget(snapshot)
+        result = self.restic_runner.forget(snapshot)
         return result
-    
+
     @exec_timer
     def check(self, read_data: bool = True) -> bool:
         if not self.is_ready:
@@ -671,7 +673,7 @@ class NPBackupRunner:
         logger.info("Checking repository")
         result = self.restic_runner.check(read_data)
         return result
-    
+
     @exec_timer
     def prune(self) -> bool:
         if not self.is_ready:
@@ -679,7 +681,7 @@ class NPBackupRunner:
         logger.info("Pruning snapshots")
         result = self.restic_runner.prune()
         return result
-    
+
     @exec_timer
     def repair(self, order: str) -> bool:
         if not self.is_ready:
@@ -687,13 +689,15 @@ class NPBackupRunner:
         logger.info("Repairing {} in repo".format(order))
         result = self.restic_runner.repair(order)
         return result
-    
+
     @exec_timer
     def raw(self, command: str) -> bool:
         logger.info("Running raw command: {}".format(command))
         result = self.restic_runner.raw(command=command)
         return result
 
-    def group_runner(self, operations_config: dict, result_queue: Optional[queue.Queue]) -> bool:
+    def group_runner(
+        self, operations_config: dict, result_queue: Optional[queue.Queue]
+    ) -> bool:
         print(operations_config)
-        print('run to the hills')
+        print("run to the hills")

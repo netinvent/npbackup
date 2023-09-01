@@ -577,9 +577,11 @@ class ResticRunner:
         for exclude_file in exclude_files:
             if exclude_file:
                 if os.path.isfile(exclude_file):
-                    cmd += ' --{}exclude-file "{}"'.format(case_ignore_param, exclude_file)
+                    cmd += ' --{}exclude-file "{}"'.format(
+                        case_ignore_param, exclude_file
+                    )
                 else:
-                    logger.error("Exclude file \"{}\" not found".format(exclude_file))
+                    logger.error('Exclude file "{}" not found'.format(exclude_file))
         if exclude_caches:
             cmd += " --exclude-caches"
         if one_file_system:
@@ -653,7 +655,9 @@ class ResticRunner:
         logger.critical("Data not restored: {}".format(output))
         return False
 
-    def forget(self, snapshot: Optional[str] = None, policy: Optional[dict] = None) -> bool:
+    def forget(
+        self, snapshot: Optional[str] = None, policy: Optional[dict] = None
+    ) -> bool:
         """
         Execute forget command for given snapshot
         """
@@ -662,11 +666,11 @@ class ResticRunner:
         if not snapshot and not policy:
             logger.error("No valid snapshot or policy defined for pruning")
             return False
-        
+
         if snapshot:
             cmd = "forget {}".format(snapshot)
         if policy:
-            cmd = "format {}".format(policy) # TODO # WIP
+            cmd = "format {}".format(policy)  # TODO # WIP
         # We need to be verbose here since server errors will not stop client from deletion attempts
         verbose = self.verbose
         self.verbose = True
@@ -677,7 +681,7 @@ class ResticRunner:
             return True
         logger.critical("Forget failed:\n{}".format(output))
         return False
-    
+
     def prune(self) -> bool:
         """
         Prune forgotten snapshots
@@ -694,37 +698,36 @@ class ResticRunner:
             return True
         logger.critical("Could not prune repository:\n{}".format(output))
         return False
-    
+
     def check(self, read_data: bool = True) -> bool:
         """
         Check current repo status
         """
         if not self.is_init:
             return None
-        cmd = "check{}".format(' --read-data' if read_data else '')
-        result, output  = self.executor(cmd)
+        cmd = "check{}".format(" --read-data" if read_data else "")
+        result, output = self.executor(cmd)
         if result:
             logger.info("Repo checked successfully.")
             return True
         logger.critical("Repo check failed:\n {}".format(output))
         return False
-    
+
     def repair(self, order: str) -> bool:
         """
         Check current repo status
         """
         if not self.is_init:
             return None
-        if order not in ['index', 'snapshots']:
+        if order not in ["index", "snapshots"]:
             logger.error("Bogus repair order given: {}".format(order))
         cmd = "repair {}".format(order)
-        result, output  = self.executor(cmd)
+        result, output = self.executor(cmd)
         if result:
             logger.info("Repo successfully repaired:\n{}".format(output))
             return True
         logger.critical("Repo repair failed:\n {}".format(output))
         return False
-
 
     def raw(self, command: str) -> Tuple[bool, str]:
         """
@@ -739,12 +742,14 @@ class ResticRunner:
         logger.critical("Raw command failed.")
         return False, output
 
-    def has_snapshot_timedelta(self, delta: int = 1441) -> Tuple[bool, Optional[datetime]]:
+    def has_snapshot_timedelta(
+        self, delta: int = 1441
+    ) -> Tuple[bool, Optional[datetime]]:
         """
         Checks if a snapshot exists that is newer that delta minutes
         Eg: if delta = -60 we expect a snapshot newer than an hour ago, and return True if exists
             if delta = +60 we expect a snpashot newer than one hour in future (!)
-            
+
             returns True, datetime if exists
             returns False, datetime if exists but too old
             returns False, datetime = 0001-01-01T00:00:00 if no snapshots found
@@ -757,7 +762,7 @@ class ResticRunner:
             if self.last_command_status is False:
                 return None, None
             if not snapshots:
-                return False, datetime(1,1,1,0,0)
+                return False, datetime(1, 1, 1, 0, 0)
 
             tz_aware_timestamp = datetime.now(timezone.utc).astimezone()
             # Begin with most recent snapshot

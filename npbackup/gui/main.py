@@ -127,10 +127,15 @@ def _get_gui_data(config_dict: dict) -> Future:
                 snapshot_tags = " [TAGS: {}]".format(snapshot["tags"])
             except KeyError:
                 snapshot_tags = ""
-            snapshot_list.append([
-                snapshot_id, snapshot_date, snapshot_hostname, snapshot_username, snapshot_tags
-            ])
-            
+            snapshot_list.append(
+                [
+                    snapshot_id,
+                    snapshot_date,
+                    snapshot_hostname,
+                    snapshot_username,
+                    snapshot_tags,
+                ]
+            )
 
     return current_state, backup_tz, snapshot_list
 
@@ -172,18 +177,22 @@ def get_gui_data(config_dict: dict) -> Tuple[bool, List[str]]:
     return thread.result()
 
 
-def _gui_update_state(window, current_state: bool, backup_tz: Optional[datetime], snapshot_list: List[str]) -> None:
+def _gui_update_state(
+    window, current_state: bool, backup_tz: Optional[datetime], snapshot_list: List[str]
+) -> None:
     if current_state:
-        window["state-button"].Update("{}: {}".format(
-            _t("generic.up_to_date"), backup_tz), button_color=GUI_STATE_OK_BUTTON
+        window["state-button"].Update(
+            "{}: {}".format(_t("generic.up_to_date"), backup_tz),
+            button_color=GUI_STATE_OK_BUTTON,
         )
-    elif current_state is False and backup_tz == datetime(1,1,1,0,0):
+    elif current_state is False and backup_tz == datetime(1, 1, 1, 0, 0):
         window["state-button"].Update(
             _t("generic.no_snapshots"), button_color=GUI_STATE_OLD_BUTTON
         )
     elif current_state is False:
-        window["state-button"].Update("{}: {}".format(
-            _t("generic.too_old"), backup_tz), button_color=GUI_STATE_OLD_BUTTON
+        window["state-button"].Update(
+            "{}: {}".format(_t("generic.too_old"), backup_tz),
+            button_color=GUI_STATE_OLD_BUTTON,
         )
     elif current_state is None:
         window["state-button"].Update(
@@ -191,6 +200,7 @@ def _gui_update_state(window, current_state: bool, backup_tz: Optional[datetime]
         )
 
     window["snapshot-list"].Update(snapshot_list)
+
 
 @threaded
 def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
@@ -512,7 +522,13 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
     backend_type, repo_uri = get_anon_repo_uri(config_dict["repo"]["repository"])
 
     right_click_menu = ["", [_t("generic.destination")]]
-    headings = ['ID     ', 'Date               ', 'Hostname  ', 'User              ', 'Tags        ']
+    headings = [
+        "ID     ",
+        "Date               ",
+        "Hostname  ",
+        "User              ",
+        "Tags        ",
+    ]
 
     layout = [
         [
@@ -546,7 +562,16 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
                             )
                         )
                     ],
-                    [sg.Table(values=[[]], headings=headings, auto_size_columns=True, justification='left', key="snapshot-list", select_mode='extended')],
+                    [
+                        sg.Table(
+                            values=[[]],
+                            headings=headings,
+                            auto_size_columns=True,
+                            justification="left",
+                            key="snapshot-list",
+                            select_mode="extended",
+                        )
+                    ],
                     [
                         sg.Button(_t("main_gui.launch_backup"), key="launch-backup"),
                         sg.Button(_t("main_gui.see_content"), key="see-content"),
@@ -579,8 +604,7 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
     )
 
     # Auto reisze table to window size
-    window['snapshot-list'].expand(True, True)
-
+    window["snapshot-list"].expand(True, True)
 
     window.read(timeout=1)
     current_state, backup_tz, snapshot_list = get_gui_data(config_dict)

@@ -327,12 +327,12 @@ def config_gui(config_dict: dict, config_file: str):
         [sg.Text(_t("config_gui.retention_policy"))],
         [
             sg.Text(_t("config_gui.custom_time_server_url"), size=(40, 1)),
-            sg.Input(key="retentionpolicy---custom_time_server", size=(50 ,1)),
+            sg.Input(key="retentionpolicy---custom_time_server", size=(50, 1)),
         ],
         [
             sg.Text(_t("config_gui.keep"), size=(40, 1)),
             sg.Text(_t("config_gui.hourly"), size=(10, 1)),
-        ]
+        ],
     ]
 
     identity_col = [
@@ -500,7 +500,7 @@ def config_gui(config_dict: dict, config_file: str):
                 retention_col,
                 font="helvetica 16",
                 key="--tab-retentino--",
-                element_justification='L',
+                element_justification="L",
             )
         ],
         [
@@ -558,7 +558,7 @@ def config_gui(config_dict: dict, config_file: str):
     window = sg.Window(
         "Configuration",
         layout,
-        size=(800,600),
+        size=(800, 600),
         text_justification="C",
         auto_size_text=True,
         auto_size_buttons=False,

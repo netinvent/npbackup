@@ -161,9 +161,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         )
 
         parser.add_argument(
-            "--operations-gui",
-            action="store_true",
-            help="Show operations GUI"
+            "--operations-gui", action="store_true", help="Show operations GUI"
         )
 
     parser.add_argument(
