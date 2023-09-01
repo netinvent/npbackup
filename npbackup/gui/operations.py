@@ -48,14 +48,14 @@ def gui_update_state(window, config_dict: dict) -> list:
         for repo_name in config_dict['repos']:
             if config_dict['repos'][repo_name]['repository'] and config_dict['repos'][repo_name]['password']:
                 backend_type, repo_uri = get_anon_repo_uri(config_dict['repos'][repo_name]['repository'])
-                repo_list.append("[{}] {}".format(backend_type, repo_uri))
+                repo_list.append([backend_type, repo_uri])
             else:
                 logger.warning("Incomplete operations repo {}".format(repo_name))
     except KeyError:
         logger.info("No operations repos configured")
     if config_dict['repo']['repository'] and config_dict['repo']['password']:
         backend_type, repo_uri = get_anon_repo_uri(config_dict['repo']['repository'])
-        repo_list.append("[{}] {}".format(backend_type, reporepo_uri))
+        repo_list.append("[{}] {}".format(backend_type, repo_uri))
     window['repo-list'].update(repo_list)
     return repo_list
 
@@ -63,6 +63,10 @@ def operations_gui(config_dict: dict, config_file: str) -> dict:
     """
     Operate on one or multiple repositories
     """
+
+    # This is a stupid hack to make sure uri column is large enough
+    headings = ['Backend', 'URI                                                  ']
+
     layout = [
     [
         sg.Column(
@@ -83,7 +87,7 @@ def operations_gui(config_dict: dict, config_file: str) -> dict:
                 [
                     sg.Text(_t("operations_gui.configured_repositories"))
                 ],
-                [sg.Listbox(values=[], key="repo-list", size=(80, 15))],
+                [sg.Table(values=[[]], headings=headings, key="repo-list", auto_size_columns=True, justification='left')],
                 [sg.Button(_t("operations_gui.add_repo"), key="add-repo"), sg.Button(_t("operations_gui.edit_repo"), key="edit-repo"), sg.Button(_t("operations_gui.remove_repo"), key="remove-repo")],
                 [sg.Button(_t("operations_gui.quick_check"), key="quick-check"), sg.Button(_t("operations_gui.full_check"), key="full-check")],
                 [sg.Button(_t("operations_gui.forget_using_retention_policy"), key="forget")],
@@ -112,7 +116,10 @@ def operations_gui(config_dict: dict, config_file: str) -> dict:
     )
 
     full_repo_list = gui_update_state(window, config_dict)
-    window.Element('repo-list').Widget.config(selectmode = sg.LISTBOX_SELECT_MODE_EXTENDED)
+
+    # Auto reisze table to window size
+    window['repo-list'].expand(True, True)
+
     while True:
         event, values = window.read(timeout=60000)
 

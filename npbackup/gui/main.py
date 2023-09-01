@@ -512,7 +512,7 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
     backend_type, repo_uri = get_anon_repo_uri(config_dict["repo"]["repository"])
 
     right_click_menu = ["", [_t("generic.destination")]]
-    headings = ['ID', 'Date', 'Hostname', 'User', 'Tags']
+    headings = ['ID     ', 'Date               ', 'Hostname  ', 'User              ', 'Tags        ']
 
     layout = [
         [
@@ -546,7 +546,7 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
                             )
                         )
                     ],
-                    [sg.Table(values=[[]], headings=headings, auto_size_columns=False, key="snapshot-list", select_mode='extended')],
+                    [sg.Table(values=[[]], headings=headings, auto_size_columns=True, justification='left', key="snapshot-list", select_mode='extended')],
                     [
                         sg.Button(_t("main_gui.launch_backup"), key="launch-backup"),
                         sg.Button(_t("main_gui.see_content"), key="see-content"),
@@ -577,6 +577,10 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
         right_click_menu=right_click_menu,
         finalize=True,
     )
+
+    # Auto reisze table to window size
+    window['snapshot-list'].expand(True, True)
+
 
     window.read(timeout=1)
     current_state, backup_tz, snapshot_list = get_gui_data(config_dict)
