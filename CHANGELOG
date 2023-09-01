@@ -14,13 +14,18 @@
       - manages multiple repos with generic key (restic key add) or specified key
 
 ## 2.3.0 - XX
+  !- Multi repository support (everything except repo URI can be inherited from groups)
+  !- Group settings for repositories
   !- New operation planifier for backups / cleaning / checking repos
   - Current backup state now shows more precise backup state, including last backup date when relevant
   !- Implemented retention policies
   !  - Optional time server update to make sure we don't drift before doing retention operations
   !  - Optional repo check befoire doing retention operations
   !- Implemented repo check / repair actions
+  !- --check --repair
+  - Split npbackup into CLI and GUI so GUI doesn't have a console window anymore
   - Added snapshot tag to snapshot list on main window
+  - Show anonymized repo uri in GUI
   - Fix deletion failed message for en lang
   - Fix Google cloud storage backend detection in repository uri
 
