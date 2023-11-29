@@ -450,12 +450,12 @@ class ResticRunner:
                 logger.info("Repo already initialized.")
                 self.is_init = True
                 return True
-            if re.search(".*server response.*\(\d+\)", output, re.IGNORECASE):
-                logger.error(f"Cannot contact repo: {output}")
-                self.is_init = False
-                return False
+            logger.error(f"Cannot contact repo: {output}")
+            self.is_init = False
+            return False
         self.is_init = False
         return False
+
 
     @property
     def is_init(self):
