@@ -285,6 +285,10 @@ def config_gui(config_dict: dict, config_file: str):
             sg.Text(_t("config_gui.additional_parameters"), size=(40, 1)),
             sg.Input(key="backup---additional_parameters", size=(50, 1)),
         ],
+        [
+            sg.Text(_t("config_gui.additional_backup_only_parameters"), size=(40, 1)),
+            sg.Input(key="backup---additional_backup_only_parameters", size=(50, 1)),
+        ],
     ]
 
     repo_col = [
