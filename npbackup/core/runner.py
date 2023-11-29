@@ -347,10 +347,11 @@ class NPBackupRunner:
         except ValueError:
             logger.warning("Bogus ignore_cloud_files value given")
 
-
         try:
             if self.config_dict["backup"]["additional_parameters"]:
-                self.restic_runner.additional_parameters = self.config_dict["backup"]["additional_parameters"]
+                self.restic_runner.additional_parameters = self.config_dict["backup"][
+                    "additional_parameters"
+                ]
         except KeyError:
             pass
         except ValueError:
@@ -572,7 +573,9 @@ class NPBackupRunner:
             tags = None
 
         try:
-            additional_backup_only_parameters = self.config_dict["backup"]["additional_backup_only_parameters"]
+            additional_backup_only_parameters = self.config_dict["backup"][
+                "additional_backup_only_parameters"
+            ]
         except KeyError:
             additional_backup_only_parameters = None
 

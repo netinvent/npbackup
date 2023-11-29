@@ -201,7 +201,11 @@ class ResticRunner:
         """
         start_time = datetime.utcnow()
         self._executor_finished = False
-        additional_parameters = f" {self.additional_parameters.strip()} " if self.additional_parameters else ""
+        additional_parameters = (
+            f" {self.additional_parameters.strip()} "
+            if self.additional_parameters
+            else ""
+        )
         _cmd = f'"{self._binary}" {additional_parameters}{cmd}{self.generic_arguments}'
         if self.dry_run:
             _cmd += " --dry-run"
@@ -456,7 +460,6 @@ class ResticRunner:
         self.is_init = False
         return False
 
-
     @property
     def is_init(self):
         if self._is_init is None:
@@ -570,7 +573,12 @@ class ResticRunner:
         else:
             # make sure path is a list and does not have trailing slashes, unless we're backing up root
             cmd = "backup {}".format(
-                " ".join(['"{}"'.format(path.rstrip("/\\")) if path != '/' else path for path in paths])
+                " ".join(
+                    [
+                        '"{}"'.format(path.rstrip("/\\")) if path != "/" else path
+                        for path in paths
+                    ]
+                )
             )
 
         case_ignore_param = ""
