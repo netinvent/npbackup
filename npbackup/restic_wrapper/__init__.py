@@ -442,6 +442,7 @@ class ResticRunner:
             if re.search(
                 r"created restic repository ([a-z0-9]+) at .+", output, re.IGNORECASE
             ):
+                self.is_init = True
                 return True
         else:
             if re.search(".*already exists", output, re.IGNORECASE):
@@ -450,7 +451,9 @@ class ResticRunner:
                 return True
             if re.search(".*server response.*\(\d+\)", output, re.IGNORECASE):
                 logger.error(f"Cannot contact repo: {output}")
+                self.is_init = False
                 return False
+        self.is_init = False
         return False
 
     @property
