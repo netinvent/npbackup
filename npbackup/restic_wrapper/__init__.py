@@ -70,7 +70,7 @@ class ResticRunner:
         except AttributeError:
             self._backend_type = None
         self._ignore_cloud_files = True
-        self._addition_parameters = None
+        self._additional_parameters = None
         self._environment_variables = {}
 
         self._stop_on = (
@@ -201,7 +201,8 @@ class ResticRunner:
         """
         start_time = datetime.utcnow()
         self._executor_finished = False
-        _cmd = '"{}" {}{}'.format(self._binary, cmd, self.generic_arguments)
+        additional_parameters = f" {self.additional_parameters.strip()} " if self.additional_parameters else ""
+        _cmd = f'"{self._binary}" {additional_parameters}{cmd}{self.generic_arguments}'
         if self.dry_run:
             _cmd += " --dry-run"
         logger.debug("Running command: [{}]".format(_cmd))
@@ -352,11 +353,11 @@ class ResticRunner:
 
     @property
     def additional_parameters(self):
-        return self._addition_parameters
+        return self._additional_parameters
 
     @additional_parameters.setter
     def additional_parameters(self, value: str):
-        self._addition_parameters = value
+        self._additional_parameters = value
 
     @property
     def priority(self):
@@ -543,7 +544,7 @@ class ResticRunner:
         use_fs_snapshot: bool = False,
         tags: List[str] = [],
         one_file_system: bool = False,
-        additional_parameters: str = None,
+        additional_backup_only_parameters: str = None,
     ) -> Tuple[bool, str]:
         """
         Executes restic backup after interpreting all arguments
@@ -599,8 +600,8 @@ class ResticRunner:
             if tag:
                 tag = tag.strip()
                 cmd += " --tag {}".format(tag)
-        if additional_parameters:
-            cmd += " {}".format(additional_parameters)
+        if additional_backup_only_parameters:
+            cmd += " {}".format(additional_backup_only_parameters)
         result, output = self.executor(cmd, live_stream=True)
 
         if (
