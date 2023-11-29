@@ -26,7 +26,7 @@ from npbackup.__main__ import __intname__ as NAME, __version__ as VERSION
 from npbackup import configuration
 
 
-logger = logging.getLogger(__intname__)
+logger = logging.getLogger()
 
 
 def metric_writer(

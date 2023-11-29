@@ -17,7 +17,7 @@ import tempfile
 from command_runner import command_runner
 from npbackup.customization import PROGRAM_NAME
 
-logger = getLogger(__intname__)
+logger = getLogger()
 
 
 # This is the path to a onefile executable binary

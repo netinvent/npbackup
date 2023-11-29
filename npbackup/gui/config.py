@@ -22,7 +22,7 @@ from npbackup.core.nuitka_helper import IS_COMPILED
 if os.name == "nt":
     from npbackup.windows.task import create_scheduled_task
 
-logger = getLogger(__intname__)
+logger = getLogger()
 
 
 def ask_backup_admin_password(config_dict) -> bool:

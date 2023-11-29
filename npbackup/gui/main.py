@@ -42,7 +42,7 @@ from npbackup.core.i18n_helper import _t
 from npbackup.core.upgrade_runner import run_upgrade, check_new_version
 
 
-logger = getLogger(__intname__)
+logger = getLogger()
 
 # Let's use mutable to get a cheap way of transfering data from thread to main program
 # There are no possible race conditions since we don't modifiy the data from anywhere outside the thread

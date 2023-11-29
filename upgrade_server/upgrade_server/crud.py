@@ -39,7 +39,7 @@ else:
     config_dict = configuration.load_config()
 
 
-logger = getLogger(__intname__)
+logger = getLogger()
 
 
 def sha256sum_data(data):

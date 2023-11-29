@@ -22,7 +22,7 @@ import queue
 from command_runner import command_runner
 
 
-logger = getLogger(__intname__)
+logger = getLogger()
 
 # Arbitrary timeout for init / init checks.
 # If init takes more than a minute, we really have a problem

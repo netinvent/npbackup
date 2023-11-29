@@ -18,7 +18,7 @@ from logging import getLogger
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 config_file = os.path.join(ROOT_DIR, "upgrade_server.conf")
 
-logger = getLogger(__intname__)
+logger = getLogger()
 
 
 def load_config(config_file: str = config_file):
