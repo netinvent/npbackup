@@ -447,6 +447,10 @@ class ResticRunner:
             if re.search(".*already exists", output, re.IGNORECASE):
                 logger.info("Repo already initialized.")
                 self.is_init = True
+                return True
+            if re.search(".*server response.*\(\d+\)", output, re.IGNORECASE):
+                logger.error(f"Cannot contact repo: {output}")
+                return False
         return False
 
     @property

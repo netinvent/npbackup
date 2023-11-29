@@ -571,7 +571,9 @@ class NPBackupRunner:
         # Check if backup is required
         self.restic_runner.verbose = False
         if not self.restic_runner.is_init:
-            self.restic_runner.init()
+            if not self.restic_runner.init():
+                logger.error("Cannot continue.")
+                return False
         if self.check_recent_backups() and not force:
             logger.info("No backup necessary.")
             return True
