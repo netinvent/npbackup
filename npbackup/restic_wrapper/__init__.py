@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023082801"
-__version__ = "1.7.2"
+__build__ = "2023112901"
+__version__ = "1.7.3"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -560,9 +560,9 @@ class ResticRunner:
             for path in paths:
                 cmd += ' {} "{}"'.format(source_parameter, path)
         else:
-            # make sure path is a list and does not have trailing slashes
+            # make sure path is a list and does not have trailing slashes, unless we're backing up root
             cmd = "backup {}".format(
-                " ".join(['"{}"'.format(path.rstrip("/\\")) for path in paths])
+                " ".join(['"{}"'.format(path.rstrip("/\\")) if path != '/' else path for path in paths])
             )
 
         case_ignore_param = ""
