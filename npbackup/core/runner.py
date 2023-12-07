@@ -609,8 +609,8 @@ class NPBackupRunner:
                 if pre_exec_failure_is_fatal:
                     return False
             else:
-                logger.debug(
-                    "Pre-execution of command {} success with\n{}.".format(
+                logger.info(
+                    "Pre-execution of command {} success with:\n{}.".format(
                         pre_exec_command, output
                     )
                 )
@@ -646,8 +646,8 @@ class NPBackupRunner:
                 if post_exec_failure_is_fatal:
                     return False
             else:
-                logger.debug(
-                    "Post-execution of command {} success with\n{}.".format(
+                logger.info(
+                    "Post-execution of command {} success with:\n{}.".format(
                         post_exec_command, output
                     )
                 )
