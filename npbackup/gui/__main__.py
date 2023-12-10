@@ -7,12 +7,13 @@ __intname__ = "npbackup.gui.main"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023083101"
+__build__ = "2023121001"
 
 
 from typing import List, Optional, Tuple
 import sys
 import os
+from pathlib import Path
 from logging import getLogger
 import re
 from datetime import datetime
@@ -20,6 +21,7 @@ import dateutil
 import queue
 from time import sleep
 import PySimpleGUI as sg
+import _tkinter
 from ofunctions.threading import threaded, Future
 from threading import Thread
 from ofunctions.misc import BytesConverter
@@ -43,7 +45,18 @@ from npbackup.gui.helpers import get_anon_repo_uri
 from npbackup.core.runner import NPBackupRunner
 from npbackup.core.i18n_helper import _t
 from npbackup.core.upgrade_runner import run_upgrade, check_new_version
+from npbackup.interface_entrypoint import entrypoint
+from npbackup.__version__ import __intname__ as intname, __version__, __build__, __copyright__
 
+from npbackup.gui.config import config_gui
+from npbackup.gui.operations import operations_gui
+from npbackup.customization import (
+    PYSIMPLEGUI_THEME,
+    OEM_ICON,
+)
+
+sg.theme(PYSIMPLEGUI_THEME)
+sg.SetOptions(icon=OEM_ICON)
 
 logger = getLogger()
 
@@ -517,7 +530,7 @@ def _gui_backup(config_dict, stdout) -> Future:
     return result
 
 
-def main_gui(config_dict: dict, config_file: str, version_string: str):
+def _main_gui():
     backup_destination = _t("main_gui.local_folder")
     backend_type, repo_uri = get_anon_repo_uri(config_dict["repo"]["repository"])
 
@@ -713,3 +726,11 @@ def main_gui(config_dict: dict, config_file: str, version_string: str):
             _gui_update_state(window, current_state, backup_tz, snapshot_list)
             if current_state is None:
                 sg.Popup(_t("main_gui.cannot_get_repo_status"))
+
+
+def main_gui():
+    try:
+        _main_gui()
+    except _tkinter.TclError as exc:
+        logger.critical(f'Tkinter error: "{exc}". Is this a headless server ?')
+        sys.exit(250)
