@@ -9,8 +9,8 @@ __site__ = "https://www.netperfect.fr/npbackup"
 __description__ = "NetPerfect Backup Client"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023082801"
-__version__ = "2.2.1"
+__build__ = "2023121101"
+__version__ = "2.2.2"
 
 
 import os
