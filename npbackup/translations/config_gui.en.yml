@@ -82,7 +82,7 @@ en:
   machine_group: Machine group
 
   show_decrypted: Show decrypted
-  not_allowed_on_not_compiled: Using this option is not allowed on non compiled or non private builds
+  no_backup_admin_password_set: No backup admin password set, cannot show unencrypted
 
   # compression
   auto: Automatic
