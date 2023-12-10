@@ -13,7 +13,7 @@ __build__ = "2023040401"
 from logging import getLogger
 from npbackup import configuration
 from npbackup.upgrade_client.upgrader import auto_upgrader, _check_new_version
-from npbackup.__main__ import __version__ as npbackup_version
+from npbackup.__version__ import __version__ as npbackup_version
 
 
 logger = getLogger(__intname__)

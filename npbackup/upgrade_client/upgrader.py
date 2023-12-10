@@ -23,7 +23,7 @@ from command_runner import deferred_command
 from npbackup.upgrade_client.requestor import Requestor
 from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
 from npbackup.core.nuitka_helper import IS_COMPILED
-from npbackup.__main__ import __version__ as npbackup_version
+from npbackup.__version__ import __version__ as npbackup_version
 
 logger = getLogger(__intname__)
 
