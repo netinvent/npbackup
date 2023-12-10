@@ -55,7 +55,7 @@ except ImportError:
         sys.exit(1)
 
 
-logger = getLogger(__name__)
+logger = getLogger()
 
 
 # Monkeypatching ruamel.yaml ordreddict so we get to use pseudo dot notations

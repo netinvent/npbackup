@@ -92,7 +92,11 @@ def execution_logs(start_time: datetime) -> None:
     10 = debug, 20 = info, 30 = warning, 40 = error, 50 = critical
     so "if 30 in logger._cache" checks if warning has been triggered
     ATTENTION: logger._cache does only contain cache of current main, not modules, deprecated in favor of
-    ofunctions.ContextFilterWorstLevel
+    ofunctions.logger_utils.ContextFilterWorstLevel
+
+    ATTENTION: For ofunctions.logger_utils.ContextFilterWorstLevel will only check current logger instance
+    So using logger = getLogger("anotherinstance") will create a separate instance from the one we can inspect
+    Makes sense ;)
     """
     end_time = datetime.utcnow()
 

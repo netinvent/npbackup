@@ -16,7 +16,7 @@ import json
 import requests
 
 
-logger = getLogger(__intname__)
+logger = getLogger()
 
 
 class Requestor:

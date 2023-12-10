@@ -25,7 +25,7 @@ from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
 from npbackup.core.nuitka_helper import IS_COMPILED
 from npbackup.__version__ import __version__ as npbackup_version
 
-logger = getLogger(__intname__)
+logger = getLogger()
 
 UPGRADE_DEFER_TIME = 60  # Wait x seconds before we actually do the upgrade so current program could quit before being erased
 
