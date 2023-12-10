@@ -17,7 +17,7 @@ import i18n
 from npbackup.path_helper import BASEDIR
 
 
-logger = getLogger(__intname__)
+logger = getLogger()
 
 
 TRANSLATIONS_DIR = os.path.join(BASEDIR, "translations")

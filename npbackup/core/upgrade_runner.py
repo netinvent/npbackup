@@ -16,7 +16,7 @@ from npbackup.upgrade_client.upgrader import auto_upgrader, _check_new_version
 from npbackup.__main__ import __version__ as npbackup_version
 
 
-logger = getLogger(__intname__)
+logger = getLogger()
 
 
 def check_new_version(config_dict: dict) -> bool:

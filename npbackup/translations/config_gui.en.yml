@@ -20,6 +20,7 @@ en:
   one_per_line: one per line
   backup_priority: Backup priority
   additional_parameters: Additional parameters
+  additional_backup_only_parameters: Additional backup only parmas
 
   backup_destination: Backup destination
   minimum_backup_age: Minimum delay between two backups

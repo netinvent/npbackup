@@ -26,7 +26,7 @@ from npbackup.__main__ import __intname__ as NAME, __version__ as VERSION
 from npbackup import configuration
 
 
-logger = logging.getLogger(__intname__)
+logger = logging.getLogger()
 
 
 def metric_writer(
@@ -347,6 +347,15 @@ class NPBackupRunner:
         except ValueError:
             logger.warning("Bogus ignore_cloud_files value given")
 
+        try:
+            if self.config_dict["backup"]["additional_parameters"]:
+                self.restic_runner.additional_parameters = self.config_dict["backup"][
+                    "additional_parameters"
+                ]
+        except KeyError:
+            pass
+        except ValueError:
+            logger.warning("Bogus additional parameters given")
         self.restic_runner.stdout = self.stdout
 
         try:
@@ -564,14 +573,18 @@ class NPBackupRunner:
             tags = None
 
         try:
-            additional_parameters = self.config_dict["backup"]["additional_parameters"]
+            additional_backup_only_parameters = self.config_dict["backup"][
+                "additional_backup_only_parameters"
+            ]
         except KeyError:
-            additional_parameters = None
+            additional_backup_only_parameters = None
 
         # Check if backup is required
         self.restic_runner.verbose = False
         if not self.restic_runner.is_init:
-            self.restic_runner.init()
+            if not self.restic_runner.init():
+                logger.error("Cannot continue.")
+                return False
         if self.check_recent_backups() and not force:
             logger.info("No backup necessary.")
             return True
@@ -596,8 +609,8 @@ class NPBackupRunner:
                 if pre_exec_failure_is_fatal:
                     return False
             else:
-                logger.debug(
-                    "Pre-execution of command {} success with\n{}.".format(
+                logger.info(
+                    "Pre-execution of command {} success with:\n{}.".format(
                         pre_exec_command, output
                     )
                 )
@@ -613,7 +626,7 @@ class NPBackupRunner:
             one_file_system=one_file_system,
             use_fs_snapshot=use_fs_snapshot,
             tags=tags,
-            additional_parameters=additional_parameters,
+            additional_backup_only_parameters=additional_backup_only_parameters,
         )
         logger.debug("Restic output:\n{}".format(result_string))
         metric_writer(
@@ -633,8 +646,8 @@ class NPBackupRunner:
                 if post_exec_failure_is_fatal:
                     return False
             else:
-                logger.debug(
-                    "Post-execution of command {} success with\n{}.".format(
+                logger.info(
+                    "Post-execution of command {} success with:\n{}.".format(
                         post_exec_command, output
                     )
                 )

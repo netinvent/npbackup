@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023082801"
-__version__ = "1.7.2"
+__build__ = "2023112901"
+__version__ = "1.7.3"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -22,7 +22,7 @@ import queue
 from command_runner import command_runner
 
 
-logger = getLogger(__intname__)
+logger = getLogger()
 
 # Arbitrary timeout for init / init checks.
 # If init takes more than a minute, we really have a problem
@@ -70,7 +70,7 @@ class ResticRunner:
         except AttributeError:
             self._backend_type = None
         self._ignore_cloud_files = True
-        self._addition_parameters = None
+        self._additional_parameters = None
         self._environment_variables = {}
 
         self._stop_on = (
@@ -201,7 +201,12 @@ class ResticRunner:
         """
         start_time = datetime.utcnow()
         self._executor_finished = False
-        _cmd = '"{}" {}{}'.format(self._binary, cmd, self.generic_arguments)
+        additional_parameters = (
+            f" {self.additional_parameters.strip()} "
+            if self.additional_parameters
+            else ""
+        )
+        _cmd = f'"{self._binary}" {additional_parameters}{cmd}{self.generic_arguments}'
         if self.dry_run:
             _cmd += " --dry-run"
         logger.debug("Running command: [{}]".format(_cmd))
@@ -352,11 +357,11 @@ class ResticRunner:
 
     @property
     def additional_parameters(self):
-        return self._addition_parameters
+        return self._additional_parameters
 
     @additional_parameters.setter
     def additional_parameters(self, value: str):
-        self._addition_parameters = value
+        self._additional_parameters = value
 
     @property
     def priority(self):
@@ -442,11 +447,17 @@ class ResticRunner:
             if re.search(
                 r"created restic repository ([a-z0-9]+) at .+", output, re.IGNORECASE
             ):
+                self.is_init = True
                 return True
         else:
             if re.search(".*already exists", output, re.IGNORECASE):
                 logger.info("Repo already initialized.")
                 self.is_init = True
+                return True
+            logger.error(f"Cannot contact repo: {output}")
+            self.is_init = False
+            return False
+        self.is_init = False
         return False
 
     @property
@@ -536,7 +547,7 @@ class ResticRunner:
         use_fs_snapshot: bool = False,
         tags: List[str] = [],
         one_file_system: bool = False,
-        additional_parameters: str = None,
+        additional_backup_only_parameters: str = None,
     ) -> Tuple[bool, str]:
         """
         Executes restic backup after interpreting all arguments
@@ -560,9 +571,14 @@ class ResticRunner:
             for path in paths:
                 cmd += ' {} "{}"'.format(source_parameter, path)
         else:
-            # make sure path is a list and does not have trailing slashes
+            # make sure path is a list and does not have trailing slashes, unless we're backing up root
             cmd = "backup {}".format(
-                " ".join(['"{}"'.format(path.rstrip("/\\")) for path in paths])
+                " ".join(
+                    [
+                        '"{}"'.format(path.rstrip("/\\")) if path != "/" else path
+                        for path in paths
+                    ]
+                )
             )
 
         case_ignore_param = ""
@@ -592,8 +608,8 @@ class ResticRunner:
             if tag:
                 tag = tag.strip()
                 cmd += " --tag {}".format(tag)
-        if additional_parameters:
-            cmd += " {}".format(additional_parameters)
+        if additional_backup_only_parameters:
+            cmd += " {}".format(additional_backup_only_parameters)
         result, output = self.executor(cmd, live_stream=True)
 
         if (

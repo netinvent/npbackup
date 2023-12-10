@@ -52,7 +52,7 @@ except ImportError:
         sys.exit(1)
 
 
-logger = getLogger(__name__)
+logger = getLogger()
 
 # NPF-SEC-00003: Avoid password command divulgation
 ENCRYPTED_OPTIONS = [

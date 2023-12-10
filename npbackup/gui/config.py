@@ -22,7 +22,7 @@ from npbackup.core.nuitka_helper import IS_COMPILED
 if os.name == "nt":
     from npbackup.windows.task import create_scheduled_task
 
-logger = getLogger(__intname__)
+logger = getLogger()
 
 
 def ask_backup_admin_password(config_dict) -> bool:
@@ -284,6 +284,10 @@ def config_gui(config_dict: dict, config_file: str):
         [
             sg.Text(_t("config_gui.additional_parameters"), size=(40, 1)),
             sg.Input(key="backup---additional_parameters", size=(50, 1)),
+        ],
+        [
+            sg.Text(_t("config_gui.additional_backup_only_parameters"), size=(40, 1)),
+            sg.Input(key="backup---additional_backup_only_parameters", size=(50, 1)),
         ],
     ]
 
