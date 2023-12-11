@@ -98,19 +98,44 @@ empty_config_dict = {
                 "backup_opts": {},
                 "repo_opts": {},
                 "prometheus": {},
-                "env": {}
+                "env": {
+                    "variables": {},
+                    "encrypted_variables": {}
+            },
             },
     },
     "groups": {
         "default_group": {
             "backup_opts": {
+                "paths": [],
+                "tags": [],
                 "compression": "auto",
                 "use_fs_snapshot": True,
                 "ignore_cloud_files": True,
                 "exclude_caches": True,
                 "exclude_case_ignore": False,
                 "one_file_system": True,
-                "priority": "low"
+                "priority": "low",
+                "exclude_caches": True,
+                "exclude_files": [
+                    "excludes/generic_excluded_extensions",
+                    "excludes/generic_excludes",
+                    "excludes/windows_excludes",
+                    "excludes/linux_excludes"
+                ],
+                "exclude_patterns": None,
+                "exclude_patterns_source_type": "files_from_verbatim",
+                "exclude_patterns_case_ignore": False,
+                "additional_parameters": None,
+                "additional_backup_only_parameters": None,
+                "pre_exec_commands": [],
+                "pre_exec_per_command_timeout": 3600,
+                "pre_exec_failure_is_fatal": False,
+                "post_exec_commands": [],
+                "post_exec_per_command_timeout": 3600,
+                "post_exec_failure_is_fatal": False,
+                "post_exec_execute_even_on_error": True,  # TODO
+                }
             },
             "repo_opts": {
                 "repo_password": "",
@@ -133,7 +158,9 @@ empty_config_dict = {
                 "backup_job": "${MACHINE_ID}",
                 "group": "${MACHINE_GROUP}",
             },
-            "env": {}
+            "env": {
+                "variables": {},
+                "encrypted_variables": {}
         },
     },
     "identity": {
@@ -156,7 +183,6 @@ empty_config_dict = {
         "auto_upgrade_server_password": "",
         "auto_upgrade_host_identity": "${MACHINE_ID}",
         "auto_upgrade_group": "${MACHINE_GROUP}",
-        "env": {}
     },
 }
 

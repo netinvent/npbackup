@@ -539,10 +539,10 @@ class ResticRunner:
     def backup(
         self,
         paths: List[str],
-        source_type: str,
+        exclude_patterns_source_type: str,
         exclude_patterns: List[str] = [],
         exclude_files: List[str] = [],
-        exclude_case_ignore: bool = False,
+        exclude_patterns_case_ignore: bool = False,
         exclude_caches: bool = False,
         use_fs_snapshot: bool = False,
         tags: List[str] = [],
@@ -556,13 +556,13 @@ class ResticRunner:
             return None, None
 
         # Handle various source types
-        if source_type in ["files_from", "files_from_verbatim", "files_from_raw"]:
+        if exclude_patterns_source_type in ["files_from", "files_from_verbatim", "files_from_raw"]:
             cmd = "backup"
-            if source_type == "files_from":
+            if exclude_patterns_source_type == "files_from":
                 source_parameter = "--files-from"
-            elif source_type == "files_from_verbatim":
+            elif exclude_patterns_source_type == "files_from_verbatim":
                 source_parameter = "--files-from-verbatim"
-            elif source_type == "files_from_raw":
+            elif exclude_patterns_source_type == "files_from_raw":
                 source_parameter = "--files-from-raw"
             else:
                 logger.error("Bogus source type given")
@@ -584,7 +584,7 @@ class ResticRunner:
 
         case_ignore_param = ""
         # Always use case ignore excludes under windows
-        if os.name == "nt" or exclude_case_ignore:
+        if os.name == "nt" or exclude_patterns_case_ignore:
             case_ignore_param = "i"
 
         for exclude_pattern in exclude_patterns:
