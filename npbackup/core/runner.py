@@ -476,16 +476,16 @@ class NPBackupRunner:
 
         exclude_patterns_case_ignore = self.repo_config.g("backup_opts.exclude_patterns_case_ignore")
         exclude_caches = self.repo_config.g("backup_opts.exclude_caches")
-        one_file_system = self.config.g("backup_opts.one_file_system") if os.name != 'nt' else False
-        use_fs_snapshot = self.config.g("backup_opts.use_fs_snapshot")
+        one_file_system = self.repo_config.g("backup_opts.one_file_system") if os.name != 'nt' else False
+        use_fs_snapshot = self.repo_config.g("backup_opts.use_fs_snapshot")
 
-        pre_exec_commands = self.config.g("backup_opts.pre_exec_commands")
-        pre_exec_per_command_timeout = self.config.g("backup_opts.pre_exec_per_command_timeout")
-        pre_exec_failure_is_fatal = self.config.g("backup_opts.pre_exec_failure_is_fatal")
+        pre_exec_commands = self.repo_config.g("backup_opts.pre_exec_commands")
+        pre_exec_per_command_timeout = self.repo_config.g("backup_opts.pre_exec_per_command_timeout")
+        pre_exec_failure_is_fatal = self.repo_config.g("backup_opts.pre_exec_failure_is_fatal")
 
-        post_exec_commands = self.config.g("backup_opts.post_exec_commands")
-        post_exec_per_command_timeout = self.config.g("backup_opts.post_exec_per_command_timeout")
-        post_exec_failure_is_fatal = self.config.g("backup_opts.post_exec_failure_is_fatal")
+        post_exec_commands = self.repo_config.g("backup_opts.post_exec_commands")
+        post_exec_per_command_timeout = self.repo_config.g("backup_opts.post_exec_per_command_timeout")
+        post_exec_failure_is_fatal = self.repo_config.g("backup_opts.post_exec_failure_is_fatal")
 
         # Make sure we convert tag to list if only one tag is given
         try:
