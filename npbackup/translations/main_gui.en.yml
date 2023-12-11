@@ -33,3 +33,4 @@ en:
   execute_operation: Executing operation
   forget_failed: Failed to forget. Please check the logs
   operations: Operations
+  select_config_file: Select config file

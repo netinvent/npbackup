@@ -532,17 +532,46 @@ def _gui_backup(repo_config, stdout) -> Future:
     return result
 
 
+def select_config_file():
+    """
+    Option to select a configuration file
+    """
+    layout = [
+        [sg.Text(_t("main_gui.select_config_file")), sg.Input(key="-config_file-"), sg.FileBrowse(_t("generic.select_file"))],
+        [sg.Button(_t("generic.cancel"), key="-CANCEL-"), sg.Button(_t("generic.accept"), key="-ACCEPT-")]
+    ]
+    window = sg.Window("Configuration File", layout=layout)
+    while True:
+        event, values = window.read()
+        if event in [sg.WIN_X_EVENT, sg.WIN_CLOSED, '-CANCEL-']:
+            break
+        if event == '-ACCEPT-':
+            config_file = Path(values["-config_file-"])
+            if not config_file.exists():
+                sg.PopupError(_t("generic.file_does_not_exist"))
+                continue
+            config = npbackup.configuration._load_config_file(config_file)
+            if not config:
+                sg.PopupError(_t("generic.bad_file"))
+                continue
+            return config_file
+
+
 def _main_gui():
     config_file = Path(f'{CURRENT_DIR}/npbackup.conf')
-    if config_file.exists():
-        full_config = npbackup.configuration.load_config(config_file)
-        # TODO add a repo selector
-        repo_config, inherit_config = npbackup.configuration.get_repo_config(full_config)
-    else:
-        # TODO: Add config load directory
-        sg.Popup("Cannot load configuration file")
-        sys.exit(3)
+    if not config_file.exists():
+        while True:
+            config_file = select_config_file()
+            if config_file:
+                config_file = select_config_file()
+            else:
+                break
 
+    logger.info(f"Using configuration file {config_file}")
+    full_config = npbackup.configuration.load_config(config_file)
+    # TODO add a repo selector
+    repo_config, inherit_config = npbackup.configuration.get_repo_config(full_config)
+    repo_list = list(full_config.g("repos").keys())
 
     backup_destination = _t("main_gui.local_folder")
     backend_type, repo_uri = get_anon_repo_uri(repo_config.g('repo_uri'))
@@ -582,11 +611,9 @@ def _main_gui():
                         ),
                     ],
                     [
-                        sg.Text(
-                            "{} {} {}".format(
-                                _t("main_gui.backup_list_to"), backend_type, repo_uri
-                            )
-                        )
+                        sg.Text(_t("main_gui.backup_list_to")),
+                        sg.Combo(repo_list, key="-active_repo-", default_value=repo_list[0], enable_events=True),
+                        sg.Text(f"Type {backend_type}", key="-backend_type-")
                     ],
                     [
                         sg.Table(
@@ -605,7 +632,7 @@ def _main_gui():
                         sg.Button(_t("main_gui.operations"), key="operations"),
                         sg.Button(_t("generic.configure"), key="configure"),
                         sg.Button(_t("generic.about"), key="about"),
-                        sg.Button(_t("generic.quit"), key="exit"),
+                        sg.Button(_t("generic.quit"), key="-EXIT-"),
                     ],
                 ],
                 element_justification="C",
@@ -638,8 +665,16 @@ def _main_gui():
     while True:
         event, values = window.read(timeout=60000)
 
-        if event in (sg.WIN_CLOSED, "exit"):
+        if event in [sg.WIN_X_EVENT, sg.WIN_CLOSED, '-EXIT-']:
             break
+        if event == "-active_repo-":
+            active_repo = values['-active_repo-']
+            if full_config.g(f"repos.{active_repo}"):
+                repo_config = npbackup.configuration.get_repo_config(full_config, active_repo)
+                current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
+            else:
+                sg.PopupError("Repo not existent in config")
+                continue
         if event == "launch-backup":
             progress_windows_layout = [
                 [
