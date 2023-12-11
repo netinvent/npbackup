@@ -40,18 +40,8 @@ def run_upgrade(config_dict):
         logger.error("Missing auto upgrade info: %s, cannot launch auto upgrade", exc)
         return False
 
-    try:
-        auto_upgrade_host_identity = configuration.evaluate_variables(
-            config_dict, config_dict["options"]["auto_upgrade_host_identity"]
-        )
-    except KeyError:
-        auto_upgrade_host_identity = None
-    try:
-        group = configuration.evaluate_variables(
-            config_dict, config_dict["options"]["auto_upgrade_group"]
-        )
-    except KeyError:
-        group = None
+    auto_upgrade_host_identity = config_dict.g("global_options.auto_upgrade_host_identity")
+    group = config_dict.g("global_options.auto_upgrade_group")
 
     result = auto_upgrader(
         upgrade_url=auto_upgrade_upgrade_url,
