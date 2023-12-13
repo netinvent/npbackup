@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023121001"
+__build__ = "2023121301"
 __version__ = "2.0.0 for npbackup 2.3.0+"
 
 CONF_VERSION = 2.3
@@ -140,6 +140,11 @@ empty_config_dict = {
                 }
             },
             "repo_opts": {
+                "permissions": {
+                    "restore": True,
+                    "verify": True,
+                    "delete": False,
+                },
                 "repo_password": "",
                 "repo_password_command": "",
                 # Minimum time between two backups, in minutes
@@ -345,7 +350,7 @@ def evaluate_variables(repo_config: dict, full_config: dict) -> dict:
     return repo_config
 
 
-def get_repo_config(full_config: dict, repo_name: str = 'default') -> Tuple[dict, dict]:
+def get_repo_config(full_config: dict, repo_name: str = 'default', eval_variables: bool = True) -> Tuple[dict, dict]:
     """
     Create inherited repo config
     Returns a dict containing the repo config, with expanded variables
@@ -389,17 +394,20 @@ def get_repo_config(full_config: dict, repo_name: str = 'default') -> Tuple[dict
                         else:
                             config_inheritance.s(f'{section}.{entries}', False)
 
-    repo_config = evaluate_variables(repo_config, full_config)
+    if eval_variables:
+        repo_config = evaluate_variables(repo_config, full_config)
     return repo_config, config_inheritance
 
 
-def get_group_config(full_config: dict, group_name: str) -> dict:
+def get_group_config(full_config: dict, group_name: str, eval_variables: bool = True) -> dict:
     try:
         group_config = deepcopy(full_config.g(f"groups.{group_name}"))
     except KeyError:
         logger.error(f"No group with name {group_name} found in config")
         return None
     
+    if eval_variables:
+        group_config = evaluate_variables(group_config, full_config)
     return group_config
 
 

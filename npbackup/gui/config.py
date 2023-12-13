@@ -91,7 +91,6 @@ def config_gui(full_config: dict, config_file: str):
         Extracts selected object from combobox
         Returns object type and name
         """
-        object_list = get_objects()
 
         if combo_value.startswith("Repo: "):
             object_type = "repo"
@@ -102,57 +101,70 @@ def config_gui(full_config: dict, config_file: str):
         return object_type, object_name
 
 
-    def update_gui(object_config, config_inheritance, object_type, unencrypted=False):
+    def update_object_gui(object_name = None, unencrypted=False):
+        # Load fist available repo or group if none given
+        if not object_name:
+            object_name = get_objects()[0]
+
+        # First we need to clear the whole GUI to reload new values
+        for key in window.AllKeysDict:
+            # We only clear config keys, wihch have '---' separator
+            if isinstance(key, str) and "---" in key:
+                window[key].Update("")
+        
+        object_type, object_name = get_object_from_combo(object_name)
+        if object_type == 'repo':
+            object_config, config_inheritance = configuration.get_repo_config(full_config, object_name, eval_variables=False)
+        if object_type == 'group':
+            object_config = configuration.get_group_config(full_config, object_name, eval_variables=False)
+
         for section in object_config.keys():
-            print(section)
-            continue
-            if config_dict[section] is None:
-                config_dict[section] = {}
-            for entry in config_dict[section].keys():
-                # Don't bother to update admin password since we won't show it
-                if entry == "backup_admin_password":
-                    continue
-                try:
-                    value = config_dict[section][entry]
-                    # Don't show sensible info unless unencrypted requested
-                    # TODO: Refactor this to use ENCRYPTED_OPTIONS from configuration
-                    if not unencrypted:
-                        if entry in [
-                            "http_username",
-                            "http_password",
-                            "repository",
-                            "password",
-                            "password_command",
-                            "auto_upgrade_server_username",
-                            "auto_upgrade_server_password",
-                            "encrypted_variables",
-                        ]:
-                            try:
-                                if (
-                                    config_dict[section][entry] is None
-                                    or config_dict[section][entry] == ""
-                                ):
-                                    continue
-                                if not str(config_dict[section][entry]).startswith(
-                                    configuration.ID_STRING
-                                ):
-                                    value = ENCRYPTED_DATA_PLACEHOLDER
-                            except (KeyError, TypeError):
-                                pass
+            # TODO: add str and int and list support
+            if isinstance(object_config.g(section), dict):
+                for entry in object_config.g(section).keys():
+                    # Don't bother to update admin password since we won't show it
+                    if entry == "backup_admin_password":
+                        continue
+                    try:
+                        value = object_config.g(f"{section}.{entry}")
+                        # Don't show sensible info unless unencrypted requested
+                        # TODO: Refactor this to use ENCRYPTED_OPTIONS from configuration
+                        if not unencrypted:
+                            if entry in [
+                                "http_username",
+                                "http_password",
+                                "repository",
+                                "password",
+                                "password_command",
+                                "auto_upgrade_server_username",
+                                "auto_upgrade_server_password",
+                                "encrypted_variables",
+                            ]:
+                                try:
+                                    if (
+                                        value is None
+                                        or value == ""
+                                    ):
+                                        continue
+                                    if not str(value).startswith(
+                                        configuration.ID_STRING
+                                    ):
+                                        value = ENCRYPTED_DATA_PLACEHOLDER
+                                except (KeyError, TypeError):
+                                    pass
 
-                    if isinstance(value, list):
-                        value = "\n".join(value)
-                    # window keys are section---entry
-                    key = "{}---{}".format(section, entry)
-                    if entry in combo_boxes:
-                        window[key].Update(combo_boxes[entry][value])
-                    else:
-                        window[key].Update(value)
-                except KeyError:
-                    logger.error("No GUI equivalent for {}.".format(entry))
-                except TypeError as exc:
-                    logger.error("{} for {}.".format(exc, entry))
-
+                        if isinstance(value, list):
+                            value = "\n".join(value)
+                        # window keys are section---entry
+                        key = "{}---{}".format(section, entry)
+                        if entry in combo_boxes:
+                            window[key].Update(combo_boxes[entry][value])
+                        else:
+                            window[key].Update(value)
+                    except KeyError:
+                        logger.error("No GUI equivalent for {}.".format(entry))
+                    except TypeError as exc:
+                        logger.error("{} for {}.".format(exc, entry))
 
     def update_config_dict(values, config_dict):
         for key, value in values.items():
@@ -200,7 +212,7 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Text(_t("config_gui.compression"), size=(40, 1)),
                 sg.Combo(
                     list(combo_boxes["compression"].values()),
-                    key="backup---compression",
+                    key="backup_opts---compression",
                     size=(48, 1),
                 ),
             ],
@@ -211,13 +223,13 @@ def config_gui(full_config: dict, config_file: str):
                     ),
                     size=(40, 2),
                 ),
-                sg.Multiline(key="backup---paths", size=(48, 4)),
+                sg.Multiline(key="backup_opts---paths", size=(48, 4)),
             ],
             [
                 sg.Text(_t("config_gui.source_type"), size=(40, 1)),
                 sg.Combo(
                     list(combo_boxes["source_type"].values()),
-                    key="backup---source_type",
+                    key="backup_opts---source_type",
                     size=(48, 1),
                 ),
             ],
@@ -228,7 +240,7 @@ def config_gui(full_config: dict, config_file: str):
                     ),
                     size=(40, 2),
                 ),
-                sg.Checkbox("", key="backup---use_fs_snapshot", size=(41, 1)),
+                sg.Checkbox("", key="backup_opts---use_fs_snapshot", size=(41, 1)),
             ],
             [
                 sg.Text(
@@ -237,7 +249,7 @@ def config_gui(full_config: dict, config_file: str):
                     ),
                     size=(40, 2),
                 ),
-                sg.Checkbox("", key="backup---ignore_cloud_files", size=(41, 1)),
+                sg.Checkbox("", key="backup_opts---ignore_cloud_files", size=(41, 1)),
             ],
             [
                 sg.Text(
@@ -246,7 +258,7 @@ def config_gui(full_config: dict, config_file: str):
                     ),
                     size=(40, 2),
                 ),
-                sg.Multiline(key="backup---exclude_patterns", size=(48, 4)),
+                sg.Multiline(key="backup_opts---exclude_patterns", size=(48, 4)),
             ],
             [
                 sg.Text(
@@ -255,7 +267,7 @@ def config_gui(full_config: dict, config_file: str):
                     ),
                     size=(40, 2),
                 ),
-                sg.Multiline(key="backup---exclude_files", size=(48, 4)),
+                sg.Multiline(key="backup_opts---exclude_files", size=(48, 4)),
             ],
             [
                 sg.Text(
@@ -265,62 +277,62 @@ def config_gui(full_config: dict, config_file: str):
                     ),
                     size=(40, 2),
                 ),
-                sg.Checkbox("", key="backup---exclude_case_ignore", size=(41, 1)),
+                sg.Checkbox("", key="backup_opts---exclude_case_ignore", size=(41, 1)),
             ],
             [
                 sg.Text(_t("config_gui.exclude_cache_dirs"), size=(40, 1)),
-                sg.Checkbox("", key="backup---exclude_caches", size=(41, 1)),
+                sg.Checkbox("", key="backup_opts---exclude_caches", size=(41, 1)),
             ],
             [
                 sg.Text(_t("config_gui.one_file_system"), size=(40, 1)),
-                sg.Checkbox("", key="backup---one_file_system", size=(41, 1)),
+                sg.Checkbox("", key="backup_opts---one_file_system", size=(41, 1)),
             ],
             [
                 sg.Text(_t("config_gui.pre_exec_command"), size=(40, 1)),
-                sg.Input(key="backup---pre_exec_command", size=(50, 1)),
+                sg.Input(key="backup_opts---pre_exec_command", size=(50, 1)),
             ],
             [
                 sg.Text(_t("config_gui.maximum_exec_time"), size=(40, 1)),
-                sg.Input(key="backup---pre_exec_timeout", size=(50, 1)),
+                sg.Input(key="backup_opts---pre_exec_timeout", size=(50, 1)),
             ],
             [
                 sg.Text(_t("config_gui.exec_failure_is_fatal"), size=(40, 1)),
-                sg.Checkbox("", key="backup---pre_exec_failure_is_fatal", size=(41, 1)),
+                sg.Checkbox("", key="backup_opts---pre_exec_failure_is_fatal", size=(41, 1)),
             ],
             [
                 sg.Text(_t("config_gui.post_exec_command"), size=(40, 1)),
-                sg.Input(key="backup---post_exec_command", size=(50, 1)),
+                sg.Input(key="backup_opts---post_exec_command", size=(50, 1)),
             ],
             [
                 sg.Text(_t("config_gui.maximum_exec_time"), size=(40, 1)),
-                sg.Input(key="backup---post_exec_timeout", size=(50, 1)),
+                sg.Input(key="backup_opts---post_exec_timeout", size=(50, 1)),
             ],
             [
                 sg.Text(_t("config_gui.exec_failure_is_fatal"), size=(40, 1)),
-                sg.Checkbox("", key="backup---post_exec_failure_is_fatal", size=(41, 1)),
+                sg.Checkbox("", key="backup_opts---post_exec_failure_is_fatal", size=(41, 1)),
             ],
             [
                 sg.Text(
                     "{}\n({})".format(_t("config_gui.tags"), _t("config_gui.one_per_line")),
                     size=(40, 2),
                 ),
-                sg.Multiline(key="backup---tags", size=(48, 2)),
+                sg.Multiline(key="backup_opts---tags", size=(48, 2)),
             ],
             [
                 sg.Text(_t("config_gui.backup_priority"), size=(40, 1)),
                 sg.Combo(
                     list(combo_boxes["priority"].values()),
-                    key="backup---priority",
+                    key="backup_opts---priority",
                     size=(48, 1),
                 ),
             ],
             [
                 sg.Text(_t("config_gui.additional_parameters"), size=(40, 1)),
-                sg.Input(key="backup---additional_parameters", size=(50, 1)),
+                sg.Input(key="backup_opts---additional_parameters", size=(50, 1)),
             ],
             [
                 sg.Text(_t("config_gui.additional_backup_only_parameters"), size=(40, 1)),
-                sg.Input(key="backup---additional_backup_only_parameters", size=(50, 1)),
+                sg.Input(key="backup_opts---additional_backup_only_parameters", size=(50, 1)),
             ],
         ]
 
@@ -332,31 +344,32 @@ def config_gui(full_config: dict, config_file: str):
                     ),
                     size=(40, 2),
                 ),
-                sg.Input(key="repo---minimum_backup_age", size=(50, 1)),
+                sg.Input(key="repo_opts---minimum_backup_age", size=(50, 1)),
             ],
             [
                 sg.Text(_t("config_gui.backup_repo_uri"), size=(40, 1)),
-                sg.Input(key="repo---repository", size=(50, 1), disabled=True if object_type == 'group' else False),
+                # TODO: replace this
+                sg.Input(key="---repository", size=(50, 1), disabled=True if object_type == 'group' else False),
             ],
             [
                 sg.Text(_t("config_gui.backup_repo_password"), size=(40, 1)),
-                sg.Input(key="repo---password", size=(50, 1)),
+                sg.Input(key="repo_opts---repo_password", size=(50, 1)),
             ],
             [
                 sg.Text(_t("config_gui.backup_repo_password_command"), size=(40, 1)),
-                sg.Input(key="repo---password_command", size=(50, 1)),
+                sg.Input(key="repo_opts---repo_password_command", size=(50, 1)),
             ],
             [
                 sg.Text(_t("config_gui.upload_speed"), size=(40, 1)),
-                sg.Input(key="repo---upload_speed", size=(50, 1)),
+                sg.Input(key="repo_opts---upload_speed", size=(50, 1)),
             ],
             [
                 sg.Text(_t("config_gui.download_speed"), size=(40, 1)),
-                sg.Input(key="repo---download_speed", size=(50, 1)),
+                sg.Input(key="repo_opts---download_speed", size=(50, 1)),
             ],
             [
                 sg.Text(_t("config_gui.backend_connections"), size=(40, 1)),
-                sg.Input(key="repo---backend_connections", size=(50, 1)),
+                sg.Input(key="repo_opts---backend_connections", size=(50, 1)),
             ],
             [sg.HorizontalSeparator()],
             [
@@ -373,27 +386,27 @@ def config_gui(full_config: dict, config_file: str):
             [
                 sg.Text(_t("config_gui.keep"), size=(30, 1)),
                 sg.Text(_t("config_gui.hourly"), size=(10, 1)),
-                sg.Input(key="repo---retention---hourly", size=(50, 1))
+                sg.Input(key="repo_opts---retention---hourly", size=(50, 1))
             ],
             [
                 sg.Text(_t("config_gui.keep"), size=(30, 1)),
                 sg.Text(_t("config_gui.daily"), size=(10, 1)),
-                sg.Input(key="repo---retention---daily", size=(50, 1))
+                sg.Input(key="repo_opts---retention---daily", size=(50, 1))
             ],
             [
                 sg.Text(_t("config_gui.keep"), size=(30, 1)),
                 sg.Text(_t("config_gui.weekly"), size=(10, 1)),
-                sg.Input(key="repo---retention---weekly", size=(50, 1))
+                sg.Input(key="repo_opts---retention---weekly", size=(50, 1))
             ],
             [
                 sg.Text(_t("config_gui.keep"), size=(30, 1)),
                 sg.Text(_t("config_gui.monthly"), size=(10, 1)),
-                sg.Input(key="repo---retention---monthly", size=(50, 1))
+                sg.Input(key="repo_opts---retention---monthly", size=(50, 1))
             ],
             [
                 sg.Text(_t("config_gui.keep"), size=(30, 1)),
                 sg.Text(_t("config_gui.yearly"), size=(10, 1)),
-                sg.Input(key="repo---retention---yearly", size=(50, 1))
+                sg.Input(key="repo_opts---retention---yearly", size=(50, 1))
             ],
         ]
 
@@ -694,6 +707,7 @@ def config_gui(full_config: dict, config_file: str):
         ]
         return _global_layout
 
+
     right_click_menu = ["", [_t("config_gui.show_decrypted")]]
     window = sg.Window(
         "Configuration",
@@ -711,8 +725,8 @@ def config_gui(full_config: dict, config_file: str):
         finalize=True,
     )
 
-    # TODO
-    #update_gui(window, config_dict, unencrypted=False)
+    # Update gui with first default object (repo or group)
+    update_object_gui(get_objects()[0], unencrypted=False)
 
     while True:
         event, values = window.read()
@@ -721,16 +735,11 @@ def config_gui(full_config: dict, config_file: str):
         if event == "-OBJECT-":
             try:
                 object_type, object_name = get_object_from_combo(values["-OBJECT-"])
-                if object_type == "repo":
-                    repo_config, config_inheritance = configuration.get_repo_config(full_config, object_name)
-                    update_gui(repo_config, config_inheritance, object_type, unencrypted=False)
-                elif object_type == "group":
-                    group_config = configuration.get_group_config(full_config, object_name)
-                    update_gui(group_config, None, object_type, unencrypted=False)
+                update_object_gui(values["-OBJECT-"], unencrypted=False)
             except AttributeError:
                 continue
         if event == "accept":
-            if not values["repo---password"] and not values["repo---password_command"]:
+            if not values["repo_opts---password"] and not values["repo_opts---password_command"]:
                 sg.PopupError(_t("config_gui.repo_password_cannot_be_empty"))
                 continue
             full_config = update_config_dict(values, full_config)
