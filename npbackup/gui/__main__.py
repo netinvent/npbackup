@@ -15,16 +15,15 @@ import sys
 import os
 from pathlib import Path
 from logging import getLogger
-import re
 from datetime import datetime
 import dateutil
 import queue
 from time import sleep
-import PySimpleGUI as sg
-import _tkinter
 from ofunctions.threading import threaded, Future
 from threading import Thread
 from ofunctions.misc import BytesConverter
+import PySimpleGUI as sg
+import _tkinter
 import npbackup.configuration
 from npbackup.customization import (
     OEM_STRING,
@@ -48,7 +47,7 @@ from npbackup.core.i18n_helper import _t
 from npbackup.core.upgrade_runner import run_upgrade, check_new_version
 from npbackup.path_helper import CURRENT_DIR
 from npbackup.interface_entrypoint import entrypoint
-from npbackup.__version__ import __intname__ as intname, __version__, __build__, __copyright__
+from npbackup.__version__ import version_string
 from npbackup.gui.config import config_gui
 from npbackup.gui.operations import operations_gui
 from npbackup.customization import (
@@ -753,7 +752,7 @@ def _main_gui():
             full_config = operations_gui(full_config, config_file)
             event = "state-button"
         if event == "configure":
-            repo_config = config_gui(full_config, config_file)
+            full_config = config_gui(full_config, config_file)
             # Make sure we trigger a GUI refresh when configuration is changed
             event = "state-button"
         if event == _t("generic.destination"):
