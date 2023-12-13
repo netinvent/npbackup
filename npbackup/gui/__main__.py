@@ -571,7 +571,7 @@ def _main_gui():
     full_config = npbackup.configuration.load_config(config_file)
     # TODO add a repo selector
     repo_config, inherit_config = npbackup.configuration.get_repo_config(full_config)
-    repo_list = list(full_config.g("repos").keys())
+    repo_list = npbackup.configuration.get_repo_list(full_config)
 
     backup_destination = _t("main_gui.local_folder")
     backend_type, repo_uri = get_anon_repo_uri(repo_config.g('repo_uri'))
@@ -750,10 +750,10 @@ def _main_gui():
             # Make sure we trigger a GUI refresh after forgetting snapshots
             event = "state-button"
         if event == "operations":
-            repo_config = operations_gui(repo_config, config_file)
+            full_config = operations_gui(full_config, config_file)
             event = "state-button"
         if event == "configure":
-            repo_config = config_gui(repo_config, config_file)
+            repo_config = config_gui(full_config, config_file)
             # Make sure we trigger a GUI refresh when configuration is changed
             event = "state-button"
         if event == _t("generic.destination"):
