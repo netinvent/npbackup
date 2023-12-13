@@ -393,6 +393,16 @@ def get_repo_config(full_config: dict, repo_name: str = 'default') -> Tuple[dict
     return repo_config, config_inheritance
 
 
+def get_group_config(full_config: dict, group_name: str) -> dict:
+    try:
+        group_config = deepcopy(full_config.g(f"groups.{group_name}"))
+    except KeyError:
+        logger.error(f"No group with name {group_name} found in config")
+        return None
+    
+    return group_config
+
+
 def _load_config_file(config_file: Path) -> Union[bool, dict]:
     """
     Checks whether config file is valid
@@ -418,13 +428,11 @@ def load_config(config_file: Path) -> Optional[dict]:
     if not full_config:
         return None
     config_file_is_updated = False
-    print(full_config)
 
     # Check if we need to encrypt some variables
     if not is_encrypted(full_config):
         logger.info("Encrypting non encrypted data in configuration file")
         config_file_is_updated = True
-    print(full_config)
     # Decrypt variables
     full_config = crypt_config(full_config, AES_KEY, ENCRYPTED_OPTIONS, operation='decrypt')
     if full_config == False:
@@ -469,3 +477,11 @@ def save_config(config_file: Path, full_config: dict) -> bool:
     except OSError:
         logger.critical(f"Cannot save configuration file to {config_file}")
         return False
+
+
+def get_repo_list(full_config: dict) -> List[str]:
+    return list(full_config.g("repos").keys())
+
+
+def get_group_list(full_config: dict) -> List[str]:
+    return list(full_config.g("groups").keys())
