@@ -101,3 +101,11 @@ fr:
   files_from: Liste fichiers depuis un fichier
   files_from_verbatim: Liste fichiers depuis un fichier "exact"
   files_from_raw: Liste fichiers depuis un fichier "raw"
+
+  keep: Garder
+  copies: copies
+  hourly: par heure
+  daily: journalières
+  weekly: hebdomadaires
+  monthly: mensuelles
+  yearly: annuelles

@@ -101,3 +101,11 @@ en:
   files_from: Files from list
   files_from_verbatim: Files from verbatim list
   files_from_raw: Files from raw list
+
+  keep: Keep
+  copies: copies
+  hourly: hourly
+  daily: daily
+  weekly: weekly
+  monthly: monthly
+  yearly: yearly
