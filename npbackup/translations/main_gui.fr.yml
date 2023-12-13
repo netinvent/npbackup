@@ -33,3 +33,4 @@ fr:
   execute_operation: Opération en cours
   forget_failed: Oubli impossible. Veuillez vérifier les journaux
   operations: Opérations
+  select_config_file: Sélectionner fichier de configuration

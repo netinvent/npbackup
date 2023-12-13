@@ -33,7 +33,7 @@ fr:
 
   prometheus_config: Configuration prometheus
   available_variables: Variables disponibles ${HOSTNAME}, ${BACKUP_JOB}, ${MACHINE_ID}, ${MACHINE_GROUP}, ${RANDOM}[n]
-  available_variables_id: Variables disponibles ${HOSTNAME}, ${RANDOM}[n] ôu n est le nombre de caractères
+  available_variables_id: Variables disponibles ${HOSTNAME}, ${RANDOM}[n] où n est le nombre de caractères aléatoires
   enable_prometheus: Activer les métriques prometheus
   job_name: Nom du travail (backup_job)
   metrics_destination: Destination métriques (URI / fichier)
