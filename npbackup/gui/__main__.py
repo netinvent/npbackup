@@ -65,11 +65,14 @@ logger = getLogger()
 THREAD_SHARED_DICT = {}
 
 
-def _about_gui(version_string: str, repo_config: dict) -> None:
+def _about_gui(version_string: str, full_config: dict) -> None:
     license_content = LICENSE_TEXT
 
-    result = check_new_version(repo_config)
-    if result:
+    if full_config.g("global_options.auto_upgrade_server_url"):
+        auto_upgrade_result = check_new_version(full_config)
+    else:
+        auto_upgrade_result = None
+    if auto_upgrade_result:
         new_version = [
             sg.Button(
                 _t("config_gui.auto_upgrade_launch"),
@@ -77,9 +80,9 @@ def _about_gui(version_string: str, repo_config: dict) -> None:
                 size=(12, 2),
             )
         ]
-    elif result is False:
+    elif auto_upgrade_result is False:
         new_version = [sg.Text(_t("generic.is_uptodate"))]
-    elif result is None:
+    elif auto_upgrade_result is None:
         new_version = [sg.Text(_t("config_gui.auto_upgrade_disabled"))]
     try:
         with open(LICENSE_FILE, "r", encoding="utf-8") as file_handle:
@@ -113,7 +116,7 @@ def _about_gui(version_string: str, repo_config: dict) -> None:
             )
             if result == "OK":
                 logger.info("Running GUI initiated upgrade")
-                sub_result = run_upgrade(repo_config)
+                sub_result = run_upgrade(full_config)
                 if sub_result:
                     sys.exit(0)
                 else:
@@ -768,7 +771,7 @@ def _main_gui():
             except (TypeError, KeyError):
                 sg.PopupNoFrame(_t("main_gui.unknown_repo"))
         if event == "about":
-            _about_gui(version_string, repo_config)
+            _about_gui(version_string, full_config)
         if event == "state-button":
             current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
             _gui_update_state(window, current_state, backup_tz, snapshot_list)

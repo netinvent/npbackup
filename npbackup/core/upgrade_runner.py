@@ -19,34 +19,32 @@ from npbackup.__version__ import __version__ as npbackup_version
 logger = getLogger()
 
 
-def check_new_version(config_dict: dict) -> bool:
-    try:
-        upgrade_url = config_dict["options"]["auto_upgrade_server_url"]
-        username = config_dict["options"]["auto_upgrade_server_username"]
-        password = config_dict["options"]["auto_upgrade_server_password"]
-    except KeyError as exc:
-        logger.error("Missing auto upgrade info: %s, cannot launch auto upgrade", exc)
+def check_new_version(full_config: dict) -> bool:
+    upgrade_url = full_config.g("global_options.auto_upgrade_server_url")
+    username = full_config.g("global_options.auto_upgrade_server_username")
+    password = full_config.g("global_options.auto_upgrade_server_password")
+    if not upgrade_url or not username or not password:
+        logger.error(f"Missing auto upgrade info, cannot launch auto upgrade")
         return None
     else:
         return _check_new_version(upgrade_url, username, password)
 
 
-def run_upgrade(config_dict):
-    try:
-        auto_upgrade_upgrade_url = config_dict["options"]["auto_upgrade_server_url"]
-        auto_upgrade_username = config_dict["options"]["auto_upgrade_server_username"]
-        auto_upgrade_password = config_dict["options"]["auto_upgrade_server_password"]
-    except KeyError as exc:
-        logger.error("Missing auto upgrade info: %s, cannot launch auto upgrade", exc)
+def run_upgrade(full_config: dict) -> bool:
+    upgrade_url = full_config.g("global_options.auto_upgrade_server_url")
+    username = full_config.g("global_options.auto_upgrade_server_username")
+    password = full_config.g("global_options.auto_upgrade_server_password")
+    if not upgrade_url or not username or not password:
+        logger.error(f"Missing auto upgrade info, cannot launch auto upgrade")
         return False
 
-    auto_upgrade_host_identity = config_dict.g("global_options.auto_upgrade_host_identity")
-    group = config_dict.g("global_options.auto_upgrade_group")
+    auto_upgrade_host_identity = full_config.g("global_options.auto_upgrade_host_identity")
+    group = full_config.g("global_options.auto_upgrade_group")
 
     result = auto_upgrader(
-        upgrade_url=auto_upgrade_upgrade_url,
-        username=auto_upgrade_username,
-        password=auto_upgrade_password,
+        upgrade_url=upgrade_url,
+        username=username,
+        password=password,
         auto_upgrade_host_identity=auto_upgrade_host_identity,
         installed_version=npbackup_version,
         group=group,
