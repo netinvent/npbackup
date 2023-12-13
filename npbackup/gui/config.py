@@ -191,7 +191,10 @@ def config_gui(full_config: dict, config_file: str):
         return config_dict
 
 
-    def layout():
+    def object_layout(object_type: str = "repo") -> List[list]:
+        """
+        Returns the GUI layout depending on the object type
+        """
         backup_col = [
             [
                 sg.Text(_t("config_gui.compression"), size=(40, 1)),
@@ -333,7 +336,7 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Text(_t("config_gui.backup_repo_uri"), size=(40, 1)),
-                sg.Input(key="repo---repository", size=(50, 1)),
+                sg.Input(key="repo---repository", size=(50, 1), disabled=True if object_type == 'group' else False),
             ],
             [
                 sg.Text(_t("config_gui.backup_repo_password"), size=(40, 1)),
@@ -355,29 +358,42 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Text(_t("config_gui.backend_connections"), size=(40, 1)),
                 sg.Input(key="repo---backend_connections", size=(50, 1)),
             ],
-        ]
-
-        retention_col = [
+            [sg.HorizontalSeparator()],
+            [
+                sg.Text(_t("config_gui.enter_backup_admin_password"), size=(40, 1)),
+                sg.Input(key="backup_admin_password", size=(50, 1), password_char="*"),
+            ],
+            [sg.Button(_t("generic.change"), key="change_backup_admin_password")],
+            [sg.HorizontalSeparator()],
             [sg.Text(_t("config_gui.retention_policy"))],
             [
                 sg.Text(_t("config_gui.custom_time_server_url"), size=(40, 1)),
                 sg.Input(key="retentionpolicy---custom_time_server", size=(50, 1)),
             ],
             [
-                sg.Text(_t("config_gui.keep"), size=(40, 1)),
+                sg.Text(_t("config_gui.keep"), size=(30, 1)),
                 sg.Text(_t("config_gui.hourly"), size=(10, 1)),
-            ],
-        ]
-
-        identity_col = [
-            [sg.Text(_t("config_gui.available_variables_id"))],
-            [
-                sg.Text(_t("config_gui.machine_id"), size=(40, 1)),
-                sg.Input(key="identity---machine_id", size=(50, 1)),
+                sg.Input(key="repo---retention---hourly", size=(50, 1))
             ],
             [
-                sg.Text(_t("config_gui.machine_group"), size=(40, 1)),
-                sg.Input(key="identity---machine_group", size=(50, 1)),
+                sg.Text(_t("config_gui.keep"), size=(30, 1)),
+                sg.Text(_t("config_gui.daily"), size=(10, 1)),
+                sg.Input(key="repo---retention---daily", size=(50, 1))
+            ],
+            [
+                sg.Text(_t("config_gui.keep"), size=(30, 1)),
+                sg.Text(_t("config_gui.weekly"), size=(10, 1)),
+                sg.Input(key="repo---retention---weekly", size=(50, 1))
+            ],
+            [
+                sg.Text(_t("config_gui.keep"), size=(30, 1)),
+                sg.Text(_t("config_gui.monthly"), size=(10, 1)),
+                sg.Input(key="repo---retention---monthly", size=(50, 1))
+            ],
+            [
+                sg.Text(_t("config_gui.keep"), size=(30, 1)),
+                sg.Text(_t("config_gui.yearly"), size=(10, 1)),
+                sg.Input(key="repo---retention---yearly", size=(50, 1))
             ],
         ]
 
@@ -453,7 +469,123 @@ def config_gui(full_config: dict, config_file: str):
             ],
         ]
 
-        options_col = [
+        object_list = get_objects()
+        object_selector = [
+            [
+            sg.Text(_t("config_gui.select_object")), sg.Combo(object_list, default_value=object_list[0], key='-OBJECT-', enable_events=True)
+            ]
+        ]
+
+        tab_group_layout = [
+            [
+                sg.Tab(
+                    _t("config_gui.backup"),
+                    [[sg.Column(backup_col, scrollable=True, vertical_scroll_only=True)]],
+                    font="helvetica 16",
+                    key="--tab-backup--",
+                    element_justification="C",
+                )
+            ],
+            [
+                sg.Tab(
+                    _t("config_gui.backup_destination"),
+                    repo_col,
+                    font="helvetica 16",
+                    key="--tab-repo--",
+                    element_justification="C",
+                )
+            ],
+            [
+                sg.Tab(
+                    _t("config_gui.prometheus_config"),
+                    prometheus_col,
+                    font="helvetica 16",
+                    key="--tab-prometheus--",
+                    element_justification="C",
+                )
+            ],
+            [
+                sg.Tab(
+                    _t("config_gui.environment_variables"),
+                    env_col,
+                    font="helvetica 16",
+                    key="--tab-env--",
+                    element_justification="C",
+                )
+            ],
+        ]
+
+        _layout = [
+            [sg.Column(object_selector, element_justification='C')],
+            [sg.TabGroup(tab_group_layout, enable_events=True, key="--object-tabgroup--")],
+        ]
+        return _layout
+
+
+    def global_options_layout():
+        """"
+        Returns layout for global options that can't be overrided by group / repo settings
+        """
+        identity_col = [
+            [sg.Text(_t("config_gui.available_variables_id"))],
+            [
+                sg.Text(_t("config_gui.machine_id"), size=(40, 1)),
+                sg.Input(key="identity---machine_id", size=(50, 1)),
+            ],
+            [
+                sg.Text(_t("config_gui.machine_group"), size=(40, 1)),
+                sg.Input(key="identity---machine_group", size=(50, 1)),
+            ],
+        ]
+
+        prometheus_col = [
+            [sg.Text(_t("config_gui.available_variables"))],
+            [
+                sg.Text(_t("config_gui.enable_prometheus"), size=(40, 1)),
+                sg.Checkbox("", key="prometheus---metrics", size=(41, 1)),
+            ],
+            [
+                sg.Text(_t("config_gui.job_name"), size=(40, 1)),
+                sg.Input(key="prometheus---backup_job", size=(50, 1)),
+            ],
+            [
+                sg.Text(_t("config_gui.metrics_destination"), size=(40, 1)),
+                sg.Input(key="prometheus---destination", size=(50, 1)),
+            ],
+            [
+                sg.Text(_t("config_gui.no_cert_verify"), size=(40, 1)),
+                sg.Checkbox("", key="prometheus---no_cert_verify", size=(41, 1)),
+            ],
+            [
+                sg.Text(_t("config_gui.metrics_username"), size=(40, 1)),
+                sg.Input(key="prometheus---http_username", size=(50, 1)),
+            ],
+            [
+                sg.Text(_t("config_gui.metrics_password"), size=(40, 1)),
+                sg.Input(key="prometheus---http_password", size=(50, 1)),
+            ],
+            [
+                sg.Text(_t("config_gui.instance"), size=(40, 1)),
+                sg.Input(key="prometheus---instance", size=(50, 1)),
+            ],
+            [
+                sg.Text(_t("generic.group"), size=(40, 1)),
+                sg.Input(key="prometheus---group", size=(50, 1)),
+            ],
+            [
+                sg.Text(
+                    "{}\n({}\n{})".format(
+                        _t("config_gui.additional_labels"),
+                        _t("config_gui.one_per_line"),
+                        _t("config_gui.format_equals"),
+                    ),
+                    size=(40, 3),
+                ),
+                sg.Multiline(key="prometheus---additional_labels", size=(48, 3)),
+            ],
+        ]
+
+        global_options_col = [
             [sg.Text(_t("config_gui.available_variables"))],
             [
                 sg.Text(_t("config_gui.auto_upgrade"), size=(40, 1)),
@@ -483,14 +615,9 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Text(_t("generic.group"), size=(40, 1)),
                 sg.Input(key="options---auto_upgrade_group", size=(50, 1)),
             ],
-            [sg.HorizontalSeparator(key="sep")],
-            [
-                sg.Text(_t("config_gui.enter_backup_admin_password"), size=(40, 1)),
-                sg.Input(key="backup_admin_password", size=(50, 1), password_char="*"),
-            ],
-            [sg.Button(_t("generic.change"), key="change_backup_admin_password")],
+            [sg.HorizontalSeparator()]
         ]
-
+        
         scheduled_task_col = [
             [
                 sg.Text(_t("config_gui.create_scheduled_task_every")),
@@ -501,49 +628,7 @@ def config_gui(full_config: dict, config_file: str):
             [sg.Text(_t("config_gui.scheduled_task_explanation"))],
         ]
 
-
-        object_selector = [
-            [
-            sg.Text(_t("config_gui.select_object")), sg.Combo(get_objects(), key='-OBJECT-', enable_events=True)
-            ]
-        ]
-
-        buttons = [
-            [
-                sg.Text(" " * 135),
-                sg.Button(_t("generic.accept"), key="accept"),
-                sg.Button(_t("generic.cancel"), key="cancel"),
-            ]
-        ]
-
         tab_group_layout = [
-            [
-                sg.Tab(
-                    _t("config_gui.backup"),
-                    [[sg.Column(backup_col, scrollable=True, vertical_scroll_only=True)]],
-                    font="helvetica 16",
-                    key="--tab-backup--",
-                    element_justification="C",
-                )
-            ],
-            [
-                sg.Tab(
-                    _t("config_gui.backup_destination"),
-                    repo_col,
-                    font="helvetica 16",
-                    key="--tab-repo--",
-                    element_justification="C",
-                )
-            ],
-            [
-                sg.Tab(
-                    _t("config_gui.retention_policy"),
-                    retention_col,
-                    font="helvetica 16",
-                    key="--tab-retentino--",
-                    element_justification="L",
-                )
-            ],
             [
                 sg.Tab(
                     _t("config_gui.machine_identification"),
@@ -564,17 +649,8 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Tab(
-                    _t("config_gui.environment_variables"),
-                    env_col,
-                    font="helvetica 16",
-                    key="--tab-env--",
-                    element_justification="C",
-                )
-            ],
-            [
-                sg.Tab(
                     _t("generic.options"),
-                    options_col,
+                    global_options_col,
                     font="helvetica 16",
                     key="--tab-options--",
                     element_justification="C",
@@ -590,18 +666,38 @@ def config_gui(full_config: dict, config_file: str):
                 )
             ],
         ]
-
+        
         _layout = [
-            [sg.Column(object_selector, element_justification='C')],
+            [sg.TabGroup(tab_group_layout, enable_events=True, key="--global-tabgroup--")],
+        ]
+        return _layout
+    
+
+    def config_layout(object_type: str = 'repo') -> List[list]:
+
+        buttons = [
+            [
+                #sg.Text(" " * 135),
+                sg.Button(_t("generic.accept"), key="accept"),
+                sg.Button(_t("generic.cancel"), key="cancel"),
+            ]
+        ]
+        
+        tab_group_layout = [
+            [sg.Tab(_t("config_gui.repo_group_config"), object_layout())],
+            [sg.Tab(_t("config_gui.global_config"), global_options_layout())]
+        ]
+
+        _global_layout = [
             [sg.TabGroup(tab_group_layout, enable_events=True, key="--tabgroup--")],
             [sg.Column(buttons, element_justification="C")],
         ]
-        return _layout
+        return _global_layout
 
     right_click_menu = ["", [_t("config_gui.show_decrypted")]]
     window = sg.Window(
         "Configuration",
-        layout(),
+        config_layout(),
         size=(800, 600),
         text_justification="C",
         auto_size_text=True,
