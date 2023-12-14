@@ -13,6 +13,7 @@ __build__ = "2023121401"
 from typing import List
 import os
 from logging import getLogger
+from copy import deepcopy
 import PySimpleGUI as sg
 import npbackup.configuration as configuration
 from ofunctions.misc import get_key_from_value
@@ -101,7 +102,7 @@ def config_gui(full_config: dict, config_file: str):
         return object_type, object_name
 
     
-    def update_gui_values(key, value, object_type, unencrypted):
+    def update_gui_values(key, value, inherited, object_type, unencrypted):
         """
         Update gui values depending on their type
         """
@@ -112,12 +113,6 @@ def config_gui(full_config: dict, config_file: str):
                 window[key].Disabled = True
             else:
                 window[key].Disabled = False
-        # special case for env
-        if key == "env":
-            if isinstance(value, dict):
-                for envkey, envvalue in value.items():
-                    value = f"{envkey}={envvalue}"
-
         try:
             # Don't show sensible info unless unencrypted requested
             if not unencrypted:
@@ -141,27 +136,37 @@ def config_gui(full_config: dict, config_file: str):
                 window[key].Update(combo_boxes[key][value])
             else:
                 window[key].Update(value)
+
+            # Set inheritance on 
+            inheritance_key = f'inherited.{key}'
+            if inheritance_key in window.AllKeysDict:
+                window[f'inherited.{key}'].update(visible=True if inherited else False)
+
         except KeyError:
             logger.error(f"No GUI equivalent for key {key}.")
         except TypeError as exc:
             logger.error(f"Error: {exc} for key {key}.")
 
-    def iter_over_config(object_config: dict, object_type: str = None, unencrypted: bool = False, root_key: str =''):
+    def iter_over_config(object_config: dict, config_inheritance: dict = None, object_type: str = None, unencrypted: bool = False, root_key: str =''):
         """
         Iter over a dict while retaining the full key path to current object
         """
         base_object = object_config
 
         def _iter_over_config(object_config: dict, root_key=''):
-            # Special case where env is a dict but should be transformed into a list
-            if isinstance(object_config, dict) and not root_key == 'env':
+            # Special case where env is a dict but we should pass it directly as it to update_gui_values
+            if isinstance(object_config, dict):
                 for key in object_config.keys():
                     if root_key:
                         _iter_over_config(object_config[key], root_key=f'{root_key}.{key}')
                     else:
                         _iter_over_config(object_config[key], root_key=f'{key}')
             else:
-                update_gui_values(root_key, base_object.g(root_key), object_type, unencrypted)
+                if config_inheritance:
+                    inherited = config_inheritance.g(root_key)
+                else:
+                    inherited = False
+                update_gui_values(root_key, base_object.g(root_key), inherited, object_type, unencrypted)
         _iter_over_config(object_config, root_key)
 
     def update_object_gui(object_name = None, unencrypted=False):
@@ -173,7 +178,6 @@ def config_gui(full_config: dict, config_file: str):
         for key in window.AllKeysDict:
             # We only clear config keys, wihch have '.' separator
             if  "." in str(key):
-                print(key)
                 window[key]('')
         
         object_type, object_name = get_object_from_combo(object_name)
@@ -184,7 +188,20 @@ def config_gui(full_config: dict, config_file: str):
 
 
         # Now let's iter over the whole config object and update keys accordingly
-        iter_over_config(object_config, object_type, unencrypted, None)
+        iter_over_config(object_config, config_inheritance, object_type, unencrypted, None)
+
+    def update_global_gui(full_config, unencrypted=False):
+        # TODO
+        return
+        global_config = deepcopy(full_config)
+
+        # Only update global options gui with identified global keys
+        for key in global_config.keys():
+            if key not in ('identity', 'global_prometheus', 'global_options'):
+                global_config.pop(key)
+        print(global_config)
+            
+        iter_over_config(global_config, None, None, unencrypted, None)
 
 
     def update_config_dict(values, full_config):
@@ -259,6 +276,7 @@ def config_gui(full_config: dict, config_file: str):
                     ),
                     size=(40, 2),
                 ),
+                sg.Text("inherited", key="inherited.backup_opts.use_fs_snapshot", visible=False),
                 sg.Checkbox("", key="backup_opts.use_fs_snapshot", size=(41, 1)),
             ],
             [
@@ -357,6 +375,14 @@ def config_gui(full_config: dict, config_file: str):
 
         repo_col = [
             [
+                sg.Text(_t("config_gui.backup_repo_uri"), size=(40, 1)),
+                sg.Input(key="repo_uri", size=(50, 1)),
+            ],
+            [
+                sg.Text(_t("config_gui.repo_group"), size=(40, 1)),
+                sg.Input(key="repo_group", size=(50, 1)),
+            ],
+            [
                 sg.Text(
                     "{}\n({})".format(
                         _t("config_gui.minimum_backup_age"), _t("generic.minutes")
@@ -364,10 +390,6 @@ def config_gui(full_config: dict, config_file: str):
                     size=(40, 2),
                 ),
                 sg.Input(key="repo_opts.minimum_backup_age", size=(50, 1)),
-            ],
-            [
-                sg.Text(_t("config_gui.backup_repo_uri"), size=(40, 1)),
-                sg.Input(key="repo_uri", size=(50, 1)),
             ],
             [
                 sg.Text(_t("config_gui.backup_repo_password"), size=(40, 1)),
@@ -403,28 +425,28 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Text(_t("config_gui.keep"), size=(30, 1)),
-                sg.Text(_t("config_gui.hourly"), size=(10, 1)),
-                sg.Input(key="repo_opts.retention_strategy.hourly", size=(50, 1))
+                sg.Input(key="repo_opts.retention_strategy.hourly", size=(3, 1)),
+                sg.Text(_t("config_gui.hourly"), size=(20, 1)),
             ],
             [
                 sg.Text(_t("config_gui.keep"), size=(30, 1)),
-                sg.Text(_t("config_gui.daily"), size=(10, 1)),
-                sg.Input(key="repo_opts.retention_strategy.daily", size=(50, 1))
+                sg.Input(key="repo_opts.retention_strategy.daily", size=(3, 1)),
+                sg.Text(_t("config_gui.daily"), size=(20, 1)),
             ],
             [
                 sg.Text(_t("config_gui.keep"), size=(30, 1)),
-                sg.Text(_t("config_gui.weekly"), size=(10, 1)),
-                sg.Input(key="repo_opts.retention_strategy.weekly", size=(50, 1))
+                sg.Input(key="repo_opts.retention_strategy.weekly", size=(3, 1)),
+                sg.Text(_t("config_gui.weekly"), size=(20, 1)),
             ],
             [
                 sg.Text(_t("config_gui.keep"), size=(30, 1)),
-                sg.Text(_t("config_gui.monthly"), size=(10, 1)),
-                sg.Input(key="repo_opts.retention_strategy.monthly", size=(50, 1))
+                sg.Input(key="repo_opts.retention_strategy.monthly", size=(3, 1)),
+                sg.Text(_t("config_gui.monthly"), size=(20, 1)),
             ],
             [
                 sg.Text(_t("config_gui.keep"), size=(30, 1)),
-                sg.Text(_t("config_gui.yearly"), size=(10, 1)),
-                sg.Input(key="repo_opts.retention_strategy.yearly", size=(50, 1))
+                sg.Input(key="repo_opts.retention_strategy.yearly", size=(3, 1)),
+                sg.Text(_t("config_gui.yearly"), size=(20, 1)),
             ],
         ]
 
@@ -485,7 +507,7 @@ def config_gui(full_config: dict, config_file: str):
                     ),
                     size=(40, 3),
                 ),
-                sg.Multiline(key="env.variables", size=(48, 5)),
+                sg.Multiline(key="env.env_variables", size=(48, 5)),
             ],
             [
                 sg.Text(
@@ -496,7 +518,7 @@ def config_gui(full_config: dict, config_file: str):
                     ),
                     size=(40, 3),
                 ),
-                sg.Multiline(key="env.encrypted_variables", size=(48, 5)),
+                sg.Multiline(key="env.encrypted_env_variables", size=(48, 5)),
             ],
         ]
 
@@ -514,7 +536,7 @@ def config_gui(full_config: dict, config_file: str):
                     [[sg.Column(backup_col, scrollable=True, vertical_scroll_only=True)]],
                     font="helvetica 16",
                     key="--tab-backup--",
-                    element_justification="C",
+                    element_justification="L",
                 )
             ],
             [
@@ -523,7 +545,7 @@ def config_gui(full_config: dict, config_file: str):
                     repo_col,
                     font="helvetica 16",
                     key="--tab-repo--",
-                    element_justification="C",
+                    element_justification="L",
                 )
             ],
             [
@@ -532,7 +554,7 @@ def config_gui(full_config: dict, config_file: str):
                     prometheus_col,
                     font="helvetica 16",
                     key="--tab-prometheus--",
-                    element_justification="C",
+                    element_justification="L",
                 )
             ],
             [
@@ -541,13 +563,13 @@ def config_gui(full_config: dict, config_file: str):
                     env_col,
                     font="helvetica 16",
                     key="--tab-env--",
-                    element_justification="C",
+                    element_justification="L",
                 )
             ],
         ]
 
         _layout = [
-            [sg.Column(object_selector, element_justification='C')],
+            [sg.Column(object_selector, element_justification='L')],
             [sg.TabGroup(tab_group_layout, enable_events=True, key="--object-tabgroup--")],
         ]
         return _layout
@@ -666,7 +688,7 @@ def config_gui(full_config: dict, config_file: str):
                     identity_col,
                     font="helvetica 16",
                     key="--tab-global-identification--",
-                    element_justification="C",
+                    element_justification="L",
                 )
             ],
             [
@@ -675,7 +697,7 @@ def config_gui(full_config: dict, config_file: str):
                     prometheus_col,
                     font="helvetica 16",
                     key="--tab-global-prometheus--",
-                    element_justification="C",
+                    element_justification="L",
                 )
             ],
             [
@@ -684,7 +706,7 @@ def config_gui(full_config: dict, config_file: str):
                     global_options_col,
                     font="helvetica 16",
                     key="--tab-global-options--",
-                    element_justification="C",
+                    element_justification="L",
                 )
             ],
             [
@@ -693,7 +715,7 @@ def config_gui(full_config: dict, config_file: str):
                     scheduled_task_col,
                     font="helvetica 16",
                     key="--tab-global-scheduled_task--",
-                    element_justification="C",
+                    element_justification="L",
                 )
             ],
         ]
@@ -704,11 +726,11 @@ def config_gui(full_config: dict, config_file: str):
         return _layout
     
 
-    def config_layout(object_type: str = 'repo') -> List[list]:
+    def config_layout() -> List[list]:
 
         buttons = [
             [
-                #sg.Text(" " * 135),
+                sg.Push(),
                 sg.Button(_t("generic.accept"), key="accept"),
                 sg.Button(_t("generic.cancel"), key="cancel"),
             ]
@@ -721,7 +743,8 @@ def config_gui(full_config: dict, config_file: str):
 
         _global_layout = [
             [sg.TabGroup(tab_group_layout, enable_events=True, key="--configtabgroup--")],
-            [sg.Column(buttons, element_justification="C")],
+            [sg.Column(buttons, element_justification="L")],
+            [sg.Button("trololo")]
         ]
         return _global_layout
 
@@ -745,6 +768,7 @@ def config_gui(full_config: dict, config_file: str):
 
     # Update gui with first default object (repo or group)
     update_object_gui(get_objects()[0], unencrypted=False)
+    update_global_gui(full_config, unencrypted=False)
 
     while True:
         event, values = window.read()

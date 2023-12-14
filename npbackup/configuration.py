@@ -96,13 +96,13 @@ empty_config_dict = {
     "repos": {
             "default": {
                 "repo_uri": "",
-                "group": "default_group",
+                "repo_group": "default_group",
                 "backup_opts": {},
                 "repo_opts": {},
                 "prometheus": {},
                 "env": {
-                    "variables": {},
-                    "encrypted_variables": {}
+                    "env_variables": [],
+                    "encrypted_env_variables": []
             },
             },
     },
@@ -167,8 +167,8 @@ empty_config_dict = {
                 "group": "${MACHINE_GROUP}",
             },
             "env": {
-                "variables": {},
-                "encrypted_variables": {}
+                "env_variables": [],
+                "env_encrypted_variables": []
         },
     },
     "identity": {
@@ -361,6 +361,30 @@ def get_repo_config(full_config: dict, repo_name: str = 'default', eval_variable
     repo_config = ordereddict()
     config_inheritance = ordereddict()
 
+    def inherit_group_settings(repo_config: dict, group_config: dict) -> Tuple[dict, dict]:
+        """
+        iter over group settings, update repo_config, and produce an identical version of repo_config
+        called config_inheritance, where every value is replaced with a boolean which states inheritance status
+        """
+
+        # WIP # TODO: cannot use local repo config, need to make a deepcopy first ?
+
+        if isinstance(group_config, dict):
+            for key, value in group_config.items():
+                if isinstance(value, dict):
+                    repo_config[key] = inherit_group_settings(repo_config.g(key), group_config.g(key))
+                elif isinstance(value, list) and isinstance(repo_config.g(key), list):
+                    merged_lists = repo_config.g(key) + group_config.g(key)
+                    repo_config.s(key, merged_lists)
+                    config_inheritance.s(key, True)
+                else:
+                    if not repo_config or not repo_config.g(key):
+                        repo_config = group_config
+                        config_inheritance.s(key, True)
+                    else:
+                        config_inheritance.s(key, False)
+        return repo_config, config_inheritance
+
     try:
         repo_config = deepcopy(full_config.g(f'repos.{repo_name}'))
         # Let's make a copy of config since it's a "pointer object"
@@ -369,10 +393,13 @@ def get_repo_config(full_config: dict, repo_name: str = 'default', eval_variable
         logger.error(f"No repo with name {repo_name} found in config")
         return None
     try:
-        repo_group = full_config.g(f'repos.{repo_name}.group')
+        repo_group = full_config.g(f'repos.{repo_name}.repo_group')
+        group_config = full_config.g(f'groups.{repo_group}')
     except KeyError:
         logger.warning(f"Repo {repo_name} has no group")
     else:
+        inherit_group_settings(repo_config, group_config)
+        """
         sections = full_config.g(f'groups.{repo_group}')
         if sections:
             for section in sections:
@@ -394,6 +421,7 @@ def get_repo_config(full_config: dict, repo_name: str = 'default', eval_variable
                             config_inheritance.s(f'{section}.{entries}', True)
                         else:
                             config_inheritance.s(f'{section}.{entries}', False)
+        """
 
     if eval_variables:
         repo_config = evaluate_variables(repo_config, full_config)
@@ -469,7 +497,6 @@ def load_config(config_file: Path) -> Optional[dict]:
     if config_file_is_updated:
         logger.info("Updating config file")
         save_config(config_file, full_config)
-
     return full_config
 
 

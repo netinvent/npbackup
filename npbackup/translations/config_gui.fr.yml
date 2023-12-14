@@ -46,7 +46,7 @@ fr:
   no_config_available: Aucun fichier de configuration trouvé. Merci d'utiliser --config-file "chemin" pour spécifier un fichier, ou copier un fichier de configuration a côté du binaire NPBackup.
   create_new_config: Souhaitez-vous créer une nouvelle configuration ?
   saved_initial_config: Si vous avez enregistré une configuration, vous pouvez à présent recharger le programme.
-  bogus_config_file: Fichier de configuration %{config_file} érroné
+  bogus_config_file: Fichier de configuration érroné
 
   encrypted_environment_variables: Variables d'envrionnement chiffrées (ie TOKENS etc)
   environment_variables: Variables d'environnement
@@ -103,9 +103,8 @@ fr:
   files_from_raw: Liste fichiers depuis un fichier "raw"
 
   keep: Garder
-  copies: copies
-  hourly: par heure
-  daily: journalières
-  weekly: hebdomadaires
-  monthly: mensuelles
-  yearly: annuelles
+  hourly: copies horaires
+  daily: copies journalières
+  weekly: copies hebdomadaires
+  monthly: copies mensuelles
+  yearly: copies annuelles

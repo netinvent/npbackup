@@ -46,7 +46,7 @@ en:
   no_config_available: No configuration file found. Please use --config-file "path" to specify one or copy a config file next to the NPBackup binary
   create_new_config: Would you like to create a new configuration ?
   saved_initial_config: If you saved your configuration, you may now reload this program
-  bogus_config_file: Bogus configuration file %{config_file} found
+  bogus_config_file: Bogus configuration file found
 
   encrypted_environment_variables: Encrypted envrionment variables (ie TOKENS etc)
   environment_variables: Environment variables
@@ -103,9 +103,8 @@ en:
   files_from_raw: Files from raw list
 
   keep: Keep
-  copies: copies
-  hourly: hourly
-  daily: daily
-  weekly: weekly
-  monthly: monthly
-  yearly: yearly
+  hourly: hourly copies
+  daily: daily copies
+  weekly: weekly copies
+  monthly: monthly copies
+  yearly: yearly copies
