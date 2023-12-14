@@ -20,7 +20,6 @@ import dateutil
 import queue
 from time import sleep
 from ofunctions.threading import threaded, Future
-from threading import Thread
 from ofunctions.misc import BytesConverter
 import PySimpleGUI as sg
 import _tkinter
