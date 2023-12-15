@@ -108,3 +108,8 @@ en:
   weekly: weekly copies
   monthly: monthly copies
   yearly: yearly copies
+
+  group_inherited: Group inherited
+  repo_group_config: Repo group configuration
+  global_config: Global config
+  select_object: Select configuration object

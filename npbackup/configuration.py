@@ -7,12 +7,12 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023121301"
+__build__ = "2023121501"
 __version__ = "2.0.0 for npbackup 2.3.0+"
 
 CONF_VERSION = 2.3
 
-from typing import Tuple, Optional, List, Callable, Any, Union
+from typing import Tuple, Optional, List, Any, Union
 import sys
 import os
 from copy import deepcopy
@@ -304,7 +304,6 @@ def get_repo_config(full_config: dict, repo_name: str = 'default', eval_variable
     Returns a dict containing the repo config, with expanded variables
     and a dict containing the repo interitance status
     """
-
     def inherit_group_settings(repo_config: dict, group_config: dict) -> Tuple[dict, dict]:
         """
         iter over group settings, update repo_config, and produce an identical version of repo_config
@@ -329,23 +328,30 @@ def get_repo_config(full_config: dict, repo_name: str = 'default', eval_variable
                         # TODO: Lists containing dicts won't be updated in repo_config here
                         # we need to have
                         # for elt in list:
-                        #   recurse into elt if elt is dict
+                        #     recurse into elt if elt is dict
                         if isinstance(_repo_config.g(key), list):
                             merged_lists = _repo_config.g(key) + _group_config.g(key)
+                        # Case where repo config already contains non list info but group config has list
+                        elif _repo_config.g(key):
+                            merged_lists = [_repo_config.g(key)] + _group_config.g(key)
                         else:
                             merged_lists = _group_config.g(key)
                         _repo_config.s(key, merged_lists)
                         _config_inheritance.s(key, True)
                     else:
-                        # Tricky part
-                        # repo_config may already contain a struct
+                        # repo_config may or may not already contain data
                         if not _repo_config:
                             _repo_config = CommentedMap()
                             _config_inheritance = CommentedMap()
                         if not _repo_config.g(key):
                             _repo_config.s(key, value)
                             _config_inheritance.s(key, True)
+                        # Case where repo_config contains list but group info has single str
+                        elif isinstance(_repo_config.g(key), list) and value:
+                            merged_lists = _repo_config.g(key) + [value]
+                            _repo_config.s(key, merged_lists)
                         else:
+                            # In other cases, just keep repo confg
                             _config_inheritance.s(key, False)
 
 

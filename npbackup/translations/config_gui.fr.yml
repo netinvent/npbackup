@@ -108,3 +108,9 @@ fr:
   weekly: copies hebdomadaires
   monthly: copies mensuelles
   yearly: copies annuelles
+
+  group_inherited: Hérité du groupe
+  repo_group_config: Configuration de groupe de dépots
+  global_config: Configuration globale
+  select_object: Selectionner l'object à configurer
+  

@@ -15,11 +15,12 @@ import os
 from logging import getLogger
 from copy import deepcopy
 import PySimpleGUI as sg
+from ruamel.yaml.comments import CommentedMap
 import npbackup.configuration as configuration
 from ofunctions.misc import get_key_from_value
 from npbackup.core.i18n_helper import _t
 from npbackup.path_helper import CURRENT_EXECUTABLE
-from npbackup.core.nuitka_helper import IS_COMPILED
+from npbackup.customization import INHERITANCE_ICON
 
 if os.name == "nt":
     from npbackup.windows.task import create_scheduled_task
@@ -108,7 +109,7 @@ def config_gui(full_config: dict, config_file: str):
         """
         if key == "backup_admin_password":
             return
-        if key == "repo_uri":
+        if key in ("repo_uri", "repo_group"):
             if object_type == "group":
                 window[key].Disabled = True
             else:
@@ -137,10 +138,10 @@ def config_gui(full_config: dict, config_file: str):
             else:
                 window[key].Update(value)
 
-            # Set inheritance on 
+            # Enable inheritance icon when needed
             inheritance_key = f'inherited.{key}'
             if inheritance_key in window.AllKeysDict:
-                window[f'inherited.{key}'].update(visible=True if inherited else False)
+                window[inheritance_key].update(visible=True if inherited else False)
 
         except KeyError:
             logger.error(f"No GUI equivalent for key {key}.")
@@ -177,31 +178,28 @@ def config_gui(full_config: dict, config_file: str):
         # First we need to clear the whole GUI to reload new values
         for key in window.AllKeysDict:
             # We only clear config keys, wihch have '.' separator
-            if  "." in str(key):
+            if  "." in str(key) and not "inherited" in str(key):
                 window[key]('')
         
         object_type, object_name = get_object_from_combo(object_name)
+
         if object_type == 'repo':
             object_config, config_inheritance = configuration.get_repo_config(full_config, object_name, eval_variables=False)
         if object_type == 'group':
             object_config = configuration.get_group_config(full_config, object_name, eval_variables=False)
-
-
+            config_inheritance = None
         # Now let's iter over the whole config object and update keys accordingly
         iter_over_config(object_config, config_inheritance, object_type, unencrypted, None)
 
+
     def update_global_gui(full_config, unencrypted=False):
-        # TODO
-        return
-        global_config = deepcopy(full_config)
+        global_config = CommentedMap()
 
         # Only update global options gui with identified global keys
-        for key in global_config.keys():
-            if key not in ('identity', 'global_prometheus', 'global_options'):
-                global_config.pop(key)
-        print(global_config)
-            
-        iter_over_config(global_config, None, None, unencrypted, None)
+        for key in full_config.keys():
+            if key in ('identity', 'global_options'):
+               global_config.s(key, full_config.g(key))
+        iter_over_config(global_config, None, 'group', unencrypted, None)
 
 
     def update_config_dict(values, full_config):
@@ -239,13 +237,14 @@ def config_gui(full_config: dict, config_file: str):
         return full_config
 
 
-    def object_layout(object_type: str = "repo") -> List[list]:
+    def object_layout() -> List[list]:
         """
         Returns the GUI layout depending on the object type
         """
         backup_col = [
             [
                 sg.Text(_t("config_gui.compression"), size=(40, 1)),
+                sg.pin(sg.Image(INHERITANCE_ICON, key="inherited.backup_opts.compression", tooltip=_t("config_gui.group_inherited"))),
                 sg.Combo(
                     list(combo_boxes["compression"].values()),
                     key="backup_opts.compression",
@@ -259,10 +258,12 @@ def config_gui(full_config: dict, config_file: str):
                     ),
                     size=(40, 2),
                 ),
+                sg.pin(sg.Image(INHERITANCE_ICON, expand_x=True, expand_y=True, key="inherited.backup_opts.paths", tooltip=_t("config_gui.group_inherited"))),
                 sg.Multiline(key="backup_opts.paths", size=(48, 4)),
             ],
             [
                 sg.Text(_t("config_gui.source_type"), size=(40, 1)),
+                sg.pin(sg.Image(INHERITANCE_ICON, expand_x=True, expand_y=True, key="inherited.backup_opts.source_type", tooltip=_t("config_gui.group_inherited"))),
                 sg.Combo(
                     list(combo_boxes["source_type"].values()),
                     key="backup_opts.source_type",
@@ -276,7 +277,7 @@ def config_gui(full_config: dict, config_file: str):
                     ),
                     size=(40, 2),
                 ),
-                sg.Text("inherited", key="inherited.backup_opts.use_fs_snapshot", visible=False),
+                sg.pin(sg.Image(INHERITANCE_ICON, expand_x=True, expand_y=True, key="inherited.backup_opts.use_fs_snapshot", tooltip=_t("config_gui.group_inherited"))),
                 sg.Checkbox("", key="backup_opts.use_fs_snapshot", size=(41, 1)),
             ],
             [
@@ -533,7 +534,7 @@ def config_gui(full_config: dict, config_file: str):
             [
                 sg.Tab(
                     _t("config_gui.backup"),
-                    [[sg.Column(backup_col, scrollable=True, vertical_scroll_only=True)]],
+                    [[sg.Column(backup_col, scrollable=True, vertical_scroll_only=True, size=(700, 450))]],
                     font="helvetica 16",
                     key="--tab-backup--",
                     element_justification="L",
@@ -542,7 +543,7 @@ def config_gui(full_config: dict, config_file: str):
             [
                 sg.Tab(
                     _t("config_gui.backup_destination"),
-                    repo_col,
+                    [[sg.Column(repo_col, scrollable=True, vertical_scroll_only=True, size=(700, 450))]],
                     font="helvetica 16",
                     key="--tab-repo--",
                     element_justification="L",
@@ -590,54 +591,6 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Input(key="identity.machine_group", size=(50, 1)),
             ],
         ]
-
-        prometheus_col = [
-            [sg.Text(_t("config_gui.available_variables"))],
-            [
-                sg.Text(_t("config_gui.enable_prometheus"), size=(40, 1)),
-                sg.Checkbox("", key="global_prometheus.metrics", size=(41, 1)),
-            ],
-            [
-                sg.Text(_t("config_gui.job_name"), size=(40, 1)),
-                sg.Input(key="global_prometheus.backup_job", size=(50, 1)),
-            ],
-            [
-                sg.Text(_t("config_gui.metrics_destination"), size=(40, 1)),
-                sg.Input(key="global_prometheus.destination", size=(50, 1)),
-            ],
-            [
-                sg.Text(_t("config_gui.no_cert_verify"), size=(40, 1)),
-                sg.Checkbox("", key="global_prometheus.no_cert_verify", size=(41, 1)),
-            ],
-            [
-                sg.Text(_t("config_gui.metrics_username"), size=(40, 1)),
-                sg.Input(key="global_prometheus.http_username", size=(50, 1)),
-            ],
-            [
-                sg.Text(_t("config_gui.metrics_password"), size=(40, 1)),
-                sg.Input(key="global_prometheus.http_password", size=(50, 1)),
-            ],
-            [
-                sg.Text(_t("config_gui.instance"), size=(40, 1)),
-                sg.Input(key="global_prometheus.instance", size=(50, 1)),
-            ],
-            [
-                sg.Text(_t("generic.group"), size=(40, 1)),
-                sg.Input(key="global_prometheus.group", size=(50, 1)),
-            ],
-            [
-                sg.Text(
-                    "{}\n({}\n{})".format(
-                        _t("config_gui.additional_labels"),
-                        _t("config_gui.one_per_line"),
-                        _t("config_gui.format_equals"),
-                    ),
-                    size=(40, 3),
-                ),
-                sg.Multiline(key="global_prometheus.additional_labels", size=(48, 3)),
-            ],
-        ]
-
         global_options_col = [
             [sg.Text(_t("config_gui.available_variables"))],
             [
@@ -693,15 +646,6 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Tab(
-                    _t("config_gui.prometheus_config"),
-                    prometheus_col,
-                    font="helvetica 16",
-                    key="--tab-global-prometheus--",
-                    element_justification="L",
-                )
-            ],
-            [
-                sg.Tab(
                     _t("generic.options"),
                     global_options_col,
                     font="helvetica 16",
@@ -743,8 +687,7 @@ def config_gui(full_config: dict, config_file: str):
 
         _global_layout = [
             [sg.TabGroup(tab_group_layout, enable_events=True, key="--configtabgroup--")],
-            [sg.Column(buttons, element_justification="L")],
-            [sg.Button("trololo")]
+            [sg.Push(), sg.Column(buttons, element_justification="L")],
         ]
         return _global_layout
 

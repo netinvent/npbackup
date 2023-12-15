@@ -207,7 +207,7 @@ def _gui_update_state(
         )
     elif current_state is False:
         window["state-button"].Update(
-            "{}: {}".format(_t("generic.too_old"), backup_tz),
+            "{}: {}".format(_t("generic.too_old"), backup_tz.replace(microsecond=0)),
             button_color=GUI_STATE_OLD_BUTTON,
         )
     elif current_state is None:
@@ -570,8 +570,7 @@ def _main_gui():
 
     logger.info(f"Using configuration file {config_file}")
     full_config = npbackup.configuration.load_config(config_file)
-    # TODO add a repo selector
-    repo_config, inherit_config = npbackup.configuration.get_repo_config(full_config)
+    repo_config, config_inheritance = npbackup.configuration.get_repo_config(full_config)
     repo_list = npbackup.configuration.get_repo_list(full_config)
 
     backup_destination = _t("main_gui.local_folder")
@@ -661,7 +660,12 @@ def _main_gui():
     window["snapshot-list"].expand(True, True)
 
     window.read(timeout=1)
-    current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
+    try:
+        current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
+    except ValueError:
+        current_state = None
+        backup_tz = None
+        snapshot_list = []
     _gui_update_state(window, current_state, backup_tz, snapshot_list)
     while True:
         event, values = window.read(timeout=60000)
@@ -671,7 +675,7 @@ def _main_gui():
         if event == "-active_repo-":
             active_repo = values['-active_repo-']
             if full_config.g(f"repos.{active_repo}"):
-                repo_config = npbackup.configuration.get_repo_config(full_config, active_repo)
+                repo_config, config_inheriteance = npbackup.configuration.get_repo_config(full_config, active_repo)
                 current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
             else:
                 sg.PopupError("Repo not existent in config")
@@ -784,3 +788,7 @@ def main_gui():
     except _tkinter.TclError as exc:
         logger.critical(f'Tkinter error: "{exc}". Is this a headless server ?')
         sys.exit(250)
+    except Exception as exc:
+        sg.Popup(_t("config_gui.bogus_config_file") + f': {exc}')
+        raise #TODO replace with logger
+        sys.exit(251)
