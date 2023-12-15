@@ -252,12 +252,7 @@ def config_gui(full_config: dict, config_file: str):
                 ),
             ],
             [
-                sg.Text(
-                    "{}\n({})".format(
-                        _t("config_gui.backup_paths"), _t("config_gui.one_per_line")
-                    ),
-                    size=(40, 2),
-                ),
+                sg.Text(f"{_t('config_gui.backup_paths')}\n({_t('config_gui.one_per_line')})", size=(40, 2)),
                 sg.pin(sg.Image(INHERITANCE_ICON, expand_x=True, expand_y=True, key="inherited.backup_opts.paths", tooltip=_t("config_gui.group_inherited"))),
                 sg.Multiline(key="backup_opts.paths", size=(48, 4)),
             ],
@@ -290,21 +285,11 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Checkbox("", key="backup_opts.ignore_cloud_files", size=(41, 1)),
             ],
             [
-                sg.Text(
-                    "{}\n({})".format(
-                        _t("config_gui.exclude_patterns"), _t("config_gui.one_per_line")
-                    ),
-                    size=(40, 2),
-                ),
+                sg.Text(f"{_t('config_gui.exclude_patterns')}\n({_t('config_gui.one_per_line')})", size=(40, 2)),
                 sg.Multiline(key="backup_opts.exclude_patterns", size=(48, 4)),
             ],
             [
-                sg.Text(
-                    "{}\n({})".format(
-                        _t("config_gui.exclude_files"), _t("config_gui.one_per_line")
-                    ),
-                    size=(40, 2),
-                ),
+                sg.Text(f"{_t('config_gui.exclude_files')}\n({_t('config_gui.one_per_line')})", size=(40, 2)),
                 sg.Multiline(key="backup_opts.exclude_files", size=(48, 4)),
             ],
             [
@@ -326,8 +311,8 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Checkbox("", key="backup_opts.one_file_system", size=(41, 1)),
             ],
             [
-                sg.Text(_t("config_gui.pre_exec_command"), size=(40, 1)),
-                sg.Input(key="backup_opts.pre_exec_command", size=(50, 1)),
+                sg.Text(f"{_t('config_gui.pre_exec_commands')}\n({_t('config_gui.one_per_line')})", size=(40, 2)),
+                sg.Multiline(key="backup_opts.pre_exec_commands", size=(48, 4)),
             ],
             [
                 sg.Text(_t("config_gui.maximum_exec_time"), size=(40, 1)),
@@ -338,8 +323,8 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Checkbox("", key="backup_opts.pre_exec_failure_is_fatal", size=(41, 1)),
             ],
             [
-                sg.Text(_t("config_gui.post_exec_command"), size=(40, 1)),
-                sg.Input(key="backup_opts.post_exec_command", size=(50, 1)),
+                sg.Text(f"{_t('config_gui.post_exec_commands')}\n({_t('config_gui.one_per_line')})", size=(40, 2)),
+                sg.Multiline(key="backup_opts.post_exec_commands", size=(48, 4)),
             ],
             [
                 sg.Text(_t("config_gui.maximum_exec_time"), size=(40, 1)),
@@ -350,11 +335,8 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Checkbox("", key="backup_opts.post_exec_failure_is_fatal", size=(41, 1)),
             ],
             [
-                sg.Text(
-                    "{}\n({})".format(_t("config_gui.tags"), _t("config_gui.one_per_line")),
-                    size=(40, 2),
-                ),
-                sg.Multiline(key="backup_opts.tags", size=(48, 2)),
+                sg.Text(f"{_t('config_gui.tags')}\n({_t('config_gui.one_per_line')})", size=(40, 2)),
+                sg.Multiline(key="backup_opts.tags", size=(48, 4)),
             ],
             [
                 sg.Text(_t("config_gui.backup_priority"), size=(40, 1)),
@@ -486,39 +468,18 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Input(key="prometheus.group", size=(50, 1)),
             ],
             [
-                sg.Text(
-                    "{}\n({}\n{})".format(
-                        _t("config_gui.additional_labels"),
-                        _t("config_gui.one_per_line"),
-                        _t("config_gui.format_equals"),
-                    ),
-                    size=(40, 3),
-                ),
+                sg.Text(f"{_t('config_gui.additional_labels')}\n({_t('config_gui.one_per_line')}\n{_t('config_gui.format_equals')})", size=(40, 3)),
                 sg.Multiline(key="prometheus.additional_labels", size=(48, 3)),
             ],
         ]
 
         env_col = [
             [
-                sg.Text(
-                    "{}\n({}\n{})".format(
-                        _t("config_gui.environment_variables"),
-                        _t("config_gui.one_per_line"),
-                        _t("config_gui.format_equals"),
-                    ),
-                    size=(40, 3),
-                ),
+                sg.Text(f"{_t('config_gui.env_variables')}\n({_t('config_gui.one_per_line')}\n{_t('config_gui.format_equals')})", size=(40, 3)),
                 sg.Multiline(key="env.env_variables", size=(48, 5)),
             ],
             [
-                sg.Text(
-                    "{}\n({}\n{})".format(
-                        _t("config_gui.encrypted_environment_variables"),
-                        _t("config_gui.one_per_line"),
-                        _t("config_gui.format_equals"),
-                    ),
-                    size=(40, 3),
-                ),
+                sg.Text(f"{_t('config_gui.encrypted_env_variables')}\n({_t('config_gui.one_per_line')}\n{_t('config_gui.format_equals')})", size=(40, 3)),
                 sg.Multiline(key="env.encrypted_env_variables", size=(48, 5)),
             ],
         ]

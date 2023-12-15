@@ -12,10 +12,10 @@ fr:
   windows_always: toujours actif pour Windows
   exclude_cache_dirs: Exclure dossiers cache
   one_file_system: Ne pas suivre les points de montage
-  pre_exec_command: Commande pré-sauvegarde
+  pre_exec_commands: Commandes pré-sauvegarde
   maximum_exec_time: Temps maximal d'execution
   exec_failure_is_fatal: L'échec d'execution est fatal
-  post_exec_command: Commande post-sauvegarde
+  post_exec_commands: Commandes post-sauvegarde
   tags: Tags
   one_per_line: un par ligne
   backup_priority: Priorité de sauvegarde
@@ -113,4 +113,3 @@ fr:
   repo_group_config: Configuration de groupe de dépots
   global_config: Configuration globale
   select_object: Selectionner l'object à configurer
-  

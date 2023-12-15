@@ -12,10 +12,10 @@ en:
   windows_always: always enabled for Windows
   exclude_cache_dirs: Exclude cache dirs
   one_file_system: Do not follow mountpoints
-  pre_exec_command: Pre-exec command
+  pre_exec_commands: Pre-exec commands
   maximum_exec_time: Maximum exec time
   exec_failure_is_fatal: Execution failure is fatal
-  post_exec_command: Post-exec command
+  post_exec_commands: Post-exec commands
   tags: Tags
   one_per_line: one per line
   backup_priority: Backup priority
@@ -48,8 +48,8 @@ en:
   saved_initial_config: If you saved your configuration, you may now reload this program
   bogus_config_file: Bogus configuration file found
 
-  encrypted_environment_variables: Encrypted envrionment variables (ie TOKENS etc)
-  environment_variables: Environment variables
+  encrypted_env_variables: Encrypted envrionment variables (ie TOKENS etc)
+  env_variables: Environment variables
   format_equals: Format variable=value
 
   no_runner: Cannot connect to backend. Please see logs
