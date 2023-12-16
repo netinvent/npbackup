@@ -113,3 +113,8 @@ fr:
   repo_group_config: Configuration de groupe de dépots
   global_config: Configuration globale
   select_object: Selectionner l'object à configurer
+  create_object: Créer un nouveau dépot ou groupe
+  delete_object: Supprimer le dépot ou groupe actuel
+  are_you_sure_to_delete: Êtes-vous sûr de vouloir supprimer le
+  repo_already_exists: Dépot déjà existant
+  group_already_exists: Groupe déjà existant

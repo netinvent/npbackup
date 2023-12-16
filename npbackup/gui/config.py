@@ -87,7 +87,52 @@ def config_gui(full_config: dict, config_file: str):
             object_list.append(f"Group: {group}")
         return object_list
     
+    def create_object(full_config: dict) -> dict:
+        
+        layout = [
+            [sg.Text(_t("generic.type")), sg.Combo(["repo", "group"], default_value="repo", key="-OBJECT-TYPE-"), sg.Text(_t("generic.name")), sg.Input(key="-OBJECT-NAME-")],
+            [sg.Push(), sg.Button(_t("generic.cancel"), key="--CANCEL--"), sg.Button(_t("generic.accept"), key="--ACCEPT--")]
+        ]
+
+        window = sg.Window(_t("config_gui.create_object"), layout=layout, keep_on_top=True)
+        while True:
+            event, values = window.read()
+            if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, '--CANCEL--'):
+                break
+            if event == '--ACCEPT--':
+                object_type = values['-OBJECT-TYPE-']
+                object_name = values['-OBJECT-NAME-']
+                if object_type == "repo":
+                    if full_config.g(f"repos.{object_name}"):
+                        sg.PopupError(_t("config_gui.repo_already_exists"), keep_on_top=True)
+                        continue
+                    full_config.s(f"repos.{object_name}", CommentedMap())
+                elif object_type == "group":
+                    if full_config.g(f"groups.{object_name}"):
+                        sg.PopupError(_t("config_gui.group_already_exists"), keep_on_top=True)
+                        continue
+                    full_config.s(f"groups.{object_name}", CommentedMap())
+                else:
+                    raise ValueError("Bogus object type given")
+        window.close()
+        update_object_gui(None, unencrypted=False)
+        return full_config
     
+    def delete_object(full_config: dict, object_name: str) -> dict:
+        object_type, object_name = get_object_from_combo(object_name)
+        result = sg.PopupYesNo(_t("config_gui.are_you_sure_to_delete") + f" {object_type} {object_name} ?")
+        if result:
+            full_config.d(f"{object_type}s.{object_name}")
+            update_object_gui(None, unencrypted=False)
+        return full_config
+    
+
+    def update_object_selector() -> None:
+        objects = get_objects()
+        window["-OBJECT-SELECT-"].Update(objects)
+        window["-OBJECT-SELECT-"].Update(value=objects[0])
+
+
     def get_object_from_combo(combo_value: str) -> (str, str):
         """
         Extracts selected object from combobox
@@ -487,7 +532,7 @@ def config_gui(full_config: dict, config_file: str):
         object_list = get_objects()
         object_selector = [
             [
-            sg.Text(_t("config_gui.select_object")), sg.Combo(object_list, default_value=object_list[0], key='-OBJECT-', enable_events=True)
+            sg.Text(_t("config_gui.select_object")), sg.Combo(object_list, default_value=object_list[0], key='-OBJECT-SELECT-', enable_events=True),
             ]
         ]
 
@@ -636,8 +681,10 @@ def config_gui(full_config: dict, config_file: str):
         buttons = [
             [
                 sg.Push(),
-                sg.Button(_t("generic.accept"), key="accept"),
-                sg.Button(_t("generic.cancel"), key="cancel"),
+                sg.Button(_t("config_gui.create_object"), key='-OBJECT-CREATE-'),
+                sg.Button(_t("config_gui.delete_object"), key='-OBJECT-DELETE-'),
+                sg.Button(_t("generic.cancel"), key="--CANCEL--"),
+                sg.Button(_t("generic.accept"), key="--ACCEPT--"),
             ]
         ]
         
@@ -676,14 +723,23 @@ def config_gui(full_config: dict, config_file: str):
 
     while True:
         event, values = window.read()
-        if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "cancel"):
+        if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--CANCEL--"):
             break
-        if event == "-OBJECT-":
+        if event == "-OBJECT-SELECT-":
             try:
-                update_object_gui(values["-OBJECT-"], unencrypted=False)
+                update_object_gui(values["-OBJECT-SELECT-"], unencrypted=False)
+                update_global_gui(full_config, unencrypted=False)
             except AttributeError:
                 continue
-        if event == "accept":
+        if event == "-OBJECT-DELETE-":
+            full_config = delete_object(full_config, values["-OBJECT-SELECT-"])
+            update_object_selector()
+            continue
+        if event == "-OBJECT-CREATE-":
+            full_config = create_object(full_config)
+            update_object_selector()
+            continue
+        if event == "--ACCEPT--":
             if not values["repo_opts.password"] and not values["repo_opts.password_command"]:
                 sg.PopupError(_t("config_gui.repo_password_cannot_be_empty"))
                 continue
@@ -700,7 +756,8 @@ def config_gui(full_config: dict, config_file: str):
                 logger.info("Could not save configuration")
         if event == _t("config_gui.show_decrypted"):
             if ask_backup_admin_password(full_config):
-                update_object_gui(values["-OBJECT-"], unencrypted=True)
+                update_object_gui(values["-OBJECT-SELECT-"], unencrypted=True)
+                update_global_gui(full_config, unencrypted=True)
         if event == "create_task":
             if os.name == "nt":
                 result = create_scheduled_task(

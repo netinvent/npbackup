@@ -113,3 +113,8 @@ en:
   repo_group_config: Repo group configuration
   global_config: Global config
   select_object: Select configuration object
+  create_object: Create new repo or group
+  delete_object: Delete selected repo or group
+  are_you_sure_to_delete: Are you sure you want to delete
+  repo_already_exists: Repo already exists
+  group_already_exists: Group already exists

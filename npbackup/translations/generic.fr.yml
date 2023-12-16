@@ -52,3 +52,5 @@ fr:
   are_you_sure: Etes-vous sûr ?
 
   select_file: Selection fichier
+  name: Nom
+  type: Type
