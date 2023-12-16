@@ -158,10 +158,9 @@ def _get_gui_data(repo_config: dict) -> Future:
 
 def get_gui_data(repo_config: dict) -> Tuple[bool, List[str]]:
     try:
-        if (
-            not repo_config.g("repo_uri")
-            and (not repo_config.g("repo_opts.repo_password")
-            and not repo_config.g("repo_opts.repo_password_command"))
+        if not repo_config.g("repo_uri") and (
+            not repo_config.g("repo_opts.repo_password")
+            and not repo_config.g("repo_opts.repo_password_command")
         ):
             sg.Popup(_t("main_gui.repository_not_configured"))
             return None, None
@@ -539,15 +538,22 @@ def select_config_file():
     Option to select a configuration file
     """
     layout = [
-        [sg.Text(_t("main_gui.select_config_file")), sg.Input(key="-config_file-"), sg.FileBrowse(_t("generic.select_file"))],
-        [sg.Button(_t("generic.cancel"), key="-CANCEL-"), sg.Button(_t("generic.accept"), key="-ACCEPT-")]
+        [
+            sg.Text(_t("main_gui.select_config_file")),
+            sg.Input(key="-config_file-"),
+            sg.FileBrowse(_t("generic.select_file")),
+        ],
+        [
+            sg.Button(_t("generic.cancel"), key="-CANCEL-"),
+            sg.Button(_t("generic.accept"), key="-ACCEPT-"),
+        ],
     ]
     window = sg.Window("Configuration File", layout=layout)
     while True:
         event, values = window.read()
-        if event in [sg.WIN_X_EVENT, sg.WIN_CLOSED, '-CANCEL-']:
+        if event in [sg.WIN_X_EVENT, sg.WIN_CLOSED, "-CANCEL-"]:
             break
-        if event == '-ACCEPT-':
+        if event == "-ACCEPT-":
             config_file = Path(values["-config_file-"])
             if not config_file.exists():
                 sg.PopupError(_t("generic.file_does_not_exist"))
@@ -560,7 +566,7 @@ def select_config_file():
 
 
 def _main_gui():
-    config_file = Path(f'{CURRENT_DIR}/npbackup.conf')
+    config_file = Path(f"{CURRENT_DIR}/npbackup.conf")
     if not config_file.exists():
         while True:
             config_file = select_config_file()
@@ -571,11 +577,13 @@ def _main_gui():
 
     logger.info(f"Using configuration file {config_file}")
     full_config = npbackup.configuration.load_config(config_file)
-    repo_config, config_inheritance = npbackup.configuration.get_repo_config(full_config)
+    repo_config, config_inheritance = npbackup.configuration.get_repo_config(
+        full_config
+    )
     repo_list = npbackup.configuration.get_repo_list(full_config)
 
     backup_destination = _t("main_gui.local_folder")
-    backend_type, repo_uri = get_anon_repo_uri(repo_config.g('repo_uri'))
+    backend_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
 
     right_click_menu = ["", [_t("generic.destination")]]
     headings = [
@@ -613,8 +621,13 @@ def _main_gui():
                     ],
                     [
                         sg.Text(_t("main_gui.backup_list_to")),
-                        sg.Combo(repo_list, key="-active_repo-", default_value=repo_list[0], enable_events=True),
-                        sg.Text(f"Type {backend_type}", key="-backend_type-")
+                        sg.Combo(
+                            repo_list,
+                            key="-active_repo-",
+                            default_value=repo_list[0],
+                            enable_events=True,
+                        ),
+                        sg.Text(f"Type {backend_type}", key="-backend_type-"),
                     ],
                     [
                         sg.Table(
@@ -671,12 +684,15 @@ def _main_gui():
     while True:
         event, values = window.read(timeout=60000)
 
-        if event in [sg.WIN_X_EVENT, sg.WIN_CLOSED, '-EXIT-']:
+        if event in [sg.WIN_X_EVENT, sg.WIN_CLOSED, "-EXIT-"]:
             break
         if event == "-active_repo-":
-            active_repo = values['-active_repo-']
+            active_repo = values["-active_repo-"]
             if full_config.g(f"repos.{active_repo}"):
-                repo_config, config_inheriteance = npbackup.configuration.get_repo_config(full_config, active_repo)
+                (
+                    repo_config,
+                    config_inheriteance,
+                ) = npbackup.configuration.get_repo_config(full_config, active_repo)
                 current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
             else:
                 sg.PopupError("Repo not existent in config")
@@ -766,9 +782,7 @@ def _main_gui():
             try:
                 if backend_type:
                     if backend_type in ["REST", "SFTP"]:
-                        destination_string = repo_config.g("repo_uri").split(
-                            "@"
-                        )[-1]
+                        destination_string = repo_config.g("repo_uri").split("@")[-1]
                     else:
                         destination_string = repo_config.g("repo_uri")
                 sg.PopupNoFrame(destination_string)
@@ -790,7 +804,7 @@ def main_gui():
         logger.critical(f'Tkinter error: "{exc}". Is this a headless server ?')
         sys.exit(250)
     except Exception as exc:
-        sg.Popup(_t("config_gui.unknown_error_see_logs") + f': {exc}')
+        sg.Popup(_t("config_gui.unknown_error_see_logs") + f": {exc}")
         logger.critical("GUI Execution error", exc)
         if _DEBUG:
             logger.critical("Trace:", exc_info=True)
