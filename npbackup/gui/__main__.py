@@ -684,7 +684,7 @@ def _main_gui():
     while True:
         event, values = window.read(timeout=60000)
 
-        if event in [sg.WIN_X_EVENT, sg.WIN_CLOSED, "-EXIT-"]:
+        if event in (sg.WIN_X_EVENT, sg.WIN_CLOSED, "-EXIT-"):
             break
         if event == "-active_repo-":
             active_repo = values["-active_repo-"]
@@ -694,6 +694,7 @@ def _main_gui():
                     config_inheriteance,
                 ) = npbackup.configuration.get_repo_config(full_config, active_repo)
                 current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
+                _gui_update_state(window, current_state, backup_tz, snapshot_list)
             else:
                 sg.PopupError("Repo not existent in config")
                 continue
