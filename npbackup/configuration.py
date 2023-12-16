@@ -83,8 +83,22 @@ def s(self, path, value, sep='.'):
         data = data[key]     
     data[lastkey] = value
 
+def d(self, path, sep='.'):
+    """
+    Deletion for dot notation in a dict/OrderedDict
+    d.d('my.array.keys')
+    """
+    data = self
+    keys = path.split(sep)
+    lastkey = keys[-1]
+    for key in keys[:-1]:
+        data = data[key]     
+    data.pop(lastkey)
+    
+
 ordereddict.g = g
 ordereddict.s = s
+ordereddict.d = d
 
 # NPF-SEC-00003: Avoid password command divulgation
 ENCRYPTED_OPTIONS = [
@@ -353,11 +367,6 @@ def get_repo_config(full_config: dict, repo_name: str = 'default', eval_variable
                         else:
                             # In other cases, just keep repo confg
                             _config_inheritance.s(key, False)
-
-
-
-
-
 
             return _repo_config, _config_inheritance
         return _inherit_group_settings(_repo_config, _group_config, _config_inheritance)
