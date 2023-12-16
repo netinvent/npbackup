@@ -556,7 +556,11 @@ class ResticRunner:
             return None, None
 
         # Handle various source types
-        if exclude_patterns_source_type in ["files_from", "files_from_verbatim", "files_from_raw"]:
+        if exclude_patterns_source_type in [
+            "files_from",
+            "files_from_verbatim",
+            "files_from_raw",
+        ]:
             cmd = "backup"
             if exclude_patterns_source_type == "files_from":
                 source_parameter = "--files-from"

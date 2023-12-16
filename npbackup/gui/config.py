@@ -86,30 +86,44 @@ def config_gui(full_config: dict, config_file: str):
         for group in configuration.get_group_list(full_config):
             object_list.append(f"Group: {group}")
         return object_list
-    
+
     def create_object(full_config: dict) -> dict:
-        
         layout = [
-            [sg.Text(_t("generic.type")), sg.Combo(["repo", "group"], default_value="repo", key="-OBJECT-TYPE-"), sg.Text(_t("generic.name")), sg.Input(key="-OBJECT-NAME-")],
-            [sg.Push(), sg.Button(_t("generic.cancel"), key="--CANCEL--"), sg.Button(_t("generic.accept"), key="--ACCEPT--")]
+            [
+                sg.Text(_t("generic.type")),
+                sg.Combo(["repo", "group"], default_value="repo", key="-OBJECT-TYPE-"),
+                sg.Text(_t("generic.name")),
+                sg.Input(key="-OBJECT-NAME-"),
+            ],
+            [
+                sg.Push(),
+                sg.Button(_t("generic.cancel"), key="--CANCEL--"),
+                sg.Button(_t("generic.accept"), key="--ACCEPT--"),
+            ],
         ]
 
-        window = sg.Window(_t("config_gui.create_object"), layout=layout, keep_on_top=True)
+        window = sg.Window(
+            _t("config_gui.create_object"), layout=layout, keep_on_top=True
+        )
         while True:
             event, values = window.read()
-            if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, '--CANCEL--'):
+            if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--CANCEL--"):
                 break
-            if event == '--ACCEPT--':
-                object_type = values['-OBJECT-TYPE-']
-                object_name = values['-OBJECT-NAME-']
+            if event == "--ACCEPT--":
+                object_type = values["-OBJECT-TYPE-"]
+                object_name = values["-OBJECT-NAME-"]
                 if object_type == "repo":
                     if full_config.g(f"repos.{object_name}"):
-                        sg.PopupError(_t("config_gui.repo_already_exists"), keep_on_top=True)
+                        sg.PopupError(
+                            _t("config_gui.repo_already_exists"), keep_on_top=True
+                        )
                         continue
                     full_config.s(f"repos.{object_name}", CommentedMap())
                 elif object_type == "group":
                     if full_config.g(f"groups.{object_name}"):
-                        sg.PopupError(_t("config_gui.group_already_exists"), keep_on_top=True)
+                        sg.PopupError(
+                            _t("config_gui.group_already_exists"), keep_on_top=True
+                        )
                         continue
                     full_config.s(f"groups.{object_name}", CommentedMap())
                 else:
@@ -117,21 +131,21 @@ def config_gui(full_config: dict, config_file: str):
         window.close()
         update_object_gui(None, unencrypted=False)
         return full_config
-    
+
     def delete_object(full_config: dict, object_name: str) -> dict:
         object_type, object_name = get_object_from_combo(object_name)
-        result = sg.PopupYesNo(_t("config_gui.are_you_sure_to_delete") + f" {object_type} {object_name} ?")
+        result = sg.PopupYesNo(
+            _t("config_gui.are_you_sure_to_delete") + f" {object_type} {object_name} ?"
+        )
         if result:
             full_config.d(f"{object_type}s.{object_name}")
             update_object_gui(None, unencrypted=False)
         return full_config
-    
 
     def update_object_selector() -> None:
         objects = get_objects()
         window["-OBJECT-SELECT-"].Update(objects)
         window["-OBJECT-SELECT-"].Update(value=objects[0])
-
 
     def get_object_from_combo(combo_value: str) -> (str, str):
         """
@@ -141,13 +155,12 @@ def config_gui(full_config: dict, config_file: str):
 
         if combo_value.startswith("Repo: "):
             object_type = "repo"
-            object_name = combo_value[len("Repo: "):]
+            object_name = combo_value[len("Repo: ") :]
         elif combo_value.startswith("Group: "):
             object_type = "group"
-            object_name = combo_value[len("Group: "):]
+            object_name = combo_value[len("Group: ") :]
         return object_type, object_name
 
-    
     def update_gui_values(key, value, inherited, object_type, unencrypted):
         """
         Update gui values depending on their type
@@ -164,14 +177,9 @@ def config_gui(full_config: dict, config_file: str):
             if not unencrypted:
                 if key in configuration.ENCRYPTED_OPTIONS:
                     try:
-                        if (
-                            value is None
-                            or value == ""
-                        ):
+                        if value is None or value == "":
                             return
-                        if not str(value).startswith(
-                            configuration.ID_STRING
-                        ):
+                        if not str(value).startswith(configuration.ID_STRING):
                             value = ENCRYPTED_DATA_PLACEHOLDER
                     except (KeyError, TypeError):
                         pass
@@ -184,7 +192,7 @@ def config_gui(full_config: dict, config_file: str):
                 window[key].Update(value)
 
             # Enable inheritance icon when needed
-            inheritance_key = f'inherited.{key}'
+            inheritance_key = f"inherited.{key}"
             if inheritance_key in window.AllKeysDict:
                 window[inheritance_key].update(visible=True if inherited else False)
 
@@ -193,29 +201,44 @@ def config_gui(full_config: dict, config_file: str):
         except TypeError as exc:
             logger.error(f"Error: {exc} for key {key}.")
 
-    def iter_over_config(object_config: dict, config_inheritance: dict = None, object_type: str = None, unencrypted: bool = False, root_key: str =''):
+    def iter_over_config(
+        object_config: dict,
+        config_inheritance: dict = None,
+        object_type: str = None,
+        unencrypted: bool = False,
+        root_key: str = "",
+    ):
         """
         Iter over a dict while retaining the full key path to current object
         """
         base_object = object_config
 
-        def _iter_over_config(object_config: dict, root_key=''):
+        def _iter_over_config(object_config: dict, root_key=""):
             # Special case where env is a dict but we should pass it directly as it to update_gui_values
             if isinstance(object_config, dict):
                 for key in object_config.keys():
                     if root_key:
-                        _iter_over_config(object_config[key], root_key=f'{root_key}.{key}')
+                        _iter_over_config(
+                            object_config[key], root_key=f"{root_key}.{key}"
+                        )
                     else:
-                        _iter_over_config(object_config[key], root_key=f'{key}')
+                        _iter_over_config(object_config[key], root_key=f"{key}")
             else:
                 if config_inheritance:
                     inherited = config_inheritance.g(root_key)
                 else:
                     inherited = False
-                update_gui_values(root_key, base_object.g(root_key), inherited, object_type, unencrypted)
+                update_gui_values(
+                    root_key,
+                    base_object.g(root_key),
+                    inherited,
+                    object_type,
+                    unencrypted,
+                )
+
         _iter_over_config(object_config, root_key)
 
-    def update_object_gui(object_name = None, unencrypted=False):
+    def update_object_gui(object_name=None, unencrypted=False):
         # Load fist available repo or group if none given
         if not object_name:
             object_name = get_objects()[0]
@@ -223,35 +246,39 @@ def config_gui(full_config: dict, config_file: str):
         # First we need to clear the whole GUI to reload new values
         for key in window.AllKeysDict:
             # We only clear config keys, wihch have '.' separator
-            if  "." in str(key) and not "inherited" in str(key):
-                window[key]('')
-        
+            if "." in str(key) and not "inherited" in str(key):
+                window[key]("")
+
         object_type, object_name = get_object_from_combo(object_name)
 
-        if object_type == 'repo':
-            object_config, config_inheritance = configuration.get_repo_config(full_config, object_name, eval_variables=False)
-        if object_type == 'group':
-            object_config = configuration.get_group_config(full_config, object_name, eval_variables=False)
+        if object_type == "repo":
+            object_config, config_inheritance = configuration.get_repo_config(
+                full_config, object_name, eval_variables=False
+            )
+        if object_type == "group":
+            object_config = configuration.get_group_config(
+                full_config, object_name, eval_variables=False
+            )
             config_inheritance = None
         # Now let's iter over the whole config object and update keys accordingly
-        iter_over_config(object_config, config_inheritance, object_type, unencrypted, None)
-
+        iter_over_config(
+            object_config, config_inheritance, object_type, unencrypted, None
+        )
 
     def update_global_gui(full_config, unencrypted=False):
         global_config = CommentedMap()
 
         # Only update global options gui with identified global keys
         for key in full_config.keys():
-            if key in ('identity', 'global_options'):
-               global_config.s(key, full_config.g(key))
-        iter_over_config(global_config, None, 'group', unencrypted, None)
-
+            if key in ("identity", "global_options"):
+                global_config.s(key, full_config.g(key))
+        iter_over_config(global_config, None, "group", unencrypted, None)
 
     def update_config_dict(values, full_config):
         for key, value in values.items():
             if value == ENCRYPTED_DATA_PLACEHOLDER:
                 continue
-            if not isinstance(key, str) or (isinstance(key, str) and not '.' in key):
+            if not isinstance(key, str) or (isinstance(key, str) and not "." in key):
                 # Don't bother with keys that don't contain with "."
                 continue
             # Handle combo boxes first to transform translation into key
@@ -281,7 +308,6 @@ def config_gui(full_config: dict, config_file: str):
             full_config.s(key, value)
         return full_config
 
-
     def object_layout() -> List[list]:
         """
         Returns the GUI layout depending on the object type
@@ -289,7 +315,13 @@ def config_gui(full_config: dict, config_file: str):
         backup_col = [
             [
                 sg.Text(_t("config_gui.compression"), size=(40, 1)),
-                sg.pin(sg.Image(INHERITANCE_ICON, key="inherited.backup_opts.compression", tooltip=_t("config_gui.group_inherited"))),
+                sg.pin(
+                    sg.Image(
+                        INHERITANCE_ICON,
+                        key="inherited.backup_opts.compression",
+                        tooltip=_t("config_gui.group_inherited"),
+                    )
+                ),
                 sg.Combo(
                     list(combo_boxes["compression"].values()),
                     key="backup_opts.compression",
@@ -297,13 +329,32 @@ def config_gui(full_config: dict, config_file: str):
                 ),
             ],
             [
-                sg.Text(f"{_t('config_gui.backup_paths')}\n({_t('config_gui.one_per_line')})", size=(40, 2)),
-                sg.pin(sg.Image(INHERITANCE_ICON, expand_x=True, expand_y=True, key="inherited.backup_opts.paths", tooltip=_t("config_gui.group_inherited"))),
+                sg.Text(
+                    f"{_t('config_gui.backup_paths')}\n({_t('config_gui.one_per_line')})",
+                    size=(40, 2),
+                ),
+                sg.pin(
+                    sg.Image(
+                        INHERITANCE_ICON,
+                        expand_x=True,
+                        expand_y=True,
+                        key="inherited.backup_opts.paths",
+                        tooltip=_t("config_gui.group_inherited"),
+                    )
+                ),
                 sg.Multiline(key="backup_opts.paths", size=(48, 4)),
             ],
             [
                 sg.Text(_t("config_gui.source_type"), size=(40, 1)),
-                sg.pin(sg.Image(INHERITANCE_ICON, expand_x=True, expand_y=True, key="inherited.backup_opts.source_type", tooltip=_t("config_gui.group_inherited"))),
+                sg.pin(
+                    sg.Image(
+                        INHERITANCE_ICON,
+                        expand_x=True,
+                        expand_y=True,
+                        key="inherited.backup_opts.source_type",
+                        tooltip=_t("config_gui.group_inherited"),
+                    )
+                ),
                 sg.Combo(
                     list(combo_boxes["source_type"].values()),
                     key="backup_opts.source_type",
@@ -317,24 +368,39 @@ def config_gui(full_config: dict, config_file: str):
                     ),
                     size=(40, 2),
                 ),
-                sg.pin(sg.Image(INHERITANCE_ICON, expand_x=True, expand_y=True, key="inherited.backup_opts.use_fs_snapshot", tooltip=_t("config_gui.group_inherited"))),
+                sg.pin(
+                    sg.Image(
+                        INHERITANCE_ICON,
+                        expand_x=True,
+                        expand_y=True,
+                        key="inherited.backup_opts.use_fs_snapshot",
+                        tooltip=_t("config_gui.group_inherited"),
+                    )
+                ),
                 sg.Checkbox("", key="backup_opts.use_fs_snapshot", size=(41, 1)),
             ],
             [
                 sg.Text(
                     "{}\n({})".format(
-                        _t("config_gui.ignore_cloud_files"), _t("config_gui.windows_only")
+                        _t("config_gui.ignore_cloud_files"),
+                        _t("config_gui.windows_only"),
                     ),
                     size=(40, 2),
                 ),
                 sg.Checkbox("", key="backup_opts.ignore_cloud_files", size=(41, 1)),
             ],
             [
-                sg.Text(f"{_t('config_gui.exclude_patterns')}\n({_t('config_gui.one_per_line')})", size=(40, 2)),
+                sg.Text(
+                    f"{_t('config_gui.exclude_patterns')}\n({_t('config_gui.one_per_line')})",
+                    size=(40, 2),
+                ),
                 sg.Multiline(key="backup_opts.exclude_patterns", size=(48, 4)),
             ],
             [
-                sg.Text(f"{_t('config_gui.exclude_files')}\n({_t('config_gui.one_per_line')})", size=(40, 2)),
+                sg.Text(
+                    f"{_t('config_gui.exclude_files')}\n({_t('config_gui.one_per_line')})",
+                    size=(40, 2),
+                ),
                 sg.Multiline(key="backup_opts.exclude_files", size=(48, 4)),
             ],
             [
@@ -356,7 +422,10 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Checkbox("", key="backup_opts.one_file_system", size=(41, 1)),
             ],
             [
-                sg.Text(f"{_t('config_gui.pre_exec_commands')}\n({_t('config_gui.one_per_line')})", size=(40, 2)),
+                sg.Text(
+                    f"{_t('config_gui.pre_exec_commands')}\n({_t('config_gui.one_per_line')})",
+                    size=(40, 2),
+                ),
                 sg.Multiline(key="backup_opts.pre_exec_commands", size=(48, 4)),
             ],
             [
@@ -365,10 +434,15 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Text(_t("config_gui.exec_failure_is_fatal"), size=(40, 1)),
-                sg.Checkbox("", key="backup_opts.pre_exec_failure_is_fatal", size=(41, 1)),
+                sg.Checkbox(
+                    "", key="backup_opts.pre_exec_failure_is_fatal", size=(41, 1)
+                ),
             ],
             [
-                sg.Text(f"{_t('config_gui.post_exec_commands')}\n({_t('config_gui.one_per_line')})", size=(40, 2)),
+                sg.Text(
+                    f"{_t('config_gui.post_exec_commands')}\n({_t('config_gui.one_per_line')})",
+                    size=(40, 2),
+                ),
                 sg.Multiline(key="backup_opts.post_exec_commands", size=(48, 4)),
             ],
             [
@@ -377,10 +451,15 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Text(_t("config_gui.exec_failure_is_fatal"), size=(40, 1)),
-                sg.Checkbox("", key="backup_opts.post_exec_failure_is_fatal", size=(41, 1)),
+                sg.Checkbox(
+                    "", key="backup_opts.post_exec_failure_is_fatal", size=(41, 1)
+                ),
             ],
             [
-                sg.Text(f"{_t('config_gui.tags')}\n({_t('config_gui.one_per_line')})", size=(40, 2)),
+                sg.Text(
+                    f"{_t('config_gui.tags')}\n({_t('config_gui.one_per_line')})",
+                    size=(40, 2),
+                ),
                 sg.Multiline(key="backup_opts.tags", size=(48, 4)),
             ],
             [
@@ -396,8 +475,12 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Input(key="backup_opts.additional_parameters", size=(50, 1)),
             ],
             [
-                sg.Text(_t("config_gui.additional_backup_only_parameters"), size=(40, 1)),
-                sg.Input(key="backup_opts.additional_backup_only_parameters", size=(50, 1)),
+                sg.Text(
+                    _t("config_gui.additional_backup_only_parameters"), size=(40, 1)
+                ),
+                sg.Input(
+                    key="backup_opts.additional_backup_only_parameters", size=(50, 1)
+                ),
             ],
         ]
 
@@ -449,7 +532,9 @@ def config_gui(full_config: dict, config_file: str):
             [sg.Text(_t("config_gui.retention_policy"))],
             [
                 sg.Text(_t("config_gui.custom_time_server_url"), size=(40, 1)),
-                sg.Input(key="repo_opts.retention_strategy.custom_time_server", size=(50, 1)),
+                sg.Input(
+                    key="repo_opts.retention_strategy.custom_time_server", size=(50, 1)
+                ),
             ],
             [
                 sg.Text(_t("config_gui.keep"), size=(30, 1)),
@@ -513,18 +598,27 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Input(key="prometheus.group", size=(50, 1)),
             ],
             [
-                sg.Text(f"{_t('config_gui.additional_labels')}\n({_t('config_gui.one_per_line')}\n{_t('config_gui.format_equals')})", size=(40, 3)),
+                sg.Text(
+                    f"{_t('config_gui.additional_labels')}\n({_t('config_gui.one_per_line')}\n{_t('config_gui.format_equals')})",
+                    size=(40, 3),
+                ),
                 sg.Multiline(key="prometheus.additional_labels", size=(48, 3)),
             ],
         ]
 
         env_col = [
             [
-                sg.Text(f"{_t('config_gui.env_variables')}\n({_t('config_gui.one_per_line')}\n{_t('config_gui.format_equals')})", size=(40, 3)),
+                sg.Text(
+                    f"{_t('config_gui.env_variables')}\n({_t('config_gui.one_per_line')}\n{_t('config_gui.format_equals')})",
+                    size=(40, 3),
+                ),
                 sg.Multiline(key="env.env_variables", size=(48, 5)),
             ],
             [
-                sg.Text(f"{_t('config_gui.encrypted_env_variables')}\n({_t('config_gui.one_per_line')}\n{_t('config_gui.format_equals')})", size=(40, 3)),
+                sg.Text(
+                    f"{_t('config_gui.encrypted_env_variables')}\n({_t('config_gui.one_per_line')}\n{_t('config_gui.format_equals')})",
+                    size=(40, 3),
+                ),
                 sg.Multiline(key="env.encrypted_env_variables", size=(48, 5)),
             ],
         ]
@@ -532,7 +626,13 @@ def config_gui(full_config: dict, config_file: str):
         object_list = get_objects()
         object_selector = [
             [
-            sg.Text(_t("config_gui.select_object")), sg.Combo(object_list, default_value=object_list[0], key='-OBJECT-SELECT-', enable_events=True),
+                sg.Text(_t("config_gui.select_object")),
+                sg.Combo(
+                    object_list,
+                    default_value=object_list[0],
+                    key="-OBJECT-SELECT-",
+                    enable_events=True,
+                ),
             ]
         ]
 
@@ -540,7 +640,16 @@ def config_gui(full_config: dict, config_file: str):
             [
                 sg.Tab(
                     _t("config_gui.backup"),
-                    [[sg.Column(backup_col, scrollable=True, vertical_scroll_only=True, size=(700, 450))]],
+                    [
+                        [
+                            sg.Column(
+                                backup_col,
+                                scrollable=True,
+                                vertical_scroll_only=True,
+                                size=(700, 450),
+                            )
+                        ]
+                    ],
                     font="helvetica 16",
                     key="--tab-backup--",
                     element_justification="L",
@@ -549,7 +658,16 @@ def config_gui(full_config: dict, config_file: str):
             [
                 sg.Tab(
                     _t("config_gui.backup_destination"),
-                    [[sg.Column(repo_col, scrollable=True, vertical_scroll_only=True, size=(700, 450))]],
+                    [
+                        [
+                            sg.Column(
+                                repo_col,
+                                scrollable=True,
+                                vertical_scroll_only=True,
+                                size=(700, 450),
+                            )
+                        ]
+                    ],
                     font="helvetica 16",
                     key="--tab-repo--",
                     element_justification="L",
@@ -576,14 +694,17 @@ def config_gui(full_config: dict, config_file: str):
         ]
 
         _layout = [
-            [sg.Column(object_selector, element_justification='L')],
-            [sg.TabGroup(tab_group_layout, enable_events=True, key="--object-tabgroup--")],
+            [sg.Column(object_selector, element_justification="L")],
+            [
+                sg.TabGroup(
+                    tab_group_layout, enable_events=True, key="--object-tabgroup--"
+                )
+            ],
         ]
         return _layout
 
-
     def global_options_layout():
-        """"
+        """ "
         Returns layout for global options that can't be overrided by group / repo settings
         """
         identity_col = [
@@ -609,11 +730,15 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Text(_t("config_gui.auto_upgrade_server_username"), size=(40, 1)),
-                sg.Input(key="global_options.auto_upgrade_server_username", size=(50, 1)),
+                sg.Input(
+                    key="global_options.auto_upgrade_server_username", size=(50, 1)
+                ),
             ],
             [
                 sg.Text(_t("config_gui.auto_upgrade_server_password"), size=(40, 1)),
-                sg.Input(key="global_options.auto_upgrade_server_password", size=(50, 1)),
+                sg.Input(
+                    key="global_options.auto_upgrade_server_password", size=(50, 1)
+                ),
             ],
             [
                 sg.Text(_t("config_gui.auto_upgrade_interval"), size=(40, 1)),
@@ -627,9 +752,9 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Text(_t("generic.group"), size=(40, 1)),
                 sg.Input(key="global_options.auto_upgrade_group", size=(50, 1)),
             ],
-            [sg.HorizontalSeparator()]
+            [sg.HorizontalSeparator()],
         ]
-        
+
         scheduled_task_col = [
             [
                 sg.Text(_t("config_gui.create_scheduled_task_every")),
@@ -669,36 +794,53 @@ def config_gui(full_config: dict, config_file: str):
                 )
             ],
         ]
-        
+
         _layout = [
-            [sg.TabGroup(tab_group_layout, enable_events=True, key="--global-tabgroup--")],
+            [
+                sg.TabGroup(
+                    tab_group_layout, enable_events=True, key="--global-tabgroup--"
+                )
+            ],
         ]
         return _layout
-    
 
     def config_layout() -> List[list]:
-
         buttons = [
             [
                 sg.Push(),
-                sg.Button(_t("config_gui.create_object"), key='-OBJECT-CREATE-'),
-                sg.Button(_t("config_gui.delete_object"), key='-OBJECT-DELETE-'),
+                sg.Button(_t("config_gui.create_object"), key="-OBJECT-CREATE-"),
+                sg.Button(_t("config_gui.delete_object"), key="-OBJECT-DELETE-"),
                 sg.Button(_t("generic.cancel"), key="--CANCEL--"),
                 sg.Button(_t("generic.accept"), key="--ACCEPT--"),
             ]
         ]
-        
+
         tab_group_layout = [
-            [sg.Tab(_t("config_gui.repo_group_config"), object_layout(), key="--repo-group-config--")],
-            [sg.Tab(_t("config_gui.global_config"), global_options_layout(), key="--global-config--")]
+            [
+                sg.Tab(
+                    _t("config_gui.repo_group_config"),
+                    object_layout(),
+                    key="--repo-group-config--",
+                )
+            ],
+            [
+                sg.Tab(
+                    _t("config_gui.global_config"),
+                    global_options_layout(),
+                    key="--global-config--",
+                )
+            ],
         ]
 
         _global_layout = [
-            [sg.TabGroup(tab_group_layout, enable_events=True, key="--configtabgroup--")],
+            [
+                sg.TabGroup(
+                    tab_group_layout, enable_events=True, key="--configtabgroup--"
+                )
+            ],
             [sg.Push(), sg.Column(buttons, element_justification="L")],
         ]
         return _global_layout
-
 
     right_click_menu = ["", [_t("config_gui.show_decrypted")]]
     window = sg.Window(
@@ -740,7 +882,10 @@ def config_gui(full_config: dict, config_file: str):
             update_object_selector()
             continue
         if event == "--ACCEPT--":
-            if not values["repo_opts.password"] and not values["repo_opts.password_command"]:
+            if (
+                not values["repo_opts.password"]
+                and not values["repo_opts.password_command"]
+            ):
                 sg.PopupError(_t("config_gui.repo_password_cannot_be_empty"))
                 continue
             full_config = update_config_dict(values, full_config)

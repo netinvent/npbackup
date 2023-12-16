@@ -280,21 +280,27 @@ class NPBackupRunner:
             return None
         try:
             if self.repo_config.g("repo_opts.upload_speed"):
-                self.restic_runner.limit_upload = self.repo_config.g("repo_opts.upload_speed")
+                self.restic_runner.limit_upload = self.repo_config.g(
+                    "repo_opts.upload_speed"
+                )
         except KeyError:
             pass
         except ValueError:
             logger.error("Bogus upload limit given.")
         try:
             if self.repo_config.g("repo_opts.download_speed"):
-                self.restic_runner.limit_download = self.repo_config.g("repo_opts.download_speed")
+                self.restic_runner.limit_download = self.repo_config.g(
+                    "repo_opts.download_speed"
+                )
         except KeyError:
             pass
         except ValueError:
             logger.error("Bogus download limit given.")
         try:
             if self.repo_config.g("repo_opts.backend_connections"):
-                self.restic_runner.backend_connections = self.repo_config.g("repo_opts.backend_connections")
+                self.restic_runner.backend_connections = self.repo_config.g(
+                    "repo_opts.backend_connections"
+                )
         except KeyError:
             pass
         except ValueError:
@@ -308,7 +314,9 @@ class NPBackupRunner:
             logger.warning("Bogus backup priority in config file.")
         try:
             if self.repo_config.g("backup_opts.ignore_cloud_files"):
-                self.restic_runner.ignore_cloud_files = self.repo_config.g("backup_opts.ignore_cloud_files")
+                self.restic_runner.ignore_cloud_files = self.repo_config.g(
+                    "backup_opts.ignore_cloud_files"
+                )
         except KeyError:
             pass
         except ValueError:
@@ -316,7 +324,9 @@ class NPBackupRunner:
 
         try:
             if self.repo_config.g("backup_opts.additional_parameters"):
-                self.restic_runner.additional_parameters = self.repo_config.g("backup_opts.additional_parameters")
+                self.restic_runner.additional_parameters = self.repo_config.g(
+                    "backup_opts.additional_parameters"
+                )
         except KeyError:
             pass
         except ValueError:
@@ -463,7 +473,9 @@ class NPBackupRunner:
             logger.error("No backup source given.")
             return False
 
-        exclude_patterns_source_type = self.repo_config.g("backup_opts.exclude_patterns_source_type")
+        exclude_patterns_source_type = self.repo_config.g(
+            "backup_opts.exclude_patterns_source_type"
+        )
 
         # MSWindows does not support one-file-system option
         exclude_patterns = self.repo_config.g("backup_opts.exclude_patterns")
@@ -474,18 +486,32 @@ class NPBackupRunner:
         if not isinstance(exclude_files, list):
             exclude_files = [exclude_files]
 
-        exclude_patterns_case_ignore = self.repo_config.g("backup_opts.exclude_patterns_case_ignore")
+        exclude_patterns_case_ignore = self.repo_config.g(
+            "backup_opts.exclude_patterns_case_ignore"
+        )
         exclude_caches = self.repo_config.g("backup_opts.exclude_caches")
-        one_file_system = self.repo_config.g("backup_opts.one_file_system") if os.name != 'nt' else False
+        one_file_system = (
+            self.repo_config.g("backup_opts.one_file_system")
+            if os.name != "nt"
+            else False
+        )
         use_fs_snapshot = self.repo_config.g("backup_opts.use_fs_snapshot")
 
         pre_exec_commands = self.repo_config.g("backup_opts.pre_exec_commands")
-        pre_exec_per_command_timeout = self.repo_config.g("backup_opts.pre_exec_per_command_timeout")
-        pre_exec_failure_is_fatal = self.repo_config.g("backup_opts.pre_exec_failure_is_fatal")
+        pre_exec_per_command_timeout = self.repo_config.g(
+            "backup_opts.pre_exec_per_command_timeout"
+        )
+        pre_exec_failure_is_fatal = self.repo_config.g(
+            "backup_opts.pre_exec_failure_is_fatal"
+        )
 
         post_exec_commands = self.repo_config.g("backup_opts.post_exec_commands")
-        post_exec_per_command_timeout = self.repo_config.g("backup_opts.post_exec_per_command_timeout")
-        post_exec_failure_is_fatal = self.repo_config.g("backup_opts.post_exec_failure_is_fatal")
+        post_exec_per_command_timeout = self.repo_config.g(
+            "backup_opts.post_exec_per_command_timeout"
+        )
+        post_exec_failure_is_fatal = self.repo_config.g(
+            "backup_opts.post_exec_failure_is_fatal"
+        )
 
         # Make sure we convert tag to list if only one tag is given
         try:
@@ -495,8 +521,9 @@ class NPBackupRunner:
         except KeyError:
             tags = None
 
-        additional_backup_only_parameters = self.repo_config.g("backup_opts.additional_backup_only_parameters")
-
+        additional_backup_only_parameters = self.repo_config.g(
+            "backup_opts.additional_backup_only_parameters"
+        )
 
         # Check if backup is required
         self.restic_runner.verbose = False

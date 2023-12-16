@@ -38,7 +38,9 @@ def run_upgrade(full_config: dict) -> bool:
         logger.error(f"Missing auto upgrade info, cannot launch auto upgrade")
         return False
 
-    auto_upgrade_host_identity = full_config.g("global_options.auto_upgrade_host_identity")
+    auto_upgrade_host_identity = full_config.g(
+        "global_options.auto_upgrade_host_identity"
+    )
     group = full_config.g("global_options.auto_upgrade_group")
 
     result = auto_upgrader(
