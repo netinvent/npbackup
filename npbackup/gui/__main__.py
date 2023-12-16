@@ -47,6 +47,7 @@ from npbackup.core.upgrade_runner import run_upgrade, check_new_version
 from npbackup.path_helper import CURRENT_DIR
 from npbackup.interface_entrypoint import entrypoint
 from npbackup.__version__ import version_string
+from npbackup.__debug__ import _DEBUG
 from npbackup.gui.config import config_gui
 from npbackup.gui.operations import operations_gui
 from npbackup.customization import (
@@ -789,6 +790,8 @@ def main_gui():
         logger.critical(f'Tkinter error: "{exc}". Is this a headless server ?')
         sys.exit(250)
     except Exception as exc:
-        sg.Popup(_t("config_gui.bogus_config_file") + f': {exc}')
-        raise #TODO replace with logger
+        sg.Popup(_t("config_gui.unknown_error_see_logs") + f': {exc}')
+        logger.critical("GUI Execution error", exc)
+        if _DEBUG:
+            logger.critical("Trace:", exc_info=True)
         sys.exit(251)

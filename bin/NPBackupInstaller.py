@@ -23,10 +23,10 @@ sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), ".."
 
 from npbackup.customization import PROGRAM_NAME, PROGRAM_DIRECTORY
 from npbackup.path_helper import CURRENT_DIR
+from npbackup.__debug__ import _DEBUG
 
 del sys.path[0]
 
-_DEBUG = os.environ.get("_DEBUG", False)
 LOG_FILE = os.path.join(CURRENT_DIR, __intname__ + ".log")
 
 BASEDIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
