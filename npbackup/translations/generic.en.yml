@@ -54,3 +54,5 @@ en:
   select_file: Select file
   name: Name
   type: Type
+
+  bogus_data_given: Bogus data given

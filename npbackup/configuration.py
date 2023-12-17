@@ -120,11 +120,19 @@ empty_config_dict = {
     "repos": {
         "default": {
             "repo_uri": "",
+            "permissions": "full",
+            "manager_password": None,
             "repo_group": "default_group",
-            "backup_opts": {},
+            "backup_opts": {
+                "paths": [],
+                "tags": [],
+            },
             "repo_opts": {},
             "prometheus": {},
-            "env": {"env_variables": [], "encrypted_env_variables": []},
+            "env": {
+                "env_variables": [],
+                "encrypted_env_variables": [],
+            },
         },
     },
     "groups": {
@@ -161,11 +169,6 @@ empty_config_dict = {
             }
         },
         "repo_opts": {
-            "permissions": {
-                "restore": True,
-                "verify": True,
-                "delete": False,
-            },
             "repo_password": "",
             "repo_password_command": "",
             # Minimum time between two backups, in minutes
@@ -180,7 +183,7 @@ empty_config_dict = {
                 "weekly": 4,
                 "monthly": 12,
                 "yearly": 3,
-                "custom_time_server": None,
+                "ntp_time_server": None,
             },
         },
         "prometheus": {
@@ -324,6 +327,39 @@ def evaluate_variables(repo_config: dict, full_config: dict) -> dict:
     return repo_config
 
 
+def extract_permissions_from_repo_config(repo_config: dict) -> dict:
+    """
+    Extract permissions and manager password from repo_uri tuple
+    repo_config objects in memory are always "expanded"
+    This function is in order to expand when loading config
+    """
+    repo_uri = repo_config.g("repo_uri")
+    if isinstance(repo_uri, tuple):
+        repo_uri, permissions, manager_password = repo_uri
+        repo_config.s("permissions", permissions)
+        repo_config.s("manager_password", manager_password)
+    return repo_config
+
+
+def inject_permissions_into_repo_config(repo_config: dict) -> dict:
+    """
+    Make sure repo_uri is a tuple containing permissions and manager password
+    This function is used before saving config
+    """
+    repo_uri = repo_config.g("repo_uri")
+    permissions = repo_config.g("permissions")
+    manager_password = repo_config.g("manager_password")
+    repo_config.s(repo_uri, (repo_uri, permissions, manager_password))
+    repo_config.d("repo_uri")
+    repo_config.d("permissions")
+    repo_config.d("manager_password")
+    return repo_config
+
+
+def get_manager_password(full_config: dict, repo_name: str) -> str:
+    return full_config.g("repos.{repo_name}.manager_password")
+
+
 def get_repo_config(
     full_config: dict, repo_name: str = "default", eval_variables: bool = True
 ) -> Tuple[dict, dict]:
@@ -413,6 +449,7 @@ def get_repo_config(
 
     if eval_variables:
         repo_config = evaluate_variables(repo_config, full_config)
+    repo_config = extract_permissions_from_repo_config(repo_config)
     return repo_config, config_inheritance
 
 

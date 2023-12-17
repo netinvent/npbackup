@@ -25,8 +25,8 @@ en:
   backup_destination: Backup destination
   minimum_backup_age: Minimum delay between two backups
   backup_repo_uri: backup repo URI / path
-  backup_repo_password: Backup repo password
-  backup_repo_password_command: Command that returns backup repo password
+  backup_repo_password: Backup repo encryption password
+  backup_repo_password_command: Command that returns backup repo encryption password
   upload_speed: Upload speed limit (KB/s)
   download_speed: Download speed limit (KB/s)
   backend_connections: Simultaneous repo connections
@@ -59,9 +59,8 @@ en:
   configuration_saved: Configuration saved
   cannot_save_configuration: Could not save configuration. See logs for further info
   repo_password_cannot_be_empty: Repo password or password command cannot be empty
-  enter_backup_admin_password: Backup admin password
+  set_manager_password: Manager password
   wrong_password: Wrong password
-  password_updated_please_save: Password updated. Please save configuration
 
   auto_upgrade: Auto upgrade
   auto_upgrade_server_url: Server URL
@@ -102,13 +101,17 @@ en:
   files_from_verbatim: Files from verbatim list
   files_from_raw: Files from raw list
 
+  # retention policiy
   keep: Keep
   hourly: hourly copies
   daily: daily copies
   weekly: weekly copies
   monthly: monthly copies
   yearly: yearly copies
+  optional_ntp_server_uri: Optional NTP server URL
 
+  # repo / group managmeent
+  repo_group: Repo group
   group_inherited: Group inherited
   repo_group_config: Repo group configuration
   global_config: Global config
@@ -118,3 +121,15 @@ en:
   are_you_sure_to_delete: Are you sure you want to delete
   repo_already_exists: Repo already exists
   group_already_exists: Group already exists
+
+  # permissions
+  set_permissions: Set permissions
+  permissions_only_for_repos: Permissions can only be applied for repos
+  permissions: Permissions
+  backup_perms: Backup
+  restore_perms: Restore and Check repo
+  full_perms: Full permissions
+  setting_permissions_requires_manager_password: Setting permissions requires manager password
+  manager_password_too_short: Manager password is too short
+  
+  unknown_error_see_logs: Unknown error, please check logs

@@ -7,13 +7,12 @@ __intname__ = "npbackup.gui.config"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023121401"
+__build__ = "2023121701"
 
 
 from typing import List
 import os
 from logging import getLogger
-from copy import deepcopy
 import PySimpleGUI as sg
 from ruamel.yaml.comments import CommentedMap
 import npbackup.configuration as configuration
@@ -28,21 +27,15 @@ if os.name == "nt":
 logger = getLogger()
 
 
-def ask_backup_admin_password(config_dict) -> bool:
-    try:
-        backup_admin_password = config_dict["options"]["backup_admin_password"]
-    except KeyError:
-        backup_admin_password = None
-    if backup_admin_password:
+def ask_manager_password(manager_password: str) -> bool:
+    if manager_password:
         if sg.PopupGetText(
-            _t("config_gui.enter_backup_admin_password"), password_char="*"
-        ) == str(backup_admin_password):
+            _t("config_gui.set_manager_password"), password_char="*"
+        ) == str(manager_password):
             return True
         sg.PopupError(_t("config_gui.wrong_password"))
         return False
-    else:
-        sg.PopupError(_t("config_gui.no_backup_admin_password_set"))
-        return False
+    return True
 
 
 def config_gui(full_config: dict, config_file: str):
@@ -72,6 +65,11 @@ def config_gui(full_config: dict, config_file: str):
             "normal": _t("config_gui.normal"),
             "high": _t("config_gui.high"),
         },
+        "permissions": {
+            "backup": _t("config_gui.backup_perms"),
+            "restore": _t("config_gui.restore_perms"),
+            "full": _t("config_gui.full_perms"),
+        }
     }
 
     ENCRYPTED_DATA_PLACEHOLDER = "<{}>".format(_t("config_gui.encrypted_data"))
@@ -255,11 +253,21 @@ def config_gui(full_config: dict, config_file: str):
             object_config, config_inheritance = configuration.get_repo_config(
                 full_config, object_name, eval_variables=False
             )
+
+            # Enable settings only valid for repos
+            window['repo_uri'].Update(visible=True)
+            window['--SET-PERMISSIONS--'].Update(visible=True)
+
         if object_type == "group":
             object_config = configuration.get_group_config(
                 full_config, object_name, eval_variables=False
             )
             config_inheritance = None
+
+            # Disable settings only valid for repos
+            window['repo_uri'].Update(visible=False)
+            window['--SET-PERMISSIONS--'].Update(visible=False)
+
         # Now let's iter over the whole config object and update keys accordingly
         iter_over_config(
             object_config, config_inheritance, object_type, unencrypted, None
@@ -274,12 +282,17 @@ def config_gui(full_config: dict, config_file: str):
                 global_config.s(key, full_config.g(key))
         iter_over_config(global_config, None, "group", unencrypted, None)
 
-    def update_config_dict(values, full_config):
+    def update_config_dict(full_config, values):
+        """
+        Update full_config with keys from 
+        """
+        object_type, object_name = get_object_from_combo(values['-OBJECT-SELECT-'])
         for key, value in values.items():
             if value == ENCRYPTED_DATA_PLACEHOLDER:
                 continue
             if not isinstance(key, str) or (isinstance(key, str) and not "." in key):
-                # Don't bother with keys that don't contain with "."
+                # Don't bother with keys that don't contain with "." since they're not in the YAML config file
+                # but are most probably for GUI events
                 continue
             # Handle combo boxes first to transform translation into key
             if key in combo_boxes:
@@ -302,10 +315,65 @@ def config_gui(full_config: dict, config_file: str):
                         except ValueError:
                             pass
             # Create section if not exists
-            if key not in full_config.keys():
-                full_config[key] = {}
+            active_object_key = f"{object_type}s.{object_name}.{key}"
+            print("ACTIVE KEY", active_object_key)
+            if  not full_config.g(active_object_key):
+                full_config.s(active_object_key, CommentedMap())
 
-            full_config.s(key, value)
+            full_config.s(active_object_key, value)
+        return full_config
+        # TODO: Do we actually save every modified object or just the last ?
+        # TDOO: also save global options
+    
+    def set_permissions(full_config: dict, object_name: str) -> dict:
+        """
+        Sets repo wide repo_uri / password / permissions
+        """
+        object_type, object_name = get_object_from_combo(object_name)
+        if object_type == "group":
+            sg.PopupError(_t("config_gui.permissions_only_for_repos"))
+            return full_config
+        repo_config, _ = configuration.get_repo_config(full_config, object_name, eval_variables=False)
+        permissions = list(combo_boxes["permissions"].values())
+        default_perm = repo_config.g("permissions")
+        if not default_perm:
+            default_perm = permissions[-1]
+        manager_password = repo_config.g("manager_password")
+
+        layout = [
+            [
+                sg.Text(_t("config_gui.permissions"), size=(40, 1)),
+                sg.Combo(permissions, default_value=default_perm, key="-PERMISSIONS-"),
+            ],
+            [sg.HorizontalSeparator()],
+            [
+                sg.Text(_t("config_gui.set_manager_password"), size=(40, 1)),
+                sg.Input(manager_password, key="-MANAGER-PASSWORD-", size=(50, 1), password_char="*"),
+                #sg.Button(_t("generic.change"), key="--CHANGE-MANAGER-PASSWORD--")
+            ],
+            [sg.Push(), sg.Button(_t("generic.cancel"), key='--CANCEL--'), sg.Button(_t("generic.accept"), key='--ACCEPT--')],
+        ]
+
+        window = sg.Window(_t("config_gui.permissions"), layout, keep_on_top=True)
+        while True:
+            event, values = window.read()
+            if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, '--CANCEL--'):
+                break
+            if event == '--ACCEPT--':
+                if not values['-MANAGER-PASSWORD-']:
+                    sg.PopupError(_t("config_gui.setting_permissions_requires_manager_password"), keep_on_top=True)
+                    continue
+                elif len(values['-MANAGER-PASSWORD-']) < 8:
+                    sg.PopupError(_t("config_gui.manager_password_too_short"), keep_on_top=True)
+                    continue
+                if not values['-PERMISSIONS-'] in permissions:
+                    sg.PopupError(_t("generic.bogus_data_given"), keep_on_top=True)
+                    continue
+                repo_config.s("permissions", values['-PERMISSIONS-'])
+                repo_config.s("manager_password", values['-MANAGER-PASSWORD-'])
+                break
+        window.close()
+        full_config.s(f"repos.{object_name}", repo_config)
         return full_config
 
     def object_layout() -> List[list]:
@@ -490,6 +558,9 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Input(key="repo_uri", size=(50, 1)),
             ],
             [
+                sg.Button(_t("config_gui.set_permissions"), key='--SET-PERMISSIONS--')
+            ],
+            [
                 sg.Text(_t("config_gui.repo_group"), size=(40, 1)),
                 sg.Input(key="repo_group", size=(50, 1)),
             ],
@@ -523,17 +594,11 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Input(key="repo_opts.backend_connections", size=(50, 1)),
             ],
             [sg.HorizontalSeparator()],
-            [
-                sg.Text(_t("config_gui.enter_backup_admin_password"), size=(40, 1)),
-                sg.Input(key="backup_admin_password", size=(50, 1), password_char="*"),
-            ],
-            [sg.Button(_t("generic.change"), key="change_backup_admin_password")],
-            [sg.HorizontalSeparator()],
             [sg.Text(_t("config_gui.retention_policy"))],
             [
-                sg.Text(_t("config_gui.custom_time_server_url"), size=(40, 1)),
+                sg.Text(_t("config_gui.optional_ntp_server_uri"), size=(40, 1)),
                 sg.Input(
-                    key="repo_opts.retention_strategy.custom_time_server", size=(50, 1)
+                    key="repo_opts.retention_strategy.ntp_time_server", size=(50, 1)
                 ),
             ],
             [
@@ -854,7 +919,7 @@ def config_gui(full_config: dict, config_file: str):
         grab_anywhere=True,
         keep_on_top=False,
         alpha_channel=1.0,
-        default_button_element_size=(12, 1),
+        default_button_element_size=(16, 1),
         right_click_menu=right_click_menu,
         finalize=True,
     )
@@ -869,6 +934,7 @@ def config_gui(full_config: dict, config_file: str):
             break
         if event == "-OBJECT-SELECT-":
             try:
+                update_config_dict(full_config, values)
                 update_object_gui(values["-OBJECT-SELECT-"], unencrypted=False)
                 update_global_gui(full_config, unencrypted=False)
             except AttributeError:
@@ -881,14 +947,20 @@ def config_gui(full_config: dict, config_file: str):
             full_config = create_object(full_config)
             update_object_selector()
             continue
+        if event == "--SET-PERMISSIONS--":
+            object_type, object_name = get_object_from_combo(values["-OBJECT-SELECT-"])
+            manager_password = configuration.get_manager_password(full_config, object_name)
+            if ask_manager_password(manager_password):
+                full_config = set_permissions(full_config, values["-OBJECT-SELECT-"])
+            continue
         if event == "--ACCEPT--":
             if (
-                not values["repo_opts.password"]
-                and not values["repo_opts.password_command"]
+                not values["repo_opts.repo_password"]
+                and not values["repo_opts.repo_password_command"]
             ):
                 sg.PopupError(_t("config_gui.repo_password_cannot_be_empty"))
                 continue
-            full_config = update_config_dict(values, full_config)
+            full_config = update_config_dict(full_config, values)
             result = configuration.save_config(config_file, full_config)
             if result:
                 sg.Popup(_t("config_gui.configuration_saved"), keep_on_top=True)
@@ -900,7 +972,9 @@ def config_gui(full_config: dict, config_file: str):
                 )
                 logger.info("Could not save configuration")
         if event == _t("config_gui.show_decrypted"):
-            if ask_backup_admin_password(full_config):
+            object_type, object_name = get_object_from_combo(values["-OBJECT-SELECT-"])
+            manager_password = configuration.get_manager_password(full_config, object_name)
+            if ask_manager_password(manager_password):
                 update_object_gui(values["-OBJECT-SELECT-"], unencrypted=True)
                 update_global_gui(full_config, unencrypted=True)
         if event == "create_task":
@@ -914,11 +988,5 @@ def config_gui(full_config: dict, config_file: str):
                     sg.PopupError(_t("config_gui.scheduled_task_creation_failure"))
             else:
                 sg.PopupError(_t("config_gui.scheduled_task_creation_failure"))
-        if event == "change_backup_admin_password":
-            if ask_backup_admin_password(full_config):
-                full_config["options"]["backup_admin_password"] = values[
-                    "backup_admin_password"
-                ]
-                sg.Popup(_t("config_gui.password_updated_please_save"))
     window.close()
     return full_config
