@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.main"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023121001"
+__build__ = "2023121701"
 
 
 from typing import List, Optional, Tuple
@@ -19,11 +19,13 @@ from datetime import datetime
 import dateutil
 import queue
 from time import sleep
+import atexit
 from ofunctions.threading import threaded, Future
 from ofunctions.misc import BytesConverter
 import PySimpleGUI as sg
 import _tkinter
 import npbackup.configuration
+import npbackup.common
 from npbackup.customization import (
     OEM_STRING,
     OEM_LOGO,
@@ -442,7 +444,15 @@ def ls_window(config: dict, snapshot_id: str) -> bool:
     # This is a little trichery lesson
     # Still we should open a case at PySimpleGUI to know why closing a sg.TreeData window is painfully slow # TODO
     window.hide()
-    Thread(target=window.close, args=())
+
+    @threaded
+    def _close_win():
+        """
+        Since closing a sg.Treedata takes alot of time, let's thread it into background
+        """
+        window.close
+    
+    _close_win()
 
     return True
 
@@ -665,7 +675,7 @@ def _main_gui():
         grab_anywhere=False,
         keep_on_top=False,
         alpha_channel=0.9,
-        default_button_element_size=(12, 1),
+        default_button_element_size=(16, 1),
         right_click_menu=right_click_menu,
         finalize=True,
     )
@@ -799,8 +809,13 @@ def _main_gui():
 
 
 def main_gui():
+    atexit.register(
+        npbackup.common.execution_logs,
+        datetime.utcnow(),
+    )
     try:
         _main_gui()
+        sys.exit(npbackup.common.EXIT_CODE)
     except _tkinter.TclError as exc:
         logger.critical(f'Tkinter error: "{exc}". Is this a headless server ?')
         sys.exit(250)
