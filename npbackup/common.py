@@ -1,12 +1,23 @@
+#! /usr/bin/env python
+#  -*- coding: utf-8 -*-
+#
+# This file is part of npbackup
+
+__intname__ = "npbackup.common"
+__author__ = "Orsiris de Jong"
+__site__ = "https://www.netperfect.fr/npbackup"
+__description__ = "NetPerfect Backup Client"
+__copyright__ = "Copyright (C) 2023 NetInvent"
+__license__ = "GPL-3.0-only"
+__build__ = "2023121801"
+
+
 from datetime import datetime
 from logging import getLogger
 import ofunctions.logger_utils
 
 
 logger = getLogger()
-
-
-EXIT_CODE = 0
 
 
 def execution_logs(start_time: datetime) -> None:
@@ -23,7 +34,6 @@ def execution_logs(start_time: datetime) -> None:
     So using logger = getLogger("anotherinstance") will create a separate instance from the one we can inspect
     Makes sense ;)
     """
-    global EXIT_CODE
 
     end_time = datetime.utcnow()
 
@@ -33,7 +43,6 @@ def execution_logs(start_time: datetime) -> None:
             logger_worst_level = flt.worst_level
 
     log_level_reached = "success"
-    EXIT_CODE = logger_worst_level
     try:
         if logger_worst_level >= 40:
             log_level_reached = "errors"
@@ -47,3 +56,4 @@ def execution_logs(start_time: datetime) -> None:
         )
     )
     # using sys.exit(code) in a atexit function will swallow the exitcode and render 0
+    # Using sys.exit(logger.get_worst_logger_level()) is the way to go, when using ofunctions.logger_utils >= 2.4.1

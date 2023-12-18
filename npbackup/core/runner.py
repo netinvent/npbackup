@@ -652,7 +652,8 @@ class NPBackupRunner:
         return result
 
     def group_runner(
-        self, operations_config: dict, result_queue: Optional[queue.Queue]
+        self, repo_list: list, operation: str, result_queue: Optional[queue.Queue]
     ) -> bool:
-        print(operations_config)
+        for repo in repo_list:
+            print(f"Running {operation} for repo {repo}")
         print("run to the hills")

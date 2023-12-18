@@ -38,34 +38,28 @@ from npbackup.customization import (
 logger = getLogger(__intname__)
 
 
-def add_repo(config_dict: dict) -> dict:
-    pass
-
-
-def gui_update_state(window, config_dict: dict) -> list:
+def gui_update_state(window, full_config: dict) -> list:
     repo_list = []
     try:
-        for repo_name in config_dict["repos"]:
-            if (
-                config_dict["repos"][repo_name]["repository"]
-                and config_dict["repos"][repo_name]["password"]
+        for repo_name in full_config.g("repos"):
+            repo_config, _ = configuration.get_repo_config(full_config, repo_name)
+            if repo_config.g(f"repo_uri") and (
+                repo_config.g(f"repo_opts.repo_password")
+                or repo_config.g(f"repo_opts.repo_password_command")
             ):
                 backend_type, repo_uri = get_anon_repo_uri(
-                    config_dict["repos"][repo_name]["repository"]
+                    repo_config.g(f"repo_uri")
                 )
                 repo_list.append([backend_type, repo_uri])
             else:
                 logger.warning("Incomplete operations repo {}".format(repo_name))
     except KeyError:
         logger.info("No operations repos configured")
-    if config_dict["repo"]["repository"] and config_dict["repo"]["password"]:
-        backend_type, repo_uri = get_anon_repo_uri(config_dict["repo"]["repository"])
-        repo_list.append("[{}] {}".format(backend_type, repo_uri))
     window["repo-list"].update(repo_list)
     return repo_list
 
 
-def operations_gui(config_dict: dict, config_file: str) -> dict:
+def operations_gui(full_config: dict) -> dict:
     """
     Operate on one or multiple repositories
     """
@@ -102,13 +96,8 @@ def operations_gui(config_dict: dict, config_file: str) -> dict:
                         )
                     ],
                     [
-                        sg.Button(_t("operations_gui.add_repo"), key="add-repo"),
-                        sg.Button(_t("operations_gui.edit_repo"), key="edit-repo"),
-                        sg.Button(_t("operations_gui.remove_repo"), key="remove-repo"),
-                    ],
-                    [
-                        sg.Button(_t("operations_gui.quick_check"), key="quick-check"),
-                        sg.Button(_t("operations_gui.full_check"), key="full-check"),
+                        sg.Button(_t("operations_gui.quick_check"), key="--QUICK-CHECK--"),
+                        sg.Button(_t("operations_gui.full_check"), key="--FULL-CHECK--"),
                     ],
                     [
                         sg.Button(
@@ -118,11 +107,11 @@ def operations_gui(config_dict: dict, config_file: str) -> dict:
                     ],
                     [
                         sg.Button(
-                            _t("operations_gui.standard_prune"), key="standard-prune"
+                            _t("operations_gui.standard_prune"), key="--STANDARD-PRUNE--"
                         ),
-                        sg.Button(_t("operations_gui.max_prune"), key="max-prune"),
+                        sg.Button(_t("operations_gui.max_prune"), key="--MAX-PRUNE--"),
                     ],
-                    [sg.Button(_t("generic.quit"), key="exit")],
+                    [sg.Button(_t("generic.quit"), key="--EXIT--")],
                 ],
                 element_justification="C",
             )
@@ -144,7 +133,7 @@ def operations_gui(config_dict: dict, config_file: str) -> dict:
         finalize=True,
     )
 
-    full_repo_list = gui_update_state(window, config_dict)
+    complete_repo_list = gui_update_state(window, full_config)
 
     # Auto reisze table to window size
     window["repo-list"].expand(True, True)
@@ -152,34 +141,14 @@ def operations_gui(config_dict: dict, config_file: str) -> dict:
     while True:
         event, values = window.read(timeout=60000)
 
-        if event in (sg.WIN_CLOSED, "exit"):
+        if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, '--EXIT--'):
             break
-        if event == "add-repo":
-            pass
-        if event in ["add-repo", "remove-repo"]:
-            if not values["repo-list"]:
-                sg.Popup(_t("main_gui.select_backup"), keep_on_top=True)
-                continue
-            if event == "add-repo":
-                config_dict = add_repo(config_dict)
-                # Save to config here #TODO #WIP
-                event == "state-update"
-            elif event == "remove-repo":
-                result = sg.popup(
-                    _t("generic.are_you_sure"),
-                    custom_text=(_t("generic.yes"), _t("generic.no")),
-                )
-                if result == _t("generic.yes"):
-                    # Save to config here #TODO #WIP
-                    event == "state-update"
-        if event == "forget":
-            pass
         if event in [
-            "forget",
-            "quick-check",
-            "full-check",
-            "standard-prune",
-            "max-prune",
+            "--FORGET--",
+            "--QUICK-CHECK--",
+            "--FULL-CHECK--",
+            "--STANDARD-PRUNE--",
+            "--MAX-PRUNE--",
         ]:
             if not values["repo-list"]:
                 result = sg.popup(
@@ -188,14 +157,29 @@ def operations_gui(config_dict: dict, config_file: str) -> dict:
                 )
                 if not result == _t("generic.yes"):
                     continue
-                repos = full_repo_list
+                repos = complete_repo_list
             else:
                 repos = values["repo-list"]
+
             result_queue = queue.Queue()
             runner = NPBackupRunner()
-            runner.group_runner(repos, result_queue)
-        if event == "state-update":
-            full_repo_list = gui_update_state(window, config_dict)
+            print(repos)
+            group_runner_repo_list = [repo_name for backend_type, repo_name in repos]
+
+            if event == '--FORGET--':
+                operation = 'forget'
+            if event == '--QUICK-CHECK--':
+                operation = 'quick_check'
+            if event == '--FULL-CHECK--':
+                operation = 'full_check'
+            if event == '--STANDARD-PRUNE--':
+                operation = 'standard_prune'
+            if event == '--MAX-PRUNE--':
+                operation = 'max_prune'
+            runner.group_runner(group_runner_repo_list, operation, result_queue)
+            event = '---STATE-UPDATE---'
+        if event == "---STATE-UPDATE---":
+            complete_repo_list = gui_update_state(window, full_config)
     window.close()
 
-    return config_dict
+    return full_config

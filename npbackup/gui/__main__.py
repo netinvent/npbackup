@@ -14,7 +14,7 @@ from typing import List, Optional, Tuple
 import sys
 import os
 from pathlib import Path
-from logging import getLogger
+import ofunctions.logger_utils
 from datetime import datetime
 import dateutil
 import queue
@@ -57,10 +57,15 @@ from npbackup.customization import (
     OEM_ICON,
 )
 
+
+
+LOG_FILE = os.path.join(CURRENT_DIR, "{}.log".format(__intname__))
+logger = ofunctions.logger_utils.logger_get_logger(LOG_FILE)
+
+
 sg.theme(PYSIMPLEGUI_THEME)
 sg.SetOptions(icon=OEM_ICON)
 
-logger = getLogger()
 
 # Let's use mutable to get a cheap way of transfering data from thread to main program
 # There are no possible race conditions since we don't modifiy the data from anywhere outside the thread
@@ -199,21 +204,21 @@ def _gui_update_state(
     window, current_state: bool, backup_tz: Optional[datetime], snapshot_list: List[str]
 ) -> None:
     if current_state:
-        window["state-button"].Update(
+        window["--STATE-BUTTON--"].Update(
             "{}: {}".format(_t("generic.up_to_date"), backup_tz),
             button_color=GUI_STATE_OK_BUTTON,
         )
     elif current_state is False and backup_tz == datetime(1, 1, 1, 0, 0):
-        window["state-button"].Update(
+        window["--STATE-BUTTON--"].Update(
             _t("generic.no_snapshots"), button_color=GUI_STATE_OLD_BUTTON
         )
     elif current_state is False:
-        window["state-button"].Update(
+        window["--STATE-BUTTON--"].Update(
             "{}: {}".format(_t("generic.too_old"), backup_tz.replace(microsecond=0)),
             button_color=GUI_STATE_OLD_BUTTON,
         )
     elif current_state is None:
-        window["state-button"].Update(
+        window["--STATE-BUTTON--"].Update(
             _t("generic.not_connected_yet"), button_color=GUI_STATE_UNKNOWN_BUTTON
         )
 
@@ -619,7 +624,7 @@ def _main_gui():
                                 [
                                     sg.Button(
                                         _t("generic.unknown"),
-                                        key="state-button",
+                                        key="--STATE-BUTTON--",
                                         button_color=("white", "grey"),
                                     )
                                 ],
@@ -650,13 +655,13 @@ def _main_gui():
                         )
                     ],
                     [
-                        sg.Button(_t("main_gui.launch_backup"), key="launch-backup"),
-                        sg.Button(_t("main_gui.see_content"), key="see-content"),
-                        sg.Button(_t("generic.forget"), key="forget"),
-                        sg.Button(_t("main_gui.operations"), key="operations"),
-                        sg.Button(_t("generic.configure"), key="configure"),
-                        sg.Button(_t("generic.about"), key="about"),
-                        sg.Button(_t("generic.quit"), key="-EXIT-"),
+                        sg.Button(_t("main_gui.launch_backup"), key="--LAUNCH-BACKUP--"),
+                        sg.Button(_t("main_gui.see_content"), key="--SEE-CONTENT--"),
+                        sg.Button(_t("generic.forget"), key="--FORGET--"),
+                        sg.Button(_t("main_gui.operations"), key="--OPERATIONS--"),
+                        sg.Button(_t("generic.configure"), key="--CONFIGURE--"),
+                        sg.Button(_t("generic.about"), key="--ABOUT--"),
+                        sg.Button(_t("generic.quit"), key="--EXIT--"),
                     ],
                 ],
                 element_justification="C",
@@ -694,7 +699,7 @@ def _main_gui():
     while True:
         event, values = window.read(timeout=60000)
 
-        if event in (sg.WIN_X_EVENT, sg.WIN_CLOSED, "-EXIT-"):
+        if event in (sg.WIN_X_EVENT, sg.WIN_CLOSED, "--EXIT--"):
             break
         if event == "-active_repo-":
             active_repo = values["-active_repo-"]
@@ -708,7 +713,7 @@ def _main_gui():
             else:
                 sg.PopupError("Repo not existent in config")
                 continue
-        if event == "launch-backup":
+        if event == "--LAUNCH-BACKUP--":
             progress_windows_layout = [
                 [
                     sg.Multiline(
@@ -762,17 +767,16 @@ def _main_gui():
                 )
             progress_window.close()
             continue
-        if event == "see-content":
+        if event == "--SEE-CONTENT--":
             if not values["snapshot-list"]:
                 sg.Popup(_t("main_gui.select_backup"), keep_on_top=True)
                 continue
-            print(values["snapshot-list"])
             if len(values["snapshot-list"]) > 1:
                 sg.Popup(_t("main_gui.select_only_one_snapshot"))
                 continue
             snapshot_to_see = snapshot_list[values["snapshot-list"][0]][0]
             ls_window(repo_config, snapshot_to_see)
-        if event == "forget":
+        if event == "--FORGET--":
             if not values["snapshot-list"]:
                 sg.Popup(_t("main_gui.select_backup"), keep_on_top=True)
                 continue
@@ -781,14 +785,14 @@ def _main_gui():
                 snapshots_to_forget.append(snapshot_list[row][0])
             forget_snapshot(repo_config, snapshots_to_forget)
             # Make sure we trigger a GUI refresh after forgetting snapshots
-            event = "state-button"
-        if event == "operations":
-            full_config = operations_gui(full_config, config_file)
-            event = "state-button"
-        if event == "configure":
+            event = "--STATE-BUTTON--"
+        if event == "--OPERATIONS--":
+            full_config = operations_gui(full_config)
+            event = "--STATE-BUTTON--"
+        if event == "--CONFIGURE--":
             full_config = config_gui(full_config, config_file)
             # Make sure we trigger a GUI refresh when configuration is changed
-            event = "state-button"
+            event = "--STATE-BUTTON--"
         if event == _t("generic.destination"):
             try:
                 if backend_type:
@@ -799,9 +803,9 @@ def _main_gui():
                 sg.PopupNoFrame(destination_string)
             except (TypeError, KeyError):
                 sg.PopupNoFrame(_t("main_gui.unknown_repo"))
-        if event == "about":
+        if event == "--ABOUT--":
             _about_gui(version_string, full_config)
-        if event == "state-button":
+        if event == "--STATE-BUTTON--":
             current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
             _gui_update_state(window, current_state, backup_tz, snapshot_list)
             if current_state is None:
@@ -815,7 +819,7 @@ def main_gui():
     )
     try:
         _main_gui()
-        sys.exit(npbackup.common.EXIT_CODE)
+        sys.exit(logger.get_worst_logger_level())
     except _tkinter.TclError as exc:
         logger.critical(f'Tkinter error: "{exc}". Is this a headless server ?')
         sys.exit(250)
