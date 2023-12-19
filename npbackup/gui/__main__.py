@@ -47,7 +47,6 @@ from npbackup.core.runner import NPBackupRunner
 from npbackup.core.i18n_helper import _t
 from npbackup.core.upgrade_runner import run_upgrade, check_new_version
 from npbackup.path_helper import CURRENT_DIR
-from npbackup.interface_entrypoint import entrypoint
 from npbackup.__version__ import version_string
 from npbackup.__debug__ import _DEBUG
 from npbackup.gui.config import config_gui
@@ -535,12 +534,13 @@ def restore_window(
 
 
 @threaded
-def _gui_backup(repo_config, stdout) -> Future:
+def _gui_backup(repo_config, stdout, stderr) -> Future:
     runner = NPBackupRunner(repo_config=repo_config)
     runner.verbose = (
         True  # We must use verbose so we get progress output from ResticRunner
     )
     runner.stdout = stdout
+    runner.stderr = stderr
     result = runner.backup(
         force=True,
     )  # Since we run manually, force backup regardless of recent backup state
@@ -729,11 +729,12 @@ def _main_gui():
             # We need to read that window at least once fopr it to exist
             progress_window.read(timeout=1)
             stdout = queue.Queue()
+            stderr = queue.Queue()
 
             # let's use a mutable so the backup thread can modify it
             # We get a thread result, hence pylint will complain the thread isn't a tuple
             # pylint: disable=E1101 (no-member)
-            thread = _gui_backup(repo_config=repo_config, stdout=stdout)
+            thread = _gui_backup(repo_config=repo_config, stdout=stdout, stderr=stderr)
             while not thread.done() and not thread.cancelled():
                 try:
                     stdout_line = stdout.get(timeout=0.01)

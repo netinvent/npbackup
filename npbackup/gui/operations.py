@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.operations"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023083101"
+__build__ = "2023121901"
 
 
 from typing import Tuple
@@ -138,6 +138,10 @@ def operations_gui(full_config: dict) -> dict:
     # Auto reisze table to window size
     window["repo-list"].expand(True, True)
 
+    # Create queues for getting runner data
+    stdout_queue = queue.Queue()
+    stderr_queue = queue.Queue()
+
     while True:
         event, values = window.read(timeout=60000)
 
@@ -160,23 +164,67 @@ def operations_gui(full_config: dict) -> dict:
                 repos = complete_repo_list
             else:
                 repos = values["repo-list"]
-
-            result_queue = queue.Queue()
+        
             runner = NPBackupRunner()
-            print(repos)
+            runner.stdout = stdout_queue
+            runner.stderr = stderr_queue
             group_runner_repo_list = [repo_name for backend_type, repo_name in repos]
 
             if event == '--FORGET--':
                 operation = 'forget'
+                op_args = {}
             if event == '--QUICK-CHECK--':
-                operation = 'quick_check'
+                operation = 'check'
+                op_args = {'read_data': False}
             if event == '--FULL-CHECK--':
-                operation = 'full_check'
+                operation = 'check'
+                op_args = {'read_data': True}
             if event == '--STANDARD-PRUNE--':
-                operation = 'standard_prune'
+                operation = 'prune'
+                op_args = {}
             if event == '--MAX-PRUNE--':
-                operation = 'max_prune'
-            runner.group_runner(group_runner_repo_list, operation, result_queue)
+                operation = 'prune'
+                op_args = {}
+            thread = runner.group_runner(group_runner_repo_list, operation, **op_args)
+            read_stdout_queue = True
+            read_sterr_queue = True
+
+            progress_layout = [
+                [sg.Text(_t("operations_gui.last_message"))],
+                [sg.Multiline(key='-OPERATIONS-PROGRESS-STDOUT-', size=(40, 10))],
+                [sg.Text(_t("operations_gui.error_messages"))],
+                [sg.Multiline(key='-OPERATIONS-PROGRESS-STDERR-', size=(40, 10))],
+                [sg.Button(_t("generic.close"), key="--EXIT--")]
+            ]
+            progress_window = sg.Window("Operation status", progress_layout)
+            event, values = progress_window.read(timeout=0.01)
+
+            while read_stdout_queue or read_sterr_queue:
+                # Read stdout queue
+                try:
+                    stdout_data = stdout_queue.get(timeout=0.01)
+                except queue.Empty:
+                    pass
+                else:
+                    if stdout_data is None:
+                        read_stdout_queue = False
+                    else:
+                        progress_window['-OPERATIONS-PROGRESS-STDOUT-'].Update(stdout_data)
+                
+                # Read stderr queue
+                try:
+                    stderr_data = stderr_queue.get(timeout=0.01)
+                except queue.Empty:
+                    pass
+                else:
+                    if stderr_data is None:
+                        read_sterr_queue = False
+                    else:
+                        progress_window['-OPERATIONS-PROGRESS-STDERR-'].Update(f"{progress_window['-OPERATIONS-PROGRESS-STDERR-'].get()}\n{stderr_data}")
+
+            _, _ = progress_window.read()
+            progress_window.close()
+
             event = '---STATE-UPDATE---'
         if event == "---STATE-UPDATE---":
             complete_repo_list = gui_update_state(window, full_config)

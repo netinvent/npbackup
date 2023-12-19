@@ -16,7 +16,9 @@ import logging
 import queue
 from datetime import datetime, timedelta
 from functools import wraps
+import queue
 from command_runner import command_runner
+from ofunctions.threading import threaded
 from ofunctions.platform import os_arch
 from npbackup.restic_metrics import restic_output_2_metrics, upload_metrics
 from npbackup.restic_wrapper import ResticRunner
@@ -114,6 +116,9 @@ class NPBackupRunner:
     # This can lead to a problem when the config file can be written by users other than npbackup
 
     def __init__(self, repo_config: Optional[dict] = None):
+        self._stdout = None
+        self._stderr = None
+
         if repo_config:
             self.repo_config = repo_config
 
@@ -177,6 +182,22 @@ class NPBackupRunner:
         self.apply_config_to_restic_runner()
 
     @property
+    def stderr(self):
+        return self._stderr
+
+    @stderr.setter
+    def stderr(self, value):
+        if (
+            not isinstance(value, str)
+            and not isinstance(value, int)
+            and not isinstance(value, Callable)
+            and not isinstance(value, queue.Queue)
+        ):
+            raise ValueError("Bogus stdout parameter given: {}".format(value))
+        self._stderr = value
+        self.apply_config_to_restic_runner()
+
+    @property
     def has_binary(self) -> bool:
         if self.is_ready:
             return True if self.restic_runner.binary else False
@@ -206,6 +227,30 @@ class NPBackupRunner:
             logger.info("Runner took {} seconds".format(self.exec_time))
             return result
 
+        return wrapper
+    
+    def write_logs(self, msg: str, error: bool=False):
+        logger.info(msg)
+        if error:
+            if self.stderr:
+                self.stderr.put(msg)
+        else:
+            if self.stdout:
+                self.stdout.put(msg)
+    
+    def close_queues(fn: Callable):
+        """
+        Function that sends None to both stdout and stderr queues so GUI gets proper results
+        """
+        def wrapper(self, *args, **kwargs):
+            close_queues = kwargs.pop("close_queues", True)
+            result = fn(self, *args, **kwargs)
+            if close_queues:
+                if self.stdout:
+                    self.stdout.put(None)
+                if self.stderr:
+                    self.stderr.put(None)
+            return result
         return wrapper
 
     def create_restic_runner(self) -> None:
@@ -266,6 +311,9 @@ class NPBackupRunner:
             password=password,
             binary_search_paths=[BASEDIR, CURRENT_DIR],
         )
+
+        self.restic_runner.stdout = self.stdout
+        self.restic_runner.stderr = self.stderr
 
         if self.restic_runner.binary is None:
             # Let's try to load our internal binary for dev purposes
@@ -381,8 +429,16 @@ class NPBackupRunner:
             self.minimum_backup_age = 1440
 
         self.restic_runner.verbose = self.verbose
-        self.restic_runner.stdout = self.stdout
+        # TODO
+        #self.restic_runner.stdout = self.stdout
+        #self.restic_runner.stderr = self.stderr
 
+
+    ###########################
+    # ACTUAL RUNNER FUNCTIONS #
+    ###########################
+
+    @close_queues
     @exec_timer
     def list(self) -> Optional[dict]:
         if not self.is_ready:
@@ -391,6 +447,7 @@ class NPBackupRunner:
         snapshots = self.restic_runner.snapshots()
         return snapshots
 
+    @close_queues
     @exec_timer
     def find(self, path: str) -> bool:
         if not self.is_ready:
@@ -404,6 +461,7 @@ class NPBackupRunner:
             return True
         return False
 
+    @close_queues
     @exec_timer
     def ls(self, snapshot: str) -> Optional[dict]:
         if not self.is_ready:
@@ -412,6 +470,7 @@ class NPBackupRunner:
         result = self.restic_runner.ls(snapshot)
         return result
 
+    @close_queues
     @exec_timer
     def check_recent_backups(self) -> bool:
         """
@@ -444,6 +503,7 @@ class NPBackupRunner:
             logger.error("Cannot connect to repository or repository empty.")
         return result, backup_tz
 
+    @close_queues
     @exec_timer
     def backup(self, force: bool = False) -> bool:
         """
@@ -601,9 +661,15 @@ class NPBackupRunner:
                     )
         return result
 
+    @close_queues
     @exec_timer
     def restore(self, snapshot: str, target: str, restore_includes: List[str]) -> bool:
         if not self.is_ready:
+            return False
+        if not self.repo_config.g("permissions") in ['restore', 'full']:
+            msg = "You don't have permissions to restore this repo"
+            self.output_queue.put(msg)
+            logger.critical(msg)
             return False
         logger.info("Launching restore to {}".format(target))
         result = self.restic_runner.restore(
@@ -613,6 +679,7 @@ class NPBackupRunner:
         )
         return result
 
+    @close_queues
     @exec_timer
     def forget(self, snapshot: str) -> bool:
         if not self.is_ready:
@@ -621,14 +688,16 @@ class NPBackupRunner:
         result = self.restic_runner.forget(snapshot)
         return result
 
+    @close_queues
     @exec_timer
     def check(self, read_data: bool = True) -> bool:
         if not self.is_ready:
             return False
-        logger.info("Checking repository")
+        self.write_logs("Checking repository")
         result = self.restic_runner.check(read_data)
         return result
 
+    @close_queues
     @exec_timer
     def prune(self) -> bool:
         if not self.is_ready:
@@ -637,6 +706,7 @@ class NPBackupRunner:
         result = self.restic_runner.prune()
         return result
 
+    @close_queues
     @exec_timer
     def repair(self, order: str) -> bool:
         if not self.is_ready:
@@ -645,15 +715,33 @@ class NPBackupRunner:
         result = self.restic_runner.repair(order)
         return result
 
+    @close_queues
     @exec_timer
     def raw(self, command: str) -> bool:
         logger.info("Running raw command: {}".format(command))
         result = self.restic_runner.raw(command=command)
         return result
 
+    @close_queues
+    @exec_timer
     def group_runner(
-        self, repo_list: list, operation: str, result_queue: Optional[queue.Queue]
+        self, repo_list: list, operation: str, **kwargs
     ) -> bool:
+        group_result = True
+
+        # Make sure we don't close the stdout/stderr queues when running multiple operations
+        kwargs = {
+            **kwargs,
+            **{'close_queues': False}
+        }
+
         for repo in repo_list:
-            print(f"Running {operation} for repo {repo}")
-        print("run to the hills")
+            self.write_logs(f"Running {operation} for repo {repo}")
+            result = self.__getattribute__(operation)(**kwargs)
+            if result:
+                self.write_logs(f"Finished {operation} for repo {repo}")
+            else:
+                self.write_logs(f"Operation {operation} failed for repo {repo}", error=True)
+                group_result = False
+        self.write_logs("Finished execution group operations")  
+        return group_result

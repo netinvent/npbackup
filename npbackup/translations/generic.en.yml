@@ -7,9 +7,10 @@ en:
   options: Options
   create: Create
   change: Change
+  close: Close
 
-  _yes: Yes
-  _no: No
+  yes: Yes
+  no: No
 
   seconds: seconds
   minutes: minutes

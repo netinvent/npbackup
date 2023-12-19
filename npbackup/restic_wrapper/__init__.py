@@ -35,6 +35,7 @@ class ResticRunner:
         repository: str,
         password: str,
         binary_search_paths: List[str] = None,
+        
     ) -> None:
         self.repository = str(repository).strip()
         self.password = str(password).strip()
@@ -77,7 +78,8 @@ class ResticRunner:
             None  # Function which will make executor abort if result is True
         )
         self._executor_finished = False  # Internal value to check whether executor is done, accessed via self.executor_finished property
-        self._stdout = None  # Optional outputs when command is run as thread
+        self._stdout = None  # Optional outputs when running GUI, to get interactive output
+        self._stderr = None
 
     def on_exit(self) -> bool:
         self._executor_finished = True
@@ -146,6 +148,14 @@ class ResticRunner:
         self._stdout = value
 
     @property
+    def stderr(self) -> Optional[Union[int, str, Callable, queue.Queue]]:
+        return self._stderr
+
+    @stdout.setter
+    def stderr(self, value: Optional[Union[int, str, Callable, queue.Queue]]):
+        self._stderr = value
+
+    @property
     def verbose(self) -> bool:
         return self._verbose
 
@@ -191,7 +201,7 @@ class ResticRunner:
         cmd: str,
         errors_allowed: bool = False,
         timeout: int = None,
-        live_stream=False,
+        live_stream=False, # TODO remove live stream since everything is live
     ) -> Tuple[bool, str]:
         """
         Executes restic with given command
@@ -220,6 +230,7 @@ class ResticRunner:
                 live_output=self.verbose,
                 valid_exit_codes=errors_allowed,
                 stdout=self._stdout,
+                stderr=self._stderr,
                 stop_on=self.stop_on,
                 on_exit=self.on_exit,
                 method="poller",

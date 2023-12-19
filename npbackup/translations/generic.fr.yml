@@ -7,9 +7,10 @@ fr:
   options: Options
   create: Créer
   change: Changer
+  close: Fermer
 
-  _yes: Oui
-  _no: Non
+  yes: Oui
+  no: Non
 
   seconds: secondes
   minutes: minutes
