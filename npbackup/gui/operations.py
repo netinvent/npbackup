@@ -185,7 +185,11 @@ def operations_gui(full_config: dict) -> dict:
             if event == '--MAX-PRUNE--':
                 operation = 'prune'
                 op_args = {}
-            thread = runner.group_runner(group_runner_repo_list, operation, **op_args)
+            @threaded
+            def _group_runner(group_runner_repo_list, operation, **op_args) -> Future:
+                return runner.group_runner(group_runner_repo_list, operation, **op_args)
+            thread = _group_runner(group_runner_repo_list, operation, **op_args)
+
             read_stdout_queue = True
             read_sterr_queue = True
 
@@ -199,7 +203,8 @@ def operations_gui(full_config: dict) -> dict:
             progress_window = sg.Window("Operation status", progress_layout)
             event, values = progress_window.read(timeout=0.01)
 
-            while read_stdout_queue or read_sterr_queue:
+            #while read_stdout_queue or read_sterr_queue:
+            while not thread.done() and not thread.cancelled():
                 # Read stdout queue
                 try:
                     stdout_data = stdout_queue.get(timeout=0.01)
@@ -222,7 +227,14 @@ def operations_gui(full_config: dict) -> dict:
                     else:
                         progress_window['-OPERATIONS-PROGRESS-STDERR-'].Update(f"{progress_window['-OPERATIONS-PROGRESS-STDERR-'].get()}\n{stderr_data}")
 
-            _, _ = progress_window.read()
+                # So we actually need to read the progress window for it to refresh...
+                _, _ = progress_window.read(.01)
+            
+            # Keep the window open until user has done something
+            while True:
+                event, _ = progress_window.read()
+                if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, '--EXIT--'):
+                    break
             progress_window.close()
 
             event = '---STATE-UPDATE---'
