@@ -48,7 +48,7 @@ def gui_update_state(window, full_config: dict) -> list:
                 or repo_config.g(f"repo_opts.repo_password_command")
             ):
                 backend_type, repo_uri = get_anon_repo_uri(repo_config.g(f"repo_uri"))
-                repo_list.append([backend_type, repo_uri])
+                repo_list.append([repo_name, backend_type, repo_uri])
             else:
                 logger.warning("Incomplete operations repo {}".format(repo_name))
     except KeyError:
@@ -63,7 +63,7 @@ def operations_gui(full_config: dict) -> dict:
     """
 
     # This is a stupid hack to make sure uri column is large enough
-    headings = ["Backend", "URI                                                  "]
+    headings = ["Name      ", "Backend", "URI                                                  "]
 
     layout = [
         [
@@ -100,6 +100,19 @@ def operations_gui(full_config: dict) -> dict:
                         sg.Button(
                             _t("operations_gui.full_check"), key="--FULL-CHECK--"
                         ),
+                    ],
+                    [
+                        sg.Button(
+                            _t("operations_gui.repair_index"), key="--REPAIR-INDEX--"
+                        ),
+                        sg.Button(
+                            _t("operations_gui.repair_snapshots"), key="--REPAIR-SNAPSHOTS--"
+                        ),
+                    ],
+                    [
+                        sg.Button(
+                            _t("operations.gui.unlock"), key="--UNLOCK--"
+                        )
                     ],
                     [
                         sg.Button(
@@ -150,13 +163,15 @@ def operations_gui(full_config: dict) -> dict:
 
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--EXIT--"):
             break
-        if event in [
+        if event in (
             "--FORGET--",
             "--QUICK-CHECK--",
             "--FULL-CHECK--",
+            "--REPAIR-INDEX--",
+            "--REPAIR-SNAPSHOTS--",
             "--STANDARD-PRUNE--",
             "--MAX-PRUNE--",
-        ]:
+        ):
             if not values["repo-list"]:
                 result = sg.popup(
                     _t("operations_gui.apply_to_all"),
@@ -171,7 +186,10 @@ def operations_gui(full_config: dict) -> dict:
             runner = NPBackupRunner()
             runner.stdout = stdout_queue
             runner.stderr = stderr_queue
-            group_runner_repo_list = [repo_name for backend_type, repo_name in repos]
+            repo_config_list = []
+            for repo_name, backend_type, repo_uri in repos:
+                repo_config, config_inheritance = configuration.get_repo_config(full_config, repo_name)
+                repo_config_list.append((repo_name, repo_config))
 
             if event == "--FORGET--":
                 operation = "forget"
@@ -182,6 +200,12 @@ def operations_gui(full_config: dict) -> dict:
             if event == "--FULL-CHECK--":
                 operation = "check"
                 op_args = {"read_data": True}
+            if event == "--REPAIR-INDEX--":
+                operation = "repair"
+                op_args = {"subject": "index"}
+            if event == "--REPAIR-SNAPSHOTS--":
+                operation = "repair"
+                op_args = {"subject": "snapshots"}
             if event == "--STANDARD-PRUNE--":
                 operation = "prune"
                 op_args = {}
@@ -190,13 +214,10 @@ def operations_gui(full_config: dict) -> dict:
                 op_args = {}
 
             @threaded
-            def _group_runner(group_runner_repo_list, operation, **op_args) -> Future:
-                return runner.group_runner(group_runner_repo_list, operation, **op_args)
+            def _group_runner(repo_config_list, operation, **op_args) -> Future:
+                return runner.group_runner(repo_config_list, operation, **op_args)
 
-            thread = _group_runner(group_runner_repo_list, operation, **op_args)
-
-            read_stdout_queue = True
-            read_sterr_queue = True
+            thread = _group_runner(repo_config_list, operation, **op_args)
 
             progress_layout = [
                 [sg.Text(_t("operations_gui.last_message"))],
@@ -209,8 +230,10 @@ def operations_gui(full_config: dict) -> dict:
             progress_window = sg.Window("Operation status", progress_layout)
             event, values = progress_window.read(timeout=0.01)
 
-            # while read_stdout_queue or read_sterr_queue:
-            while not thread.done() and not thread.cancelled():
+            read_stdout_queue = True
+            read_stderr_queue = True
+            #while read_stdout_queue or read_stderr_queue: # TODO add queue read as while 
+            while (not thread.done() and not thread.cancelled()) or (read_stdout_queue or read_stderr_queue):
                 # Read stdout queue
                 try:
                     stdout_data = stdout_queue.get(timeout=0.01)
@@ -231,7 +254,7 @@ def operations_gui(full_config: dict) -> dict:
                     pass
                 else:
                     if stderr_data is None:
-                        read_sterr_queue = False
+                        read_stderr_queue = False
                     else:
                         progress_window["-OPERATIONS-PROGRESS-STDERR-"].Update(
                             f"{progress_window['-OPERATIONS-PROGRESS-STDERR-'].get()}\n{stderr_data}"

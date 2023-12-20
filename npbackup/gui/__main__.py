@@ -131,7 +131,8 @@ def _about_gui(version_string: str, full_config: dict) -> None:
 
 @threaded
 def _get_gui_data(repo_config: dict) -> Future:
-    runner = NPBackupRunner(repo_config=repo_config)
+    runner = NPBackupRunner()
+    runner.repo_config = repo_config
     snapshots = runner.list()
     current_state, backup_tz = runner.check_recent_backups()
     snapshot_list = []
@@ -173,9 +174,10 @@ def get_gui_data(repo_config: dict) -> Tuple[bool, List[str]]:
         sg.Popup(_t("main_gui.repository_not_configured"))
         return None, None
     try:
-        runner = NPBackupRunner(repo_config=repo_config)
-    except ValueError:
-        sg.Popup(_t("config_gui.no_runner"))
+        runner = NPBackupRunner()
+        runner.repo_config = repo_config
+    except ValueError as exc:
+        sg.Popup(f'{_t("config_gui.no_runner")}: {exc}')
         return None, None
     if not runner._is_ready:
         sg.Popup(_t("config_gui.runner_not_configured"))
@@ -283,14 +285,16 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
 
 @threaded
 def _forget_snapshot(repo_config: dict, snapshot_id: str) -> Future:
-    runner = NPBackupRunner(repo_config=repo_config)
+    runner = NPBackupRunner()
+    runner.repo_config = repo_config
     result = runner.forget(snapshot=snapshot_id)
     return result
 
 
 @threaded
 def _ls_window(repo_config: dict, snapshot_id: str) -> Future:
-    runner = NPBackupRunner(repo_config=repo_config)
+    runner = NPBackupRunner()
+    runner.repo_config = repo_config
     result = runner.ls(snapshot=snapshot_id)
     if not result:
         return result, None
@@ -464,7 +468,8 @@ def ls_window(config: dict, snapshot_id: str) -> bool:
 def _restore_window(
     repo_config: dict, snapshot: str, target: str, restore_includes: Optional[List]
 ) -> Future:
-    runner = NPBackupRunner(repo_config=repo_config)
+    runner = NPBackupRunner()
+    runner.repo_config = repo_config
     runner.verbose = True
     result = runner.restore(snapshot, target, restore_includes)
     THREAD_SHARED_DICT["exec_time"] = runner.exec_time
@@ -534,7 +539,8 @@ def restore_window(
 
 @threaded
 def _gui_backup(repo_config, stdout, stderr) -> Future:
-    runner = NPBackupRunner(repo_config=repo_config)
+    runner = NPBackupRunner()
+    runner.rep_config = repo_config
     runner.verbose = (
         True  # We must use verbose so we get progress output from ResticRunner
     )

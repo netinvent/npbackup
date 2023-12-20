@@ -428,7 +428,7 @@ def get_repo_config(
                             _config_inheritance.s(key, False)
 
             return _repo_config, _config_inheritance
-
+        
         return _inherit_group_settings(_repo_config, _group_config, _config_inheritance)
 
     try:
@@ -443,6 +443,7 @@ def get_repo_config(
     except KeyError:
         logger.warning(f"Repo {repo_name} has no group")
     else:
+        repo_config.s("name", repo_name)
         repo_config, config_inheritance = inherit_group_settings(
             repo_config, group_config
         )

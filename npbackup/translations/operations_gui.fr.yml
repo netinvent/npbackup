@@ -2,6 +2,8 @@ fr:
   configured_repositories: Dépots configurés
   quick_check: Vérification rapide
   full_check: Vérification complète
+  repair_index: Réparer index
+  repair_snapshots: Réparer les sauvegardes
   forget_using_retention_policy: Oublier en utilisant la stratégie de rétention
   standard_prune: Opération de purge normale
   max_prune: Opération de purge la plus efficace

@@ -2,6 +2,8 @@ en:
   configured_repositories: Configured repositories
   quick_check: Quick check
   full_check: Full check
+  repair_index: Repair index
+  repair_snapshots: Repair snapshots
   forget_using_retention_policy: Forget using retention polic
   standard_prune: Normal prune operation
   max_prune: Prune with maximum efficiency
