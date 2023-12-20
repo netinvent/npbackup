@@ -178,7 +178,7 @@ def get_gui_data(repo_config: dict) -> Tuple[bool, List[str]]:
     except ValueError:
         sg.Popup(_t("config_gui.no_runner"))
         return None, None
-    if not runner.is_ready:
+    if not runner._is_ready:
         sg.Popup(_t("config_gui.runner_not_configured"))
         return None, None
     if not runner.has_binary:

@@ -25,8 +25,7 @@ from npbackup.restic_wrapper import ResticRunner
 from npbackup.core.restic_source_binary import get_restic_internal_binary
 from npbackup.path_helper import CURRENT_DIR, BASEDIR
 from npbackup.__version__ import __intname__ as NAME, __version__ as VERSION
-from npbackup import configuration
-
+from time import sleep
 
 logger = logging.getLogger()
 
@@ -119,6 +118,7 @@ class NPBackupRunner:
         self._stdout = None
         self._stderr = None
 
+        self._is_ready = False
         if repo_config:
             self.repo_config = repo_config
 
@@ -128,18 +128,16 @@ class NPBackupRunner:
             self.restic_runner = None
             self.minimum_backup_age = None
             self._exec_time = None
-
-            self.is_ready = False
+            
             # Create an instance of restic wrapper
             self.create_restic_runner()
             # Configure that instance
             self.apply_config_to_restic_runner()
-        else:
-            self.is_ready = False
+
 
     @property
     def backend_version(self) -> bool:
-        if self.is_ready:
+        if self._is_ready:
             return self.restic_runner.binary_version
         return None
 
@@ -199,7 +197,7 @@ class NPBackupRunner:
 
     @property
     def has_binary(self) -> bool:
-        if self.is_ready:
+        if self._is_ready:
             return True if self.restic_runner.binary else False
         return False
 
@@ -211,6 +209,19 @@ class NPBackupRunner:
     def exec_time(self, value: int):
         self._exec_time = value
 
+    def write_logs(self, msg: str, error: bool=False):
+        """
+        Write logs to log file and stdout / stderr queues if exist for GUI usage
+        """
+        if error:
+            logger.error(msg)
+            if self.stderr:
+                self.stderr.put(msg)
+        else:
+            logger.info(msg)
+            if self.stdout:
+                self.stdout.put(msg)
+
     # pylint does not understand why this function does not take a self parameter
     # It's a decorator, and the inner function will have the self argument instead
     # pylint: disable=no-self-argument
@@ -219,29 +230,22 @@ class NPBackupRunner:
         Decorator that calculates time of a function execution
         """
 
+        @wraps(fn)
         def wrapper(self, *args, **kwargs):
             start_time = datetime.utcnow()
             # pylint: disable=E1102 (not-callable)
             result = fn(self, *args, **kwargs)
             self.exec_time = (datetime.utcnow() - start_time).total_seconds()
-            logger.info("Runner took {} seconds".format(self.exec_time))
+            logger.info(f"Runner took {self.exec_time} seconds for {fn.__name__}")
             return result
 
         return wrapper
-    
-    def write_logs(self, msg: str, error: bool=False):
-        logger.info(msg)
-        if error:
-            if self.stderr:
-                self.stderr.put(msg)
-        else:
-            if self.stdout:
-                self.stdout.put(msg)
-    
+
     def close_queues(fn: Callable):
         """
-        Function that sends None to both stdout and stderr queues so GUI gets proper results
+        Decorator that sends None to both stdout and stderr queues so GUI gets proper results
         """
+        @wraps(fn)
         def wrapper(self, *args, **kwargs):
             close_queues = kwargs.pop("close_queues", True)
             result = fn(self, *args, **kwargs)
@@ -253,6 +257,46 @@ class NPBackupRunner:
             return result
         return wrapper
 
+    def is_ready(fn: Callable):
+        """"
+        Decorator that checks if NPBackupRunner is ready to run, and logs accordingly
+        """
+        @wraps(fn)
+        def wrapper(self, *args, **kwargs):
+                if not self._is_ready:
+                    self.write_logs(f"Runner cannot execute {fn.__name__}. Backend not ready", error=True)
+                    return False
+                return fn(self, *args, **kwargs)
+        return wrapper
+
+    def has_permission(fn: Callable):
+        """
+        Decorator that checks permissions before running functions
+        """
+        @wraps(fn)
+        def wrapper(self, *args, **kwargs):
+            required_permissions = {
+                "backup": ["backup", "restore", "full"],
+                "check_recent_backups": ["backup", "restore", "full"],
+                "list": ["backup", "restore", "full"],
+                "ls": ["backup", "restore", "full"],
+                "find": ["backup", "restore", "full"],
+                "restore": ["restore", "full"],
+                "check": ["restore", "full"],
+                "forget": ["full"],
+                "prune": ["full"],
+                "raw": ["full"]
+            }
+            try:
+                operation = fn.__name__
+                # TODO: enforce permissions
+                self.write_logs(f"Permissions required are {required_permissions[operation]}")
+            except (IndexError, KeyError):
+                self.write_logs("You don't have sufficient permissions")
+                return False
+            return fn(self, *args, **kwargs)
+        return wrapper
+    
     def create_restic_runner(self) -> None:
         can_run = True
         try:
@@ -303,7 +347,7 @@ class NPBackupRunner:
                     "No password nor password command given. Repo password cannot be empty"
                 )
                 can_run = False
-        self.is_ready = can_run
+        self._is_ready = can_run
         if not can_run:
             return None
         self.restic_runner = ResticRunner(
@@ -324,7 +368,8 @@ class NPBackupRunner:
                 self.restic_runner.binary = binary
 
     def apply_config_to_restic_runner(self) -> None:
-        if not self.is_ready:
+        if not self._is_ready:
+            self.write_logs("Runner settings cannot be applied to backend", error=True)
             return None
         try:
             if self.repo_config.g("repo_opts.upload_speed"):
@@ -438,20 +483,20 @@ class NPBackupRunner:
     # ACTUAL RUNNER FUNCTIONS #
     ###########################
 
-    #@close_queues
     @exec_timer
+    @has_permission
+    @is_ready
+    @close_queues
     def list(self) -> Optional[dict]:
-        if not self.is_ready:
-            return False
         logger.info("Listing snapshots")
         snapshots = self.restic_runner.snapshots()
         return snapshots
 
-    #@close_queues
     @exec_timer
+    @has_permission
+    @is_ready
+    @close_queues
     def find(self, path: str) -> bool:
-        if not self.is_ready:
-            return False
         logger.info("Searching for path {}".format(path))
         result = self.restic_runner.find(path=path)
         if result:
@@ -461,25 +506,25 @@ class NPBackupRunner:
             return True
         return False
 
-    #@close_queues
     @exec_timer
+    @has_permission
+    @is_ready
+    @close_queues
     def ls(self, snapshot: str) -> Optional[dict]:
-        if not self.is_ready:
-            return False
         logger.info("Showing content of snapshot {}".format(snapshot))
         result = self.restic_runner.ls(snapshot)
         return result
 
-    #@close_queues
     @exec_timer
+    @has_permission
+    @is_ready
+    @close_queues
     def check_recent_backups(self) -> bool:
         """
         Checks for backups in timespan
         Returns True or False if found or not
         Returns None if no information is available
         """
-        if not self.is_ready:
-            return None
         if self.minimum_backup_age == 0:
             logger.info("No minimal backup age set. Set for backup")
 
@@ -503,14 +548,14 @@ class NPBackupRunner:
             logger.error("Cannot connect to repository or repository empty.")
         return result, backup_tz
 
-    #@close_queues
     @exec_timer
+    @has_permission
+    @is_ready
+    @close_queues
     def backup(self, force: bool = False) -> bool:
         """
         Run backup after checking if no recent backup exists, unless force == True
         """
-        if not self.is_ready:
-            return False
         # Preflight checks
         paths = self.repo_config.g("backup_opts.paths")
         if not paths:
@@ -661,11 +706,11 @@ class NPBackupRunner:
                     )
         return result
 
-    #@close_queues
     @exec_timer
+    @has_permission
+    @is_ready
+    @close_queues
     def restore(self, snapshot: str, target: str, restore_includes: List[str]) -> bool:
-        if not self.is_ready:
-            return False
         if not self.repo_config.g("permissions") in ['restore', 'full']:
             msg = "You don't have permissions to restore this repo"
             self.output_queue.put(msg)
@@ -679,50 +724,52 @@ class NPBackupRunner:
         )
         return result
 
-    #@close_queues
     @exec_timer
+    @has_permission
+    @is_ready
+    @close_queues
     def forget(self, snapshot: str) -> bool:
-        if not self.is_ready:
-            return False
         logger.info("Forgetting snapshot {}".format(snapshot))
         result = self.restic_runner.forget(snapshot)
         return result
 
-    #@close_queues
     @exec_timer
+    @has_permission
+    @is_ready
+    @close_queues
     def check(self, read_data: bool = True) -> bool:
-        if not self.is_ready:
-            return False
         self.write_logs("Checking repository")
+        sleep(1)
         result = self.restic_runner.check(read_data)
         return result
 
-    #@close_queues
     @exec_timer
+    @has_permission
+    @is_ready
+    @close_queues
     def prune(self) -> bool:
-        if not self.is_ready:
-            return False
         logger.info("Pruning snapshots")
         result = self.restic_runner.prune()
         return result
 
-    #@close_queues
     @exec_timer
+    @has_permission
+    @is_ready
+    @close_queues
     def repair(self, order: str) -> bool:
-        if not self.is_ready:
-            return False
         logger.info("Repairing {} in repo".format(order))
         result = self.restic_runner.repair(order)
         return result
 
-    #@close_queues
     @exec_timer
+    @has_permission
+    @is_ready
+    @close_queues
     def raw(self, command: str) -> bool:
         logger.info("Running raw command: {}".format(command))
         result = self.restic_runner.raw(command=command)
         return result
 
-    #@close_queues
     @exec_timer
     def group_runner(
         self, repo_list: list, operation: str, **kwargs
@@ -730,10 +777,10 @@ class NPBackupRunner:
         group_result = True
 
         # Make sure we don't close the stdout/stderr queues when running multiple operations
-        #kwargs = {
-        #    **kwargs,
-        #    **{'close_queues': False}
-        #}
+        kwargs = {
+            **kwargs,
+            **{'close_queues': False}
+        }
 
         for repo in repo_list:
             self.write_logs(f"Running {operation} for repo {repo}")
@@ -744,6 +791,6 @@ class NPBackupRunner:
                 self.write_logs(f"Operation {operation} failed for repo {repo}", error=True)
                 group_result = False
         self.write_logs("Finished execution group operations")  
-        from time import sleep
         sleep(2)
+        self.close_queues(lambda *args, **kwargs: None, **kwargs)
         return group_result
