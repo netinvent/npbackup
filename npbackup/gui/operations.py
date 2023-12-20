@@ -198,6 +198,7 @@ def operations_gui(full_config: dict) -> dict:
                 [sg.Multiline(key='-OPERATIONS-PROGRESS-STDOUT-', size=(40, 10))],
                 [sg.Text(_t("operations_gui.error_messages"))],
                 [sg.Multiline(key='-OPERATIONS-PROGRESS-STDERR-', size=(40, 10))],
+                [sg.Image(LOADER_ANIMATION, key="-LOADER-ANIMATION-")],
                 [sg.Button(_t("generic.close"), key="--EXIT--")]
             ]
             progress_window = sg.Window("Operation status", progress_layout)
@@ -227,6 +228,7 @@ def operations_gui(full_config: dict) -> dict:
                     else:
                         progress_window['-OPERATIONS-PROGRESS-STDERR-'].Update(f"{progress_window['-OPERATIONS-PROGRESS-STDERR-'].get()}\n{stderr_data}")
 
+                progress_window['-LOADER-ANIMATION-'].UpdateAnimation(LOADER_ANIMATION, time_between_frames=100)
                 # So we actually need to read the progress window for it to refresh...
                 _, _ = progress_window.read(.01)
             
