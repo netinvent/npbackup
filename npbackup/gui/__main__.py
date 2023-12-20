@@ -57,7 +57,6 @@ from npbackup.customization import (
 )
 
 
-
 LOG_FILE = os.path.join(CURRENT_DIR, "{}.log".format(__intname__))
 logger = ofunctions.logger_utils.logger_get_logger(LOG_FILE)
 
@@ -455,7 +454,7 @@ def ls_window(config: dict, snapshot_id: str) -> bool:
         Since closing a sg.Treedata takes alot of time, let's thread it into background
         """
         window.close
-    
+
     _close_win()
 
     return True
@@ -655,7 +654,9 @@ def _main_gui():
                         )
                     ],
                     [
-                        sg.Button(_t("main_gui.launch_backup"), key="--LAUNCH-BACKUP--"),
+                        sg.Button(
+                            _t("main_gui.launch_backup"), key="--LAUNCH-BACKUP--"
+                        ),
                         sg.Button(_t("main_gui.see_content"), key="--SEE-CONTENT--"),
                         sg.Button(_t("generic.forget"), key="--FORGET--"),
                         sg.Button(_t("main_gui.operations"), key="--OPERATIONS--"),

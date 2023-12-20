@@ -35,7 +35,6 @@ class ResticRunner:
         repository: str,
         password: str,
         binary_search_paths: List[str] = None,
-        
     ) -> None:
         self.repository = str(repository).strip()
         self.password = str(password).strip()
@@ -78,7 +77,9 @@ class ResticRunner:
             None  # Function which will make executor abort if result is True
         )
         self._executor_finished = False  # Internal value to check whether executor is done, accessed via self.executor_finished property
-        self._stdout = None  # Optional outputs when running GUI, to get interactive output
+        self._stdout = (
+            None  # Optional outputs when running GUI, to get interactive output
+        )
         self._stderr = None
 
     def on_exit(self) -> bool:
@@ -201,7 +202,7 @@ class ResticRunner:
         cmd: str,
         errors_allowed: bool = False,
         timeout: int = None,
-        live_stream=False, # TODO remove live stream since everything is live
+        live_stream=False,  # TODO remove live stream since everything is live
     ) -> Tuple[bool, str]:
         """
         Executes restic with given command

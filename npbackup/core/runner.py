@@ -128,12 +128,11 @@ class NPBackupRunner:
             self.restic_runner = None
             self.minimum_backup_age = None
             self._exec_time = None
-            
+
             # Create an instance of restic wrapper
             self.create_restic_runner()
             # Configure that instance
             self.apply_config_to_restic_runner()
-
 
     @property
     def backend_version(self) -> bool:
@@ -209,7 +208,7 @@ class NPBackupRunner:
     def exec_time(self, value: int):
         self._exec_time = value
 
-    def write_logs(self, msg: str, error: bool=False):
+    def write_logs(self, msg: str, error: bool = False):
         """
         Write logs to log file and stdout / stderr queues if exist for GUI usage
         """
@@ -245,6 +244,7 @@ class NPBackupRunner:
         """
         Decorator that sends None to both stdout and stderr queues so GUI gets proper results
         """
+
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
             close_queues = kwargs.pop("close_queues", True)
@@ -255,24 +255,31 @@ class NPBackupRunner:
                 if self.stderr:
                     self.stderr.put(None)
             return result
+
         return wrapper
 
     def is_ready(fn: Callable):
-        """"
+        """ "
         Decorator that checks if NPBackupRunner is ready to run, and logs accordingly
         """
+
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
-                if not self._is_ready:
-                    self.write_logs(f"Runner cannot execute {fn.__name__}. Backend not ready", error=True)
-                    return False
-                return fn(self, *args, **kwargs)
+            if not self._is_ready:
+                self.write_logs(
+                    f"Runner cannot execute {fn.__name__}. Backend not ready",
+                    error=True,
+                )
+                return False
+            return fn(self, *args, **kwargs)
+
         return wrapper
 
     def has_permission(fn: Callable):
         """
         Decorator that checks permissions before running functions
         """
+
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
             required_permissions = {
@@ -285,18 +292,21 @@ class NPBackupRunner:
                 "check": ["restore", "full"],
                 "forget": ["full"],
                 "prune": ["full"],
-                "raw": ["full"]
+                "raw": ["full"],
             }
             try:
                 operation = fn.__name__
                 # TODO: enforce permissions
-                self.write_logs(f"Permissions required are {required_permissions[operation]}")
+                self.write_logs(
+                    f"Permissions required are {required_permissions[operation]}"
+                )
             except (IndexError, KeyError):
                 self.write_logs("You don't have sufficient permissions")
                 return False
             return fn(self, *args, **kwargs)
+
         return wrapper
-    
+
     def create_restic_runner(self) -> None:
         can_run = True
         try:
@@ -475,9 +485,8 @@ class NPBackupRunner:
 
         self.restic_runner.verbose = self.verbose
         # TODO
-        #self.restic_runner.stdout = self.stdout
-        #self.restic_runner.stderr = self.stderr
-
+        # self.restic_runner.stdout = self.stdout
+        # self.restic_runner.stderr = self.stderr
 
     ###########################
     # ACTUAL RUNNER FUNCTIONS #
@@ -711,7 +720,7 @@ class NPBackupRunner:
     @is_ready
     @close_queues
     def restore(self, snapshot: str, target: str, restore_includes: List[str]) -> bool:
-        if not self.repo_config.g("permissions") in ['restore', 'full']:
+        if not self.repo_config.g("permissions") in ["restore", "full"]:
             msg = "You don't have permissions to restore this repo"
             self.output_queue.put(msg)
             logger.critical(msg)
@@ -771,16 +780,11 @@ class NPBackupRunner:
         return result
 
     @exec_timer
-    def group_runner(
-        self, repo_list: list, operation: str, **kwargs
-    ) -> bool:
+    def group_runner(self, repo_list: list, operation: str, **kwargs) -> bool:
         group_result = True
 
         # Make sure we don't close the stdout/stderr queues when running multiple operations
-        kwargs = {
-            **kwargs,
-            **{'close_queues': False}
-        }
+        kwargs = {**kwargs, **{"close_queues": False}}
 
         for repo in repo_list:
             self.write_logs(f"Running {operation} for repo {repo}")
@@ -788,9 +792,11 @@ class NPBackupRunner:
             if result:
                 self.write_logs(f"Finished {operation} for repo {repo}")
             else:
-                self.write_logs(f"Operation {operation} failed for repo {repo}", error=True)
+                self.write_logs(
+                    f"Operation {operation} failed for repo {repo}", error=True
+                )
                 group_result = False
-        self.write_logs("Finished execution group operations")  
+        self.write_logs("Finished execution group operations")
         sleep(2)
         self.close_queues(lambda *args, **kwargs: None, **kwargs)
         return group_result

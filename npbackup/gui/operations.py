@@ -47,9 +47,7 @@ def gui_update_state(window, full_config: dict) -> list:
                 repo_config.g(f"repo_opts.repo_password")
                 or repo_config.g(f"repo_opts.repo_password_command")
             ):
-                backend_type, repo_uri = get_anon_repo_uri(
-                    repo_config.g(f"repo_uri")
-                )
+                backend_type, repo_uri = get_anon_repo_uri(repo_config.g(f"repo_uri"))
                 repo_list.append([backend_type, repo_uri])
             else:
                 logger.warning("Incomplete operations repo {}".format(repo_name))
@@ -96,8 +94,12 @@ def operations_gui(full_config: dict) -> dict:
                         )
                     ],
                     [
-                        sg.Button(_t("operations_gui.quick_check"), key="--QUICK-CHECK--"),
-                        sg.Button(_t("operations_gui.full_check"), key="--FULL-CHECK--"),
+                        sg.Button(
+                            _t("operations_gui.quick_check"), key="--QUICK-CHECK--"
+                        ),
+                        sg.Button(
+                            _t("operations_gui.full_check"), key="--FULL-CHECK--"
+                        ),
                     ],
                     [
                         sg.Button(
@@ -107,7 +109,8 @@ def operations_gui(full_config: dict) -> dict:
                     ],
                     [
                         sg.Button(
-                            _t("operations_gui.standard_prune"), key="--STANDARD-PRUNE--"
+                            _t("operations_gui.standard_prune"),
+                            key="--STANDARD-PRUNE--",
                         ),
                         sg.Button(_t("operations_gui.max_prune"), key="--MAX-PRUNE--"),
                     ],
@@ -145,7 +148,7 @@ def operations_gui(full_config: dict) -> dict:
     while True:
         event, values = window.read(timeout=60000)
 
-        if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, '--EXIT--'):
+        if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--EXIT--"):
             break
         if event in [
             "--FORGET--",
@@ -164,30 +167,32 @@ def operations_gui(full_config: dict) -> dict:
                 repos = complete_repo_list
             else:
                 repos = values["repo-list"]
-        
+
             runner = NPBackupRunner()
             runner.stdout = stdout_queue
             runner.stderr = stderr_queue
             group_runner_repo_list = [repo_name for backend_type, repo_name in repos]
 
-            if event == '--FORGET--':
-                operation = 'forget'
+            if event == "--FORGET--":
+                operation = "forget"
                 op_args = {}
-            if event == '--QUICK-CHECK--':
-                operation = 'check'
-                op_args = {'read_data': False}
-            if event == '--FULL-CHECK--':
-                operation = 'check'
-                op_args = {'read_data': True}
-            if event == '--STANDARD-PRUNE--':
-                operation = 'prune'
+            if event == "--QUICK-CHECK--":
+                operation = "check"
+                op_args = {"read_data": False}
+            if event == "--FULL-CHECK--":
+                operation = "check"
+                op_args = {"read_data": True}
+            if event == "--STANDARD-PRUNE--":
+                operation = "prune"
                 op_args = {}
-            if event == '--MAX-PRUNE--':
-                operation = 'prune'
+            if event == "--MAX-PRUNE--":
+                operation = "prune"
                 op_args = {}
+
             @threaded
             def _group_runner(group_runner_repo_list, operation, **op_args) -> Future:
                 return runner.group_runner(group_runner_repo_list, operation, **op_args)
+
             thread = _group_runner(group_runner_repo_list, operation, **op_args)
 
             read_stdout_queue = True
@@ -195,16 +200,16 @@ def operations_gui(full_config: dict) -> dict:
 
             progress_layout = [
                 [sg.Text(_t("operations_gui.last_message"))],
-                [sg.Multiline(key='-OPERATIONS-PROGRESS-STDOUT-', size=(40, 10))],
+                [sg.Multiline(key="-OPERATIONS-PROGRESS-STDOUT-", size=(40, 10))],
                 [sg.Text(_t("operations_gui.error_messages"))],
-                [sg.Multiline(key='-OPERATIONS-PROGRESS-STDERR-', size=(40, 10))],
+                [sg.Multiline(key="-OPERATIONS-PROGRESS-STDERR-", size=(40, 10))],
                 [sg.Image(LOADER_ANIMATION, key="-LOADER-ANIMATION-")],
-                [sg.Button(_t("generic.close"), key="--EXIT--")]
+                [sg.Button(_t("generic.close"), key="--EXIT--")],
             ]
             progress_window = sg.Window("Operation status", progress_layout)
             event, values = progress_window.read(timeout=0.01)
 
-            #while read_stdout_queue or read_sterr_queue:
+            # while read_stdout_queue or read_sterr_queue:
             while not thread.done() and not thread.cancelled():
                 # Read stdout queue
                 try:
@@ -215,8 +220,10 @@ def operations_gui(full_config: dict) -> dict:
                     if stdout_data is None:
                         read_stdout_queue = False
                     else:
-                        progress_window['-OPERATIONS-PROGRESS-STDOUT-'].Update(stdout_data)
-                
+                        progress_window["-OPERATIONS-PROGRESS-STDOUT-"].Update(
+                            stdout_data
+                        )
+
                 # Read stderr queue
                 try:
                     stderr_data = stderr_queue.get(timeout=0.01)
@@ -226,20 +233,24 @@ def operations_gui(full_config: dict) -> dict:
                     if stderr_data is None:
                         read_sterr_queue = False
                     else:
-                        progress_window['-OPERATIONS-PROGRESS-STDERR-'].Update(f"{progress_window['-OPERATIONS-PROGRESS-STDERR-'].get()}\n{stderr_data}")
+                        progress_window["-OPERATIONS-PROGRESS-STDERR-"].Update(
+                            f"{progress_window['-OPERATIONS-PROGRESS-STDERR-'].get()}\n{stderr_data}"
+                        )
 
-                progress_window['-LOADER-ANIMATION-'].UpdateAnimation(LOADER_ANIMATION, time_between_frames=100)
+                progress_window["-LOADER-ANIMATION-"].UpdateAnimation(
+                    LOADER_ANIMATION, time_between_frames=100
+                )
                 # So we actually need to read the progress window for it to refresh...
-                _, _ = progress_window.read(.01)
-            
+                _, _ = progress_window.read(0.01)
+
             # Keep the window open until user has done something
             while True:
                 event, _ = progress_window.read()
-                if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, '--EXIT--'):
+                if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--EXIT--"):
                     break
             progress_window.close()
 
-            event = '---STATE-UPDATE---'
+            event = "---STATE-UPDATE---"
         if event == "---STATE-UPDATE---":
             complete_repo_list = gui_update_state(window, full_config)
     window.close()
