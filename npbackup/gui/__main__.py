@@ -42,7 +42,7 @@ from npbackup.customization import (
 )
 from npbackup.gui.config import config_gui
 from npbackup.gui.operations import operations_gui
-from npbackup.gui.helpers import get_anon_repo_uri
+from npbackup.gui.helpers import get_anon_repo_uri, gui_thread_runner
 from npbackup.core.runner import NPBackupRunner
 from npbackup.core.i18n_helper import _t
 from npbackup.core.upgrade_runner import run_upgrade, check_new_version
@@ -65,12 +65,7 @@ sg.theme(PYSIMPLEGUI_THEME)
 sg.SetOptions(icon=OEM_ICON)
 
 
-# Let's use mutable to get a cheap way of transfering data from thread to main program
-# There are no possible race conditions since we don't modifiy the data from anywhere outside the thread
-THREAD_SHARED_DICT = {}
-
-
-def _about_gui(version_string: str, full_config: dict) -> None:
+def about_gui(version_string: str, full_config: dict) -> None:
     license_content = LICENSE_TEXT
 
     if full_config.g("global_options.auto_upgrade_server_url"):
@@ -129,12 +124,11 @@ def _about_gui(version_string: str, full_config: dict) -> None:
     window.close()
 
 
-@threaded
-def _get_gui_data(repo_config: dict) -> Future:
-    runner = NPBackupRunner()
-    runner.repo_config = repo_config
-    snapshots = runner.list()
-    current_state, backup_tz = runner.check_recent_backups()
+
+
+def get_gui_data(repo_config: dict) -> Tuple[bool, List[str]]:
+    gui_msg = _t("main_gui.loading_snapshot_list_from_repo")
+    snapshots = gui_thread_runner(repo_config, "list", __autoclose=True, __compact=True)
     snapshot_list = []
     if snapshots:
         snapshots.reverse()  # Let's show newer snapshots first
@@ -158,71 +152,10 @@ def _get_gui_data(repo_config: dict) -> Future:
                     snapshot_tags,
                 ]
             )
-
+    gui_msg = _t("main_gui.loading_last_snapshot_date")
+    current_state, backup_tz = gui_thread_runner(repo_config, "check_recent_backups", __gui_msg=gui_msg, __autoclose=True)
     return current_state, backup_tz, snapshot_list
-
-
-def get_gui_data(repo_config: dict) -> Tuple[bool, List[str]]:
-    try:
-        if not repo_config.g("repo_uri") and (
-            not repo_config.g("repo_opts.repo_password")
-            and not repo_config.g("repo_opts.repo_password_command")
-        ):
-            sg.Popup(_t("main_gui.repository_not_configured"))
-            return None, None
-    except KeyError:
-        sg.Popup(_t("main_gui.repository_not_configured"))
-        return None, None
-    try:
-        runner = NPBackupRunner()
-        runner.repo_config = repo_config
-    except ValueError as exc:
-        sg.Popup(f'{_t("config_gui.no_runner")}: {exc}')
-        return None, None
-    if not runner._is_ready:
-        sg.Popup(_t("config_gui.runner_not_configured"))
-        return None, None
-    if not runner.has_binary:
-        sg.Popup(_t("config_gui.no_binary"))
-        return None, None
-    # We get a thread result, hence pylint will complain the thread isn't a tuple
-    # pylint: disable=E1101 (no-member)
-    thread = _get_gui_data(repo_config)
-    while not thread.done() and not thread.cancelled():
-        sg.PopupAnimated(
-            LOADER_ANIMATION,
-            message=_t("main_gui.loading_data_from_repo"),
-            time_between_frames=50,
-            background_color=GUI_LOADER_COLOR,
-            text_color=GUI_LOADER_TEXT_COLOR,
-        )
-    sg.PopupAnimated(None)
-    return thread.result()
-
-
-def _gui_update_state(
-    window, current_state: bool, backup_tz: Optional[datetime], snapshot_list: List[str]
-) -> None:
-    if current_state:
-        window["--STATE-BUTTON--"].Update(
-            "{}: {}".format(_t("generic.up_to_date"), backup_tz),
-            button_color=GUI_STATE_OK_BUTTON,
-        )
-    elif current_state is False and backup_tz == datetime(1, 1, 1, 0, 0):
-        window["--STATE-BUTTON--"].Update(
-            _t("generic.no_snapshots"), button_color=GUI_STATE_OLD_BUTTON
-        )
-    elif current_state is False:
-        window["--STATE-BUTTON--"].Update(
-            "{}: {}".format(_t("generic.too_old"), backup_tz.replace(microsecond=0)),
-            button_color=GUI_STATE_OLD_BUTTON,
-        )
-    elif current_state is None:
-        window["--STATE-BUTTON--"].Update(
-            _t("generic.not_connected_yet"), button_color=GUI_STATE_UNKNOWN_BUTTON
-        )
-
-    window["snapshot-list"].Update(snapshot_list)
+    
 
 
 @threaded
@@ -283,25 +216,14 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
     return treedata
 
 
-@threaded
-def _forget_snapshot(repo_config: dict, snapshot_id: str) -> Future:
-    runner = NPBackupRunner()
-    runner.repo_config = repo_config
-    result = runner.forget(snapshot=snapshot_id)
-    return result
-
-
-@threaded
-def _ls_window(repo_config: dict, snapshot_id: str) -> Future:
-    runner = NPBackupRunner()
-    runner.repo_config = repo_config
-    result = runner.ls(snapshot=snapshot_id)
-    if not result:
-        return result, None
+def ls_window(repo_config: dict, snapshot_id: str) -> bool:
+    snapshot_content = gui_thread_runner(repo_config, 'ls', snapshot=snapshot_id, __autoclose=True, __compact=True)
+    if not snapshot_content:
+        return snapshot_content, None
 
     try:
         # Since ls returns an iter now, we need to use next
-        snapshot_id = next(result)
+        snapshot_id = next(snapshot_content)
     # Exception that happens when restic cannot successfully get snapshot content
     except StopIteration:
         return None, None
@@ -322,71 +244,9 @@ def _ls_window(repo_config: dict, snapshot_id: str) -> Future:
     except (KeyError, IndexError):
         hostname = "[inconnu]"
 
-    backup_content = " {} {} {} {}@{} {} {}".format(
-        _t("main_gui.backup_content_from"),
-        snap_date,
-        _t("main_gui.run_as"),
-        username,
-        hostname,
-        _t("main_gui.identified_by"),
-        short_id,
-    )
-    return backup_content, result
+    backup_id = f" {_t('main_gui.backup_content_from')} {snap_date} {_t('main_gui.run_as')} {username}@{hostname} {_t('main_gui.identified_by')} {short_id}"
 
-
-def forget_snapshot(config: dict, snapshot_ids: List[str]) -> bool:
-    batch_result = True
-    for snapshot_id in snapshot_ids:
-        # We get a thread result, hence pylint will complain the thread isn't a tuple
-        # pylint: disable=E1101 (no-member)
-        thread = _forget_snapshot(config, snapshot_id)
-
-        while not thread.done() and not thread.cancelled():
-            sg.PopupAnimated(
-                LOADER_ANIMATION,
-                message="{} {}. {}".format(
-                    _t("generic.forgetting"),
-                    snapshot_id,
-                    _t("main_gui.this_will_take_a_while"),
-                ),
-                time_between_frames=50,
-                background_color=GUI_LOADER_COLOR,
-                text_color=GUI_LOADER_TEXT_COLOR,
-            )
-        sg.PopupAnimated(None)
-        result = thread.result()
-        if not result:
-            batch_result = result
-    if not batch_result:
-        sg.PopupError(_t("main_gui.forget_failed"), keep_on_top=True)
-        return False
-    else:
-        sg.Popup(
-            "{} {} {}".format(
-                snapshot_ids, _t("generic.forgotten"), _t("generic.successfully")
-            )
-        )
-
-
-def ls_window(config: dict, snapshot_id: str) -> bool:
-    # We get a thread result, hence pylint will complain the thread isn't a tuple
-    # pylint: disable=E1101 (no-member)
-    thread = _ls_window(config, snapshot_id)
-
-    while not thread.done() and not thread.cancelled():
-        sg.PopupAnimated(
-            LOADER_ANIMATION,
-            message="{}. {}".format(
-                _t("main_gui.loading_data_from_repo"),
-                _t("main_gui.this_will_take_a_while"),
-            ),
-            time_between_frames=50,
-            background_color=GUI_LOADER_COLOR,
-            text_color=GUI_LOADER_TEXT_COLOR,
-        )
-    sg.PopupAnimated(None)
-    backup_content, ls_result = thread.result()
-    if not backup_content or not ls_result:
+    if not backup_id or not snapshot_content:
         sg.PopupError(_t("main_gui.cannot_get_content"), keep_on_top=True)
         return False
 
@@ -396,8 +256,7 @@ def ls_window(config: dict, snapshot_id: str) -> bool:
 
     # We get a thread result, hence pylint will complain the thread isn't a tuple
     # pylint: disable=E1101 (no-member)
-    thread = _make_treedata_from_json(ls_result)
-
+    thread = _make_treedata_from_json(snapshot_content)
     while not thread.done() and not thread.cancelled():
         sg.PopupAnimated(
             LOADER_ANIMATION,
@@ -410,7 +269,7 @@ def ls_window(config: dict, snapshot_id: str) -> bool:
     treedata = thread.result()
 
     left_col = [
-        [sg.Text(backup_content)],
+        [sg.Text(backup_id)],
         [
             sg.Tree(
                 data=treedata,
@@ -445,7 +304,7 @@ def ls_window(config: dict, snapshot_id: str) -> bool:
             if not values["-TREE-"]:
                 sg.PopupError(_t("main_gui.select_folder"))
                 continue
-            restore_window(config, snapshot_id, values["-TREE-"])
+            restore_window(repo_config, snapshot_id, values["-TREE-"])
 
     # Closing a big sg.TreeData is really slow
     # This is a little trichery lesson
@@ -458,35 +317,24 @@ def ls_window(config: dict, snapshot_id: str) -> bool:
         Since closing a sg.Treedata takes alot of time, let's thread it into background
         """
         window.close
-
     _close_win()
-
     return True
-
-
-@threaded
-def _restore_window(
-    repo_config: dict, snapshot: str, target: str, restore_includes: Optional[List]
-) -> Future:
-    runner = NPBackupRunner()
-    runner.repo_config = repo_config
-    runner.verbose = True
-    result = runner.restore(snapshot, target, restore_includes)
-    THREAD_SHARED_DICT["exec_time"] = runner.exec_time
-    return result
 
 
 def restore_window(
     repo_config: dict, snapshot_id: str, restore_include: List[str]
-) -> None:
+) -> None: 
+    def _restore_window(
+    repo_config: dict, snapshot: str, target: str, restore_includes: Optional[List]
+    ) -> bool:
+        result = gui_thread_runner(repo_config, "restore", snapshot=snapshot, target=target, restore_includes=restore_includes)
+        return result
     left_col = [
         [
             sg.Text(_t("main_gui.destination_folder")),
             sg.In(size=(25, 1), enable_events=True, key="-RESTORE-FOLDER-"),
             sg.FolderBrowse(),
         ],
-        # Do not show which folder gets to get restored since we already make that selection
-        # [sg.Text(_t("main_gui.only_include")), sg.Text(includes, size=(25, 1))],
         [
             sg.Button(_t("main_gui.restore"), key="restore"),
             sg.Button(_t("generic.cancel"), key="cancel"),
@@ -502,90 +350,102 @@ def restore_window(
         if event in (sg.WIN_CLOSED, sg.WIN_CLOSE_ATTEMPTED_EVENT, "cancel"):
             break
         if event == "restore":
-            # We get a thread result, hence pylint will complain the thread isn't a tuple
-            # pylint: disable=E1101 (no-member)
-            thread = _restore_window(
-                repo_config=repo_config,
-                snapshot=snapshot_id,
-                target=values["-RESTORE-FOLDER-"],
-                restore_includes=restore_include,
-            )
-            while not thread.done() and not thread.cancelled():
-                sg.PopupAnimated(
-                    LOADER_ANIMATION,
-                    message="{}...".format(_t("main_gui.restore_in_progress")),
-                    time_between_frames=50,
-                    background_color=GUI_LOADER_COLOR,
-                    text_color=GUI_LOADER_TEXT_COLOR,
-                )
-            sg.PopupAnimated(None)
-
-            result = thread.result()
-            try:
-                exec_time = THREAD_SHARED_DICT["exec_time"]
-            except KeyError:
-                exec_time = "N/A"
+            result = _restore_window(repo_config, snapshot=snapshot_id, target=values["-RESTORE-FOLDER-"], restore_includes=restore_include)
             if result:
                 sg.Popup(
-                    _t("main_gui.restore_done", seconds=exec_time), keep_on_top=True
+                    _t("main_gui.restore_done"), keep_on_top=True
                 )
             else:
                 sg.PopupError(
-                    _t("main_gui.restore_failed", seconds=exec_time), keep_on_top=True
+                    _t("main_gui.restore_failed"), keep_on_top=True
                 )
             break
     window.close()
 
 
-@threaded
-def _gui_backup(repo_config, stdout, stderr) -> Future:
-    runner = NPBackupRunner()
-    runner.rep_config = repo_config
-    runner.verbose = (
-        True  # We must use verbose so we get progress output from ResticRunner
-    )
-    runner.stdout = stdout
-    runner.stderr = stderr
-    result = runner.backup(
-        force=True,
-    )  # Since we run manually, force backup regardless of recent backup state
-    THREAD_SHARED_DICT["exec_time"] = runner.exec_time
-    return result
+def backup(repo_config: dict) -> bool:
+    gui_msg = _t("main_gui.backup_activity")
+    result = gui_thread_runner(repo_config, 'backup', __gui_msg=gui_msg)
+    if not result:
+        sg.PopupError(
+            _t("main_gui.backup_failed"), keep_on_top=True
+        )
+        return False
+    else:
+        sg.Popup(
+            _t("main_gui.backup_done"), keep_on_top=True
+        )
+        return True
 
 
-def select_config_file():
-    """
-    Option to select a configuration file
-    """
-    layout = [
-        [
-            sg.Text(_t("main_gui.select_config_file")),
-            sg.Input(key="-config_file-"),
-            sg.FileBrowse(_t("generic.select_file")),
-        ],
-        [
-            sg.Button(_t("generic.cancel"), key="-CANCEL-"),
-            sg.Button(_t("generic.accept"), key="-ACCEPT-"),
-        ],
-    ]
-    window = sg.Window("Configuration File", layout=layout)
-    while True:
-        event, values = window.read()
-        if event in [sg.WIN_X_EVENT, sg.WIN_CLOSED, "-CANCEL-"]:
-            break
-        if event == "-ACCEPT-":
-            config_file = Path(values["-config_file-"])
-            if not config_file.exists():
-                sg.PopupError(_t("generic.file_does_not_exist"))
-                continue
-            config = npbackup.configuration._load_config_file(config_file)
-            if not config:
-                sg.PopupError(_t("generic.bad_file"))
-                continue
-            return config_file
+def forget_snapshot(repo_config: dict, snapshot_ids: List[str]) -> bool:
+    gui_msg = f"{_t('generic.forgetting')} {snapshot_ids} {_t('main_gui.this_will_take_a_while')}"
+    result = gui_thread_runner(repo_config, "forget", snapshots=snapshot_ids, __gui_msg=gui_msg, __autoclose=True)
+    if not result:
+        sg.PopupError(_t("main_gui.forget_failed"), keep_on_top=True)
+        return False
+    else:
+        sg.Popup(
+            f"{snapshot_ids} {_t('generic.forgotten')} {_t('generic.successfully')}"
+        )
+    return True
 
 
 def _main_gui():
+    def select_config_file():
+        """
+        Option to select a configuration file
+        """
+        layout = [
+            [
+                sg.Text(_t("main_gui.select_config_file")),
+                sg.Input(key="-config_file-"),
+                sg.FileBrowse(_t("generic.select_file")),
+            ],
+            [
+                sg.Button(_t("generic.cancel"), key="-CANCEL-"),
+                sg.Button(_t("generic.accept"), key="-ACCEPT-"),
+            ],
+        ]
+        window = sg.Window("Configuration File", layout=layout)
+        while True:
+            event, values = window.read()
+            if event in [sg.WIN_X_EVENT, sg.WIN_CLOSED, "-CANCEL-"]:
+                break
+            if event == "-ACCEPT-":
+                config_file = Path(values["-config_file-"])
+                if not config_file.exists():
+                    sg.PopupError(_t("generic.file_does_not_exist"))
+                    continue
+                config = npbackup.configuration._load_config_file(config_file)
+                if not config:
+                    sg.PopupError(_t("generic.bad_file"))
+                    continue
+                return config_file
+
+    def gui_update_state() -> None:
+        if current_state:
+            window["--STATE-BUTTON--"].Update(
+                "{}: {}".format(_t("generic.up_to_date"), backup_tz),
+                button_color=GUI_STATE_OK_BUTTON,
+            )
+        elif current_state is False and backup_tz == datetime(1, 1, 1, 0, 0):
+            window["--STATE-BUTTON--"].Update(
+                _t("generic.no_snapshots"), button_color=GUI_STATE_OLD_BUTTON
+            )
+        elif current_state is False:
+            window["--STATE-BUTTON--"].Update(
+                "{}: {}".format(_t("generic.too_old"), backup_tz.replace(microsecond=0)),
+                button_color=GUI_STATE_OLD_BUTTON,
+            )
+        elif current_state is None:
+            window["--STATE-BUTTON--"].Update(
+                _t("generic.not_connected_yet"), button_color=GUI_STATE_UNKNOWN_BUTTON
+            )
+
+        window["snapshot-list"].Update(snapshot_list)
+
+
     config_file = Path(f"{CURRENT_DIR}/npbackup.conf")
     if not config_file.exists():
         while True:
@@ -664,7 +524,7 @@ def _main_gui():
                             _t("main_gui.launch_backup"), key="--LAUNCH-BACKUP--"
                         ),
                         sg.Button(_t("main_gui.see_content"), key="--SEE-CONTENT--"),
-                        sg.Button(_t("generic.forget"), key="--FORGET--"),
+                        sg.Button(_t("generic.forget"), key="--FORGET--"), # TODO , visible=False if repo_config.g("permissions") != "full" else True),
                         sg.Button(_t("main_gui.operations"), key="--OPERATIONS--"),
                         sg.Button(_t("generic.configure"), key="--CONFIGURE--"),
                         sg.Button(_t("generic.about"), key="--ABOUT--"),
@@ -702,7 +562,7 @@ def _main_gui():
         current_state = None
         backup_tz = None
         snapshot_list = []
-    _gui_update_state(window, current_state, backup_tz, snapshot_list)
+    gui_update_state()
     while True:
         event, values = window.read(timeout=60000)
 
@@ -716,65 +576,13 @@ def _main_gui():
                     config_inheriteance,
                 ) = npbackup.configuration.get_repo_config(full_config, active_repo)
                 current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
-                _gui_update_state(window, current_state, backup_tz, snapshot_list)
+                gui_update_state()
             else:
                 sg.PopupError("Repo not existent in config")
                 continue
         if event == "--LAUNCH-BACKUP--":
-            progress_windows_layout = [
-                [
-                    sg.Multiline(
-                        size=(80, 10), key="progress", expand_x=True, expand_y=True
-                    )
-                ]
-            ]
-            progress_window = sg.Window(
-                _t("main_gui.backup_activity"),
-                layout=progress_windows_layout,
-                finalize=True,
-            )
-            # We need to read that window at least once fopr it to exist
-            progress_window.read(timeout=1)
-            stdout = queue.Queue()
-            stderr = queue.Queue()
-
-            # let's use a mutable so the backup thread can modify it
-            # We get a thread result, hence pylint will complain the thread isn't a tuple
-            # pylint: disable=E1101 (no-member)
-            thread = _gui_backup(repo_config=repo_config, stdout=stdout, stderr=stderr)
-            while not thread.done() and not thread.cancelled():
-                try:
-                    stdout_line = stdout.get(timeout=0.01)
-                except queue.Empty:
-                    pass
-                else:
-                    if stdout_line:
-                        progress_window["progress"].Update(stdout_line)
-                sg.PopupAnimated(
-                    LOADER_ANIMATION,
-                    message="{}...".format(_t("main_gui.backup_in_progress")),
-                    time_between_frames=50,
-                    background_color=GUI_LOADER_COLOR,
-                    text_color=GUI_LOADER_TEXT_COLOR,
-                )
-            sg.PopupAnimated(None)
-            result = thread.result()
-            try:
-                exec_time = THREAD_SHARED_DICT["exec_time"]
-            except KeyError:
-                exec_time = "N/A"
-            current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
-            _gui_update_state(window, current_state, backup_tz, snapshot_list)
-            if not result:
-                sg.PopupError(
-                    _t("main_gui.backup_failed", seconds=exec_time), keep_on_top=True
-                )
-            else:
-                sg.Popup(
-                    _t("main_gui.backup_done", seconds=exec_time), keep_on_top=True
-                )
-            progress_window.close()
-            continue
+            backup(repo_config)
+            event = "--STATE-BUTTON"
         if event == "--SEE-CONTENT--":
             if not values["snapshot-list"]:
                 sg.Popup(_t("main_gui.select_backup"), keep_on_top=True)
@@ -812,10 +620,10 @@ def _main_gui():
             except (TypeError, KeyError):
                 sg.PopupNoFrame(_t("main_gui.unknown_repo"))
         if event == "--ABOUT--":
-            _about_gui(version_string, full_config)
+            about_gui(version_string, full_config)
         if event == "--STATE-BUTTON--":
             current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
-            _gui_update_state(window, current_state, backup_tz, snapshot_list)
+            gui_update_state()
             if current_state is None:
                 sg.Popup(_t("main_gui.cannot_get_repo_status"))
 
