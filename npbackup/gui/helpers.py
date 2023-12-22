@@ -7,11 +7,24 @@ __intname__ = "npbackup.gui.helpers"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023083101"
+__build__ = "2023122201"
 
 
-from typing import Tuple
+from typing import Tuple, Callable
+from logging import getLogger
 import re
+import queue
+import PySimpleGUI as sg
+from npbackup.core.i18n_helper import _t
+from npbackup.customization import LOADER_ANIMATION, GUI_LOADER_COLOR, GUI_LOADER_TEXT_COLOR
+from npbackup.core.runner import NPBackupRunner
+
+# For debugging purposes, we should be able to disable threading to see actual errors
+# out of thread
+USE_THREADING = True
+
+
+logger = getLogger()
 
 
 def get_anon_repo_uri(repository: str) -> Tuple[str, str]:
@@ -40,3 +53,126 @@ def get_anon_repo_uri(repository: str) -> Tuple[str, str]:
         backend_type = "LOCAL"
         backend_uri = repository
     return backend_type, backend_uri
+
+
+# TODO: add compact popupanimation + error gui only
+def gui_thread_runner(__repo_config: dict, __fn_name: str, __compact: bool = True, __autoclose: bool = False, __gui_msg: str = "", *args, **kwargs):
+    """
+    Runs any NPBackupRunner functions in threads if needed
+    """
+    runner = NPBackupRunner()
+    # So we don't always init repo_config, since runner.group_runner would do that itself
+    if __repo_config:
+        runner.repo_config = __repo_config
+    stdout_queue = queue.Queue()
+    stderr_queue = queue.Queue()
+    fn = getattr(runner, __fn_name)
+    logger.debug(f"gui_thread_runner runs {fn.__name__} {'with' if USE_THREADING else 'without'} threads")
+
+    runner.stdout = stdout_queue
+    runner.stderr = stderr_queue
+
+    stderr_has_messages = False
+    if USE_THREADING:
+        """
+        thread = fn(*args, **kwargs)
+        while not thread.done() and not thread.cancelled():
+            sg.PopupAnimated(
+                LOADER_ANIMATION,
+                message=_t("main_gui.loading_data_from_repo"),
+                time_between_frames=50,
+                background_color=GUI_LOADER_COLOR,
+                text_color=GUI_LOADER_TEXT_COLOR,
+            )
+        sg.PopupAnimated(None)
+        return thread.result()
+        """
+        progress_layout = [
+            [sg.Text(__gui_msg, text_color=GUI_LOADER_TEXT_COLOR, visible=__compact, justification='C')],
+            [sg.Text(_t("operations_gui.last_message"), key="-OPERATIONS-PROGRESS-STDOUT-TITLE-", visible=not __compact)],
+            [sg.Multiline(key="-OPERATIONS-PROGRESS-STDOUT-", size=(40, 10), visible=not __compact)],
+            [sg.Text(_t("operations_gui.error_messages"), key="-OPERATIONS-PROGRESS-STDERR-TITLE-", visible=not __compact)],
+            [sg.Multiline(key="-OPERATIONS-PROGRESS-STDERR-", size=(40, 10), visible=not __compact)],
+            [sg.Image(LOADER_ANIMATION, key="-LOADER-ANIMATION-")],
+            [sg.Text(_t("generic.finished"), key="-FINISHED-", visible=False)],
+            [sg.Button(_t("generic.close"), key="--EXIT--")],
+        ]
+        progress_window = sg.Window(__gui_msg, progress_layout, no_titlebar=True, grab_anywhere=True, background_color=GUI_LOADER_COLOR)
+        event, values = progress_window.read(timeout=0.01)
+
+        read_stdout_queue = True
+        read_stderr_queue = True
+        read_queues = True
+        thread_alive = True
+        grace_counter = 100 # 2s since we read 2x queues with 0.01 seconds
+        thread = fn(*args, **kwargs)
+        while True:
+            # Read stdout queue
+            try:
+                stdout_data = stdout_queue.get(timeout=0.01)
+            except queue.Empty:
+                pass
+            else:
+                if stdout_data is None:
+                    read_stdout_queue = False
+                else:
+                    progress_window["-OPERATIONS-PROGRESS-STDOUT-"].Update(
+                        f"{progress_window['-OPERATIONS-PROGRESS-STDOUT-'].get()}\n{stdout_data}"
+                    )
+
+            # Read stderr queue
+            try:
+                stderr_data = stderr_queue.get(timeout=0.01)
+            except queue.Empty:
+                pass
+            else:
+                if stderr_data is None:
+                    read_stderr_queue = False
+                else:
+                    stderr_has_messages = True
+                    if __compact:
+                        for key in progress_window.AllKeysDict:
+                            progress_window[key].Update(visible=True)
+                    progress_window["-OPERATIONS-PROGRESS-STDERR-"].Update(
+                        f"{progress_window['-OPERATIONS-PROGRESS-STDERR-'].get()}\n{stderr_data}"
+                    )
+
+            progress_window["-LOADER-ANIMATION-"].UpdateAnimation(
+                LOADER_ANIMATION, time_between_frames=100
+            )
+            # So we actually need to read the progress window for it to refresh...
+            _, _ = progress_window.read(0.01)
+
+            if thread_alive:
+                thread_alive = not thread.done and not thread.cancelled()
+            read_queues = read_stdout_queue or read_stderr_queue
+            
+            if not thread_alive and not read_queues:
+                break
+            if not thread_alive and read_queues:
+                # Let's read the queue for a grace period if queues are not closed
+                grace_counter -= 1
+            
+            if grace_counter < 1:
+                progress_window["-OPERATIONS-PROGRESS-STDERR-"].Update(
+                    f"{progress_window['-OPERATIONS-PROGRESS-STDERR-'].get()}\nGRACE COUNTER FOR output queues encountered. Thread probably died."
+                )
+                __autoclose = False
+                break
+
+        # Keep the window open until user has done something
+        progress_window["-LOADER-ANIMATION-"].Update(visible=False)
+        progress_window["-FINISHED-"].Update(visible=True)
+        if not __autoclose or stderr_has_messages:
+            while True:
+                event, _ = progress_window.read()
+                if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--EXIT--"):
+                    break
+        progress_window.close()
+        return thread.result()
+    else:
+        kwargs = {
+            **kwargs,
+            **{"__no_threads": True}
+        }
+        return runner.__getattr__(fn)(*args, **kwargs)
