@@ -20,6 +20,7 @@ from datetime import datetime, timezone
 import dateutil.parser
 import queue
 from command_runner import command_runner
+from npbackup.__debug__ import _DEBUG
 
 
 logger = getLogger()
@@ -211,7 +212,7 @@ class ResticRunner:
         else:
             raise ValueError("Bogus log level given {level}")
 
-        if self.stdout and level in ('info', 'debug'):
+        if self.stdout and (level == 'info' or (level == 'debug' and _DEBUG)):
             self.stdout.put(msg)
         if self.stderr and level in ('critical', 'error', 'warning'):
             self.stderr.put(msg)
@@ -712,31 +713,41 @@ class ResticRunner:
         return False
 
     def forget(
-        self, snapshot: Optional[str] = None, policy: Optional[dict] = None
+        self, snapshots: Union[List[str], Optional[str]] = None, policy: Optional[dict] = None
     ) -> bool:
         """
         Execute forget command for given snapshot
         """
         if not self.is_init:
             return None
-        if not snapshot and not policy:
-            logger.error("No valid snapshot or policy defined for pruning")
+        if not snapshots and not policy:
+            self.write_logs("No valid snapshot or policy defined for pruning", level="error")
             return False
 
-        if snapshot:
-            cmd = "forget {}".format(snapshot)
+        if snapshots:
+            if isinstance(snapshots, list):
+                cmds = []
+                for snapshot in snapshots:
+                    cmds.append(f"forget {snapshot}")
+            else:
+                cmds = f"forget {snapshots}"
         if policy:
-            cmd = "format {}".format(policy)  # TODO # WIP
+            cmds = ["format {}".format(policy)]  # TODO # WIP
+
         # We need to be verbose here since server errors will not stop client from deletion attempts
         verbose = self.verbose
         self.verbose = True
-        result, output = self.executor(cmd)
+        batch_result = True
+        if cmds:
+            for cmd in cmds:
+                result, output = self.executor(cmd)
+                if result:
+                    self.write_logs("successfully forgot snapshot", level='info')
+                else:
+                    self.write_logs(f"Forget failed\n{output}", level="error")
+                    batch_result = False
         self.verbose = verbose
-        if result:
-            logger.info("successfully forgot snapshots")
-            return True
-        logger.critical("Forget failed:\n{}".format(output))
-        return False
+        return batch_result
 
     def prune(self) -> bool:
         """
