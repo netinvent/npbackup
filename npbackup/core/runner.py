@@ -26,9 +26,11 @@ from npbackup.restic_wrapper import ResticRunner
 from npbackup.core.restic_source_binary import get_restic_internal_binary
 from npbackup.path_helper import CURRENT_DIR, BASEDIR
 from npbackup.__version__ import __intname__ as NAME, __version__ as VERSION
-from time import sleep
+from npbackup.__debug__ import _DEBUG
+
 
 logger = logging.getLogger()
+
 
 def metric_writer(
     repo_config: dict, restic_result: bool, result_string: str, dry_run: bool
@@ -124,7 +126,6 @@ class NPBackupRunner:
 
         self._dry_run = False
         self._verbose = False
-        self._stdout = None
         self.restic_runner = None
         self.minimum_backup_age = None
         self._exec_time = None
@@ -244,7 +245,7 @@ class NPBackupRunner:
         else:
             raise ValueError("Bogus log level given {level}")
 
-        if self.stdout and level in ('info', 'debug'):
+        if self.stdout and (level == 'info' or (level == 'debug' and _DEBUG)):
             self.stdout.put(msg)
         if self.stderr and level in ('critical', 'error', 'warning'):
             self.stderr.put(msg)
@@ -329,7 +330,12 @@ class NPBackupRunner:
                 "raw": ["full"],
             }
             try:
-                operation = fn.__name__
+                # When running group_runner, we need to extract operation from kwargs
+                # else, operarion is just the wrapped function name
+                if fn.__name__ == "group_runner":
+                    operation = kwargs.get("operation")
+                else:
+                    operation = fn.__name__
                 # TODO: enforce permissions
                 self.write_logs(
                     f"Permissions required are {required_permissions[operation]}", level="info"
@@ -534,24 +540,30 @@ class NPBackupRunner:
     # ACTUAL RUNNER FUNCTIONS #
     ###########################
 
+    # Decorator order is important
+    # Since we want a concurrent.futures.Future result, we need to put the @threaded decorator
+    # Before any other decorator that would change the results
+
     @exec_timer
+    @close_queues
+    @threaded
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @close_queues
     def list(self) -> Optional[dict]:
-        self.write_logs(f"Listing snapshots of repo {self.repo_config.g('name')}", level="error")
+        self.write_logs(f"Listing snapshots of repo {self.repo_config.g('name')}", level="info")
         snapshots = self.restic_runner.snapshots()
         return snapshots
 
     @exec_timer
+    @close_queues
+    @threaded
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @close_queues
     # TODO: add json output
     def find(self, path: str) -> bool:
-        self.write_logs(f"Searching for path {path} in repo {self.repo_config.g('name')}", level="error")
+        self.write_logs(f"Searching for path {path} in repo {self.repo_config.g('name')}", level="info")
         result = self.restic_runner.find(path=path)
         if result:
             self.write_logs("Found path in:\n", level="info")
@@ -561,20 +573,22 @@ class NPBackupRunner:
         return False
 
     @exec_timer
+    @close_queues
+    @threaded
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @close_queues
     def ls(self, snapshot: str) -> Optional[dict]:
         self.write_logs(f"Showing content of snapshot {snapshot} in repo {self.repo_config.g('name')}", level="info")
         result = self.restic_runner.ls(snapshot)
         return result
 
     @exec_timer
+    @close_queues
+    @threaded
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @close_queues
     def check_recent_backups(self) -> bool:
         """
         Checks for backups in timespan
@@ -603,10 +617,11 @@ class NPBackupRunner:
         return result, backup_tz
 
     @exec_timer
+    @close_queues
+    @threaded
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @close_queues
     def backup(self, force: bool = False) -> bool:
         """
         Run backup after checking if no recent backup exists, unless force == True
@@ -754,10 +769,11 @@ class NPBackupRunner:
         return result
 
     @exec_timer
+    @close_queues
+    @threaded
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @close_queues
     def restore(self, snapshot: str, target: str, restore_includes: List[str]) -> bool:
         if not self.repo_config.g("permissions") in ["restore", "full"]:
             self.write_logs(f"You don't have permissions to restore repo {self.repo_config.g('name')}", level="error")
@@ -771,61 +787,66 @@ class NPBackupRunner:
         return result
 
     @exec_timer
+    @close_queues
+    @threaded
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @close_queues
-    def forget(self, snapshot: str) -> bool:
-        self.write_logs(f"Forgetting snapshot {snapshot}", level="info")
-        result = self.restic_runner.forget(snapshot)
+    def forget(self, snapshots: Union[List[str], str]) -> bool:
+        self.write_logs(f"Forgetting snapshots {snapshots}", level="info")
+        result = self.restic_runner.forget(snapshots)
         return result
 
     @exec_timer
+    @close_queues
+    @threaded
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @threaded
-    @close_queues
     def check(self, read_data: bool = True) -> bool:
         if read_data:
             self.write_logs(f"Running full data check of repository {self.repo_config.g('name')}", level="info")
         else:
             self.write_logs(f"Running metadata consistency check of repository {self.repo_config.g('name')}", level="info")
-        sleep(1)
         result = self.restic_runner.check(read_data)
         return result
 
     @exec_timer
+    @close_queues
+    @threaded
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @close_queues
     def prune(self) -> bool:
         self.write_logs(f"Pruning snapshots for repo {self.repo_config.g('name')}", level="info")
         result = self.restic_runner.prune()
         return result
 
     @exec_timer
+    @close_queues
+    @threaded
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @close_queues
     def repair(self, subject: str) -> bool:
         self.write_logs(f"Repairing {subject} in repo {self.repo_config.g('name')}", level="info")
         result = self.restic_runner.repair(subject)
         return result
 
     @exec_timer
+    @close_queues
+    @threaded
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @close_queues
     def raw(self, command: str) -> bool:
         self.write_logs(f"Running raw command: {command}", level="info")
         result = self.restic_runner.raw(command=command)
         return result
 
     @exec_timer
+    @threaded
+    @has_permission
     def group_runner(self, repo_config_list: list, operation: str, **kwargs) -> bool:
         group_result = True
 
@@ -835,7 +856,7 @@ class NPBackupRunner:
             **kwargs,
             **{
                 "close_queues": False,
-                #"__no_threads": True,
+                "__no_threads": True,
                 }
             }
 
@@ -856,5 +877,4 @@ class NPBackupRunner:
             self.stdout.put(None)
         if self.stderr:
             self.stderr.put(None)
-        sleep(3) # TODO this is arbitrary to allow queues to be read entirely
         return group_result
