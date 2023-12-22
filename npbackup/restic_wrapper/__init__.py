@@ -40,7 +40,6 @@ class ResticRunner:
         self.password = str(password).strip()
         self._verbose = False
         self._dry_run = False
-        self._stdout = None
         self._binary = None
         self.binary_search_paths = binary_search_paths
         self._get_binary()
@@ -77,9 +76,7 @@ class ResticRunner:
             None  # Function which will make executor abort if result is True
         )
         self._executor_finished = False  # Internal value to check whether executor is done, accessed via self.executor_finished property
-        self._stdout = (
-            None  # Optional outputs when running GUI, to get interactive output
-        )
+        self._stdout = None
         self._stderr = None
 
     def on_exit(self) -> bool:
@@ -152,7 +149,7 @@ class ResticRunner:
     def stderr(self) -> Optional[Union[int, str, Callable, queue.Queue]]:
         return self._stderr
 
-    @stdout.setter
+    @stderr.setter
     def stderr(self, value: Optional[Union[int, str, Callable, queue.Queue]]):
         self._stderr = value
 
@@ -197,6 +194,33 @@ class ResticRunner:
     def exec_time(self, value: int):
         self._exec_time = value
 
+    def write_logs(self, msg: str, level: str, raise_error: str = None):
+        """
+        Write logs to log file and stdout / stderr queues if exist for GUI usage
+        """
+        if level == 'warning':
+            logger.warning(msg)
+        elif level == 'error':
+            logger.error(msg)
+        elif level == 'critical':
+            logger.critical(msg)
+        elif level == 'info':
+            logger.info(msg)
+        elif level == 'debug':
+            logger.debug(msg)
+        else:
+            raise ValueError("Bogus log level given {level}")
+
+        if self.stdout and level in ('info', 'debug'):
+            self.stdout.put(msg)
+        if self.stderr and level in ('critical', 'error', 'warning'):
+            self.stderr.put(msg)
+        
+        if raise_error == "ValueError":
+            raise ValueError(msg)
+        elif raise_error:
+            raise Exception(msg)
+
     def executor(
         self,
         cmd: str,
@@ -220,7 +244,7 @@ class ResticRunner:
         _cmd = f'"{self._binary}" {additional_parameters}{cmd}{self.generic_arguments}'
         if self.dry_run:
             _cmd += " --dry-run"
-        logger.debug("Running command: [{}]".format(_cmd))
+        self.write_logs(f"Running command: [{_cmd}]", level="debug")
         self._make_env()
         if live_stream:
             exit_code, output = command_runner(
@@ -230,8 +254,8 @@ class ResticRunner:
                 encoding="utf-8",
                 live_output=self.verbose,
                 valid_exit_codes=errors_allowed,
-                stdout=self._stdout,
-                stderr=self._stderr,
+                stdout=None, # TODO we need other local queues to get subprocess output into gui queues
+                stderr=None,
                 stop_on=self.stop_on,
                 on_exit=self.on_exit,
                 method="poller",
@@ -740,25 +764,25 @@ class ResticRunner:
         cmd = "check{}".format(" --read-data" if read_data else "")
         result, output = self.executor(cmd)
         if result:
-            logger.info("Repo checked successfully.")
+            self.write_logs("Repo checked successfully.", level="info")
             return True
-        logger.critical("Repo check failed:\n {}".format(output))
+        self.write_logs(f"Repo check failed:\n {output}", level="critical")
         return False
 
-    def repair(self, order: str) -> bool:
+    def repair(self, subject: str) -> bool:
         """
         Check current repo status
         """
         if not self.is_init:
             return None
-        if order not in ["index", "snapshots"]:
-            logger.error("Bogus repair order given: {}".format(order))
-        cmd = "repair {}".format(order)
+        if subject not in ["index", "snapshots"]:
+            self.write_logs(f"Bogus repair order given: {subject}", level="error")
+        cmd = "repair {}".format(subject)
         result, output = self.executor(cmd)
         if result:
-            logger.info("Repo successfully repaired:\n{}".format(output))
+            self.write_logs(f"Repo successfully repaired:\n{output}", level="info")
             return True
-        logger.critical("Repo repair failed:\n {}".format(output))
+        self.write_logs(f"Repo repair failed:\n {output}", level="critical")
         return False
 
     def raw(self, command: str) -> Tuple[bool, str]:
@@ -769,9 +793,9 @@ class ResticRunner:
             return None
         result, output = self.executor(command)
         if result:
-            logger.info("successfully run raw command:\n{}".format(output))
+            self.write_logs(f"successfully run raw command:\n{output}", level="info")
             return True, output
-        logger.critical("Raw command failed.")
+        self.write_logs("Raw command failed.", level="error")
         return False, output
 
     def has_snapshot_timedelta(

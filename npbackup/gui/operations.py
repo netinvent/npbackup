@@ -225,6 +225,7 @@ def operations_gui(full_config: dict) -> dict:
                 [sg.Text(_t("operations_gui.error_messages"))],
                 [sg.Multiline(key="-OPERATIONS-PROGRESS-STDERR-", size=(40, 10))],
                 [sg.Image(LOADER_ANIMATION, key="-LOADER-ANIMATION-")],
+                [sg.Text(_t("generic.finished"), key="-FINISHED-", visible=False)],
                 [sg.Button(_t("generic.close"), key="--EXIT--")],
             ]
             progress_window = sg.Window("Operation status", progress_layout)
@@ -233,7 +234,7 @@ def operations_gui(full_config: dict) -> dict:
             read_stdout_queue = True
             read_stderr_queue = True
             #while read_stdout_queue or read_stderr_queue: # TODO add queue read as while 
-            while (not thread.done() and not thread.cancelled()) or (read_stdout_queue or read_stderr_queue):
+            while (not thread.done() and not thread.cancelled()) or read_stdout_queue or read_stderr_queue:
                 # Read stdout queue
                 try:
                     stdout_data = stdout_queue.get(timeout=0.01)
@@ -244,7 +245,7 @@ def operations_gui(full_config: dict) -> dict:
                         read_stdout_queue = False
                     else:
                         progress_window["-OPERATIONS-PROGRESS-STDOUT-"].Update(
-                            stdout_data
+                            f"{progress_window['-OPERATIONS-PROGRESS-STDOUT-'].get()}\n{stdout_data}"
                         )
 
                 # Read stderr queue
@@ -267,6 +268,8 @@ def operations_gui(full_config: dict) -> dict:
                 _, _ = progress_window.read(0.01)
 
             # Keep the window open until user has done something
+            progress_window["-LOADER-ANIMATION-"].Update(visible=False)
+            progress_window["-FINISHED-"].Update(visible=True)
             while True:
                 event, _ = progress_window.read()
                 if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--EXIT--"):

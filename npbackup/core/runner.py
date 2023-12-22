@@ -131,6 +131,15 @@ class NPBackupRunner:
 
         self._using_dev_binary = False
 
+    @property
+    def repo_name(self) -> str:
+        return self._repo_name
+    
+    @repo_name.setter
+    def repo_name(self, value: str):
+        if not isinstance(value, str) or not value:
+            msg = f"Bogus repo name {value} found"
+            self.write_logs(msg, level="critical", raise_error="ValueError")
 
     @property
     def repo_config(self) -> dict:
@@ -139,8 +148,10 @@ class NPBackupRunner:
     @repo_config.setter
     def repo_config(self, value: dict):
         if not isinstance(value, dict):
-            raise ValueError(f"Bogus repo config given: {value}")
+            msg = f"Bogus repo config object given"
+            self.write_logs(msg, level="critical", raise_error="ValueError")
         self._repo_config = deepcopy(value)
+        self.repo_name = self.repo_config.g("name")
         # Create an instance of restic wrapper
         self.create_restic_runner()
 
@@ -157,7 +168,8 @@ class NPBackupRunner:
     @dry_run.setter
     def dry_run(self, value):
         if not isinstance(value, bool):
-            raise ValueError("Bogus dry_run parameter given: {}".format(value))
+            msg = f"Bogus dry_run parameter given: {value}"
+            self.write_logs(msg, level="critical", raise_error="ValueError")
         self._dry_run = value
 
     @property
@@ -167,7 +179,8 @@ class NPBackupRunner:
     @verbose.setter
     def verbose(self, value):
         if not isinstance(value, bool):
-            raise ValueError("Bogus verbose parameter given: {}".format(value))
+            msg = f"Bogus verbose parameter given: {value}"
+            self.write_logs(msg, level="critical", raise_error="ValueError")
         self._verbose = value
 
     @property
@@ -214,27 +227,32 @@ class NPBackupRunner:
     def exec_time(self, value: int):
         self._exec_time = value
 
-    def write_logs(self, msg: str, level: str = None):
+    def write_logs(self, msg: str, level: str, raise_error: str = None):
         """
         Write logs to log file and stdout / stderr queues if exist for GUI usage
         """
         if level == 'warning':
             logger.warning(msg)
-            if self.stderr:
-                self.stderr.put(msg)
         elif level == 'error':
             logger.error(msg)
-            if self.stderr:
-                self.stderr.put(msg)
         elif level == 'critical':
             logger.critical(msg)
-            if self.stderr:
-                self.stderr.put(msg)
-        else:
+        elif level == 'info':
             logger.info(msg)
-            if self.stdout:
-                self.stdout.put(msg)
+        elif level == 'debug':
+            logger.debug(msg)
+        else:
+            raise ValueError("Bogus log level given {level}")
 
+        if self.stdout and level in ('info', 'debug'):
+            self.stdout.put(msg)
+        if self.stderr and level in ('critical', 'error', 'warning'):
+            self.stderr.put(msg)
+        
+        if raise_error == "ValueError":
+            raise ValueError(msg)
+        elif raise_error:
+            raise Exception(msg)
 
     # pylint does not understand why this function does not take a self parameter
     # It's a decorator, and the inner function will have the self argument instead
@@ -250,7 +268,7 @@ class NPBackupRunner:
             # pylint: disable=E1102 (not-callable)
             result = fn(self, *args, **kwargs)
             self.exec_time = (datetime.utcnow() - start_time).total_seconds()
-            self.write_logs(f"Runner took {self.exec_time} seconds for {fn.__name__}")
+            self.write_logs(f"Runner took {self.exec_time} seconds for {fn.__name__}", level="info")
             return result
 
         return wrapper
@@ -314,7 +332,7 @@ class NPBackupRunner:
                 operation = fn.__name__
                 # TODO: enforce permissions
                 self.write_logs(
-                    f"Permissions required are {required_permissions[operation]}"
+                    f"Permissions required are {required_permissions[operation]}", level="info"
                 )
             except (IndexError, KeyError):
                 self.write_logs("You don't have sufficient permissions", level="error")
@@ -459,7 +477,6 @@ class NPBackupRunner:
             pass
         except ValueError:
             self.write_logs("Bogus additional parameters given", level="warning")
-        self.restic_runner.stdout = self.stdout
 
         try:
             env_variables = self.repo_config.g("env.variables")
@@ -504,7 +521,8 @@ class NPBackupRunner:
                 self.repo_config.g("repo_opts.minimum_backup_age")
             )
         except (KeyError, ValueError, TypeError):
-            self.minimum_backup_age = 1440
+            # In doubt, launch the backup regardless of last backup age
+            self.minimum_backup_age = 0
 
         self.restic_runner.verbose = self.verbose
         self.restic_runner.stdout = self.stdout
@@ -531,13 +549,14 @@ class NPBackupRunner:
     @is_ready
     @apply_config_to_restic_runner
     @close_queues
+    # TODO: add json output
     def find(self, path: str) -> bool:
         self.write_logs(f"Searching for path {path} in repo {self.repo_config.g('name')}", level="error")
         result = self.restic_runner.find(path=path)
         if result:
-            self.write_logs("Found path in:\n")
+            self.write_logs("Found path in:\n", level="info")
             for line in result:
-                self.write_logs(line)
+                self.write_logs(line, level="info")
             return True
         return False
 
@@ -547,7 +566,7 @@ class NPBackupRunner:
     @apply_config_to_restic_runner
     @close_queues
     def ls(self, snapshot: str) -> Optional[dict]:
-        self.write_logs(f"Showing content of snapshot {snapshot} in repo {self.repo_config.g('name')}")
+        self.write_logs(f"Showing content of snapshot {snapshot} in repo {self.repo_config.g('name')}", level="info")
         result = self.restic_runner.ls(snapshot)
         return result
 
@@ -563,10 +582,10 @@ class NPBackupRunner:
         Returns None if no information is available
         """
         if self.minimum_backup_age == 0:
-            self.write_logs("No minimal backup age set. Set for backup")
+            self.write_logs("No minimal backup age set set.", level="info")
 
         self.write_logs(
-            f"Searching for a backup newer than {str(timedelta(minutes=self.minimum_backup_age))} ago"
+            f"Searching for a backup newer than {str(timedelta(minutes=self.minimum_backup_age))} ago", level="info"
         )
         self.restic_runner.verbose = False
         result, backup_tz = self.restic_runner.has_snapshot_timedelta(
@@ -574,11 +593,11 @@ class NPBackupRunner:
         )
         self.restic_runner.verbose = self.verbose
         if result:
-            self.write_logs(f"Most recent backup in repo {self.repo_config.g('name')} is from {backup_tz}")
+            self.write_logs(f"Most recent backup in repo {self.repo_config.g('name')} is from {backup_tz}", level="info")
         elif result is False and backup_tz == datetime(1, 1, 1, 0, 0):
-            self.write_logs(f"No snapshots found in repo {self.repo_config.g('name')}.")
+            self.write_logs(f"No snapshots found in repo {self.repo_config.g('name')}.", level="info")
         elif result is False:
-            self.write_logs(f"No recent backup found in repo {self.repo_config.g('name')}. Newest is from {backup_tz}")
+            self.write_logs(f"No recent backup found in repo {self.repo_config.g('name')}. Newest is from {backup_tz}", level="info")
         elif result is None:
             self.write_logs("Cannot connect to repository or repository empty.", level="error")
         return result, backup_tz
@@ -673,15 +692,15 @@ class NPBackupRunner:
                 self.write_logs(f"Cannot continue, repo {self.repo_config.g('name')} is not defined.", level="critical")
                 return False
         if self.check_recent_backups() and not force:
-            self.write_logs("No backup necessary.")
+            self.write_logs("No backup necessary.", level="info")
             return True
         self.restic_runner.verbose = self.verbose
 
         # Run backup here
         if exclude_patterns_source_type not in ["folder_list", None]:
-            self.write_logs(f"Running backup of files in {paths} list to repo {self.repo_config.g('name')}")
+            self.write_logs(f"Running backup of files in {paths} list to repo {self.repo_config.g('name')}", level="info")
         else:
-            self.write_logs(f"Running backup of {paths} to repo {self.repo_config.g('name')}")
+            self.write_logs(f"Running backup of {paths} to repo {self.repo_config.g('name')}", level="info")
 
         if pre_exec_commands:
             for pre_exec_command in pre_exec_commands:
@@ -696,7 +715,7 @@ class NPBackupRunner:
                         return False
                 else:
                     self.write_logs(
-                        "Pre-execution of command {pre_exec_command} success with:\n{output}."
+                        "Pre-execution of command {pre_exec_command} success with:\n{output}.", level="info"
                     )
 
         self.restic_runner.dry_run = self.dry_run
@@ -730,7 +749,7 @@ class NPBackupRunner:
                         return False
                 else:
                     self.write_logs(
-                        "Post-execution of command {post_exec_command} success with:\n{output}.", level="error"
+                        "Post-execution of command {post_exec_command} success with:\n{output}.", level="info"
                     )
         return result
 
@@ -743,7 +762,7 @@ class NPBackupRunner:
         if not self.repo_config.g("permissions") in ["restore", "full"]:
             self.write_logs(f"You don't have permissions to restore repo {self.repo_config.g('name')}", level="error")
             return False
-        self.write_logs(f"Launching restore to {target}")
+        self.write_logs(f"Launching restore to {target}", level="info")
         result = self.restic_runner.restore(
             snapshot=snapshot,
             target=target,
@@ -757,7 +776,7 @@ class NPBackupRunner:
     @apply_config_to_restic_runner
     @close_queues
     def forget(self, snapshot: str) -> bool:
-        self.write_logs(f"Forgetting snapshot {snapshot}")
+        self.write_logs(f"Forgetting snapshot {snapshot}", level="info")
         result = self.restic_runner.forget(snapshot)
         return result
 
@@ -769,9 +788,9 @@ class NPBackupRunner:
     @close_queues
     def check(self, read_data: bool = True) -> bool:
         if read_data:
-            self.write_logs(f"Running full data check of repository {self.repo_config.g('name')}")
+            self.write_logs(f"Running full data check of repository {self.repo_config.g('name')}", level="info")
         else:
-            self.write_logs(f"Running metadata consistency check of repository {self.repo_config.g('name')}")
+            self.write_logs(f"Running metadata consistency check of repository {self.repo_config.g('name')}", level="info")
         sleep(1)
         result = self.restic_runner.check(read_data)
         return result
@@ -782,7 +801,7 @@ class NPBackupRunner:
     @apply_config_to_restic_runner
     @close_queues
     def prune(self) -> bool:
-        self.write_logs(f"Pruning snapshots for repo {self.repo_config.g('name')}")
+        self.write_logs(f"Pruning snapshots for repo {self.repo_config.g('name')}", level="info")
         result = self.restic_runner.prune()
         return result
 
@@ -792,7 +811,7 @@ class NPBackupRunner:
     @apply_config_to_restic_runner
     @close_queues
     def repair(self, subject: str) -> bool:
-        self.write_logs(f"Repairing {subject} in repo {self.repo_config.g('name')}")
+        self.write_logs(f"Repairing {subject} in repo {self.repo_config.g('name')}", level="info")
         result = self.restic_runner.repair(subject)
         return result
 
@@ -802,7 +821,7 @@ class NPBackupRunner:
     @apply_config_to_restic_runner
     @close_queues
     def raw(self, command: str) -> bool:
-        self.write_logs(f"Running raw command: {command}")
+        self.write_logs(f"Running raw command: {command}", level="info")
         result = self.restic_runner.raw(command=command)
         return result
 
@@ -821,21 +840,21 @@ class NPBackupRunner:
             }
 
         for repo_name, repo_config in repo_config_list:
-            self.write_logs(f"Running {operation} for repo {repo_name}")
+            self.write_logs(f"Running {operation} for repo {repo_name}", level="info")
             self.repo_config = repo_config
             result = self.__getattribute__(operation)(**kwargs)
             if result:
-                self.write_logs(f"Finished {operation} for repo {repo_name}")
+                self.write_logs(f"Finished {operation} for repo {repo_name}", level="info")
             else:
                 self.write_logs(
                     f"Operation {operation} failed for repo {repo_name}", level="error"
                 )
                 group_result = False
-        self.write_logs("Finished execution group operations")
+        self.write_logs("Finished execution group operations", level="info")
         # Manually close the queues at the end
         if self.stdout:
             self.stdout.put(None)
         if self.stderr:
             self.stderr.put(None)
-        #sleep(1) # TODO this is arbitrary to allow queues to be read entirely
+        sleep(3) # TODO this is arbitrary to allow queues to be read entirely
         return group_result
