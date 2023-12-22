@@ -1,5 +1,6 @@
 en:
-  loading_data_from_repo: Loading data from repo
+  loading_snapshot_list_from_repo: Loading snapshot list from repo
+  loading_last_snapshot_date: Loading last snapshot date
   this_will_take_a_while: This will take a while
   cannot_get_content: Cannot get content. Pleasse check the logs
   cannot_get_repo_status: Cannot get repo status
