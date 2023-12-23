@@ -73,31 +73,26 @@ def gui_thread_runner(__repo_config: dict, __fn_name: str, __compact: bool = Tru
     runner.stderr = stderr_queue
 
     stderr_has_messages = False
+    if not __gui_msg:
+        __gui_msg = "Operation"
     if USE_THREADING:
-        """
-        thread = fn(*args, **kwargs)
-        while not thread.done() and not thread.cancelled():
-            sg.PopupAnimated(
-                LOADER_ANIMATION,
-                message=_t("main_gui.loading_data_from_repo"),
-                time_between_frames=50,
-                background_color=GUI_LOADER_COLOR,
-                text_color=GUI_LOADER_TEXT_COLOR,
-            )
-        sg.PopupAnimated(None)
-        return thread.result()
-        """
         progress_layout = [
-            [sg.Text(__gui_msg, text_color=GUI_LOADER_TEXT_COLOR, visible=__compact, justification='C')],
-            [sg.Text(_t("operations_gui.last_message"), key="-OPERATIONS-PROGRESS-STDOUT-TITLE-", visible=not __compact)],
-            [sg.Multiline(key="-OPERATIONS-PROGRESS-STDOUT-", size=(40, 10), visible=not __compact)],
-            [sg.Text(_t("operations_gui.error_messages"), key="-OPERATIONS-PROGRESS-STDERR-TITLE-", visible=not __compact)],
-            [sg.Multiline(key="-OPERATIONS-PROGRESS-STDERR-", size=(40, 10), visible=not __compact)],
+            [sg.Text(__gui_msg, text_color=GUI_LOADER_TEXT_COLOR, background_color=GUI_LOADER_COLOR, visible=__compact, justification='C')],
+            [sg.Text(_t("main_gui.last_messages"), key="-OPERATIONS-PROGRESS-STDOUT-TITLE-", text_color=GUI_LOADER_TEXT_COLOR, background_color=GUI_LOADER_COLOR, visible=not __compact)],
+            [sg.Multiline(key="-OPERATIONS-PROGRESS-STDOUT-", size=(70, 5), visible=not __compact)],
+            [sg.Text(_t("main_gui.error_messages"), key="-OPERATIONS-PROGRESS-STDERR-TITLE-", text_color=GUI_LOADER_TEXT_COLOR, background_color=GUI_LOADER_COLOR, visible=not __compact)],
+            [sg.Multiline(key="-OPERATIONS-PROGRESS-STDERR-", size=(70, 10), visible=not __compact)],
             [sg.Image(LOADER_ANIMATION, key="-LOADER-ANIMATION-")],
-            [sg.Text(_t("generic.finished"), key="-FINISHED-", visible=False)],
-            [sg.Button(_t("generic.close"), key="--EXIT--")],
+            [sg.Text(_t("generic.finished"), key="-FINISHED-", text_color=GUI_LOADER_TEXT_COLOR, visible=False)],
+            [sg.Button(_t("generic.close"), key="--EXIT--", button_color=('white', sg.COLOR_SYSTEM_DEFAULT))],
         ]
-        progress_window = sg.Window(__gui_msg, progress_layout, no_titlebar=True, grab_anywhere=True, background_color=GUI_LOADER_COLOR)
+
+        full_layout = [
+            [sg.Column(progress_layout, element_justification='C', background_color=GUI_LOADER_COLOR)]
+        ]
+
+        progress_window = sg.Window(__gui_msg, full_layout, no_titlebar=True, grab_anywhere=True, 
+                                    background_color=GUI_LOADER_COLOR)
         event, values = progress_window.read(timeout=0.01)
 
         read_stdout_queue = True

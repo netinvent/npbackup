@@ -35,3 +35,7 @@ en:
   forget_failed: Failed to forget. Please check the logs
   operations: Operations
   select_config_file: Select config file
+
+  # logs
+  last_messages: Last messages
+  error_messages: Error messages

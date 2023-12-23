@@ -1,11 +1,12 @@
 en:
   configured_repositories: Configured repositories
-  quick_check: Quick check
-  full_check: Full check
-  repair_index: Repair index
-  repair_snapshots: Repair snapshots
+  quick_check: Quick check of repo
+  full_check: Full check of repo
+  repair_index: Repair repo index
+  repair_snapshots: Repair repo snapshots
+  unlock: Unlock repo
   forget_using_retention_policy: Forget using retention polic
-  standard_prune: Normal prune operation
+  standard_prune: Normal prune data
   max_prune: Prune with maximum efficiency
   apply_to_all: Apply to all repos ?
   add_repo: Add repo

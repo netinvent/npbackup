@@ -10,13 +10,9 @@ __license__ = "GPL-3.0-only"
 __build__ = "2023121901"
 
 
-from typing import Tuple
 from logging import getLogger
-import queue
 import PySimpleGUI as sg
 import npbackup.configuration as configuration
-from ofunctions.threading import threaded, Future
-from npbackup.core.runner import NPBackupRunner
 from npbackup.core.i18n_helper import _t
 from npbackup.gui.helpers import get_anon_repo_uri, gui_thread_runner
 from npbackup.customization import (
@@ -71,7 +67,7 @@ def operations_gui(full_config: dict) -> dict:
                 [
                     [
                         sg.Column(
-                            [[sg.Image(data=OEM_LOGO, size=(64, 64))]],
+                            [[sg.Image(data=OEM_LOGO)]],
                             vertical_alignment="top",
                         ),
                         sg.Column(
@@ -95,37 +91,44 @@ def operations_gui(full_config: dict) -> dict:
                     ],
                     [
                         sg.Button(
-                            _t("operations_gui.quick_check"), key="--QUICK-CHECK--"
+                            _t("operations_gui.quick_check"), key="--QUICK-CHECK--",
+                            size=(45, 1)
                         ),
                         sg.Button(
-                            _t("operations_gui.full_check"), key="--FULL-CHECK--"
-                        ),
-                    ],
-                    [
-                        sg.Button(
-                            _t("operations_gui.repair_index"), key="--REPAIR-INDEX--"
-                        ),
-                        sg.Button(
-                            _t("operations_gui.repair_snapshots"), key="--REPAIR-SNAPSHOTS--"
+                            _t("operations_gui.full_check"), key="--FULL-CHECK--",
+                            size=(45, 1)
                         ),
                     ],
                     [
                         sg.Button(
-                            _t("operations.gui.unlock"), key="--UNLOCK--"
-                        )
+                            _t("operations_gui.repair_index"), key="--REPAIR-INDEX--",
+                            size=(45, 1)
+                        ),
+                        sg.Button(
+                            _t("operations_gui.repair_snapshots"), key="--REPAIR-SNAPSHOTS--",
+                            size=(45, 1)
+                        ),
                     ],
                     [
+                        sg.Button(
+                            _t("operations.gui.unlock"), key="--UNLOCK--",
+                            size=(45, 1)
+                        ),
                         sg.Button(
                             _t("operations_gui.forget_using_retention_policy"),
                             key="forget",
+                            size=(45, 1)
                         )
                     ],
                     [
                         sg.Button(
                             _t("operations_gui.standard_prune"),
                             key="--STANDARD-PRUNE--",
+                            size=(45, 1)
                         ),
-                        sg.Button(_t("operations_gui.max_prune"), key="--MAX-PRUNE--"),
+                        sg.Button(_t("operations_gui.max_prune"), key="--MAX-PRUNE--",
+                                  size=(45, 1)
+                                  ),
                     ],
                     [sg.Button(_t("generic.quit"), key="--EXIT--")],
                 ],
@@ -137,7 +140,7 @@ def operations_gui(full_config: dict) -> dict:
     window = sg.Window(
         "Configuration",
         layout,
-        size=(600, 600),
+        #size=(600, 600),
         text_justification="C",
         auto_size_text=True,
         auto_size_buttons=True,
@@ -145,7 +148,7 @@ def operations_gui(full_config: dict) -> dict:
         grab_anywhere=True,
         keep_on_top=False,
         alpha_channel=1.0,
-        default_button_element_size=(12, 1),
+        default_button_element_size=(20, 1),
         finalize=True,
     )
 
@@ -163,6 +166,7 @@ def operations_gui(full_config: dict) -> dict:
             "--FORGET--",
             "--QUICK-CHECK--",
             "--FULL-CHECK--",
+            "--UNLOCK--"
             "--REPAIR-INDEX--",
             "--REPAIR-SNAPSHOTS--",
             "--STANDARD-PRUNE--",
@@ -177,7 +181,7 @@ def operations_gui(full_config: dict) -> dict:
                     continue
                 repos = complete_repo_list
             else:
-                repos = values["repo-list"]
+                repos = complete_repo_list.index(values["repo-list"]) # TODO multi select
 
             repo_config_list = []
             for repo_name, backend_type, repo_uri in repos:
@@ -186,26 +190,36 @@ def operations_gui(full_config: dict) -> dict:
             if event == "--FORGET--":
                 operation = "forget"
                 op_args = {}
+                gui_msg = _t("operations_gui.forget_using_retention_policy")
             if event == "--QUICK-CHECK--":
                 operation = "check"
                 op_args = {"read_data": False}
+                gui_msg = _t("operations_gui.quick_check")
             if event == "--FULL-CHECK--":
                 operation = "check"
                 op_args = {"read_data": True}
+                gui_msg = _t("operations_gui.full_check")
+            if event == "--UNLOCK--":
+                operation = "unlock"
+                op_args = {}
+                gui_msg = _t("operations_gui.unlock")
             if event == "--REPAIR-INDEX--":
                 operation = "repair"
                 op_args = {"subject": "index"}
+                gui_msg = _t("operations_gui.repair_index")
             if event == "--REPAIR-SNAPSHOTS--":
                 operation = "repair"
                 op_args = {"subject": "snapshots"}
+                gui_msg = _t("operations_gui.repair_snapshots")
             if event == "--STANDARD-PRUNE--":
                 operation = "prune"
                 op_args = {}
+                gui_msg = _t("operations_gui.standard_prune")
             if event == "--MAX-PRUNE--":
                 operation = "prune"
                 op_args = {}
-
-            result = gui_thread_runner(None, 'group_runner', operation=operation, repo_config_list=repo_config_list, **op_args)
+                gui_msg = _t("operations_gui.max_prune")
+            result = gui_thread_runner(None, 'group_runner', operation=operation, repo_config_list=repo_config_list, __gui_msg=gui_msg, **op_args)
 
             event = "---STATE-UPDATE---"
         if event == "---STATE-UPDATE---":
