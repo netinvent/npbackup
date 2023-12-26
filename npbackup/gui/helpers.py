@@ -93,7 +93,7 @@ def gui_thread_runner(__repo_config: dict, __fn_name: str, __compact: bool = Tru
         [sg.Column(
             [
                 [
-                    sg.Image(LOADER_ANIMATION, key="-LOADER-ANIMATION-", visible=USE_THREADING)
+                    sg.Image(LOADER_ANIMATION, key="-LOADER-ANIMATION-", background_color=GUI_LOADER_COLOR, visible=USE_THREADING)
                 ],
                 [
                     sg.Text("Debugging active", visible=not USE_THREADING)

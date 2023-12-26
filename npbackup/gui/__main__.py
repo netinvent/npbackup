@@ -365,7 +365,7 @@ def restore_window(
 
 def backup(repo_config: dict) -> bool:
     gui_msg = _t("main_gui.backup_activity")
-    result = gui_thread_runner(repo_config, 'backup', __gui_msg=gui_msg)
+    result = gui_thread_runner(repo_config, 'backup', force=True, __autoclose=True, __compact=False, __gui_msg=gui_msg)
     if not result:
         sg.PopupError(
             _t("main_gui.backup_failed"), keep_on_top=True
@@ -582,7 +582,7 @@ def _main_gui():
                 continue
         if event == "--LAUNCH-BACKUP--":
             backup(repo_config)
-            event = "--STATE-BUTTON"
+            event = "--STATE-BUTTON--"
         if event == "--SEE-CONTENT--":
             if not values["snapshot-list"]:
                 sg.Popup(_t("main_gui.select_backup"), keep_on_top=True)

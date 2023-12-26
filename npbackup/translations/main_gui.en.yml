@@ -24,8 +24,8 @@ en:
   backup_from: Backup from
   backup_activity: Backup activity
   backup_in_progress: Backup in progress
-  backup_done: Backup done in %{seconds} seconds
-  backup_failed: Backup failed in %{seconds} seconds. Please check the logs
+  backup_done: Backup done
+  backup_failed: Backup failed. Please check the logs
   select_backup: Please select a backup
   run_as: run as
   identified_by: identified by
