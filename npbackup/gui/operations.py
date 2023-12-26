@@ -111,7 +111,7 @@ def operations_gui(full_config: dict) -> dict:
                     ],
                     [
                         sg.Button(
-                            _t("operations.gui.unlock"), key="--UNLOCK--",
+                            _t("operations_gui.unlock"), key="--UNLOCK--",
                             size=(45, 1)
                         ),
                         sg.Button(
