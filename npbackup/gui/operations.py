@@ -116,7 +116,7 @@ def operations_gui(full_config: dict) -> dict:
                         ),
                         sg.Button(
                             _t("operations_gui.forget_using_retention_policy"),
-                            key="forget",
+                            key="--FORGET--",
                             size=(45, 1)
                         )
                     ],
@@ -163,12 +163,12 @@ def operations_gui(full_config: dict) -> dict:
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--EXIT--"):
             break
         if event in (
-            "--FORGET--",
             "--QUICK-CHECK--",
             "--FULL-CHECK--",
-            "--UNLOCK--"
             "--REPAIR-INDEX--",
             "--REPAIR-SNAPSHOTS--",
+            "--UNLOCK--",
+            "--FORGET--",
             "--STANDARD-PRUNE--",
             "--MAX-PRUNE--",
         ):
@@ -189,7 +189,7 @@ def operations_gui(full_config: dict) -> dict:
                 repo_config_list.append((repo_name, repo_config))
             if event == "--FORGET--":
                 operation = "forget"
-                op_args = {}
+                op_args = {"use_policy": True}
                 gui_msg = _t("operations_gui.forget_using_retention_policy")
             if event == "--QUICK-CHECK--":
                 operation = "check"
@@ -217,7 +217,7 @@ def operations_gui(full_config: dict) -> dict:
                 gui_msg = _t("operations_gui.standard_prune")
             if event == "--MAX-PRUNE--":
                 operation = "prune"
-                op_args = {}
+                op_args = {"max": True}
                 gui_msg = _t("operations_gui.max_prune")
             result = gui_thread_runner(None, 'group_runner', operation=operation, repo_config_list=repo_config_list, __gui_msg=gui_msg, **op_args)
 

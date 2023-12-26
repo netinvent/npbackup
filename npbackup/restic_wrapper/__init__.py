@@ -713,7 +713,7 @@ class ResticRunner:
         return False
 
     def forget(
-        self, snapshots: Union[List[str], Optional[str]] = None, policy: Optional[dict] = None
+        self, snapshots: Optional[Union[List[str], Optional[str]]] = None, policy: Optional[dict] = None
     ) -> bool:
         """
         Execute forget command for given snapshot
@@ -732,7 +732,16 @@ class ResticRunner:
             else:
                 cmds = f"forget {snapshots}"
         if policy:
-            cmds = ["format {}".format(policy)]  # TODO # WIP
+            cmd = "forget"
+            for key, value in policy.items():
+                if key == 'keep-tags':
+                    if isinstance(value, list):
+                        for tag in value:
+                            if tag:
+                                cmd += f" --keep-tag {tag}"
+                else:
+                    cmd += f" --{key.replace('_', '-')} {value}"
+            cmds = [cmd]
 
         # We need to be verbose here since server errors will not stop client from deletion attempts
         verbose = self.verbose
@@ -749,13 +758,17 @@ class ResticRunner:
         self.verbose = verbose
         return batch_result
 
-    def prune(self) -> bool:
+    def prune(self, max_unused: Optional[str] = None, max_repack_size: Optional[int] = None) -> bool:
         """
         Prune forgotten snapshots
         """
         if not self.is_init:
             return None
         cmd = "prune"
+        if max_unused:
+            cmd += f"--max-unused {max_unused}"
+        if max_repack_size:
+            cmd += f"--max-repack-size {max_repack_size}"
         verbose = self.verbose
         self.verbose = True
         result, output = self.executor(cmd)
@@ -788,12 +801,26 @@ class ResticRunner:
             return None
         if subject not in ["index", "snapshots"]:
             self.write_logs(f"Bogus repair order given: {subject}", level="error")
-        cmd = "repair {}".format(subject)
+        cmd = f"repair {subject}"
         result, output = self.executor(cmd)
         if result:
             self.write_logs(f"Repo successfully repaired:\n{output}", level="info")
             return True
         self.write_logs(f"Repo repair failed:\n {output}", level="critical")
+        return False
+    
+    def unlock(self) -> bool:
+        """
+        Remove stale locks from repos
+        """
+        if not self.is_init:
+            return None
+        cmd = f"unlock"
+        result, output = self.executor(cmd)
+        if result:
+            self.write_logs(f"Repo successfully unlocked:\n{output}", level="info")
+            return True
+        self.write_logs(f"Repo unlock failed:\n {output}", level="critical")
         return False
 
     def raw(self, command: str) -> Tuple[bool, str]:

@@ -177,14 +177,19 @@ empty_config_dict = {
             "upload_speed": 1000000,  # in KiB, use 0 for unlimited upload speed
             "download_speed": 0,  # in KiB, use 0 for unlimited download speed
             "backend_connections": 0,  # Fine tune simultaneous connections to backend, use 0 for standard configuration
-            "retention": {
+            "retention_strategy": {
+                "last": 0,
                 "hourly": 72,
                 "daily": 30,
                 "weekly": 4,
                 "monthly": 12,
                 "yearly": 3,
-                "ntp_time_server": None,
+                "tags": [],
+                "within": True,
+                "ntp_time_server": None, # TODO
             },
+            "prune_max_unused": None,
+            "prune_max_repack_size": None,
         },
         "prometheus": {
             "backup_job": "${MACHINE_ID}",

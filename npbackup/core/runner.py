@@ -324,6 +324,7 @@ class NPBackupRunner:
                 "find": ["backup", "restore", "full"],
                 "restore": ["restore", "full"],
                 "check": ["restore", "full"],
+                "unlock": ["full"],
                 "repair": ["full"],
                 "forget": ["full"],
                 "prune": ["full"],
@@ -792,9 +793,34 @@ class NPBackupRunner:
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    def forget(self, snapshots: Union[List[str], str]) -> bool:
+    def forget(self, snapshots: Optional[Union[List[str], str]] = None, use_policy: bool = None) -> bool:
         self.write_logs(f"Forgetting snapshots {snapshots}", level="info")
-        result = self.restic_runner.forget(snapshots)
+        if snapshots:
+            result = self.restic_runner.forget(snapshots)
+        elif use_policy:
+            # Build policiy
+            # policy = {'keep-within-hourly': 123}
+            policy = {}
+            for entry in ["last", "hourly", "daily", "weekly", "monthly", "yearly"]:
+                value = self.repo_config.g(f"repo_opts.retention_strategy.{entry}")
+                if value:
+                    if not self.repo_config.g("repo_opts.retention_strategy.within"):
+                        policy[f"keep-{entry}"] = value
+                    else:
+                        # We need to add a type value for keep-within
+                        policy[f"keep-within-{entry}"] = value
+            keep_tags = self.repo_config.g("repo_opts.retention_strategy.tags")
+            if not isinstance(keep_tags, list) and keep_tags:
+                keep_tags = [keep_tags]
+                policy["keep-tags"] = keep_tags
+            # Fool proof, don't run without policy, or else we'll get 
+            if not policy:
+                self.write_logs(f"Empty retention policy. Won't run", level="error")
+                return False
+            self.write_logs(f"Retention policy:\n{policy}", level="info")
+            result = self.restic_runner.forget(policy=policy)
+        else:
+            self.write_logs("Bogus options given to forget: snapshots={snapshots}, policy={policy}", level="critical", raise_error=True)
         return result
 
     @exec_timer
@@ -817,9 +843,12 @@ class NPBackupRunner:
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    def prune(self) -> bool:
+    def prune(self, max: bool = False) -> bool:
         self.write_logs(f"Pruning snapshots for repo {self.repo_config.g('name')}", level="info")
-        result = self.restic_runner.prune()
+        if max:
+            max_unused = self.repo_config.g("prune_max_unused")
+            max_repack_size = self.repo_config.g("prune_max_repack_size")
+        result = self.restic_runner.prune(max_unused=max_unused, max_repack_size=max_repack_size)
         return result
 
     @exec_timer
@@ -831,6 +860,17 @@ class NPBackupRunner:
     def repair(self, subject: str) -> bool:
         self.write_logs(f"Repairing {subject} in repo {self.repo_config.g('name')}", level="info")
         result = self.restic_runner.repair(subject)
+        return result
+
+    @exec_timer
+    @close_queues
+    @threaded
+    @has_permission
+    @is_ready
+    @apply_config_to_restic_runner
+    def unlock(self) -> bool:
+        self.write_logs(f"Unlocking repo {self.repo_config.g('name')}", level="info")
+        result = self.restic_runner.unlock()
         return result
 
     @exec_timer
