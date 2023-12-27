@@ -838,9 +838,10 @@ class ResticRunner:
         Expects a restic snasphot_list (which is most recent at the end ordered)
         Returns bool if delta (in minutes) is not reached since last successful backup, and returns the last backup timestamp
         """
+        backup_ts = datetime(1, 1, 1, 0, 0)
         # Don't bother to deal with mising delta or snapshot list
         if not snapshot_list or not delta:
-            return False, datetime(1, 1, 1, 0, 0)
+            return False, backup_ts
         tz_aware_timestamp = datetime.now(timezone.utc).astimezone()
         # Begin with most recent snapshot
         snapshot_list.reverse()
@@ -858,6 +859,7 @@ class ResticRunner:
                         f"Recent snapshot {snapshot['short_id']} of {snapshot['time']} exists !"
                     )
                     return True, backup_ts
+        return None, backup_ts
 
     def has_snapshot_timedelta(
         self, delta: int = None
