@@ -647,7 +647,7 @@ def _main_gui(viewer_mode: bool):
                 sg.Popup(_t("main_gui.cannot_get_repo_status"))
 
 
-def main_gui(viewer_mode=True):
+def main_gui(viewer_mode=False):
     atexit.register(
         npbackup.common.execution_logs,
         datetime.utcnow(),
