@@ -133,16 +133,6 @@ class NPBackupRunner:
         self._using_dev_binary = False
 
     @property
-    def repo_name(self) -> str:
-        return self._repo_name
-
-    @repo_name.setter
-    def repo_name(self, value: str):
-        if not isinstance(value, str) or not value:
-            msg = f"Bogus repo name {value} found"
-            self.write_logs(msg, level="critical", raise_error="ValueError")
-
-    @property
     def repo_config(self) -> dict:
         return self._repo_config
 
@@ -152,7 +142,6 @@ class NPBackupRunner:
             msg = f"Bogus repo config object given"
             self.write_logs(msg, level="critical", raise_error="ValueError")
         self._repo_config = deepcopy(value)
-        self.repo_name = self.repo_config.g("name")
         # Create an instance of restic wrapper
         self.create_restic_runner()
 
@@ -271,6 +260,7 @@ class NPBackupRunner:
             # pylint: disable=E1102 (not-callable)
             result = fn(self, *args, **kwargs)
             self.exec_time = (datetime.utcnow() - start_time).total_seconds()
+            # pylint: disable=E1101 (no-member)
             self.write_logs(
                 f"Runner took {self.exec_time} seconds for {fn.__name__}", level="info"
             )
@@ -286,6 +276,7 @@ class NPBackupRunner:
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
             close_queues = kwargs.pop("close_queues", True)
+            # pylint: disable=E1102 (not-callable)
             result = fn(self, *args, **kwargs)
             if close_queues:
                 if self.stdout:
@@ -304,11 +295,13 @@ class NPBackupRunner:
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
             if not self._is_ready:
+                # pylint: disable=E1101 (no-member)
                 self.write_logs(
                     f"Runner cannot execute {fn.__name__}. Backend not ready",
                     level="error",
                 )
                 return False
+            # pylint: disable=E1102 (not-callable)
             return fn(self, *args, **kwargs)
 
         return wrapper
@@ -337,9 +330,11 @@ class NPBackupRunner:
             try:
                 # When running group_runner, we need to extract operation from kwargs
                 # else, operarion is just the wrapped function name
+                # pylint: disable=E1101 (no-member)
                 if fn.__name__ == "group_runner":
                     operation = kwargs.get("operation")
                 else:
+                    # pylint: disable=E1101 (no-member)
                     operation = fn.__name__
                 # TODO: enforce permissions
                 self.write_logs(
@@ -349,6 +344,7 @@ class NPBackupRunner:
             except (IndexError, KeyError):
                 self.write_logs("You don't have sufficient permissions", level="error")
                 return False
+            # pylint: disable=E1102 (not-callable)
             return fn(self, *args, **kwargs)
 
         return wrapper
@@ -362,6 +358,7 @@ class NPBackupRunner:
         def wrapper(self, *args, **kwargs):
             if not self._apply_config_to_restic_runner():
                 return False
+            # pylint: disable=E1102 (not-callable)
             return fn(self, *args, **kwargs)
 
         return wrapper
@@ -374,8 +371,10 @@ class NPBackupRunner:
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
             try:
+                # pylint: disable=E1102 (not-callable)
                 return fn(self, *args, **kwargs)
             except Exception as exc:
+                # pylint: disable=E1101 (no-member)
                 self.write_logs(f"Function {fn.__name__} failed with: {exc}")
                 logger.debug("Trace:", exc_info=True)
                 return False

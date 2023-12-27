@@ -19,6 +19,7 @@ __SPECIAL_DEBUG_STRING = ""
 __debug_os_env = os.environ.get("_DEBUG", "False").strip("'\"")
 
 try:
+    # pylint: disable=E0601 (used-before-assignment)
     _DEBUG
 except NameError:
     _DEBUG = False

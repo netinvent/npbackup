@@ -693,7 +693,7 @@ class ResticRunner:
             except json.decoder.JSONDecodeError:
                 self.write_logs(f"Returned data is not JSON:\n{output}", level="error")
                 logger.debug("Trace:", exc_info=True)
-        self.write_logs(f"Could not find path: {path}")
+        self.write_logs(f"Could not find path: {path}", level="error")
         return None
 
     def restore(self, snapshot: str, target: str, includes: List[str] = None):
@@ -903,7 +903,7 @@ class ResticRunner:
             snapshots = self.snapshots()
             if self.last_command_status is False:
                 return None, None
-            return self.has_snapshot_timedelta(snapshots, delta)
+            return self._has_snapshot_timedelta(snapshots, delta)
         except IndexError as exc:
             self.write_logs(f"snapshot information missing: {exc}", level="error")
             logger.debug("Trace", exc_info=True)

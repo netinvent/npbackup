@@ -728,7 +728,7 @@ def main_gui(viewer_mode=False):
         sys.exit(250)
     except Exception as exc:
         sg.Popup(_t("config_gui.unknown_error_see_logs") + f": {exc}")
-        logger.critical("GUI Execution error", exc)
+        logger.critical(f"GUI Execution error {exc}")
         if _DEBUG:
             logger.critical("Trace:", exc_info=True)
         sys.exit(251)
