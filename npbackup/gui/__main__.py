@@ -13,6 +13,7 @@ __build__ = "2023121701"
 from typing import List, Optional, Tuple
 import sys
 import os
+import re
 from pathlib import Path
 import ofunctions.logger_utils
 from datetime import datetime
@@ -51,6 +52,7 @@ from npbackup.__version__ import version_string
 from npbackup.__debug__ import _DEBUG
 from npbackup.gui.config import config_gui
 from npbackup.gui.operations import operations_gui
+from npbackup.restic_wrapper import ResticRunner
 
 
 LOG_FILE = os.path.join(CURRENT_DIR, "{}.log".format(__intname__))
@@ -125,13 +127,18 @@ def about_gui(version_string: str, full_config: dict) -> None:
 def get_gui_data(repo_config: dict) -> Tuple[bool, List[str]]:
     gui_msg = _t("main_gui.loading_snapshot_list_from_repo")
     snapshots = gui_thread_runner(repo_config, "list", __gui_msg=gui_msg, __autoclose=True, __compact=True)
+    current_state, backup_tz = ResticRunner._has_snapshot_timedelta(snapshots, repo_config.g("repo_opts.minimum_backup_age"))
     snapshot_list = []
     if snapshots:
         snapshots.reverse()  # Let's show newer snapshots first
         for snapshot in snapshots:
-            snapshot_date = dateutil.parser.parse(snapshot["time"]).strftime(
-                "%Y-%m-%d %H:%M:%S"
-            )
+            if re.match(
+                    r"[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]\..*\+[0-2][0-9]:[0-9]{2}",
+                    snapshot["time"],
+                ):
+                snapshot_date = dateutil.parser.parse(snapshot["time"]).strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                snapshot_date = "Unparsable"
             snapshot_username = snapshot["username"]
             snapshot_hostname = snapshot["hostname"]
             snapshot_id = snapshot["short_id"]
@@ -148,8 +155,6 @@ def get_gui_data(repo_config: dict) -> Tuple[bool, List[str]]:
                     snapshot_tags,
                 ]
             )
-    gui_msg = _t("main_gui.loading_last_snapshot_date")
-    current_state, backup_tz = gui_thread_runner(repo_config, "check_recent_backups", __gui_msg=gui_msg, __autoclose=True)
     return current_state, backup_tz, snapshot_list
     
 

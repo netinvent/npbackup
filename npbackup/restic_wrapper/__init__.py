@@ -829,9 +829,38 @@ class ResticRunner:
             return True, output
         self.write_logs("Raw command failed.", level="error")
         return False, output
+    
+    @staticmethod
+    def _has_snapshot_timedelta(snapshot_list: List, delta: int = None) -> Tuple[bool, Optional[datetime]]:
+        """
+        Making the actual comparaison a static method so we can call it from GUI too
+
+        Expects a restic snasphot_list (which is most recent at the end ordered)
+        Returns bool if delta (in minutes) is not reached since last successful backup, and returns the last backup timestamp
+        """
+        # Don't bother to deal with mising delta or snapshot list
+        if not snapshot_list or not delta:
+            return False, datetime(1, 1, 1, 0, 0)
+        tz_aware_timestamp = datetime.now(timezone.utc).astimezone()
+        # Begin with most recent snapshot
+        snapshot_list.reverse()
+        for snapshot in snapshot_list:
+            if re.match(
+                r"[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]\..*\+[0-2][0-9]:[0-9]{2}",
+                snapshot["time"],
+            ):
+                backup_ts = dateutil.parser.parse(snapshot["time"])
+                snapshot_age_minutes = (
+                    tz_aware_timestamp - backup_ts
+                ).total_seconds() / 60
+                if delta - snapshot_age_minutes > 0:
+                    logger.info(
+                        f"Recent snapshot {snapshot['short_id']} of {snapshot['time']} exists !"
+                    )
+                    return True, backup_ts
 
     def has_snapshot_timedelta(
-        self, delta: int = 1441
+        self, delta: int = None
     ) -> Tuple[bool, Optional[datetime]]:
         """
         Checks if a snapshot exists that is newer that delta minutes
@@ -845,31 +874,14 @@ class ResticRunner:
         """
         if not self.is_init:
             return None
+        # Don't bother to deal with mising delta
+        if not delta:
+            return False, None
         try:
             snapshots = self.snapshots()
             if self.last_command_status is False:
                 return None, None
-            if not snapshots:
-                return False, datetime(1, 1, 1, 0, 0)
-
-            tz_aware_timestamp = datetime.now(timezone.utc).astimezone()
-            # Begin with most recent snapshot
-            snapshots.reverse()
-            for snapshot in snapshots:
-                if re.match(
-                    r"[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]\..*\+[0-2][0-9]:[0-9]{2}",
-                    snapshot["time"],
-                ):
-                    backup_ts = dateutil.parser.parse(snapshot["time"])
-                    snapshot_age_minutes = (
-                        tz_aware_timestamp - backup_ts
-                    ).total_seconds() / 60
-                    if delta - snapshot_age_minutes > 0:
-                        self.write_logs(
-                            f"Recent snapshot {snapshot['short_id']} of {snapshot['time']} exists !", level='info'
-                        )
-                        return True, backup_ts
-            return False, backup_ts
+            return self.has_snapshot_timedelta(snapshots, delta)
         except IndexError as exc:
             self.write_logs(f"snapshot information missing: {exc}", level="error")
             logger.debug("Trace", exc_info=True)
