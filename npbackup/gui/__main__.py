@@ -21,6 +21,7 @@ import dateutil
 from time import sleep
 from ruamel.yaml.comments import CommentedMap
 import atexit
+from ofunctions.process import kill_childs
 from ofunctions.threading import threaded
 from ofunctions.misc import BytesConverter
 import PySimpleGUI as sg
@@ -719,6 +720,11 @@ def main_gui(viewer_mode=False):
     atexit.register(
         npbackup.common.execution_logs,
         datetime.utcnow(),
+    )
+    # kill_childs normally would not be necessary, but let's just be foolproof here (kills restic subprocess in all cases)
+    atexit.register(
+        kill_childs,
+        os.getpid(),
     )
     try:
         _main_gui(viewer_mode=viewer_mode)
