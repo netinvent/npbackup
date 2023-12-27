@@ -1,5 +1,5 @@
 fr:
-  loading_snapshot_list_from_repo: Chargement liste des instantanés depuis le dépit
+  loading_snapshot_list_from_repo: Chargement liste des instantanés depuis le dépot
   loading_last_snapshot_date: Chargement date du dernier instantané
   this_will_take_a_while: Cela prendra quelques instants
   cannot_get_content: Impossible d'obtenir le contenu. Veuillez vérifier les journaux
