@@ -76,6 +76,12 @@ def gui_thread_runner(__repo_config: dict, __fn_name: str, __compact: bool = Tru
     also gets stdout and stderr queues output into gui window
     Has a grace period after thread end to get queue output, so we can see whenever a thread dies of mysterious causes
     """
+
+    def _upgrade_from_compact_view():
+        for key in ('-OPERATIONS-PROGRESS-STDOUT-TITLE-', '-OPERATIONS-PROGRESS-STDOUT-',
+                    '-OPERATIONS-PROGRESS-STDERR-TITLE-', '-OPERATIONS-PROGRESS-STDERR-'):
+            progress_window[key].Update(visible=True)
+
     runner = NPBackupRunner()
     # So we don't always init repo_config, since runner.group_runner would do that itself
     if __repo_config:
@@ -96,9 +102,9 @@ def gui_thread_runner(__repo_config: dict, __fn_name: str, __compact: bool = Tru
         # Replaced by custom title bar
         # [sg.Text(__gui_msg, text_color=GUI_LOADER_TEXT_COLOR, background_color=GUI_LOADER_COLOR, visible=__compact, justification='C')],
         [sg.Text(_t("main_gui.last_messages"), key="-OPERATIONS-PROGRESS-STDOUT-TITLE-", text_color=GUI_LOADER_TEXT_COLOR, background_color=GUI_LOADER_COLOR, visible=not __compact)],
-        [sg.Multiline(key="-OPERATIONS-PROGRESS-STDOUT-", size=(70, 5), visible=not __compact)],
+        [sg.Multiline(key="-OPERATIONS-PROGRESS-STDOUT-", size=(70, 5), visible=not __compact, autoscroll=True)],
         [sg.Text(_t("main_gui.error_messages"), key="-OPERATIONS-PROGRESS-STDERR-TITLE-", text_color=GUI_LOADER_TEXT_COLOR, background_color=GUI_LOADER_COLOR, visible=not __compact)],
-        [sg.Multiline(key="-OPERATIONS-PROGRESS-STDERR-", size=(70, 10), visible=not __compact)],
+        [sg.Multiline(key="-OPERATIONS-PROGRESS-STDERR-", size=(70, 10), visible=not __compact, autoscroll=True)],
         [sg.Column(
             [
                 [
@@ -123,11 +129,8 @@ def gui_thread_runner(__repo_config: dict, __fn_name: str, __compact: bool = Tru
     read_stderr_queue = True
     read_queues = True
     if USE_THREADING:
-        thread_alive = True
-        grace_counter = 100 # 2s since we read 2x queues with 0.01 seconds
         thread = fn(*args, **kwargs)
     else:
-        thread_alive = False
         kwargs = {
             **kwargs,
             **{"__no_threads": True}
@@ -150,7 +153,7 @@ def gui_thread_runner(__repo_config: dict, __fn_name: str, __compact: bool = Tru
                 read_stdout_queue = False
             else:
                 progress_window["-OPERATIONS-PROGRESS-STDOUT-"].Update(
-                    f"{progress_window['-OPERATIONS-PROGRESS-STDOUT-'].get()}\n{stdout_data}"
+                    f"\n{stdout_data}", append=True
                 )
 
         # Read stderr queue
@@ -168,28 +171,20 @@ def gui_thread_runner(__repo_config: dict, __fn_name: str, __compact: bool = Tru
                     for key in progress_window.AllKeysDict:
                         progress_window[key].Update(visible=True)
                 progress_window["-OPERATIONS-PROGRESS-STDERR-"].Update(
-                    f"{progress_window['-OPERATIONS-PROGRESS-STDERR-'].get()}\n{stderr_data}"
+                    f"\n{stderr_data}", append=True
                 )
 
-        if thread_alive:
-            thread_alive = not thread.done and not thread.cancelled()
         read_queues = read_stdout_queue or read_stderr_queue
         
-        if not thread_alive and not read_queues:
+        if not read_queues:
             # Arbitrary wait time so window get's time to get fully drawn
             sleep(.2)
             break
-        if USE_THREADING and not thread_alive and read_queues:
-            # Let's read the queue for a grace period if queues are not closed
-            grace_counter -= 1
-        
-        if USE_THREADING and grace_counter < 1:
-            progress_window["-OPERATIONS-PROGRESS-STDERR-"].Update(
-                f"{progress_window['-OPERATIONS-PROGRESS-STDERR-'].get()}\nGRACE COUNTER FOR output queues encountered. Thread probably died."
-            )
+
+        if stderr_has_messages:
+            _upgrade_from_compact_view()
             # Make sure we will keep the window visible since we have errors
             __autoclose = False
-            break
 
     # Keep the window open until user has done something
     progress_window["-LOADER-ANIMATION-"].Update(visible=False)
