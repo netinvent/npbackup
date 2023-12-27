@@ -143,40 +143,6 @@ def viewer_repo_gui(viewer_repo_uri: str = None, viewer_repo_password: str = Non
     window.close()
     return values['-REPO-URI-'], values['-REPO-PASSWORD-']
 
-def get_gui_data(repo_config: dict) -> Tuple[bool, List[str]]:
-    gui_msg = _t("main_gui.loading_snapshot_list_from_repo")
-    snapshots = gui_thread_runner(repo_config, "list", __gui_msg=gui_msg, __autoclose=True, __compact=True)
-    current_state, backup_tz = ResticRunner._has_snapshot_timedelta(snapshots, repo_config.g("repo_opts.minimum_backup_age"))
-    snapshot_list = []
-    if snapshots:
-        snapshots.reverse()  # Let's show newer snapshots first
-        for snapshot in snapshots:
-            if re.match(
-                    r"[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]\..*\+[0-2][0-9]:[0-9]{2}",
-                    snapshot["time"],
-                ):
-                snapshot_date = dateutil.parser.parse(snapshot["time"]).strftime("%Y-%m-%d %H:%M:%S")
-            else:
-                snapshot_date = "Unparsable"
-            snapshot_username = snapshot["username"]
-            snapshot_hostname = snapshot["hostname"]
-            snapshot_id = snapshot["short_id"]
-            try:
-                snapshot_tags = " [TAGS: {}]".format(snapshot["tags"])
-            except KeyError:
-                snapshot_tags = ""
-            snapshot_list.append(
-                [
-                    snapshot_id,
-                    snapshot_date,
-                    snapshot_hostname,
-                    snapshot_username,
-                    snapshot_tags,
-                ]
-            )
-    return current_state, backup_tz, snapshot_list
-    
-
 
 @threaded
 def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
@@ -449,6 +415,41 @@ def _main_gui(viewer_mode: bool):
 
         window["snapshot-list"].Update(snapshot_list)
 
+    def get_gui_data(repo_config: dict) -> Tuple[bool, List[str]]:
+        window['--STATE-BUTTON--'].Update(
+            _t("generic.please_wait"), button_color="orange"
+        )
+        gui_msg = _t("main_gui.loading_snapshot_list_from_repo")
+        snapshots = gui_thread_runner(repo_config, "list", __gui_msg=gui_msg, __autoclose=True, __compact=True)
+        current_state, backup_tz = ResticRunner._has_snapshot_timedelta(snapshots, repo_config.g("repo_opts.minimum_backup_age"))
+        snapshot_list = []
+        if snapshots:
+            snapshots.reverse()  # Let's show newer snapshots first
+            for snapshot in snapshots:
+                if re.match(
+                        r"[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]\..*\+[0-2][0-9]:[0-9]{2}",
+                        snapshot["time"],
+                    ):
+                    snapshot_date = dateutil.parser.parse(snapshot["time"]).strftime("%Y-%m-%d %H:%M:%S")
+                else:
+                    snapshot_date = "Unparsable"
+                snapshot_username = snapshot["username"]
+                snapshot_hostname = snapshot["hostname"]
+                snapshot_id = snapshot["short_id"]
+                try:
+                    snapshot_tags = " [TAGS: {}]".format(snapshot["tags"])
+                except KeyError:
+                    snapshot_tags = ""
+                snapshot_list.append(
+                    [
+                        snapshot_id,
+                        snapshot_date,
+                        snapshot_hostname,
+                        snapshot_username,
+                        snapshot_tags,
+                    ]
+                )
+        return current_state, backup_tz, snapshot_list
 
     if not viewer_mode:
         config_file = Path(f"{CURRENT_DIR}/npbackup.conf")
