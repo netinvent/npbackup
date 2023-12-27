@@ -300,7 +300,8 @@ class ResticRunner:
         # From here, we assume that we have errors
         # We'll log them unless we tried to know if the repo is initialized
         if not errors_allowed and output:
-            self.write_logs(output, level="error")
+            # We won't write to stdout/stderr queues since command_runner already did that for us
+            logger.error(output)
         return False, output
 
     @property
