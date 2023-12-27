@@ -25,6 +25,7 @@ from npbackup.__debug__ import _DEBUG
 
 logger = getLogger()
 
+
 # Arbitrary timeout for init / init checks.
 # If init takes more than a minute, we really have a problem
 INIT_TIMEOUT = 60
@@ -37,10 +38,14 @@ class ResticRunner:
         password: str,
         binary_search_paths: List[str] = None,
     ) -> None:
+        self._stdout = None
+        self._stderr = None
+        
         self.repository = str(repository).strip()
         self.password = str(password).strip()
         self._verbose = False
         self._dry_run = False
+
         self._binary = None
         self.binary_search_paths = binary_search_paths
         self._get_binary()
@@ -77,8 +82,6 @@ class ResticRunner:
             None  # Function which will make executor abort if result is True
         )
         self._executor_finished = False  # Internal value to check whether executor is done, accessed via self.executor_finished property
-        self._stdout = None
-        self._stderr = None
 
     def on_exit(self) -> bool:
         self._executor_finished = True
@@ -92,7 +95,7 @@ class ResticRunner:
             try:
                 os.environ["RESTIC_PASSWORD"] = str(self.password)
             except TypeError:
-                logger.error("Bogus restic password")
+                self.write_logs("Bogus restic password", level="critical")
                 self.password = None
         if self.repository:
             try:
@@ -101,11 +104,11 @@ class ResticRunner:
                     self.repository = os.path.expandvars(self.repository)
                 os.environ["RESTIC_REPOSITORY"] = str(self.repository)
             except TypeError:
-                logger.error("Bogus restic repository")
+                self.write_logs("Bogus restic repository", level="critical")
                 self.repository = None
 
         for env_variable, value in self.environment_variables.items():
-            logger.debug('Setting envrionment variable "{}"'.format(env_variable))
+            self.write_logs(f'Setting envrionment variable "{env_variable}"', level="debug")
             os.environ[env_variable] = value
 
         # Configure default cpu usage when not specifically set
@@ -117,6 +120,7 @@ class ResticRunner:
                 gomaxprocs = nb_cores - 1
             elif nb_cores > 4:
                 gomaxprocs = nb_cores - 2
+            # No need to use write_logs here
             logger.debug("Setting GOMAXPROCS to {}".format(gomaxprocs))
             os.environ["GOMAXPROCS"] = str(gomaxprocs)
 
@@ -211,7 +215,9 @@ class ResticRunner:
             logger.debug(msg)
         else:
             raise ValueError("Bogus log level given {level}")
-
+        
+        if msg is None:
+            raise ValueError("None log message received")
         if self.stdout and (level == 'info' or (level == 'debug' and _DEBUG)):
             self.stdout.put(msg)
         if self.stderr and level in ('critical', 'error', 'warning'):
@@ -226,14 +232,13 @@ class ResticRunner:
         self,
         cmd: str,
         errors_allowed: bool = False,
+        no_output_queues: bool = False,
         timeout: int = None,
-        live_stream=False,  # TODO remove live stream since everything is live
     ) -> Tuple[bool, str]:
         """
         Executes restic with given command
-
-        When using live_stream, we'll have command_runner fill stdout queue, which is useful for interactive GUI programs, but slower, especially for ls operation
-
+        errors_allowed is needed since we're testing if repo is already initialized
+        no_output_queues is needed since we don't want is_init output to be logged
         """
         start_time = datetime.utcnow()
         self._executor_finished = False
@@ -247,36 +252,22 @@ class ResticRunner:
             _cmd += " --dry-run"
         self.write_logs(f"Running command: [{_cmd}]", level="debug")
         self._make_env()
-        if live_stream:
-            exit_code, output = command_runner(
-                _cmd,
-                timeout=timeout,
-                split_streams=False,
-                encoding="utf-8",
-                live_output=self.verbose,
-                valid_exit_codes=errors_allowed,
-                stdout=None, # TODO we need other local queues to get subprocess output into gui queues
-                stderr=None,
-                stop_on=self.stop_on,
-                on_exit=self.on_exit,
-                method="poller",
-                priority=self.priority,
-                io_priority=self.priority,
-            )
-        else:
-            exit_code, output = command_runner(
-                _cmd,
-                timeout=timeout,
-                split_streams=False,
-                encoding="utf-8",
-                live_output=self.verbose,
-                valid_exit_codes=errors_allowed,
-                stop_on=self.stop_on,
-                on_exit=self.on_exit,
-                method="monitor",
-                priority=self._priority,
-                io_priority=self._priority,
-            )
+
+        exit_code, output = command_runner(
+            _cmd,
+            timeout=timeout,
+            split_streams=False,
+            encoding="utf-8",
+            stdout=self.stdout if not no_output_queues else None,
+            stderr=self.stderr if not no_output_queues else None,
+            no_close_queues=True,
+            valid_exit_codes=errors_allowed,
+            stop_on=self.stop_on,
+            on_exit=self.on_exit,
+            method="poller",
+            priority=self._priority,
+            io_priority=self._priority,
+        )
         # Don't keep protected environment variables in memory when not necessary
         self._remove_env()
 
@@ -309,7 +300,7 @@ class ResticRunner:
         # From here, we assume that we have errors
         # We'll log them unless we tried to know if the repo is initialized
         if not errors_allowed and output:
-            logger.error(output)
+            self.write_logs(output, level="error")
         return False, output
 
     @property
@@ -343,8 +334,8 @@ class ResticRunner:
             if os.path.isfile(probed_path):
                 self._binary = probed_path
                 return
-        logger.error(
-            "No backup engine binary found. Please install latest binary from restic.net"
+        self.write_logs(
+            "No backup engine binary found. Please install latest binary from restic.net", level="error"
         )
 
     @property
@@ -390,7 +381,7 @@ class ResticRunner:
                     self._backend_connections = 8
 
         except TypeError:
-            logger.warning("Bogus backend_connections value given.")
+            self.write_logs("Bogus backend_connections value given.", level="warning")
 
     @property
     def additional_parameters(self):
@@ -445,9 +436,9 @@ class ResticRunner:
             if exit_code == 0:
                 return output.strip()
             else:
-                logger.error("Cannot get backend version: {}".format(output))
+                self.write_logs("Cannot get backend version: {output}", level="warning")
         else:
-            logger.error("Cannot get backend version: No binary defined.")
+            self.write_logs("Cannot get backend version: No binary defined.", level="error")
         return None
 
     @property
@@ -477,8 +468,9 @@ class ResticRunner:
         cmd = "init --repository-version {} --compression {}".format(
             repository_version, compression
         )
+        # We don't want output_queues here since we don't want is already inialized errors to show up
         result, output = self.executor(
-            cmd, errors_allowed=errors_allowed, timeout=INIT_TIMEOUT
+            cmd, errors_allowed=errors_allowed, no_output_queues=True, timeout=INIT_TIMEOUT,
         )
         if result:
             if re.search(
@@ -488,10 +480,10 @@ class ResticRunner:
                 return True
         else:
             if re.search(".*already exists", output, re.IGNORECASE):
-                logger.info("Repo already initialized.")
+                self.write_logs("Repo is initialized.", level="info")
                 self.is_init = True
                 return True
-            logger.error(f"Cannot contact repo: {output}")
+            self.write_logs(f"Cannot contact repo: {output}", level="error")
             self.is_init = False
             return False
         self.is_init = False
@@ -527,7 +519,7 @@ class ResticRunner:
             try:
                 return json.loads(output)
             except json.decoder.JSONDecodeError:
-                logger.error("Returned data is not JSON:\n{}".format(output))
+                self.write_logs(f"Returned data is not JSON:\n{output}", level="error")
                 logger.debug("Trace:", exc_info=True)
         return None
 
@@ -552,7 +544,7 @@ class ResticRunner:
                     if line:
                         yield json.loads(line)
             except json.decoder.JSONDecodeError:
-                logger.error("Returned data is not JSON:\n{}".format(output))
+                self.write_logs(f"Returned data is not JSON:\n{output}", level="error")
                 logger.debug("Trace:", exc_info=True)
         return result
 
@@ -568,7 +560,7 @@ class ResticRunner:
             try:
                 return json.loads(output)
             except json.decoder.JSONDecodeError:
-                logger.error("Returned data is not JSON:\n{}".format(output))
+                self.write_logs(f"Returned data is not JSON:\n{output}", level="error")
                 logger.debug("Trace:", exc_info=True)
                 return False
         return None
@@ -591,7 +583,7 @@ class ResticRunner:
         """
         if not self.is_init:
             return None, None
-
+        
         # Handle various source types
         if exclude_patterns_source_type in [
             "files_from",
@@ -606,7 +598,7 @@ class ResticRunner:
             elif exclude_patterns_source_type == "files_from_raw":
                 source_parameter = "--files-from-raw"
             else:
-                logger.error("Bogus source type given")
+                self.write_logs("Bogus source type given", level="error")
                 return False, ""
 
             for path in paths:
@@ -638,7 +630,7 @@ class ResticRunner:
                         case_ignore_param, exclude_file
                     )
                 else:
-                    logger.error('Exclude file "{}" not found'.format(exclude_file))
+                    self.write_logs(f"Exclude file '{exclude_file}' not found", level="error")
         if exclude_caches:
             cmd += " --exclude-caches"
         if one_file_system:
@@ -646,10 +638,10 @@ class ResticRunner:
         if use_fs_snapshot:
             if os.name == "nt":
                 cmd += " --use-fs-snapshot"
-                logger.info("Using VSS snapshot to backup")
+                self.write_logs("Using VSS snapshot to backup", level="info")
             else:
-                logger.warning(
-                    "Parameter --use-fs-snapshot was given, which is only compatible with Windows"
+                self.write_logs(
+                    "Parameter --use-fs-snapshot was given, which is only compatible with Windows", level="warning"
                 )
         for tag in tags:
             if tag:
@@ -657,19 +649,21 @@ class ResticRunner:
                 cmd += " --tag {}".format(tag)
         if additional_backup_only_parameters:
             cmd += " {}".format(additional_backup_only_parameters)
-        result, output = self.executor(cmd, live_stream=True)
+        result, output = self.executor(cmd)
 
         if (
             use_fs_snapshot
             and not result
             and re.search("VSS Error", output, re.IGNORECASE)
         ):
-            logger.warning("VSS cannot be used. Backup will be done without VSS.")
+            self.write_logs("VSS cannot be used. Backup will be done without VSS.", level="error")
             result, output = self.executor(
-                cmd.replace(" --use-fs-snapshot", ""), live_stream=True
+                cmd.replace(" --use-fs-snapshot", "")
             )
         if result:
+            self.write_logs("Backend finished backup with success", level="info")
             return True, output
+        self.write_logs("Backup failed backup operation", level="error")
         return False, output
 
     def find(self, path: str) -> Optional[list]:
@@ -681,13 +675,13 @@ class ResticRunner:
         cmd = 'find "{}" --json'.format(path)
         result, output = self.executor(cmd)
         if result:
-            logger.info("Successfuly found {}".format(path))
+            self.write_logs(f"Successfuly found {path}", level="info")
             try:
                 return json.loads(output)
             except json.decoder.JSONDecodeError:
-                logger.error("Returned data is not JSON:\n{}".format(output))
+                self.write_logs(f"Returned data is not JSON:\n{output}", level="error")
                 logger.debug("Trace:", exc_info=True)
-        logger.warning("Could not find path: {}".format(path))
+        self.write_logs(f"Could not find path: {path}")
         return None
 
     def restore(self, snapshot: str, target: str, includes: List[str] = None):
@@ -707,9 +701,9 @@ class ResticRunner:
                     cmd += ' --{}include "{}"'.format(case_ignore_param, include)
         result, output = self.executor(cmd)
         if result:
-            logger.info("successfully restored data.")
+            self.write_logs("successfully restored data.", level="info")
             return True
-        logger.critical("Data not restored: {}".format(output))
+        self.write_logs(f"Data not restored: {output}", level="info")
         return False
 
     def forget(
@@ -774,9 +768,9 @@ class ResticRunner:
         result, output = self.executor(cmd)
         self.verbose = verbose
         if result:
-            logger.info("Successfully pruned repository:\n{}".format(output))
+            self.write_logs(f"Successfully pruned repository:\n{output}", level="info")
             return True
-        logger.critical("Could not prune repository:\n{}".format(output))
+        self.write_logs(f"Could not prune repository:\n{output}", level="error")
         return False
 
     def check(self, read_data: bool = True) -> bool:
@@ -871,15 +865,13 @@ class ResticRunner:
                         tz_aware_timestamp - backup_ts
                     ).total_seconds() / 60
                     if delta - snapshot_age_minutes > 0:
-                        logger.debug(
-                            "Recent snapshot {} of {} exists !".format(
-                                snapshot["short_id"], snapshot["time"]
-                            )
+                        self.write_logs(
+                            f"Recent snapshot {snapshot['short_id']} of {snapshot['time']} exists !", level='info'
                         )
                         return True, backup_ts
             return False, backup_ts
         except IndexError as exc:
-            logger.debug("snapshot information missing: {}".format(exc))
+            self.write_logs(f"snapshot information missing: {exc}", level="error")
             logger.debug("Trace", exc_info=True)
             # No 'time' attribute in snapshot ?
             return None, None
