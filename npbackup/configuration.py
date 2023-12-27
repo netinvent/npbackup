@@ -186,7 +186,7 @@ empty_config_dict = {
                 "yearly": 3,
                 "tags": [],
                 "within": True,
-                "ntp_time_server": None, # TODO
+                "ntp_time_server": None,  # TODO
             },
             "prune_max_unused": None,
             "prune_max_repack_size": None,
@@ -433,7 +433,7 @@ def get_repo_config(
                             _config_inheritance.s(key, False)
 
             return _repo_config, _config_inheritance
-        
+
         return _inherit_group_settings(_repo_config, _group_config, _config_inheritance)
 
     try:

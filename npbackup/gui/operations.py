@@ -59,7 +59,11 @@ def operations_gui(full_config: dict) -> dict:
     """
 
     # This is a stupid hack to make sure uri column is large enough
-    headings = ["Name      ", "Backend", "URI                                                  "]
+    headings = [
+        "Name      ",
+        "Backend",
+        "URI                                                  ",
+    ]
 
     layout = [
         [
@@ -91,44 +95,49 @@ def operations_gui(full_config: dict) -> dict:
                     ],
                     [
                         sg.Button(
-                            _t("operations_gui.quick_check"), key="--QUICK-CHECK--",
-                            size=(45, 1)
+                            _t("operations_gui.quick_check"),
+                            key="--QUICK-CHECK--",
+                            size=(45, 1),
                         ),
                         sg.Button(
-                            _t("operations_gui.full_check"), key="--FULL-CHECK--",
-                            size=(45, 1)
-                        ),
-                    ],
-                    [
-                        sg.Button(
-                            _t("operations_gui.repair_index"), key="--REPAIR-INDEX--",
-                            size=(45, 1)
-                        ),
-                        sg.Button(
-                            _t("operations_gui.repair_snapshots"), key="--REPAIR-SNAPSHOTS--",
-                            size=(45, 1)
+                            _t("operations_gui.full_check"),
+                            key="--FULL-CHECK--",
+                            size=(45, 1),
                         ),
                     ],
                     [
                         sg.Button(
-                            _t("operations_gui.unlock"), key="--UNLOCK--",
-                            size=(45, 1)
+                            _t("operations_gui.repair_index"),
+                            key="--REPAIR-INDEX--",
+                            size=(45, 1),
+                        ),
+                        sg.Button(
+                            _t("operations_gui.repair_snapshots"),
+                            key="--REPAIR-SNAPSHOTS--",
+                            size=(45, 1),
+                        ),
+                    ],
+                    [
+                        sg.Button(
+                            _t("operations_gui.unlock"), key="--UNLOCK--", size=(45, 1)
                         ),
                         sg.Button(
                             _t("operations_gui.forget_using_retention_policy"),
                             key="--FORGET--",
-                            size=(45, 1)
-                        )
+                            size=(45, 1),
+                        ),
                     ],
                     [
                         sg.Button(
                             _t("operations_gui.standard_prune"),
                             key="--STANDARD-PRUNE--",
-                            size=(45, 1)
+                            size=(45, 1),
                         ),
-                        sg.Button(_t("operations_gui.max_prune"), key="--MAX-PRUNE--",
-                                  size=(45, 1)
-                                  ),
+                        sg.Button(
+                            _t("operations_gui.max_prune"),
+                            key="--MAX-PRUNE--",
+                            size=(45, 1),
+                        ),
                     ],
                     [sg.Button(_t("generic.quit"), key="--EXIT--")],
                 ],
@@ -140,7 +149,7 @@ def operations_gui(full_config: dict) -> dict:
     window = sg.Window(
         "Configuration",
         layout,
-        #size=(600, 600),
+        # size=(600, 600),
         text_justification="C",
         auto_size_text=True,
         auto_size_buttons=True,
@@ -181,11 +190,15 @@ def operations_gui(full_config: dict) -> dict:
                     continue
                 repos = complete_repo_list
             else:
-                repos = complete_repo_list.index(values["repo-list"]) # TODO multi select
+                repos = complete_repo_list.index(
+                    values["repo-list"]
+                )  # TODO multi select
 
             repo_config_list = []
             for repo_name, backend_type, repo_uri in repos:
-                repo_config, config_inheritance = configuration.get_repo_config(full_config, repo_name)
+                repo_config, config_inheritance = configuration.get_repo_config(
+                    full_config, repo_name
+                )
                 repo_config_list.append((repo_name, repo_config))
             if event == "--FORGET--":
                 operation = "forget"
@@ -219,7 +232,16 @@ def operations_gui(full_config: dict) -> dict:
                 operation = "prune"
                 op_args = {"max": True}
                 gui_msg = _t("operations_gui.max_prune")
-            result = gui_thread_runner(None, 'group_runner', operation=operation, repo_config_list=repo_config_list, __autoclose=False, __compact=False, __gui_msg=gui_msg, **op_args)
+            result = gui_thread_runner(
+                None,
+                "group_runner",
+                operation=operation,
+                repo_config_list=repo_config_list,
+                __autoclose=False,
+                __compact=False,
+                __gui_msg=gui_msg,
+                **op_args,
+            )
 
             event = "---STATE-UPDATE---"
         if event == "---STATE-UPDATE---":

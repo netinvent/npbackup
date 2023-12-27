@@ -40,7 +40,7 @@ class ResticRunner:
     ) -> None:
         self._stdout = None
         self._stderr = None
-        
+
         self.repository = str(repository).strip()
         self.password = str(password).strip()
         self._verbose = False
@@ -108,7 +108,9 @@ class ResticRunner:
                 self.repository = None
 
         for env_variable, value in self.environment_variables.items():
-            self.write_logs(f'Setting envrionment variable "{env_variable}"', level="debug")
+            self.write_logs(
+                f'Setting envrionment variable "{env_variable}"', level="debug"
+            )
             os.environ[env_variable] = value
 
         # Configure default cpu usage when not specifically set
@@ -203,26 +205,26 @@ class ResticRunner:
         """
         Write logs to log file and stdout / stderr queues if exist for GUI usage
         """
-        if level == 'warning':
+        if level == "warning":
             logger.warning(msg)
-        elif level == 'error':
+        elif level == "error":
             logger.error(msg)
-        elif level == 'critical':
+        elif level == "critical":
             logger.critical(msg)
-        elif level == 'info':
+        elif level == "info":
             logger.info(msg)
-        elif level == 'debug':
+        elif level == "debug":
             logger.debug(msg)
         else:
             raise ValueError("Bogus log level given {level}")
-        
+
         if msg is None:
             raise ValueError("None log message received")
-        if self.stdout and (level == 'info' or (level == 'debug' and _DEBUG)):
+        if self.stdout and (level == "info" or (level == "debug" and _DEBUG)):
             self.stdout.put(msg)
-        if self.stderr and level in ('critical', 'error', 'warning'):
+        if self.stderr and level in ("critical", "error", "warning"):
             self.stderr.put(msg)
-        
+
         if raise_error == "ValueError":
             raise ValueError(msg)
         elif raise_error:
@@ -336,7 +338,8 @@ class ResticRunner:
                 self._binary = probed_path
                 return
         self.write_logs(
-            "No backup engine binary found. Please install latest binary from restic.net", level="error"
+            "No backup engine binary found. Please install latest binary from restic.net",
+            level="error",
         )
 
     @property
@@ -439,7 +442,9 @@ class ResticRunner:
             else:
                 self.write_logs("Cannot get backend version: {output}", level="warning")
         else:
-            self.write_logs("Cannot get backend version: No binary defined.", level="error")
+            self.write_logs(
+                "Cannot get backend version: No binary defined.", level="error"
+            )
         return None
 
     @property
@@ -471,7 +476,10 @@ class ResticRunner:
         )
         # We don't want output_queues here since we don't want is already inialized errors to show up
         result, output = self.executor(
-            cmd, errors_allowed=errors_allowed, no_output_queues=True, timeout=INIT_TIMEOUT,
+            cmd,
+            errors_allowed=errors_allowed,
+            no_output_queues=True,
+            timeout=INIT_TIMEOUT,
         )
         if result:
             if re.search(
@@ -584,7 +592,7 @@ class ResticRunner:
         """
         if not self.is_init:
             return None, None
-        
+
         # Handle various source types
         if exclude_patterns_source_type in [
             "files_from",
@@ -631,7 +639,9 @@ class ResticRunner:
                         case_ignore_param, exclude_file
                     )
                 else:
-                    self.write_logs(f"Exclude file '{exclude_file}' not found", level="error")
+                    self.write_logs(
+                        f"Exclude file '{exclude_file}' not found", level="error"
+                    )
         if exclude_caches:
             cmd += " --exclude-caches"
         if one_file_system:
@@ -642,7 +652,8 @@ class ResticRunner:
                 self.write_logs("Using VSS snapshot to backup", level="info")
             else:
                 self.write_logs(
-                    "Parameter --use-fs-snapshot was given, which is only compatible with Windows", level="warning"
+                    "Parameter --use-fs-snapshot was given, which is only compatible with Windows",
+                    level="warning",
                 )
         for tag in tags:
             if tag:
@@ -657,10 +668,10 @@ class ResticRunner:
             and not result
             and re.search("VSS Error", output, re.IGNORECASE)
         ):
-            self.write_logs("VSS cannot be used. Backup will be done without VSS.", level="error")
-            result, output = self.executor(
-                cmd.replace(" --use-fs-snapshot", "")
+            self.write_logs(
+                "VSS cannot be used. Backup will be done without VSS.", level="error"
             )
+            result, output = self.executor(cmd.replace(" --use-fs-snapshot", ""))
         if result:
             self.write_logs("Backend finished backup with success", level="info")
             return True, output
@@ -708,7 +719,9 @@ class ResticRunner:
         return False
 
     def forget(
-        self, snapshots: Optional[Union[List[str], Optional[str]]] = None, policy: Optional[dict] = None
+        self,
+        snapshots: Optional[Union[List[str], Optional[str]]] = None,
+        policy: Optional[dict] = None,
     ) -> bool:
         """
         Execute forget command for given snapshot
@@ -716,7 +729,9 @@ class ResticRunner:
         if not self.is_init:
             return None
         if not snapshots and not policy:
-            self.write_logs("No valid snapshot or policy defined for pruning", level="error")
+            self.write_logs(
+                "No valid snapshot or policy defined for pruning", level="error"
+            )
             return False
 
         if snapshots:
@@ -729,7 +744,7 @@ class ResticRunner:
         if policy:
             cmd = "forget"
             for key, value in policy.items():
-                if key == 'keep-tags':
+                if key == "keep-tags":
                     if isinstance(value, list):
                         for tag in value:
                             if tag:
@@ -746,14 +761,16 @@ class ResticRunner:
             for cmd in cmds:
                 result, output = self.executor(cmd)
                 if result:
-                    self.write_logs("successfully forgot snapshot", level='info')
+                    self.write_logs("successfully forgot snapshot", level="info")
                 else:
                     self.write_logs(f"Forget failed\n{output}", level="error")
                     batch_result = False
         self.verbose = verbose
         return batch_result
 
-    def prune(self, max_unused: Optional[str] = None, max_repack_size: Optional[int] = None) -> bool:
+    def prune(
+        self, max_unused: Optional[str] = None, max_repack_size: Optional[int] = None
+    ) -> bool:
         """
         Prune forgotten snapshots
         """
@@ -803,7 +820,7 @@ class ResticRunner:
             return True
         self.write_logs(f"Repo repair failed:\n {output}", level="critical")
         return False
-    
+
     def unlock(self) -> bool:
         """
         Remove stale locks from repos
@@ -830,9 +847,11 @@ class ResticRunner:
             return True, output
         self.write_logs("Raw command failed.", level="error")
         return False, output
-    
+
     @staticmethod
-    def _has_snapshot_timedelta(snapshot_list: List, delta: int = None) -> Tuple[bool, Optional[datetime]]:
+    def _has_snapshot_timedelta(
+        snapshot_list: List, delta: int = None
+    ) -> Tuple[bool, Optional[datetime]]:
         """
         Making the actual comparaison a static method so we can call it from GUI too
 

@@ -41,7 +41,7 @@ from npbackup.customization import (
     LICENSE_TEXT,
     LICENSE_FILE,
     PYSIMPLEGUI_THEME,
-    OEM_ICON
+    OEM_ICON,
 )
 from npbackup.gui.config import config_gui
 from npbackup.gui.operations import operations_gui
@@ -122,26 +122,38 @@ def about_gui(version_string: str, full_config: dict = None) -> None:
     window.close()
 
 
-def viewer_repo_gui(viewer_repo_uri: str = None, viewer_repo_password: str = None) -> Tuple[str, str]:
+def viewer_repo_gui(
+    viewer_repo_uri: str = None, viewer_repo_password: str = None
+) -> Tuple[str, str]:
     """
     Ask for repo and password if not defined in env variables
     """
     layout = [
-        [sg.Text(_t("config_gui.backup_repo_uri"), size=(35, 1)), sg.Input(viewer_repo_uri, key="-REPO-URI-")],
-        [sg.Text(_t("config_gui.backup_repo_password"), size=(35, 1)), sg.Input(viewer_repo_password, key="-REPO-PASSWORD-", password_char='*')],
-        [sg.Push(), sg.Button(_t("generic.cancel"), key="--CANCEL--"), sg.Button(_t("generic.accept"), key="--ACCEPT--")]
+        [
+            sg.Text(_t("config_gui.backup_repo_uri"), size=(35, 1)),
+            sg.Input(viewer_repo_uri, key="-REPO-URI-"),
+        ],
+        [
+            sg.Text(_t("config_gui.backup_repo_password"), size=(35, 1)),
+            sg.Input(viewer_repo_password, key="-REPO-PASSWORD-", password_char="*"),
+        ],
+        [
+            sg.Push(),
+            sg.Button(_t("generic.cancel"), key="--CANCEL--"),
+            sg.Button(_t("generic.accept"), key="--ACCEPT--"),
+        ],
     ]
     window = sg.Window("Viewer", layout, keep_on_top=True, grab_anywhere=True)
     while True:
         event, values = window.read()
-        if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, '--CANCEL--'):
+        if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--CANCEL--"):
             break
-        if event == '--ACCEPT--':
-            if values['-REPO-URI-'] and values['-REPO-PASSWORD-']:
+        if event == "--ACCEPT--":
+            if values["-REPO-URI-"] and values["-REPO-PASSWORD-"]:
                 break
             sg.Popup(_t("main_gui.repo_and_password_cannot_be_empty"))
     window.close()
-    return values['-REPO-URI-'], values['-REPO-PASSWORD-']
+    return values["-REPO-URI-"], values["-REPO-PASSWORD-"]
 
 
 @threaded
@@ -203,7 +215,9 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
 
 
 def ls_window(repo_config: dict, snapshot_id: str) -> bool:
-    snapshot_content = gui_thread_runner(repo_config, 'ls', snapshot=snapshot_id, __autoclose=True, __compact=True)
+    snapshot_content = gui_thread_runner(
+        repo_config, "ls", snapshot=snapshot_id, __autoclose=True, __compact=True
+    )
     if not snapshot_content:
         return snapshot_content, None
 
@@ -303,18 +317,26 @@ def ls_window(repo_config: dict, snapshot_id: str) -> bool:
         Since closing a sg.Treedata takes alot of time, let's thread it into background
         """
         window.close
+
     _close_win()
     return True
 
 
 def restore_window(
     repo_config: dict, snapshot_id: str, restore_include: List[str]
-) -> None: 
+) -> None:
     def _restore_window(
-    repo_config: dict, snapshot: str, target: str, restore_includes: Optional[List]
+        repo_config: dict, snapshot: str, target: str, restore_includes: Optional[List]
     ) -> bool:
-        result = gui_thread_runner(repo_config, "restore", snapshot=snapshot, target=target, restore_includes=restore_includes)
+        result = gui_thread_runner(
+            repo_config,
+            "restore",
+            snapshot=snapshot,
+            target=target,
+            restore_includes=restore_includes,
+        )
         return result
+
     left_col = [
         [
             sg.Text(_t("main_gui.destination_folder")),
@@ -338,7 +360,12 @@ def restore_window(
         if event == "restore":
             # on_success = _t("main_gui.restore_done")
             # on_failure = _t("main_gui.restore_failed")
-            result = _restore_window(repo_config, snapshot=snapshot_id, target=values["-RESTORE-FOLDER-"], restore_includes=restore_include)
+            result = _restore_window(
+                repo_config,
+                snapshot=snapshot_id,
+                target=values["-RESTORE-FOLDER-"],
+                restore_includes=restore_include,
+            )
             break
     window.close()
     return result
@@ -348,7 +375,14 @@ def backup(repo_config: dict) -> bool:
     gui_msg = _t("main_gui.backup_activity")
     # on_success = _t("main_gui.backup_done")
     # on_failure = _t("main_gui.backup_failed")
-    result = gui_thread_runner(repo_config, 'backup', force=True, __autoclose=False, __compact=False, __gui_msg=gui_msg)
+    result = gui_thread_runner(
+        repo_config,
+        "backup",
+        force=True,
+        __autoclose=False,
+        __compact=False,
+        __gui_msg=gui_msg,
+    )
     return result
 
 
@@ -356,12 +390,17 @@ def forget_snapshot(repo_config: dict, snapshot_ids: List[str]) -> bool:
     gui_msg = f"{_t('generic.forgetting')} {snapshot_ids} {_t('main_gui.this_will_take_a_while')}"
     # on_success = f"{snapshot_ids} {_t('generic.forgotten')} {_t('generic.successfully')}"
     # on_failure = _t("main_gui.forget_failed")
-    result = gui_thread_runner(repo_config, "forget", snapshots=snapshot_ids, __gui_msg=gui_msg, __autoclose=True)
+    result = gui_thread_runner(
+        repo_config,
+        "forget",
+        snapshots=snapshot_ids,
+        __gui_msg=gui_msg,
+        __autoclose=True,
+    )
     return result
 
 
 def _main_gui(viewer_mode: bool):
-
     def select_config_file():
         """
         Option to select a configuration file
@@ -396,7 +435,9 @@ def _main_gui(viewer_mode: bool):
     def gui_update_state() -> None:
         if current_state:
             window["--STATE-BUTTON--"].Update(
-                "{}: {}".format(_t("generic.up_to_date"), backup_tz.replace(microsecond=0)),
+                "{}: {}".format(
+                    _t("generic.up_to_date"), backup_tz.replace(microsecond=0)
+                ),
                 button_color=GUI_STATE_OK_BUTTON,
             )
         elif current_state is False and backup_tz == datetime(1, 1, 1, 0, 0):
@@ -405,7 +446,9 @@ def _main_gui(viewer_mode: bool):
             )
         elif current_state is False:
             window["--STATE-BUTTON--"].Update(
-                "{}: {}".format(_t("generic.too_old"), backup_tz.replace(microsecond=0)),
+                "{}: {}".format(
+                    _t("generic.too_old"), backup_tz.replace(microsecond=0)
+                ),
                 button_color=GUI_STATE_OLD_BUTTON,
             )
         elif current_state is None:
@@ -416,21 +459,27 @@ def _main_gui(viewer_mode: bool):
         window["snapshot-list"].Update(snapshot_list)
 
     def get_gui_data(repo_config: dict) -> Tuple[bool, List[str]]:
-        window['--STATE-BUTTON--'].Update(
+        window["--STATE-BUTTON--"].Update(
             _t("generic.please_wait"), button_color="orange"
         )
         gui_msg = _t("main_gui.loading_snapshot_list_from_repo")
-        snapshots = gui_thread_runner(repo_config, "list", __gui_msg=gui_msg, __autoclose=True, __compact=True)
-        current_state, backup_tz = ResticRunner._has_snapshot_timedelta(snapshots, repo_config.g("repo_opts.minimum_backup_age"))
+        snapshots = gui_thread_runner(
+            repo_config, "list", __gui_msg=gui_msg, __autoclose=True, __compact=True
+        )
+        current_state, backup_tz = ResticRunner._has_snapshot_timedelta(
+            snapshots, repo_config.g("repo_opts.minimum_backup_age")
+        )
         snapshot_list = []
         if snapshots:
             snapshots.reverse()  # Let's show newer snapshots first
             for snapshot in snapshots:
                 if re.match(
-                        r"[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]\..*\+[0-2][0-9]:[0-9]{2}",
-                        snapshot["time"],
-                    ):
-                    snapshot_date = dateutil.parser.parse(snapshot["time"]).strftime("%Y-%m-%d %H:%M:%S")
+                    r"[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]\..*\+[0-2][0-9]:[0-9]{2}",
+                    snapshot["time"],
+                ):
+                    snapshot_date = dateutil.parser.parse(snapshot["time"]).strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
                 else:
                     snapshot_date = "Unparsable"
                 snapshot_username = snapshot["username"]
@@ -477,7 +526,9 @@ def _main_gui(viewer_mode: bool):
         viewer_repo_uri = os.environ.get("RESTIC_REPOSITORY", None)
         viewer_repo_password = os.environ.get("RESTIC_PASSWORD", None)
         if not viewer_repo_uri or not viewer_repo_password:
-            viewer_repo_uri, viewer_repo_password = viewer_repo_gui(viewer_repo_uri, viewer_repo_password)
+            viewer_repo_uri, viewer_repo_password = viewer_repo_gui(
+                viewer_repo_uri, viewer_repo_password
+            )
         repo_config.s("repo_uri", viewer_repo_uri)
         repo_config.s("repo_opts", CommentedMap())
         repo_config.s("repo_opts.repo_password", viewer_repo_password)
@@ -504,7 +555,9 @@ def _main_gui(viewer_mode: bool):
                         sg.Column(
                             [
                                 [sg.Text(OEM_STRING, font="Arial 14")],
-                                [sg.Text(_t("main_gui.viewer_mode"))] if viewer_mode else [],
+                                [sg.Text(_t("main_gui.viewer_mode"))]
+                                if viewer_mode
+                                else [],
                                 [sg.Text("{}: ".format(_t("main_gui.backup_state")))],
                                 [
                                     sg.Button(
@@ -528,7 +581,9 @@ def _main_gui(viewer_mode: bool):
                             enable_events=True,
                         ),
                         sg.Text(f"Type {backend_type}", key="-backend_type-"),
-                    ] if not viewer_mode else [],
+                    ]
+                    if not viewer_mode
+                    else [],
                     [
                         sg.Table(
                             values=[[]],
@@ -541,12 +596,24 @@ def _main_gui(viewer_mode: bool):
                     ],
                     [
                         sg.Button(
-                            _t("main_gui.launch_backup"), key="--LAUNCH-BACKUP--", disabled=viewer_mode
+                            _t("main_gui.launch_backup"),
+                            key="--LAUNCH-BACKUP--",
+                            disabled=viewer_mode,
                         ),
                         sg.Button(_t("main_gui.see_content"), key="--SEE-CONTENT--"),
-                        sg.Button(_t("generic.forget"), key="--FORGET--", disabled=viewer_mode), # TODO , visible=False if repo_config.g("permissions") != "full" else True),
-                        sg.Button(_t("main_gui.operations"), key="--OPERATIONS--", disabled=viewer_mode),
-                        sg.Button(_t("generic.configure"), key="--CONFIGURE--", disabled=viewer_mode),
+                        sg.Button(
+                            _t("generic.forget"), key="--FORGET--", disabled=viewer_mode
+                        ),  # TODO , visible=False if repo_config.g("permissions") != "full" else True),
+                        sg.Button(
+                            _t("main_gui.operations"),
+                            key="--OPERATIONS--",
+                            disabled=viewer_mode,
+                        ),
+                        sg.Button(
+                            _t("generic.configure"),
+                            key="--CONFIGURE--",
+                            disabled=viewer_mode,
+                        ),
                         sg.Button(_t("generic.about"), key="--ABOUT--"),
                         sg.Button(_t("generic.quit"), key="--EXIT--"),
                     ],

@@ -17,14 +17,14 @@ import re
 import queue
 import PySimpleGUI as sg
 from npbackup.core.i18n_helper import _t
-from npbackup.customization import LOADER_ANIMATION, GUI_LOADER_COLOR, GUI_LOADER_TEXT_COLOR
+from npbackup.customization import (
+    LOADER_ANIMATION,
+    GUI_LOADER_COLOR,
+    GUI_LOADER_TEXT_COLOR,
+)
 from npbackup.core.runner import NPBackupRunner
 from npbackup.__debug__ import _DEBUG
-from npbackup.customization import (
-    PYSIMPLEGUI_THEME,
-    OEM_ICON,
-    OEM_LOGO
-)
+from npbackup.customization import PYSIMPLEGUI_THEME, OEM_ICON, OEM_LOGO
 
 logger = getLogger()
 
@@ -70,7 +70,15 @@ def get_anon_repo_uri(repository: str) -> Tuple[str, str]:
     return backend_type, backend_uri
 
 
-def gui_thread_runner(__repo_config: dict, __fn_name: str, __compact: bool = True, __autoclose: bool = False, __gui_msg: str = "", *args, **kwargs):
+def gui_thread_runner(
+    __repo_config: dict,
+    __fn_name: str,
+    __compact: bool = True,
+    __autoclose: bool = False,
+    __gui_msg: str = "",
+    *args,
+    **kwargs,
+):
     """
     Runs any NPBackupRunner functions in threads for GUI
     also gets stdout and stderr queues output into gui window
@@ -78,8 +86,12 @@ def gui_thread_runner(__repo_config: dict, __fn_name: str, __compact: bool = Tru
     """
 
     def _upgrade_from_compact_view():
-        for key in ('-OPERATIONS-PROGRESS-STDOUT-TITLE-', '-OPERATIONS-PROGRESS-STDOUT-',
-                    '-OPERATIONS-PROGRESS-STDERR-TITLE-', '-OPERATIONS-PROGRESS-STDERR-'):
+        for key in (
+            "-OPERATIONS-PROGRESS-STDOUT-TITLE-",
+            "-OPERATIONS-PROGRESS-STDOUT-",
+            "-OPERATIONS-PROGRESS-STDERR-TITLE-",
+            "-OPERATIONS-PROGRESS-STDERR-",
+        ):
             progress_window[key].Update(visible=True)
 
     runner = NPBackupRunner()
@@ -89,7 +101,9 @@ def gui_thread_runner(__repo_config: dict, __fn_name: str, __compact: bool = Tru
     stdout_queue = queue.Queue()
     stderr_queue = queue.Queue()
     fn = getattr(runner, __fn_name)
-    logger.debug(f"gui_thread_runner runs {fn.__name__} {'with' if USE_THREADING else 'without'} threads")
+    logger.debug(
+        f"gui_thread_runner runs {fn.__name__} {'with' if USE_THREADING else 'without'} threads"
+    )
 
     runner.stdout = stdout_queue
     runner.stderr = stderr_queue
@@ -101,28 +115,88 @@ def gui_thread_runner(__repo_config: dict, __fn_name: str, __compact: bool = Tru
     progress_layout = [
         # Replaced by custom title bar
         # [sg.Text(__gui_msg, text_color=GUI_LOADER_TEXT_COLOR, background_color=GUI_LOADER_COLOR, visible=__compact, justification='C')],
-        [sg.Text(_t("main_gui.last_messages"), key="-OPERATIONS-PROGRESS-STDOUT-TITLE-", text_color=GUI_LOADER_TEXT_COLOR, background_color=GUI_LOADER_COLOR, visible=not __compact)],
-        [sg.Multiline(key="-OPERATIONS-PROGRESS-STDOUT-", size=(70, 5), visible=not __compact, autoscroll=True)],
-        [sg.Text(_t("main_gui.error_messages"), key="-OPERATIONS-PROGRESS-STDERR-TITLE-", text_color=GUI_LOADER_TEXT_COLOR, background_color=GUI_LOADER_COLOR, visible=not __compact)],
-        [sg.Multiline(key="-OPERATIONS-PROGRESS-STDERR-", size=(70, 10), visible=not __compact, autoscroll=True)],
-        [sg.Column(
-            [
+        [
+            sg.Text(
+                _t("main_gui.last_messages"),
+                key="-OPERATIONS-PROGRESS-STDOUT-TITLE-",
+                text_color=GUI_LOADER_TEXT_COLOR,
+                background_color=GUI_LOADER_COLOR,
+                visible=not __compact,
+            )
+        ],
+        [
+            sg.Multiline(
+                key="-OPERATIONS-PROGRESS-STDOUT-",
+                size=(70, 5),
+                visible=not __compact,
+                autoscroll=True,
+            )
+        ],
+        [
+            sg.Text(
+                _t("main_gui.error_messages"),
+                key="-OPERATIONS-PROGRESS-STDERR-TITLE-",
+                text_color=GUI_LOADER_TEXT_COLOR,
+                background_color=GUI_LOADER_COLOR,
+                visible=not __compact,
+            )
+        ],
+        [
+            sg.Multiline(
+                key="-OPERATIONS-PROGRESS-STDERR-",
+                size=(70, 10),
+                visible=not __compact,
+                autoscroll=True,
+            )
+        ],
+        [
+            sg.Column(
                 [
-                    sg.Image(LOADER_ANIMATION, key="-LOADER-ANIMATION-", background_color=GUI_LOADER_COLOR, visible=USE_THREADING)
+                    [
+                        sg.Image(
+                            LOADER_ANIMATION,
+                            key="-LOADER-ANIMATION-",
+                            background_color=GUI_LOADER_COLOR,
+                            visible=USE_THREADING,
+                        )
+                    ],
+                    [sg.Text("Debugging active", visible=not USE_THREADING)],
                 ],
-                [
-                    sg.Text("Debugging active", visible=not USE_THREADING)
-                ]
-            ], expand_x=True, justification='C', element_justification='C', background_color=GUI_LOADER_COLOR)],
-        [sg.Button(_t("generic.close"), key="--EXIT--", button_color=(GUI_LOADER_TEXT_COLOR, GUI_LOADER_COLOR))],
+                expand_x=True,
+                justification="C",
+                element_justification="C",
+                background_color=GUI_LOADER_COLOR,
+            )
+        ],
+        [
+            sg.Button(
+                _t("generic.close"),
+                key="--EXIT--",
+                button_color=(GUI_LOADER_TEXT_COLOR, GUI_LOADER_COLOR),
+            )
+        ],
     ]
 
     full_layout = [
-        [sg.Column(progress_layout, element_justification='C', expand_x=True, background_color=GUI_LOADER_COLOR)]
+        [
+            sg.Column(
+                progress_layout,
+                element_justification="C",
+                expand_x=True,
+                background_color=GUI_LOADER_COLOR,
+            )
+        ]
     ]
 
-    progress_window = sg.Window(__gui_msg, full_layout, use_custom_titlebar=True, grab_anywhere=True, keep_on_top=True,
-                                background_color=GUI_LOADER_COLOR, titlebar_icon=OEM_ICON)
+    progress_window = sg.Window(
+        __gui_msg,
+        full_layout,
+        use_custom_titlebar=True,
+        grab_anywhere=True,
+        keep_on_top=True,
+        background_color=GUI_LOADER_COLOR,
+        titlebar_icon=OEM_ICON,
+    )
     event, values = progress_window.read(timeout=0.01)
 
     read_stdout_queue = True
@@ -131,10 +205,7 @@ def gui_thread_runner(__repo_config: dict, __fn_name: str, __compact: bool = Tru
     if USE_THREADING:
         thread = fn(*args, **kwargs)
     else:
-        kwargs = {
-            **kwargs,
-            **{"__no_threads": True}
-        }
+        kwargs = {**kwargs, **{"__no_threads": True}}
         result = runner.__getattribute__(fn.__name__)(*args, **kwargs)
     while True:
         progress_window["-LOADER-ANIMATION-"].UpdateAnimation(
@@ -175,10 +246,10 @@ def gui_thread_runner(__repo_config: dict, __fn_name: str, __compact: bool = Tru
                 )
 
         read_queues = read_stdout_queue or read_stderr_queue
-        
+
         if not read_queues:
             # Arbitrary wait time so window get's time to get fully drawn
-            sleep(.2)
+            sleep(0.2)
             break
 
         if stderr_has_messages:
