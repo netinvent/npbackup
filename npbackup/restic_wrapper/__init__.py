@@ -813,6 +813,7 @@ class ResticRunner:
             return None
         if subject not in ["index", "snapshots"]:
             self.write_logs(f"Bogus repair order given: {subject}", level="error")
+            return False
         cmd = f"repair {subject}"
         result, output = self.executor(cmd)
         if result:
