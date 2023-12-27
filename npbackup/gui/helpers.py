@@ -20,9 +20,18 @@ from npbackup.core.i18n_helper import _t
 from npbackup.customization import LOADER_ANIMATION, GUI_LOADER_COLOR, GUI_LOADER_TEXT_COLOR
 from npbackup.core.runner import NPBackupRunner
 from npbackup.__debug__ import _DEBUG
-
+from npbackup.customization import (
+    PYSIMPLEGUI_THEME,
+    OEM_ICON,
+    OEM_LOGO
+)
 
 logger = getLogger()
+
+
+sg.theme(PYSIMPLEGUI_THEME)
+sg.SetOptions(icon=OEM_ICON)
+
 
 # For debugging purposes, we should be able to disable threading to see actual errors
 # out of thread
@@ -107,7 +116,7 @@ def gui_thread_runner(__repo_config: dict, __fn_name: str, __compact: bool = Tru
     ]
 
     progress_window = sg.Window(__gui_msg, full_layout, use_custom_titlebar=True, grab_anywhere=True, keep_on_top=True,
-                                background_color=GUI_LOADER_COLOR)
+                                background_color=GUI_LOADER_COLOR, titlebar_icon=OEM_ICON)
     event, values = progress_window.read(timeout=0.01)
 
     read_stdout_queue = True
@@ -137,6 +146,7 @@ def gui_thread_runner(__repo_config: dict, __fn_name: str, __compact: bool = Tru
             pass
         else:
             if stdout_data is None:
+                logger.debug("gui_thread_runner got stdout queue close signal")
                 read_stdout_queue = False
             else:
                 progress_window["-OPERATIONS-PROGRESS-STDOUT-"].Update(
@@ -150,6 +160,7 @@ def gui_thread_runner(__repo_config: dict, __fn_name: str, __compact: bool = Tru
             pass
         else:
             if stderr_data is None:
+                logger.debug("gui_thread_runner got stderr queue close signal")
                 read_stderr_queue = False
             else:
                 stderr_has_messages = True
