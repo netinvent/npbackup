@@ -245,6 +245,8 @@ class NPBackupRunner:
         else:
             raise ValueError("Bogus log level given {level}")
 
+        if msg is None:
+            raise ValueError("None log message received")
         if self.stdout and (level == 'info' or (level == 'debug' and _DEBUG)):
             self.stdout.put(msg)
         if self.stderr and level in ('critical', 'error', 'warning'):
@@ -718,6 +720,7 @@ class NPBackupRunner:
         else:
             self.write_logs(f"Running backup of {paths} to repo {self.repo_config.g('name')}", level="info")
 
+        pre_exec_commands_success = True
         if pre_exec_commands:
             for pre_exec_command in pre_exec_commands:
                 exit_code, output = command_runner(
@@ -729,6 +732,7 @@ class NPBackupRunner:
                     )
                     if pre_exec_failure_is_fatal:
                         return False
+                    pre_exec_commands_success = False
                 else:
                     self.write_logs(
                         "Pre-execution of command {pre_exec_command} success with:\n{output}.", level="info"
@@ -747,11 +751,12 @@ class NPBackupRunner:
             tags=tags,
             additional_backup_only_parameters=additional_backup_only_parameters,
         )
-        logger.debug(f"Restic output:\n{result_string}")
+        self.write_logs(f"Restic output:\n{result_string}", level="debug")
         metric_writer(
             self.repo_config, result, result_string, self.restic_runner.dry_run
         )
 
+        post_exec_commands_success = True
         if post_exec_commands:
             for post_exec_command in post_exec_commands:
                 exit_code, output = command_runner(
@@ -761,13 +766,17 @@ class NPBackupRunner:
                     self.write_logs(
                         f"Post-execution of command {post_exec_command} failed with:\n{output}", level="error"
                     )
+                    post_exec_commands_success = False
                     if post_exec_failure_is_fatal:
                         return False
                 else:
                     self.write_logs(
-                        "Post-execution of command {post_exec_command} success with:\n{output}.", level="info"
+                        f"Post-execution of command {post_exec_command} success with:\n{output}.", level="info"
                     )
-        return result
+
+        operation_result = result and pre_exec_commands_success and post_exec_commands_success    
+        self.write_logs(f"Operation finished with {'success' if operation_result else 'failure'}", level="info" if operation_result else "error")
+        return operation_result
 
     @exec_timer
     @close_queues
@@ -776,9 +785,6 @@ class NPBackupRunner:
     @is_ready
     @apply_config_to_restic_runner
     def restore(self, snapshot: str, target: str, restore_includes: List[str]) -> bool:
-        if not self.repo_config.g("permissions") in ["restore", "full"]:
-            self.write_logs(f"You don't have permissions to restore repo {self.repo_config.g('name')}", level="error")
-            return False
         self.write_logs(f"Launching restore to {target}", level="info")
         result = self.restic_runner.restore(
             snapshot=snapshot,
@@ -794,8 +800,8 @@ class NPBackupRunner:
     @is_ready
     @apply_config_to_restic_runner
     def forget(self, snapshots: Optional[Union[List[str], str]] = None, use_policy: bool = None) -> bool:
-        self.write_logs(f"Forgetting snapshots {snapshots}", level="info")
         if snapshots:
+            self.write_logs(f"Forgetting snapshots {snapshots}", level="info")
             result = self.restic_runner.forget(snapshots)
         elif use_policy:
             # Build policiy
@@ -817,7 +823,7 @@ class NPBackupRunner:
             if not policy:
                 self.write_logs(f"Empty retention policy. Won't run", level="error")
                 return False
-            self.write_logs(f"Retention policy:\n{policy}", level="info")
+            self.write_logs(f"Forgetting snapshots using retention policy: {policy}", level="info")
             result = self.restic_runner.forget(policy=policy)
         else:
             self.write_logs("Bogus options given to forget: snapshots={snapshots}, policy={policy}", level="critical", raise_error=True)
