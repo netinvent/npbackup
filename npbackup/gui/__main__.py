@@ -124,7 +124,7 @@ def about_gui(version_string: str, full_config: dict) -> None:
 
 def get_gui_data(repo_config: dict) -> Tuple[bool, List[str]]:
     gui_msg = _t("main_gui.loading_snapshot_list_from_repo")
-    snapshots = gui_thread_runner(repo_config, "list", __autoclose=True, __compact=True)
+    snapshots = gui_thread_runner(repo_config, "list", __gui_msg=gui_msg, __autoclose=True, __compact=True)
     snapshot_list = []
     if snapshots:
         snapshots.reverse()  # Let's show newer snapshots first
