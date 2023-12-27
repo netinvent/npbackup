@@ -35,6 +35,8 @@ en:
   forget_failed: Failed to forget. Please check the logs
   operations: Operations
   select_config_file: Select config file
+  repo_and_password_cannot_be_empty: Repo and password cannot be empty
+  viewer_mode: Repository view-only mode
 
   # logs
   last_messages: Last messages

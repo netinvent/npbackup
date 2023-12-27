@@ -19,6 +19,7 @@ import ofunctions.logger_utils
 from datetime import datetime
 import dateutil
 from time import sleep
+from ruamel.yaml.comments import CommentedMap
 import atexit
 from ofunctions.threading import threaded
 from ofunctions.misc import BytesConverter
@@ -58,15 +59,14 @@ from npbackup.restic_wrapper import ResticRunner
 LOG_FILE = os.path.join(CURRENT_DIR, "{}.log".format(__intname__))
 logger = ofunctions.logger_utils.logger_get_logger(LOG_FILE, debug=_DEBUG)
 
-
 sg.theme(PYSIMPLEGUI_THEME)
 sg.SetOptions(icon=OEM_ICON)
 
 
-def about_gui(version_string: str, full_config: dict) -> None:
+def about_gui(version_string: str, full_config: dict = None) -> None:
     license_content = LICENSE_TEXT
 
-    if full_config.g("global_options.auto_upgrade_server_url"):
+    if full_config and full_config.g("global_options.auto_upgrade_server_url"):
         auto_upgrade_result = check_new_version(full_config)
     else:
         auto_upgrade_result = None
@@ -122,7 +122,26 @@ def about_gui(version_string: str, full_config: dict) -> None:
     window.close()
 
 
-
+def viewer_repo_gui(viewer_repo_uri: str = None, viewer_repo_password: str = None) -> Tuple[str, str]:
+    """
+    Ask for repo and password if not defined in env variables
+    """
+    layout = [
+        [sg.Text(_t("config_gui.backup_repo_uri"), size=(35, 1)), sg.Input(viewer_repo_uri, key="-REPO-URI-")],
+        [sg.Text(_t("config_gui.backup_repo_password"), size=(35, 1)), sg.Input(viewer_repo_password, key="-REPO-PASSWORD-", password_char='*')],
+        [sg.Push(), sg.Button(_t("generic.cancel"), key="--CANCEL--"), sg.Button(_t("generic.accept"), key="--ACCEPT--")]
+    ]
+    window = sg.Window("Viewer", layout, keep_on_top=True, grab_anywhere=True)
+    while True:
+        event, values = window.read()
+        if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, '--CANCEL--'):
+            break
+        if event == '--ACCEPT--':
+            if values['-REPO-URI-'] and values['-REPO-PASSWORD-']:
+                break
+            sg.Popup(_t("main_gui.repo_and_password_cannot_be_empty"))
+    window.close()
+    return values['-REPO-URI-'], values['-REPO-PASSWORD-']
 
 def get_gui_data(repo_config: dict) -> Tuple[bool, List[str]]:
     gui_msg = _t("main_gui.loading_snapshot_list_from_repo")
@@ -224,28 +243,28 @@ def ls_window(repo_config: dict, snapshot_id: str) -> bool:
 
     try:
         # Since ls returns an iter now, we need to use next
-        snapshot_id = next(snapshot_content)
+        snapshot = next(snapshot_content)
     # Exception that happens when restic cannot successfully get snapshot content
     except StopIteration:
         return None, None
     try:
-        snap_date = dateutil.parser.parse(snapshot_id["time"])
+        snap_date = dateutil.parser.parse(snapshot["time"])
     except (KeyError, IndexError):
         snap_date = "[inconnu]"
     try:
-        short_id = snapshot_id["short_id"]
+        short_id = snapshot["short_id"]
     except (KeyError, IndexError):
         short_id = "[inconnu]"
     try:
-        username = snapshot_id["username"]
+        username = snapshot["username"]
     except (KeyError, IndexError):
         username = "[inconnu]"
     try:
-        hostname = snapshot_id["hostname"]
+        hostname = snapshot["hostname"]
     except (KeyError, IndexError):
         hostname = "[inconnu]"
 
-    backup_id = f" {_t('main_gui.backup_content_from')} {snap_date} {_t('main_gui.run_as')} {username}@{hostname} {_t('main_gui.identified_by')} {short_id}"
+    backup_id = f"{_t('main_gui.backup_content_from')} {snap_date} {_t('main_gui.run_as')} {username}@{hostname} {_t('main_gui.identified_by')} {short_id}"
 
     if not backup_id or not snapshot_content:
         sg.PopupError(_t("main_gui.cannot_get_content"), keep_on_top=True)
@@ -375,7 +394,8 @@ def forget_snapshot(repo_config: dict, snapshot_ids: List[str]) -> bool:
     return result
 
 
-def _main_gui():
+def _main_gui(viewer_mode: bool):
+
     def select_config_file():
         """
         Option to select a configuration file
@@ -430,24 +450,38 @@ def _main_gui():
         window["snapshot-list"].Update(snapshot_list)
 
 
-    config_file = Path(f"{CURRENT_DIR}/npbackup.conf")
-    if not config_file.exists():
-        while True:
-            config_file = select_config_file()
-            if config_file:
+    if not viewer_mode:
+        config_file = Path(f"{CURRENT_DIR}/npbackup.conf")
+        if not config_file.exists():
+            while True:
                 config_file = select_config_file()
-            else:
-                break
+                if config_file:
+                    config_file = select_config_file()
+                else:
+                    break
 
-    logger.info(f"Using configuration file {config_file}")
-    full_config = npbackup.configuration.load_config(config_file)
-    repo_config, config_inheritance = npbackup.configuration.get_repo_config(
-        full_config
-    )
-    repo_list = npbackup.configuration.get_repo_list(full_config)
+        logger.info(f"Using configuration file {config_file}")
+        full_config = npbackup.configuration.load_config(config_file)
+        repo_config, config_inheritance = npbackup.configuration.get_repo_config(
+            full_config
+        )
+        repo_list = npbackup.configuration.get_repo_list(full_config)
 
-    backup_destination = _t("main_gui.local_folder")
-    backend_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
+        backup_destination = _t("main_gui.local_folder")
+        backend_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
+    else:
+        # Init empty REPO
+        repo_config = CommentedMap()
+        repo_config.s("name", "external")
+        viewer_repo_uri = os.environ.get("RESTIC_REPOSITORY", None)
+        viewer_repo_password = os.environ.get("RESTIC_PASSWORD", None)
+        if not viewer_repo_uri or not viewer_repo_password:
+            viewer_repo_uri, viewer_repo_password = viewer_repo_gui(viewer_repo_uri, viewer_repo_password)
+        repo_config.s("repo_uri", viewer_repo_uri)
+        repo_config.s("repo_opts", CommentedMap())
+        repo_config.s("repo_opts.repo_password", viewer_repo_password)
+        # Let's set default backup age to 24h
+        repo_config.s("repo_opts.minimum_backup_age", 1440)
 
     right_click_menu = ["", [_t("generic.destination")]]
     headings = [
@@ -469,6 +503,7 @@ def _main_gui():
                         sg.Column(
                             [
                                 [sg.Text(OEM_STRING, font="Arial 14")],
+                                [sg.Text(_t("main_gui.viewer_mode"))] if viewer_mode else [],
                                 [sg.Text("{}: ".format(_t("main_gui.backup_state")))],
                                 [
                                     sg.Button(
@@ -492,7 +527,7 @@ def _main_gui():
                             enable_events=True,
                         ),
                         sg.Text(f"Type {backend_type}", key="-backend_type-"),
-                    ],
+                    ] if not viewer_mode else [],
                     [
                         sg.Table(
                             values=[[]],
@@ -505,12 +540,12 @@ def _main_gui():
                     ],
                     [
                         sg.Button(
-                            _t("main_gui.launch_backup"), key="--LAUNCH-BACKUP--"
+                            _t("main_gui.launch_backup"), key="--LAUNCH-BACKUP--", disabled=viewer_mode
                         ),
                         sg.Button(_t("main_gui.see_content"), key="--SEE-CONTENT--"),
-                        sg.Button(_t("generic.forget"), key="--FORGET--"), # TODO , visible=False if repo_config.g("permissions") != "full" else True),
-                        sg.Button(_t("main_gui.operations"), key="--OPERATIONS--"),
-                        sg.Button(_t("generic.configure"), key="--CONFIGURE--"),
+                        sg.Button(_t("generic.forget"), key="--FORGET--", disabled=viewer_mode), # TODO , visible=False if repo_config.g("permissions") != "full" else True),
+                        sg.Button(_t("main_gui.operations"), key="--OPERATIONS--", disabled=viewer_mode),
+                        sg.Button(_t("generic.configure"), key="--CONFIGURE--", disabled=viewer_mode),
                         sg.Button(_t("generic.about"), key="--ABOUT--"),
                         sg.Button(_t("generic.quit"), key="--EXIT--"),
                     ],
@@ -604,7 +639,7 @@ def _main_gui():
             except (TypeError, KeyError):
                 sg.PopupNoFrame(_t("main_gui.unknown_repo"))
         if event == "--ABOUT--":
-            about_gui(version_string, full_config)
+            about_gui(version_string, full_config if not viewer_mode else None)
         if event == "--STATE-BUTTON--":
             current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
             gui_update_state()
@@ -612,13 +647,13 @@ def _main_gui():
                 sg.Popup(_t("main_gui.cannot_get_repo_status"))
 
 
-def main_gui():
+def main_gui(viewer_mode=True):
     atexit.register(
         npbackup.common.execution_logs,
         datetime.utcnow(),
     )
     try:
-        _main_gui()
+        _main_gui(viewer_mode=viewer_mode)
         sys.exit(logger.get_worst_logger_level())
     except _tkinter.TclError as exc:
         logger.critical(f'Tkinter error: "{exc}". Is this a headless server ?')
