@@ -219,7 +219,7 @@ def operations_gui(full_config: dict) -> dict:
                 operation = "prune"
                 op_args = {"max": True}
                 gui_msg = _t("operations_gui.max_prune")
-            result = gui_thread_runner(None, 'group_runner', operation=operation, repo_config_list=repo_config_list, __gui_msg=gui_msg, **op_args)
+            result = gui_thread_runner(None, 'group_runner', operation=operation, repo_config_list=repo_config_list, __autoclose=False, __compact=False, __gui_msg=gui_msg, **op_args)
 
             event = "---STATE-UPDATE---"
         if event == "---STATE-UPDATE---":
