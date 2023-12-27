@@ -17,10 +17,9 @@ from pathlib import Path
 import ofunctions.logger_utils
 from datetime import datetime
 import dateutil
-import queue
 from time import sleep
 import atexit
-from ofunctions.threading import threaded, Future
+from ofunctions.threading import threaded
 from ofunctions.misc import BytesConverter
 import PySimpleGUI as sg
 import _tkinter
@@ -39,11 +38,12 @@ from npbackup.customization import (
     FILE_ICON,
     LICENSE_TEXT,
     LICENSE_FILE,
+    PYSIMPLEGUI_THEME,
+    OEM_ICON
 )
 from npbackup.gui.config import config_gui
 from npbackup.gui.operations import operations_gui
 from npbackup.gui.helpers import get_anon_repo_uri, gui_thread_runner
-from npbackup.core.runner import NPBackupRunner
 from npbackup.core.i18n_helper import _t
 from npbackup.core.upgrade_runner import run_upgrade, check_new_version
 from npbackup.path_helper import CURRENT_DIR
@@ -51,14 +51,10 @@ from npbackup.__version__ import version_string
 from npbackup.__debug__ import _DEBUG
 from npbackup.gui.config import config_gui
 from npbackup.gui.operations import operations_gui
-from npbackup.customization import (
-    PYSIMPLEGUI_THEME,
-    OEM_ICON,
-)
 
 
 LOG_FILE = os.path.join(CURRENT_DIR, "{}.log".format(__intname__))
-logger = ofunctions.logger_utils.logger_get_logger(LOG_FILE)
+logger = ofunctions.logger_utils.logger_get_logger(LOG_FILE, debug=_DEBUG)
 
 
 sg.theme(PYSIMPLEGUI_THEME)
@@ -298,7 +294,7 @@ def ls_window(repo_config: dict, snapshot_id: str) -> bool:
     )
     while True:
         event, values = window.read()
-        if event in (sg.WIN_CLOSED, sg.WIN_CLOSE_ATTEMPTED_EVENT, "quit"):
+        if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "quit"):
             break
         if event == "restore_to":
             if not values["-TREE-"]:
@@ -347,48 +343,31 @@ def restore_window(
     )
     while True:
         event, values = window.read()
-        if event in (sg.WIN_CLOSED, sg.WIN_CLOSE_ATTEMPTED_EVENT, "cancel"):
+        if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "cancel"):
             break
         if event == "restore":
+            # on_success = _t("main_gui.restore_done")
+            # on_failure = _t("main_gui.restore_failed")
             result = _restore_window(repo_config, snapshot=snapshot_id, target=values["-RESTORE-FOLDER-"], restore_includes=restore_include)
-            if result:
-                sg.Popup(
-                    _t("main_gui.restore_done"), keep_on_top=True
-                )
-            else:
-                sg.PopupError(
-                    _t("main_gui.restore_failed"), keep_on_top=True
-                )
             break
     window.close()
+    return result
 
 
 def backup(repo_config: dict) -> bool:
     gui_msg = _t("main_gui.backup_activity")
-    result = gui_thread_runner(repo_config, 'backup', force=True, __autoclose=True, __compact=False, __gui_msg=gui_msg)
-    if not result:
-        sg.PopupError(
-            _t("main_gui.backup_failed"), keep_on_top=True
-        )
-        return False
-    else:
-        sg.Popup(
-            _t("main_gui.backup_done"), keep_on_top=True
-        )
-        return True
+    # on_success = _t("main_gui.backup_done")
+    # on_failure = _t("main_gui.backup_failed")
+    result = gui_thread_runner(repo_config, 'backup', force=True, __autoclose=False, __compact=False, __gui_msg=gui_msg)
+    return result
 
 
 def forget_snapshot(repo_config: dict, snapshot_ids: List[str]) -> bool:
     gui_msg = f"{_t('generic.forgetting')} {snapshot_ids} {_t('main_gui.this_will_take_a_while')}"
+    # on_success = f"{snapshot_ids} {_t('generic.forgotten')} {_t('generic.successfully')}"
+    # on_failure = _t("main_gui.forget_failed")
     result = gui_thread_runner(repo_config, "forget", snapshots=snapshot_ids, __gui_msg=gui_msg, __autoclose=True)
-    if not result:
-        sg.PopupError(_t("main_gui.forget_failed"), keep_on_top=True)
-        return False
-    else:
-        sg.Popup(
-            f"{snapshot_ids} {_t('generic.forgotten')} {_t('generic.successfully')}"
-        )
-    return True
+    return result
 
 
 def _main_gui():
@@ -426,7 +405,7 @@ def _main_gui():
     def gui_update_state() -> None:
         if current_state:
             window["--STATE-BUTTON--"].Update(
-                "{}: {}".format(_t("generic.up_to_date"), backup_tz),
+                "{}: {}".format(_t("generic.up_to_date"), backup_tz.replace(microsecond=0)),
                 button_color=GUI_STATE_OK_BUTTON,
             )
         elif current_state is False and backup_tz == datetime(1, 1, 1, 0, 0):
