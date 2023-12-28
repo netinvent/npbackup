@@ -369,9 +369,11 @@ class NPBackupRunner:
         """
         Make sure there we don't allow concurrent actions
         """
+
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
             locking_operations = ["backup", "repair", "forget", "prune", "raw", "unlock"]
+            # pylint: disable=E1101 (no-member)
             if fn.__name__ in locking_operations:
                 pid_file = os.path.join(tempfile.gettempdir(), "{}.pid".format(__intname__))
                 try:
@@ -380,11 +382,10 @@ class NPBackupRunner:
                         result = fn(self, *args, **kwargs)
                 except pidfile.AlreadyRunningError:
                     # pylint: disable=E1101 (no-member)
-                    self.write_logs("There is already an operation {fn.__name__} running. Will not continue", level="critical")
+                    self.write_logs(f"There is already an {fn.__name__} operation running by NPBackup. Will not continue", level="critical")
                     return False
             else:
-                # pylint: disable=E1102 (not-callable)
-                result = fn(self, *args, **kwargs)
+                result = fn(self, *args, **kwargs)  # pylint: disable=E1102 (not-callable)
             return result
         
         return wrapper
@@ -808,7 +809,8 @@ class NPBackupRunner:
                 )
                 return False
         # Since we don't want to close queues nor create a subthread, we need to change behavior here
-        if self.has_recent_snapshot(__no_threads=True, __close_queues=False) and not force:
+        # pylint: disable=E1123 (unexpected-keyword-arg)
+        if self.has_recent_snapshot(__close_queues=False, __no_threads=True) and not force:
             self.write_logs("No backup necessary.", level="info")
             return True
         self.restic_runner.verbose = self.verbose
