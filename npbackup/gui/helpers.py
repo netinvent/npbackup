@@ -209,10 +209,9 @@ def gui_thread_runner(
         result = runner.__getattribute__(fn.__name__)(*args, **kwargs)
     while True:
         # No idea why pylint thingks that UpdateAnimation does not exist in PySimpleGUI
-        # pylint: disable=no-member
         progress_window["-LOADER-ANIMATION-"].UpdateAnimation(
             LOADER_ANIMATION, time_between_frames=100
-        )
+        )  # pylint: disable=E1101 (no-member)
         # So we actually need to read the progress window for it to refresh...
         _, _ = progress_window.read(0.01)
         # Read stdout queue
