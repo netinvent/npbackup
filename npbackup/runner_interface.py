@@ -25,7 +25,7 @@ def entrypoint(*args, **kwargs):
     npbackup_runner.repo_config = kwargs.pop("repo_config")
     npbackup_runner.dry_run = kwargs.pop("dry_run")
     npbackup_runner.verbose = kwargs.pop("verbose")
-    result = npbackup_runner.__getattribute__(kwargs.pop("operation"))(kwargs.pop("op_args"), __no_threads=True)
+    result = npbackup_runner.__getattribute__(kwargs.pop("operation"))(**kwargs.pop("op_args"), __no_threads=True)
 
 
 def auto_upgrade(full_config: dict):
