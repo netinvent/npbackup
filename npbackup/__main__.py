@@ -12,8 +12,6 @@ from pathlib import Path
 import atexit
 from argparse import ArgumentParser
 from datetime import datetime
-import tempfile
-import pidfile
 import ofunctions.logger_utils
 from ofunctions.process import kill_childs
 from npbackup.path_helper import CURRENT_DIR
@@ -39,7 +37,6 @@ except ImportError:
 
 
 LOG_FILE = os.path.join(CURRENT_DIR, "{}.log".format(__intname__))
-PID_FILE = os.path.join(tempfile.gettempdir(), "{}.pid".format(__intname__))
 
 
 logger = ofunctions.logger_utils.logger_get_logger(LOG_FILE, debug=_DEBUG)
@@ -316,22 +313,11 @@ This is free software, and you are welcome to redistribute it under certain cond
     elif args.has_recent_snapshot:
         cli_args["operation"] = "has_recent_snapshot"
     
+
     if cli_args["operation"]:
-        locking_operations = ["backup", "repair", "forget", "prune", "raw", "unlock"]
-        # Program entry
-        if cli_args["operation"] in locking_operations:
-            try:
-                with pidfile.PIDFile(PID_FILE):
-                    entrypoint(**cli_args)
-            except pidfile.AlreadyRunningError:
-                logger.critical("Backup process already running. Will not continue.")
-                # EXIT_CODE 21 = current backup process already running
-                sys.exit(21)
-        else:
-            entrypoint(**cli_args)
+        entrypoint(**cli_args)
     else:
         logger.warning("No operation has been requested")
-        
 
 
 def main():

@@ -13,6 +13,8 @@ __build__ = "2023083101"
 from typing import Optional, Callable, Union, List
 import os
 import logging
+import tempfile
+import pidfile
 import queue
 from datetime import datetime, timedelta
 from functools import wraps
@@ -362,10 +364,34 @@ class NPBackupRunner:
             return fn(self, *args, **kwargs)
 
         return wrapper
+    
+    def check_concurrency(fn: Callable):
+        """
+        Make sure there we don't allow concurrent actions
+        """
+        @wraps(fn)
+        def wrapper(self, *args, **kwargs):
+            locking_operations = ["backup", "repair", "forget", "prune", "raw", "unlock"]
+            if fn.__name__ in locking_operations:
+                pid_file = os.path.join(tempfile.gettempdir(), "{}.pid".format(__intname__))
+                try:
+                    with pidfile.PIDFile(pid_file):
+                        # pylint: disable=E1102 (not-callable)
+                        result = fn(self, *args, **kwargs)
+                except pidfile.AlreadyRunningError:
+                    # pylint: disable=E1101 (no-member)
+                    self.write_logs("There is already an operation {fn.__name__} running. Will not continue", level="critical")
+                    return False
+            else:
+                # pylint: disable=E1102 (not-callable)
+                result = fn(self, *args, **kwargs)
+            return result
+        
+        return wrapper
 
     def catch_exceptions(fn: Callable):
         """
-        Catch any exception and log it
+        Catch any exception and log it so we don't loose exceptions in thread
         """
 
         @wraps(fn)
@@ -582,6 +608,7 @@ class NPBackupRunner:
     @threaded
     @close_queues
     @exec_timer
+    @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
@@ -596,6 +623,7 @@ class NPBackupRunner:
     @threaded
     @close_queues
     @exec_timer
+    @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
@@ -617,6 +645,7 @@ class NPBackupRunner:
     @threaded
     @close_queues
     @exec_timer
+    @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
@@ -632,6 +661,7 @@ class NPBackupRunner:
     @threaded
     @close_queues
     @exec_timer
+    @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
@@ -678,6 +708,7 @@ class NPBackupRunner:
     @threaded
     @close_queues
     @exec_timer
+    @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
@@ -863,6 +894,7 @@ class NPBackupRunner:
     @threaded
     @close_queues
     @exec_timer
+    @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
@@ -879,6 +911,7 @@ class NPBackupRunner:
     @threaded
     @close_queues
     @exec_timer
+    @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
@@ -924,6 +957,7 @@ class NPBackupRunner:
     @threaded
     @close_queues
     @exec_timer
+    @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
@@ -945,6 +979,7 @@ class NPBackupRunner:
     @threaded
     @close_queues
     @exec_timer
+    @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
@@ -964,6 +999,7 @@ class NPBackupRunner:
     @threaded
     @close_queues
     @exec_timer
+    @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
@@ -978,6 +1014,7 @@ class NPBackupRunner:
     @threaded
     @close_queues
     @exec_timer
+    @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
@@ -990,6 +1027,7 @@ class NPBackupRunner:
     @threaded
     @close_queues
     @exec_timer
+    @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
