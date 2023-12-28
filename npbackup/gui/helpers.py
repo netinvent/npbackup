@@ -208,6 +208,8 @@ def gui_thread_runner(
         kwargs = {**kwargs, **{"__no_threads": True}}
         result = runner.__getattribute__(fn.__name__)(*args, **kwargs)
     while True:
+        # No idea why pylint thingks that UpdateAnimation does not exist in PySimpleGUI
+        # pylint: disable=no-member
         progress_window["-LOADER-ANIMATION-"].UpdateAnimation(
             LOADER_ANIMATION, time_between_frames=100
         )
