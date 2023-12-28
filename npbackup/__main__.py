@@ -329,7 +329,7 @@ def main():
     # kill_childs normally would not be necessary, but let's just be foolproof here (kills restic subprocess in all cases)
     atexit.register(
         kill_childs,
-        os.getpid(),
+        os.getpid(), grace_period=30
     )
     try:
         cli_interface()

@@ -724,7 +724,7 @@ def main_gui(viewer_mode=False):
     # kill_childs normally would not be necessary, but let's just be foolproof here (kills restic subprocess in all cases)
     atexit.register(
         kill_childs,
-        os.getpid(),
+        os.getpid(), grace_period = 30
     )
     try:
         _main_gui(viewer_mode=viewer_mode)
