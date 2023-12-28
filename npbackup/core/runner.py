@@ -277,7 +277,7 @@ class NPBackupRunner:
 
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
-            close_queues = kwargs.pop("close_queues", True)
+            close_queues = kwargs.pop("__close_queues", True)
             # pylint: disable=E1102 (not-callable)
             result = fn(self, *args, **kwargs)
             if close_queues:
@@ -807,7 +807,8 @@ class NPBackupRunner:
                     level="critical",
                 )
                 return False
-        if self.has_recent_snapshot() and not force:
+        # Since we don't want to close queues nor create a subthread, we need to change behavior here
+        if self.has_recent_snapshot(__no_threads=True, __close_queues=False) and not force:
             self.write_logs("No backup necessary.", level="info")
             return True
         self.restic_runner.verbose = self.verbose
@@ -1050,7 +1051,7 @@ class NPBackupRunner:
         kwargs = {
             **kwargs,
             **{
-                "close_queues": False,
+                "__close_queues": False,
                 "__no_threads": True,
             },
         }
