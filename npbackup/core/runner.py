@@ -315,7 +315,7 @@ class NPBackupRunner:
         def wrapper(self, *args, **kwargs):
             required_permissions = {
                 "backup": ["backup", "restore", "full"],
-                "check_recent_backups": ["backup", "restore", "full"],
+                "has_recent_snapshot": ["backup", "restore", "full"],
                 "list": ["backup", "restore", "full"],
                 "ls": ["backup", "restore", "full"],
                 "find": ["backup", "restore", "full"],
@@ -375,7 +375,7 @@ class NPBackupRunner:
                 return fn(self, *args, **kwargs)
             except Exception as exc:
                 # pylint: disable=E1101 (no-member)
-                self.write_logs(f"Function {fn.__name__} failed with: {exc}")
+                self.write_logs(f"Function {fn.__name__} failed with: {exc}", level="error")
                 logger.debug("Trace:", exc_info=True)
                 return False
 
@@ -636,7 +636,7 @@ class NPBackupRunner:
     @is_ready
     @apply_config_to_restic_runner
     @catch_exceptions
-    def check_recent_backups(self) -> bool:
+    def has_recent_snapshot(self) -> bool:
         """
         Checks for backups in timespan
         Returns True or False if found or not
@@ -650,7 +650,7 @@ class NPBackupRunner:
             level="info",
         )
         self.restic_runner.verbose = False
-        result, backup_tz = self.restic_runner.has_snapshot_timedelta(
+        result, backup_tz = self.restic_runner.has_recent_snapshot(
             self.minimum_backup_age
         )
         self.restic_runner.verbose = self.verbose
@@ -776,7 +776,7 @@ class NPBackupRunner:
                     level="critical",
                 )
                 return False
-        if self.check_recent_backups() and not force:
+        if self.has_recent_snapshot() and not force:
             self.write_logs("No backup necessary.", level="info")
             return True
         self.restic_runner.verbose = self.verbose

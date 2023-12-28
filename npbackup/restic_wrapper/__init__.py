@@ -850,7 +850,7 @@ class ResticRunner:
         return False, output
 
     @staticmethod
-    def _has_snapshot_timedelta(
+    def _has_recent_snapshot(
         snapshot_list: List, delta: int = None
     ) -> Tuple[bool, Optional[datetime]]:
         """
@@ -882,7 +882,7 @@ class ResticRunner:
                     return True, backup_ts
         return None, backup_ts
 
-    def has_snapshot_timedelta(
+    def has_recent_snapshot(
         self, delta: int = None
     ) -> Tuple[bool, Optional[datetime]]:
         """
@@ -904,7 +904,7 @@ class ResticRunner:
             snapshots = self.snapshots()
             if self.last_command_status is False:
                 return None, None
-            return self._has_snapshot_timedelta(snapshots, delta)
+            return self._has_recent_snapshot(snapshots, delta)
         except IndexError as exc:
             self.write_logs(f"snapshot information missing: {exc}", level="error")
             logger.debug("Trace", exc_info=True)

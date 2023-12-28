@@ -53,7 +53,30 @@ This program is distributed under the GNU General Public License and comes with 
 This is free software, and you are welcome to redistribute it under certain conditions; Please type --license for more info.""",
     )
 
+    parser.add_argument(
+        "-c",
+        "--config-file",
+        dest="config_file",
+        type=str,
+        default=None,
+        required=False,
+        help="Path to alternative configuration file (defaults to current dir/npbackup.conf)",
+    )
+    parser.add_argument(
+        "--repo-name",
+        dest="repo_name",
+        type=str,
+        default="default",
+        required=False,
+        help="Name of the repository to work with. Defaults to 'default'",
+    )
     parser.add_argument("-b", "--backup", action="store_true", help="Run a backup")
+    parser.add_argument(
+        "-f", "--force",
+        action="store_true",
+        default=False,
+        help="Force running a backup regardless of existing backups age",
+    )
     parser.add_argument(
         "-r",
         "--restore",
@@ -129,30 +152,7 @@ This is free software, and you are welcome to redistribute it under certain cond
 
 
     parser.add_argument(
-        "--has-recent-backup", action="store_true", help="Check if a recent backup exists"
-    )
-    parser.add_argument(
-        "-f", "--force",
-        action="store_true",
-        default=False,
-        help="Force running a backup regardless of existing backups",
-    )
-    parser.add_argument(
-        "-c",
-        "--config-file",
-        dest="config_file",
-        type=str,
-        default=None,
-        required=False,
-        help="Path to alternative configuration file",
-    )
-    parser.add_argument(
-        "--repo-name",
-        dest="repo_name",
-        type=str,
-        default="default",
-        required=False,
-        help="Name of the repository to work with. Defaults to 'default'",
+        "--has-recent-snapshot", action="store_true", help="Check if a recent snapshot exists"
     )
     parser.add_argument(
         "--restore-include",
@@ -162,11 +162,11 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Restore only paths within include path",
     )
     parser.add_argument(
-        "--restore-from-snapshot",
+        "--snapshot",
         type=str,
         default="latest",
         required=False,
-        help="Choose which snapshot to restore from. Defaults to latest",
+        help="Choose which snapshot to use. Defaults to latest",
     )
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Show verbose output"
@@ -313,20 +313,24 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["op_args"] = {
             "command": args.raw
         }
+    elif args.has_recent_snapshot:
+        cli_args["operation"] = "has_recent_snapshot"
     
-    locking_operations = ["backup", "repair", "forget", "prune", "raw", "unlock"]
-
-    # Program entry
-    if cli_args["operation"] in locking_operations:
-        try:
-            with pidfile.PIDFile(PID_FILE):
-                entrypoint(**cli_args)
-        except pidfile.AlreadyRunningError:
-            logger.critical("Backup process already running. Will not continue.")
-            # EXIT_CODE 21 = current backup process already running
-            sys.exit(21)
+    if cli_args["operation"]:
+        locking_operations = ["backup", "repair", "forget", "prune", "raw", "unlock"]
+        # Program entry
+        if cli_args["operation"] in locking_operations:
+            try:
+                with pidfile.PIDFile(PID_FILE):
+                    entrypoint(**cli_args)
+            except pidfile.AlreadyRunningError:
+                logger.critical("Backup process already running. Will not continue.")
+                # EXIT_CODE 21 = current backup process already running
+                sys.exit(21)
+        else:
+            entrypoint(**cli_args)
     else:
-        entrypoint(**cli_args)
+        logger.warning("No operation has been requested")
         
 
 
