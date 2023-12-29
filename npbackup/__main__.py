@@ -25,6 +25,7 @@ from npbackup.__version__ import version_string
 from npbackup.__debug__ import _DEBUG
 from npbackup.common import execution_logs
 from npbackup.core.i18n_helper import _t
+
 if os.name == "nt":
     from npbackup.windows.task import create_scheduled_task
 
@@ -69,7 +70,8 @@ This is free software, and you are welcome to redistribute it under certain cond
     )
     parser.add_argument("-b", "--backup", action="store_true", help="Run a backup")
     parser.add_argument(
-        "-f", "--force",
+        "-f",
+        "--force",
         action="store_true",
         default=False,
         help="Force running a backup regardless of existing backups age",
@@ -82,7 +84,9 @@ This is free software, and you are welcome to redistribute it under certain cond
         required=False,
         help="Restore to path given by --restore",
     )
-    parser.add_argument("-l", "--list", action="store_true", help="Show current snapshots")
+    parser.add_argument(
+        "-l", "--list", action="store_true", help="Show current snapshots"
+    )
     parser.add_argument(
         "--ls",
         type=str,
@@ -102,54 +106,37 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help='Forget given snapshot, or specify \"policy\" to apply retention policy',
+        help='Forget given snapshot, or specify "policy" to apply retention policy',
     )
     parser.add_argument(
-        "--quick-check",
-        action="store_true",
-        help="Quick check repository"
+        "--quick-check", action="store_true", help="Quick check repository"
     )
     parser.add_argument(
-        "--full-check",
-        action="store_true",
-        help="Full check repository"
+        "--full-check", action="store_true", help="Full check repository"
     )
-    parser.add_argument(
-        "--prune",
-        action="store_true",
-        help="Prune data in repository"
-    )
+    parser.add_argument("--prune", action="store_true", help="Prune data in repository")
     parser.add_argument(
         "--prune-max",
         action="store_true",
-        help="Prune data in repository reclaiming maximum space"
+        help="Prune data in repository reclaiming maximum space",
     )
+    parser.add_argument("--unlock", action="store_true", help="Unlock repository")
+    parser.add_argument("--repair-index", action="store_true", help="Repair repo index")
     parser.add_argument(
-        "--unlock",
-        action="store_true",
-        help="Unlock repository"
-    )
-    parser.add_argument(
-        "--repair-index",
-        action="store_true",
-        help="Repair repo index"
-    )
-    parser.add_argument(
-        "--repair-snapshots",
-        action="store_true",
-        help="Repair repo snapshots"
+        "--repair-snapshots", action="store_true", help="Repair repo snapshots"
     )
     parser.add_argument(
         "--raw",
         type=str,
         default=None,
         required=False,
-        help='Run raw command against backend.',
+        help="Run raw command against backend.",
     )
 
-
     parser.add_argument(
-        "--has-recent-snapshot", action="store_true", help="Check if a recent snapshot exists"
+        "--has-recent-snapshot",
+        action="store_true",
+        help="Check if a recent snapshot exists",
     )
     parser.add_argument(
         "--restore-include",
@@ -224,7 +211,9 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     full_config = npbackup.configuration.load_config(CONFIG_FILE)
     if full_config:
-        repo_config, _ = npbackup.configuration.get_repo_config(full_config, args.repo_name)
+        repo_config, _ = npbackup.configuration.get_repo_config(
+            full_config, args.repo_name
+        )
     else:
         logger.critical("Cannot obtain repo config")
         sys.exit(71)
@@ -241,78 +230,56 @@ This is free software, and you are welcome to redistribute it under certain cond
         "dry_run": args.dry_run,
         "debug": args.debug,
         "operation": None,
-        "op_args": {}
+        "op_args": {},
     }
 
     if args.backup:
         cli_args["operation"] = "backup"
-        cli_args["op_args"] = {
-            "force": args.force
-        }
+        cli_args["op_args"] = {"force": args.force}
     elif args.restore:
         cli_args["operation"] = "restore"
         cli_args["op_args"] = {
             "snapshot": args.snapshot,
             "target": args.restore,
-            "restore_include": args.restore_include
-            }   
+            "restore_include": args.restore_include,
+        }
     elif args.list:
         cli_args["operation"] = "list"
     elif args.ls:
         cli_args["operation"] = "ls"
-        cli_args["op_args"] = {
-            "snapshot": args.snapshot
-        }
+        cli_args["op_args"] = {"snapshot": args.snapshot}
     elif args.find:
         cli_args["operation"] = "find"
-        cli_args["op_args"] = {
-            "snapshot": args.snapshot,
-            "path": args.find
-        }
+        cli_args["op_args"] = {"snapshot": args.snapshot, "path": args.find}
     elif args.forget:
         cli_args["operation"] = "forget"
         if args.forget == "policy":
-            cli_args["op_args"] = {
-                "use_policy": True
-            }
+            cli_args["op_args"] = {"use_policy": True}
         else:
-            cli_args["op_args"] = {
-                "snapshots": args.forget
-            }
+            cli_args["op_args"] = {"snapshots": args.forget}
     elif args.quick_check:
         cli_args["operation"] = "check"
     elif args.full_check:
         cli_args["operation"] = "check"
-        cli_args["op_args"] = {
-            "read_data": True
-        }
+        cli_args["op_args"] = {"read_data": True}
     elif args.prune:
         cli_args["operation"] = "prune"
     elif args.prune_max:
         cli_args["operation"] = "prune"
-        cli_args["op_args"] = {
-            "max": True
-        }
+        cli_args["op_args"] = {"max": True}
     elif args.unlock:
         cli_args["operation"] = "unlock"
     elif args.repair_index:
         cli_args["operation"] = "repair"
-        cli_args["op_args"] = {
-            "subject": "index"
-        }
+        cli_args["op_args"] = {"subject": "index"}
     elif args.repair_snapshots:
         cli_args["operation"] = "repair"
-        cli_args["op_args"] = {
-            "subject": "snapshots"
-        }
+        cli_args["op_args"] = {"subject": "snapshots"}
     elif args.raw:
         cli_args["operation"] = "raw"
-        cli_args["op_args"] = {
-            "command": args.raw
-        }
+        cli_args["op_args"] = {"command": args.raw}
     elif args.has_recent_snapshot:
         cli_args["operation"] = "has_recent_snapshot"
-    
 
     if cli_args["operation"]:
         entrypoint(**cli_args)
@@ -327,10 +294,7 @@ def main():
         datetime.utcnow(),
     )
     # kill_childs normally would not be necessary, but let's just be foolproof here (kills restic subprocess in all cases)
-    atexit.register(
-        kill_childs,
-        os.getpid(), grace_period=30
-    )
+    atexit.register(kill_childs, os.getpid(), grace_period=30)
     try:
         cli_interface()
         sys.exit(logger.get_worst_logger_level())

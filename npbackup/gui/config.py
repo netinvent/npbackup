@@ -984,9 +984,7 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Popup(_t("config_gui.configuration_saved"), keep_on_top=True)
                 logger.info("Configuration saved successfully.")
                 break
-            sg.PopupError(
-                _t("config_gui.cannot_save_configuration"), keep_on_top=True
-            )
+            sg.PopupError(_t("config_gui.cannot_save_configuration"), keep_on_top=True)
             logger.info("Could not save configuration")
         if event == _t("config_gui.show_decrypted"):
             object_type, object_name = get_object_from_combo(values["-OBJECT-SELECT-"])

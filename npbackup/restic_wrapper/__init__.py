@@ -881,9 +881,7 @@ class ResticRunner:
                     return True, backup_ts
         return None, backup_ts
 
-    def has_recent_snapshot(
-        self, delta: int = None
-    ) -> Tuple[bool, Optional[datetime]]:
+    def has_recent_snapshot(self, delta: int = None) -> Tuple[bool, Optional[datetime]]:
         """
         Checks if a snapshot exists that is newer that delta minutes
         Eg: if delta = -60 we expect a snapshot newer than an hour ago, and return True if exists

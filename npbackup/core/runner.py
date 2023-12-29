@@ -364,7 +364,7 @@ class NPBackupRunner:
             return fn(self, *args, **kwargs)
 
         return wrapper
-    
+
     def check_concurrency(fn: Callable):
         """
         Make sure there we don't allow concurrent actions
@@ -372,22 +372,36 @@ class NPBackupRunner:
 
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
-            locking_operations = ["backup", "repair", "forget", "prune", "raw", "unlock"]
+            locking_operations = [
+                "backup",
+                "repair",
+                "forget",
+                "prune",
+                "raw",
+                "unlock",
+            ]
             # pylint: disable=E1101 (no-member)
             if fn.__name__ in locking_operations:
-                pid_file = os.path.join(tempfile.gettempdir(), "{}.pid".format(__intname__))
+                pid_file = os.path.join(
+                    tempfile.gettempdir(), "{}.pid".format(__intname__)
+                )
                 try:
                     with pidfile.PIDFile(pid_file):
                         # pylint: disable=E1102 (not-callable)
                         result = fn(self, *args, **kwargs)
                 except pidfile.AlreadyRunningError:
                     # pylint: disable=E1101 (no-member)
-                    self.write_logs(f"There is already an {fn.__name__} operation running by NPBackup. Will not continue", level="critical")
+                    self.write_logs(
+                        f"There is already an {fn.__name__} operation running by NPBackup. Will not continue",
+                        level="critical",
+                    )
                     return False
             else:
-                result = fn(self, *args, **kwargs)  # pylint: disable=E1102 (not-callable)
+                result = fn(
+                    self, *args, **kwargs
+                )  # pylint: disable=E1102 (not-callable)
             return result
-        
+
         return wrapper
 
     def catch_exceptions(fn: Callable):
@@ -402,7 +416,9 @@ class NPBackupRunner:
                 return fn(self, *args, **kwargs)
             except Exception as exc:
                 # pylint: disable=E1101 (no-member)
-                self.write_logs(f"Function {fn.__name__} failed with: {exc}", level="error")
+                self.write_logs(
+                    f"Function {fn.__name__} failed with: {exc}", level="error"
+                )
                 logger.debug("Trace:", exc_info=True)
                 return False
 
@@ -813,7 +829,10 @@ class NPBackupRunner:
                 return False
         # Since we don't want to close queues nor create a subthread, we need to change behavior here
         # pylint: disable=E1123 (unexpected-keyword-arg)
-        if self.has_recent_snapshot(__close_queues=False, __no_threads=True) and not force:
+        if (
+            self.has_recent_snapshot(__close_queues=False, __no_threads=True)
+            and not force
+        ):
             self.write_logs("No backup necessary.", level="info")
             return True
         self.restic_runner.verbose = self.verbose
