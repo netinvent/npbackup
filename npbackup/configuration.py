@@ -7,10 +7,11 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023121501"
+__build__ = "2023122901"
 __version__ = "2.0.0 for npbackup 2.3.0+"
 
-CONF_VERSION = 2.3
+MIN_CONF_VERSION = 2.3
+MAX_CONF_VERSION = 2.3
 
 from typing import Tuple, Optional, List, Any, Union
 import sys
@@ -116,7 +117,7 @@ ENCRYPTED_OPTIONS = [
 
 # This is what a config file looks like
 empty_config_dict = {
-    "conf_version": CONF_VERSION,
+    "conf_version": MAX_CONF_VERSION,
     "repos": {
         "default": {
             "repo_uri": "",
@@ -481,12 +482,18 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
         with open(config_file, "r", encoding="utf-8") as file_handle:
             yaml = YAML(typ="rt")
             full_config = yaml.load(file_handle)
-
-            conf_version = full_config.g("conf_version")
-            if conf_version != CONF_VERSION:
-                logger.critical(
-                    f"Config file version {conf_version} is not required version {CONF_VERSION}"
-                )
+            if not full_config:
+                logger.critical("Config file seems empty !")
+                return False
+            try:
+                conf_version = float(full_config.g("conf_version"))
+                if conf_version < MIN_CONF_VERSION or conf_version > MAX_CONF_VERSION:
+                    logger.critical(
+                        f"Config file version {conf_version} is not required version min={MIN_CONF_VERSION}, max={MAX_CONF_VERSION}"
+                    )
+                    return False
+            except AttributeError:
+                logger.critical("Cannot read conf version from config file, which seems bogus")
                 return False
             return full_config
     except OSError:
