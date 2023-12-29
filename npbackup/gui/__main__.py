@@ -52,8 +52,6 @@ from npbackup.core.upgrade_runner import run_upgrade, check_new_version
 from npbackup.path_helper import CURRENT_DIR
 from npbackup.__version__ import version_string
 from npbackup.__debug__ import _DEBUG
-from npbackup.gui.config import config_gui
-from npbackup.gui.operations import operations_gui
 from npbackup.restic_wrapper import ResticRunner
 
 
@@ -541,7 +539,9 @@ def _main_gui(viewer_mode: bool):
                     sys.exit(100)
                 if action == "--NEW-CONFIG--":
                     config_file = "npbackup.conf"
-                    full_config = config_gui(npbackup.configuration.get_default_config(), config_file)
+                    full_config = config_gui(
+                        npbackup.configuration.get_default_config(), config_file
+                    )
             if config_file:
                 logger.info(f"Using configuration file {config_file}")
                 full_config = npbackup.configuration.load_config(config_file)
@@ -549,10 +549,10 @@ def _main_gui(viewer_mode: bool):
                     sg.PopupError(f"{_t('main_gui.config_error')} {config_file}")
                     config_file = None
                 else:
-                    return full_config
+                    return full_config, config_file
 
     if not viewer_mode:
-        full_config = get_config_file()
+        full_config, config_file = get_config_file()
         repo_config, config_inheritance = npbackup.configuration.get_repo_config(
             full_config
         )
@@ -568,7 +568,7 @@ def _main_gui(viewer_mode: bool):
             repo_config = viewer_create_repo(viewer_repo_uri, viewer_repo_password)
         else:
             repo_config = None
-    
+
     right_click_menu = ["", [_t("generic.destination")]]
     headings = [
         "ID     ",
@@ -632,7 +632,7 @@ def _main_gui(viewer_mode: bool):
                         sg.Button(
                             _t("main_gui.open_repo"),
                             key="--OPEN-REPO--",
-                            visible=viewer_mode
+                            visible=viewer_mode,
                         ),
                         sg.Button(
                             _t("main_gui.launch_backup"),
@@ -656,7 +656,7 @@ def _main_gui(viewer_mode: bool):
                         sg.Button(
                             _t("main_gui.load_configuration"),
                             key="--LOAD-CONF--",
-                            disabled=viewer_mode
+                            disabled=viewer_mode,
                         ),
                         sg.Button(_t("generic.about"), key="--ABOUT--"),
                         sg.Button(_t("generic.quit"), key="--EXIT--"),
@@ -747,7 +747,7 @@ def _main_gui(viewer_mode: bool):
             event = "--STATE-BUTTON--"
         if event == "--LOAD-CONF--":
             # TODO: duplicate code
-            full_config = get_config_file()
+            full_config, config_file = get_config_file()
             repo_config, config_inheritance = npbackup.configuration.get_repo_config(
                 full_config
             )

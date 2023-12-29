@@ -227,9 +227,12 @@ def get_default_config() -> dict:
     Returns a config dict as nested CommentedMaps (used by ruamel.yaml to keep comments intact)
     """
     full_config = deepcopy(empty_config_dict)
-    def convert_to(source_dict, ):
+
+    def convert_to(
+        source_dict,
+    ):
         if isinstance(source_dict, dict):
-            return CommentedMap({k:convert_to(v) for k,v in source_dict.items()})
+            return CommentedMap({k: convert_to(v) for k, v in source_dict.items()})
         else:
             return source_dict
 

@@ -508,17 +508,6 @@ class ResticRunner:
     def is_init(self, value: bool):
         self._is_init = value
 
-    def check_if_init(fn):
-        """
-        Decorator to check that we don't do anything unless repo is initialized
-        """
-        @wraps(fn)
-        def wrapper(self, *args, **kwargs):
-            if not self.is_init:
-                return None
-            return fn(self, *args, **kwargs)
-        return wrapper
-
     @property
     def last_command_status(self):
         return self._last_command_status
@@ -526,6 +515,26 @@ class ResticRunner:
     @last_command_status.setter
     def last_command_status(self, value: bool):
         self._last_command_status = value
+
+    # pylint: disable=E0213 (no-self-argument)
+    def check_if_init(fn: Callable):
+        """
+        Decorator to check that we don't do anything unless repo is initialized
+        """
+
+        @wraps(fn)
+        def wrapper(self, *args, **kwargs):
+            if not self.is_init:
+                # pylint: disable=E1101 (no-member)
+                self.write_logs(
+                    "Backend is not ready to perform operation {fn.__name}",
+                    level="error",
+                )
+                return None
+            # pylint: disable=E1102 (not-callable)
+            return fn(self, *args, **kwargs)
+
+        return wrapper
 
     @check_if_init
     def list(self, obj: str = "snapshots") -> Optional[list]:

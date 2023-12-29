@@ -290,7 +290,7 @@ class NPBackupRunner:
         return wrapper
 
     def is_ready(fn: Callable):
-        """ "
+        """
         Decorator that checks if NPBackupRunner is ready to run, and logs accordingly
         """
 
@@ -397,8 +397,9 @@ class NPBackupRunner:
                     )
                     return False
             else:
-                # pylint: disable=E1102 (not-callable)
-                result = fn(self, *args, **kwargs)
+                result = fn(  # pylint: disable=E1102 (not-callable)
+                    self, *args, **kwargs
+                )
             return result
 
         return wrapper
@@ -636,6 +637,7 @@ class NPBackupRunner:
         self.write_logs(
             f"Listing snapshots of repo {self.repo_config.g('name')}", level="info"
         )
+        # TODO: replace with list("snapshots")
         snapshots = self.restic_runner.snapshots()
         return snapshots
 
