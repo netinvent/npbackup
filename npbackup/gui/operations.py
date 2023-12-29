@@ -18,8 +18,8 @@ from npbackup.gui.helpers import get_anon_repo_uri, gui_thread_runner
 from npbackup.customization import (
     OEM_STRING,
     OEM_LOGO,
-    GUI_LOADER_COLOR,
-    GUI_LOADER_TEXT_COLOR,
+    BG_COLOR_LDR,
+    TXT_COLOR_LDR,
     GUI_STATE_OK_BUTTON,
     GUI_STATE_OLD_BUTTON,
     GUI_STATE_UNKNOWN_BUTTON,
