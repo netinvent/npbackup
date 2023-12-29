@@ -31,8 +31,8 @@ import npbackup.common
 from npbackup.customization import (
     OEM_STRING,
     OEM_LOGO,
-    GUI_LOADER_COLOR,
-    GUI_LOADER_TEXT_COLOR,
+    BG_COLOR_LDR,
+    TXT_COLOR_LDR,
     GUI_STATE_OK_BUTTON,
     GUI_STATE_OLD_BUTTON,
     GUI_STATE_UNKNOWN_BUTTON,
@@ -121,6 +121,23 @@ def about_gui(version_string: str, full_config: dict = None) -> None:
                 else:
                     sg.Popup(_t("config_gui.auto_upgrade_failed"), keep_on_top=True)
     window.close()
+
+
+def viewer_create_repo(viewer_repo_uri: str, viewer_repo_password: str) -> dict:
+    """
+    Create a minimal repo config for viewing purposes
+    """
+    repo_config = CommentedMap()
+    repo_config.s("name", "external")
+    repo_config.s("repo_uri", viewer_repo_uri)
+    repo_config.s("repo_opts", CommentedMap())
+    repo_config.s("repo_opts.repo_password", viewer_repo_password)
+    # Let's set default backup age to 24h
+    repo_config.s("repo_opts.minimum_backup_age", 1440)
+    # NPF-SEC-00005 Add restore permission
+    repo_config.s("permissions", "restore")
+
+    return repo_config
 
 
 def viewer_repo_gui(
@@ -263,8 +280,8 @@ def ls_window(repo_config: dict, snapshot_id: str) -> bool:
             LOADER_ANIMATION,
             message="{}...".format(_t("main_gui.creating_tree")),
             time_between_frames=50,
-            background_color=GUI_LOADER_COLOR,
-            text_color=GUI_LOADER_TEXT_COLOR,
+            background_color=BG_COLOR_LDR,
+            text_color=TXT_COLOR_LDR,
         )
     sg.PopupAnimated(None)
     treedata = thread.result()
@@ -503,18 +520,26 @@ def _main_gui(viewer_mode: bool):
                 )
         return current_state, backup_tz, snapshot_list
 
-    if not viewer_mode:
+    def get_config_file() -> str:
+        """
+        Load config file until we got something
+        """
         config_file = Path(f"{CURRENT_DIR}/npbackup.conf")
-        if not config_file.exists():
-            while True:
-                config_file = select_config_file()
-                if config_file:
-                    config_file = select_config_file()
-                else:
-                    break
 
-        logger.info(f"Using configuration file {config_file}")
-        full_config = npbackup.configuration.load_config(config_file)
+        while True:
+            if not config_file or not config_file.exists():
+                config_file = select_config_file()
+            if config_file:
+                logger.info(f"Using configuration file {config_file}")
+                full_config = npbackup.configuration.load_config(config_file)
+                if not full_config:
+                    config_file = None
+                    sg.PopupError("main_gui.config_error")
+                else:
+                    return full_config
+
+    if not viewer_mode:
+        full_config = get_config_file()
         repo_config, config_inheritance = npbackup.configuration.get_repo_config(
             full_config
         )
@@ -523,21 +548,14 @@ def _main_gui(viewer_mode: bool):
         backup_destination = _t("main_gui.local_folder")
         backend_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
     else:
-        # Init empty REPO
-        repo_config = CommentedMap()
-        repo_config.s("name", "external")
+        # Let's try to read standard restic repository env variables
         viewer_repo_uri = os.environ.get("RESTIC_REPOSITORY", None)
         viewer_repo_password = os.environ.get("RESTIC_PASSWORD", None)
-        if not viewer_repo_uri or not viewer_repo_password:
-            viewer_repo_uri, viewer_repo_password = viewer_repo_gui(
-                viewer_repo_uri, viewer_repo_password
-            )
-        repo_config.s("repo_uri", viewer_repo_uri)
-        repo_config.s("repo_opts", CommentedMap())
-        repo_config.s("repo_opts.repo_password", viewer_repo_password)
-        # Let's set default backup age to 24h
-        repo_config.s("repo_opts.minimum_backup_age", 1440)
-
+        if viewer_repo_uri and viewer_repo_password:
+            repo_config = viewer_create_repo(viewer_repo_uri, viewer_repo_password)
+        else:
+            repo_config = None
+    
     right_click_menu = ["", [_t("generic.destination")]]
     headings = [
         "ID     ",
@@ -599,6 +617,11 @@ def _main_gui(viewer_mode: bool):
                     ],
                     [
                         sg.Button(
+                            _t("main_gui.open_repo"),
+                            key="--OPEN-REPO--",
+                            visible=viewer_mode
+                        ),
+                        sg.Button(
                             _t("main_gui.launch_backup"),
                             key="--LAUNCH-BACKUP--",
                             disabled=viewer_mode,
@@ -646,13 +669,14 @@ def _main_gui(viewer_mode: bool):
     window["snapshot-list"].expand(True, True)
 
     window.read(timeout=1)
-    try:
-        current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
-    except ValueError:
-        current_state = None
-        backup_tz = None
-        snapshot_list = []
-    gui_update_state()
+    if repo_config:
+        try:
+            current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
+        except ValueError:
+            current_state = None
+            backup_tz = None
+            snapshot_list = []
+        gui_update_state()
     while True:
         event, values = window.read(timeout=60000)
 
@@ -699,6 +723,10 @@ def _main_gui(viewer_mode: bool):
             full_config = config_gui(full_config, config_file)
             # Make sure we trigger a GUI refresh when configuration is changed
             event = "--STATE-BUTTON--"
+        if event == "--OPEN-REPO--":
+            viewer_repo_uri, viewer_repo_password = viewer_repo_gui()
+            repo_config = viewer_create_repo(viewer_repo_uri, viewer_repo_password)
+            event = "--STATE-BUTTON--"
         if event == _t("generic.destination"):
             try:
                 if backend_type:
@@ -734,6 +762,5 @@ def main_gui(viewer_mode=False):
     except Exception as exc:
         sg.Popup(_t("config_gui.unknown_error_see_logs") + f": {exc}")
         logger.critical(f"GUI Execution error {exc}")
-        if _DEBUG:
-            logger.critical("Trace:", exc_info=True)
+        logger.debug("Trace:", exc_info=True)
         sys.exit(251)
