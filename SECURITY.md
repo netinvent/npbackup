@@ -18,3 +18,8 @@ Password command is also not logged.
 Partially covered with password_command feature.
 We should have a central password server that holds repo passwords, so password is never actually stored in config.
 This will prevent local backups, so we need to think of a better zero knowledge strategy here.
+
+# NPF-SEC-00005: Viewer mode can bypass permissions
+
+Since viewer mode requires actual knowledge of repo URI and repo password, there's no need to manage local permissions.
+Viewer mode permissions are set to "restore".
