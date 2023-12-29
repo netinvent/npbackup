@@ -450,7 +450,7 @@ class ResticRunner:
                 self.is_init = True
                 return True
         else:
-            if re.search(".*already exists", output, re.IGNORECASE):
+            if re.search(".*already exists|.*already initialized", output, re.IGNORECASE):
                 logger.info("Repo already initialized.")
                 self.is_init = True
                 return True
