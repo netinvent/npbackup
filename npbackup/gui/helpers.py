@@ -268,4 +268,6 @@ def gui_thread_runner(
     progress_window.close()
     if USE_THREADING:
         return thread.result()
-    return result
+    # Do not change this because of linter, it's a false positive to say we can remove the else statement
+    else:
+        return result
