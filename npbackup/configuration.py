@@ -493,7 +493,9 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
                     )
                     return False
             except AttributeError:
-                logger.critical("Cannot read conf version from config file, which seems bogus")
+                logger.critical(
+                    "Cannot read conf version from config file, which seems bogus"
+                )
                 return False
             return full_config
     except OSError:
