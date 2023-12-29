@@ -60,3 +60,6 @@ en:
   bogus_data_given: Bogus data given
 
   please_wait: Please wait
+
+  bad_file: Bad file
+  file_does_not_exist: File does not exist

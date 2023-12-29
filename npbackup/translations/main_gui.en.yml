@@ -38,6 +38,8 @@ en:
   repo_and_password_cannot_be_empty: Repo and password cannot be empty
   viewer_mode: Repository view-only mode
   open_repo: Open repo
+  new_config: New config
+  config_error: Configuration file error
 
   # logs
   last_messages: Last messages

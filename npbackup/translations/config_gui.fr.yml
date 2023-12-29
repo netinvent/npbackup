@@ -127,8 +127,8 @@ fr:
   set_permissions: Régler les permissions
   permissions_only_for_repos: Les permissions peuvent être appliquées uniquement à des dépots
   permissions: Permissions
-  backup_perms: Sauvegarde
-  restore_perms: Restauration et vérification de dépot
+  backup_perms: Sauvegardes uniquement
+  restore_perms: Sauvegarde, vérification et restauration
   full_perms: Accès total
   setting_permissions_requires_manager_password: Un mot de passe gestionnaire est requis pour définir des permissions
   manager_password_too_short: Le mot de passe gestionnaire est trop court

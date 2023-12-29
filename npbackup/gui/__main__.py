@@ -430,27 +430,35 @@ def _main_gui(viewer_mode: bool):
                 sg.FileBrowse(_t("generic.select_file")),
             ],
             [
-                sg.Button(_t("generic.cancel"), key="-CANCEL-"),
-                sg.Button(_t("generic.accept"), key="-ACCEPT-"),
+                sg.Push(),
+                sg.Button(_t("generic.quit"), key="--EXIT--"),
+                sg.Button(_t("main_gui.new_config"), key="--NEW-CONFIG--"),
+                sg.Button(_t("generic.accept"), key="--ACCEPT--"),
             ],
         ]
         window = sg.Window("Configuration File", layout=layout)
+        config_file = None
         while True:
+            action = None
             event, values = window.read()
-            if event in [sg.WIN_X_EVENT, sg.WIN_CLOSED, "-CANCEL-"]:
+            if event in [sg.WIN_X_EVENT, sg.WIN_CLOSED, "--EXIT--"]:
+                action = "--EXIT--"
                 break
-            if event == "-ACCEPT-":
+            if event == "--NEW-CONFIG--":
+                action = event
+                break
+            if event == "--ACCEPT--":
                 config_file = Path(values["-config_file-"])
-                if not config_file.exists():
+                if not values["-config_file-"] or not config_file.exists():
                     sg.PopupError(_t("generic.file_does_not_exist"))
                     continue
-                config = npbackup.configuration._load_config_file(config_file)
-                if not config:
+                full_config = npbackup.configuration.load_config(config_file)
+                if not full_config:
                     sg.PopupError(_t("generic.bad_file"))
                     continue
-                window.close()
-                return config_file
-        return None
+                break
+        window.close()
+        return config_file, action
 
     def gui_update_state() -> None:
         if current_state:
@@ -528,13 +536,18 @@ def _main_gui(viewer_mode: bool):
 
         while True:
             if not config_file or not config_file.exists():
-                config_file = select_config_file()
+                config_file, action = select_config_file()
+                if action == "--EXIT--":
+                    sys.exit(100)
+                if action == "--NEW-CONFIG--":
+                    config_file = "npbackup.conf"
+                    full_config = config_gui(npbackup.configuration.get_default_config(), config_file)
             if config_file:
                 logger.info(f"Using configuration file {config_file}")
                 full_config = npbackup.configuration.load_config(config_file)
                 if not full_config:
+                    sg.PopupError(f"{_t('main_gui.config_error')} {config_file}")
                     config_file = None
-                    sg.PopupError("main_gui.config_error")
                 else:
                     return full_config
 
@@ -640,6 +653,11 @@ def _main_gui(viewer_mode: bool):
                             key="--CONFIGURE--",
                             disabled=viewer_mode,
                         ),
+                        sg.Button(
+                            _t("main_gui.load_configuration"),
+                            key="--LOAD-CONF--",
+                            disabled=viewer_mode
+                        ),
                         sg.Button(_t("generic.about"), key="--ABOUT--"),
                         sg.Button(_t("generic.quit"), key="--EXIT--"),
                     ],
@@ -726,6 +744,17 @@ def _main_gui(viewer_mode: bool):
         if event == "--OPEN-REPO--":
             viewer_repo_uri, viewer_repo_password = viewer_repo_gui()
             repo_config = viewer_create_repo(viewer_repo_uri, viewer_repo_password)
+            event = "--STATE-BUTTON--"
+        if event == "--LOAD-CONF--":
+            # TODO: duplicate code
+            full_config = get_config_file()
+            repo_config, config_inheritance = npbackup.configuration.get_repo_config(
+                full_config
+            )
+            repo_list = npbackup.configuration.get_repo_list(full_config)
+
+            backup_destination = _t("main_gui.local_folder")
+            backend_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
             event = "--STATE-BUTTON--"
         if event == _t("generic.destination"):
             try:

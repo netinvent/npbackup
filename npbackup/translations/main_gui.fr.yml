@@ -38,7 +38,9 @@ fr:
   repo_and_password_cannot_be_empty: Le dépot et le mot de passe ne peuvent être vides
   viewer_mode: Mode visualisation de dépot uniquement
   open_repo: Ouvrir dépot
-  
+  new_config: Nouvelle configuration
+  config_error: Erreur du fichier de configuration
+
   # logs
   last_messages: Last messages
   error_messages: Error messages

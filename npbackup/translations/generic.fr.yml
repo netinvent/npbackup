@@ -60,3 +60,6 @@ fr:
   bogus_data_given: Données invalides
 
   please_wait: Merci de patienter
+
+  bad_file: Fichier erroné
+  file_does_not_exist: Fichier inexistant
