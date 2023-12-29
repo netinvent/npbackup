@@ -19,8 +19,8 @@ import PySimpleGUI as sg
 from npbackup.core.i18n_helper import _t
 from npbackup.customization import (
     LOADER_ANIMATION,
-    GUI_LOADER_COLOR,
-    GUI_LOADER_TEXT_COLOR,
+    BG_COLOR_LDR,
+    TXT_COLOR_LDR,
 )
 from npbackup.core.runner import NPBackupRunner
 from npbackup.__debug__ import _DEBUG
@@ -120,8 +120,8 @@ def gui_thread_runner(
             sg.Text(
                 _t("main_gui.last_messages"),
                 key="-OPERATIONS-PROGRESS-STDOUT-TITLE-",
-                text_color=GUI_LOADER_TEXT_COLOR,
-                background_color=GUI_LOADER_COLOR,
+                text_color=TXT_COLOR_LDR,
+                background_color=BG_COLOR_LDR,
                 visible=not __compact,
             )
         ],
@@ -137,8 +137,8 @@ def gui_thread_runner(
             sg.Text(
                 _t("main_gui.error_messages"),
                 key="-OPERATIONS-PROGRESS-STDERR-TITLE-",
-                text_color=GUI_LOADER_TEXT_COLOR,
-                background_color=GUI_LOADER_COLOR,
+                text_color=TXT_COLOR_LDR,
+                background_color=BG_COLOR_LDR,
                 visible=not __compact,
             )
         ],
@@ -153,28 +153,28 @@ def gui_thread_runner(
         [
             sg.Column(
                 [
+                    [sg.Push(background_color=BG_COLOR_LDR), sg.Text("↓", key="--EXPAND--", enable_events=True, background_color=BG_COLOR_LDR, text_color=TXT_COLOR_LDR, visible=__compact)],
                     [
                         sg.Image(
                             LOADER_ANIMATION,
                             key="-LOADER-ANIMATION-",
-                            background_color=GUI_LOADER_COLOR,
+                            background_color=BG_COLOR_LDR,
                             visible=USE_THREADING,
                         )
                     ],
-                    [sg.Button(_t("generic.expand"), key="--EXPAND--", visible=__compact)],
                     [sg.Text("Debugging active", visible=not USE_THREADING)],
                 ],
                 expand_x=True,
                 justification="C",
                 element_justification="C",
-                background_color=GUI_LOADER_COLOR,
+                background_color=BG_COLOR_LDR,
             )
         ],
         [
             sg.Button(
                 _t("generic.close"),
                 key="--EXIT--",
-                button_color=(GUI_LOADER_TEXT_COLOR, GUI_LOADER_COLOR),
+                button_color=(TXT_COLOR_LDR, BG_COLOR_LDR),
             )
         ],
     ]
@@ -185,7 +185,7 @@ def gui_thread_runner(
                 progress_layout,
                 element_justification="C",
                 expand_x=True,
-                background_color=GUI_LOADER_COLOR,
+                background_color=BG_COLOR_LDR,
             )
         ]
     ]
@@ -196,7 +196,7 @@ def gui_thread_runner(
         use_custom_titlebar=True,
         grab_anywhere=True,
         keep_on_top=True,
-        background_color=GUI_LOADER_COLOR,
+        background_color=BG_COLOR_LDR,
         titlebar_icon=OEM_ICON,
     )
     # Finalize the window
