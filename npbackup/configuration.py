@@ -222,6 +222,20 @@ empty_config_dict = {
 }
 
 
+def get_default_config() -> dict:
+    """
+    Returns a config dict as nested CommentedMaps (used by ruamel.yaml to keep comments intact)
+    """
+    full_config = deepcopy(empty_config_dict)
+    def convert_to(source_dict, ):
+        if isinstance(source_dict, dict):
+            return CommentedMap({k:convert_to(v) for k,v in source_dict.items()})
+        else:
+            return source_dict
+
+    return convert_to(full_config)
+
+
 def crypt_config(
     full_config: dict, aes_key: str, encrypted_options: List[str], operation: str
 ):
