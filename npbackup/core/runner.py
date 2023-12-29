@@ -397,9 +397,10 @@ class NPBackupRunner:
                     )
                     return False
             else:
+                # pylint: disable=E1102 (not-callable)
                 result = fn(
                     self, *args, **kwargs
-                )  # pylint: disable=E1102 (not-callable)
+                )
             return result
 
         return wrapper
