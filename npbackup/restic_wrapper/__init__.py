@@ -227,7 +227,7 @@ class ResticRunner:
 
         if raise_error == "ValueError":
             raise ValueError(msg)
-        elif raise_error:
+        if raise_error:
             raise Exception(msg)
 
     def executor(
@@ -439,8 +439,7 @@ class ResticRunner:
             )
             if exit_code == 0:
                 return output.strip()
-            else:
-                self.write_logs("Cannot get backend version: {output}", level="warning")
+            self.write_logs("Cannot get backend version: {output}", level="warning")
         else:
             self.write_logs(
                 "Cannot get backend version: No binary defined.", level="error"

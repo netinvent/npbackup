@@ -261,12 +261,11 @@ def gui_thread_runner(
     # Keep the window open until user has done something
     progress_window["-LOADER-ANIMATION-"].Update(visible=False)
     if not __autoclose or stderr_has_messages:
-        while True and not progress_window.is_closed():
+        while not progress_window.is_closed():
             event, _ = progress_window.read()
             if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--EXIT--"):
                 break
     progress_window.close()
     if USE_THREADING:
         return thread.result()
-    else:
-        return result
+    return result

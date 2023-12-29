@@ -192,7 +192,7 @@ def config_gui(full_config: dict, config_file: str):
             # Enable inheritance icon when needed
             inheritance_key = f"inherited.{key}"
             if inheritance_key in window.AllKeysDict:
-                window[inheritance_key].update(visible=True if inherited else False)
+                window[inheritance_key].update(visible=inherited)
 
         except KeyError:
             logger.error(f"No GUI equivalent for key {key}.")
@@ -379,7 +379,7 @@ def config_gui(full_config: dict, config_file: str):
                         keep_on_top=True,
                     )
                     continue
-                elif len(values["-MANAGER-PASSWORD-"]) < 8:
+                if len(values["-MANAGER-PASSWORD-"]) < 8:
                     sg.PopupError(
                         _t("config_gui.manager_password_too_short"), keep_on_top=True
                     )
@@ -984,11 +984,10 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Popup(_t("config_gui.configuration_saved"), keep_on_top=True)
                 logger.info("Configuration saved successfully.")
                 break
-            else:
-                sg.PopupError(
-                    _t("config_gui.cannot_save_configuration"), keep_on_top=True
-                )
-                logger.info("Could not save configuration")
+            sg.PopupError(
+                _t("config_gui.cannot_save_configuration"), keep_on_top=True
+            )
+            logger.info("Could not save configuration")
         if event == _t("config_gui.show_decrypted"):
             object_type, object_name = get_object_from_combo(values["-OBJECT-SELECT-"])
             manager_password = configuration.get_manager_password(

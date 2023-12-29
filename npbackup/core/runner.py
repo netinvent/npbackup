@@ -245,7 +245,7 @@ class NPBackupRunner:
 
         if raise_error == "ValueError":
             raise ValueError(msg)
-        elif raise_error:
+        if raise_error:
             raise Exception(msg)
 
     # pylint does not understand why this function does not take a self parameter
@@ -408,7 +408,7 @@ class NPBackupRunner:
 
         return wrapper
 
-    def create_restic_runner(self) -> None:
+    def create_restic_runner(self) -> bool:
         can_run = True
         try:
             repository = self.repo_config.g("repo_uri")
@@ -462,7 +462,7 @@ class NPBackupRunner:
                 can_run = False
         self._is_ready = can_run
         if not can_run:
-            return None
+            return False
         self.restic_runner = ResticRunner(
             repository=repository,
             password=password,
@@ -478,6 +478,9 @@ class NPBackupRunner:
                     self._using_dev_binary = True
                     self.write_logs("Using dev binary !", level="warning")
                 self.restic_runner.binary = binary
+            else:
+                return False
+        return True
 
     def _apply_config_to_restic_runner(self) -> bool:
         if not isinstance(self.restic_runner, ResticRunner):

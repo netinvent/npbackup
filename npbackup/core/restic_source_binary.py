@@ -19,7 +19,7 @@ from npbackup.path_helper import BASEDIR
 RESTIC_SOURCE_FILES_DIR = os.path.join(BASEDIR, os.pardir, "RESTIC_SOURCE_FILES")
 
 
-def get_restic_internal_binary(arch):
+def get_restic_internal_binary(arch: str) -> str:
     binary = None
     if os.path.isdir(RESTIC_SOURCE_FILES_DIR):
         if os.name == "nt":
@@ -45,3 +45,4 @@ def get_restic_internal_binary(arch):
         guessed_path = glob.glob(os.path.join(RESTIC_SOURCE_FILES_DIR, binary))
         if guessed_path:
             return guessed_path[0]
+    return None

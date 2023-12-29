@@ -109,7 +109,7 @@ def about_gui(version_string: str, full_config: dict = None) -> None:
         event, _ = window.read()
         if event in [sg.WIN_CLOSED, "exit"]:
             break
-        elif event == "autoupgrade":
+        if event == "autoupgrade":
             result = sg.PopupOKCancel(
                 _t("config_gui.auto_ugprade_will_quit"), keep_on_top=True
             )
@@ -402,7 +402,7 @@ def forget_snapshot(repo_config: dict, snapshot_ids: List[str]) -> bool:
 
 
 def _main_gui(viewer_mode: bool):
-    def select_config_file():
+    def select_config_file() -> None:
         """
         Option to select a configuration file
         """
@@ -431,7 +431,9 @@ def _main_gui(viewer_mode: bool):
                 if not config:
                     sg.PopupError(_t("generic.bad_file"))
                     continue
+                window.close()
                 return config_file
+        return None
 
     def gui_update_state() -> None:
         if current_state:
