@@ -93,6 +93,7 @@ def gui_thread_runner(
             "-OPERATIONS-PROGRESS-STDERR-",
         ):
             progress_window[key].Update(visible=True)
+        progress_window['--EXPAND--'].Update(visible=False)
 
     runner = NPBackupRunner()
     # So we don't always init repo_config, since runner.group_runner would do that itself
@@ -160,6 +161,7 @@ def gui_thread_runner(
                             visible=USE_THREADING,
                         )
                     ],
+                    [sg.Button(_t("generic.expand"), key="--EXPAND--", visible=__compact)],
                     [sg.Text("Debugging active", visible=not USE_THREADING)],
                 ],
                 expand_x=True,
@@ -197,6 +199,7 @@ def gui_thread_runner(
         background_color=GUI_LOADER_COLOR,
         titlebar_icon=OEM_ICON,
     )
+    # Finalize the window
     event, values = progress_window.read(timeout=0.01)
 
     read_stdout_queue = True
@@ -213,7 +216,9 @@ def gui_thread_runner(
             LOADER_ANIMATION, time_between_frames=100
         )  # pylint: disable=E1101 (no-member)
         # So we actually need to read the progress window for it to refresh...
-        _, _ = progress_window.read(0.01)
+        event , _ = progress_window.read(0.01)
+        if event == '--EXPAND--':
+            _upgrade_from_compact_view()
         # Read stdout queue
         try:
             stdout_data = stdout_queue.get(timeout=0.01)
@@ -239,9 +244,9 @@ def gui_thread_runner(
                 read_stderr_queue = False
             else:
                 stderr_has_messages = True
-                if __compact:
-                    for key in progress_window.AllKeysDict:
-                        progress_window[key].Update(visible=True)
+                #if __compact:
+                    #for key in progress_window.AllKeysDict:
+                    #    progress_window[key].Update(visible=True)
                 progress_window["-OPERATIONS-PROGRESS-STDERR-"].Update(
                     f"\n{stderr_data}", append=True
                 )
