@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2023 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023083101"
-__version__ = "1.8.0"
+__build__ = "2023122901"
+__version__ = "1.9.0"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -19,6 +19,7 @@ import json
 from datetime import datetime, timezone
 import dateutil.parser
 import queue
+from functools import wraps
 from command_runner import command_runner
 from npbackup.__debug__ import _DEBUG
 
@@ -507,6 +508,17 @@ class ResticRunner:
     def is_init(self, value: bool):
         self._is_init = value
 
+    def check_if_init(fn):
+        """
+        Decorator to check that we don't do anything unless repo is initialized
+        """
+        @wraps(fn)
+        def wrapper(self, *args, **kwargs):
+            if not self.is_init:
+                return None
+            return fn(*args, **kwargs)
+        return wrapper
+
     @property
     def last_command_status(self):
         return self._last_command_status
@@ -515,12 +527,11 @@ class ResticRunner:
     def last_command_status(self, value: bool):
         self._last_command_status = value
 
+    @check_if_init
     def list(self, obj: str = "snapshots") -> Optional[list]:
         """
         Returns json list of snapshots
         """
-        if not self.is_init:
-            return None
         cmd = "list {} --json".format(obj)
         result, output = self.executor(cmd)
         if result:
@@ -531,12 +542,11 @@ class ResticRunner:
                 logger.debug("Trace:", exc_info=True)
         return None
 
+    @check_if_init
     def ls(self, snapshot: str) -> Optional[list]:
         """
         Returns json list of objects
         """
-        if not self.is_init:
-            return None
         cmd = "ls {} --json".format(snapshot)
         result, output = self.executor(cmd)
         if result and output:
@@ -556,12 +566,11 @@ class ResticRunner:
                 logger.debug("Trace:", exc_info=True)
         return result
 
+    @check_if_init
     def snapshots(self) -> Optional[list]:
         """
         Returns json list of snapshots
         """
-        if not self.is_init:
-            return None
         cmd = "snapshots --json"
         result, output = self.executor(cmd)
         if result:
@@ -589,6 +598,7 @@ class ResticRunner:
         """
         Executes restic backup after interpreting all arguments
         """
+        # TODO: replace with @check_if_init decorator
         if not self.is_init:
             return None, None
 
@@ -677,12 +687,11 @@ class ResticRunner:
         self.write_logs("Backup failed backup operation", level="error")
         return False, output
 
+    @check_if_init
     def find(self, path: str) -> Optional[list]:
         """
         Returns find command
         """
-        if not self.is_init:
-            return None
         cmd = 'find "{}" --json'.format(path)
         result, output = self.executor(cmd)
         if result:
@@ -695,12 +704,11 @@ class ResticRunner:
         self.write_logs(f"Could not find path: {path}", level="error")
         return None
 
+    @check_if_init
     def restore(self, snapshot: str, target: str, includes: List[str] = None):
         """
         Restore given snapshot to directory
         """
-        if not self.is_init:
-            return None
         case_ignore_param = ""
         # Always use case ignore excludes under windows
         if os.name == "nt":
@@ -717,6 +725,7 @@ class ResticRunner:
         self.write_logs(f"Data not restored: {output}", level="info")
         return False
 
+    @check_if_init
     def forget(
         self,
         snapshots: Optional[Union[List[str], Optional[str]]] = None,
@@ -725,8 +734,6 @@ class ResticRunner:
         """
         Execute forget command for given snapshot
         """
-        if not self.is_init:
-            return None
         if not snapshots and not policy:
             self.write_logs(
                 "No valid snapshot or policy defined for pruning", level="error"
@@ -767,14 +774,13 @@ class ResticRunner:
         self.verbose = verbose
         return batch_result
 
+    @check_if_init
     def prune(
         self, max_unused: Optional[str] = None, max_repack_size: Optional[int] = None
     ) -> bool:
         """
         Prune forgotten snapshots
         """
-        if not self.is_init:
-            return None
         cmd = "prune"
         if max_unused:
             cmd += f"--max-unused {max_unused}"
@@ -790,12 +796,11 @@ class ResticRunner:
         self.write_logs(f"Could not prune repository:\n{output}", level="error")
         return False
 
+    @check_if_init
     def check(self, read_data: bool = True) -> bool:
         """
         Check current repo status
         """
-        if not self.is_init:
-            return None
         cmd = "check{}".format(" --read-data" if read_data else "")
         result, output = self.executor(cmd)
         if result:
@@ -804,12 +809,11 @@ class ResticRunner:
         self.write_logs(f"Repo check failed:\n {output}", level="critical")
         return False
 
+    @check_if_init
     def repair(self, subject: str) -> bool:
         """
         Check current repo status
         """
-        if not self.is_init:
-            return None
         if subject not in ["index", "snapshots"]:
             self.write_logs(f"Bogus repair order given: {subject}", level="error")
             return False
@@ -821,12 +825,11 @@ class ResticRunner:
         self.write_logs(f"Repo repair failed:\n {output}", level="critical")
         return False
 
+    @check_if_init
     def unlock(self) -> bool:
         """
         Remove stale locks from repos
         """
-        if not self.is_init:
-            return None
         cmd = f"unlock"
         result, output = self.executor(cmd)
         if result:
@@ -835,12 +838,11 @@ class ResticRunner:
         self.write_logs(f"Repo unlock failed:\n {output}", level="critical")
         return False
 
+    @check_if_init
     def raw(self, command: str) -> Tuple[bool, str]:
         """
         Execute plain restic command without any interpretation"
         """
-        if not self.is_init:
-            return None
         result, output = self.executor(command)
         if result:
             self.write_logs(f"successfully run raw command:\n{output}", level="info")
@@ -881,6 +883,7 @@ class ResticRunner:
                     return True, backup_ts
         return None, backup_ts
 
+    @check_if_init
     def has_recent_snapshot(self, delta: int = None) -> Tuple[bool, Optional[datetime]]:
         """
         Checks if a snapshot exists that is newer that delta minutes
@@ -892,8 +895,6 @@ class ResticRunner:
             returns False, datetime = 0001-01-01T00:00:00 if no snapshots found
             Returns None, None on error
         """
-        if not self.is_init:
-            return None
         # Don't bother to deal with mising delta
         if not delta:
             return False, None
