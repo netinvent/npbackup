@@ -516,7 +516,7 @@ class ResticRunner:
         def wrapper(self, *args, **kwargs):
             if not self.is_init:
                 return None
-            return fn(*args, **kwargs)
+            return fn(self, *args, **kwargs)
         return wrapper
 
     @property
@@ -566,7 +566,7 @@ class ResticRunner:
                 logger.debug("Trace:", exc_info=True)
         return result
 
-    @check_if_init
+    @check_if_init  # TODO: remove function and keep list("snapshots")
     def snapshots(self) -> Optional[list]:
         """
         Returns json list of snapshots
