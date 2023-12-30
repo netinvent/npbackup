@@ -106,13 +106,13 @@ ordereddict.d = d
 # NPF-SEC-00003: Avoid password command divulgation
 ENCRYPTED_OPTIONS = [
     "repo_uri",
-    "repo_password",
-    "repo_password_command",
-    "http_username",
-    "http_password",
-    "encrypted_variables",
-    "auto_upgrade_server_username",
-    "auto_upgrade_server_password",
+    "repo_opts.repo_password",
+    "repo_opts.repo_password_command",
+    "prometheus.http_username",
+    "prometheus.http_username",
+    "env.encrypted_env_variables",
+    "global_options.auto_upgrade_server_username",
+    "global_options.auto_upgrade_server_password",
 ]
 
 # This is what a config file looks like
@@ -239,25 +239,36 @@ def get_default_config() -> dict:
     return convert_to(full_config)
 
 
+def key_should_be_encrypted(key, encrypted_options: List[str]):
+    """
+    Checks whether key should be encrypted
+    """
+    for option in encrypted_options:
+        if option in key:
+            return True
+    return False
+
 def crypt_config(
     full_config: dict, aes_key: str, encrypted_options: List[str], operation: str
 ):
     try:
-
         def _crypt_config(key: str, value: Any) -> Any:
-            if key in encrypted_options:
+            if key_should_be_encrypted(key, encrypted_options):
+                print("operation", operation)
                 if operation == "encrypt":
                     if (
-                        isinstance(value, str)
-                        and not value.startswith("__NPBACKUP__")
+                        (isinstance(value, str)
+                        and (not value.startswith(ID_STRING) or not value.endswith(ID_STRING)))
                         or not isinstance(value, str)
                     ):
                         value = enc.encrypt_message_hf(
                             value, aes_key, ID_STRING, ID_STRING
-                        )
+                        ).decode(
+                        "utf-8"
+                    )
                 elif operation == "decrypt":
-                    if isinstance(value, str) and value.startswith("__NPBACKUP__"):
-                        value = enc.decrypt_message_hf(
+                    if isinstance(value, str) and value.startswith(ID_STRING) and value.endswith(ID_STRING):
+                        _, value = enc.decrypt_message_hf(
                             value,
                             aes_key,
                             ID_STRING,
@@ -267,9 +278,10 @@ def crypt_config(
                     raise ValueError(f"Bogus operation {operation} given")
             return value
 
-        return replace_in_iterable(full_config, _crypt_config, callable_wants_key=True)
+        return replace_in_iterable(full_config, _crypt_config, callable_wants_key=True, callable_wants_root_key=True)
     except Exception as exc:
         logger.error(f"Cannot {operation} configuration: {exc}.")
+        logger.info("Trace:", exc_info=True)
         return False
 
 
@@ -279,12 +291,12 @@ def is_encrypted(full_config: dict) -> bool:
     def _is_encrypted(key, value) -> Any:
         nonlocal is_encrypted
 
-        if key in ENCRYPTED_OPTIONS:
-            if isinstance(value, str) and not value.startswith("__NPBACKUP__"):
-                is_encrypted = True
+        if key_should_be_encrypted(key, ENCRYPTED_OPTIONS):
+            if isinstance(value, str) and (not value.startswith(ID_STRING) or not value.endswith(ID_STRING)):
+                is_encrypted = False
         return value
 
-    replace_in_iterable(full_config, _is_encrypted, callable_wants_key=True)
+    replace_in_iterable(full_config, _is_encrypted, callable_wants_key=True, callable_wants_root_key=True)
     return is_encrypted
 
 
