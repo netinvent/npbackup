@@ -417,18 +417,19 @@ def forget_snapshot(repo_config: dict, snapshot_ids: List[str]) -> bool:
 
 
 def _main_gui(viewer_mode: bool):
-    def select_config_file() -> None:
+    def select_config_file(config_file: str = None) -> None:
         """
         Option to select a configuration file
         """
         layout = [
             [
                 sg.Text(_t("main_gui.select_config_file")),
-                sg.Input(key="-config_file-"),
+                sg.Input(config_file, key="-config_file-"),
                 sg.FileBrowse(_t("generic.select_file")),
             ],
             [
                 sg.Push(),
+                sg.Button(_t("generic.cancel"), key="--CANCEL--"),
                 sg.Button(_t("generic.quit"), key="--EXIT--"),
                 sg.Button(_t("main_gui.new_config"), key="--NEW-CONFIG--"),
                 sg.Button(_t("generic.accept"), key="--ACCEPT--"),
@@ -439,7 +440,10 @@ def _main_gui(viewer_mode: bool):
         while True:
             action = None
             event, values = window.read()
-            if event in [sg.WIN_X_EVENT, sg.WIN_CLOSED, "--EXIT--"]:
+            if event in [sg.WIN_X_EVENT, sg.WIN_CLOSED, "--CANCEL--"]:
+                action = "--CANCEL--"
+                break
+            if event == "--EXIT--":
                 action = "--EXIT--"
                 break
             if event == "--NEW-CONFIG--":
@@ -526,15 +530,18 @@ def _main_gui(viewer_mode: bool):
                 )
         return current_state, backup_tz, snapshot_list
 
-    def get_config_file() -> str:
+    def get_config_file(default: bool = True) -> str:
         """
         Load config file until we got something
         """
-        config_file = Path(f"{CURRENT_DIR}/npbackup.conf")
+        if default:
+            config_file = Path(f"{CURRENT_DIR}/npbackup.conf")
+        else:
+            config_file = None
 
         while True:
             if not config_file or not config_file.exists():
-                config_file, action = select_config_file()
+                config_file, action = select_config_file(config_file)
                 if action == "--EXIT--":
                     sys.exit(100)
                 if action == "--NEW-CONFIG--":
@@ -654,7 +661,7 @@ def _main_gui(viewer_mode: bool):
                             disabled=viewer_mode,
                         ),
                         sg.Button(
-                            _t("main_gui.load_configuration"),
+                            _t("main_gui.load_config"),
                             key="--LOAD-CONF--",
                             disabled=viewer_mode,
                         ),
@@ -747,7 +754,7 @@ def _main_gui(viewer_mode: bool):
             event = "--STATE-BUTTON--"
         if event == "--LOAD-CONF--":
             # TODO: duplicate code
-            full_config, config_file = get_config_file()
+            full_config, config_file = get_config_file(default=False)
             repo_config, config_inheritance = npbackup.configuration.get_repo_config(
                 full_config
             )
@@ -791,5 +798,5 @@ def main_gui(viewer_mode=False):
     except Exception as exc:
         sg.Popup(_t("config_gui.unknown_error_see_logs") + f": {exc}")
         logger.critical(f"GUI Execution error {exc}")
-        logger.debug("Trace:", exc_info=True)
+        logger.info("Trace:", exc_info=True)
         sys.exit(251)
