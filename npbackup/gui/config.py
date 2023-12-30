@@ -163,16 +163,18 @@ def config_gui(full_config: dict, config_file: str):
         """
         Update gui values depending on their type
         """
-        if key == "backup_admin_password":
-            return
         if key in ("repo_uri", "repo_group"):
             if object_type == "group":
                 window[key].Disabled = True
             else:
                 window[key].Disabled = False
         try:
+            # Don't bother to update repo name
+            if key == "name":
+                return
             # Don't show sensible info unless unencrypted requested
             if not unencrypted:
+                # Use last part of key only
                 if key in configuration.ENCRYPTED_OPTIONS:
                     try:
                         if value is None or value == "":
@@ -284,11 +286,14 @@ def config_gui(full_config: dict, config_file: str):
 
     def update_config_dict(full_config, values):
         """
-        Update full_config with keys from
+        Update full_config with keys from GUI
+        keys should always have form section.name or section.subsection.name
         """
-        # TODO
-        return
         object_type, object_name = get_object_from_combo(values["-OBJECT-SELECT-"])
+        if object_type == "repo":
+            object_group = full_config.g(f"repos.{object_name}.repo_group")
+        else:
+            object_group = None
         for key, value in values.items():
             if value == ENCRYPTED_DATA_PLACEHOLDER:
                 continue
@@ -296,6 +301,7 @@ def config_gui(full_config: dict, config_file: str):
                 # Don't bother with keys that don't contain with "." since they're not in the YAML config file
                 # but are most probably for GUI events
                 continue
+
             # Handle combo boxes first to transform translation into key
             if key in combo_boxes:
                 value = get_key_from_value(combo_boxes[key], value)
@@ -316,16 +322,43 @@ def config_gui(full_config: dict, config_file: str):
                             value = int(value)
                         except ValueError:
                             pass
-            # Create section if not exists
-            active_object_key = f"{object_type}s.{object_name}.{key}"
-            print("ACTIVE KEY", active_object_key)
-            if not full_config.g(active_object_key):
-                full_config.s(active_object_key, CommentedMap())
 
-            full_config.s(active_object_key, value)
+            # Don't bother with inheritance on global options
+            if not key.startswith("global_options."):
+
+                # Don't update items that have been inherited from groups
+                if object_group:
+                    inheritance_key = f"groups.{object_group}.{key}"
+                    # If object is a list, check which values are inherited from group and remove them
+                    if isinstance(value, list):
+                        for entry in full_config.g(inheritance_key):
+                            if entry in value:
+                                value.remove(entry)
+                    # check if value is inherited from group
+                    if full_config.g(inheritance_key) == value:
+                        continue
+
+                    active_object_key = f"{object_type}s.{object_name}.{key}"
+                    current_value = full_config.g(active_object_key)
+                    if object_group:
+                        inherited = full_config.g(inheritance_key)
+                    else:
+                        inherited = False
+                    # WIP print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
+                    #if not full_config.g(active_object_key):
+                    #    full_config.s(active_object_key, CommentedMap())
+
+
+            # Don't bother to update empty strings, empty lists and None
+            if not current_value and not value:
+                continue
+            # Don't bother to update values which haven't changed
+            if current_value == value:
+                continue
+
+            #full_config.s(active_object_key, value)
         return full_config
         # TODO: Do we actually save every modified object or just the last ?
-        # TDOO: also save global options
 
     def set_permissions(full_config: dict, object_name: str) -> dict:
         """
