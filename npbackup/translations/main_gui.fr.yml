@@ -39,6 +39,7 @@ fr:
   viewer_mode: Mode visualisation de dépot uniquement
   open_repo: Ouvrir dépot
   new_config: Nouvelle configuration
+  load_config: Charger configuration
   config_error: Erreur du fichier de configuration
 
   # logs

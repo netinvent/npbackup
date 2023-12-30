@@ -39,6 +39,7 @@ en:
   viewer_mode: Repository view-only mode
   open_repo: Open repo
   new_config: New config
+  load_config: Load configuration
   config_error: Configuration file error
 
   # logs
