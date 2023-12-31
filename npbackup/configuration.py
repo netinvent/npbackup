@@ -140,15 +140,16 @@ empty_config_dict = {
         "default_group": {
             "backup_opts": {
                 "paths": [],
+                "source_type": None,
                 "tags": [],
                 "compression": "auto",
                 "use_fs_snapshot": True,
                 "ignore_cloud_files": True,
                 "exclude_caches": True,
-                "exclude_case_ignore": False,
                 "one_file_system": True,
                 "priority": "low",
                 "exclude_caches": True,
+                "excludes_case_ignore": False,
                 "exclude_files": [
                     "excludes/generic_excluded_extensions",
                     "excludes/generic_excludes",
@@ -156,8 +157,7 @@ empty_config_dict = {
                     "excludes/linux_excludes",
                 ],
                 "exclude_patterns": None,
-                "exclude_patterns_source_type": "files_from_verbatim",
-                "exclude_patterns_case_ignore": False,
+                "exclude_files_larger_than": None,
                 "additional_parameters": None,
                 "additional_backup_only_parameters": None,
                 "pre_exec_commands": [],
@@ -166,7 +166,8 @@ empty_config_dict = {
                 "post_exec_commands": [],
                 "post_exec_per_command_timeout": 3600,
                 "post_exec_failure_is_fatal": False,
-                "post_exec_execute_even_on_error": True,  # TODO
+                "post_exec_execute_even_on_backup_error": True,
+                "minimum_backup_size_error": "1M" # TODO
             }
         },
         "repo_opts": {
@@ -254,7 +255,6 @@ def crypt_config(
     try:
         def _crypt_config(key: str, value: Any) -> Any:
             if key_should_be_encrypted(key, encrypted_options):
-                print("operation", operation)
                 if operation == "encrypt":
                     if (
                         (isinstance(value, str)
@@ -466,6 +466,9 @@ def get_repo_config(
 
         return _inherit_group_settings(_repo_config, _group_config, _config_inheritance)
 
+    if not full_config:
+        return None, None
+
     try:
         # Let's make a copy of config since it's a "pointer object"
         repo_config = deepcopy(full_config.g(f"repos.{repo_name}"))
@@ -521,7 +524,7 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
                         f"Config file version {conf_version} is not required version min={MIN_CONF_VERSION}, max={MAX_CONF_VERSION}"
                     )
                     return False
-            except AttributeError:
+            except (AttributeError, TypeError):
                 logger.critical(
                     "Cannot read conf version from config file, which seems bogus"
                 )
@@ -597,8 +600,12 @@ def save_config(config_file: Path, full_config: dict) -> bool:
 
 
 def get_repo_list(full_config: dict) -> List[str]:
-    return list(full_config.g("repos").keys())
+    if full_config:
+        return list(full_config.g("repos").keys())
+    return []
 
 
 def get_group_list(full_config: dict) -> List[str]:
-    return list(full_config.g("groups").keys())
+    if full_config:
+        return list(full_config.g("groups").keys())
+    return []
