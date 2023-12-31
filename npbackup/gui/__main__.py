@@ -495,7 +495,7 @@ def _main_gui(viewer_mode: bool):
         )
         gui_msg = _t("main_gui.loading_snapshot_list_from_repo")
         snapshots = gui_thread_runner(
-            repo_config, "list", __gui_msg=gui_msg, __autoclose=True, __compact=True
+            repo_config, "snapshots", __gui_msg=gui_msg, __autoclose=True, __compact=True
         )
         current_state, backup_tz = ResticRunner._has_recent_snapshot(
             snapshots, repo_config.g("repo_opts.minimum_backup_age")

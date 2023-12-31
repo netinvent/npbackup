@@ -318,11 +318,12 @@ class NPBackupRunner:
             required_permissions = {
                 "backup": ["backup", "restore", "full"],
                 "has_recent_snapshot": ["backup", "restore", "full"],
-                "list": ["backup", "restore", "full"],
+                "snapshots": ["backup", "restore", "full"],
                 "ls": ["backup", "restore", "full"],
                 "find": ["backup", "restore", "full"],
                 "restore": ["restore", "full"],
                 "check": ["restore", "full"],
+                "list": ["full"],
                 "unlock": ["full"],
                 "repair": ["full"],
                 "forget": ["full"],
@@ -633,12 +634,26 @@ class NPBackupRunner:
     @is_ready
     @apply_config_to_restic_runner
     @catch_exceptions
-    def list(self) -> Optional[dict]:
+    def snapshots(self) -> Optional[dict]:
         self.write_logs(
             f"Listing snapshots of repo {self.repo_config.g('name')}", level="info"
         )
-        # TODO: replace with list("snapshots")
         snapshots = self.restic_runner.snapshots()
+        return snapshots
+    
+    @threaded
+    @close_queues
+    @exec_timer
+    @check_concurrency
+    @has_permission
+    @is_ready
+    @apply_config_to_restic_runner
+    @catch_exceptions
+    def list(self, subject: str) -> Optional[dict]:
+        self.write_logs(
+            f"Listing {subject} objects of repo {self.repo_config.g('name')}", level="info"
+        )
+        snapshots = self.restic_runner.list(subject)
         return snapshots
 
     @threaded
@@ -1068,7 +1083,7 @@ class NPBackupRunner:
     @exec_timer
     @has_permission
     @catch_exceptions
-    def group_runner(self, repo_config_list: list, operation: str, **kwargs) -> bool:
+    def group_runner(self, repo_config_list: List, operation: str, **kwargs) -> bool:
         group_result = True
 
         # Make sure we don't close the stdout/stderr queues when running multiple operations
@@ -1095,9 +1110,4 @@ class NPBackupRunner:
                 )
                 group_result = False
         self.write_logs("Finished execution group operations", level="info")
-        # Manually close the queues at the end
-        # if self.stdout:
-        #    self.stdout.put(None)
-        # if self.stderr:
-        #    self.stderr.put(None)
         return group_result
