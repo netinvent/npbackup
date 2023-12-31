@@ -28,6 +28,8 @@ def entrypoint(*args, **kwargs):
     result = npbackup_runner.__getattribute__(kwargs.pop("operation"))(
         **kwargs.pop("op_args"), __no_threads=True
     )
+    print(result)
+    logger.debug(result)
 
 
 def auto_upgrade(full_config: dict):

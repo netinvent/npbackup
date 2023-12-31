@@ -295,6 +295,8 @@ class ResticRunner:
                         is_cloud_error = False
             if is_cloud_error is True:
                 return True, output
+            else:
+                self.write_logs("Some files could not be backed up", level="error")
             # TEMP-FIX-4155-END
         self.last_command_status = False
 
@@ -592,11 +594,12 @@ class ResticRunner:
     def backup(
         self,
         paths: List[str],
-        exclude_patterns_source_type: str,
+        source_type: str,
         exclude_patterns: List[str] = [],
         exclude_files: List[str] = [],
-        exclude_patterns_case_ignore: bool = False,
+        excludes_case_ignore: bool = False,
         exclude_caches: bool = False,
+        exclude_files_larger_than: str = None,
         use_fs_snapshot: bool = False,
         tags: List[str] = [],
         one_file_system: bool = False,
@@ -616,11 +619,11 @@ class ResticRunner:
             "files_from_raw",
         ]:
             cmd = "backup"
-            if exclude_patterns_source_type == "files_from":
+            if source_type == "files_from":
                 source_parameter = "--files-from"
-            elif exclude_patterns_source_type == "files_from_verbatim":
+            elif source_type == "files_from_verbatim":
                 source_parameter = "--files-from-verbatim"
-            elif exclude_patterns_source_type == "files_from_raw":
+            elif source_type == "files_from_raw":
                 source_parameter = "--files-from-raw"
             else:
                 self.write_logs("Bogus source type given", level="error")
@@ -642,24 +645,24 @@ class ResticRunner:
 
         case_ignore_param = ""
         # Always use case ignore excludes under windows
-        if os.name == "nt" or exclude_patterns_case_ignore:
+        if os.name == "nt" or excludes_case_ignore:
             case_ignore_param = "i"
 
         for exclude_pattern in exclude_patterns:
             if exclude_pattern:
-                cmd += ' --{}exclude "{}"'.format(case_ignore_param, exclude_pattern)
+                cmd += f' --{case_ignore_param}exclude "{exclude_pattern}"'
         for exclude_file in exclude_files:
             if exclude_file:
                 if os.path.isfile(exclude_file):
-                    cmd += ' --{}exclude-file "{}"'.format(
-                        case_ignore_param, exclude_file
-                    )
-                else:
+                    cmd += f' --{case_ignore_param}exclude-file "{exclude_file}"'
+                else:g
                     self.write_logs(
                         f"Exclude file '{exclude_file}' not found", level="error"
                     )
         if exclude_caches:
             cmd += " --exclude-caches"
+        if exclude_files_larger_than:
+            cmd += f" --exclude-files-larger-than {exclude_files_larger_than}"
         if one_file_system:
             cmd += " --one-file-system"
         if use_fs_snapshot:
