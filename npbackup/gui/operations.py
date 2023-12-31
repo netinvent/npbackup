@@ -190,9 +190,9 @@ def operations_gui(full_config: dict) -> dict:
                     continue
                 repos = complete_repo_list
             else:
-                repos = complete_repo_list.index(
-                    values["repo-list"]
-                )  # TODO multi select
+                repos = []
+                for value in values["repo-list"]:
+                    repos.append(complete_repo_list[value])
 
             repo_config_list = []
             for repo_name, backend_type, repo_uri in repos:
