@@ -431,7 +431,6 @@ def _main_gui(viewer_mode: bool):
             [
                 sg.Push(),
                 sg.Button(_t("generic.cancel"), key="--CANCEL--"),
-                sg.Button(_t("generic.quit"), key="--EXIT--"),
                 sg.Button(_t("main_gui.new_config"), key="--NEW-CONFIG--"),
                 sg.Button(_t("generic.accept"), key="--ACCEPT--"),
             ],
@@ -443,9 +442,6 @@ def _main_gui(viewer_mode: bool):
             event, values = window.read()
             if event in [sg.WIN_X_EVENT, sg.WIN_CLOSED, "--CANCEL--"]:
                 action = "--CANCEL--"
-                break
-            if event == "--EXIT--":
-                action = "--EXIT--"
                 break
             if event == "--NEW-CONFIG--":
                 action = event
@@ -497,8 +493,13 @@ def _main_gui(viewer_mode: bool):
         snapshots = gui_thread_runner(
             repo_config, "snapshots", __gui_msg=gui_msg, __autoclose=True, __compact=True
         )
+        try:
+            min_backup_age = repo_config.g("repo_opts.minimum_backup_age")
+        except AttributeError:
+            min_backup_age = 0
+
         current_state, backup_tz = ResticRunner._has_recent_snapshot(
-            snapshots, repo_config.g("repo_opts.minimum_backup_age")
+            snapshots, min_backup_age
         )
         snapshot_list = []
         if snapshots:
@@ -542,9 +543,9 @@ def _main_gui(viewer_mode: bool):
 
         while True:
             if not config_file or not config_file.exists():
-                config_file, action = select_config_file(config_file)
-                if action == "--EXIT--":
-                    sys.exit(100)
+                config_file, action = select_config_file()
+                if action == "--CANCEL--":
+                    break
                 if action == "--NEW-CONFIG--":
                     config_file = "npbackup.conf"
                     full_config = config_gui(
@@ -558,16 +559,43 @@ def _main_gui(viewer_mode: bool):
                     config_file = None
                 else:
                     return full_config, config_file
+        return None, None
+
+    def get_config():
+        full_config, config_file = get_config_file()
+        if full_config and config_file:
+            repo_config, config_inheritance = npbackup.configuration.get_repo_config(
+                full_config
+            )
+            backup_destination = _t("main_gui.local_folder")
+            backend_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
+            window.set_title(f"{SHORT_PRODUCT_NAME} - {config_file}")
+        else:
+            repo_config = None
+            config_inheritance = None
+            backup_destination = "None"
+            backend_type = "None"
+            repo_uri = "None"
+        repo_list = npbackup.configuration.get_repo_list(full_config)
+        return full_config, config_file, repo_config, backup_destination, backend_type, repo_uri, repo_list
 
     if not viewer_mode:
+        """
         full_config, config_file = get_config_file()
-        repo_config, config_inheritance = npbackup.configuration.get_repo_config(
-            full_config
-        )
+        if full_config and config_file:
+            repo_config, config_inheritance = npbackup.configuration.get_repo_config(
+                full_config
+            )
+            backup_destination = _t("main_gui.local_folder")
+            backend_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
+        else:
+            repo_config = None
+            config_inheritance = None
+            backup_destination = "None"
+            backend_type = "Bone"
         repo_list = npbackup.configuration.get_repo_list(full_config)
-
-        backup_destination = _t("main_gui.local_folder")
-        backend_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
+        """
+        full_config, config_file, repo_config, backup_destination, backend_type, repo_uri, repo_list = get_config()
     else:
         # Let's try to read standard restic repository env variables
         viewer_repo_uri = os.environ.get("RESTIC_REPOSITORY", None)
@@ -619,7 +647,7 @@ def _main_gui(viewer_mode: bool):
                         sg.Combo(
                             repo_list,
                             key="-active_repo-",
-                            default_value=repo_list[0],
+                            default_value=repo_list[0] if repo_list else None,
                             enable_events=True,
                         ),
                         sg.Text(f"Type {backend_type}", key="-backend_type-"),
@@ -723,9 +751,15 @@ def _main_gui(viewer_mode: bool):
                 sg.PopupError("Repo not existent in config")
                 continue
         if event == "--LAUNCH-BACKUP--":
+            if not full_config:
+                sg.PopupError(_t("main_gui.no_config"))
+                continue
             backup(repo_config)
             event = "--STATE-BUTTON--"
         if event == "--SEE-CONTENT--":
+            if not full_config:
+                sg.PopupError(_t("main_gui.no_config"))
+                continue
             if not values["snapshot-list"]:
                 sg.Popup(_t("main_gui.select_backup"), keep_on_top=True)
                 continue
@@ -735,6 +769,9 @@ def _main_gui(viewer_mode: bool):
             snapshot_to_see = snapshot_list[values["snapshot-list"][0]][0]
             ls_window(repo_config, snapshot_to_see)
         if event == "--FORGET--":
+            if not full_config:
+                sg.PopupError(_t("main_gui.no_config"))
+                continue
             if not values["snapshot-list"]:
                 sg.Popup(_t("main_gui.select_backup"), keep_on_top=True)
                 continue
@@ -745,9 +782,15 @@ def _main_gui(viewer_mode: bool):
             # Make sure we trigger a GUI refresh after forgetting snapshots
             event = "--STATE-BUTTON--"
         if event == "--OPERATIONS--":
+            if not full_config:
+                sg.PopupError(_t("main_gui.no_config"))
+                continue
             full_config = operations_gui(full_config)
             event = "--STATE-BUTTON--"
         if event == "--CONFIGURE--":
+            if not full_config:
+                sg.PopupError(_t("main_gui.no_config"))
+                continue
             full_config = config_gui(full_config, config_file)
             # Make sure we trigger a GUI refresh when configuration is changed
             event = "--STATE-BUTTON--"
@@ -756,16 +799,7 @@ def _main_gui(viewer_mode: bool):
             repo_config = viewer_create_repo(viewer_repo_uri, viewer_repo_password)
             event = "--STATE-BUTTON--"
         if event == "--LOAD-CONF--":
-            # TODO: duplicate code
-            full_config, config_file = get_config_file(default=False)
-            repo_config, config_inheritance = npbackup.configuration.get_repo_config(
-                full_config
-            )
-            repo_list = npbackup.configuration.get_repo_list(full_config)
-
-            backup_destination = _t("main_gui.local_folder")
-            backend_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
-            window.set_title(f"{SHORT_PRODUCT_NAME} - {config_file}")
+            full_config, config_file, repo_config, backup_destination, backend_type, repo_uri, repo_list = get_config()
             event = "--STATE-BUTTON--"
         if event == _t("generic.destination"):
             try:
@@ -780,10 +814,11 @@ def _main_gui(viewer_mode: bool):
         if event == "--ABOUT--":
             about_gui(version_string, full_config if not viewer_mode else None)
         if event == "--STATE-BUTTON--":
-            current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
-            gui_update_state()
-            if current_state is None:
-                sg.Popup(_t("main_gui.cannot_get_repo_status"))
+            if full_config:
+                current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
+                gui_update_state()
+                if current_state is None:
+                    sg.Popup(_t("main_gui.cannot_get_repo_status"))
 
 
 def main_gui(viewer_mode=False):
