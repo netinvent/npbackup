@@ -160,6 +160,7 @@ empty_config_dict = {
                 "exclude_files_larger_than": None,
                 "additional_parameters": None,
                 "additional_backup_only_parameters": None,
+                "minimum_backup_size_error": "10M", # TODO
                 "pre_exec_commands": [],
                 "pre_exec_per_command_timeout": 3600,
                 "pre_exec_failure_is_fatal": False,
@@ -167,7 +168,6 @@ empty_config_dict = {
                 "post_exec_per_command_timeout": 3600,
                 "post_exec_failure_is_fatal": False,
                 "post_exec_execute_even_on_backup_error": True,
-                "minimum_backup_size_error": "1M" # TODO
             }
         },
         "repo_opts": {

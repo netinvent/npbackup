@@ -816,6 +816,8 @@ class NPBackupRunner:
         )
         use_fs_snapshot = self.repo_config.g("backup_opts.use_fs_snapshot")
 
+        minimum_backup_size_error = self.repo_config.g("backup_opts.minimum_backup_size_error")
+
         pre_exec_commands = self.repo_config.g("backup_opts.pre_exec_commands")
         pre_exec_per_command_timeout = self.repo_config.g(
             "backup_opts.pre_exec_per_command_timeout"
@@ -910,6 +912,9 @@ class NPBackupRunner:
             additional_backup_only_parameters=additional_backup_only_parameters,
         )
         self.write_logs(f"Restic output:\n{result_string}", level="debug")
+        # Extract backup size from result_string
+
+        minimum_backup_size_error = 0
         metric_writer(
             self.repo_config, result, result_string, self.restic_runner.dry_run
         )

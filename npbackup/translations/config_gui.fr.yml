@@ -12,6 +12,7 @@ fr:
   windows_always: toujours actif pour Windows
   exclude_cache_dirs: Exclure dossiers cache
   one_file_system: Ne pas suivre les points de montage
+  minimum_backup_size_error: Taille minimale en dessous de laquelle la sauvegarde est considérée échouée
   pre_exec_commands: Commandes pré-sauvegarde
   maximum_exec_time: Temps maximal d'execution
   exec_failure_is_fatal: L'échec d'execution est fatal
