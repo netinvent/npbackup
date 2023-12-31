@@ -43,6 +43,7 @@ from npbackup.customization import (
     LICENSE_FILE,
     PYSIMPLEGUI_THEME,
     OEM_ICON,
+    SHORT_PRODUCT_NAME
 )
 from npbackup.gui.config import config_gui
 from npbackup.gui.operations import operations_gui
@@ -675,7 +676,7 @@ def _main_gui(viewer_mode: bool):
     ]
 
     window = sg.Window(
-        "npbackup",
+        SHORT_PRODUCT_NAME,
         layout,
         default_element_size=(12, 1),
         text_justification="r",
@@ -702,6 +703,8 @@ def _main_gui(viewer_mode: bool):
             backup_tz = None
             snapshot_list = []
         gui_update_state()
+    # Show which config file is loaded
+    window.set_title(f"{SHORT_PRODUCT_NAME} - {config_file}")
     while True:
         event, values = window.read(timeout=60000)
 
@@ -762,6 +765,7 @@ def _main_gui(viewer_mode: bool):
 
             backup_destination = _t("main_gui.local_folder")
             backend_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
+            window.set_title(f"{SHORT_PRODUCT_NAME} - {config_file}")
             event = "--STATE-BUTTON--"
         if event == _t("generic.destination"):
             try:

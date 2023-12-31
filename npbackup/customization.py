@@ -29,6 +29,7 @@ COPYRIGHT = "NetInvent 2022-2023"
 FILE_DESCRIPTION = "Network Backup Client"
 TRADEMARKS = "NetInvent (C)"
 PRODUCT_NAME = "NPBackup Network Backup Client"
+SHORT_PRODUCT_NAME = "NPBackup"
 
 # Arbitrary string
 ID_STRING = "__NPBACKUP__"
