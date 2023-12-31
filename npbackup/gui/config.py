@@ -170,7 +170,8 @@ def config_gui(full_config: dict, config_file: str):
                 window[key].Disabled = False
         try:
             # Don't bother to update repo name
-            if key == "name":
+            # Also permissions / manager_password are in a separate gui
+            if key in ('name', 'permissions', 'manager_password'):
                 return
             # Don't show sensible info unless unencrypted requested
             if not unencrypted:
@@ -295,6 +296,7 @@ def config_gui(full_config: dict, config_file: str):
         else:
             object_group = None
         for key, value in values.items():
+            # Don't update placeholders ;)
             if value == ENCRYPTED_DATA_PLACEHOLDER:
                 continue
             if not isinstance(key, str) or (isinstance(key, str) and not "." in key):
@@ -323,6 +325,8 @@ def config_gui(full_config: dict, config_file: str):
                         except ValueError:
                             pass
 
+            current_value = full_config.g(active_object_key)
+            
             # Don't bother with inheritance on global options
             if not key.startswith("global_options."):
 
@@ -339,12 +343,11 @@ def config_gui(full_config: dict, config_file: str):
                         continue
 
                     active_object_key = f"{object_type}s.{object_name}.{key}"
-                    current_value = full_config.g(active_object_key)
                     if object_group:
                         inherited = full_config.g(inheritance_key)
                     else:
                         inherited = False
-                    # WIP print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
+            # WIP print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
                     #if not full_config.g(active_object_key):
                     #    full_config.s(active_object_key, CommentedMap())
 
@@ -517,6 +520,13 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Text(
+                    _t("config_gui.exclude_files_larger_than"),
+                    size=(40, 2),
+                ),
+                sg.Input(key="backup_opts.exclude_files_larger_than", size=(50, 1)),
+            ],
+            [
+                sg.Text(
                     f"{_t('config_gui.exclude_files')}\n({_t('config_gui.one_per_line')})",
                     size=(40, 2),
                 ),
@@ -525,12 +535,12 @@ def config_gui(full_config: dict, config_file: str):
             [
                 sg.Text(
                     "{}\n({})".format(
-                        _t("config_gui.exclude_case_ignore"),
+                        _t("config_gui.excludes_case_ignore"),
                         _t("config_gui.windows_always"),
                     ),
                     size=(40, 2),
                 ),
-                sg.Checkbox("", key="backup_opts.exclude_case_ignore", size=(41, 1)),
+                sg.Checkbox("", key="backup_opts.excludes_case_ignore", size=(41, 1)),
             ],
             [
                 sg.Text(_t("config_gui.exclude_cache_dirs"), size=(40, 1)),
@@ -541,6 +551,10 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Checkbox("", key="backup_opts.one_file_system", size=(41, 1)),
             ],
             [
+                sg.Text(_t("config_gui.minimum_backup_size_error"), size=(40, 2)),
+                sg.Input(key="backup_opts.minimum_backup_size_error", size=(50, 1)),
+            ],
+            [
                 sg.Text(
                     f"{_t('config_gui.pre_exec_commands')}\n({_t('config_gui.one_per_line')})",
                     size=(40, 2),
@@ -549,7 +563,7 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Text(_t("config_gui.maximum_exec_time"), size=(40, 1)),
-                sg.Input(key="backup_opts.pre_exec_timeout", size=(50, 1)),
+                sg.Input(key="backup_opts.pre_exec_per_command_timeout", size=(50, 1)),
             ],
             [
                 sg.Text(_t("config_gui.exec_failure_is_fatal"), size=(40, 1)),
@@ -566,12 +580,18 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Text(_t("config_gui.maximum_exec_time"), size=(40, 1)),
-                sg.Input(key="backup_opts.post_exec_timeout", size=(50, 1)),
+                sg.Input(key="backup_opts.post_exec_per_command_timeout", size=(50, 1)),
             ],
             [
                 sg.Text(_t("config_gui.exec_failure_is_fatal"), size=(40, 1)),
                 sg.Checkbox(
                     "", key="backup_opts.post_exec_failure_is_fatal", size=(41, 1)
+                ),
+            ],
+            [
+                sg.Text(_t("config_gui.execute_even_on_backup_error"), size=(40, 1)),
+                sg.Checkbox(
+                    "", key="backup_opts.post_exec_execute_even_on_backup_error", size=(41, 1)
                 ),
             ],
             [
@@ -743,7 +763,7 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Text(_t("config_gui.select_object")),
                 sg.Combo(
                     object_list,
-                    default_value=object_list[0],
+                    default_value=object_list[0] if object_list else None,
                     key="-OBJECT-SELECT-",
                     enable_events=True,
                 ),
@@ -922,10 +942,10 @@ def config_gui(full_config: dict, config_file: str):
         buttons = [
             [
                 sg.Push(),
-                sg.Button(_t("config_gui.create_object"), key="-OBJECT-CREATE-"),
-                sg.Button(_t("config_gui.delete_object"), key="-OBJECT-DELETE-"),
-                sg.Button(_t("generic.cancel"), key="--CANCEL--"),
-                sg.Button(_t("generic.accept"), key="--ACCEPT--"),
+                sg.Button(_t("config_gui.create_object"), key="-OBJECT-CREATE-", size=(30, 1)),
+                sg.Button(_t("config_gui.delete_object"), key="-OBJECT-DELETE-", size=(30, 1)),
+                sg.Button(_t("generic.cancel"), key="--CANCEL--", size=(15, 1)),
+                sg.Button(_t("generic.accept"), key="--ACCEPT--", size=(15, 1)),
             ]
         ]
 
