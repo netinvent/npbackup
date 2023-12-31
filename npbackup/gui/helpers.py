@@ -24,7 +24,8 @@ from npbackup.customization import (
 )
 from npbackup.core.runner import NPBackupRunner
 from npbackup.__debug__ import _DEBUG
-from npbackup.customization import PYSIMPLEGUI_THEME, OEM_ICON, OEM_LOGO
+from npbackup.__env__ import GUI_CHECK_INTERVAL
+from npbackup.customization import PYSIMPLEGUI_THEME, OEM_ICON
 
 logger = getLogger()
 
@@ -227,12 +228,12 @@ def gui_thread_runner(
             LOADER_ANIMATION, time_between_frames=100
         )
         # So we actually need to read the progress window for it to refresh...
-        event, _ = progress_window.read(0.01)
+        event, _ = progress_window.read(0.000000001)
         if event == "--EXPAND--":
             _upgrade_from_compact_view()
         # Read stdout queue
         try:
-            stdout_data = stdout_queue.get(timeout=0.01)
+            stdout_data = stdout_queue.get(timeout=GUI_CHECK_INTERVAL)
         except queue.Empty:
             pass
         else:
@@ -246,7 +247,7 @@ def gui_thread_runner(
 
         # Read stderr queue
         try:
-            stderr_data = stderr_queue.get(timeout=0.01)
+            stderr_data = stderr_queue.get(timeout=GUI_CHECK_INTERVAL)
         except queue.Empty:
             pass
         else:

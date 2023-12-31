@@ -22,14 +22,11 @@ import queue
 from functools import wraps
 from command_runner import command_runner
 from npbackup.__debug__ import _DEBUG
+from npbackup.__env__ import INIT_TIMEOUT, CHECK_INTERVAL
+
 
 
 logger = getLogger()
-
-
-# Arbitrary timeout for init / init checks.
-# If init takes more than a minute, we really have a problem
-INIT_TIMEOUT = 60
 
 
 class ResticRunner:
@@ -268,6 +265,7 @@ class ResticRunner:
             stop_on=self.stop_on,
             on_exit=self.on_exit,
             method="poller",
+            check_interval=CHECK_INTERVAL,
             priority=self._priority,
             io_priority=self._priority,
         )
