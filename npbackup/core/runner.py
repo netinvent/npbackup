@@ -782,8 +782,8 @@ class NPBackupRunner:
             )
             return False
 
-        exclude_patterns_source_type = self.repo_config.g(
-            "backup_opts.exclude_patterns_source_type"
+        source_type = self.repo_config.g(
+            "backup_opts.source_type"
         )
 
         # MSWindows does not support one-file-system option
@@ -795,10 +795,20 @@ class NPBackupRunner:
         if not isinstance(exclude_files, list):
             exclude_files = [exclude_files]
 
-        exclude_patterns_case_ignore = self.repo_config.g(
-            "backup_opts.exclude_patterns_case_ignore"
+        excludes_case_ignore = self.repo_config.g(
+            "backup_opts.excludes_case_ignore"
         )
         exclude_caches = self.repo_config.g("backup_opts.exclude_caches")
+        exclude_files_larger_than = self.repo_config.g("backup_opts.exclude_files_larger_than")
+        if not exclude_files_larger_than[-1] in ('k', 'K', 'm', 'M', 'g', 'G', 't', 'T'):
+            self.write_logs(f"Bogus exclude_files_larger_than value given: {exclude_files_larger_than}")
+            exclude_files_larger_than = None
+        try:
+            float(exclude_files_larger_than[:-1])
+        except (ValueError, TypeError):
+            self.write_logs(f"Cannot check whether excludes_files_larger_than is a float: {exclude_files_larger_than}")
+            exclude_files_larger_than = None
+
         one_file_system = (
             self.repo_config.g("backup_opts.one_file_system")
             if os.name != "nt"
@@ -854,7 +864,7 @@ class NPBackupRunner:
         self.restic_runner.verbose = self.verbose
 
         # Run backup here
-        if exclude_patterns_source_type not in ["folder_list", None]:
+        if source_type not in ["folder_list", None]:
             self.write_logs(
                 f"Running backup of files in {paths} list to repo {self.repo_config.g('name')}",
                 level="info",
@@ -888,11 +898,12 @@ class NPBackupRunner:
         self.restic_runner.dry_run = self.dry_run
         result, result_string = self.restic_runner.backup(
             paths=paths,
-            exclude_patterns_source_type=exclude_patterns_source_type,
+            source_type=source_type,
             exclude_patterns=exclude_patterns,
             exclude_files=exclude_files,
-            exclude_patterns_case_ignore=exclude_patterns_case_ignore,
+            excludes_case_ignore=excludes_case_ignore,
             exclude_caches=exclude_caches,
+            exclude_files_largen_than=exclude_files_larger_than,
             one_file_system=one_file_system,
             use_fs_snapshot=use_fs_snapshot,
             tags=tags,
