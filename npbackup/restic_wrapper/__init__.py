@@ -655,7 +655,7 @@ class ResticRunner:
             if exclude_file:
                 if os.path.isfile(exclude_file):
                     cmd += f' --{case_ignore_param}exclude-file "{exclude_file}"'
-                else:g
+                else:
                     self.write_logs(
                         f"Exclude file '{exclude_file}' not found", level="error"
                     )
