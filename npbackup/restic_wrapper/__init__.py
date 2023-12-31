@@ -537,11 +537,11 @@ class ResticRunner:
         return wrapper
 
     @check_if_init
-    def list(self, obj: str = "snapshots") -> Optional[list]:
+    def list(self, subject: str) -> Optional[list]:
         """
         Returns json list of snapshots
         """
-        cmd = "list {} --json".format(obj)
+        cmd = "list {} --json".format(subject)
         result, output = self.executor(cmd)
         if result:
             try:
@@ -575,7 +575,7 @@ class ResticRunner:
                 logger.debug("Trace:", exc_info=True)
         return result
 
-    @check_if_init  # TODO: remove function and keep list("snapshots")
+    @check_if_init
     def snapshots(self) -> Optional[list]:
         """
         Returns json list of snapshots
@@ -877,6 +877,7 @@ class ResticRunner:
         # Begin with most recent snapshot
         snapshot_list.reverse()
         for snapshot in snapshot_list:
+            print(snapshot)
             if re.match(
                 r"[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]\..*\+[0-2][0-9]:[0-9]{2}",
                 snapshot["time"],
