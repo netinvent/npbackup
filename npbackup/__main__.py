@@ -12,6 +12,7 @@ from pathlib import Path
 import atexit
 from argparse import ArgumentParser
 from datetime import datetime
+import logging
 import ofunctions.logger_utils
 from ofunctions.process import kill_childs
 from npbackup.path_helper import CURRENT_DIR
@@ -38,9 +39,7 @@ except ImportError:
 
 
 LOG_FILE = os.path.join(CURRENT_DIR, "{}.log".format(__intname__))
-
-
-logger = ofunctions.logger_utils.logger_get_logger(LOG_FILE, debug=_DEBUG)
+logger = logging.getLogger()
 
 
 def cli_interface():
@@ -85,7 +84,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Restore to path given by --restore",
     )
     parser.add_argument(
-        "-l", "--list", action="store_true", help="Show current snapshots"
+        "-s", "--snapshots", action="store_true", default=False, help="Show current snapshots"
     )
     parser.add_argument(
         "--ls",
@@ -126,6 +125,9 @@ This is free software, and you are welcome to redistribute it under certain cond
         "--repair-snapshots", action="store_true", help="Repair repo snapshots"
     )
     parser.add_argument(
+        "--list", type=str, default=None, required=False, help="Show [blobs|packs|index|snapshots|keys|locks] objects"
+    )
+    parser.add_argument(
         "--raw",
         type=str,
         default=None,
@@ -146,11 +148,14 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Restore only paths within include path",
     )
     parser.add_argument(
-        "--snapshot",
+        "--snapshot-id",
         type=str,
         default="latest",
         required=False,
         help="Choose which snapshot to use. Defaults to latest",
+    )
+    parser.add_argument(
+        "--api", action="store_true", help="Run in JSON API mode. Nothing else than JSON will be printed to stdout"
     )
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Show verbose output"
@@ -176,6 +181,11 @@ This is free software, and you are welcome to redistribute it under certain cond
         "--auto-upgrade", action="store_true", help="Auto upgrade NPBackup"
     )
     args = parser.parse_args()
+
+    if args.api:
+        logger = ofunctions.logger_utils.logger_get_logger(LOG_FILE, console=False, debug=_DEBUG)
+    else:
+        logger = ofunctions.logger_utils.logger_get_logger(LOG_FILE, debug=_DEBUG)
 
     if args.version:
         print(version_string)
@@ -229,6 +239,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         "verbose": args.verbose,
         "dry_run": args.dry_run,
         "debug": args.debug,
+        "api_mode": args.api,
         "operation": None,
         "op_args": {},
     }
@@ -239,18 +250,21 @@ This is free software, and you are welcome to redistribute it under certain cond
     elif args.restore:
         cli_args["operation"] = "restore"
         cli_args["op_args"] = {
-            "snapshot": args.snapshot,
+            "snapshot": args.snapshot_id,
             "target": args.restore,
             "restore_include": args.restore_include,
         }
+    elif args.snapshots:
+        cli_args["operation"] = "snapshots"
     elif args.list:
         cli_args["operation"] = "list"
+        cli_args["op_args"] = {"subject": args.list}
     elif args.ls:
         cli_args["operation"] = "ls"
-        cli_args["op_args"] = {"snapshot": args.snapshot}
+        cli_args["op_args"] = {"snapshot": args.snapshot_id}
     elif args.find:
         cli_args["operation"] = "find"
-        cli_args["op_args"] = {"snapshot": args.snapshot, "path": args.find}
+        cli_args["op_args"] = {"snapshot": args.snapshot_id, "path": args.find}
     elif args.forget:
         cli_args["operation"] = "forget"
         if args.forget == "policy":
