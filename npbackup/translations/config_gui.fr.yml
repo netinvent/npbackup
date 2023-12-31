@@ -8,7 +8,7 @@ fr:
   windows_only: Windows seulement
   exclude_patterns: Patterns d'exclusion
   exclude_files: Fichiers contenant des exclusions
-  exclude_case_ignore: Ignorer la casse aux exclusions
+  excludes_case_ignore: Ignorer la casse des exclusions patterns/fichiers
   windows_always: toujours actif pour Windows
   exclude_cache_dirs: Exclure dossiers cache
   one_file_system: Ne pas suivre les points de montage
@@ -16,6 +16,7 @@ fr:
   maximum_exec_time: Temps maximal d'execution
   exec_failure_is_fatal: L'échec d'execution est fatal
   post_exec_commands: Commandes post-sauvegarde
+  execute_even_on_backup_error: Executer même si la sauvegarde a échouée
   tags: Tags
   one_per_line: un par ligne
   backup_priority: Priorité de sauvegarde
@@ -82,7 +83,7 @@ fr:
   machine_group: Groupe machine
 
   show_decrypted: Voir déchiffré
-  no_backup_admin_password_set: Mot de passe admin backup non initialisé, ne peut montrer la version déchiffrée
+  no_manager_password_set: Mot de passe gestionnaire non initialisé, ne peut montrer la version déchiffrée
 
   # compression
   auto: Automatique

@@ -8,7 +8,7 @@ en:
   windows_only: Windows only
   exclude_patterns: Exclude patterns
   exclude_files: Files containing exclusions
-  exclude_case_ignore: Ignore case for excludes
+  excludes_case_ignore: Ignore case for excludes patterns/files
   windows_always: always enabled for Windows
   exclude_cache_dirs: Exclude cache dirs
   one_file_system: Do not follow mountpoints
@@ -16,6 +16,7 @@ en:
   maximum_exec_time: Maximum exec time
   exec_failure_is_fatal: Execution failure is fatal
   post_exec_commands: Post-exec commands
+  execute_even_on_backup_error: Execute even if backup failed
   tags: Tags
   one_per_line: one per line
   backup_priority: Backup priority
@@ -82,7 +83,7 @@ en:
   machine_group: Machine group
 
   show_decrypted: Show decrypted
-  no_backup_admin_password_set: No backup admin password set, cannot show unencrypted
+  no_manager_password_set: No managert password set, cannot show unencrypted
 
   # compression
   auto: Automatic

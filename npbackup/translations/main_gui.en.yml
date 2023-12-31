@@ -34,13 +34,14 @@ en:
   execute_operation: Executing operation
   forget_failed: Failed to forget. Please check the logs
   operations: Operations
-  select_config_file: Select config file
+  select_config_file: Load config file
   repo_and_password_cannot_be_empty: Repo and password cannot be empty
   viewer_mode: Repository view-only mode
   open_repo: Open repo
   new_config: New config
   load_config: Load configuration
-  config_error: Configuration file error
+  config_error: Configuration error
+  no_config: Please load a configuration before proceeding
 
   # logs
   last_messages: Last messages
