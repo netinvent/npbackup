@@ -12,7 +12,7 @@ jobs:
         # Python 3.3 and 3.4 have been removed since github won't provide these anymore
         # As of 2023/01/09, we have removed python 3.5 and 3.6 as they don't work anymore with linux on github
         # As of 2023/08/30, we have removed python 2.7 since github actions won't provide it anymore
-        python-version: [3.6, 3.7, 3.8, 3.9, "3.10", "3.11", "3.12", 'pypy-3.6', 'pypy-3.7', 'pypy-3.8', 'pypy-3.10']
+        python-version: [3.7, 3.8, 3.9, "3.10", "3.11", "3.12", 'pypy-3.6', 'pypy-3.7', 'pypy-3.8', 'pypy-3.10']
 
     steps:
     - uses: actions/checkout@v3
