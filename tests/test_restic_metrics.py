@@ -93,6 +93,16 @@ expected_results_V2 = [
     r'restic_total_duration_seconds{instance="test",backup_job="some_nas",action="backup"} (\d+)',
 ]
 
+
+def running_on_github_actions():
+    """
+    This is set in github actions workflow with
+          env:
+        RUNNING_ON_GITHUB_ACTIONS: true
+    """
+    return os.environ.get("RUNNING_ON_GITHUB_ACTIONS").lower() == "true"
+
+
 def test_restic_str_output_2_metrics():
     instance = "test"
     backup_job = "some_nas"
@@ -159,6 +169,11 @@ def test_restic_json_output():
 
 
 def test_real_restic_output():
+    # Don't do the real tests on github actions, since we don't have 
+    # the binaries there.
+    # TODO: Add download/unzip restic binaries so we can run these tests
+    if running_on_github_actions():
+        return
     labels = {
         "instance": "test",
         "backup_job": "some_nas"
