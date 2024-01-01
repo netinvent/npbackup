@@ -810,14 +810,16 @@ class NPBackupRunner:
             "T",
         ):
             self.write_logs(
-                f"Bogus suffix for exclude_files_larger_than value given: {exclude_files_larger_than}", level="warning"
+                f"Bogus suffix for exclude_files_larger_than value given: {exclude_files_larger_than}",
+                level="warning",
             )
             exclude_files_larger_than = None
         try:
             float(exclude_files_larger_than[:-1])
         except (ValueError, TypeError):
             self.write_logs(
-                f"Cannot check whether excludes_files_larger_than is a float: {exclude_files_larger_than}", level="warning"
+                f"Cannot check whether excludes_files_larger_than is a float: {exclude_files_larger_than}",
+                level="warning",
             )
             exclude_files_larger_than = None
 
