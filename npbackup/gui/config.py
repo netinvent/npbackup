@@ -325,6 +325,7 @@ def config_gui(full_config: dict, config_file: str):
                         except ValueError:
                             pass
 
+            active_object_key = f"{object_type}s.{object_name}.{key}"
             current_value = full_config.g(active_object_key)
 
             # Don't bother with inheritance on global options
@@ -341,7 +342,6 @@ def config_gui(full_config: dict, config_file: str):
                     if full_config.g(inheritance_key) == value:
                         continue
 
-                    active_object_key = f"{object_type}s.{object_name}.{key}"
                     if object_group:
                         inherited = full_config.g(inheritance_key)
                     else:
