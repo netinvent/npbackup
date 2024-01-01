@@ -171,7 +171,7 @@ def config_gui(full_config: dict, config_file: str):
         try:
             # Don't bother to update repo name
             # Also permissions / manager_password are in a separate gui
-            if key in ('name', 'permissions', 'manager_password'):
+            if key in ("name", "permissions", "manager_password"):
                 return
             # Don't show sensible info unless unencrypted requested
             if not unencrypted:
@@ -326,10 +326,9 @@ def config_gui(full_config: dict, config_file: str):
                             pass
 
             current_value = full_config.g(active_object_key)
-            
+
             # Don't bother with inheritance on global options
             if not key.startswith("global_options."):
-
                 # Don't update items that have been inherited from groups
                 if object_group:
                     inheritance_key = f"groups.{object_group}.{key}"
@@ -348,9 +347,8 @@ def config_gui(full_config: dict, config_file: str):
                     else:
                         inherited = False
             # WIP print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
-                    #if not full_config.g(active_object_key):
-                    #    full_config.s(active_object_key, CommentedMap())
-
+            # if not full_config.g(active_object_key):
+            #    full_config.s(active_object_key, CommentedMap())
 
             # Don't bother to update empty strings, empty lists and None
             if not current_value and not value:
@@ -359,7 +357,7 @@ def config_gui(full_config: dict, config_file: str):
             if current_value == value:
                 continue
 
-            #full_config.s(active_object_key, value)
+            # full_config.s(active_object_key, value)
         return full_config
         # TODO: Do we actually save every modified object or just the last ?
 
@@ -591,7 +589,9 @@ def config_gui(full_config: dict, config_file: str):
             [
                 sg.Text(_t("config_gui.execute_even_on_backup_error"), size=(40, 1)),
                 sg.Checkbox(
-                    "", key="backup_opts.post_exec_execute_even_on_backup_error", size=(41, 1)
+                    "",
+                    key="backup_opts.post_exec_execute_even_on_backup_error",
+                    size=(41, 1),
                 ),
             ],
             [
@@ -942,8 +942,12 @@ def config_gui(full_config: dict, config_file: str):
         buttons = [
             [
                 sg.Push(),
-                sg.Button(_t("config_gui.create_object"), key="-OBJECT-CREATE-", size=(30, 1)),
-                sg.Button(_t("config_gui.delete_object"), key="-OBJECT-DELETE-", size=(30, 1)),
+                sg.Button(
+                    _t("config_gui.create_object"), key="-OBJECT-CREATE-", size=(30, 1)
+                ),
+                sg.Button(
+                    _t("config_gui.delete_object"), key="-OBJECT-DELETE-", size=(30, 1)
+                ),
                 sg.Button(_t("generic.cancel"), key="--CANCEL--", size=(15, 1)),
                 sg.Button(_t("generic.accept"), key="--ACCEPT--", size=(15, 1)),
             ]

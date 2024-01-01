@@ -84,7 +84,11 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Restore to path given by --restore",
     )
     parser.add_argument(
-        "-s", "--snapshots", action="store_true", default=False, help="Show current snapshots"
+        "-s",
+        "--snapshots",
+        action="store_true",
+        default=False,
+        help="Show current snapshots",
     )
     parser.add_argument(
         "--ls",
@@ -125,7 +129,11 @@ This is free software, and you are welcome to redistribute it under certain cond
         "--repair-snapshots", action="store_true", help="Repair repo snapshots"
     )
     parser.add_argument(
-        "--list", type=str, default=None, required=False, help="Show [blobs|packs|index|snapshots|keys|locks] objects"
+        "--list",
+        type=str,
+        default=None,
+        required=False,
+        help="Show [blobs|packs|index|snapshots|keys|locks] objects",
     )
     parser.add_argument(
         "--raw",
@@ -155,7 +163,9 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Choose which snapshot to use. Defaults to latest",
     )
     parser.add_argument(
-        "--api", action="store_true", help="Run in JSON API mode. Nothing else than JSON will be printed to stdout"
+        "--api",
+        action="store_true",
+        help="Run in JSON API mode. Nothing else than JSON will be printed to stdout",
     )
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Show verbose output"
@@ -183,7 +193,9 @@ This is free software, and you are welcome to redistribute it under certain cond
     args = parser.parse_args()
 
     if args.api:
-        logger = ofunctions.logger_utils.logger_get_logger(LOG_FILE, console=False, debug=_DEBUG)
+        logger = ofunctions.logger_utils.logger_get_logger(
+            LOG_FILE, console=False, debug=_DEBUG
+        )
     else:
         logger = ofunctions.logger_utils.logger_get_logger(LOG_FILE, debug=_DEBUG)
 

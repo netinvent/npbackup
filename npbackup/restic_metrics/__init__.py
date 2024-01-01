@@ -29,13 +29,17 @@ from ofunctions.misc import BytesConverter, convert_time_to_seconds
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-  
 
-def restic_str_output_to_json(restic_exit_status: Union[bool, int], output: str) -> dict:
+
+def restic_str_output_to_json(
+    restic_exit_status: Union[bool, int], output: str
+) -> dict:
     """
     Parsse restic output when used without `--json` parameter
     """
-    if restic_exit_status is False or (restic_exit_status is not True and restic_exit_status != 0):
+    if restic_exit_status is False or (
+        restic_exit_status is not True and restic_exit_status != 0
+    ):
         errors = True
     else:
         errors = False
@@ -46,129 +50,126 @@ def restic_str_output_to_json(restic_exit_status: Union[bool, int], output: str)
         "dirs_new": None,
         "dirs_changed": None,
         "dirs_unmodified": None,
-        "data_blobs": None,                 # Not present in standard output
-        "tree_blobs": None,                 # Not present in standard output
-        "data_added": None,                 # Is "4.425" in  Added to the repository: 4.425 MiB (1.431 MiB stored)
-        "data_stored": None,                # Not present in json output, is "1.431" in Added to the repository: 4.425 MiB (1.431 MiB stored)
+        "data_blobs": None,  # Not present in standard output
+        "tree_blobs": None,  # Not present in standard output
+        "data_added": None,  # Is "4.425" in  Added to the repository: 4.425 MiB (1.431 MiB stored)
+        "data_stored": None,  # Not present in json output, is "1.431" in Added to the repository: 4.425 MiB (1.431 MiB stored)
         "total_files_processed": None,
         "total_bytes_processed": None,
         "total_duration": None,
-
         # type bool:
-        "errors": None
+        "errors": None,
     }
     for line in output.splitlines():
-            # for line in output:
-            matches = re.match(
-                r"Files:\s+(\d+)\snew,\s+(\d+)\schanged,\s+(\d+)\sunmodified",
-                line,
-                re.IGNORECASE,
-            )
-            if matches:
-                try:
-                    metrics["files_new"] = matches.group(1)
-                    metrics["files_changed"] = matches.group(2)
-                    metrics["files_unmodified"] = matches.group(3)
-                except IndexError:
-                    logger.warning("Cannot parse restic log for files")
-                    errors = True
-
-            matches = re.match(
-                r"Dirs:\s+(\d+)\snew,\s+(\d+)\schanged,\s+(\d+)\sunmodified",
-                line,
-                re.IGNORECASE,
-            )
-            if matches:
-                try:
-                    metrics["dirs_new"] = matches.group(1)
-                    metrics["dirs_changed"] = matches.group(2)
-                    metrics["dirs_unmodified"] = matches.group(3)
-                except IndexError:
-                    logger.warning("Cannot parse restic log for dirs")
-                    errors = True
-
-            matches = re.match(
-                r"Added to the repo.*:\s([-+]?(?:\d*\.\d+|\d+))\s(\w+)\s+\((.*)\sstored\)",
-                line,
-                re.IGNORECASE,
-            )
-            if matches:
-                try:
-                    size = matches.group(1)
-                    unit = matches.group(2)
-                    try:
-                        value = int(BytesConverter("{} {}".format(size, unit)))
-                        metrics["data_added"] = value
-                    except TypeError:
-                        logger.warning(
-                            "Cannot parse restic values from added to repo size log line"
-                        )
-                        errors = True
-                    stored_size = matches.group(3)  # TODO: add unit detection in regex
-                    try:
-                        stored_size = int(BytesConverter(stored_size))
-                        metrics["data_stored"] = stored_size
-                    except TypeError:
-                        logger.warning(
-                            "Cannot parse restic values from added to repo stored_size log line"
-                        )
-                        errors = True
-                except IndexError as exc:
-                    logger.warning(
-                        "Cannot parse restic log for added data: {}".format(exc)
-                    )
-                    errors = True
-
-            matches = re.match(
-                r"processed\s(\d+)\sfiles,\s([-+]?(?:\d*\.\d+|\d+))\s(\w+)\sin\s((\d+:\d+:\d+)|(\d+:\d+)|(\d+))",
-                line,
-                re.IGNORECASE,
-            )
-            if matches:
-                try:
-                    metrics["total_files_processed"] = matches.group(1)
-                    size = matches.group(2)
-                    unit = matches.group(3)
-                    try:
-                        value = int(BytesConverter("{} {}".format(size, unit)))
-                        metrics["total_bytes_processed"] = value
-                    except TypeError:
-                        logger.warning("Cannot parse restic values for total repo size")
-                        errors = True
-
-                    seconds_elapsed = convert_time_to_seconds(matches.group(4))
-                    try:
-                        metrics["total_duration"] = int(seconds_elapsed)
-                    except ValueError:
-                        logger.warning("Cannot parse restic elapsed time")
-                        errors = True
-                except IndexError as exc:
-                    logger.error("Trace:", exc_info=True)
-                    logger.warning(
-                        "Cannot parse restic log for repo size: {}".format(exc)
-                    )
-                    errors = True
-            matches = re.match(
-                r"Failure|Fatal|Unauthorized|no such host|s there a repository at the following location\?",
-                line,
-                re.IGNORECASE,
-            )
-            if matches:
-                try:
-                    logger.debug(
-                        'Matcher found error: "{}" in line "{}".'.format(
-                            matches.group(), line
-                        )
-                    )
-                except IndexError as exc:
-                    logger.error("Trace:", exc_info=True)
+        # for line in output:
+        matches = re.match(
+            r"Files:\s+(\d+)\snew,\s+(\d+)\schanged,\s+(\d+)\sunmodified",
+            line,
+            re.IGNORECASE,
+        )
+        if matches:
+            try:
+                metrics["files_new"] = matches.group(1)
+                metrics["files_changed"] = matches.group(2)
+                metrics["files_unmodified"] = matches.group(3)
+            except IndexError:
+                logger.warning("Cannot parse restic log for files")
                 errors = True
-    
+
+        matches = re.match(
+            r"Dirs:\s+(\d+)\snew,\s+(\d+)\schanged,\s+(\d+)\sunmodified",
+            line,
+            re.IGNORECASE,
+        )
+        if matches:
+            try:
+                metrics["dirs_new"] = matches.group(1)
+                metrics["dirs_changed"] = matches.group(2)
+                metrics["dirs_unmodified"] = matches.group(3)
+            except IndexError:
+                logger.warning("Cannot parse restic log for dirs")
+                errors = True
+
+        matches = re.match(
+            r"Added to the repo.*:\s([-+]?(?:\d*\.\d+|\d+))\s(\w+)\s+\((.*)\sstored\)",
+            line,
+            re.IGNORECASE,
+        )
+        if matches:
+            try:
+                size = matches.group(1)
+                unit = matches.group(2)
+                try:
+                    value = int(BytesConverter("{} {}".format(size, unit)))
+                    metrics["data_added"] = value
+                except TypeError:
+                    logger.warning(
+                        "Cannot parse restic values from added to repo size log line"
+                    )
+                    errors = True
+                stored_size = matches.group(3)  # TODO: add unit detection in regex
+                try:
+                    stored_size = int(BytesConverter(stored_size))
+                    metrics["data_stored"] = stored_size
+                except TypeError:
+                    logger.warning(
+                        "Cannot parse restic values from added to repo stored_size log line"
+                    )
+                    errors = True
+            except IndexError as exc:
+                logger.warning("Cannot parse restic log for added data: {}".format(exc))
+                errors = True
+
+        matches = re.match(
+            r"processed\s(\d+)\sfiles,\s([-+]?(?:\d*\.\d+|\d+))\s(\w+)\sin\s((\d+:\d+:\d+)|(\d+:\d+)|(\d+))",
+            line,
+            re.IGNORECASE,
+        )
+        if matches:
+            try:
+                metrics["total_files_processed"] = matches.group(1)
+                size = matches.group(2)
+                unit = matches.group(3)
+                try:
+                    value = int(BytesConverter("{} {}".format(size, unit)))
+                    metrics["total_bytes_processed"] = value
+                except TypeError:
+                    logger.warning("Cannot parse restic values for total repo size")
+                    errors = True
+
+                seconds_elapsed = convert_time_to_seconds(matches.group(4))
+                try:
+                    metrics["total_duration"] = int(seconds_elapsed)
+                except ValueError:
+                    logger.warning("Cannot parse restic elapsed time")
+                    errors = True
+            except IndexError as exc:
+                logger.error("Trace:", exc_info=True)
+                logger.warning("Cannot parse restic log for repo size: {}".format(exc))
+                errors = True
+        matches = re.match(
+            r"Failure|Fatal|Unauthorized|no such host|s there a repository at the following location\?",
+            line,
+            re.IGNORECASE,
+        )
+        if matches:
+            try:
+                logger.debug(
+                    'Matcher found error: "{}" in line "{}".'.format(
+                        matches.group(), line
+                    )
+                )
+            except IndexError as exc:
+                logger.error("Trace:", exc_info=True)
+            errors = True
+
     metrics["errors"] = errors
     return metrics
 
 
-def restic_json_to_prometheus(restic_json, labels: dict = None) -> Tuple[bool, List[str]]:
+def restic_json_to_prometheus(
+    restic_json, labels: dict = None
+) -> Tuple[bool, List[str]]:
     """
     Transform a restic JSON result into prometheus metrics
     """
@@ -180,7 +181,7 @@ def restic_json_to_prometheus(restic_json, labels: dict = None) -> Tuple[bool, L
     # Take last line of restic output
     if isinstance(restic_json, str):
         found = False
-        for line in reversed(restic_json.split('\n')):
+        for line in reversed(restic_json.split("\n")):
             if '"message_type":"summary"' in line:
                 restic_json = line
                 found = True
@@ -202,15 +203,21 @@ def restic_json_to_prometheus(restic_json, labels: dict = None) -> Tuple[bool, L
             if key.startswith(starters):
                 for enders in ("new", "changed", "unmodified"):
                     if key.endswith(enders):
-                        prom_metrics.append(f'restic_{starters}{{{labels},state="{enders}",action="backup"}} {value}')
+                        prom_metrics.append(
+                            f'restic_{starters}{{{labels},state="{enders}",action="backup"}} {value}'
+                        )
                         skip = True
         if skip:
             continue
         if key == "total_files_processed":
-            prom_metrics.append(f'restic_files{{{labels},state="total",action="backup"}} {value}')
+            prom_metrics.append(
+                f'restic_files{{{labels},state="total",action="backup"}} {value}'
+            )
             continue
         if key == "total_bytes_processed":
-            prom_metrics.append(f'restic_snasphot_size_bytes{{{labels},action="backup",type="processed"}} {value}')
+            prom_metrics.append(
+                f'restic_snasphot_size_bytes{{{labels},action="backup",type="processed"}} {value}'
+            )
             continue
         if "duration" in key:
             key += "_seconds"

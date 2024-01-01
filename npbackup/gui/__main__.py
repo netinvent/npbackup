@@ -43,7 +43,7 @@ from npbackup.customization import (
     LICENSE_FILE,
     PYSIMPLEGUI_THEME,
     OEM_ICON,
-    SHORT_PRODUCT_NAME
+    SHORT_PRODUCT_NAME,
 )
 from npbackup.gui.config import config_gui
 from npbackup.gui.operations import operations_gui
@@ -491,7 +491,11 @@ def _main_gui(viewer_mode: bool):
         )
         gui_msg = _t("main_gui.loading_snapshot_list_from_repo")
         snapshots = gui_thread_runner(
-            repo_config, "snapshots", __gui_msg=gui_msg, __autoclose=True, __compact=True
+            repo_config,
+            "snapshots",
+            __gui_msg=gui_msg,
+            __autoclose=True,
+            __compact=True,
         )
         try:
             min_backup_age = repo_config.g("repo_opts.minimum_backup_age")
@@ -568,7 +572,7 @@ def _main_gui(viewer_mode: bool):
                 full_config
             )
             backup_destination = _t("main_gui.local_folder")
-            backend_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri")) 
+            backend_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
         else:
             repo_config = None
             config_inheritance = None
@@ -576,10 +580,26 @@ def _main_gui(viewer_mode: bool):
             backend_type = "None"
             repo_uri = "None"
         repo_list = npbackup.configuration.get_repo_list(full_config)
-        return full_config, config_file, repo_config, backup_destination, backend_type, repo_uri, repo_list
+        return (
+            full_config,
+            config_file,
+            repo_config,
+            backup_destination,
+            backend_type,
+            repo_uri,
+            repo_list,
+        )
 
     if not viewer_mode:
-        full_config, config_file, repo_config, backup_destination, backend_type, repo_uri, repo_list = get_config()
+        (
+            full_config,
+            config_file,
+            repo_config,
+            backup_destination,
+            backend_type,
+            repo_uri,
+            repo_list,
+        ) = get_config()
     else:
         # Let's try to read standard restic repository env variables
         viewer_repo_uri = os.environ.get("RESTIC_REPOSITORY", None)
@@ -786,7 +806,15 @@ def _main_gui(viewer_mode: bool):
             repo_config = viewer_create_repo(viewer_repo_uri, viewer_repo_password)
             event = "--STATE-BUTTON--"
         if event == "--LOAD-CONF--":
-            full_config, config_file, repo_config, backup_destination, backend_type, repo_uri, repo_list = get_config()
+            (
+                full_config,
+                config_file,
+                repo_config,
+                backup_destination,
+                backend_type,
+                repo_uri,
+                repo_list,
+            ) = get_config()
             window.set_title(f"{SHORT_PRODUCT_NAME} - {config_file}")
             event = "--STATE-BUTTON--"
         if event == _t("generic.destination"):

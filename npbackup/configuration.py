@@ -160,7 +160,7 @@ empty_config_dict = {
                 "exclude_files_larger_than": None,
                 "additional_parameters": None,
                 "additional_backup_only_parameters": None,
-                "minimum_backup_size_error": "10M", # TODO
+                "minimum_backup_size_error": "10M",  # TODO
                 "pre_exec_commands": [],
                 "pre_exec_per_command_timeout": 3600,
                 "pre_exec_failure_is_fatal": False,
@@ -249,25 +249,31 @@ def key_should_be_encrypted(key, encrypted_options: List[str]):
             return True
     return False
 
+
 def crypt_config(
     full_config: dict, aes_key: str, encrypted_options: List[str], operation: str
 ):
     try:
+
         def _crypt_config(key: str, value: Any) -> Any:
             if key_should_be_encrypted(key, encrypted_options):
                 if operation == "encrypt":
                     if (
-                        (isinstance(value, str)
-                        and (not value.startswith(ID_STRING) or not value.endswith(ID_STRING)))
-                        or not isinstance(value, str)
-                    ):
+                        isinstance(value, str)
+                        and (
+                            not value.startswith(ID_STRING)
+                            or not value.endswith(ID_STRING)
+                        )
+                    ) or not isinstance(value, str):
                         value = enc.encrypt_message_hf(
                             value, aes_key, ID_STRING, ID_STRING
-                        ).decode(
-                        "utf-8"
-                    )
+                        ).decode("utf-8")
                 elif operation == "decrypt":
-                    if isinstance(value, str) and value.startswith(ID_STRING) and value.endswith(ID_STRING):
+                    if (
+                        isinstance(value, str)
+                        and value.startswith(ID_STRING)
+                        and value.endswith(ID_STRING)
+                    ):
                         _, value = enc.decrypt_message_hf(
                             value,
                             aes_key,
@@ -278,7 +284,12 @@ def crypt_config(
                     raise ValueError(f"Bogus operation {operation} given")
             return value
 
-        return replace_in_iterable(full_config, _crypt_config, callable_wants_key=True, callable_wants_root_key=True)
+        return replace_in_iterable(
+            full_config,
+            _crypt_config,
+            callable_wants_key=True,
+            callable_wants_root_key=True,
+        )
     except Exception as exc:
         logger.error(f"Cannot {operation} configuration: {exc}.")
         logger.info("Trace:", exc_info=True)
@@ -292,11 +303,18 @@ def is_encrypted(full_config: dict) -> bool:
         nonlocal is_encrypted
 
         if key_should_be_encrypted(key, ENCRYPTED_OPTIONS):
-            if isinstance(value, str) and (not value.startswith(ID_STRING) or not value.endswith(ID_STRING)):
+            if isinstance(value, str) and (
+                not value.startswith(ID_STRING) or not value.endswith(ID_STRING)
+            ):
                 is_encrypted = False
         return value
 
-    replace_in_iterable(full_config, _is_encrypted, callable_wants_key=True, callable_wants_root_key=True)
+    replace_in_iterable(
+        full_config,
+        _is_encrypted,
+        callable_wants_key=True,
+        callable_wants_root_key=True,
+    )
     return is_encrypted
 
 

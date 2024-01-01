@@ -25,7 +25,6 @@ from npbackup.__debug__ import _DEBUG
 from npbackup.__env__ import INIT_TIMEOUT, CHECK_INTERVAL
 
 
-
 logger = getLogger()
 
 
@@ -875,13 +874,13 @@ class ResticRunner:
         if not snapshot_list or not delta:
             return False, backup_ts
         tz_aware_timestamp = datetime.now(timezone.utc).astimezone()
-        
+
         # Now just take the last snapshot in list (being the more recent), and check whether it's too old
         last_snapshot = snapshot_list[-1]
         if re.match(
-                r"[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9](\.\d*)?(\+[0-2][0-9]:[0-9]{2})?",
-                last_snapshot["time"],
-            ):
+            r"[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9](\.\d*)?(\+[0-2][0-9]:[0-9]{2})?",
+            last_snapshot["time"],
+        ):
             backup_ts = dateutil.parser.parse(last_snapshot["time"])
             snapshot_age_minutes = (tz_aware_timestamp - backup_ts).total_seconds() / 60
             if delta - snapshot_age_minutes > 0:

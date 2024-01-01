@@ -640,7 +640,7 @@ class NPBackupRunner:
         )
         snapshots = self.restic_runner.snapshots()
         return snapshots
-    
+
     @threaded
     @close_queues
     @exec_timer
@@ -651,7 +651,8 @@ class NPBackupRunner:
     @catch_exceptions
     def list(self, subject: str) -> Optional[dict]:
         self.write_logs(
-            f"Listing {subject} objects of repo {self.repo_config.g('name')}", level="info"
+            f"Listing {subject} objects of repo {self.repo_config.g('name')}",
+            level="info",
         )
         snapshots = self.restic_runner.list(subject)
         return snapshots
@@ -782,9 +783,7 @@ class NPBackupRunner:
             )
             return False
 
-        source_type = self.repo_config.g(
-            "backup_opts.source_type"
-        )
+        source_type = self.repo_config.g("backup_opts.source_type")
 
         # MSWindows does not support one-file-system option
         exclude_patterns = self.repo_config.g("backup_opts.exclude_patterns")
@@ -795,18 +794,31 @@ class NPBackupRunner:
         if not isinstance(exclude_files, list):
             exclude_files = [exclude_files]
 
-        excludes_case_ignore = self.repo_config.g(
-            "backup_opts.excludes_case_ignore"
-        )
+        excludes_case_ignore = self.repo_config.g("backup_opts.excludes_case_ignore")
         exclude_caches = self.repo_config.g("backup_opts.exclude_caches")
-        exclude_files_larger_than = self.repo_config.g("backup_opts.exclude_files_larger_than")
-        if not exclude_files_larger_than[-1] in ('k', 'K', 'm', 'M', 'g', 'G', 't', 'T'):
-            self.write_logs(f"Bogus exclude_files_larger_than value given: {exclude_files_larger_than}")
+        exclude_files_larger_than = self.repo_config.g(
+            "backup_opts.exclude_files_larger_than"
+        )
+        if not exclude_files_larger_than[-1] in (
+            "k",
+            "K",
+            "m",
+            "M",
+            "g",
+            "G",
+            "t",
+            "T",
+        ):
+            self.write_logs(
+                f"Bogus exclude_files_larger_than value given: {exclude_files_larger_than}"
+            )
             exclude_files_larger_than = None
         try:
             float(exclude_files_larger_than[:-1])
         except (ValueError, TypeError):
-            self.write_logs(f"Cannot check whether excludes_files_larger_than is a float: {exclude_files_larger_than}")
+            self.write_logs(
+                f"Cannot check whether excludes_files_larger_than is a float: {exclude_files_larger_than}"
+            )
             exclude_files_larger_than = None
 
         one_file_system = (
@@ -816,7 +828,9 @@ class NPBackupRunner:
         )
         use_fs_snapshot = self.repo_config.g("backup_opts.use_fs_snapshot")
 
-        minimum_backup_size_error = self.repo_config.g("backup_opts.minimum_backup_size_error")
+        minimum_backup_size_error = self.repo_config.g(
+            "backup_opts.minimum_backup_size_error"
+        )
 
         pre_exec_commands = self.repo_config.g("backup_opts.pre_exec_commands")
         pre_exec_per_command_timeout = self.repo_config.g(
