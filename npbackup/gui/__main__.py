@@ -588,6 +588,8 @@ def _main_gui(viewer_mode: bool):
             repo_config = viewer_create_repo(viewer_repo_uri, viewer_repo_password)
         else:
             repo_config = None
+        config_file = None
+        full_config = None
 
     right_click_menu = ["", [_t("generic.destination")]]
     headings = [
@@ -800,7 +802,7 @@ def _main_gui(viewer_mode: bool):
         if event == "--ABOUT--":
             about_gui(version_string, full_config if not viewer_mode else None)
         if event == "--STATE-BUTTON--":
-            if full_config:
+            if full_config or viewer_mode:
                 current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
                 gui_update_state()
                 if current_state is None:
