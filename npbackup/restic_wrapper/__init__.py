@@ -5,14 +5,15 @@
 
 __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2022-2023 NetInvent"
+__copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023122901"
-__version__ = "1.9.0"
+__build__ = "2024010201"
+__version__ = "2.0.0"
 
 
 from typing import Tuple, List, Optional, Callable, Union
 import os
+import sys
 from logging import getLogger
 import re
 import json
@@ -28,6 +29,8 @@ from npbackup.__env__ import INIT_TIMEOUT, CHECK_INTERVAL
 logger = getLogger()
 
 
+fn_name = lambda n=0: sys._getframe(n + 1).f_code.co_name # TODO go to ofunctions.misc
+
 class ResticRunner:
     def __init__(
         self,
@@ -42,6 +45,7 @@ class ResticRunner:
         self.password = str(password).strip()
         self._verbose = False
         self._dry_run = False
+        self._json_output = False
 
         self._binary = None
         self.binary_search_paths = binary_search_paths
@@ -78,11 +82,12 @@ class ResticRunner:
         self._stop_on = (
             None  # Function which will make executor abort if result is True
         )
-        self._executor_finished = False  # Internal value to check whether executor is done, accessed via self.executor_finished property
+        # Internal value to check whether executor is running, accessed via self.executor_running property
+        self._executor_running = False
 
     def on_exit(self) -> bool:
-        self._executor_finished = True
-        return self._executor_finished
+        self._executor_running = False
+        return self._executor_running
 
     def _make_env(self) -> None:
         """
@@ -178,6 +183,17 @@ class ResticRunner:
             self._dry_run = value
         else:
             raise ValueError("Bogus dry run value givne")
+        
+    @property
+    def json_output(self) -> bool:
+        return self._json_output
+
+    @json_output.setter
+    def json_output(self, value: bool):
+        if isinstance(value, bool):
+            self._json_output = value
+        else:
+            raise ValueError("Bogus json_output value givne")
 
     @property
     def ignore_cloud_files(self) -> bool:
@@ -197,6 +213,10 @@ class ResticRunner:
     @exec_time.setter
     def exec_time(self, value: int):
         self._exec_time = value
+
+    @property
+    def executor_running(self) -> bool:
+        return self._executor_running
 
     def write_logs(self, msg: str, level: str, raise_error: str = None):
         """
@@ -240,15 +260,14 @@ class ResticRunner:
         no_output_queues is needed since we don't want is_init output to be logged
         """
         start_time = datetime.utcnow()
-        self._executor_finished = False
         additional_parameters = (
             f" {self.additional_parameters.strip()} "
             if self.additional_parameters
             else ""
         )
         _cmd = f'"{self._binary}" {additional_parameters}{cmd}{self.generic_arguments}'
-        if self.dry_run:
-            _cmd += " --dry-run"
+        
+        self._executor_running = True
         self.write_logs(f"Running command: [{_cmd}]", level="debug")
         self._make_env()
 
@@ -271,7 +290,8 @@ class ResticRunner:
         # Don't keep protected environment variables in memory when not necessary
         self._remove_env()
 
-        self._executor_finished = True
+        # _executor_running = False is also set via on_exit function call
+        self._executor_running = False
         self.exec_time = (datetime.utcnow() - start_time).total_seconds
 
         if exit_code == 0:
@@ -305,10 +325,6 @@ class ResticRunner:
             # We won't write to stdout/stderr queues since command_runner already did that for us
             logger.error(output)
         return False, output
-
-    @property
-    def executor_finished(self) -> bool:
-        return self._executor_finished
 
     def _get_binary(self) -> None:
         """
@@ -462,6 +478,10 @@ class ResticRunner:
             )
         if self.verbose:
             args += " -vv"
+        if self.dry_run:
+            args += " --dry-run"
+        if self.json_output:
+            args += " --json"
         return args
 
     def init(
@@ -534,62 +554,105 @@ class ResticRunner:
             return fn(self, *args, **kwargs)
 
         return wrapper
+    
+    def convert_to_json_output(self, result, output, **kwargs):
+        """
+        Converts restic --json output to parseable json
 
-    @check_if_init
-    def list(self, subject: str) -> Optional[list]:
+        as of restic 0.16.2:
+        restic --list snapshots|index... --json returns brute strings, one per line !
         """
-        Returns json list of snapshots
-        """
-        cmd = "list {} --json".format(subject)
-        result, output = self.executor(cmd)
+        operation = fn_name(1)
+        js = {
+            "result": result,
+            "operation": operation,
+            "args": kwargs,
+            "output": None
+        }
         if result:
-            try:
-                return json.loads(output)
-            except json.decoder.JSONDecodeError:
-                self.write_logs(f"Returned data is not JSON:\n{output}", level="error")
-                logger.debug("Trace:", exc_info=True)
-        return None
+            if output:
+                if isinstance(output, str):
+                    output = list(filter(None, output.split("\n")))
+                else:
+                    output = str(output)
+                if len(output) > 1:
+                    output_is_list = True
+                    js["output"] = []
+                else:
+                    output_is_list = False
+                for line in output:
+                    try:
+                        if output_is_list:
+                            js["output"].append(line)
+                        else:
+                            js["output"] = json.loads(line)
+                    except json.decoder.JSONDecodeError:
+                        self.write_logs(f"Returned data is not JSON parseable:\n{line}", level="error")
+                """
+                print("L", line)
+                try:
+                    # Specia handling for list which returns "raw lists"
+                    if operation == 'list':
+                        js["output"].append(line)
+                    else:
+                        sub_js = json.loads(line)
+                        if isinstance(sub_js)
+                        js["output"].append()
+                """
+        else:
+            js["reason"] = output
+        return js
 
     @check_if_init
-    def ls(self, snapshot: str) -> Optional[list]:
+    def list(self, subject: str) -> Union[bool, str, dict]:
         """
-        Returns json list of objects
-        """
-        cmd = "ls {} --json".format(snapshot)
-        result, output = self.executor(cmd)
-        if result and output:
-            """
-            # When not using --json, we must remove first line since it will contain a heading string like:
-            # snapshot db125b40 of [C:\\GIT\\npbackup] filtered by [] at 2023-01-03 09:41:30.9104257 +0100 CET):
-            return output.split("\n", 2)[2]
+        Returns list of snapshots
 
-            Using --json here does not return actual json content, but lines with each file being a json... !
-            """
-            try:
-                for line in output.split("\n"):
-                    if line:
-                        yield json.loads(line)
-            except json.decoder.JSONDecodeError:
-                self.write_logs(f"Returned data is not JSON:\n{output}", level="error")
-                logger.debug("Trace:", exc_info=True)
-        return result
-
-    @check_if_init
-    def snapshots(self) -> Optional[list]:
+        restic won't really return json content, but rather lines of object without any formatting
         """
-        Returns json list of snapshots
-        """
-        cmd = "snapshots --json"
+        cmd = "list {}".format(subject)
         result, output = self.executor(cmd)
+        if self.json_output:
+            return self.convert_to_json_output(result, output, subject=subject)
         if result:
-            try:
-                return json.loads(output)
-            except json.decoder.JSONDecodeError:
-                self.write_logs(f"Returned data is not JSON:\n{output}", level="error")
-                logger.debug("Trace:", exc_info=True)
-                return False
-        return None
+            return output
+        return False
 
+    @check_if_init
+    def ls(self, snapshot: str) -> Union[bool, str, dict]:
+        """
+        Returns list of objects in a snapshot
+
+        # When not using --json, we must remove first line since it will contain a heading string like:
+        # snapshot db125b40 of [C:\\GIT\\npbackup] filtered by [] at 2023-01-03 09:41:30.9104257 +0100 CET):
+        return output.split("\n", 2)[2]
+
+        Using --json here does not return actual json content, but lines with each file being a json... 
+
+        """
+        cmd = "ls {}".format(snapshot)
+        result, output = self.executor(cmd)
+        if self.json_output:
+            return self.convert_to_json_output(result, output, snapshot=snapshot)
+        if result:
+            return output
+        return False
+
+    @check_if_init
+    def snapshots(self) -> Union[bool, str, dict]:
+        """
+        Returns a list of snapshots
+        --json is directly parseable
+        """
+        cmd = "snapshots"
+        result, output = self.executor(cmd)
+        if self.json_output:
+            return self.convert_to_json_output(result, output)
+        if result:
+            return result
+        return False
+
+    @check_if_init
     def backup(
         self,
         paths: List[str],
@@ -603,13 +666,10 @@ class ResticRunner:
         tags: List[str] = [],
         one_file_system: bool = False,
         additional_backup_only_parameters: str = None,
-    ) -> Tuple[bool, str]:
+    ) -> Union[bool, str, dict]:
         """
         Executes restic backup after interpreting all arguments
         """
-        # TODO: replace with @check_if_init decorator
-        if not self.is_init:
-            return None, None
 
         # Handle various source types
         if source_type in [
@@ -690,31 +750,30 @@ class ResticRunner:
                 "VSS cannot be used. Backup will be done without VSS.", level="error"
             )
             result, output = self.executor(cmd.replace(" --use-fs-snapshot", ""))
+        if self.json_output:
+            return self.convert_to_json_output(result, output, paths=paths)
         if result:
             self.write_logs("Backend finished backup with success", level="info")
-            return True, output
+            return output
         self.write_logs("Backup failed backup operation", level="error")
-        return False, output
+        return False
 
     @check_if_init
-    def find(self, path: str) -> Optional[list]:
+    def find(self, path: str) -> Union[bool, str, dict]:
         """
         Returns find command
+        --json produces a directly parseable format
         """
-        cmd = 'find "{}" --json'.format(path)
+        cmd = f'find "{path}"'
         result, output = self.executor(cmd)
+        if self.json_output:
+            return self.convert_to_json_output(result, output, path=path)
         if result:
-            self.write_logs(f"Successfuly found {path}", level="info")
-            try:
-                return json.loads(output)
-            except json.decoder.JSONDecodeError:
-                self.write_logs(f"Returned data is not JSON:\n{output}", level="error")
-                logger.debug("Trace:", exc_info=True)
-        self.write_logs(f"Could not find path: {path}", level="error")
-        return None
-
+            return output
+        return False
+    
     @check_if_init
-    def restore(self, snapshot: str, target: str, includes: List[str] = None):
+    def restore(self, snapshot: str, target: str, includes: List[str] = None) -> Union[bool, str, dict]:
         """
         Restore given snapshot to directory
         """
@@ -728,6 +787,8 @@ class ResticRunner:
                 if include:
                     cmd += ' --{}include "{}"'.format(case_ignore_param, include)
         result, output = self.executor(cmd)
+        if self.json_output:
+            return self.convert_to_json_output(result, output, snapshot=snapshot, target=target, includes=includes)
         if result:
             self.write_logs("successfully restored data.", level="info")
             return True
@@ -739,7 +800,7 @@ class ResticRunner:
         self,
         snapshots: Optional[Union[List[str], Optional[str]]] = None,
         policy: Optional[dict] = None,
-    ) -> bool:
+    ) -> Union[bool, str, dict]:
         """
         Execute forget command for given snapshot
         """
@@ -786,7 +847,7 @@ class ResticRunner:
     @check_if_init
     def prune(
         self, max_unused: Optional[str] = None, max_repack_size: Optional[int] = None
-    ) -> bool:
+    ) -> Union[bool, str, dict]:
         """
         Prune forgotten snapshots
         """
@@ -799,6 +860,8 @@ class ResticRunner:
         self.verbose = True
         result, output = self.executor(cmd)
         self.verbose = verbose
+        if self.json_output:
+            return self.convert_to_json_output(result, output, max_unused=max_unused, max_repack_size=max_repack_size)
         if result:
             self.write_logs(f"Successfully pruned repository:\n{output}", level="info")
             return True
@@ -812,6 +875,8 @@ class ResticRunner:
         """
         cmd = "check{}".format(" --read-data" if read_data else "")
         result, output = self.executor(cmd)
+        if self.json_output:
+            return self.convert_to_json_output(result, output, read_data=read_data)
         if result:
             self.write_logs("Repo checked successfully.", level="info")
             return True
@@ -828,6 +893,8 @@ class ResticRunner:
             return False
         cmd = f"repair {subject}"
         result, output = self.executor(cmd)
+        if self.json_output:
+            return self.convert_to_json_output(result, output, subject=subject)
         if result:
             self.write_logs(f"Repo successfully repaired:\n{output}", level="info")
             return True
@@ -841,8 +908,10 @@ class ResticRunner:
         """
         cmd = f"unlock"
         result, output = self.executor(cmd)
+        if self.json_output:
+            return self.convert_to_json_output(result, output)
         if result:
-            self.write_logs(f"Repo successfully unlocked:\n{output}", level="info")
+            self.write_logs(f"Repo successfully unlocked", level="info")
             return True
         self.write_logs(f"Repo unlock failed:\n {output}", level="critical")
         return False
@@ -853,6 +922,8 @@ class ResticRunner:
         Execute plain restic command without any interpretation"
         """
         result, output = self.executor(command)
+        if self.json_output:
+            return self.convert_to_json_output(result, output, command=command)
         if result:
             self.write_logs(f"successfully run raw command:\n{output}", level="info")
             return True, output
@@ -904,14 +975,28 @@ class ResticRunner:
         """
         # Don't bother to deal with mising delta
         if not delta:
+            if self.json_output:
+                self.convert_to_json_output(False, None, delta=delta)
             return False, None
         try:
-            snapshots = self.snapshots()
+            # Make sure we run with json support for this one
+            json_output = self.json_output
+            self.json_output = True
+            result = self.snapshots()
+            self.json_output = json_output
             if self.last_command_status is False:
-                return None, None
-            return self._has_recent_snapshot(snapshots, delta)
+                if self.json_output:
+                    return self.convert_to_json_output(False, None, delta=delta)
+                return False, None
+            snapshots = result["output"]
+            result, timestamp = self._has_recent_snapshot(snapshots, delta)
+            if self.json_output:
+                return self.convert_to_json_output(result, timestamp, delta=delta)
+            return result, timestamp
         except IndexError as exc:
             self.write_logs(f"snapshot information missing: {exc}", level="error")
             logger.debug("Trace", exc_info=True)
             # No 'time' attribute in snapshot ?
+            if self.json_output:
+                return self.convert_to_json_output(None, None, delta=delta)
             return None, None

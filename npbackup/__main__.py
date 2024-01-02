@@ -163,7 +163,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Choose which snapshot to use. Defaults to latest",
     )
     parser.add_argument(
-        "--api",
+        "--json",
         action="store_true",
         help="Run in JSON API mode. Nothing else than JSON will be printed to stdout",
     )
@@ -192,7 +192,7 @@ This is free software, and you are welcome to redistribute it under certain cond
     )
     args = parser.parse_args()
 
-    if args.api:
+    if args.json:
         logger = ofunctions.logger_utils.logger_get_logger(
             LOG_FILE, console=False, debug=_DEBUG
         )
@@ -251,7 +251,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         "verbose": args.verbose,
         "dry_run": args.dry_run,
         "debug": args.debug,
-        "api_mode": args.api,
+        "json_output": args.json,
         "operation": None,
         "op_args": {},
     }
@@ -276,7 +276,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["op_args"] = {"snapshot": args.snapshot_id}
     elif args.find:
         cli_args["operation"] = "find"
-        cli_args["op_args"] = {"snapshot": args.snapshot_id, "path": args.find}
+        cli_args["op_args"] = {"path": args.find}
     elif args.forget:
         cli_args["operation"] = "forget"
         if args.forget == "policy":

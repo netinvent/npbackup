@@ -232,12 +232,13 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
 
 
 def ls_window(repo_config: dict, snapshot_id: str) -> bool:
-    snapshot_content = gui_thread_runner(
+    result = gui_thread_runner(
         repo_config, "ls", snapshot=snapshot_id, __autoclose=True, __compact=True
     )
-    if not snapshot_content:
-        return snapshot_content, None
+    if not result["result"]:
+        return None, None
 
+    snapshot_content = result["output"]
     try:
         # Since ls returns an iter now, we need to use next
         snapshot = next(snapshot_content)
@@ -352,7 +353,7 @@ def restore_window(
             target=target,
             restore_includes=restore_includes,
         )
-        return result
+        return result["result"]
 
     left_col = [
         [
@@ -400,7 +401,7 @@ def backup(repo_config: dict) -> bool:
         __compact=False,
         __gui_msg=gui_msg,
     )
-    return result
+    return result["result"]
 
 
 def forget_snapshot(repo_config: dict, snapshot_ids: List[str]) -> bool:
@@ -414,7 +415,7 @@ def forget_snapshot(repo_config: dict, snapshot_ids: List[str]) -> bool:
         __gui_msg=gui_msg,
         __autoclose=True,
     )
-    return result
+    return result["result"]
 
 
 def _main_gui(viewer_mode: bool):
@@ -490,13 +491,17 @@ def _main_gui(viewer_mode: bool):
             _t("generic.please_wait"), button_color="orange"
         )
         gui_msg = _t("main_gui.loading_snapshot_list_from_repo")
-        snapshots = gui_thread_runner(
+        result = gui_thread_runner(
             repo_config,
             "snapshots",
             __gui_msg=gui_msg,
             __autoclose=True,
             __compact=True,
         )
+        if not result["result"]:
+            snapshots = None
+        else:
+            snapshots = result["output"]
         try:
             min_backup_age = repo_config.g("repo_opts.minimum_backup_age")
         except AttributeError:

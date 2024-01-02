@@ -7,13 +7,14 @@ __intname__ = "npbackup.runner_interface"
 __author__ = "Orsiris de Jong"
 __site__ = "https://www.netperfect.fr/npbackup"
 __description__ = "NetPerfect Backup Client"
-__copyright__ = "Copyright (C) 2022-2023 NetInvent"
+__copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023122801"
+__build__ = "2024010201"
 
 
-import os
+import sys
 from logging import getLogger
+import json
 from npbackup.core.runner import NPBackupRunner
 
 
@@ -25,12 +26,16 @@ def entrypoint(*args, **kwargs):
     npbackup_runner.repo_config = kwargs.pop("repo_config")
     npbackup_runner.dry_run = kwargs.pop("dry_run")
     npbackup_runner.verbose = kwargs.pop("verbose")
+    json_output = kwargs.pop("json_output")
+    npbackup_runner.json_output = json_output
     result = npbackup_runner.__getattribute__(kwargs.pop("operation"))(
         **kwargs.pop("op_args"), __no_threads=True
     )
-    print(result)
-    logger.debug(result)
-
+    if not json_output:
+        logger.info(f"Operation finished with {result}")
+    else:
+        print(json.dumps(result))
+        sys.exit(0)
 
 def auto_upgrade(full_config: dict):
     pass

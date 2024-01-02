@@ -5,9 +5,9 @@
 
 __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2022-2023 NetInvent"
+__copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023083101"
+__build__ = "2024010201"
 
 
 from typing import Optional, Callable, Union, List
@@ -128,6 +128,7 @@ class NPBackupRunner:
 
         self._dry_run = False
         self._verbose = False
+        self._json_output = False
         self.restic_runner = None
         self.minimum_backup_age = None
         self._exec_time = None
@@ -174,6 +175,18 @@ class NPBackupRunner:
             msg = f"Bogus verbose parameter given: {value}"
             self.write_logs(msg, level="critical", raise_error="ValueError")
         self._verbose = value
+
+
+    @property
+    def json_output(self):
+        return self._json_output
+
+    @json_output.setter
+    def json_output(self, value):
+        if not isinstance(value, bool):
+            msg = f"Bogus json_output parameter given: {value}"
+            self.write_logs(msg, level="critical", raise_error="ValueError")
+        self._json_output = value
 
     @property
     def stdout(self):
@@ -262,6 +275,9 @@ class NPBackupRunner:
             # pylint: disable=E1102 (not-callable)
             result = fn(self, *args, **kwargs)
             self.exec_time = (datetime.utcnow() - start_time).total_seconds()
+            # Optional patch result with exec time
+            if self.restic_runner.json_output and isinstance(result, dict):
+                result["exec_time"] = self.exec_time
             # pylint: disable=E1101 (no-member)
             self.write_logs(
                 f"Runner took {self.exec_time} seconds for {fn.__name__}", level="info"
@@ -298,8 +314,20 @@ class NPBackupRunner:
         def wrapper(self, *args, **kwargs):
             if not self._is_ready:
                 # pylint: disable=E1101 (no-member)
+                if fn.__name__ == "group_runner":
+                    operation = kwargs.get("operation")
+                else:
+                    # pylint: disable=E1101 (no-member)
+                    operation = fn.__name__
+                if self.json_output:
+                    js = {
+                        "result": False,
+                        "operation": operation,
+                        "reason": "backend not ready"
+                    }
+                    return js
                 self.write_logs(
-                    f"Runner cannot execute {fn.__name__}. Backend not ready",
+                    f"Runner cannot execute {operation}. Backend not ready",
                     level="error",
                 )
                 return False
@@ -339,13 +367,23 @@ class NPBackupRunner:
                 else:
                     # pylint: disable=E1101 (no-member)
                     operation = fn.__name__
-                # TODO: enforce permissions
+                
                 self.write_logs(
                     f"Permissions required are {required_permissions[operation]}",
                     level="info",
                 )
-            except (IndexError, KeyError):
+                has_permissions = True # TODO: enforce permissions
+                if not has_permissions:
+                    raise PermissionError
+            except (IndexError, KeyError, PermissionError):
                 self.write_logs("You don't have sufficient permissions", level="error")
+                if self.json_output:
+                    js = {
+                        "result": False,
+                        "operation": operation,
+                        "reason": "Not enough permissions"
+                    }
+                    return js
                 return False
             # pylint: disable=E1102 (not-callable)
             return fn(self, *args, **kwargs)
@@ -382,7 +420,12 @@ class NPBackupRunner:
                 "unlock",
             ]
             # pylint: disable=E1101 (no-member)
-            if fn.__name__ in locking_operations:
+            if fn.__name__ == "group_runner":
+                operation = kwargs.get("operation")
+            else:
+                # pylint: disable=E1101 (no-member)
+                operation = fn.__name__
+            if operation in locking_operations:
                 pid_file = os.path.join(
                     tempfile.gettempdir(), "{}.pid".format(__intname__)
                 )
@@ -391,9 +434,8 @@ class NPBackupRunner:
                         # pylint: disable=E1102 (not-callable)
                         result = fn(self, *args, **kwargs)
                 except pidfile.AlreadyRunningError:
-                    # pylint: disable=E1101 (no-member)
                     self.write_logs(
-                        f"There is already an {fn.__name__} operation running by NPBackup. Will not continue",
+                        f"There is already an {operation} operation running by NPBackup. Will not continue",
                         level="critical",
                     )
                     return False
@@ -417,10 +459,22 @@ class NPBackupRunner:
                 return fn(self, *args, **kwargs)
             except Exception as exc:
                 # pylint: disable=E1101 (no-member)
+                if fn.__name__ == "group_runner":
+                    operation = kwargs.get("operation")
+                else:
+                    # pylint: disable=E1101 (no-member)
+                    operation = fn.__name__
                 self.write_logs(
-                    f"Function {fn.__name__} failed with: {exc}", level="error"
+                    f"Function {operation} failed with: {exc}", level="error"
                 )
-                logger.debug("Trace:", exc_info=True)
+                logger.info("Trace:", exc_info=True)
+                if self.json_output:
+                    js = {
+                        "result": False,
+                        "operation": operation,
+                        "reason": f"Exception: {exc}"
+                    }
+                    return js
                 return False
 
         return wrapper
@@ -609,6 +663,7 @@ class NPBackupRunner:
             self.minimum_backup_age = 0
 
         self.restic_runner.verbose = self.verbose
+        self.restic_runner.json_output = self.json_output
         self.restic_runner.stdout = self.stdout
         self.restic_runner.stderr = self.stderr
 
@@ -672,10 +727,8 @@ class NPBackupRunner:
         )
         result = self.restic_runner.find(path=path)
         if result:
-            self.write_logs("Found path in:\n", level="info")
-            for line in result:
-                self.write_logs(line, level="info")
-            return True
+            self.write_logs(f"Found path in:\n{result}", level="info")
+            return result
         return False
 
     @threaded
@@ -715,6 +768,7 @@ class NPBackupRunner:
             f"Searching for a backup newer than {str(timedelta(minutes=self.minimum_backup_age))} ago",
             level="info",
         )
+        # Temporarily disable verbose and enable json result
         self.restic_runner.verbose = False
         result, backup_tz = self.restic_runner.has_recent_snapshot(
             self.minimum_backup_age
