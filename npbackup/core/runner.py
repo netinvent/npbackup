@@ -654,8 +654,7 @@ class NPBackupRunner:
             f"Listing {subject} objects of repo {self.repo_config.g('name')}",
             level="info",
         )
-        snapshots = self.restic_runner.list(subject)
-        return snapshots
+        return self.restic_runner.list(subject)
 
     @threaded
     @close_queues
@@ -796,31 +795,33 @@ class NPBackupRunner:
 
         excludes_case_ignore = self.repo_config.g("backup_opts.excludes_case_ignore")
         exclude_caches = self.repo_config.g("backup_opts.exclude_caches")
+        
         exclude_files_larger_than = self.repo_config.g(
             "backup_opts.exclude_files_larger_than"
         )
-        if not exclude_files_larger_than[-1] in (
-            "k",
-            "K",
-            "m",
-            "M",
-            "g",
-            "G",
-            "t",
-            "T",
-        ):
-            self.write_logs(
-                f"Bogus suffix for exclude_files_larger_than value given: {exclude_files_larger_than}",
-                level="warning",
-            )
-            exclude_files_larger_than = None
-        try:
-            float(exclude_files_larger_than[:-1])
-        except (ValueError, TypeError):
-            self.write_logs(
-                f"Cannot check whether excludes_files_larger_than is a float: {exclude_files_larger_than}",
-                level="warning",
-            )
+        if exclude_files_larger_than:
+            if not exclude_files_larger_than[-1] in (
+                "k",
+                "K",
+                "m",
+                "M",
+                "g",
+                "G",
+                "t",
+                "T",
+            ):
+                self.write_logs(
+                    f"Bogus suffix for exclude_files_larger_than value given: {exclude_files_larger_than}",
+                    level="warning",
+                )
+                exclude_files_larger_than = None
+            try:
+                float(exclude_files_larger_than[:-1])
+            except (ValueError, TypeError):
+                self.write_logs(
+                    f"Cannot check whether excludes_files_larger_than is a float: {exclude_files_larger_than}",
+                    level="warning",
+                )
             exclude_files_larger_than = None
 
         one_file_system = (
@@ -921,7 +922,7 @@ class NPBackupRunner:
             exclude_files=exclude_files,
             excludes_case_ignore=excludes_case_ignore,
             exclude_caches=exclude_caches,
-            exclude_files_largen_than=exclude_files_larger_than,
+            exclude_files_larger_than=exclude_files_larger_than,
             one_file_system=one_file_system,
             use_fs_snapshot=use_fs_snapshot,
             tags=tags,
