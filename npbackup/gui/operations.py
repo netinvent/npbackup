@@ -167,7 +167,7 @@ def operations_gui(full_config: dict) -> dict:
     window["repo-list"].expand(True, True)
 
     while True:
-        event, values = window.read(timeout=60000)
+        event, values = window.read()
 
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--EXIT--"):
             break
