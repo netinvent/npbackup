@@ -13,6 +13,7 @@ import atexit
 from argparse import ArgumentParser
 from datetime import datetime
 import logging
+import json
 import ofunctions.logger_utils
 from ofunctions.process import kill_childs
 from npbackup.path_helper import CURRENT_DIR
@@ -38,11 +39,24 @@ except ImportError:
     pass
 
 
+_JSON = False
 LOG_FILE = os.path.join(CURRENT_DIR, "{}.log".format(__intname__))
 logger = logging.getLogger()
 
 
+def json_error_logging(result: bool, msg: str, level: str):
+    if _JSON:
+        js = {
+            "result": result,
+            "reason": msg
+        }
+        print(json.dumps(js))
+    logger.__getattribute__(level)(msg)
+
+
 def cli_interface():
+    global _JSON
+
     parser = ArgumentParser(
         prog=f"{__intname__}",
         description="""Portable Network Backup Client\n
@@ -193,6 +207,7 @@ This is free software, and you are welcome to redistribute it under certain cond
     args = parser.parse_args()
 
     if args.json:
+        _JSON = True
         logger = ofunctions.logger_utils.logger_get_logger(
             LOG_FILE, console=False, debug=_DEBUG
         )
@@ -220,7 +235,8 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     if args.config_file:
         if not os.path.isfile(args.config_file):
-            logger.critical(f"Config file {args.config_file} cannot be read.")
+            msg = f"Config file {args.config_file} cannot be read."
+            json_error_logging(False, msg, "critical")
             sys.exit(70)
         CONFIG_FILE = args.config_file
     else:
@@ -228,7 +244,8 @@ This is free software, and you are welcome to redistribute it under certain cond
         if config_file.exists:
             CONFIG_FILE = config_file
         else:
-            logger.critical("Cannot run without configuration file.")
+            msg = "Cannot run without configuration file."
+            json_error_logging(False, msg, "critical")
             sys.exit(70)
 
     full_config = npbackup.configuration.load_config(CONFIG_FILE)
@@ -237,12 +254,13 @@ This is free software, and you are welcome to redistribute it under certain cond
             full_config, args.repo_name
         )
     else:
-        logger.critical("Cannot obtain repo config")
+        msg = "Cannot obtain repo config"
+        json_error_logging(False, msg, "critical")
         sys.exit(71)
 
     if not repo_config:
-        message = _t("config_gui.no_config_available")
-        logger.critical(message)
+        msg = "Cannot find repo config"
+        json_error_logging(False, msg, "critical")
         sys.exit(72)
 
     # Prepare program run
@@ -310,7 +328,7 @@ This is free software, and you are welcome to redistribute it under certain cond
     if cli_args["operation"]:
         entrypoint(**cli_args)
     else:
-        logger.warning("No operation has been requested")
+        json_error_logging(False, "No operation has been requested", level="warning")
 
 
 def main():
@@ -325,12 +343,12 @@ def main():
         cli_interface()
         sys.exit(logger.get_worst_logger_level())
     except KeyboardInterrupt as exc:
-        logger.error("Program interrupted by keyboard. {}".format(exc))
+        json_error_logging(False, f"Program interrupted by keyboard: {exc}", level="error")
         logger.info("Trace:", exc_info=True)
         # EXIT_CODE 200 = keyboard interrupt
         sys.exit(200)
     except Exception as exc:
-        logger.error("Program interrupted by error. {}".format(exc))
+        json_error_logging(False, f"Program interrupted by error: {exc}", level="error")
         logger.info("Trace:", exc_info=True)
         # EXIT_CODE 201 = Non handled exception
         sys.exit(201)

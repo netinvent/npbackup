@@ -555,53 +555,59 @@ class ResticRunner:
 
         return wrapper
     
-    def convert_to_json_output(self, result, output, **kwargs):
+    def convert_to_json_output(self, result, output, msg=None, **kwargs):
         """
+        result, output = command_runner results
+        msg will be logged and used as reason on failure
+
         Converts restic --json output to parseable json
 
         as of restic 0.16.2:
         restic --list snapshots|index... --json returns brute strings, one per line !
         """
-        operation = fn_name(1)
-        js = {
-            "result": result,
-            "operation": operation,
-            "args": kwargs,
-            "output": None
-        }
-        if result:
-            if output:
-                if isinstance(output, str):
-                    output = list(filter(None, output.split("\n")))
-                else:
-                    output = str(output)
-                if len(output) > 1:
-                    output_is_list = True
-                    js["output"] = []
-                else:
-                    output_is_list = False
-                for line in output:
-                    try:
+        if self.json_output:
+            operation = fn_name(1)
+            js = {
+                "result": result,
+                "operation": operation,
+                "args": kwargs,
+                "output": None
+            }
+            if result:
+                if output:
+                    if isinstance(output, str):
+                        output = list(filter(None, output.split("\n")))
+                    else:
+                        output = [str(output)]
+                    if len(output) > 1:
+                        output_is_list = True
+                        js["output"] = []
+                    else:
+                        output_is_list = False
+                    for line in output:
                         if output_is_list:
                             js["output"].append(line)
                         else:
-                            js["output"] = json.loads(line)
-                    except json.decoder.JSONDecodeError:
-                        self.write_logs(f"Returned data is not JSON parseable:\n{line}", level="error")
-                """
-                print("L", line)
-                try:
-                    # Specia handling for list which returns "raw lists"
-                    if operation == 'list':
-                        js["output"].append(line)
-                    else:
-                        sub_js = json.loads(line)
-                        if isinstance(sub_js)
-                        js["output"].append()
-                """
-        else:
-            js["reason"] = output
-        return js
+                            try:
+                                js["output"] = json.loads(line)
+                            except json.decoder.JSONDecodeError:
+                                js["output"] = {'data': line}
+                if msg:
+                    self.write_logs(msg, level="info")
+            else:
+                if msg:
+                    js["reason"] = msg
+                    self.write_logs(msg, level="error")
+                else:
+                    js["reason"] = output
+            return js
+        
+        if result:
+            self.write_logs(msg, level="info")
+            return output
+        self.write_logs(msg, level="error")
+        return False
+
 
     @check_if_init
     def list(self, subject: str) -> Union[bool, str, dict]:
@@ -610,13 +616,13 @@ class ResticRunner:
 
         restic won't really return json content, but rather lines of object without any formatting
         """
+        kwargs = locals()
+        kwargs.pop("self")
+
         cmd = "list {}".format(subject)
         result, output = self.executor(cmd)
-        if self.json_output:
-            return self.convert_to_json_output(result, output, subject=subject)
-        if result:
-            return output
-        return False
+        return self.convert_to_json_output(result, output, **kwargs)
+
 
     @check_if_init
     def ls(self, snapshot: str) -> Union[bool, str, dict]:
@@ -630,13 +636,13 @@ class ResticRunner:
         Using --json here does not return actual json content, but lines with each file being a json... 
 
         """
+        kwargs = locals()
+        kwargs.pop("self")
+
         cmd = "ls {}".format(snapshot)
         result, output = self.executor(cmd)
-        if self.json_output:
-            return self.convert_to_json_output(result, output, snapshot=snapshot)
-        if result:
-            return output
-        return False
+        return self.convert_to_json_output(result, output, **kwargs)
+
 
     @check_if_init
     def snapshots(self) -> Union[bool, str, dict]:
@@ -644,13 +650,12 @@ class ResticRunner:
         Returns a list of snapshots
         --json is directly parseable
         """
+        kwargs = locals()
+        kwargs.pop("self")
+        
         cmd = "snapshots"
         result, output = self.executor(cmd)
-        if self.json_output:
-            return self.convert_to_json_output(result, output)
-        if result:
-            return result
-        return False
+        return self.convert_to_json_output(result, output, **kwargs)
 
     @check_if_init
     def backup(
@@ -670,6 +675,8 @@ class ResticRunner:
         """
         Executes restic backup after interpreting all arguments
         """
+        kwargs = locals()
+        kwargs.pop("self")
 
         # Handle various source types
         if source_type in [
@@ -751,7 +758,7 @@ class ResticRunner:
             )
             result, output = self.executor(cmd.replace(" --use-fs-snapshot", ""))
         if self.json_output:
-            return self.convert_to_json_output(result, output, paths=paths)
+            return self.convert_to_json_output(result, output, **kwargs)
         if result:
             self.write_logs("Backend finished backup with success", level="info")
             return output
@@ -764,19 +771,22 @@ class ResticRunner:
         Returns find command
         --json produces a directly parseable format
         """
+        kwargs = locals()
+        kwargs.pop("self")
+
         cmd = f'find "{path}"'
         result, output = self.executor(cmd)
-        if self.json_output:
-            return self.convert_to_json_output(result, output, path=path)
-        if result:
-            return output
-        return False
+        return self.convert_to_json_output(result, output, **kwargs)
+
     
     @check_if_init
     def restore(self, snapshot: str, target: str, includes: List[str] = None) -> Union[bool, str, dict]:
         """
         Restore given snapshot to directory
         """
+        kwargs = locals()
+        kwargs.pop("self")
+
         case_ignore_param = ""
         # Always use case ignore excludes under windows
         if os.name == "nt":
@@ -788,7 +798,7 @@ class ResticRunner:
                     cmd += ' --{}include "{}"'.format(case_ignore_param, include)
         result, output = self.executor(cmd)
         if self.json_output:
-            return self.convert_to_json_output(result, output, snapshot=snapshot, target=target, includes=includes)
+            return self.convert_to_json_output(result, output, **kwargs)
         if result:
             self.write_logs("successfully restored data.", level="info")
             return True
@@ -804,6 +814,9 @@ class ResticRunner:
         """
         Execute forget command for given snapshot
         """
+        kwargs = locals()
+        kwargs.pop("self")
+
         if not snapshots and not policy:
             self.write_logs(
                 "No valid snapshot or policy defined for pruning", level="error"
@@ -833,6 +846,7 @@ class ResticRunner:
         verbose = self.verbose
         self.verbose = True
         batch_result = True
+        batch_output = ""
         if cmds:
             for cmd in cmds:
                 result, output = self.executor(cmd)
@@ -841,8 +855,9 @@ class ResticRunner:
                 else:
                     self.write_logs(f"Forget failed\n{output}", level="error")
                     batch_result = False
+                    batch_output += f"\n{output}"
         self.verbose = verbose
-        return batch_result
+        return self.convert_to_json_output(batch_result, batch_output, **kwargs)
 
     @check_if_init
     def prune(
@@ -851,6 +866,9 @@ class ResticRunner:
         """
         Prune forgotten snapshots
         """
+        kwargs = locals()
+        kwargs.pop("self")
+
         cmd = "prune"
         if max_unused:
             cmd += f"--max-unused {max_unused}"
@@ -860,41 +878,45 @@ class ResticRunner:
         self.verbose = True
         result, output = self.executor(cmd)
         self.verbose = verbose
-        if self.json_output:
-            return self.convert_to_json_output(result, output, max_unused=max_unused, max_repack_size=max_repack_size)
         if result:
-            self.write_logs(f"Successfully pruned repository:\n{output}", level="info")
-            return True
-        self.write_logs(f"Could not prune repository:\n{output}", level="error")
-        return False
+            msg = "Successfully pruned repository"
+        else:
+            msg = "Could not prune repository"
+        return self.convert_to_json_output(result, output=output, msg=msg, **kwargs)
+
 
     @check_if_init
-    def check(self, read_data: bool = True) -> bool:
+    def check(self, read_data: bool = True) -> Union[bool, str, dict]:
         """
         Check current repo status
         """
+        kwargs = locals()
+        kwargs.pop("self")
+
         cmd = "check{}".format(" --read-data" if read_data else "")
         result, output = self.executor(cmd)
-        if self.json_output:
-            return self.convert_to_json_output(result, output, read_data=read_data)
         if result:
-            self.write_logs("Repo checked successfully.", level="info")
-            return True
-        self.write_logs(f"Repo check failed:\n {output}", level="critical")
-        return False
+            msg = "Repo checked successfully."
+        else:
+            msg = "Repo check failed"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
+
 
     @check_if_init
-    def repair(self, subject: str) -> bool:
+    def repair(self, subject: str) -> Union[bool, str, dict]:
         """
         Check current repo status
         """
+        kwargs = locals()
+        kwargs.pop("self")
+
         if subject not in ["index", "snapshots"]:
             self.write_logs(f"Bogus repair order given: {subject}", level="error")
             return False
         cmd = f"repair {subject}"
         result, output = self.executor(cmd)
         if self.json_output:
-            return self.convert_to_json_output(result, output, subject=subject)
+            return self.convert_to_json_output(result, output, **kwargs)
         if result:
             self.write_logs(f"Repo successfully repaired:\n{output}", level="info")
             return True
@@ -902,14 +924,17 @@ class ResticRunner:
         return False
 
     @check_if_init
-    def unlock(self) -> bool:
+    def unlock(self) -> Union[bool, str, dict]:
         """
         Remove stale locks from repos
         """
+        kwargs = locals()
+        kwargs.pop("self")
+
         cmd = f"unlock"
         result, output = self.executor(cmd)
         if self.json_output:
-            return self.convert_to_json_output(result, output)
+            return self.convert_to_json_output(result, output, **kwargs)
         if result:
             self.write_logs(f"Repo successfully unlocked", level="info")
             return True
@@ -917,13 +942,16 @@ class ResticRunner:
         return False
 
     @check_if_init
-    def raw(self, command: str) -> Tuple[bool, str]:
+    def raw(self, command: str) -> Union[bool, str, dict]:
         """
         Execute plain restic command without any interpretation"
         """
+        kwargs = locals()
+        kwargs.pop("self")
+
         result, output = self.executor(command)
         if self.json_output:
-            return self.convert_to_json_output(result, output, command=command)
+            return self.convert_to_json_output(result, output, **kwargs)
         if result:
             self.write_logs(f"successfully run raw command:\n{output}", level="info")
             return True, output
@@ -973,30 +1001,31 @@ class ResticRunner:
             returns False, datetime = 0001-01-01T00:00:00 if no snapshots found
             Returns None, None on error
         """
+        kwargs = locals()
+        kwargs.pop("self")
+
         # Don't bother to deal with mising delta
         if not delta:
             if self.json_output:
-                self.convert_to_json_output(False, None, delta=delta)
+                self.convert_to_json_output(False, None, **kwargs)
             return False, None
         try:
             # Make sure we run with json support for this one
-            json_output = self.json_output
-            self.json_output = True
+
             result = self.snapshots()
-            self.json_output = json_output
             if self.last_command_status is False:
                 if self.json_output:
-                    return self.convert_to_json_output(False, None, delta=delta)
+                    return self.convert_to_json_output(False, None, **kwargs)
                 return False, None
             snapshots = result["output"]
             result, timestamp = self._has_recent_snapshot(snapshots, delta)
             if self.json_output:
-                return self.convert_to_json_output(result, timestamp, delta=delta)
+                return self.convert_to_json_output(result, timestamp, **kwargs)
             return result, timestamp
         except IndexError as exc:
             self.write_logs(f"snapshot information missing: {exc}", level="error")
             logger.debug("Trace", exc_info=True)
             # No 'time' attribute in snapshot ?
             if self.json_output:
-                return self.convert_to_json_output(None, None, delta=delta)
+                return self.convert_to_json_output(None, None, **kwargs)
             return None, None

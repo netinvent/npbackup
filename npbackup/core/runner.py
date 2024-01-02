@@ -668,7 +668,19 @@ class NPBackupRunner:
         self.restic_runner.stderr = self.stderr
 
         return True
-
+    
+    def convert_to_json_output(self, result: bool, output: str = None):
+        if self.json_output:
+            js = {
+                "result": result,
+            }
+            if result:
+                js["output"] = output
+            else:
+                js["reason"] = output
+            return js
+        return result
+    
     ###########################
     # ACTUAL RUNNER FUNCTIONS #
     ###########################
@@ -719,7 +731,6 @@ class NPBackupRunner:
     @is_ready
     @apply_config_to_restic_runner
     @catch_exceptions
-    # TODO: add json output
     def find(self, path: str) -> bool:
         self.write_logs(
             f"Searching for path {path} in repo {self.repo_config.g('name')}",
@@ -728,8 +739,7 @@ class NPBackupRunner:
         result = self.restic_runner.find(path=path)
         if result:
             self.write_logs(f"Found path in:\n{result}", level="info")
-            return result
-        return False
+        return self.convert_to_json_output(result, None)
 
     @threaded
     @close_queues
@@ -770,10 +780,18 @@ class NPBackupRunner:
         )
         # Temporarily disable verbose and enable json result
         self.restic_runner.verbose = False
-        result, backup_tz = self.restic_runner.has_recent_snapshot(
+        json_output = self.restic_runner.json_output
+        self.restic_runner.json_output = True
+        data = self.restic_runner.has_recent_snapshot(
             self.minimum_backup_age
         )
         self.restic_runner.verbose = self.verbose
+        self.restic_runner.json_output = json_output
+        if self.json_output:
+            return data
+        
+        result = data["result"]
+        backup_tz = data["output"]
         if result:
             self.write_logs(
                 f"Most recent backup in repo {self.repo_config.g('name')} is from {backup_tz}",
@@ -1068,8 +1086,9 @@ class NPBackupRunner:
                 policy["keep-tags"] = keep_tags
             # Fool proof, don't run without policy, or else we'll get
             if not policy:
-                self.write_logs(f"Empty retention policy. Won't run", level="error")
-                return False
+                msg = f"Empty retention policy. Won't run"
+                self.write_logs(msg, level="error")
+                return self.convert_to_json_output(False, msg)
             self.write_logs(
                 f"Forgetting snapshots using retention policy: {policy}", level="info"
             )
@@ -1080,7 +1099,7 @@ class NPBackupRunner:
                 level="critical",
                 raise_error=True,
             )
-        return result
+        return self.convert_to_json_output(result)
 
     @threaded
     @close_queues
