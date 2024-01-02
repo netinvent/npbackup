@@ -44,8 +44,8 @@ Dirs:           29 new,    47 changed,   817 unmodified
 Added to the repository: 4.425 MiB (1.431 MiB stored)
 
 processed 6073 files, 116.657 MiB in 0:03
-snapshot b28b0901 save
-d"""
+snapshot b28b0901 saved
+"""
 
     # log file from restic v0.14.0
 restic_str_outputs["v0.14.0"] = \
