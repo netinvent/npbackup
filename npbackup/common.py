@@ -44,7 +44,9 @@ def execution_logs(start_time: datetime) -> None:
 
     log_level_reached = "success"
     try:
-        if logger_worst_level >= 40:
+        if logger_worst_level >= 50:
+            log_level_reached = "critical"
+        elif logger_worst_level >= 40:
             log_level_reached = "errors"
         elif logger_worst_level >= 30:
             log_level_reached = "warnings"
