@@ -1230,7 +1230,8 @@ class NPBackupRunner:
             },
         }
 
-        for repo_name, repo_config in repo_config_list:
+        for repo_config in repo_config_list:
+            repo_name = repo_config.g("name")
             self.write_logs(f"Running {operation} for repo {repo_name}", level="info")
             self.repo_config = repo_config
             result = self.__getattribute__(operation)(**kwargs)

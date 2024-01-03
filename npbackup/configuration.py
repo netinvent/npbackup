@@ -627,3 +627,12 @@ def get_group_list(full_config: dict) -> List[str]:
     if full_config:
         return list(full_config.g("groups").keys())
     return []
+
+
+def get_repos_by_group(full_config: dict, group: str) -> List[str]:
+    repo_list = []
+    if full_config:
+        for repo in list(full_config.g("repos").keys()):
+            if full_config.g(f"repos.{repo}.repo_group") == group:
+                repo_list.append(repo)
+    return repo_list

@@ -5,9 +5,9 @@
 
 __intname__ = "npbackup.gui.operations"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2023 NetInvent"
+__copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023121901"
+__build__ = "2024010301"
 
 
 from logging import getLogger
@@ -18,16 +18,6 @@ from npbackup.gui.helpers import get_anon_repo_uri, gui_thread_runner
 from npbackup.customization import (
     OEM_STRING,
     OEM_LOGO,
-    BG_COLOR_LDR,
-    TXT_COLOR_LDR,
-    GUI_STATE_OK_BUTTON,
-    GUI_STATE_OLD_BUTTON,
-    GUI_STATE_UNKNOWN_BUTTON,
-    LOADER_ANIMATION,
-    FOLDER_ICON,
-    FILE_ICON,
-    LICENSE_TEXT,
-    LICENSE_FILE,
 )
 
 
@@ -44,7 +34,8 @@ def gui_update_state(window, full_config: dict) -> list:
                 or repo_config.g(f"repo_opts.repo_password_command")
             ):
                 backend_type, repo_uri = get_anon_repo_uri(repo_config.g(f"repo_uri"))
-                repo_list.append([repo_name, backend_type, repo_uri])
+                repo_group = repo_config.g("repo_group")
+                repo_list.append([repo_name, repo_group, backend_type, repo_uri])
             else:
                 logger.warning("Incomplete operations repo {}".format(repo_name))
     except KeyError:
@@ -58,9 +49,42 @@ def operations_gui(full_config: dict) -> dict:
     Operate on one or multiple repositories
     """
 
+    def _select_groups():
+        selector_layout = [
+            [
+                sg.Table(
+                    values=configuration.get_group_list(full_config),
+                    headings=["Group Name"],
+                    key="-GROUP_LIST-",
+                    auto_size_columns=True,
+                    justification="left",
+                )
+            ],
+            [
+                sg.Push(),
+                sg.Button(_t("generic.cancel"), key="--CANCEL--"),
+                sg.Button(_t("operations_gui.apply_to_selected_groups"), key="--SELECTED_GROUPS--"),
+                sg.Button(_t("operations_gui.apply_to_all"), key="--APPLY-TO-ALL--")
+            ]
+        ]
+
+        select_group_window = sg.Window("Group", selector_layout)
+        while True:
+            event, values = select_group_window.read()
+            if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--CANCEL--"):
+                break
+            if event == "--SELECTED_GROUPS--":
+                if not values["-GROUP_LIST-"]:
+                    sg.Popup("No groups selected")
+                    continue
+            if event == "--APPLY-TO-ALL":
+                continue
+        select_group_window.close()
+
     # This is a stupid hack to make sure uri column is large enough
     headings = [
         "Name      ",
+        "Group      ",
         "Backend",
         "URI                                                  ",
     ]
@@ -190,12 +214,15 @@ def operations_gui(full_config: dict) -> dict:
             "--STATS--"
         ):
             if not values["repo-list"]:
+                """
                 result = sg.popup(
                     _t("operations_gui.apply_to_all"),
                     custom_text=(_t("generic.yes"), _t("generic.no")),
                 )
                 if not result == _t("generic.yes"):
                     continue
+                """
+                repos = _select_groups() # TODO #WIP
                 repos = complete_repo_list
             else:
                 repos = []
@@ -203,11 +230,11 @@ def operations_gui(full_config: dict) -> dict:
                     repos.append(complete_repo_list[value])
 
             repo_config_list = []
-            for repo_name, backend_type, repo_uri in repos:
+            for repo_name, repo_group, backend_type, repo_uri in repos:
                 repo_config, config_inheritance = configuration.get_repo_config(
                     full_config, repo_name
                 )
-                repo_config_list.append((repo_name, repo_config))
+                repo_config_list.append(repo_config)
             if event == "--FORGET--":
                 operation = "forget"
                 op_args = {"use_policy": True}
