@@ -538,6 +538,12 @@ def _main_gui(viewer_mode: bool):
         """
         if default:
             config_file = Path(f"{CURRENT_DIR}/npbackup.conf")
+            if default:
+                full_config = npbackup.configuration.load_config(config_file)
+                if not config_file.exists():
+                    config_file = None
+                if not full_config:
+                    return full_config, config_file
         else:
             config_file = None
 
@@ -561,8 +567,8 @@ def _main_gui(viewer_mode: bool):
                     return full_config, config_file
         return None, None
 
-    def get_config():
-        full_config, config_file = get_config_file()
+    def get_config(default: bool = False):
+        full_config, config_file = get_config_file(default=default)
         if full_config and config_file:
             repo_config, config_inheritance = npbackup.configuration.get_repo_config(
                 full_config
@@ -595,7 +601,7 @@ def _main_gui(viewer_mode: bool):
             backend_type,
             repo_uri,
             repo_list,
-        ) = get_config()
+        ) = get_config(default=True)
     else:
         # Let's try to read standard restic repository env variables
         viewer_repo_uri = os.environ.get("RESTIC_REPOSITORY", None)
@@ -645,6 +651,10 @@ def _main_gui(viewer_mode: bool):
                         ),
                     ],
                     [
+                        sg.Text(_t("main_gui.no_config"), font=("Arial", 14), text_color="red", key="-NO-CONFIG-", visible=False)
+                    ] if not viewer_mode
+                    else [],
+                    [
                         sg.Text(_t("main_gui.backup_list_to")),
                         sg.Combo(
                             repo_list,
@@ -664,6 +674,7 @@ def _main_gui(viewer_mode: bool):
                             justification="left",
                             key="snapshot-list",
                             select_mode="extended",
+                            size=(None, 10)
                         )
                     ],
                     [
@@ -725,7 +736,9 @@ def _main_gui(viewer_mode: bool):
     window["snapshot-list"].expand(True, True)
     window.set_title(f"{SHORT_PRODUCT_NAME} - {config_file}")
 
-    window.read(timeout=1)
+    window.read(timeout=0.01)
+    if not config_file and not full_config and not viewer_mode:
+        window["-NO-CONFIG-"].Update(visible=True)
     if repo_config:
         try:
             current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
@@ -812,6 +825,10 @@ def _main_gui(viewer_mode: bool):
                 repo_list,
             ) = get_config()
             window.set_title(f"{SHORT_PRODUCT_NAME} - {config_file}")
+            if not viewer_mode and not config_file and not full_config:
+                window["-NO-CONFIG-"].Update(visible=True)
+            elif not viewer_mode:
+                window["-NO-CONFIG-"].Update(visible=False)
             event = "--STATE-BUTTON--"
         if event == _t("generic.destination"):
             try:

@@ -41,7 +41,7 @@ en:
   new_config: New config
   load_config: Load configuration
   config_error: Configuration error
-  no_config: Please load a configuration before proceeding
+  no_config: Please load / create a configuration before proceeding
 
   # logs
   last_messages: Last messages
