@@ -5,7 +5,7 @@
 
 __intname__ = "npbackup.upgrade_client.upgrader"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2023 NetInvent"
+__copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "BSD-3-Clause"
 __build__ = "20263040401"
 

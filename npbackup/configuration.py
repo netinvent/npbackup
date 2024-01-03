@@ -5,7 +5,7 @@
 
 __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2022-2023 NetInvent"
+__copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2023122901"
 __version__ = "2.0.0 for npbackup 2.3.0+"
