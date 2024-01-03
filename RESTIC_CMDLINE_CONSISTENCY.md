@@ -6,7 +6,16 @@ As of 2024/01/02, version 0.16.2:
 
 - `restic check --json` does not produce json output, probably single str on error
 - `restic unlock --json` does not produce any output, probably single str on error
-- `restic repair index|snapshots` does not produce json output
+- `restic repair index --json` does not produce json output
+```
+loading indexes...
+getting pack files to read...
+rebuilding index
+[0:00] 100.00%  28 / 28 packs processed
+deleting obsolete index files
+done
+```
+- `restic repair snapshots --json` does not produce json output
 ```
 snapshot 00ecc4e3 of [c:\git\npbackup] at 2024-01-02 19:15:35.3779691 +0100 CET)
 
@@ -14,7 +23,7 @@ snapshot 1066f045 of [c:\git\npbackup] at 2023-12-28 13:46:41.3639521 +0100 CET)
 
 no snapshots were modified
 ```
-- `restic forget <snapshot-id>` does not produce any output, and produces str output on error. Example on error:
+- `restic forget <snapshot-id> --json` does not produce any output, and produces str output on error. Example on error:
 ```
 Ignoring "ff20970b": no matching ID found for prefix "ff20970b"
 ```
@@ -24,9 +33,13 @@ tree 0d2eef6a1b06aa0650a08a82058d57a42bf515a4c84bf4f899e391a4b9906197
 tree 9e61b5966a936e2e8b4ef4198b86ad59000c5cba3fc6250ece97cb13621b3cd1
 tree 1fe90879bd35d90cd4fde440e64bfc16b331297cbddb776a43eb3fdf94875540
 ```
-- `restic snapshots --json` is the only verb that produces valid json
-- `restic backup --json` produces one per line valid json, makes sense
 
+- `restic key list --json` produces direct parseable json
+- `restic stats --json` produces direct parseable json
+- `restic find <path> --json` produces direct parseable json
+- `restic snapshots --json` produces direct parseable json
+- `restic backup --json` produces multiple state lines, each one being valid json, which makes sense
+- `restic restore <snapshot> --target <target> --json` produces multiple state lines, each one being valid json, which makes sense
 
 ### backup results inconsistency
 
