@@ -17,13 +17,10 @@ import json
 import ofunctions.logger_utils
 from ofunctions.process import kill_childs
 from npbackup.path_helper import CURRENT_DIR
-from npbackup.customization import (
-    LICENSE_TEXT,
-    LICENSE_FILE,
-)
+from npbackup.customization import LICENSE_TEXT
 import npbackup.configuration
 from npbackup.runner_interface import entrypoint
-from npbackup.__version__ import version_string
+from npbackup.__version__ import version_string, version_dict
 from npbackup.__debug__ import _DEBUG
 from npbackup.common import execution_logs
 from npbackup.core.i18n_helper import _t
@@ -228,15 +225,20 @@ This is free software, and you are welcome to redistribute it under certain cond
         logger = ofunctions.logger_utils.logger_get_logger(LOG_FILE, debug=_DEBUG)
 
     if args.version:
-        print(version_string)
+        if _JSON:
+            print(json.dumps({
+                "result": True,
+                "version": version_dict
+            }))
+        else:
+            print(version_string)
         sys.exit(0)
 
     logger.info(version_string)
     if args.license:
-        try:
-            with open(LICENSE_FILE, "r", encoding="utf-8") as file_handle:
-                print(file_handle.read())
-        except OSError:
+        if _JSON:
+            print(json.dumps({"result": True, "output": LICENSE_TEXT}))
+        else:
             print(LICENSE_TEXT)
         sys.exit(0)
 

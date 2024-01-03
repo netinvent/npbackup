@@ -58,6 +58,7 @@ def operations_gui(full_config: dict) -> dict:
                     key="-GROUP_LIST-",
                     auto_size_columns=True,
                     justification="left",
+                    size=(60, 5)
                 )
             ],
             [

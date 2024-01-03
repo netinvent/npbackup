@@ -40,7 +40,6 @@ from npbackup.customization import (
     FOLDER_ICON,
     FILE_ICON,
     LICENSE_TEXT,
-    LICENSE_FILE,
     PYSIMPLEGUI_THEME,
     OEM_ICON,
     SHORT_PRODUCT_NAME,
@@ -64,8 +63,6 @@ sg.SetOptions(icon=OEM_ICON)
 
 
 def about_gui(version_string: str, full_config: dict = None) -> None:
-    license_content = LICENSE_TEXT
-
     if full_config and full_config.g("global_options.auto_upgrade_server_url"):
         auto_upgrade_result = check_new_version(full_config)
     else:
@@ -82,17 +79,11 @@ def about_gui(version_string: str, full_config: dict = None) -> None:
         new_version = [sg.Text(_t("generic.is_uptodate"))]
     elif auto_upgrade_result is None:
         new_version = [sg.Text(_t("config_gui.auto_upgrade_disabled"))]
-    try:
-        with open(LICENSE_FILE, "r", encoding="utf-8") as file_handle:
-            license_content = file_handle.read()
-    except OSError:
-        logger.info("Could not read license file.")
-
     layout = [
         [sg.Text(version_string)],
         new_version,
         [sg.Text("License: GNU GPLv3")],
-        [sg.Multiline(license_content, size=(65, 20), disabled=True)],
+        [sg.Multiline(LICENSE_TEXT, size=(65, 20), disabled=True)],
         [sg.Button(_t("generic.accept"), key="exit")],
     ]
 
