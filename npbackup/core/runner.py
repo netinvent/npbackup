@@ -347,9 +347,11 @@ class NPBackupRunner:
                 "backup": ["backup", "restore", "full"],
                 "has_recent_snapshot": ["backup", "restore", "full"],
                 "snapshots": ["backup", "restore", "full"],
+                "stats": ["backup", "restore", "full"],
                 "ls": ["backup", "restore", "full"],
                 "find": ["backup", "restore", "full"],
                 "restore": ["restore", "full"],
+                "dump": ["restore", "full"],
                 "check": ["restore", "full"],
                 "list": ["full"],
                 "unlock": ["full"],
@@ -1170,6 +1172,32 @@ class NPBackupRunner:
         self.write_logs(f"Unlocking repo {self.repo_config.g('name')}", level="info")
         result = self.restic_runner.unlock()
         return result
+
+    @threaded
+    @close_queues
+    @exec_timer
+    @check_concurrency
+    @has_permission
+    @is_ready
+    @apply_config_to_restic_runner
+    @catch_exceptions
+    def dump(self, path: str) -> bool:
+        self.write_logs(f"Dumping {path} from {self.repo_config.g('name')}", level="info")
+        result = self.restic_runner.dump(path)
+        return result
+
+    @threaded
+    @close_queues
+    @exec_timer
+    @check_concurrency
+    @has_permission
+    @is_ready
+    @apply_config_to_restic_runner
+    @catch_exceptions
+    def stats(self) -> bool:
+        self.write_logs(f"Getting stats of repo {self.repo_config.g('name')}", level="info")
+        result = self.restic_runner.stats()
+        return result 
 
     @threaded
     @close_queues

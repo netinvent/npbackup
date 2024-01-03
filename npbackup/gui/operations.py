@@ -139,6 +139,13 @@ def operations_gui(full_config: dict) -> dict:
                             size=(45, 1),
                         ),
                     ],
+                    [
+                        sg.Button(
+                            _t("operations_gui.stats"),
+                            key="--STATS--",
+                            size=(45, 1),
+                        )
+                    ],
                     [sg.Button(_t("generic.quit"), key="--EXIT--")],
                 ],
                 element_justification="C",
@@ -180,6 +187,7 @@ def operations_gui(full_config: dict) -> dict:
             "--FORGET--",
             "--STANDARD-PRUNE--",
             "--MAX-PRUNE--",
+            "--STATS--"
         ):
             if not values["repo-list"]:
                 result = sg.popup(
@@ -232,6 +240,10 @@ def operations_gui(full_config: dict) -> dict:
                 operation = "prune"
                 op_args = {"max": True}
                 gui_msg = _t("operations_gui.max_prune")
+            if event == "--STATS--":
+                operation = "stats"
+                op_args = {}
+                gui_msg = _t("operations_gui.stats")
             result = gui_thread_runner(
                 None,
                 "group_runner",

@@ -603,9 +603,11 @@ class ResticRunner:
             return js
         
         if result:
-            self.write_logs(msg, level="info")
+            if msg:
+                self.write_logs(msg, level="info")
             return output
-        self.write_logs(msg, level="error")
+        if msg:
+            self.write_logs(msg, level="error")
         return False
 
 
@@ -940,6 +942,38 @@ class ResticRunner:
             return True
         self.write_logs(f"Repo unlock failed:\n {output}", level="critical")
         return False
+    
+    @check_if_init
+    def dump(self, path: str) -> Union[bool, str, dict]:
+        """
+        Dump given file directly to stdout
+        """
+        kwargs = locals()
+        kwargs.pop("self")
+
+        cmd = f'dump "{path}"'
+        result, output = self.executor(cmd)
+        if result:
+            msg = f"File {path} successfully dumped"
+        else:
+            msg = f"Cannot dump file {path}:\n {output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
+
+    @check_if_init
+    def stats(self) -> Union[bool, str, dict]:
+        """
+        Gives various repository statistics
+        """
+        kwargs = locals()
+        kwargs.pop("self")
+
+        cmd = f"stats"
+        result, output = self.executor(cmd)
+        if result:
+            msg = f"Repo statistics command success"
+        else:
+            msg = f"Cannot get repo statistics:\n {output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
     @check_if_init
     def raw(self, command: str) -> Union[bool, str, dict]:

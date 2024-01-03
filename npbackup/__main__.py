@@ -150,6 +150,19 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Show [blobs|packs|index|snapshots|keys|locks] objects",
     )
     parser.add_argument(
+        "--dump",
+        type=str,
+        default=None,
+        required=False,
+        help="Dump a specific file to stdout"
+    )
+    parser.add_argument(
+        "--stats",
+        action="store_true",
+        help="Get repository statistics"
+
+    )
+    parser.add_argument(
         "--raw",
         type=str,
         default=None,
@@ -319,6 +332,11 @@ This is free software, and you are welcome to redistribute it under certain cond
     elif args.repair_snapshots:
         cli_args["operation"] = "repair"
         cli_args["op_args"] = {"subject": "snapshots"}
+    elif args.dump:
+        cli_args["operation"] = "dump"
+        cli_args["op_args"] = {"path": args.dump}
+    elif args.stats:
+        cli_args["operation"] = "stats"
     elif args.raw:
         cli_args["operation"] = "raw"
         cli_args["op_args"] = {"command": args.raw}
