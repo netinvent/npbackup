@@ -522,7 +522,7 @@ def _main_gui(viewer_mode: bool):
                         "%Y-%m-%d %H:%M:%S"
                     )
                 else:
-                    snapshot_date = "Unparsable"
+                    snapshot_date = "Unparseable"
                 snapshot_username = snapshot["username"]
                 snapshot_hostname = snapshot["hostname"]
                 snapshot_id = snapshot["short_id"]
