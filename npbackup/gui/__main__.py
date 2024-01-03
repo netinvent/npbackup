@@ -794,7 +794,10 @@ def _main_gui(viewer_mode: bool):
             # Make sure we trigger a GUI refresh when configuration is changed
             event = "--STATE-BUTTON--"
         if event == "--OPEN-REPO--":
-            viewer_repo_uri, viewer_repo_password = viewer_repo_gui()
+            viewer_repo_uri, viewer_repo_password = viewer_repo_gui(viewer_repo_uri, viewer_repo_password)
+            if not viewer_repo_uri or not viewer_repo_password:
+                sg.Popup(_t("main_gui.repo_and_password_cannot_be_empty"), keep_on_top=True)
+                continue
             repo_config = viewer_create_repo(viewer_repo_uri, viewer_repo_password)
             event = "--STATE-BUTTON--"
         if event == "--LOAD-CONF--":
