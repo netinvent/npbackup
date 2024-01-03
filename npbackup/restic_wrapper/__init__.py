@@ -586,7 +586,10 @@ class ResticRunner:
                         output_is_list = False
                     for line in output:
                         if output_is_list:
-                            js["output"].append(line)
+                            try:
+                                js["output"].append(json.loads(line))
+                            except json.decoder.JSONDecodeError:
+                                js["output"].append(line)
                         else:
                             try:
                                 js["output"] = json.loads(line)

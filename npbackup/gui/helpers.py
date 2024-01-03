@@ -77,6 +77,7 @@ def gui_thread_runner(
     __compact: bool = True,
     __autoclose: bool = False,
     __gui_msg: str = "",
+    __stdout: bool = True,
     *args,
     **kwargs,
 ):
@@ -105,15 +106,16 @@ def gui_thread_runner(
     if __repo_config:
         runner.repo_config = __repo_config
     
-    stdout_queue = queue.Queue()
+    if __stdout:
+        stdout_queue = queue.Queue()
+        runner.stdout = stdout_queue
+
     stderr_queue = queue.Queue()
+    runner.stderr = stderr_queue
     fn = getattr(runner, __fn_name)
     logger.debug(
         f"gui_thread_runner runs {fn.__name__} {'with' if USE_THREADING else 'without'} threads"
     )
-
-    runner.stdout = stdout_queue
-    runner.stderr = stderr_queue
 
     stderr_has_messages = False
     if not __gui_msg:
@@ -191,6 +193,7 @@ def gui_thread_runner(
                 _t("generic.close"),
                 key="--EXIT--",
                 button_color=(TXT_COLOR_LDR, BG_COLOR_LDR),
+                disabled=True
             )
         ],
     ]
@@ -212,13 +215,14 @@ def gui_thread_runner(
         use_custom_titlebar=True,
         grab_anywhere=True,
         keep_on_top=True,
+        disable_close=True,  # Don't allow closing this window via "X" since we still need to update it
         background_color=BG_COLOR_LDR,
         titlebar_icon=OEM_ICON,
     )
     # Finalize the window
     event, values = progress_window.read(timeout=0.01)
 
-    read_stdout_queue = True
+    read_stdout_queue = __stdout
     read_stderr_queue = True
     read_queues = True
     if USE_THREADING:
@@ -237,36 +241,38 @@ def gui_thread_runner(
         if event == "--EXPAND--":
             _upgrade_from_compact_view()
         # Read stdout queue
-        try:
-            stdout_data = stdout_queue.get(timeout=GUI_CHECK_INTERVAL)
-        except queue.Empty:
-            pass
-        else:
-            if stdout_data is None:
-                logger.debug("gui_thread_runner got stdout queue close signal")
-                read_stdout_queue = False
+        if read_stdout_queue:
+            try:
+                stdout_data = stdout_queue.get(timeout=GUI_CHECK_INTERVAL)
+            except queue.Empty:
+                pass
             else:
-                progress_window["-OPERATIONS-PROGRESS-STDOUT-"].Update(
-                    f"\n{stdout_data}", append=True
-                )
+                if stdout_data is None:
+                    logger.debug("gui_thread_runner got stdout queue close signal")
+                    read_stdout_queue = False
+                else:
+                    progress_window["-OPERATIONS-PROGRESS-STDOUT-"].Update(
+                        f"\n{stdout_data}", append=True
+                    )
 
         # Read stderr queue
-        try:
-            stderr_data = stderr_queue.get(timeout=GUI_CHECK_INTERVAL)
-        except queue.Empty:
-            pass
-        else:
-            if stderr_data is None:
-                logger.debug("gui_thread_runner got stderr queue close signal")
-                read_stderr_queue = False
+        if read_stderr_queue:
+            try:
+                stderr_data = stderr_queue.get(timeout=GUI_CHECK_INTERVAL)
+            except queue.Empty:
+                pass
             else:
-                stderr_has_messages = True
-                # if __compact:
-                # for key in progress_window.AllKeysDict:
-                #    progress_window[key].Update(visible=True)
-                progress_window["-OPERATIONS-PROGRESS-STDERR-"].Update(
-                    f"\n{stderr_data}", append=True
-                )
+                if stderr_data is None:
+                    logger.debug("gui_thread_runner got stderr queue close signal")
+                    read_stderr_queue = False
+                else:
+                    stderr_has_messages = True
+                    # if __compact:
+                    # for key in progress_window.AllKeysDict:
+                    #    progress_window[key].Update(visible=True)
+                    progress_window["-OPERATIONS-PROGRESS-STDERR-"].Update(
+                        f"\n{stderr_data}", append=True
+                    )
 
         read_queues = read_stdout_queue or read_stderr_queue
 
@@ -280,6 +286,7 @@ def gui_thread_runner(
             # Make sure we will keep the window visible since we have errors
             __autoclose = False
 
+    progress_window["--EXIT--"].Update(disabled=False)
     # Keep the window open until user has done something
     progress_window["-LOADER-ANIMATION-"].Update(visible=False)
     if not __autoclose or stderr_has_messages:

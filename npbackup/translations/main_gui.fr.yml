@@ -43,6 +43,7 @@ fr:
   config_error: Erreur de configuration
   no_config: Veuillez charger / créer une configuration avant de procéder
 
+  snapshot_is_empty: L'instantané est vide
   # logs
   last_messages: Last messages
   error_messages: Error messages

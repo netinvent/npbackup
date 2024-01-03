@@ -43,6 +43,8 @@ en:
   config_error: Configuration error
   no_config: Please load / create a configuration before proceeding
 
+  snapshot_is_empty: Snapshot is empty
+
   # logs
   last_messages: Last messages
   error_messages: Error messages

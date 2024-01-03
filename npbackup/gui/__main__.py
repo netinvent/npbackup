@@ -47,6 +47,7 @@ from npbackup.customization import (
 from npbackup.gui.config import config_gui
 from npbackup.gui.operations import operations_gui
 from npbackup.gui.helpers import get_anon_repo_uri, gui_thread_runner
+from npbackup.gui.notification import display_notification
 from npbackup.core.i18n_helper import _t
 from npbackup.core.upgrade_runner import run_upgrade, check_new_version
 from npbackup.path_helper import CURRENT_DIR
@@ -180,9 +181,6 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
     """
     treedata = sg.TreeData()
     count = 0
-    # First entry of list of list should be the snapshot description and can be discarded
-    # Since we use an iter now, first result was discarded by ls_window function already
-    # ls_result.pop(0)
     for entry in ls_result:
         # Make sure we drop the prefix '/' so sg.TreeData does not get an empty root
         entry["path"] = entry["path"].lstrip("/")
@@ -224,38 +222,35 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
 
 def ls_window(repo_config: dict, snapshot_id: str) -> bool:
     result = gui_thread_runner(
-        repo_config, "ls", snapshot=snapshot_id, __autoclose=True, __compact=True
+        repo_config, "ls", snapshot=snapshot_id, __stdout=False, __autoclose=True, __compact=True
     )
     if not result["result"]:
+        sg.Popup("main_gui.snapshot_is_empty")
         return None, None
-
-    snapshot_content = result["output"]
-    try:
-        # Since ls returns an iter now, we need to use next
-        snapshot = next(snapshot_content)
-    # Exception that happens when restic cannot successfully get snapshot content
-    except StopIteration:
-        return None, None
+    # result is {"result": True, "output": [{snapshot_description}, {entry}, {entry}]}
+    content = result["output"]
+    # First entry of snapshot list is the snapshot description
+    snapshot = content.pop(0)
     try:
         snap_date = dateutil.parser.parse(snapshot["time"])
-    except (KeyError, IndexError):
+    except (KeyError, IndexError, TypeError):
         snap_date = "[inconnu]"
     try:
         short_id = snapshot["short_id"]
-    except (KeyError, IndexError):
-        short_id = "[inconnu]"
+    except (KeyError, IndexError, TypeError):
+        short_id = None
     try:
         username = snapshot["username"]
-    except (KeyError, IndexError):
+    except (KeyError, IndexError, TypeError):
         username = "[inconnu]"
     try:
         hostname = snapshot["hostname"]
-    except (KeyError, IndexError):
+    except (KeyError, IndexError, TypeError):
         hostname = "[inconnu]"
 
     backup_id = f"{_t('main_gui.backup_content_from')} {snap_date} {_t('main_gui.run_as')} {username}@{hostname} {_t('main_gui.identified_by')} {short_id}"
 
-    if not backup_id or not snapshot_content:
+    if not backup_id or not snapshot or not short_id:
         sg.PopupError(_t("main_gui.cannot_get_content"), keep_on_top=True)
         return False
 
@@ -265,7 +260,7 @@ def ls_window(repo_config: dict, snapshot_id: str) -> bool:
 
     # We get a thread result, hence pylint will complain the thread isn't a tuple
     # pylint: disable=E1101 (no-member)
-    thread = _make_treedata_from_json(snapshot_content)
+    thread = _make_treedata_from_json(content)
     while not thread.done() and not thread.cancelled():
         sg.PopupAnimated(
             LOADER_ANIMATION,
@@ -773,7 +768,7 @@ def _main_gui(viewer_mode: bool):
             backup(repo_config)
             event = "--STATE-BUTTON--"
         if event == "--SEE-CONTENT--":
-            if not full_config:
+            if not repo_config:
                 sg.PopupError(_t("main_gui.no_config"))
                 continue
             if not values["snapshot-list"]:
