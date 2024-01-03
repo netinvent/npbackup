@@ -410,7 +410,7 @@ def inject_permissions_into_repo_config(repo_config: dict) -> dict:
 
 
 def get_manager_password(full_config: dict, repo_name: str) -> str:
-    return full_config.g("repos.{repo_name}.manager_password")
+    return full_config.g(f"repos.{repo_name}.manager_password")
 
 
 def get_repo_config(
