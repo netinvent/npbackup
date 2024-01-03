@@ -310,19 +310,7 @@ def ls_window(repo_config: dict, snapshot_id: str) -> bool:
                 continue
             restore_window(repo_config, snapshot_id, values["-TREE-"])
 
-    # Closing a big sg.TreeData is really slow
-    # This is a little trichery lesson
-    # Still we should open a case at PySimpleGUI to know why closing a sg.TreeData window is painfully slow # TODO
-    window.hide()
-
-    @threaded
-    def _close_win():
-        """
-        Since closing a sg.Treedata takes alot of time, let's thread it into background
-        """
-        window.close
-
-    _close_win()
+    window.close()
     return True
 
 
