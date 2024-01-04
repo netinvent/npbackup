@@ -823,87 +823,88 @@ class NPBackupRunner:
     @is_ready
     @apply_config_to_restic_runner
     @catch_exceptions
-    def backup(self, force: bool = False) -> bool:
+    def backup(self, force: bool = False, read_from_stdin: bool = False, stdin_filename: str = "stdin.data") -> bool:
         """
         Run backup after checking if no recent backup exists, unless force == True
         """
         # Preflight checks
-        paths = self.repo_config.g("backup_opts.paths")
-        if not paths:
-            self.write_logs(
-                f"No paths to backup defined for repo {self.repo_config.g('name')}.",
-                level="error",
-            )
-            return False
-
-        # Make sure we convert paths to list if only one path is give
-        # Also make sure we remove trailing and ending spaces
-        try:
-            if not isinstance(paths, list):
-                paths = [paths]
-            paths = [path.strip() for path in paths]
-            for path in paths:
-                if path == self.repo_config.g("repo_uri"):
-                    self.write_logs(
-                        f"You cannot backup source into it's own path in repo {self.repo_config.g('name')}. No inception allowed !",
-                        level="critical",
-                    )
-                    return False
-        except KeyError:
-            self.write_logs(
-                f"No backup source given for repo {self.repo_config.g('name')}.",
-                level="error",
-            )
-            return False
-
-        source_type = self.repo_config.g("backup_opts.source_type")
-
-        # MSWindows does not support one-file-system option
-        exclude_patterns = self.repo_config.g("backup_opts.exclude_patterns")
-        if not isinstance(exclude_patterns, list):
-            exclude_patterns = [exclude_patterns]
-
-        exclude_files = self.repo_config.g("backup_opts.exclude_files")
-        if not isinstance(exclude_files, list):
-            exclude_files = [exclude_files]
-
-        excludes_case_ignore = self.repo_config.g("backup_opts.excludes_case_ignore")
-        exclude_caches = self.repo_config.g("backup_opts.exclude_caches")
-        
-        exclude_files_larger_than = self.repo_config.g(
-            "backup_opts.exclude_files_larger_than"
-        )
-        if exclude_files_larger_than:
-            if not exclude_files_larger_than[-1] in (
-                "k",
-                "K",
-                "m",
-                "M",
-                "g",
-                "G",
-                "t",
-                "T",
-            ):
+        if not read_from_stdin:
+            paths = self.repo_config.g("backup_opts.paths")
+            if not paths:
                 self.write_logs(
-                    f"Bogus suffix for exclude_files_larger_than value given: {exclude_files_larger_than}",
-                    level="warning",
+                    f"No paths to backup defined for repo {self.repo_config.g('name')}.",
+                    level="error",
                 )
-                exclude_files_larger_than = None
+                return False
+
+            # Make sure we convert paths to list if only one path is give
+            # Also make sure we remove trailing and ending spaces
             try:
-                float(exclude_files_larger_than[:-1])
-            except (ValueError, TypeError):
+                if not isinstance(paths, list):
+                    paths = [paths]
+                paths = [path.strip() for path in paths]
+                for path in paths:
+                    if path == self.repo_config.g("repo_uri"):
+                        self.write_logs(
+                            f"You cannot backup source into it's own path in repo {self.repo_config.g('name')}. No inception allowed !",
+                            level="critical",
+                        )
+                        return False
+            except KeyError:
                 self.write_logs(
-                    f"Cannot check whether excludes_files_larger_than is a float: {exclude_files_larger_than}",
-                    level="warning",
+                    f"No backup source given for repo {self.repo_config.g('name')}.",
+                    level="error",
                 )
-            exclude_files_larger_than = None
+                return False
 
-        one_file_system = (
-            self.repo_config.g("backup_opts.one_file_system")
-            if os.name != "nt"
-            else False
-        )
-        use_fs_snapshot = self.repo_config.g("backup_opts.use_fs_snapshot")
+            source_type = self.repo_config.g("backup_opts.source_type")
+
+            # MSWindows does not support one-file-system option
+            exclude_patterns = self.repo_config.g("backup_opts.exclude_patterns")
+            if not isinstance(exclude_patterns, list):
+                exclude_patterns = [exclude_patterns]
+
+            exclude_files = self.repo_config.g("backup_opts.exclude_files")
+            if not isinstance(exclude_files, list):
+                exclude_files = [exclude_files]
+
+            excludes_case_ignore = self.repo_config.g("backup_opts.excludes_case_ignore")
+            exclude_caches = self.repo_config.g("backup_opts.exclude_caches")
+            
+            exclude_files_larger_than = self.repo_config.g(
+                "backup_opts.exclude_files_larger_than"
+            )
+            if exclude_files_larger_than:
+                if not exclude_files_larger_than[-1] in (
+                    "k",
+                    "K",
+                    "m",
+                    "M",
+                    "g",
+                    "G",
+                    "t",
+                    "T",
+                ):
+                    self.write_logs(
+                        f"Bogus suffix for exclude_files_larger_than value given: {exclude_files_larger_than}",
+                        level="warning",
+                    )
+                    exclude_files_larger_than = None
+                try:
+                    float(exclude_files_larger_than[:-1])
+                except (ValueError, TypeError):
+                    self.write_logs(
+                        f"Cannot check whether excludes_files_larger_than is a float: {exclude_files_larger_than}",
+                        level="warning",
+                    )
+                exclude_files_larger_than = None
+
+            one_file_system = (
+                self.repo_config.g("backup_opts.one_file_system")
+                if os.name != "nt"
+                else False
+            )
+            use_fs_snapshot = self.repo_config.g("backup_opts.use_fs_snapshot")
 
         minimum_backup_size_error = self.repo_config.g(
             "backup_opts.minimum_backup_size_error"
@@ -957,16 +958,19 @@ class NPBackupRunner:
         self.restic_runner.verbose = self.verbose
 
         # Run backup here
-        if source_type not in ["folder_list", None]:
-            self.write_logs(
-                f"Running backup of files in {paths} list to repo {self.repo_config.g('name')}",
-                level="info",
-            )
+        if not read_from_stdin:
+            if source_type not in ["folder_list", None]:
+                self.write_logs(
+                    f"Running backup of files in {paths} list to repo {self.repo_config.g('name')}",
+                    level="info",
+                )
+            else:
+                self.write_logs(
+                    f"Running backup of {paths} to repo {self.repo_config.g('name')}",
+                    level="info",
+                )
         else:
-            self.write_logs(
-                f"Running backup of {paths} to repo {self.repo_config.g('name')}",
-                level="info",
-            )
+            self.write_logs(f"Running backup of piped stdin data as name {stdin_filename} to repo {self.repo_config.g('name')}", level="info")
 
         pre_exec_commands_success = True
         if pre_exec_commands:
@@ -989,19 +993,27 @@ class NPBackupRunner:
                     )
 
         self.restic_runner.dry_run = self.dry_run
-        result, result_string = self.restic_runner.backup(
-            paths=paths,
-            source_type=source_type,
-            exclude_patterns=exclude_patterns,
-            exclude_files=exclude_files,
-            excludes_case_ignore=excludes_case_ignore,
-            exclude_caches=exclude_caches,
-            exclude_files_larger_than=exclude_files_larger_than,
-            one_file_system=one_file_system,
-            use_fs_snapshot=use_fs_snapshot,
-            tags=tags,
-            additional_backup_only_parameters=additional_backup_only_parameters,
-        )
+        if not read_from_stdin:
+            result, result_string = self.restic_runner.backup(
+                paths=paths,
+                source_type=source_type,
+                exclude_patterns=exclude_patterns,
+                exclude_files=exclude_files,
+                excludes_case_ignore=excludes_case_ignore,
+                exclude_caches=exclude_caches,
+                exclude_files_larger_than=exclude_files_larger_than,
+                one_file_system=one_file_system,
+                use_fs_snapshot=use_fs_snapshot,
+                tags=tags,
+                additional_backup_only_parameters=additional_backup_only_parameters,
+            )
+        else:
+            result, result_string = self.restic_runner.backup(
+                read_from_stdin=read_from_stdin,
+                stdin_filename=stdin_filename,
+                tags=tags,
+                additional_backup_only_parameters=additional_backup_only_parameters
+            )
         self.write_logs(f"Restic output:\n{result_string}", level="debug")
         # Extract backup size from result_string
 

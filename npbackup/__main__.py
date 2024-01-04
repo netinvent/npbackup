@@ -192,6 +192,17 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Run in JSON API mode. Nothing else than JSON will be printed to stdout",
     )
     parser.add_argument(
+        "--stdin",
+        action="store_true",
+        help="Backup using data from stdin input"
+    )
+    parser.add_argument(
+        "--stdin-filename",
+        type=str,
+        default=None,
+        help="Alternate filename for stdin, defaults to 'stdin.data'"
+    )
+    parser.add_argument(
         "-v", "--verbose", action="store_true", help="Show verbose output"
     )
     parser.add_argument("-d", "--debug", action="store_true", help="Run with debugging")
@@ -289,7 +300,14 @@ This is free software, and you are welcome to redistribute it under certain cond
         "op_args": {},
     }
 
-    if args.backup:
+    if args.stdin:
+        cli_args["operation"] = "backup"
+        cli_args["op_args"] = {
+            "force": True,
+            "read_from_stdin": True,
+            "stdin_filename": args.stdin_filename if args.stdin_filename else None
+        }
+    elif args.backup:
         cli_args["operation"] = "backup"
         cli_args["op_args"] = {"force": args.force}
     elif args.restore:

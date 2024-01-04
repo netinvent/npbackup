@@ -253,6 +253,8 @@ class ResticRunner:
         errors_allowed: bool = False,
         no_output_queues: bool = False,
         timeout: int = None,
+        stdin: sys.stdin = None
+    
     ) -> Tuple[bool, str]:
         """
         Executes restic with given command
@@ -276,6 +278,7 @@ class ResticRunner:
             timeout=timeout,
             split_streams=False,
             encoding="utf-8",
+            stdin=stdin,
             stdout=self.stdout if not no_output_queues else None,
             stderr=self.stderr if not no_output_queues else None,
             no_close_queues=True,
@@ -665,8 +668,8 @@ class ResticRunner:
     @check_if_init
     def backup(
         self,
-        paths: List[str],
-        source_type: str,
+        paths: List[str] = None,
+        source_type: str = None,
         exclude_patterns: List[str] = [],
         exclude_files: List[str] = [],
         excludes_case_ignore: bool = False,
@@ -675,6 +678,8 @@ class ResticRunner:
         use_fs_snapshot: bool = False,
         tags: List[str] = [],
         one_file_system: bool = False,
+        read_from_stdin: bool = False,
+        stdin_filename: str = "stdin.data",
         additional_backup_only_parameters: str = None,
     ) -> Union[bool, str, dict]:
         """
@@ -683,78 +688,88 @@ class ResticRunner:
         kwargs = locals()
         kwargs.pop("self")
 
-        # Handle various source types
-        if source_type in [
-            "files_from",
-            "files_from_verbatim",
-            "files_from_raw",
-        ]:
-            cmd = "backup"
-            if source_type == "files_from":
-                source_parameter = "--files-from"
-            elif source_type == "files_from_verbatim":
-                source_parameter = "--files-from-verbatim"
-            elif source_type == "files_from_raw":
-                source_parameter = "--files-from-raw"
-            else:
-                self.write_logs("Bogus source type given", level="error")
-                return False, ""
-
-            for path in paths:
-                cmd += ' {} "{}"'.format(source_parameter, path)
+        if read_from_stdin:
+            cmd = "backup --stdin"
+            if stdin_filename:
+                cmd += f' --stdin-filename "{stdin_filename}"'
         else:
-            # make sure path is a list and does not have trailing slashes, unless we're backing up root
-            # We don't need to scan files for ETA, so let's add --no-scan
-            cmd = "backup --no-scan {}".format(
-                " ".join(
-                    [
-                        '"{}"'.format(path.rstrip("/\\")) if path != "/" else path
-                        for path in paths
-                    ]
+            # Handle various source types
+            if source_type in [
+                "files_from",
+                "files_from_verbatim",
+                "files_from_raw",
+            ]:
+                cmd = "backup"
+                if source_type == "files_from":
+                    source_parameter = "--files-from"
+                elif source_type == "files_from_verbatim":
+                    source_parameter = "--files-from-verbatim"
+                elif source_type == "files_from_raw":
+                    source_parameter = "--files-from-raw"
+                else:
+                    self.write_logs("Bogus source type given", level="error")
+                    return False, ""
+
+                for path in paths:
+                    cmd += ' {} "{}"'.format(source_parameter, path)
+            else:
+                # make sure path is a list and does not have trailing slashes, unless we're backing up root
+                # We don't need to scan files for ETA, so let's add --no-scan
+                cmd = "backup --no-scan {}".format(
+                    " ".join(
+                        [
+                            '"{}"'.format(path.rstrip("/\\")) if path != "/" else path
+                            for path in paths
+                        ]
+                    )
                 )
-            )
 
-        case_ignore_param = ""
-        # Always use case ignore excludes under windows
-        if os.name == "nt" or excludes_case_ignore:
-            case_ignore_param = "i"
+            case_ignore_param = ""
+            # Always use case ignore excludes under windows
+            if os.name == "nt" or excludes_case_ignore:
+                case_ignore_param = "i"
 
-        for exclude_pattern in exclude_patterns:
-            if exclude_pattern:
-                cmd += f' --{case_ignore_param}exclude "{exclude_pattern}"'
-        for exclude_file in exclude_files:
-            if exclude_file:
-                if os.path.isfile(exclude_file):
-                    cmd += f' --{case_ignore_param}exclude-file "{exclude_file}"'
+            for exclude_pattern in exclude_patterns:
+                if exclude_pattern:
+                    cmd += f' --{case_ignore_param}exclude "{exclude_pattern}"'
+            for exclude_file in exclude_files:
+                if exclude_file:
+                    if os.path.isfile(exclude_file):
+                        cmd += f' --{case_ignore_param}exclude-file "{exclude_file}"'
+                    else:
+                        self.write_logs(
+                            f"Exclude file '{exclude_file}' not found", level="error"
+                        )
+            if exclude_caches:
+                cmd += " --exclude-caches"
+            if exclude_files_larger_than:
+                cmd += f" --exclude-files-larger-than {exclude_files_larger_than}"
+            if one_file_system:
+                cmd += " --one-file-system"
+            if use_fs_snapshot:
+                if os.name == "nt":
+                    cmd += " --use-fs-snapshot"
+                    self.write_logs("Using VSS snapshot to backup", level="info")
                 else:
                     self.write_logs(
-                        f"Exclude file '{exclude_file}' not found", level="error"
+                        "Parameter --use-fs-snapshot was given, which is only compatible with Windows",
+                        level="warning",
                     )
-        if exclude_caches:
-            cmd += " --exclude-caches"
-        if exclude_files_larger_than:
-            cmd += f" --exclude-files-larger-than {exclude_files_larger_than}"
-        if one_file_system:
-            cmd += " --one-file-system"
-        if use_fs_snapshot:
-            if os.name == "nt":
-                cmd += " --use-fs-snapshot"
-                self.write_logs("Using VSS snapshot to backup", level="info")
-            else:
-                self.write_logs(
-                    "Parameter --use-fs-snapshot was given, which is only compatible with Windows",
-                    level="warning",
-                )
         for tag in tags:
             if tag:
                 tag = tag.strip()
                 cmd += " --tag {}".format(tag)
         if additional_backup_only_parameters:
             cmd += " {}".format(additional_backup_only_parameters)
-        result, output = self.executor(cmd)
+
+        # Run backup
+        if read_from_stdin:
+            result, output = self.executor(cmd, stdin=sys.stdin.buffer)
+        else:
+            result, output = self.executor(cmd)
 
         if (
-            use_fs_snapshot
+            not read_from_stdin and use_fs_snapshot
             and not result
             and re.search("VSS Error", output, re.IGNORECASE)
         ):
@@ -762,6 +777,7 @@ class ResticRunner:
                 "VSS cannot be used. Backup will be done without VSS.", level="error"
             )
             result, output = self.executor(cmd.replace(" --use-fs-snapshot", ""))
+        
         if self.json_output:
             return self.convert_to_json_output(result, output, **kwargs)
         if result:
