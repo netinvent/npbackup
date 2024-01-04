@@ -1017,7 +1017,7 @@ class NPBackupRunner:
         self.write_logs(f"Restic output:\n{result_string}", level="debug")
         # Extract backup size from result_string
 
-        minimum_backup_size_error = 0
+        minimum_backup_size_error = 0 # TODO
         metric_writer(
             self.repo_config, result, result_string, self.restic_runner.dry_run
         )
@@ -1049,7 +1049,10 @@ class NPBackupRunner:
             f"Operation finished with {'success' if operation_result else 'failure'}",
             level="info" if operation_result else "error",
         )
-        return operation_result
+        if not operation_result:
+            if isinstance(result, dict):
+                result["result"] = False
+        return result
 
     @threaded
     @close_queues
