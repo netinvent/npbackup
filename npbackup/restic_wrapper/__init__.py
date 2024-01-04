@@ -629,7 +629,11 @@ class ResticRunner:
 
         cmd = "list {}".format(subject)
         result, output = self.executor(cmd)
-        return self.convert_to_json_output(result, output, **kwargs)
+        if result:
+            msg = f"Successfully listed {subject} objects"
+        else:
+            msg = f"Failed to list {subject} objects:\n{output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
 
     @check_if_init
@@ -649,7 +653,11 @@ class ResticRunner:
 
         cmd = "ls {}".format(snapshot)
         result, output = self.executor(cmd)
-        return self.convert_to_json_output(result, output, **kwargs)
+        if result:
+            msg = f"Successfuly listed snapshot {snapshot} content"
+        else:
+            msg = f"Could not list snapshot {snapshot} content:\n{output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
 
     @check_if_init
@@ -663,7 +671,11 @@ class ResticRunner:
         
         cmd = "snapshots"
         result, output = self.executor(cmd)
-        return self.convert_to_json_output(result, output, **kwargs)
+        if result:
+            msg = "Snapshots listed successfully"
+        else:
+            msg = f"Could not list snapshots:n{output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
     @check_if_init
     def backup(
@@ -778,13 +790,13 @@ class ResticRunner:
             )
             result, output = self.executor(cmd.replace(" --use-fs-snapshot", ""))
         
-        if self.json_output:
-            return self.convert_to_json_output(result, output, **kwargs)
         if result:
-            self.write_logs("Backend finished backup with success", level="info")
-            return output
-        self.write_logs("Backup failed backup operation", level="error")
-        return False
+            msg = "Backend finished backup with success"
+        else:
+            msg = f"Backup failed backup operation:\n{output}"
+        # For backups, we need to return the result string restic too, for metrics analysis
+        result =  self.convert_to_json_output(result, output, msg=msg, **kwargs)
+        return result, output
 
     @check_if_init
     def find(self, path: str) -> Union[bool, str, dict]:
@@ -797,7 +809,11 @@ class ResticRunner:
 
         cmd = f'find "{path}"'
         result, output = self.executor(cmd)
-        return self.convert_to_json_output(result, output, **kwargs)
+        if result:
+            msg = "Find command succeed"
+        else:
+            msg = f"Could not find path {path}:\n{output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
     
     @check_if_init
@@ -818,13 +834,12 @@ class ResticRunner:
                 if include:
                     cmd += ' --{}include "{}"'.format(case_ignore_param, include)
         result, output = self.executor(cmd)
-        if self.json_output:
-            return self.convert_to_json_output(result, output, **kwargs)
         if result:
-            self.write_logs("successfully restored data.", level="info")
-            return True
-        self.write_logs(f"Data not restored: {output}", level="info")
-        return False
+            msg = "successfully restored data"
+        else:
+            msg = f"Data not restored:\n{output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
+
 
     @check_if_init
     def forget(
@@ -936,13 +951,11 @@ class ResticRunner:
             return False
         cmd = f"repair {subject}"
         result, output = self.executor(cmd)
-        if self.json_output:
-            return self.convert_to_json_output(result, output, **kwargs)
         if result:
-            self.write_logs(f"Repo successfully repaired:\n{output}", level="info")
-            return True
-        self.write_logs(f"Repo repair failed:\n {output}", level="critical")
-        return False
+            msg = f"Repo successfully repaired:\n{output}"
+        else:
+            msg = f"Repo repair failed:\n{output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
     @check_if_init
     def unlock(self) -> Union[bool, str, dict]:
@@ -954,13 +967,11 @@ class ResticRunner:
 
         cmd = f"unlock"
         result, output = self.executor(cmd)
-        if self.json_output:
-            return self.convert_to_json_output(result, output, **kwargs)
         if result:
-            self.write_logs(f"Repo successfully unlocked", level="info")
-            return True
-        self.write_logs(f"Repo unlock failed:\n {output}", level="critical")
-        return False
+            msg = f"Repo successfully unlocked"
+        else:
+            msg = f"Repo unlock failed:\n{output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
     
     @check_if_init
     def dump(self, path: str) -> Union[bool, str, dict]:
@@ -1003,13 +1014,11 @@ class ResticRunner:
         kwargs.pop("self")
 
         result, output = self.executor(command)
-        if self.json_output:
-            return self.convert_to_json_output(result, output, **kwargs)
         if result:
-            self.write_logs(f"successfully run raw command:\n{output}", level="info")
-            return True, output
-        self.write_logs("Raw command failed.", level="error")
-        return False, output
+            msg = f"successfully run raw command:\n{output}"
+        else:
+            msg = "Raw command failed:\n{output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
     @staticmethod
     def _has_recent_snapshot(
