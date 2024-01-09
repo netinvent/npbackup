@@ -267,8 +267,9 @@ This is free software, and you are welcome to redistribute it under certain cond
         CONFIG_FILE = args.config_file
     else:
         config_file = Path(f"{CURRENT_DIR}/npbackup.conf")
-        if config_file.exists:
+        if config_file.exists():
             CONFIG_FILE = config_file
+            logger.info(f"Loading default configuration file {config_file}")
         else:
             msg = "Cannot run without configuration file."
             json_error_logging(False, msg, "critical")
