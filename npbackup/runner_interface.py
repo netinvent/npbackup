@@ -15,10 +15,21 @@ __build__ = "2024010201"
 import sys
 from logging import getLogger
 import json
+import datetime
 from npbackup.core.runner import NPBackupRunner
 
 
 logger = getLogger()
+
+
+def serialize_datetime(obj):
+    """
+    By default, datetime objects aren't serialisable to json directly
+    Here's a quick converter from https://www.geeksforgeeks.org/how-to-fix-datetime-datetime-not-json-serializable-in-python/
+    """
+    if isinstance(obj, datetime.datetime): 
+        return obj.isoformat() 
+    raise TypeError("Type not serializable") 
 
 
 def entrypoint(*args, **kwargs):
@@ -34,7 +45,7 @@ def entrypoint(*args, **kwargs):
     if not json_output:
         logger.info(f"Operation finished with {result}")
     else:
-        print(json.dumps(result))
+        print(json.dumps(result, default=serialize_datetime))
         sys.exit(0)
 
 def auto_upgrade(full_config: dict):
