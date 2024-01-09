@@ -782,18 +782,16 @@ class NPBackupRunner:
         )
         # Temporarily disable verbose and enable json result
         self.restic_runner.verbose = False
-        json_output = self.restic_runner.json_output
-        self.restic_runner.json_output = True
         data = self.restic_runner.has_recent_snapshot(
             self.minimum_backup_age
         )
         self.restic_runner.verbose = self.verbose
-        self.restic_runner.json_output = json_output
         if self.json_output:
             return data
-        
-        result = data["result"]
-        backup_tz = data["output"]
+
+        # has_recent_snapshot returns a tuple when not self.json_output
+        result = data[0]
+        backup_tz = data[1]
         if result:
             self.write_logs(
                 f"Most recent backup in repo {self.repo_config.g('name')} is from {backup_tz}",

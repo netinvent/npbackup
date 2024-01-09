@@ -1074,8 +1074,10 @@ class ResticRunner:
             return False, None
         try:
             # Make sure we run with json support for this one
-
+            json_output = self.json_output
+            self.json_output = True
             result = self.snapshots()
+            self.json_output = json_output
             if self.last_command_status is False:
                 if self.json_output:
                     msg = "Could not check for snapshots"
