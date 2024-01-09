@@ -794,9 +794,8 @@ class ResticRunner:
             msg = "Backend finished backup with success"
         else:
             msg = f"Backup failed backup operation:\n{output}"
-        # For backups, we need to return the result string restic too, for metrics analysis
-        result =  self.convert_to_json_output(result, output, msg=msg, **kwargs)
-        return result, output
+
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
     @check_if_init
     def find(self, path: str) -> Union[bool, str, dict]:

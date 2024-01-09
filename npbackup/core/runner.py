@@ -829,11 +829,8 @@ class NPBackupRunner:
         if not read_from_stdin:
             paths = self.repo_config.g("backup_opts.paths")
             if not paths:
-                self.write_logs(
-                    f"No paths to backup defined for repo {self.repo_config.g('name')}.",
-                    level="error",
-                )
-                return False
+                output = f"No paths to backup defined for repo {self.repo_config.g('name')}"
+                return self.convert_to_json_output(False, output)
 
             # Make sure we convert paths to list if only one path is give
             # Also make sure we remove trailing and ending spaces
@@ -843,17 +840,11 @@ class NPBackupRunner:
                 paths = [path.strip() for path in paths]
                 for path in paths:
                     if path == self.repo_config.g("repo_uri"):
-                        self.write_logs(
-                            f"You cannot backup source into it's own path in repo {self.repo_config.g('name')}. No inception allowed !",
-                            level="critical",
-                        )
-                        return False
+                        output = f"You cannot backup source into it's own path in repo {self.repo_config.g('name')}. No inception allowed !"
+                        return self.convert_to_json_output(False, output)
             except KeyError:
-                self.write_logs(
-                    f"No backup source given for repo {self.repo_config.g('name')}.",
-                    level="error",
-                )
-                return False
+                output = f"No backup source given for repo {self.repo_config.g('name')}"
+                return self.convert_to_json_output(False, output)
 
             source_type = self.repo_config.g("backup_opts.source_type")
 
@@ -883,6 +874,7 @@ class NPBackupRunner:
                     "t",
                     "T",
                 ):
+                    # TODO: we need to bring this message to json
                     self.write_logs(
                         f"Bogus suffix for exclude_files_larger_than value given: {exclude_files_larger_than}",
                         level="warning",
