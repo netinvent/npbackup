@@ -1069,7 +1069,8 @@ class ResticRunner:
         # Don't bother to deal with mising delta
         if not delta:
             if self.json_output:
-                self.convert_to_json_output(False, None, **kwargs)
+                msg = "No delta given"
+                self.convert_to_json_output(False, None, msg=msg **kwargs)
             return False, None
         try:
             # Make sure we run with json support for this one
@@ -1077,7 +1078,8 @@ class ResticRunner:
             result = self.snapshots()
             if self.last_command_status is False:
                 if self.json_output:
-                    return self.convert_to_json_output(False, None, **kwargs)
+                    msg = "Could not check for snapshots"
+                    return self.convert_to_json_output(False, None, msg=msg, **kwargs)
                 return False, None
             snapshots = result["output"]
             result, timestamp = self._has_recent_snapshot(snapshots, delta)
