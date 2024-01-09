@@ -865,7 +865,7 @@ class ResticRunner:
                 for snapshot in snapshots:
                     cmds.append(f"forget {snapshot}")
             else:
-                cmds = f"forget {snapshots}"
+                cmds = [f"forget {snapshots}"]
         if policy:
             cmd = "forget"
             for key, value in policy.items():
