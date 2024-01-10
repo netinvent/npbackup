@@ -23,7 +23,7 @@ import queue
 from functools import wraps
 from command_runner import command_runner
 from npbackup.__debug__ import _DEBUG
-from npbackup.__env__ import INIT_TIMEOUT, CHECK_INTERVAL
+from npbackup.__env__ import FAST_COMMANDS_TIMEOUT, CHECK_INTERVAL
 
 
 logger = getLogger()
@@ -491,17 +491,13 @@ class ResticRunner:
         self,
         repository_version: int = 2,
         compression: str = "auto",
-        errors_allowed: bool = False,
     ) -> bool:
         cmd = "init --repository-version {} --compression {}".format(
             repository_version, compression
         )
-        # We don't want output_queues here since we don't want is already inialized errors to show up
         result, output = self.executor(
             cmd,
-            errors_allowed=errors_allowed,
-            no_output_queues=True,
-            timeout=INIT_TIMEOUT,
+            timeout=FAST_COMMANDS_TIMEOUT,
         )
         if result:
             if re.search(
@@ -510,8 +506,8 @@ class ResticRunner:
                 self.is_init = True
                 return True
         else:
-            if re.search(".*already exists", output, re.IGNORECASE):
-                self.write_logs("Repo is initialized.", level="info")
+            if re.search(".*already exists|.*already initialized", output, re.IGNORECASE):
+                self.write_logs("Repo is already initialized.", level="info")
                 self.is_init = True
                 return True
             self.write_logs(f"Cannot contact repo: {output}", level="error")
@@ -522,8 +518,13 @@ class ResticRunner:
 
     @property
     def is_init(self):
-        if self._is_init is None:
-            self.init(errors_allowed=True)
+        """
+        We'll just check if snapshots can be read
+        """
+        cmd = "snapshots"
+        self._is_init, output = self.executor(cmd, timeout=FAST_COMMANDS_TIMEOUT, errors_allowed=True)
+        if not self._is_init:
+            self.write_logs(output, level="error")
         return self._is_init
 
     @is_init.setter
@@ -542,17 +543,25 @@ class ResticRunner:
     def check_if_init(fn: Callable):
         """
         Decorator to check that we don't do anything unless repo is initialized
+        Also auto init repo when backing up
         """
 
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
             if not self.is_init:
-                # pylint: disable=E1101 (no-member)
-                self.write_logs(
-                    "Backend is not ready to perform operation {fn.__name}",
-                    level="error",
-                )
-                return None
+                if fn.__name__ == "backup":
+                    if not self.init():
+                        self.write_logs(
+                            f"Could not initialize repo for backup operation", level="critical"
+                        )
+                        return None
+                else:
+                    # pylint: disable=E1101 (no-member)
+                    self.write_logs(
+                        f"Backend is not ready to perform operation {fn.__name__}",
+                        level="error",
+                    )
+                    return None
             # pylint: disable=E1102 (not-callable)
             return fn(self, *args, **kwargs)
 
@@ -670,7 +679,7 @@ class ResticRunner:
         kwargs.pop("self")
         
         cmd = "snapshots"
-        result, output = self.executor(cmd)
+        result, output = self.executor(cmd, timeout=FAST_COMMANDS_TIMEOUT)
         if result:
             msg = "Snapshots listed successfully"
         else:

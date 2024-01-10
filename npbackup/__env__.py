@@ -25,4 +25,4 @@ GUI_CHECK_INTERVAL = 0.005
 
 # Arbitrary timeout for init / init checks.
 # If init takes more than a minute, we really have a problem in our backend
-INIT_TIMEOUT = 60
+FAST_COMMANDS_TIMEOUT = 60
