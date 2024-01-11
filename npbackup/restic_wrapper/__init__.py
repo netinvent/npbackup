@@ -47,6 +47,8 @@ class ResticRunner:
         self._dry_run = False
         self._json_output = False
 
+        self.backup_result_content = None
+
         self._binary = None
         self.binary_search_paths = binary_search_paths
         self._get_binary()
@@ -669,7 +671,7 @@ class ResticRunner:
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
 
-    @check_if_init
+    #  @check_if_init  # We don't need to run if init before checking snapshots since if init searches for snapshots
     def snapshots(self) -> Union[bool, str, dict]:
         """
         Returns a list of snapshots
@@ -804,6 +806,7 @@ class ResticRunner:
         else:
             msg = f"Backup failed backup operation:\n{output}"
 
+        self.backup_result_content = output
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
     @check_if_init
@@ -1059,7 +1062,7 @@ class ResticRunner:
                 return True, backup_ts
             return False, backup_ts
 
-    @check_if_init
+    #  @check_if_init  # We don't need to run if init before checking snapshots since if init searches for snapshots
     def has_recent_snapshot(self, delta: int = None) -> Tuple[bool, Optional[datetime]]:
         """
         Checks if a snapshot exists that is newer that delta minutes
@@ -1078,7 +1081,7 @@ class ResticRunner:
         if not delta:
             if self.json_output:
                 msg = "No delta given"
-                self.convert_to_json_output(False, None, msg=msg **kwargs)
+                self.convert_to_json_outpugt(False, None, msg=msg **kwargs)
             return False, None
         try:
             # Make sure we run with json support for this one

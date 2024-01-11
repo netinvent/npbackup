@@ -23,7 +23,7 @@ from copy import deepcopy
 from command_runner import command_runner
 from ofunctions.threading import threaded
 from ofunctions.platform import os_arch
-from npbackup.restic_metrics import restic_output_2_metrics, upload_metrics
+from npbackup.restic_metrics import restic_str_output_to_json, restic_json_to_prometheus, upload_metrics
 from npbackup.restic_wrapper import ResticRunner
 from npbackup.core.restic_source_binary import get_restic_internal_binary
 from npbackup.path_helper import CURRENT_DIR, BASEDIR
@@ -46,6 +46,7 @@ def metric_writer(
             no_cert_verify = repo_config.g("prometheus.no_cert_verify")
             destination = repo_config.g("prometheus.destination")
             prometheus_additional_labels = repo_config.g("prometheus.additional_labels")
+            minimum_backup_size_error = repo_config.g("backup_opts.minimum_backup_size_error") # TODO
             if not isinstance(prometheus_additional_labels, list):
                 prometheus_additional_labels = [prometheus_additional_labels]
 
@@ -73,8 +74,13 @@ def metric_writer(
                 logger.debug("Trace:", exc_info=True)
 
             label_string += ',npversion="{}{}"'.format(NAME, VERSION)
-            errors, metrics = restic_output_2_metrics(
-                restic_result=restic_result, output=result_string, labels=label_string
+            
+            # If result was a str, we need to transform it into json first
+            if isinstance(result_string, str):
+                restic_result = restic_str_output_to_json(restic_result, result_string)
+
+            errors, metrics = restic_json_to_prometheus(
+                restic_result=restic_result, output=restic_result, labels=label_string
             )
             if errors or not restic_result:
                 logger.error("Restic finished with errors.")
@@ -671,11 +677,15 @@ class NPBackupRunner:
 
         return True
     
-    def convert_to_json_output(self, result: bool, output: str = None):
+    def convert_to_json_output(self, result: bool, output: str = None, backend_js: dict = None, warnings: str = None):
         if self.json_output:
+            if backend_js:
+                js = backend_js
             js = {
                 "result": result,
             }
+            if warnings:
+                js["warnings"] = warnings
             if result:
                 js["output"] = output
             else:
@@ -825,12 +835,16 @@ class NPBackupRunner:
         """
         Run backup after checking if no recent backup exists, unless force == True
         """
+        # Possible warnings to add to json output
+        warnings = []
+
         # Preflight checks
         if not read_from_stdin:
             paths = self.repo_config.g("backup_opts.paths")
             if not paths:
-                output = f"No paths to backup defined for repo {self.repo_config.g('name')}"
-                return self.convert_to_json_output(False, output)
+                msg = f"No paths to backup defined for repo {self.repo_config.g('name')}"
+                self.write_logs(msg, level="critical")
+                return self.convert_to_json_output(False, msg)
 
             # Make sure we convert paths to list if only one path is give
             # Also make sure we remove trailing and ending spaces
@@ -840,11 +854,13 @@ class NPBackupRunner:
                 paths = [path.strip() for path in paths]
                 for path in paths:
                     if path == self.repo_config.g("repo_uri"):
-                        output = f"You cannot backup source into it's own path in repo {self.repo_config.g('name')}. No inception allowed !"
-                        return self.convert_to_json_output(False, output)
+                        msg = f"You cannot backup source into it's own path in repo {self.repo_config.g('name')}. No inception allowed !"
+                        self.write_logs(msg, level="critical")
+                        return self.convert_to_json_output(False, msg)
             except KeyError:
-                output = f"No backup source given for repo {self.repo_config.g('name')}"
-                return self.convert_to_json_output(False, output)
+                msg = f"No backup source given for repo {self.repo_config.g('name')}"
+                self.write_logs(msg, level="critical")
+                return self.convert_to_json_output(False, msg)
 
             source_type = self.repo_config.g("backup_opts.source_type")
 
@@ -874,19 +890,16 @@ class NPBackupRunner:
                     "t",
                     "T",
                 ):
-                    # TODO: we need to bring this message to json
-                    self.write_logs(
-                        f"Bogus suffix for exclude_files_larger_than value given: {exclude_files_larger_than}",
-                        level="warning",
-                    )
+                    warning = f"Bogus suffix for exclude_files_larger_than value given: {exclude_files_larger_than}"
+                    self.write_logs( warning, level="warning")
+                    warnings.append(warning)
                     exclude_files_larger_than = None
                 try:
                     float(exclude_files_larger_than[:-1])
                 except (ValueError, TypeError):
-                    self.write_logs(
-                        f"Cannot check whether excludes_files_larger_than is a float: {exclude_files_larger_than}",
-                        level="warning",
-                    )
+                    warning = f"Cannot check whether excludes_files_larger_than is a float: {exclude_files_larger_than}"
+                    self.write_logs(warning, level="warning")
+                    warnings.append(warning)
                 exclude_files_larger_than = None
 
             one_file_system = (
@@ -895,10 +908,6 @@ class NPBackupRunner:
                 else False
             )
             use_fs_snapshot = self.repo_config.g("backup_opts.use_fs_snapshot")
-
-        minimum_backup_size_error = self.repo_config.g(
-            "backup_opts.minimum_backup_size_error"
-        )
 
         pre_exec_commands = self.repo_config.g("backup_opts.pre_exec_commands")
         pre_exec_per_command_timeout = self.repo_config.g(
@@ -928,23 +937,20 @@ class NPBackupRunner:
             "backup_opts.additional_backup_only_parameters"
         )
 
-        # Check if backup is required
+        # Check if backup is required, no need to be verbose, but we'll make sure we don't get a json result here
         self.restic_runner.verbose = False
-        if not self.restic_runner.is_init:
-            if not self.restic_runner.init():
-                self.write_logs(
-                    f"Cannot continue, repo {self.repo_config.g('name')} is not defined.",
-                    level="critical",
-                )
-                return False
+        json_output = self.json_output
+        self.json_output = False
         # Since we don't want to close queues nor create a subthread, we need to change behavior here
         # pylint: disable=E1123 (unexpected-keyword-arg)
-        if (
-            self.has_recent_snapshot(__close_queues=False, __no_threads=True)
-            and not force
-        ):
-            self.write_logs("No backup necessary.", level="info")
-            return True
+        has_recent_snapshots, backup_tz = self.has_recent_snapshot(__close_queues=False, __no_threads=True)
+        self.json_output = json_output
+        # We also need to "reapply" the json setting to backend
+        self.restic_runner.json_output = json_output
+        if has_recent_snapshots and not force:
+            msg = "No backup necessary"
+            self.write_logs(msg, level="info")
+            return self.convert_to_json_output(True, msg)
         self.restic_runner.verbose = self.verbose
 
         # Run backup here
@@ -969,12 +975,12 @@ class NPBackupRunner:
                     pre_exec_command, shell=True, timeout=pre_exec_per_command_timeout
                 )
                 if exit_code != 0:
-                    self.write_logs(
-                        f"Pre-execution of command {pre_exec_command} failed with:\n{output}",
-                        level="error",
-                    )
+                    msg = f"Pre-execution of command {pre_exec_command} failed with:\n{output}"
+                    self.write_logs(msg, level="error")
                     if pre_exec_failure_is_fatal:
-                        return False
+                        return self.convert_to_json_output(False, msg)
+                    else:
+                        warnings.append(msg)
                     pre_exec_commands_success = False
                 else:
                     self.write_logs(
@@ -984,7 +990,7 @@ class NPBackupRunner:
 
         self.restic_runner.dry_run = self.dry_run
         if not read_from_stdin:
-            result, result_string = self.restic_runner.backup(
+            result = self.restic_runner.backup(
                 paths=paths,
                 source_type=source_type,
                 exclude_patterns=exclude_patterns,
@@ -998,18 +1004,18 @@ class NPBackupRunner:
                 additional_backup_only_parameters=additional_backup_only_parameters,
             )
         else:
-            result, result_string = self.restic_runner.backup(
+            result = self.restic_runner.backup(
                 read_from_stdin=read_from_stdin,
                 stdin_filename=stdin_filename,
                 tags=tags,
                 additional_backup_only_parameters=additional_backup_only_parameters
             )
-        self.write_logs(f"Restic output:\n{result_string}", level="debug")
+
+        self.write_logs(f"Restic output:\n{self.restic_runner.backup_result_content}", level="debug")
         # Extract backup size from result_string
 
-        minimum_backup_size_error = 0 # TODO
-        metric_writer(
-            self.repo_config, result, result_string, self.restic_runner.dry_run
+        metrics_analyzer_result = metric_writer(
+            self.repo_config, result, self.restic_runner.backup_result_content, self.restic_runner.dry_run
         )
 
         post_exec_commands_success = True
@@ -1019,13 +1025,13 @@ class NPBackupRunner:
                     post_exec_command, shell=True, timeout=post_exec_per_command_timeout
                 )
                 if exit_code != 0:
-                    self.write_logs(
-                        f"Post-execution of command {post_exec_command} failed with:\n{output}",
-                        level="error",
-                    )
+                    msg = f"Post-execution of command {post_exec_command} failed with:\n{output}"
+                    self.write_logs(msg, level="error")
                     post_exec_commands_success = False
                     if post_exec_failure_is_fatal:
-                        return False
+                        return self.convert_to_json_output(False, msg)
+                    else:
+                        warnings.append(msg)
                 else:
                     self.write_logs(
                         f"Post-execution of command {post_exec_command} success with:\n{output}.",
@@ -1035,14 +1041,16 @@ class NPBackupRunner:
         operation_result = (
             result and pre_exec_commands_success and post_exec_commands_success
         )
-        self.write_logs(
-            f"Operation finished with {'success' if operation_result else 'failure'}",
-            level="info" if operation_result else "error",
+        msg = f"Operation finished with {'success' if operation_result else 'failure'}"
+        self.write_logs(msg, level="info" if operation_result else "error",
         )
         if not operation_result:
+            # patch result if json
             if isinstance(result, dict):
                 result["result"] = False
-        return result
+            # Don't overwrite backend output in case of failure
+            return self.convert_to_json_output(result)
+        return self.convert_to_json_output(result, msg)
 
     @threaded
     @close_queues
