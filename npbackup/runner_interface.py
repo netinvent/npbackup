@@ -43,7 +43,7 @@ def entrypoint(*args, **kwargs):
         **kwargs.pop("op_args"), __no_threads=True
     )
     if not json_output:
-        logger.info(f"Operation finished with {result}")
+        logger.info(f"Operation finished with {'success' if result else 'failure'}")
     else:
         print(json.dumps(result, default=serialize_datetime))
         sys.exit(0)
