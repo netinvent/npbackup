@@ -717,7 +717,9 @@ def _main_gui(viewer_mode: bool):
 
     # Auto reisze table to window size
     window["snapshot-list"].expand(True, True)
-    window.set_title(f"{SHORT_PRODUCT_NAME} - {config_file}")
+    # Show which config file is loaded
+    if config_file:
+        window.set_title(f"{SHORT_PRODUCT_NAME} - {config_file}")
 
     window.read(timeout=0.01)
     if not config_file and not full_config and not viewer_mode:
@@ -730,8 +732,7 @@ def _main_gui(viewer_mode: bool):
             backup_tz = None
             snapshot_list = []
         gui_update_state()
-    # Show which config file is loaded
-    window.set_title(f"{SHORT_PRODUCT_NAME} - {config_file}")
+    
     while True:
         event, values = window.read(timeout=60000)
 
