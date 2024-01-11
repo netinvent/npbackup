@@ -96,6 +96,7 @@ def gui_thread_runner(
         ):
             progress_window[key].Update(visible=True)
         progress_window["--EXPAND--"].Update(visible=False)
+        progress_window["-OPERATIONS-PROGRESS-STDOUT-"].update(autoscroll=True)
 
     runner = NPBackupRunner()
     
@@ -138,7 +139,7 @@ def gui_thread_runner(
                 key="-OPERATIONS-PROGRESS-STDOUT-",
                 size=(70, 5),
                 visible=not __compact,
-                autoscroll=True,
+                autoscroll=False,  # Setting autoscroll=True on not visible Multiline takes seconds on updates
             )
         ],
         [
@@ -271,7 +272,7 @@ def gui_thread_runner(
                     # for key in progress_window.AllKeysDict:
                     #    progress_window[key].Update(visible=True)
                     progress_window["-OPERATIONS-PROGRESS-STDERR-"].Update(
-                        f"\n{stderr_data}", append=True
+                        f"{stderr_data}", append=True
                     )
 
         read_queues = read_stdout_queue or read_stderr_queue
