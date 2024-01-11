@@ -24,3 +24,11 @@ Caveats:
 That's another story. Creating snapshots and dumping VM is easy.
 Shall we go that route since alot of good commercial products exist ?
 
+### Key management
+
+Possibility to add new keys to current repo, and delete old keys if more than one key present
+
+### Provision server
+
+Possibility to auto load repo settings for new instances from central server
+We actually could improve upgrade_server to do so
