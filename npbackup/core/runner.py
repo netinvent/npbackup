@@ -1153,9 +1153,11 @@ class NPBackupRunner:
         if max:
             max_unused = self.repo_config.g("prune_max_unused")
             max_repack_size = self.repo_config.g("prune_max_repack_size")
-        result = self.restic_runner.prune(
-            max_unused=max_unused, max_repack_size=max_repack_size
-        )
+            result = self.restic_runner.prune(
+                max_unused=max_unused, max_repack_size=max_repack_size
+            )
+        else:
+            result = self.restic_runner.prune()
         return result
 
     @threaded
