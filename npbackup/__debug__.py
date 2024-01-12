@@ -8,9 +8,16 @@ __author__ = "Orsiris de Jong"
 __site__ = "https://www.netperfect.fr/npbackup"
 __description__ = "NetPerfect Backup Client"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
+__build__ = "2024011201"
 
 
 import os
+from typing import Callable
+from functools import wraps
+from logging import getLogger
+
+
+logger = getLogger()
 
 
 # If set, debugging will be enabled by setting envrionment variable to __SPECIAL_DEBUG_STRING content
@@ -18,13 +25,33 @@ import os
 __SPECIAL_DEBUG_STRING = ""
 __debug_os_env = os.environ.get("_DEBUG", "False").strip("'\"")
 
-try:
-    # pylint: disable=E0601 (used-before-assignment)
-    _DEBUG
-except NameError:
+
+if not "_DEBUG" in globals():
     _DEBUG = False
     if __SPECIAL_DEBUG_STRING:
         if __debug_os_env == __SPECIAL_DEBUG_STRING:
             _DEBUG = True
     elif __debug_os_env.capitalize() == "True":
         _DEBUG = True
+
+
+def catch_exceptions(fn: Callable):
+    """
+    Catch any exception and log it so we don't loose exceptions in thread
+    """
+
+    @wraps(fn)
+    def wrapper(self, *args, **kwargs):
+        try:
+            # pylint: disable=E1102 (not-callable)
+            return fn(self, *args, **kwargs)
+        except Exception as exc:
+            # pylint: disable=E1101 (no-member)
+            operation = fn.__name__
+            logger.error(
+                f"Function {operation} failed with: {exc}", level="error"
+            )
+            logger.error("Trace:", exc_info=True)
+            return None
+
+    return wrapper
