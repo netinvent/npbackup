@@ -457,7 +457,7 @@ def _main_gui(viewer_mode: bool):
             window["--STATE-BUTTON--"].Update(
                 _t("generic.not_connected_yet"), button_color=GUI_STATE_UNKNOWN_BUTTON
             )
-
+        window["-backend_type-"].Update(backend_type)
         window["snapshot-list"].Update(snapshot_list)
 
     def get_gui_data(repo_config: dict) -> Tuple[bool, List[str]]:
@@ -550,7 +550,7 @@ def _main_gui(viewer_mode: bool):
                     return full_config, config_file
         return None, None
 
-    def get_config(default: bool = False):
+    def get_config(default: bool = False, window: sg.Window = None):
         full_config, config_file = get_config_file(default=default)
         if full_config and config_file:
             repo_config, config_inheritance = npbackup.configuration.get_repo_config(
@@ -565,6 +565,17 @@ def _main_gui(viewer_mode: bool):
             backend_type = "None"
             repo_uri = "None"
         repo_list = npbackup.configuration.get_repo_list(full_config)
+
+        if window:
+            if config_file:
+                window.set_title(f"{SHORT_PRODUCT_NAME} - {config_file}")
+            if not viewer_mode and config_file:
+                window['--LAUNCH-BACKUP--'].Update(disabled=False)
+                window['--OPERATIONS--'].Update(disabled=False)
+                window['--FORGET--'].Update(disabled=False)
+                window['--CONFIGURE--'].Update(disabled=False)
+            if repo_list:
+                window['-active_repo-'].Update(values=repo_list, value=repo_list[0])
         return (
             full_config,
             config_file,
@@ -619,7 +630,7 @@ def _main_gui(viewer_mode: bool):
                                 [sg.Text(_t("main_gui.viewer_mode"))]
                                 if viewer_mode
                                 else [],
-                                [sg.Text("{}: ".format(_t("main_gui.backup_state")))],
+                                [sg.Text("{} ".format(_t("main_gui.backup_state"))), sg.Text("", key="-backend_type-")],
                                 [
                                     sg.Button(
                                         _t("generic.unknown"),
@@ -644,8 +655,8 @@ def _main_gui(viewer_mode: bool):
                             key="-active_repo-",
                             default_value=repo_list[0] if repo_list else None,
                             enable_events=True,
+                            size=(20, 1)
                         ),
-                        sg.Text(f"Type {backend_type}", key="-backend_type-"),
                     ]
                     if not viewer_mode
                     else [],
@@ -669,21 +680,23 @@ def _main_gui(viewer_mode: bool):
                         sg.Button(
                             _t("main_gui.launch_backup"),
                             key="--LAUNCH-BACKUP--",
-                            disabled=viewer_mode,
+                            disabled=viewer_mode or (not viewer_mode and not config_file),
                         ),
-                        sg.Button(_t("main_gui.see_content"), key="--SEE-CONTENT--"),
+                        sg.Button(_t("main_gui.see_content"), key="--SEE-CONTENT--",
+                            disabled=not viewer_mode and not config_file 
+                        ),
                         sg.Button(
-                            _t("generic.forget"), key="--FORGET--", disabled=viewer_mode
+                            _t("generic.forget"), key="--FORGET--", disabled=viewer_mode or (not viewer_mode and not config_file)
                         ),  # TODO , visible=False if repo_config.g("permissions") != "full" else True),
                         sg.Button(
                             _t("main_gui.operations"),
                             key="--OPERATIONS--",
-                            disabled=viewer_mode,
+                            disabled=viewer_mode or (not viewer_mode and not config_file),
                         ),
                         sg.Button(
                             _t("generic.configure"),
                             key="--CONFIGURE--",
-                            disabled=viewer_mode,
+                            disabled=viewer_mode or (not viewer_mode and not config_file),
                         ),
                         sg.Button(
                             _t("main_gui.load_config"),
@@ -717,9 +730,6 @@ def _main_gui(viewer_mode: bool):
 
     # Auto reisze table to window size
     window["snapshot-list"].expand(True, True)
-    # Show which config file is loaded
-    if config_file:
-        window.set_title(f"{SHORT_PRODUCT_NAME} - {config_file}")
 
     window.read(timeout=0.01)
     if not config_file and not full_config and not viewer_mode:
@@ -810,8 +820,7 @@ def _main_gui(viewer_mode: bool):
                 backend_type,
                 repo_uri,
                 repo_list,
-            ) = get_config()
-            window.set_title(f"{SHORT_PRODUCT_NAME} - {config_file}")
+            ) = get_config(window=window)
             if not viewer_mode and not config_file and not full_config:
                 window["-NO-CONFIG-"].Update(visible=True)
             elif not viewer_mode:
