@@ -225,7 +225,17 @@ This is free software, and you are welcome to redistribute it under certain cond
     parser.add_argument(
         "--auto-upgrade", action="store_true", help="Auto upgrade NPBackup"
     )
+    parser.add_argument(
+        "--log-file",
+        type=str,
+        default=None,
+        required=False,
+        help="Optional path for logfile"
+    )
     args = parser.parse_args()
+
+    if args.log_file:
+        LOG_FILE = args.log_file
 
     if args.json:
         _JSON = True
