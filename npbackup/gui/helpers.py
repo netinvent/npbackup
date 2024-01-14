@@ -213,7 +213,7 @@ def gui_thread_runner(
     progress_window = sg.Window(
         __gui_msg,
         full_layout,
-        use_custom_titlebar=True,
+        use_custom_titlebar=False,  # Will not show an icon in task bar if custom titlebar is set unless window is minimized, basically it can be hidden behind others with this option
         grab_anywhere=True,
         disable_close=True,  # Don't allow closing this window via "X" since we still need to update it
         background_color=BG_COLOR_LDR,

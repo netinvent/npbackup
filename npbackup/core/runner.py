@@ -558,7 +558,7 @@ class NPBackupRunner:
             if binary:
                 if not self._using_dev_binary:
                     self._using_dev_binary = True
-                    self.write_logs("Using dev binary !", level="warning")
+                    self.write_logs("Using dev binary !", level="info")
                 self.restic_runner.binary = binary
             else:
                 return False
