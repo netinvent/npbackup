@@ -215,13 +215,13 @@ def gui_thread_runner(
         full_layout,
         use_custom_titlebar=True,
         grab_anywhere=True,
-        keep_on_top=True,
         disable_close=True,  # Don't allow closing this window via "X" since we still need to update it
         background_color=BG_COLOR_LDR,
         titlebar_icon=OEM_ICON,
     )
     # Finalize the window
     event, values = progress_window.read(timeout=0.01)
+    progress_window.bring_to_front()
 
     read_stdout_queue = __stdout
     read_stderr_queue = True
