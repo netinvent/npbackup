@@ -99,20 +99,20 @@ def gui_thread_runner(
         progress_window["-OPERATIONS-PROGRESS-STDOUT-"].update(autoscroll=True)
 
     runner = NPBackupRunner()
-    
-    # We'll always use json output in GUI mode
-    
-    runner.json_output = True
-    # So we don't always init repo_config, since runner.group_runner would do that itself
-    if __repo_config:
-        runner.repo_config = __repo_config
-    
+
     if __stdout:
         stdout_queue = queue.Queue()
         runner.stdout = stdout_queue
 
     stderr_queue = queue.Queue()
     runner.stderr = stderr_queue
+
+    # We'll always use json output in GUI mode
+    runner.json_output = True
+    # So we don't always init repo_config, since runner.group_runner would do that itself
+    if __repo_config:
+        runner.repo_config = __repo_config
+    
     fn = getattr(runner, __fn_name)
     logger.debug(
         f"gui_thread_runner runs {fn.__name__} {'with' if USE_THREADING else 'without'} threads"
