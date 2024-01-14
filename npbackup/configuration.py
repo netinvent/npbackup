@@ -635,6 +635,6 @@ def get_repos_by_group(full_config: dict, group: str) -> List[str]:
     repo_list = []
     if full_config:
         for repo in list(full_config.g("repos").keys()):
-            if full_config.g(f"repos.{repo}.repo_group") == group:
+            if full_config.g(f"repos.{repo}.repo_group") == group and group not in repo_list:
                 repo_list.append(repo)
     return repo_list
