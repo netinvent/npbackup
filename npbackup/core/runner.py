@@ -282,7 +282,7 @@ class NPBackupRunner:
             result = fn(self, *args, **kwargs)
             self.exec_time = (datetime.utcnow() - start_time).total_seconds()
             # Optional patch result with exec time
-            if self.restic_runner.json_output and isinstance(result, dict):
+            if self.restic_runner and self.restic_runner.json_output and isinstance(result, dict):
                 result["exec_time"] = self.exec_time
             # pylint: disable=E1101 (no-member)
             self.write_logs(
@@ -325,6 +325,9 @@ class NPBackupRunner:
                 else:
                     # pylint: disable=E1101 (no-member)
                     operation = fn.__name__
+                msg = f"Runner cannot execute {operation}. Backend not ready"
+                if self.stderr:
+                    self.stderr.put(msg)
                 if self.json_output:
                     js = {
                         "result": False,
@@ -333,7 +336,7 @@ class NPBackupRunner:
                     }
                     return js
                 self.write_logs(
-                    f"Runner cannot execute {operation}. Backend not ready",
+                    msg,
                     level="error",
                 )
                 return False
