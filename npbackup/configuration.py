@@ -398,6 +398,8 @@ def inject_permissions_into_repo_config(repo_config: dict) -> dict:
     """
     Make sure repo_uri is a tuple containing permissions and manager password
     This function is used before saving config
+
+    NPF-SEC-00006: Never inject permissions if some are already present
     """
     repo_uri = repo_config.g("repo_uri")
     permissions = repo_config.g("permissions")
