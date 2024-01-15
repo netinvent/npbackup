@@ -1021,7 +1021,6 @@ class NPBackupRunner:
         backup_too_small = metric_writer(
             self.repo_config, result, self.restic_runner.backup_result_content, self.restic_runner.dry_run
         )
-        print(backup_too_small)
         if backup_too_small:
             self.write_logs("Backup is smaller than expected", level="error")
 
