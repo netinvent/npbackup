@@ -79,11 +79,12 @@ def operations_gui(full_config: dict) -> dict:
                 break
             if event == "--SELECTED_GROUPS--":
                 if not values["-GROUP_LIST-"]:
-                    sg.Popup("No groups selected")
+                    sg.Popup(_t("operations_gui.no_groups_selected"))
                     continue
                 repo_list = []
                 for group_index in values["-GROUP_LIST-"]:
                     group_name = group_list[group_index]
+                    print(group_name, configuration.get_repos_by_group(full_config, group_name))
                     repo_list += configuration.get_repos_by_group(full_config, group_name)
                 result = repo_list
                 break
@@ -231,12 +232,12 @@ def operations_gui(full_config: dict) -> dict:
             else:
                 repos = []
                 for value in values["repo-list"]:
-                    repos.append(complete_repo_list[value])
+                    repos.append(complete_repo_list[value][0])
 
             repo_config_list = []
             if not repos:
                 continue
-            for repo_name, repo_group, backend_type, repo_uri in repos:
+            for repo_name in repos:
                 repo_config, config_inheritance = configuration.get_repo_config(
                     full_config, repo_name
                 )

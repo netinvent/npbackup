@@ -9,7 +9,9 @@ en:
   standard_prune: Normal prune data
   max_prune: Prune with maximum efficiency
   stats: Repo statistics
-  apply_to_all: Apply to all repos ?
+  apply_to_all: Apply to all repos
+  apply_to_selected_groups: Apply to selected groups
+  no_groups_selected: No groups selected
   add_repo: Add repo
   edit_repo: Edit repo
   remove_repo: Remove repo

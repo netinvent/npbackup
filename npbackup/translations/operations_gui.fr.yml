@@ -9,7 +9,9 @@ fr:
   standard_prune: Opération de purge normale
   max_prune: Opération de purge la plus efficace
   stats: Statistiques de dépot
-  apply_to_all: Appliquer à tous les dépots ?
+  apply_to_all: Appliquer à tous les dépots
+  apply_to_selected_groups: Appliquer aux groupes sélectionnés
+  no_groups_selected: Aucun groupe sélectionné
   add_repo: Ajouter dépot
   edit_repo: Modifier dépot
   remove_repo: Supprimer dépot
