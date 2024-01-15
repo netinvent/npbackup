@@ -44,5 +44,7 @@ def get_restic_internal_binary(arch: str) -> str:
     if binary:
         guessed_path = glob.glob(os.path.join(RESTIC_SOURCE_FILES_DIR, binary))
         if guessed_path:
-            return guessed_path[0]
+            # Take glob results reversed so we get newer version
+            # Does not always compute, but is g00denough(TM) for our dev
+            return guessed_path[-1]
     return None
