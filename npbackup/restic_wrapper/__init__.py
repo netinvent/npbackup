@@ -1081,7 +1081,7 @@ class ResticRunner:
         if not delta:
             if self.json_output:
                 msg = "No delta given"
-                self.convert_to_json_outpugt(False, None, msg=msg **kwargs)
+                self.convert_to_json_output(False, None, msg=msg **kwargs)
             return False, None
         try:
             # Make sure we run with json support for this one
