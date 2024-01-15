@@ -100,7 +100,7 @@ def running_on_github_actions():
           env:
         RUNNING_ON_GITHUB_ACTIONS: true
     """
-    return os.environ.get("RUNNING_ON_GITHUB_ACTIONS").lower() == "true"
+    return os.environ.get("RUNNING_ON_GITHUB_ACTIONS", "False").lower() == "true"
 
 
 def test_restic_str_output_2_metrics():
