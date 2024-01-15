@@ -133,7 +133,7 @@ def test_restic_str_output_to_json():
         json_metrics = restic_str_output_to_json(True, output)
         assert json_metrics["errors"] == False
         #print(json_metrics)
-        prom_metrics = restic_json_to_prometheus(json_metrics, labels)
+        _, prom_metrics, _ = restic_json_to_prometheus(True, json_metrics, labels)
 
         #print(f"Parsed result:\n{prom_metrics}")
         for expected_result in expected_results_V2:
@@ -155,7 +155,7 @@ def test_restic_json_output():
     for version, json_output in restic_json_outputs.items():
         print(f"Testing V2 direct restic --json output from version {version}")
         restic_json = json.loads(json_output)
-        prom_metrics = restic_json_to_prometheus(restic_json, labels)
+        _, prom_metrics, _ = restic_json_to_prometheus(True, restic_json, labels)
         #print(f"Parsed result:\n{prom_metrics}")
         for expected_result in expected_results_V2:
             match_found = False
@@ -195,14 +195,15 @@ def test_real_restic_output():
 
 
         exit_code, output = command_runner(f"{restic_binary} init --repository-version 2", live_output=True)
+        # Just backend current directory
         cmd = f"{restic_binary} backup {api_arg} ."
-        exit_code, output = command_runner(cmd, timeout=60, live_output=True)
+        exit_code, output = command_runner(cmd, timeout=120, live_output=True)
         assert exit_code == 0, "Failed to run restic"
         if not api_arg:
             restic_json = restic_str_output_to_json(True, output)
         else:
             restic_json = output
-        prom_metrics = restic_json_to_prometheus(restic_json, labels)
+        _, prom_metrics, _ = restic_json_to_prometheus(True, restic_json, labels)
         #print(f"Parsed result:\n{prom_metrics}")
         for expected_result in expected_results_V2:
             match_found = False

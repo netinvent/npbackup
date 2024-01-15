@@ -168,14 +168,14 @@ def restic_str_output_to_json(
 
 
 def restic_json_to_prometheus(
-    restic_json, labels: dict = None
-) -> Tuple[bool, List[str]]:
+    restic_result: bool, restic_json: dict, labels: dict = None, minimum_backup_size_error: float = None,
+) -> Tuple[bool, List[str], bool]:
     """
     Transform a restic JSON result into prometheus metrics
     """
     _labels = []
     for key, value in labels.items():
-        _labels.append(f'{key}="{value}"')
+        _labels.append(f'{key.strip()}="{value.strip()}"')
     labels = ",".join(_labels)
 
     # Take last line of restic output
@@ -222,7 +222,20 @@ def restic_json_to_prometheus(
         if "duration" in key:
             key += "_seconds"
         prom_metrics.append(f'restic_{key}{{{labels},action="backup"}} {value}')
-    return prom_metrics
+
+    backup_too_small = False
+    if minimum_backup_size_error:
+        if restic_json["data_added"] < minimum_backup_size_error:
+            backup_too_small = True
+    good_backup = restic_result and not backup_too_small
+
+    prom_metrics.append(
+        'restic_backup_failure{{{},timestamp="{}"}} {}'.format(
+            labels, int(datetime.utcnow().timestamp()), 1 if not good_backup else 0
+        )
+    )
+
+    return good_backup, prom_metrics, backup_too_small
 
 
 def restic_output_2_metrics(restic_result, output, labels=None):

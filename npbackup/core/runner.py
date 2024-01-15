@@ -36,9 +36,13 @@ logger = logging.getLogger()
 
 def metric_writer(
     repo_config: dict, restic_result: bool, result_string: str, dry_run: bool
-):
+) -> bool:
+    backup_too_small = False
+    minimum_backup_size_error = repo_config.g("backup_opts.minimum_backup_size_error")
     try:
-        labels = {}
+        labels = {
+            "npversion": f"{NAME}{VERSION}"
+        }
         if repo_config.g("prometheus.metrics"):
             labels["instance"] = repo_config.g("prometheus.instance")
             labels["backup_job"] = repo_config.g("prometheus.backup_job")
@@ -46,23 +50,18 @@ def metric_writer(
             no_cert_verify = repo_config.g("prometheus.no_cert_verify")
             destination = repo_config.g("prometheus.destination")
             prometheus_additional_labels = repo_config.g("prometheus.additional_labels")
-            minimum_backup_size_error = repo_config.g("backup_opts.minimum_backup_size_error") # TODO
+            
             if not isinstance(prometheus_additional_labels, list):
                 prometheus_additional_labels = [prometheus_additional_labels]
 
             # Configure lables
-            label_string = ",".join(
-                [f'{key}="{value}"' for key, value in labels.items() if value]
-            )
             try:
                 if prometheus_additional_labels:
                     for additional_label in prometheus_additional_labels:
                         if additional_label:
                             try:
                                 label, value = additional_label.split("=")
-                                label_string += ',{}="{}"'.format(
-                                    label.strip(), value.strip()
-                                )
+                                labels[label.strip()] = value.strip()
                             except ValueError:
                                 logger.error(
                                     'Bogus additional label "{}" defined in configuration.'.format(
@@ -73,47 +72,46 @@ def metric_writer(
                 logger.error("Bogus additional labels defined in configuration.")
                 logger.debug("Trace:", exc_info=True)
 
-            label_string += ',npversion="{}{}"'.format(NAME, VERSION)
-            
-            # If result was a str, we need to transform it into json first
-            if isinstance(result_string, str):
-                restic_result = restic_str_output_to_json(restic_result, result_string)
+        # If result was a str, we need to transform it into json first
+        if isinstance(result_string, str):
+            restic_result = restic_str_output_to_json(restic_result, result_string)
 
-            errors, metrics = restic_json_to_prometheus(
-                restic_result=restic_result, output=restic_result, labels=label_string
-            )
-            if errors or not restic_result:
-                logger.error("Restic finished with errors.")
-            if destination:
-                logger.debug("Uploading metrics to {}".format(destination))
-                if destination.lower().startswith("http"):
-                    try:
-                        authentication = (
-                            repo_config.g("prometheus.http_username"),
-                            repo_config.g("prometheus.http_password"),
-                        )
-                    except KeyError:
-                        logger.info("No metrics authentication present.")
-                        authentication = None
-                    if not dry_run:
-                        upload_metrics(
-                            destination, authentication, no_cert_verify, metrics
-                        )
-                    else:
-                        logger.info("Not uploading metrics in dry run mode")
+        errors, metrics, backup_too_small = restic_json_to_prometheus(
+            restic_result=restic_result, restic_json=restic_result, labels=labels, minimum_backup_size_error=minimum_backup_size_error
+        )
+        if errors or not restic_result:
+            logger.error("Restic finished with errors.")
+        if repo_config.g("prometheus.metrics") and destination:
+            logger.debug("Uploading metrics to {}".format(destination))
+            if destination.lower().startswith("http"):
+                try:
+                    authentication = (
+                        repo_config.g("prometheus.http_username"),
+                        repo_config.g("prometheus.http_password"),
+                    )
+                except KeyError:
+                    logger.info("No metrics authentication present.")
+                    authentication = None
+                if not dry_run:
+                    upload_metrics(
+                        destination, authentication, no_cert_verify, metrics
+                    )
                 else:
-                    try:
-                        with open(destination, "w") as file_handle:
-                            for metric in metrics:
-                                file_handle.write(metric + "\n")
-                    except OSError as exc:
-                        logger.error(
-                            "Cannot write metrics file {}: {}".format(destination, exc)
-                        )
+                    logger.info("Not uploading metrics in dry run mode")
+            else:
+                try:
+                    with open(destination, "w") as file_handle:
+                        for metric in metrics:
+                            file_handle.write(metric + "\n")
+                except OSError as exc:
+                    logger.error(
+                        "Cannot write metrics file {}: {}".format(destination, exc)
+                    )
     except KeyError as exc:
         logger.info("Metrics not configured: {}".format(exc))
     except OSError as exc:
         logger.error("Cannot write metric file: ".format(exc))
+    return backup_too_small
 
 
 class NPBackupRunner:
@@ -1016,12 +1014,16 @@ class NPBackupRunner:
             )
 
         self.write_logs(f"Restic output:\n{self.restic_runner.backup_result_content}", level="debug")
+        
         # Extract backup size from result_string
-
         # Metrics will not be in json format, since we need to diag cloud issues until
-        metrics_analyzer_result = metric_writer(
+        # there is a fix for https://github.com/restic/restic/issues/4155
+        backup_too_small = metric_writer(
             self.repo_config, result, self.restic_runner.backup_result_content, self.restic_runner.dry_run
         )
+        print(backup_too_small)
+        if backup_too_small:
+            self.write_logs("Backup is smaller than expected", level="error")
 
         post_exec_commands_success = True
         if post_exec_commands:
@@ -1044,7 +1046,7 @@ class NPBackupRunner:
                     )
 
         operation_result = (
-            result and pre_exec_commands_success and post_exec_commands_success
+            result and pre_exec_commands_success and post_exec_commands_success and not backup_too_small
         )
         msg = f"Operation finished with {'success' if operation_result else 'failure'}"
         self.write_logs(msg, level="info" if operation_result else "error",
