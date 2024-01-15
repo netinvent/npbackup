@@ -139,8 +139,6 @@ class NPBackupRunner:
         self.minimum_backup_age = None
         self._exec_time = None
 
-        self._using_dev_binary = False
-
     @property
     def repo_config(self) -> dict:
         return self._repo_config
@@ -556,11 +554,11 @@ class NPBackupRunner:
             arch = os_arch()
             binary = get_restic_internal_binary(arch)
             if binary:
-                if not self._using_dev_binary:
-                    self._using_dev_binary = True
-                    self.write_logs("Using dev binary !", level="info")
                 self.restic_runner.binary = binary
+                version = self.restic_runner.binary_version
+                self.write_logs(f"Using dev binary {version}", level="info")
             else:
+                self._is_ready = False
                 return False
         return True
 
@@ -684,9 +682,12 @@ class NPBackupRunner:
         if self.json_output:
             if backend_js:
                 js = backend_js
-            js = {
-                "result": result,
-            }
+            if isinstance(result, dict):
+                js = result
+            else:
+                js = {
+                    "result": result,
+                }
             if warnings:
                 js["warnings"] = warnings
             if result:
@@ -1017,6 +1018,7 @@ class NPBackupRunner:
         self.write_logs(f"Restic output:\n{self.restic_runner.backup_result_content}", level="debug")
         # Extract backup size from result_string
 
+        # Metrics will not be in json format, since we need to diag cloud issues until
         metrics_analyzer_result = metric_writer(
             self.repo_config, result, self.restic_runner.backup_result_content, self.restic_runner.dry_run
         )

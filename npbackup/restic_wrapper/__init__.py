@@ -318,6 +318,7 @@ class ResticRunner:
                     ):
                         is_cloud_error = False
             if is_cloud_error is True:
+                self.last_command_status = True
                 return True, output
             else:
                 self.write_logs("Some files could not be backed up", level="error")
@@ -785,7 +786,9 @@ class ResticRunner:
         if additional_backup_only_parameters:
             cmd += " {}".format(additional_backup_only_parameters)
 
-        # Run backup
+        # Run backup without json output, as we could not compute the cloud errors in json output via regexes
+        json_output = self.json_output
+        self.json_output = False
         if read_from_stdin:
             result, output = self.executor(cmd, stdin=sys.stdin.buffer)
         else:
@@ -800,7 +803,7 @@ class ResticRunner:
                 "VSS cannot be used. Backup will be done without VSS.", level="error"
             )
             result, output = self.executor(cmd.replace(" --use-fs-snapshot", ""))
-        
+        self.json_output = json_output
         if result:
             msg = "Backend finished backup with success"
         else:
