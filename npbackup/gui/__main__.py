@@ -435,7 +435,7 @@ def _main_gui(viewer_mode: bool):
     logger = ofunctions.logger_utils.logger_get_logger(log_file, debug=_DEBUG)
 
     if args.config_file:
-        config_file = args.config_file
+        config_file = Path(args.config_file)
     else:
         config_file = Path(f"{CURRENT_DIR}/npbackup.conf")
 

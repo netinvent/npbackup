@@ -276,7 +276,7 @@ This is free software, and you are welcome to redistribute it under certain cond
             msg = f"Config file {args.config_file} cannot be read."
             json_error_logging(False, msg, "critical")
             sys.exit(70)
-        CONFIG_FILE = args.config_file
+        CONFIG_FILE = Path(args.config_file)
     else:
         config_file = Path(f"{CURRENT_DIR}/npbackup.conf")
         if config_file.exists():
