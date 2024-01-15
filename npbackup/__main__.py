@@ -37,7 +37,6 @@ except ImportError:
 
 
 _JSON = False
-LOG_FILE = os.path.join(CURRENT_DIR, "{}.log".format(__intname__))
 logger = logging.getLogger()
 
 
@@ -53,6 +52,7 @@ def json_error_logging(result: bool, msg: str, level: str):
 
 def cli_interface():
     global _JSON
+    global logger
 
     parser = ArgumentParser(
         prog=f"{__intname__}",
@@ -235,15 +235,17 @@ This is free software, and you are welcome to redistribute it under certain cond
     args = parser.parse_args()
 
     if args.log_file:
-        LOG_FILE = args.log_file
+        log_file = args.log_file
+    else:
+        log_file = os.path.join(CURRENT_DIR, "{}.log".format(__intname__))
 
     if args.json:
         _JSON = True
         logger = ofunctions.logger_utils.logger_get_logger(
-            LOG_FILE, console=False, debug=_DEBUG
+            log_file, console=False, debug=_DEBUG
         )
     else:
-        logger = ofunctions.logger_utils.logger_get_logger(LOG_FILE, debug=_DEBUG)
+        logger = ofunctions.logger_utils.logger_get_logger(log_file, debug=_DEBUG)
 
     if args.version:
         if _JSON:
