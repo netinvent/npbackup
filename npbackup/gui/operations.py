@@ -50,22 +50,24 @@ def operations_gui(full_config: dict) -> dict:
     """
 
     def _select_groups():
+        group_list = configuration.get_group_list(full_config)
         selector_layout = [
             [
                 sg.Table(
-                    values=configuration.get_group_list(full_config),
+                    values=group_list,
                     headings=["Group Name"],
                     key="-GROUP_LIST-",
                     auto_size_columns=True,
                     justification="left",
-                    size=(60, 5)
+                    expand_x=True,
+                    expand_y=True
                 )
             ],
             [
                 sg.Push(),
                 sg.Button(_t("generic.cancel"), key="--CANCEL--"),
                 sg.Button(_t("operations_gui.apply_to_selected_groups"), key="--SELECTED_GROUPS--"),
-                sg.Button(_t("operations_gui.apply_to_all"), key="--APPLY-TO-ALL--")
+                sg.Button(_t("operations_gui.apply_to_all"), key="--APPLY_TO_ALL--")
             ]
         ]
 
@@ -73,14 +75,24 @@ def operations_gui(full_config: dict) -> dict:
         while True:
             event, values = select_group_window.read()
             if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--CANCEL--"):
+                result = []
                 break
             if event == "--SELECTED_GROUPS--":
                 if not values["-GROUP_LIST-"]:
                     sg.Popup("No groups selected")
                     continue
-            if event == "--APPLY-TO-ALL":
-                continue
+                repo_list = []
+                for group_index in values["-GROUP_LIST-"]:
+                    group_name = group_list[group_index]
+                    repo_list += configuration.get_repos_by_group(full_config, group_name)
+                result = repo_list
+                break
+            if event == "--APPLY_TO_ALL--":
+                result = complete_repo_list
+                break
         select_group_window.close()
+        print(result)
+        return result
 
     # This is a stupid hack to make sure uri column is large enough
     headings = [
@@ -116,7 +128,7 @@ def operations_gui(full_config: dict) -> dict:
                             key="repo-list",
                             auto_size_columns=True,
                             justification="left",
-                        )
+                        ),
                     ],
                     [
                         sg.Button(
@@ -215,22 +227,15 @@ def operations_gui(full_config: dict) -> dict:
             "--STATS--"
         ):
             if not values["repo-list"]:
-                """
-                result = sg.popup(
-                    _t("operations_gui.apply_to_all"),
-                    custom_text=(_t("generic.yes"), _t("generic.no")),
-                )
-                if not result == _t("generic.yes"):
-                    continue
-                """
-                repos = _select_groups() # TODO #WIP
-                repos = complete_repo_list
+                repos = _select_groups()
             else:
                 repos = []
                 for value in values["repo-list"]:
                     repos.append(complete_repo_list[value])
 
             repo_config_list = []
+            if not repos:
+                continue
             for repo_name, repo_group, backend_type, repo_uri in repos:
                 repo_config, config_inheritance = configuration.get_repo_config(
                     full_config, repo_name
