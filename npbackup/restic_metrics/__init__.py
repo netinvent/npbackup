@@ -168,7 +168,7 @@ def restic_str_output_to_json(
 
 
 def restic_json_to_prometheus(
-    restic_result: bool, restic_json: dict, labels: dict = None, minimum_backup_size_error: float = None,
+    restic_result: bool, restic_json: dict, labels: dict = None, minimum_backup_size_error: str = None,
 ) -> Tuple[bool, List[str], bool]:
     """
     Transform a restic JSON result into prometheus metrics
@@ -225,7 +225,7 @@ def restic_json_to_prometheus(
 
     backup_too_small = False
     if minimum_backup_size_error:
-        if restic_json["data_added"] < minimum_backup_size_error:
+        if restic_json["data_added"] < int(BytesConverter(str(minimum_backup_size_error).replace(" ", ""))):
             backup_too_small = True
     good_backup = restic_result and not backup_too_small
 

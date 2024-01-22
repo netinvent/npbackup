@@ -164,7 +164,7 @@ empty_config_dict = {
                 "exclude_files_larger_than": None,
                 "additional_parameters": None,
                 "additional_backup_only_parameters": None,
-                "minimum_backup_size_error": "10",  # In megabytes
+                "minimum_backup_size_error": "10MiB",  # allows BytesConverter units
                 "pre_exec_commands": [],
                 "pre_exec_per_command_timeout": 3600,
                 "pre_exec_failure_is_fatal": False,
