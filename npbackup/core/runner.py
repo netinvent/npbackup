@@ -375,8 +375,9 @@ class NPBackupRunner:
                     # pylint: disable=E1101 (no-member)
                     operation = fn.__name__
                 
+                current_permissions = self.repo_config.g("permissions")
                 self.write_logs(
-                    f"Permissions required are {required_permissions[operation]}",
+                    f"Permissions required are {required_permissions[operation]}, current permissions are {current_permissions}",
                     level="info",
                 )
                 has_permissions = True # TODO: enforce permissions
