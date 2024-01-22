@@ -63,3 +63,7 @@ fr:
 
   bad_file: Fichier erroné
   file_does_not_exist: Fichier inexistant
+
+  add_files: Ajouter fichiers
+  add_folder: Ajouter dossier
+  remove_selected: Enlever la sélection

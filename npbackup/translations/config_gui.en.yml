@@ -1,6 +1,11 @@
 en:
-  encrypted_data: Encrypted Data
+  # tabs
   backup: Backup
+  backup_destination: Destination
+  exclusions: Exclusions
+  pre_post: Pre/Post exec
+
+  encrypted_data: Encrypted Data
   compression: Compression
   backup_paths: Backup paths
   use_fs_snapshot: Use VSS snapshots
@@ -24,7 +29,6 @@ en:
   additional_parameters: Additional parameters
   additional_backup_only_parameters: Additional backup only parmas
 
-  backup_destination: Backup destination
   minimum_backup_age: Minimum delay between two backups
   backup_repo_uri: backup repo URI / path
   backup_repo_password: Backup repo encryption password
@@ -98,10 +102,10 @@ en:
 
   # source types
   source_type: Sources type
-  folder_list: Folder list
-  files_from: Files from list
-  files_from_verbatim: Files from verbatim list
-  files_from_raw: Files from raw list
+  folder_list: Folder / file list
+  files_from: From file
+  files_from_verbatim: From verbatim
+  files_from_raw: From raw
 
   # retention policiy
   keep: Keep
