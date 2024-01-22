@@ -96,6 +96,9 @@ def config_gui(full_config: dict, config_file: str):
         },
     }
 
+    byte_units = ["B", "KB", "KiB", "MB", "MiB", "GB", "GiB", "TB", "TiB", "PB", "PiB"]
+
+
     ENCRYPTED_DATA_PLACEHOLDER = "<{}>".format(_t("config_gui.encrypted_data"))
 
     def get_objects() -> List[str]:
@@ -272,7 +275,10 @@ def config_gui(full_config: dict, config_file: str):
         for key in window.AllKeysDict:
             # We only clear config keys, wihch have '.' separator
             if "." in str(key) and not "inherited" in str(key):
-                window[key]("")
+                if isinstance(window[key], sg.Tree):
+                    window[key].Update(sg.TreeData())
+                else:
+                    window[key]("")
 
         object_type, object_name = get_object_from_combo(object_name)
 
@@ -473,7 +479,9 @@ def config_gui(full_config: dict, config_file: str):
                 ),
             ],
             [
-                sg.Tree(sg.TreeData(), key="inherited.backup_opts.path", headings=[], expand_x=True, expand_y=True)
+                sg.Tree(sg.TreeData(), key="inherited.backup_opts.path", headings=[], 
+                        col0_heading=_t("generic.paths"),
+                        expand_x=True, expand_y=True)
             ],
             [
                 sg.Input(visible=False, key="--PATHS-ADD-FILE--", enable_events=True),
@@ -495,31 +503,42 @@ def config_gui(full_config: dict, config_file: str):
                 sg.pin(sg.Image(INHERITANCE_ICON, key="inherited.backup_opts.backup_priority", tooltip=_t("config_gui.group_inherited")))
             ],
             [
+                sg.Column([
+                    [
+                        sg.Tree(sg.TreeData(), key="inherited.backup_opts.tags", headings=[],
+                                col0_heading="Tags", col0_width=30, num_rows=3, expand_x=True, expand_y=True)
+                    ]
+                ], pad=0, size=(295, 80)),
+                sg.Column([
+                    [
+                        sg.Button("+", key="--ADD-TAG--", size=(3, 1))
+                    ],
+                    [
+                        sg.Button("-", key="--REMOVE-TAG--", size=(3, 1))
+                    ]
+                ], pad=0, size=(50, 80)),
+                sg.Column([
+                    [
+                        sg.Text(_t("config_gui.minimum_backup_size_error"), size=(40, 2)),
+                    ],
+                    [
+                        sg.Input(key="backup_opts.minimum_backup_size_error", size=(20, 1)),
+                        sg.Combo(byte_units, default_value=byte_units[3], key="bakcup_opts.minimum_backup_size_error_unit")
+                    ]
+                ], pad=0, size=(300, 80))
+            ],
+            [
                 sg.Checkbox("", key="backup_opts.use_fs_snapshot", size=(1, 1)),
                 sg.Text(
                     textwrap.fill(f'{_t("config_gui.use_fs_snapshot")} ({_t("config_gui.windows_only")})', width=34),
                     size=(34, 2),
                 ),
-            ],
-                        [
-                sg.Text(_t("config_gui.minimum_backup_size_error"), size=(40, 2)),
-                sg.Input(key="backup_opts.minimum_backup_size_error", size=(50, 1)),
-            ],
-            [
-                sg.Text(
-                    f"{_t('config_gui.tags')}\n({_t('config_gui.one_per_line')})",
-                    size=(40, 2),
-                ),
-                sg.Multiline(key="backup_opts.tags", size=(48, 4)),
-            ],
-            [
-                sg.Text(_t("config_gui.additional_parameters"), size=(40, 1)),
-                sg.Input(key="backup_opts.additional_parameters", size=(50, 1)),
-            ],
-            [
                 sg.Text(
                     _t("config_gui.additional_backup_only_parameters"), size=(40, 1)
                 ),
+            ],
+            [
+                
                 sg.Input(
                     key="backup_opts.additional_backup_only_parameters", size=(50, 1)
                 ),
@@ -753,6 +772,10 @@ def config_gui(full_config: dict, config_file: str):
                 ),
                 sg.Multiline(key="env.encrypted_env_variables", size=(48, 5)),
             ],
+            [
+                sg.Text(_t("config_gui.additional_parameters"), size=(40, 1)),
+                sg.Input(key="backup_opts.additional_parameters", size=(50, 1)),
+            ],
         ]
 
         object_list = get_objects()
@@ -964,7 +987,8 @@ def config_gui(full_config: dict, config_file: str):
                     object_layout(),
                     key="--repo-group-config--",
                     expand_x=True,
-                    expand_y=True
+                    expand_y=True,
+                    pad=0
                 )
             ],
             [
@@ -973,7 +997,8 @@ def config_gui(full_config: dict, config_file: str):
                     global_options_layout(),
                     key="--global-config--",
                     expand_x=True,
-                    expand_y=True
+                    expand_y=True,
+                    pad=0
                 )
             ],
         ]
@@ -981,7 +1006,7 @@ def config_gui(full_config: dict, config_file: str):
         _global_layout = [
             [
                 sg.TabGroup(
-                    tab_group_layout, enable_events=True, key="--configtabgroup--", expand_x=True, expand_y=True,
+                    tab_group_layout, enable_events=True, key="--configtabgroup--", expand_x=True, expand_y=True, pad=0,
                 )
             ],
             [sg.Push(), sg.Column(buttons,
@@ -1006,6 +1031,7 @@ def config_gui(full_config: dict, config_file: str):
     )
 
     backup_paths_tree = sg.TreeData()
+    tags_tree = sg.TreeData()
 
     # Update gui with first default object (repo or group)
     update_object_gui(get_objects()[0], unencrypted=False)
@@ -1052,6 +1078,15 @@ def config_gui(full_config: dict, config_file: str):
             for key in values['inherited.backup_opts.path']:
                 backup_paths_tree.delete(key)
                 window['inherited.backup_opts.path'].update(values=backup_paths_tree)
+        if event == "--ADD-TAG--":
+            node = sg.PopupGetText(_t("config_gui.enter_tag"))
+            if node:
+                tags_tree.insert('', node, node, node)
+                window["inherited.backup_opts.tags"].Update(values=tags_tree)
+        if event == "--REMOVE-TAG--":
+            for key in values["inherited.backup_opts.tags"]:
+                tags_tree.delete(key)
+                window["inherited.backup_opts.tags"].Update(values=tags_tree)
         if event == "--ACCEPT--":
             if (
                 not values["repo_opts.repo_password"]

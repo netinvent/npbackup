@@ -20,7 +20,7 @@ fr:
   one_file_system: Ne pas suivre les points de montage
   minimum_backup_size_error: Taille minimale en dessous de laquelle la sauvegarde est considérée échouée
   pre_exec_commands: Commandes pré-sauvegarde
-  maximum_exec_time: Temps maximal d'execution
+  maximum_exec_time: Temps maximal d'execution (secondes)
   exec_failure_is_fatal: L'échec d'execution est fatal
   post_exec_commands: Commandes post-sauvegarde
   execute_even_on_backup_error: Executer même si la sauvegarde a échouée

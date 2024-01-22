@@ -28,6 +28,7 @@ en:
 
   size: Size
   path: Path
+  paths: Paths
   modification_date: Modification date
 
   content: Content
