@@ -28,7 +28,7 @@ fr:
   one_per_line: un par ligne
   backup_priority: Priorité de sauvegarde
   additional_parameters: Paramètres supplémentaires
-  additional_backup_only_parameters: Paramètres supp. sauvegarde
+  additional_backup_only_parameters: Paramètres supplémentaires de sauvegarde
 
   minimum_backup_age: Délai minimal entre deux sauvegardes
   backup_repo_uri: URL / chemin local dépot de sauvegarde

@@ -491,48 +491,57 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Button(_t("generic.remove_selected"), key="--REMOVE-SELECTED-BACKUP-PATHS--")
             ],
             [
-                sg.Text(_t("config_gui.compression"), size=(20, None)),
-                sg.Combo(list(combo_boxes["compression"].values()), key="backup_opts.compression", size=(20, 1)),
-                sg.pin(sg.Image(INHERITANCE_ICON, key="inherited.backup_opts.compression", tooltip=_t("config_gui.group_inherited"))),
-                sg.Text(_t("config_gui.backup_priority"), size=(20, 1)),
-                sg.Combo(
-                    list(combo_boxes["priority"].values()),
-                    key="backup_opts.priority",
-                    size=(20, 1),
+                sg.Column(
+                    [
+                        [
+                            sg.Text(_t("config_gui.compression"), size=(20, None)),
+                            sg.Combo(list(combo_boxes["compression"].values()), key="backup_opts.compression", size=(20, 1)),
+                            sg.pin(sg.Image(INHERITANCE_ICON, key="inherited.backup_opts.compression", tooltip=_t("config_gui.group_inherited"))),
+                        ],
+                        [
+                            sg.Text(_t("config_gui.backup_priority"), size=(20, 1)),
+                            sg.Combo(
+                                list(combo_boxes["priority"].values()),
+                                key="backup_opts.priority",
+                                size=(20, 1),
+                            ),
+                            sg.pin(sg.Image(INHERITANCE_ICON, key="inherited.backup_opts.backup_priority", tooltip=_t("config_gui.group_inherited"))),
+                        ],
+                        [
+                            sg.Column([
+                                [
+                                    sg.Button("+", key="--ADD-TAG--", size=(3, 1))
+                                ],
+                                [
+                                    sg.Button("-", key="--REMOVE-TAG--", size=(3, 1))
+                                ]
+                            ], pad=0, size=(40, 80)),
+                            sg.Column([
+                                [
+                                    sg.Tree(sg.TreeData(), key="inherited.backup_opts.tags", headings=[],
+                                            col0_heading="Tags", col0_width=30, num_rows=3, expand_x=True, expand_y=True)
+                                ]
+                            ], pad=0, size=(300, 80))
+                        ]
+                    ], pad=0
                 ),
-                sg.pin(sg.Image(INHERITANCE_ICON, key="inherited.backup_opts.backup_priority", tooltip=_t("config_gui.group_inherited")))
+                sg.Column(
+                    [
+                        [
+                            sg.Text(_t("config_gui.minimum_backup_size_error"), size=(40, 2)),
+                        ],
+                        [
+                            sg.Input(key="backup_opts.minimum_backup_size_error", size=(8, 1)),
+                            sg.Combo(byte_units, default_value="KB", key="bakcup_opts.minimum_backup_size_error_unit")
+                        ],
+                        [
+                            sg.Checkbox(textwrap.fill(f'{_t("config_gui.use_fs_snapshot")}', width=34), key="backup_opts.use_fs_snapshot", size=(40, 1), pad=0),
+                        ]
+                    ], pad=0
+                )
             ],
             [
-                sg.Column([
-                    [
-                        sg.Tree(sg.TreeData(), key="inherited.backup_opts.tags", headings=[],
-                                col0_heading="Tags", col0_width=30, num_rows=3, expand_x=True, expand_y=True)
-                    ]
-                ], pad=0, size=(295, 80)),
-                sg.Column([
-                    [
-                        sg.Button("+", key="--ADD-TAG--", size=(3, 1))
-                    ],
-                    [
-                        sg.Button("-", key="--REMOVE-TAG--", size=(3, 1))
-                    ]
-                ], pad=0, size=(50, 80)),
-                sg.Column([
-                    [
-                        sg.Text(_t("config_gui.minimum_backup_size_error"), size=(40, 2)),
-                    ],
-                    [
-                        sg.Input(key="backup_opts.minimum_backup_size_error", size=(20, 1)),
-                        sg.Combo(byte_units, default_value=byte_units[3], key="bakcup_opts.minimum_backup_size_error_unit")
-                    ]
-                ], pad=0, size=(300, 80))
-            ],
-            [
-                sg.Checkbox("", key="backup_opts.use_fs_snapshot", size=(1, 1)),
-                sg.Text(
-                    textwrap.fill(f'{_t("config_gui.use_fs_snapshot")} ({_t("config_gui.windows_only")})', width=34),
-                    size=(34, 2),
-                ),
+                
                 sg.Text(
                     _t("config_gui.additional_backup_only_parameters"), size=(40, 1)
                 ),
@@ -540,7 +549,7 @@ def config_gui(full_config: dict, config_file: str):
             [
                 
                 sg.Input(
-                    key="backup_opts.additional_backup_only_parameters", size=(50, 1)
+                    key="backup_opts.additional_backup_only_parameters", size=(100, 1)
                 ),
             ],
 
@@ -555,11 +564,25 @@ def config_gui(full_config: dict, config_file: str):
                 ),
             ],
             [
-                sg.Text(
-                    f"{_t('config_gui.exclude_patterns')}\n({_t('config_gui.one_per_line')})",
-                    size=(40, 2),
+                sg.Column(
+                    [
+                        [
+                            sg.Button("+", key="--ADD-TAG--", size=(3, 1))
+                        ],
+                        [
+                            sg.Button("-", key="--REMOVE-TAG--", size=(3, 1))
+                        ]
+                    ], pad=0,
                 ),
-                sg.Multiline(key="backup_opts.exclude_patterns", size=(48, 4)),
+                sg.Column(
+                    [
+                        [
+                            sg.Tree(sg.TreeData(), key="backup_opts.exclude_patterns", headings=[],
+                                col0_heading=_t('config_gui.exclude_patterns'),
+                                num_rows=3, expand_x=True, expand_y=True)
+                        ]
+                    ], pad=0, expand_x=True
+                )
             ],
             [
                 sg.Text(
@@ -688,29 +711,41 @@ def config_gui(full_config: dict, config_file: str):
                 ),
             ],
             [
-                sg.Text(_t("config_gui.keep"), size=(30, 1)),
-                sg.Input(key="repo_opts.retention_strategy.hourly", size=(3, 1)),
-                sg.Text(_t("config_gui.hourly"), size=(20, 1)),
-            ],
-            [
-                sg.Text(_t("config_gui.keep"), size=(30, 1)),
-                sg.Input(key="repo_opts.retention_strategy.daily", size=(3, 1)),
-                sg.Text(_t("config_gui.daily"), size=(20, 1)),
-            ],
-            [
-                sg.Text(_t("config_gui.keep"), size=(30, 1)),
-                sg.Input(key="repo_opts.retention_strategy.weekly", size=(3, 1)),
-                sg.Text(_t("config_gui.weekly"), size=(20, 1)),
-            ],
-            [
-                sg.Text(_t("config_gui.keep"), size=(30, 1)),
-                sg.Input(key="repo_opts.retention_strategy.monthly", size=(3, 1)),
-                sg.Text(_t("config_gui.monthly"), size=(20, 1)),
-            ],
-            [
-                sg.Text(_t("config_gui.keep"), size=(30, 1)),
-                sg.Input(key="repo_opts.retention_strategy.yearly", size=(3, 1)),
-                sg.Text(_t("config_gui.yearly"), size=(20, 1)),
+                sg.Column(
+                    [
+                        [
+                            sg.Text(_t("config_gui.keep"), size=(30, 1)),
+                        ]
+                    ]
+                ),
+                sg.Column(
+                    [
+                        [
+                            sg.Input(key="repo_opts.retention_strategy.hourly", size=(3, 1)),
+                            sg.Text(_t("config_gui.hourly"), size=(20, 1)),
+                        ],
+                        [
+                            sg.Input(key="repo_opts.retention_strategy.daily", size=(3, 1)),
+                            sg.Text(_t("config_gui.daily"), size=(20, 1)),
+                        ],
+                        [
+                            sg.Input(key="repo_opts.retention_strategy.weekly", size=(3, 1)),
+                            sg.Text(_t("config_gui.weekly"), size=(20, 1)),
+                        ]
+                    ]
+                ),
+                sg.Column(
+                    [
+                        [
+                            sg.Input(key="repo_opts.retention_strategy.monthly", size=(3, 1)),
+                            sg.Text(_t("config_gui.monthly"), size=(20, 1)),
+                        ],
+                        [
+                            sg.Input(key="repo_opts.retention_strategy.yearly", size=(3, 1)),
+                            sg.Text(_t("config_gui.yearly"), size=(20, 1)),
+                        ]
+                    ]
+                )
             ],
         ]
 
