@@ -13,7 +13,8 @@ fr:
   ignore_cloud_files: Exclure le fichiers dans le cloud
   windows_only: Windows seulement
   exclude_patterns: Patterns d'exclusion
-  exclude_files: Fichiers contenant des exclusions
+  exclude_files: Fichiers contenant des patterns d'exclusions
+  exclude_files_larger_than: Exclude les fichiers plus grands que
   excludes_case_ignore: Ignorer la casse des exclusions patterns/fichiers
   windows_always: toujours actif pour Windows
   exclude_cache_dirs: Exclure dossiers cache

@@ -12,8 +12,9 @@ en:
   ignore_cloud_files: Ignore in-cloud files
   windows_only: Windows only
   exclude_patterns: Exclude patterns
-  exclude_files: Files containing exclusions
+  exclude_files: Files containing exclude patterns
   excludes_case_ignore: Ignore case for excludes patterns/files
+  exclude_files_larger_than: Exclude files larger than
   windows_always: always enabled for Windows
   exclude_cache_dirs: Exclude cache dirs
   one_file_system: Do not follow mountpoints
