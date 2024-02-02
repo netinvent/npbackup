@@ -7,11 +7,11 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024010501"
-__version__ = "2.0.0 for npbackup 2.3.0+"
+__build__ = "2024020201"
+__version__ = "2.0.0 for npbackup 3.0.0+"
 
-MIN_CONF_VERSION = 2.3
-MAX_CONF_VERSION = 2.3
+MIN_CONF_VERSION = 3.0
+MAX_CONF_VERSION = 3.0
 
 from typing import Tuple, Optional, List, Any, Union
 import sys
@@ -26,7 +26,7 @@ import re
 import platform
 from cryptidy import symmetric_encryption as enc
 from ofunctions.random import random_string
-from ofunctions.misc import replace_in_iterable
+from ofunctions.misc import replace_in_iterable, BytesConverter
 from npbackup.customization import ID_STRING
 
 
@@ -349,9 +349,10 @@ def has_random_variables(full_config: dict) -> Tuple[bool, dict]:
 def evaluate_variables(repo_config: dict, full_config: dict) -> dict:
     """
     Replace runtime variables with their corresponding value
+    Also replaces human bytes notation with ints
     """
 
-    def _evaluate_variables(value):
+    def _evaluate_variables(key, value):
         if isinstance(value, str):
             if "${MACHINE_ID}" in value:
                 machine_id = full_config.g("identity.machine_id")
@@ -379,9 +380,26 @@ def evaluate_variables(repo_config: dict, full_config: dict) -> dict:
     count = 0
     maxcount = 4 * 2 * 2
     while count < maxcount:
-        repo_config = replace_in_iterable(repo_config, _evaluate_variables)
+        repo_config = replace_in_iterable(repo_config, _evaluate_variables, callable_wants_key=True)
         count += 1
     return repo_config
+
+
+def expand_units(object_config: dict, unexpand: bool = False) -> dict:
+    """
+    Evaluate human bytes notation
+    eg 50 KB to 500000
+    and 500000 to 50 KB in unexpand mode
+    """
+    def _expand_units(key, value):
+        if key in ("minimum_backup_size_error", "exclude_files_larger_than", "upload_speed", "download_speed"):
+            if unexpand:
+                return BytesConverter(value).human
+            return BytesConverter(value)
+        return value
+
+    return replace_in_iterable(object_config, _expand_units, callable_wants_key=True)
+
 
 
 def extract_permissions_from_full_config(full_config: dict) -> dict:
@@ -526,6 +544,7 @@ def get_repo_config(
 
     if eval_variables:
         repo_config = evaluate_variables(repo_config, full_config)
+    repo_config = expand_units(repo_config, unexpand=True)
     return repo_config, config_inheritance
 
 
@@ -540,6 +559,7 @@ def get_group_config(
 
     if eval_variables:
         group_config = evaluate_variables(group_config, full_config)
+    group_config = expand_units(group_config, unexpand=True)
     return group_config
 
 
