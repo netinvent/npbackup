@@ -10,8 +10,9 @@ __license__ = "GPL-3.0-only"
 __build__ = "2023121701"
 
 
-from typing import List
+from typing import List, Union
 import os
+import pathlib
 from logging import getLogger
 import PySimpleGUI as sg
 import textwrap
@@ -211,6 +212,31 @@ def config_gui(full_config: dict, config_file: str):
                             value = ENCRYPTED_DATA_PLACEHOLDER
                     except (KeyError, TypeError):
                         pass
+
+            # Update tree objects
+            if key in ("backup_opts.paths", "backup_opts.tags", "backup_opts.exclude_patterns", "backup_opts.exclude_files"):
+                print(value)
+                if not isinstance(value, list):
+                    value = [value]
+                if key == "backup_opts.paths":
+                    for val in value:
+                        print(val, inherited)
+                        if pathlib.Path(val).is_dir():
+                            icon = FOLDER_ICON
+                        else:
+                            icon = FILE_ICON
+                        backup_paths_tree.insert('', val, val, val, icon=icon)
+                    window['backup_opts.paths'].update(values=backup_paths_tree)
+                if key == "backup_opts.tags":
+                    for val in value:
+                        tags_tree.insert('', val, val, val, icon=icon)
+                    window['backup_opts.tags'].Update(values=tags_tree)
+                return
+                        
+            # Update units into separate value and unit combobox
+            if key in ["backup_opts.minimum_backup_size_error", "backup_opts.exclude_files_larger_than", "upload_speed", "download_speed"]:
+                value, unit = value.split(" ")
+                window[f"{key}_unit"].Update(unit)
 
             if isinstance(value, list):
                 value = "\n".join(value)
@@ -457,6 +483,13 @@ def config_gui(full_config: dict, config_file: str):
         window.close()
         full_config.s(f"repos.{object_name}", repo_config)
         return full_config
+    
+    def is_inherited(key: str, values: Union[str, int, float, list]) -> bool:
+        """
+        Checks if value(s) are inherited from group settings
+        """
+        # TODO
+        return False
 
     def object_layout() -> List[list]:
         """
@@ -479,7 +512,7 @@ def config_gui(full_config: dict, config_file: str):
                 ),
             ],
             [
-                sg.Tree(sg.TreeData(), key="inherited.backup_opts.path", headings=[], 
+                sg.Tree(sg.TreeData(), key="backup_opts.paths", headings=[], 
                         col0_heading=_t("generic.paths"),
                         expand_x=True, expand_y=True)
             ],
@@ -518,7 +551,7 @@ def config_gui(full_config: dict, config_file: str):
                             ], pad=0, size=(40, 80)),
                             sg.Column([
                                 [
-                                    sg.Tree(sg.TreeData(), key="inherited.backup_opts.tags", headings=[],
+                                    sg.Tree(sg.TreeData(), key="backup_opts.tags", headings=[],
                                             col0_heading="Tags", col0_width=30, num_rows=3, expand_x=True, expand_y=True)
                                 ]
                             ], pad=0, size=(300, 80))
@@ -532,7 +565,7 @@ def config_gui(full_config: dict, config_file: str):
                         ],
                         [
                             sg.Input(key="backup_opts.minimum_backup_size_error", size=(8, 1)),
-                            sg.Combo(byte_units, default_value="KB", key="bakcup_opts.minimum_backup_size_error_unit")
+                            sg.Combo(byte_units, default_value=byte_units[3], key="backup_opts.minimum_backup_size_error_unit")
                         ],
                         [
                             sg.Checkbox(textwrap.fill(f'{_t("config_gui.use_fs_snapshot")}', width=34), key="backup_opts.use_fs_snapshot", size=(40, 1), pad=0),
@@ -557,20 +590,13 @@ def config_gui(full_config: dict, config_file: str):
            
         exclusions_col = [
             [
-                sg.Checkbox("", key="backup_opts.ignore_cloud_files", size=(1, 1)),
-                sg.Text(
-                    textwrap.fill(f'{_t("config_gui.ignore_cloud_files")} ({_t("config_gui.windows_only")})', width=34),
-                    size=(34, 2),
-                ),
-            ],
-            [
                 sg.Column(
                     [
                         [
-                            sg.Button("+", key="--ADD-TAG--", size=(3, 1))
+                            sg.Button("+", key="--ADD-EXCLUDE-PATTERN--", size=(3, 1))
                         ],
                         [
-                            sg.Button("-", key="--REMOVE-TAG--", size=(3, 1))
+                            sg.Button("-", key="--REMOVE-EXCLUDE-PATTERN--", size=(3, 1))
                         ]
                     ], pad=0,
                 ),
@@ -579,42 +605,57 @@ def config_gui(full_config: dict, config_file: str):
                         [
                             sg.Tree(sg.TreeData(), key="backup_opts.exclude_patterns", headings=[],
                                 col0_heading=_t('config_gui.exclude_patterns'),
-                                num_rows=3, expand_x=True, expand_y=True)
+                                num_rows=4, expand_x=True, expand_y=True)
                         ]
                     ], pad=0, expand_x=True
                 )
             ],
             [
+                sg.HSeparator()
+            ],
+            [
+                sg.Column(
+                    [
+                        [
+                            sg.Button("+", key="--ADD-EXCLUDE-FILES--", size=(3, 1))
+                        ],
+                        [
+                            sg.Button("-", key="--REMOVE-EXCLUDE-FILES--", size=(3, 1))
+                        ]
+                    ], pad=0,
+                ),
+                sg.Column(
+                    [
+                        [
+                            sg.Tree(sg.TreeData(), key="backup_opts.exclude_files", headings=[],
+                                col0_heading=_t('config_gui.exclude_files'),
+                                num_rows=4, expand_x=True, expand_y=True)
+                        ]
+                    ], pad=0, expand_x=True
+                )
+            ],
+            [
+                sg.HSeparator()
+            ],
+            [
                 sg.Text(
                     _t("config_gui.exclude_files_larger_than"),
-                    size=(40, 2),
+                    size=(40, 1),
                 ),
-                sg.Input(key="backup_opts.exclude_files_larger_than", size=(50, 1)),
+                sg.Input(key="backup_opts.exclude_files_larger_than", size=(8, 1)),
+                sg.Combo(byte_units, default_value=byte_units[3], key="backup_opts.exclude_files_larger_than_unit")
             ],
             [
-                sg.Text(
-                    f"{_t('config_gui.exclude_files')}\n({_t('config_gui.one_per_line')})",
-                    size=(40, 2),
-                ),
-                sg.Multiline(key="backup_opts.exclude_files", size=(48, 4)),
+                sg.Checkbox(f'{_t("config_gui.ignore_cloud_files")} ({_t("config_gui.windows_only")})', key="backup_opts.ignore_cloud_files", size=(None, 1)),
             ],
             [
-                sg.Text(
-                    "{}\n({})".format(
-                        _t("config_gui.excludes_case_ignore"),
-                        _t("config_gui.windows_always"),
-                    ),
-                    size=(40, 2),
-                ),
-                sg.Checkbox("", key="backup_opts.excludes_case_ignore", size=(41, 1)),
+                sg.Checkbox(f'{_t("config_gui.excludes_case_ignore")} ({_t("config_gui.windows_always")})', key="backup_opts.excludes_case_ignore", size=(None, 1)),
             ],
             [
-                sg.Text(_t("config_gui.exclude_cache_dirs"), size=(40, 1)),
-                sg.Checkbox("", key="backup_opts.exclude_caches", size=(41, 1)),
+                sg.Checkbox(_t("config_gui.exclude_cache_dirs"), key="backup_opts.exclude_caches", size=(None, 1)),
             ],
             [
-                sg.Text(_t("config_gui.one_file_system"), size=(40, 1)),
-                sg.Checkbox("", key="backup_opts.one_file_system", size=(41, 1)),
+                sg.Checkbox(_t("config_gui.one_file_system"), key="backup_opts.one_file_system", size=(None, 1)),
             ],
         ]
 
@@ -1067,6 +1108,8 @@ def config_gui(full_config: dict, config_file: str):
 
     backup_paths_tree = sg.TreeData()
     tags_tree = sg.TreeData()
+    exclude_patterns_tree = sg.TreeData()
+    exclude_files_tree = sg.TreeData()
 
     # Update gui with first default object (repo or group)
     update_object_gui(get_objects()[0], unencrypted=False)
@@ -1107,19 +1150,21 @@ def config_gui(full_config: dict, config_file: str):
                 node = values['--PATHS-ADD-FOLDER--']
                 icon = FOLDER_ICON
             backup_paths_tree.insert('', node, node, node, icon=icon)
-            window['inherited.backup_opts.path'].update(values=backup_paths_tree)
+            window['backup_opts.paths'].update(values=backup_paths_tree)
         if event == "--REMOVE-SELECTED-BACKUP-PATHS--":
             # TODO: prevent removing inherited values
-            for key in values['inherited.backup_opts.path']:
+            for key in values['backup_opts.paths']:
                 backup_paths_tree.delete(key)
-                window['inherited.backup_opts.path'].update(values=backup_paths_tree)
+                window['backup_opts.paths'].update(values=backup_paths_tree)
         if event == "--ADD-TAG--":
             node = sg.PopupGetText(_t("config_gui.enter_tag"))
             if node:
                 tags_tree.insert('', node, node, node)
-                window["inherited.backup_opts.tags"].Update(values=tags_tree)
+                window["backup_opts.tags"].Update(values=tags_tree)
         if event == "--REMOVE-TAG--":
-            for key in values["inherited.backup_opts.tags"]:
+            for key in values["backup_opts.tags"]:
+                if is_inherited("backup_opts.tags", values["backup_opts.tags"]) and object_type != "group":
+                    sg.Popup("Cannot remove ")
                 tags_tree.delete(key)
                 window["inherited.backup_opts.tags"].Update(values=tags_tree)
         if event == "--ACCEPT--":
