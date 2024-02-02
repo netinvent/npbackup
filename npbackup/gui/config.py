@@ -21,7 +21,7 @@ import npbackup.configuration as configuration
 from ofunctions.misc import get_key_from_value
 from npbackup.core.i18n_helper import _t
 from npbackup.path_helper import CURRENT_EXECUTABLE
-from npbackup.customization import INHERITANCE_ICON, FILE_ICON, FOLDER_ICON
+from npbackup.customization import INHERITANCE_ICON, FILE_ICON, FOLDER_ICON, INHERITED_FILE_ICON, INHERITED_FOLDER_ICON, TREE_ICON, INHERITED_TREE_ICON
 
 if os.name == "nt":
     from npbackup.windows.task import create_scheduled_task
@@ -215,20 +215,28 @@ def config_gui(full_config: dict, config_file: str):
 
             # Update tree objects
             if key in ("backup_opts.paths", "backup_opts.tags", "backup_opts.exclude_patterns", "backup_opts.exclude_files"):
-                print(value)
                 if not isinstance(value, list):
                     value = [value]
                 if key == "backup_opts.paths":
                     for val in value:
-                        print(val, inherited)
                         if pathlib.Path(val).is_dir():
-                            icon = FOLDER_ICON
+                            if inherited[val]:
+                                icon = INHERITED_FOLDER_ICON
+                            else:
+                                icon = FOLDER_ICON
                         else:
-                            icon = FILE_ICON
+                            if inherited[val]:
+                                icon = INHERITED_FILE_ICON
+                            else:
+                                icon = FILE_ICON
                         backup_paths_tree.insert('', val, val, val, icon=icon)
                     window['backup_opts.paths'].update(values=backup_paths_tree)
                 if key == "backup_opts.tags":
                     for val in value:
+                        if inherited[val]:
+                            icon = INHERITED_TREE_ICON
+                        else:
+                            icon = TREE_ICON
                         tags_tree.insert('', val, val, val, icon=icon)
                     window['backup_opts.tags'].Update(values=tags_tree)
                 return
@@ -529,16 +537,17 @@ def config_gui(full_config: dict, config_file: str):
                         [
                             sg.Text(_t("config_gui.compression"), size=(20, None)),
                             sg.Combo(list(combo_boxes["compression"].values()), key="backup_opts.compression", size=(20, 1)),
-                            sg.pin(sg.Image(INHERITANCE_ICON, key="inherited.backup_opts.compression", tooltip=_t("config_gui.group_inherited"))),
+                            sg.pin(sg.Image(INHERITANCE_ICON, key="inherited.backup_opts.compression", tooltip=_t("config_gui.group_inherited"), pad=0)),
                         ],
                         [
                             sg.Text(_t("config_gui.backup_priority"), size=(20, 1)),
+                            sg.pin(sg.Image(INHERITANCE_ICON, key="inherited.backup_opts.backup_priority", tooltip=_t("config_gui.group_inherited") ,pad=0)),
                             sg.Combo(
                                 list(combo_boxes["priority"].values()),
                                 key="backup_opts.priority",
-                                size=(20, 1),
+                                size=(20, 1), pad=0
                             ),
-                            sg.pin(sg.Image(INHERITANCE_ICON, key="inherited.backup_opts.backup_priority", tooltip=_t("config_gui.group_inherited"))),
+                
                         ],
                         [
                             sg.Column([
@@ -1145,10 +1154,16 @@ def config_gui(full_config: dict, config_file: str):
         if event in ("--PATHS-ADD-FILE--", '--PATHS-ADD-FOLDER--'):
             if event == "--PATHS-ADD-FILE--":
                 node = values["--PATHS-ADD-FILE--"]
-                icon = FILE_ICON
+                if object_type == "group":
+                    icon = INHERITED_FILE_ICON
+                else:
+                    icon = FILE_ICON
             elif event == '--PATHS-ADD-FOLDER--':
                 node = values['--PATHS-ADD-FOLDER--']
-                icon = FOLDER_ICON
+                if object_type == "group":
+                    icon = INHERITED_FOLDER_ICON
+                else:
+                    icon = FOLDER_ICON
             backup_paths_tree.insert('', node, node, node, icon=icon)
             window['backup_opts.paths'].update(values=backup_paths_tree)
         if event == "--REMOVE-SELECTED-BACKUP-PATHS--":
@@ -1159,14 +1174,19 @@ def config_gui(full_config: dict, config_file: str):
         if event == "--ADD-TAG--":
             node = sg.PopupGetText(_t("config_gui.enter_tag"))
             if node:
-                tags_tree.insert('', node, node, node)
+                if object_type == "group":
+                    icon = INHERITED_TREE_ICON
+                else:
+                    icon = TREE_ICON
+                tags_tree.insert('', node, node, node, icon=icon)
                 window["backup_opts.tags"].Update(values=tags_tree)
         if event == "--REMOVE-TAG--":
             for key in values["backup_opts.tags"]:
                 if is_inherited("backup_opts.tags", values["backup_opts.tags"]) and object_type != "group":
-                    sg.Popup("Cannot remove ")
+                    sg.Popup(_t("config_gui.cannot_remove_group_inherited_settings"))
+                    continue
                 tags_tree.delete(key)
-                window["inherited.backup_opts.tags"].Update(values=tags_tree)
+                window["backup_opts.tags"].Update(values=tags_tree)
         if event == "--ACCEPT--":
             if (
                 not values["repo_opts.repo_password"]
