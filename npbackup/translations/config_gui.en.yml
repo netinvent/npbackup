@@ -128,6 +128,7 @@ en:
   are_you_sure_to_delete: Are you sure you want to delete
   repo_already_exists: Repo already exists
   group_already_exists: Group already exists
+  cannot_remove_group_inherited_settings: Cannot remove group inherited settings. Please remove directly in group configuration
 
   # permissions
   set_permissions: Set permissions
