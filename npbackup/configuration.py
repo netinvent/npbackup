@@ -26,7 +26,7 @@ import re
 import platform
 from cryptidy import symmetric_encryption as enc
 from ofunctions.random import random_string
-from ofunctions.misc import replace_in_iterable, BytesConverter
+from ofunctions.misc import replace_in_iterable, BytesConverter, iter_over_keys
 from npbackup.customization import ID_STRING
 
 
@@ -501,7 +501,12 @@ def get_repo_config(
                         else:
                             merged_lists = _group_config.g(key)
                         _repo_config.s(key, merged_lists)
-                        _config_inheritance.s(key, True)
+                        _config_inheritance.s(key, {})
+                        for v in merged_lists:
+                            if v in _group_config.g(key):
+                                _config_inheritance.s(f"{key}.{v}", True)
+                            else:
+                                _config_inheritance.s(f"{key}.{v}", False)
                     else:
                         # repo_config may or may not already contain data
                         if not _repo_config:
@@ -599,6 +604,16 @@ def load_config(config_file: Path) -> Optional[dict]:
     if not full_config:
         return None
     config_file_is_updated = False
+
+    # Make sure we expand every key that should be a list into a list
+    # We'll use iter_over_keys instead of replace_in_iterable to avoid chaning list contents by lists
+    def _make_list(key: str, value: Union[str, int, float, dict, list]) -> Any:
+        if key in ("paths", "tags", "env_variables", "encrypted_env_variables"):
+            if not isinstance(value, list):
+                value = [value]
+            pass
+        return value
+    iter_over_keys(full_config, _make_list)
 
     # Check if we need to encrypt some variables
     if not is_encrypted(full_config):
