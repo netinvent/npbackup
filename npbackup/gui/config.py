@@ -21,7 +21,7 @@ import npbackup.configuration as configuration
 from ofunctions.misc import get_key_from_value
 from npbackup.core.i18n_helper import _t
 from npbackup.path_helper import CURRENT_EXECUTABLE
-from npbackup.customization import INHERITANCE_ICON, FILE_ICON, FOLDER_ICON, INHERITED_FILE_ICON, INHERITED_FOLDER_ICON, TREE_ICON, INHERITED_TREE_ICON
+from npbackup.customization import INHERITED_ICON, NON_INHERITED_ICON, FILE_ICON, FOLDER_ICON, INHERITED_FILE_ICON, INHERITED_FOLDER_ICON, TREE_ICON, INHERITED_TREE_ICON
 
 if os.name == "nt":
     from npbackup.windows.task import create_scheduled_task
@@ -191,6 +191,15 @@ def config_gui(full_config: dict, config_file: str):
         """
         Update gui values depending on their type
         """
+        nonlocal backup_paths_tree
+        nonlocal tags_tree
+        nonlocal exclude_files_tree
+        nonlocal exclude_patterns_tree
+        nonlocal pre_exec_commands_tree
+        nonlocal post_exec_commands_tree
+        nonlocal env_variables_tree
+        nonlocal encrypted_env_variables_tree
+
         if key in ("repo_uri", "repo_group"):
             if object_type == "group":
                 window[key].Disabled = True
@@ -256,7 +265,11 @@ def config_gui(full_config: dict, config_file: str):
             # Enable inheritance icon when needed
             inheritance_key = f"inherited.{key}"
             if inheritance_key in window.AllKeysDict:
-                window[inheritance_key].update(visible=inherited)
+                print(inheritance_key, inherited)
+                if inherited:
+                    window[inheritance_key].update(INHERITED_ICON)
+                else:
+                    window[inheritance_key].update(NON_INHERITED_ICON)
 
         except KeyError:
             logger.error(f"No GUI equivalent for key {key}.")
@@ -301,6 +314,13 @@ def config_gui(full_config: dict, config_file: str):
         _iter_over_config(object_config, root_key)
 
     def update_object_gui(object_name=None, unencrypted=False):
+        nonlocal backup_paths_tree
+        nonlocal tags_tree
+        nonlocal exclude_files_tree
+        nonlocal exclude_patterns_tree
+        nonlocal env_variables_tree
+        nonlocal encrypted_env_variables_tree
+        
         # Load fist available repo or group if none given
         if not object_name:
             object_name = get_objects()[0]
@@ -313,6 +333,9 @@ def config_gui(full_config: dict, config_file: str):
                     window[key].Update(sg.TreeData())
                 else:
                     window[key]("")
+
+        # We also need to clear tree objects
+        backup_paths_tree = sg.TreeData()
 
         object_type, object_name = get_object_from_combo(object_name)
 
@@ -346,6 +369,7 @@ def config_gui(full_config: dict, config_file: str):
         # Only update global options gui with identified global keys
         for key in full_config.keys():
             if key in ("identity", "global_options"):
+                print(key)
                 global_config.s(key, full_config.g(key))
         iter_over_config(global_config, None, "group", unencrypted, None)
 
@@ -354,6 +378,7 @@ def config_gui(full_config: dict, config_file: str):
         Update full_config with keys from GUI
         keys should always have form section.name or section.subsection.name
         """
+        return
         object_type, object_name = get_object_from_combo(values["-OBJECT-SELECT-"])
         if object_type == "repo":
             object_group = full_config.g(f"repos.{object_name}.repo_group")
@@ -372,7 +397,7 @@ def config_gui(full_config: dict, config_file: str):
             if key in combo_boxes:
                 value = get_key_from_value(combo_boxes[key], value)
             # check whether we need to split into list
-            elif not isinstance(value, bool):
+            elif not isinstance(value, bool) and not isinstance(value, list):
                 result = value.split("\n")
                 if len(result) > 1:
                     value = result
@@ -398,7 +423,7 @@ def config_gui(full_config: dict, config_file: str):
                 if object_group:
                     inheritance_key = f"groups.{object_group}.{key}"
                     # If object is a list, check which values are inherited from group and remove them
-                    if isinstance(value, list):
+                    if isinstance(value, list): # WIP # TODO
                         for entry in full_config.g(inheritance_key):
                             if entry in value:
                                 value.remove(entry)
@@ -536,17 +561,20 @@ def config_gui(full_config: dict, config_file: str):
                     [
                         [
                             sg.Text(_t("config_gui.compression"), size=(20, None)),
-                            sg.Combo(list(combo_boxes["compression"].values()), key="backup_opts.compression", size=(20, 1)),
-                            sg.pin(sg.Image(INHERITANCE_ICON, key="inherited.backup_opts.compression", tooltip=_t("config_gui.group_inherited"), pad=0)),
+                            sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.compression", tooltip=_t("config_gui.group_inherited"), pad=1),
+                            sg.Combo(
+                                list(combo_boxes["compression"].values()),
+                                key="backup_opts.compression",
+                                size=(20, 1), pad=0),
                         ],
                         [
                             sg.Text(_t("config_gui.backup_priority"), size=(20, 1)),
-                            sg.pin(sg.Image(INHERITANCE_ICON, key="inherited.backup_opts.backup_priority", tooltip=_t("config_gui.group_inherited") ,pad=0)),
+                            sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.priority", tooltip=_t("config_gui.group_inherited"), pad=1),
                             sg.Combo(
                                 list(combo_boxes["priority"].values()),
                                 key="backup_opts.priority",
                                 size=(20, 1), pad=0
-                            ),
+                            )
                 
                         ],
                         [
@@ -573,13 +601,15 @@ def config_gui(full_config: dict, config_file: str):
                             sg.Text(_t("config_gui.minimum_backup_size_error"), size=(40, 2)),
                         ],
                         [
+                            sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.minimum_backup_size_error", tooltip=_t("config_gui.group_inherited"), pad=1),
                             sg.Input(key="backup_opts.minimum_backup_size_error", size=(8, 1)),
                             sg.Combo(byte_units, default_value=byte_units[3], key="backup_opts.minimum_backup_size_error_unit")
                         ],
                         [
+                            sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.fs_snapshot", tooltip=_t("config_gui.group_inherited"), pad=1),
                             sg.Checkbox(textwrap.fill(f'{_t("config_gui.use_fs_snapshot")}', width=34), key="backup_opts.use_fs_snapshot", size=(40, 1), pad=0),
                         ]
-                    ], pad=0
+                    ]
                 )
             ],
             [
@@ -589,7 +619,7 @@ def config_gui(full_config: dict, config_file: str):
                 ),
             ],
             [
-                
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.additional_backup_only_parameters", tooltip=_t("config_gui.group_inherited"), pad=1),
                 sg.Input(
                     key="backup_opts.additional_backup_only_parameters", size=(100, 1)
                 ),
@@ -651,19 +681,24 @@ def config_gui(full_config: dict, config_file: str):
                     _t("config_gui.exclude_files_larger_than"),
                     size=(40, 1),
                 ),
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.exclude_files_larger_than", tooltip=_t("config_gui.group_inherited"), pad=1),
                 sg.Input(key="backup_opts.exclude_files_larger_than", size=(8, 1)),
                 sg.Combo(byte_units, default_value=byte_units[3], key="backup_opts.exclude_files_larger_than_unit")
             ],
             [
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.ignore_cloud_files", tooltip=_t("config_gui.group_inherited"), pad=1),
                 sg.Checkbox(f'{_t("config_gui.ignore_cloud_files")} ({_t("config_gui.windows_only")})', key="backup_opts.ignore_cloud_files", size=(None, 1)),
             ],
             [
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.excludes_case_ignore", tooltip=_t("config_gui.group_inherited"), pad=1),
                 sg.Checkbox(f'{_t("config_gui.excludes_case_ignore")} ({_t("config_gui.windows_always")})', key="backup_opts.excludes_case_ignore", size=(None, 1)),
             ],
             [
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.exclude_caches", tooltip=_t("config_gui.group_inherited"), pad=1),
                 sg.Checkbox(_t("config_gui.exclude_cache_dirs"), key="backup_opts.exclude_caches", size=(None, 1)),
             ],
             [
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.one_file_system", tooltip=_t("config_gui.group_inherited"), pad=1),
                 sg.Checkbox(_t("config_gui.one_file_system"), key="backup_opts.one_file_system", size=(None, 1)),
             ],
         ]
@@ -771,14 +806,17 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Column(
                     [
                         [
+                            sg.Image(NON_INHERITED_ICON, key="inherited.repo_opts.retention_strategy.hourly", tooltip=_t("config_gui.group_inherited"), pad=1),
                             sg.Input(key="repo_opts.retention_strategy.hourly", size=(3, 1)),
                             sg.Text(_t("config_gui.hourly"), size=(20, 1)),
                         ],
                         [
+                            sg.Image(NON_INHERITED_ICON, key="inherited.repo_opts.retention_strategy.daily", tooltip=_t("config_gui.group_inherited"), pad=1),
                             sg.Input(key="repo_opts.retention_strategy.daily", size=(3, 1)),
                             sg.Text(_t("config_gui.daily"), size=(20, 1)),
                         ],
                         [
+                            sg.Image(NON_INHERITED_ICON, key="inherited.repo_opts.retention_strategy.weekly", tooltip=_t("config_gui.group_inherited"), pad=1),
                             sg.Input(key="repo_opts.retention_strategy.weekly", size=(3, 1)),
                             sg.Text(_t("config_gui.weekly"), size=(20, 1)),
                         ]
@@ -787,10 +825,12 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Column(
                     [
                         [
+                            sg.Image(NON_INHERITED_ICON, key="inherited.repo_opts.retention_strategy.monthly", tooltip=_t("config_gui.group_inherited"), pad=1),
                             sg.Input(key="repo_opts.retention_strategy.monthly", size=(3, 1)),
                             sg.Text(_t("config_gui.monthly"), size=(20, 1)),
                         ],
                         [
+                            sg.Image(NON_INHERITED_ICON, key="inherited.repo_opts.retention_strategy.yearly", tooltip=_t("config_gui.group_inherited"), pad=1),
                             sg.Input(key="repo_opts.retention_strategy.yearly", size=(3, 1)),
                             sg.Text(_t("config_gui.yearly"), size=(20, 1)),
                         ]
@@ -1119,6 +1159,10 @@ def config_gui(full_config: dict, config_file: str):
     tags_tree = sg.TreeData()
     exclude_patterns_tree = sg.TreeData()
     exclude_files_tree = sg.TreeData()
+    pre_exec_commands_tree = sg.TreeData()
+    post_exec_commands_tree = sg.TreeData()
+    env_variables_tree = sg.TreeData()
+    encrypted_env_variables_tree = sg.TreeData()
 
     # Update gui with first default object (repo or group)
     update_object_gui(get_objects()[0], unencrypted=False)
@@ -1129,12 +1173,9 @@ def config_gui(full_config: dict, config_file: str):
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--CANCEL--"):
             break
         if event == "-OBJECT-SELECT-":
-            try:
-                update_config_dict(full_config, values)
-                update_object_gui(values["-OBJECT-SELECT-"], unencrypted=False)
-                update_global_gui(full_config, unencrypted=False)
-            except AttributeError:
-                continue
+            update_config_dict(full_config, values)
+            update_object_gui(values["-OBJECT-SELECT-"], unencrypted=False)
+            update_global_gui(full_config, unencrypted=False)
         if event == "-OBJECT-DELETE-":
             full_config = delete_object(full_config, values["-OBJECT-SELECT-"])
             update_object_selector()
