@@ -180,7 +180,7 @@ empty_config_dict = {
             # Minimum time between two backups, in minutes
             # Set to zero in order to disable time checks
             "minimum_backup_age": 1440,
-            "upload_speed": 1000000,  # in KiB, use 0 for unlimited upload speed
+            "upload_speed": "100Mb",  # Mb(its) or MB(ytes), use 0 for unlimited upload speed
             "download_speed": 0,  # in KiB, use 0 for unlimited download speed
             "backend_connections": 0,  # Fine tune simultaneous connections to backend, use 0 for standard configuration
             "retention_strategy": {
