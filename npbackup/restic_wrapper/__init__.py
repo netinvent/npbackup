@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024010201"
-__version__ = "2.0.0"
+__build__ = "2024020501"
+__version__ = "2.0.1"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -22,6 +22,7 @@ import dateutil.parser
 import queue
 from functools import wraps
 from command_runner import command_runner
+from ofunctions.misc import BytesConverter
 from npbackup.__debug__ import _DEBUG
 from npbackup.__env__ import FAST_COMMANDS_TIMEOUT, CHECK_INTERVAL
 
@@ -369,9 +370,10 @@ class ResticRunner:
         return self._limit_upload
 
     @limit_upload.setter
-    def limit_upload(self, value: int):
+    def limit_upload(self, value: str):
         try:
-            value = int(value)
+            # restic uses kbytes as upload speed unit
+            value = int(BytesConverter(value).kbytes)
             if value > 0:
                 self._limit_upload = value
         except TypeError:
@@ -382,9 +384,10 @@ class ResticRunner:
         return self._limit_download
 
     @limit_download.setter
-    def limit_download(self, value: int):
+    def limit_download(self, value: str):
         try:
-            value = int(value)
+            # restic uses kbytes as download speed unit
+            value = int(BytesConverter(value).kbytes)
             if value > 0:
                 self._limit_download = value
         except TypeError:
@@ -767,6 +770,7 @@ class ResticRunner:
             if exclude_caches:
                 cmd += " --exclude-caches"
             if exclude_files_larger_than:
+                exclude_files_larger_than = BytesConverter(exclude_files_larger_than).bytes
                 cmd += f" --exclude-files-larger-than {exclude_files_larger_than}"
             if one_file_system:
                 cmd += " --one-file-system"

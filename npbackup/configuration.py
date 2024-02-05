@@ -394,7 +394,7 @@ def expand_units(object_config: dict, unexpand: bool = False) -> dict:
     def _expand_units(key, value):
         if key in ("minimum_backup_size_error", "exclude_files_larger_than", "upload_speed", "download_speed"):
             if unexpand:
-                return BytesConverter(value).human
+                return BytesConverter(value).human_iec_bytes
             return BytesConverter(value)
         return value
 
