@@ -14,7 +14,7 @@ fr:
   windows_only: Windows seulement
   exclude_patterns: Patterns d'exclusion
   exclude_files: Fichiers contenant des patterns d'exclusions
-  exclude_files_larger_than: Exclude les fichiers plus grands que
+  exclude_files_larger_than: Exclure les fichiers plus grands que
   excludes_case_ignore: Ignorer la casse des exclusions patterns/fichiers
   windows_always: toujours actif pour Windows
   exclude_cache_dirs: Exclure dossiers cache
@@ -49,7 +49,7 @@ fr:
   metrics_username: Nom d'utilisateur métriques HTTP
   metrics_password: Mot de passe métriques HTTP
   instance: Instance Prometheus
-  additional_labels: Labels supplémentaires
+  additional_labels: Etiquettes supplémentaires
 
   no_config_available: Aucun fichier de configuration trouvé. Merci d'utiliser --config-file "chemin" pour spécifier un fichier, ou copier un fichier de configuration a côté du binaire NPBackup.
   create_new_config: Souhaitez-vous créer une nouvelle configuration ?
@@ -149,3 +149,4 @@ fr:
   enter_command: Entrer command
   enter_var_name: Entrer le nom de la variable
   enter_var_value: Entrer sa valeur
+  enter_label: Entrer étiquette
