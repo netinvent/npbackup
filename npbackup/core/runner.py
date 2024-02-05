@@ -23,6 +23,7 @@ from copy import deepcopy
 from command_runner import command_runner
 from ofunctions.threading import threaded
 from ofunctions.platform import os_arch
+from ofunctions.misc import BytesConverter
 from npbackup.restic_metrics import restic_str_output_to_json, restic_json_to_prometheus, upload_metrics
 from npbackup.restic_wrapper import ResticRunner
 from npbackup.core.restic_source_binary import get_restic_internal_binary
@@ -883,27 +884,14 @@ class NPBackupRunner:
                 "backup_opts.exclude_files_larger_than"
             )
             if exclude_files_larger_than:
-                if not exclude_files_larger_than[-1] in (
-                    "k",
-                    "K",
-                    "m",
-                    "M",
-                    "g",
-                    "G",
-                    "t",
-                    "T",
-                ):
-                    warning = f"Bogus suffix for exclude_files_larger_than value given: {exclude_files_larger_than}"
+                try:
+                    BytesConverter(exclude_files_larger_than)
+                except ValueError:
+                    warning = f"Bogus unit for exclude_files_larger_than value given: {exclude_files_larger_than}"
                     self.write_logs( warning, level="warning")
                     warnings.append(warning)
                     exclude_files_larger_than = None
-                try:
-                    float(exclude_files_larger_than[:-1])
-                except (ValueError, TypeError):
-                    warning = f"Cannot check whether excludes_files_larger_than is a float: {exclude_files_larger_than}"
-                    self.write_logs(warning, level="warning")
-                    warnings.append(warning)
-                exclude_files_larger_than = None
+                    exclude_files_larger_than = None
 
             one_file_system = (
                 self.repo_config.g("backup_opts.one_file_system")
