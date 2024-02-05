@@ -770,8 +770,8 @@ class ResticRunner:
             if exclude_caches:
                 cmd += " --exclude-caches"
             if exclude_files_larger_than:
-                exclude_files_larger_than = BytesConverter(exclude_files_larger_than).bytes
-                cmd += f" --exclude-files-larger-than {exclude_files_larger_than}"
+                exclude_files_larger_than = int(BytesConverter(exclude_files_larger_than).bytes)
+                cmd += f" --exclude-larger-than {exclude_files_larger_than}"
             if one_file_system:
                 cmd += " --one-file-system"
             if use_fs_snapshot:
