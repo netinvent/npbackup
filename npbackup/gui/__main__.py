@@ -551,7 +551,10 @@ def _main_gui(viewer_mode: bool):
                 snapshot_hostname = snapshot["hostname"]
                 snapshot_id = snapshot["short_id"]
                 try:
-                    snapshot_tags = " [TAGS: {}]".format(snapshot["tags"])
+                    tags = snapshot["tags"]
+                    if isinstance(tags, list):
+                        tags = ",".join(tags)
+                    snapshot_tags = tags
                 except KeyError:
                     snapshot_tags = ""
                 snapshot_list.append(
