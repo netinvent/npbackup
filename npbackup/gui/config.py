@@ -283,7 +283,11 @@ def config_gui(full_config: dict, config_file: str):
                 return
                         
             # Update units into separate value and unit combobox
-            if key in ["backup_opts.minimum_backup_size_error", "backup_opts.exclude_files_larger_than", "upload_speed", "download_speed"]:
+            if key in (
+                "backup_opts.minimum_backup_size_error",
+                "backup_opts.exclude_files_larger_than",
+                "repo_opts.upload_speed",
+                "repo_opts.download_speed"):
                 value, unit = value.split(" ")
                 window[f"{key}_unit"].Update(unit)
 
@@ -759,11 +763,13 @@ def config_gui(full_config: dict, config_file: str):
                 )
             ],
             [
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.pre_exec_per_command_timeout", tooltip=_t("config_gui.group_inherited"), pad=1),
                 sg.Text(_t("config_gui.maximum_exec_time"), size=(40, 1)),
                 sg.Input(key="backup_opts.pre_exec_per_command_timeout", size=(8, 1)),
                 sg.Text(_t("generic.seconds"))
             ],
             [
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.pre_exec_failure_is_fatal", tooltip=_t("config_gui.group_inherited"), pad=1),
                 sg.Checkbox(
                     _t("config_gui.exec_failure_is_fatal"), key="backup_opts.pre_exec_failure_is_fatal", size=(41, 1)
                 ),
@@ -793,16 +799,19 @@ def config_gui(full_config: dict, config_file: str):
                 )
             ],
             [
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.post_exec_per_command_timeout", tooltip=_t("config_gui.group_inherited"), pad=1),
                 sg.Text(_t("config_gui.maximum_exec_time"), size=(40, 1)),
                 sg.Input(key="backup_opts.post_exec_per_command_timeout", size=(8, 1)),
                 sg.Text(_t("generic.seconds"))
             ],
             [
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.post_exec_failure_is_fatal", tooltip=_t("config_gui.group_inherited"), pad=1),
                 sg.Checkbox(
                     _t("config_gui.exec_failure_is_fatal"), key="backup_opts.post_exec_failure_is_fatal", size=(41, 1)
                 ),
             ],
             [
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.execute_even_on_backup_error", tooltip=_t("config_gui.group_inherited"), pad=1),
                 sg.Checkbox(
                     _t("config_gui.execute_even_on_backup_error"),
                     key="backup_opts.post_exec_execute_even_on_backup_error",
@@ -814,41 +823,49 @@ def config_gui(full_config: dict, config_file: str):
         repo_col = [
             [
                 sg.Text(_t("config_gui.backup_repo_uri"), size=(40, 1)),
-                sg.Input(key="repo_uri", size=(50, 1)),
+            ],
+            [
+                sg.Image(NON_INHERITED_ICON, pad=1),
+                sg.Input(key="repo_uri", size=(95, 1)),
             ],
             [
                 sg.Text(_t("config_gui.backup_repo_password"), size=(40, 1)),
-                sg.Input(key="repo_opts.repo_password", size=(50, 1)),
+            ],
+            [
+                sg.Image(NON_INHERITED_ICON, key="inherited.repo_opts.repo_password", tooltip=_t("config_gui.group_inherited"), pad=1),
+                sg.Input(key="repo_opts.repo_password", size=(95, 1)),
             ],
             [
                 sg.Text(_t("config_gui.backup_repo_password_command"), size=(40, 1)),
-                sg.Input(key="repo_opts.repo_password_command", size=(50, 1)),
+            ],
+            [
+                sg.Image(NON_INHERITED_ICON, key="inherited.repo_opts.repo_password_command", tooltip=_t("config_gui.group_inherited"), pad=1),
+                sg.Input(key="repo_opts.repo_password_command", size=(95, 1)),
             ],
             [sg.Button(_t("config_gui.set_permissions"), key="--SET-PERMISSIONS--")],
             [
                 sg.Text(_t("config_gui.repo_group"), size=(40, 1)),
-                sg.Input(key="repo_group", size=(50, 1)),
+                sg.Combo(values=[], key="repo_group") # TODO
             ],
             [
-                sg.Text(
-                    "{}\n({})".format(
-                        _t("config_gui.minimum_backup_age"), _t("generic.minutes")
-                    ),
-                    size=(40, 2),
+                sg.Text(_t("config_gui.minimum_backup_age"), size=(40, 2),
                 ),
-                sg.Input(key="repo_opts.minimum_backup_age", size=(50, 1)),
+                sg.Input(key="repo_opts.minimum_backup_age", size=(8, 1)),
+                sg.Text(_t("generic.minutes"))
             ],
             [
                 sg.Text(_t("config_gui.upload_speed"), size=(40, 1)),
-                sg.Input(key="repo_opts.upload_speed", size=(50, 1)),
+                sg.Input(key="repo_opts.upload_speed", size=(8, 1)),
+                sg.Combo(byte_units, default_value=byte_units[3], key="repo_opts.upload_speed_unit")
             ],
             [
                 sg.Text(_t("config_gui.download_speed"), size=(40, 1)),
-                sg.Input(key="repo_opts.download_speed", size=(50, 1)),
+                sg.Input(key="repo_opts.download_speed", size=(8, 1)),
+                sg.Combo(byte_units, default_value=byte_units[3], key="repo_opts.download_speed_unit")
             ],
             [
                 sg.Text(_t("config_gui.backend_connections"), size=(40, 1)),
-                sg.Input(key="repo_opts.backend_connections", size=(50, 1)),
+                sg.Input(key="repo_opts.backend_connections", size=(8, 1)),
             ],
             [sg.HorizontalSeparator()],
             [sg.Text(_t("config_gui.retention_policy"))],
@@ -995,6 +1012,9 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Text(_t("config_gui.additional_parameters"), size=(40, 1)),
+            ],
+            [
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.additional_parameters", tooltip=_t("config_gui.group_inherited"), pad=1),
                 sg.Input(key="backup_opts.additional_parameters", size=(50, 1)),
             ],
         ]
