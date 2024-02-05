@@ -197,6 +197,7 @@ def config_gui(full_config: dict, config_file: str):
         nonlocal exclude_patterns_tree
         nonlocal pre_exec_commands_tree
         nonlocal post_exec_commands_tree
+        nonlocal prometheus_labels_tree
         nonlocal env_variables_tree
         nonlocal encrypted_env_variables_tree
 
@@ -230,6 +231,7 @@ def config_gui(full_config: dict, config_file: str):
                 "backup_opts.exclude_files",
                 "backup_opts.pre_exec_commands",
                 "backup_opts.post_exec_commands",
+                "prometheus.additional_labels",
                 "env.env_variables",
                 "env.encrypted_env_variables"
             ):
@@ -255,6 +257,7 @@ def config_gui(full_config: dict, config_file: str):
                     "backup_opts.post_exec_commands",
                     "backup_opts.exclude_files",
                     "backup_opts.exclude_patterns",
+                    "prometheus.additional_labels",
                     "env.env_variables",
                     "env.encrypted_env_variables"
                 
@@ -269,6 +272,8 @@ def config_gui(full_config: dict, config_file: str):
                         tree = exclude_files_tree
                     if key == "backup_opts.exclude_patterns":
                         tree = exclude_patterns_tree
+                    if key == "prometheus.additional_labels":
+                        tree = prometheus_labels_tree
                     if key == "env.env_variables":
                         tree = env_variables_tree
                     if key == "env.encrypted_env_variables":
@@ -356,6 +361,9 @@ def config_gui(full_config: dict, config_file: str):
         nonlocal tags_tree
         nonlocal exclude_files_tree
         nonlocal exclude_patterns_tree
+        nonlocal pre_exec_commands_tree
+        nonlocal post_exec_commands_tree
+        nonlocal prometheus_labels_tree
         nonlocal env_variables_tree
         nonlocal encrypted_env_variables_tree
         
@@ -953,11 +961,25 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Input(key="prometheus.group", size=(50, 1)),
             ],
             [
-                sg.Text(
-                    f"{_t('config_gui.additional_labels')}\n({_t('config_gui.one_per_line')}\n{_t('config_gui.format_equals')})",
-                    size=(40, 3),
+                sg.Column(
+                    [
+                        [
+                            sg.Button("+", key="--ADD-PROMETHEUS-LABEL--", size=(3, 1))
+                        ],
+                        [
+                            sg.Button("-", key="--REMOVE-PROMETHEUS-LABEL--", size=(3, 1))
+                        ]
+                    ], pad=0,
                 ),
-                sg.Multiline(key="prometheus.additional_labels", size=(48, 3)),
+                sg.Column(
+                    [
+                        [
+                            sg.Tree(sg.TreeData(), key="prometheus.additional_labels", headings=[],
+                                col0_heading=_t('config_gui.additional_labels'),
+                                num_rows=4, expand_x=True, expand_y=True)
+                        ]
+                    ], pad=0, expand_x=True
+                )
             ],
         ]
 
@@ -1272,6 +1294,7 @@ def config_gui(full_config: dict, config_file: str):
     exclude_files_tree = sg.TreeData()
     pre_exec_commands_tree = sg.TreeData()
     post_exec_commands_tree = sg.TreeData()
+    prometheus_labels_tree = sg.TreeData()
     env_variables_tree = sg.TreeData()
     encrypted_env_variables_tree = sg.TreeData()
 
@@ -1325,6 +1348,7 @@ def config_gui(full_config: dict, config_file: str):
             "--ADD-EXCLUDE-PATTERN--",
             "--ADD-PRE-EXEC-COMMAND--",
             "--ADD-POST-EXEC-COMMAND--",
+            "--ADD-PROMETHEUS-LABEL--",
             "--ADD-ENV-VARIABLE--",
             "--ADD-ENCRYPTED-ENV-VARIABLE--",
             "--REMOVE-BACKUP-PATHS",
@@ -1333,6 +1357,7 @@ def config_gui(full_config: dict, config_file: str):
             "--REMOVE-EXCLUDE-FILE--",
             "--REMOVE-PRE-EXEC-COMMAND--",
             "--REMOVE-POST-EXEC-COMMAND--",
+            "--REMOVE-PROMETHEUS-LABEL--",
             "--REMOVE-ENV-VARIABLE--",
             "--REMOVE-ENCRYPTED-ENV-VARIABLE--"
         ):
@@ -1358,6 +1383,10 @@ def config_gui(full_config: dict, config_file: str):
                 popup_text = _t("config_gui.enter_command")
                 tree = post_exec_commands_tree
                 option_key = "backup_opts.post_exec_commands"
+            elif "PROMETHEUS-LABEL" in event:
+                popup_text = _t("config_gui.enter_label")
+                tree = prometheus_labels_tree
+                option_key = "prometheus.additional_labels"
             elif "ENCRYPTED-ENV-VARIABLE" in event:
                 tree = encrypted_env_variables_tree
                 option_key = "env.encrypted_env_variables"
