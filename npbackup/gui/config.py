@@ -704,44 +704,74 @@ def config_gui(full_config: dict, config_file: str):
         ]
 
         pre_post_col = [
+            [
+                sg.Column(
+                    [
                         [
-                sg.Text(
-                    f"{_t('config_gui.pre_exec_commands')}\n({_t('config_gui.one_per_line')})",
-                    size=(40, 2),
+                            sg.Button("+", key="--ADD-PRE-EXEC-COMMAND--", size=(3, 1))
+                        ],
+                        [
+                            sg.Button("-", key="--REMOVE-PRE-EXEC-COMMAND--", size=(3, 1))
+                        ]
+                    ], pad=0,
                 ),
-                sg.Multiline(key="backup_opts.pre_exec_commands", size=(48, 4)),
+                sg.Column(
+                    [
+                        [
+                            sg.Tree(sg.TreeData(), key="backup_opts.pre_exec_commands", headings=[],
+                                col0_heading=_t('config_gui.pre_exec_commands'),
+                                num_rows=4, expand_x=True, expand_y=True)
+                        ]
+                    ], pad=0, expand_x=True
+                )
             ],
             [
                 sg.Text(_t("config_gui.maximum_exec_time"), size=(40, 1)),
-                sg.Input(key="backup_opts.pre_exec_per_command_timeout", size=(50, 1)),
+                sg.Input(key="backup_opts.pre_exec_per_command_timeout", size=(8, 1)),
+                sg.Text(_t("generic.seconds"))
             ],
             [
-                sg.Text(_t("config_gui.exec_failure_is_fatal"), size=(40, 1)),
                 sg.Checkbox(
-                    "", key="backup_opts.pre_exec_failure_is_fatal", size=(41, 1)
+                    _t("config_gui.exec_failure_is_fatal"), key="backup_opts.pre_exec_failure_is_fatal", size=(41, 1)
                 ),
             ],
             [
-                sg.Text(
-                    f"{_t('config_gui.post_exec_commands')}\n({_t('config_gui.one_per_line')})",
-                    size=(40, 2),
+                sg.HorizontalSeparator()
+            ],
+            [
+                sg.Column(
+                    [
+                        [
+                            sg.Button("+", key="--ADD-POST-EXEC-COMMAND--", size=(3, 1))
+                        ],
+                        [
+                            sg.Button("-", key="--REMOVE-POST-EXEC-COMMAND--", size=(3, 1))
+                        ]
+                    ], pad=0,
                 ),
-                sg.Multiline(key="backup_opts.post_exec_commands", size=(48, 4)),
+                sg.Column(
+                    [
+                        [
+                            sg.Tree(sg.TreeData(), key="backup_opts.post_exec_commands", headings=[],
+                                col0_heading=_t('config_gui.post_exec_commands'),
+                                num_rows=4, expand_x=True, expand_y=True)
+                        ]
+                    ], pad=0, expand_x=True
+                )
             ],
             [
                 sg.Text(_t("config_gui.maximum_exec_time"), size=(40, 1)),
-                sg.Input(key="backup_opts.post_exec_per_command_timeout", size=(50, 1)),
+                sg.Input(key="backup_opts.post_exec_per_command_timeout", size=(8, 1)),
+                sg.Text(_t("generic.seconds"))
             ],
             [
-                sg.Text(_t("config_gui.exec_failure_is_fatal"), size=(40, 1)),
                 sg.Checkbox(
-                    "", key="backup_opts.post_exec_failure_is_fatal", size=(41, 1)
+                    _t("config_gui.exec_failure_is_fatal"), key="backup_opts.post_exec_failure_is_fatal", size=(41, 1)
                 ),
             ],
             [
-                sg.Text(_t("config_gui.execute_even_on_backup_error"), size=(40, 1)),
                 sg.Checkbox(
-                    "",
+                    _t("config_gui.execute_even_on_backup_error"),
                     key="backup_opts.post_exec_execute_even_on_backup_error",
                     size=(41, 1),
                 ),
@@ -842,8 +872,7 @@ def config_gui(full_config: dict, config_file: str):
         prometheus_col = [
             [sg.Text(_t("config_gui.available_variables"))],
             [
-                sg.Text(_t("config_gui.enable_prometheus"), size=(40, 1)),
-                sg.Checkbox("", key="prometheus.metrics", size=(41, 1)),
+                sg.Checkbox(_t("config_gui.enable_prometheus"), key="prometheus.metrics", size=(41, 1)),
             ],
             [
                 sg.Text(_t("config_gui.job_name"), size=(40, 1)),
@@ -1170,6 +1199,8 @@ def config_gui(full_config: dict, config_file: str):
 
     while True:
         event, values = window.read()
+        # Get object type for various delete operations
+        object_type, _ = get_object_from_combo(values["-OBJECT-SELECT-"])
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--CANCEL--"):
             break
         if event == "-OBJECT-SELECT-":
@@ -1208,12 +1239,57 @@ def config_gui(full_config: dict, config_file: str):
             backup_paths_tree.insert('', node, node, node, icon=icon)
             window['backup_opts.paths'].update(values=backup_paths_tree)
         if event == "--REMOVE-SELECTED-BACKUP-PATHS--":
-            # TODO: prevent removing inherited values
             for key in values['backup_opts.paths']:
+                if object_type != "group" and backup_paths_tree.tree_dict[key].icon in (INHERITED_FILE_ICON, INHERITED_FOLDER_ICON):
+                    sg.PopupError(_t("config_gui.cannot_remove_group_inherited_settings"))
+                    continue
                 backup_paths_tree.delete(key)
-                window['backup_opts.paths'].update(values=backup_paths_tree)
+            window['backup_opts.paths'].update(values=backup_paths_tree)
+        if event in (
+            "--ADD-TAG--",
+            "--ADD-EXCLUDE-PATTERN--",
+            "--ADD-PRE-EXEC-COMMAND--",
+            "--ADD-POST-EXEC-COMMAND--",
+            "--ADD-ENV-VARIABLES--",
+            "--ADD-ENCRYPTED-ENV-VARIABLES--",
+            "--REMOVE-TAG--",
+            "--REMOVE-EXCLUDE_PATTERN--"
+
+        ):
+            if "TAG" in event:
+                popup_text = _t("config_gui.enter_tag")
+                tree = tags_tree
+                option_key = "backup_opts.tags"
+            if "EXCLUDE_PATTERN" in event:
+                popup_text = _t("config_gui.enter_pattern")
+                tree = exclude_patterns_tree
+                option_key = "backup_opts.exclude_patterns"
+            if "PRE-EXEC-COMMANDS" in event:
+                popup_text = _t("config_gui.entern_command")
+                tree = pre_exec_commands_tree
+                option_key = "backup_opts.pre_exec_commands"
+            if "POST-EXEC-COMMANDS" in event:
+                pass
+
+            
+            if event.startswith("--ADD-"):
+                node = sg.PopupGetText(popup_text)
+                if node:
+                    if object_type == "group":
+                        icon = INHERITED_TREE_ICON
+                    else:
+                        icon = TREE_ICON
+                    tree.insert('', node, node, node, icon=icon) 
+            if event.startswith("--REMOVE-"):
+                for key in values[option_key]:
+                    if object_type != "group" and tree.tree_dict[key].icon == INHERITED_TREE_ICON:
+                        sg.PopupError(_t("config_gui.cannot_remove_group_inherited_settings"))
+                        continue
+                    tree.delete(key)
+            window[option_key].Update(values=tree)
+        """
         if event == "--ADD-TAG--":
-            node = sg.PopupGetText(_t("config_gui.enter_tag"))
+            node = sg.PopupGetText()
             if node:
                 if object_type == "group":
                     icon = INHERITED_TREE_ICON
@@ -1223,11 +1299,27 @@ def config_gui(full_config: dict, config_file: str):
                 window["backup_opts.tags"].Update(values=tags_tree)
         if event == "--REMOVE-TAG--":
             for key in values["backup_opts.tags"]:
-                if is_inherited("backup_opts.tags", values["backup_opts.tags"]) and object_type != "group":
+                if object_type != "group" and tags_tree.tree_dict[key].icon == INHERITED_TREE_ICON:
                     sg.Popup(_t("config_gui.cannot_remove_group_inherited_settings"))
                     continue
                 tags_tree.delete(key)
                 window["backup_opts.tags"].Update(values=tags_tree)
+        if event == "--ADD-EXCLUDE-PATTERN--":
+            node = sg.PopupGetText(_t("config_gui.enter_pattern"))
+            if object_type == "group":
+                icon = INHERITED_TREE_ICON
+            else:
+                icon = TREE_ICON
+            exclude_patterns_tree.insert('', node, node, node, icon=icon)
+            window["backup_opts.exclude_patterns"].Update(values=exclude_patterns_tree)
+        if event == "--REMOVE-EXCLUDE-PATTERN--":
+            for key in values["backup_opts.exclude_patterns"]:
+                if object_type != "group" and exclude_patterns_tree.tree_dict[key].icon == INHERITED_TREE_ICON:
+                    sg.Popup(_t("config_gui.cannot_remove_group_inherited_settings"))
+                    continue
+                    exclude_patterns_tree.delete(key)
+                    window["backup_opts.exclude_patterns"].Update(values=exclude_patterns_tree)
+        """
         if event == "--ACCEPT--":
             if (
                 not values["repo_opts.repo_password"]
