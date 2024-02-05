@@ -74,18 +74,18 @@ def config_gui(full_config: dict, config_file: str):
     )
 
     combo_boxes = {
-        "compression": {
+        "backup_opts.compression": {
             "auto": _t("config_gui.auto"),
             "max": _t("config_gui.max"),
             "off": _t("config_gui.off"),
         },
-        "source_type": {
+        "backup_opts.source_type": {
             "folder_list": _t("config_gui.folder_list"),
             "files_from": _t("config_gui.files_from"),
             "files_from_verbatim": _t("config_gui.files_from_verbatim"),
             "files_from_raw": _t("config_gui.files_from_raw"),
         },
-        "priority": {
+        "backup_opts.priority": {
             "low": _t("config_gui.low"),
             "normal": _t("config_gui.normal"),
             "high": _t("config_gui.high"),
@@ -199,7 +199,7 @@ def config_gui(full_config: dict, config_file: str):
         nonlocal post_exec_commands_tree
         nonlocal env_variables_tree
         nonlocal encrypted_env_variables_tree
-        print("MY", key)
+
         if key in ("repo_uri", "repo_group"):
             if object_type == "group":
                 window[key].Disabled = True
@@ -290,12 +290,9 @@ def config_gui(full_config: dict, config_file: str):
             if isinstance(value, list):
                 value = "\n".join(value)
             
-            if key in combo_boxes:
-                print("combo key")
-                print(combo_boxes[key][value])
+            if key in combo_boxes.keys():
                 window[key].Update(value=combo_boxes[key][value])
             else:
-                print("nOKEy", key)
                 window[key].Update(value=value)
 
             # Enable inheritance icon when needed
@@ -575,7 +572,7 @@ def config_gui(full_config: dict, config_file: str):
                     size=(None, None), expand_x=True, justification='R'
                 ),
                 sg.Combo(
-                    list(combo_boxes["source_type"].values()),
+                    list(combo_boxes["backup_opts.source_type"].values()),
                     key="backup_opts.source_type",
                     size=(48, 1),
                 ),
@@ -599,7 +596,7 @@ def config_gui(full_config: dict, config_file: str):
                             sg.Text(_t("config_gui.compression"), size=(20, None)),
                             sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.compression", tooltip=_t("config_gui.group_inherited"), pad=1),
                             sg.Combo(
-                                list(combo_boxes["compression"].values()),
+                                list(combo_boxes["backup_opts.compression"].values()),
                                 key="backup_opts.compression",
                                 size=(20, 1), pad=0),
                         ],
@@ -607,7 +604,7 @@ def config_gui(full_config: dict, config_file: str):
                             sg.Text(_t("config_gui.backup_priority"), size=(20, 1)),
                             sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.priority", tooltip=_t("config_gui.group_inherited"), pad=1),
                             sg.Combo(
-                                list(combo_boxes["priority"].values()),
+                                list(combo_boxes["backup_opts.priority"].values()),
                                 key="backup_opts.priority",
                                 size=(20, 1), pad=0
                             )
