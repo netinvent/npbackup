@@ -56,8 +56,8 @@ fr:
   saved_initial_config: Si vous avez enregistré une configuration, vous pouvez à présent recharger le programme.
   bogus_config_file: Fichier de configuration érroné
 
-  encrypted_environment_variables: Variables d'envrionnement chiffrées (ie TOKENS etc)
-  environment_variables: Variables d'environnement
+  encrypted_env_variables: Variables d'envrionnement chiffrées
+  env_variables: Variables d'environnement
   format_equals: Format variable=valeur
 
   no_runner: Impossible de se connecter au backend. Verifier les logs
@@ -146,3 +146,6 @@ fr:
 
   enter_tag: Entrer tag
   enter_pattern: Entrer pattern
+  enter_command: Entrer command
+  enter_var_name: Entrer le nom de la variable
+  enter_var_value: Entrer sa valeur

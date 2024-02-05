@@ -55,7 +55,7 @@ en:
   saved_initial_config: If you saved your configuration, you may now reload this program
   bogus_config_file: Bogus configuration file found
 
-  encrypted_env_variables: Encrypted envrionment variables (ie TOKENS etc)
+  encrypted_env_variables: Encrypted envrionment variables
   env_variables: Environment variables
   format_equals: Format variable=value
 
@@ -144,3 +144,6 @@ en:
 
   enter_tag: Enter tag
   enter_pattern: Enter pattern
+  enter_command: Enter command
+  enter_var_name: Enter variable name
+  enter_var_value: Enter variable value

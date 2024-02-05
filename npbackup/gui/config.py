@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.config"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023121701"
+__build__ = "2024020501"
 
 
 from typing import List, Union
@@ -199,7 +199,7 @@ def config_gui(full_config: dict, config_file: str):
         nonlocal post_exec_commands_tree
         nonlocal env_variables_tree
         nonlocal encrypted_env_variables_tree
-
+        print("MY", key)
         if key in ("repo_uri", "repo_group"):
             if object_type == "group":
                 window[key].Disabled = True
@@ -223,7 +223,16 @@ def config_gui(full_config: dict, config_file: str):
                         pass
 
             # Update tree objects
-            if key in ("backup_opts.paths", "backup_opts.tags", "backup_opts.exclude_patterns", "backup_opts.exclude_files"):
+            if key in (
+                "backup_opts.paths",
+                "backup_opts.tags",
+                "backup_opts.exclude_patterns",
+                "backup_opts.exclude_files",
+                "backup_opts.pre_exec_commands",
+                "backup_opts.post_exec_commands",
+                "env.env_variables",
+                "env.encrypted_env_variables"
+            ):
                 if not isinstance(value, list):
                     value = [value]
                 if key == "backup_opts.paths":
@@ -240,14 +249,37 @@ def config_gui(full_config: dict, config_file: str):
                                 icon = FILE_ICON
                         backup_paths_tree.insert('', val, val, val, icon=icon)
                     window['backup_opts.paths'].update(values=backup_paths_tree)
-                if key == "backup_opts.tags":
+                elif key in (
+                    "backup_opts.tags",
+                    "backup_opts.pre_exec_commands",
+                    "backup_opts.post_exec_commands",
+                    "backup_opts.exclude_files",
+                    "backup_opts.exclude_patterns",
+                    "env.env_variables",
+                    "env.encrypted_env_variables"
+                
+                ):
+                    if key == "backup_opts.tags":
+                        tree = tags_tree
+                    if key == "backup_opts.pre_exec_commands":
+                        tree = pre_exec_commands_tree
+                    if key == "backup_opts.post_exec_commands":
+                        tree = post_exec_commands_tree
+                    if key == "backup_opts.exclude_files":
+                        tree = exclude_files_tree
+                    if key == "backup_opts.exclude_patterns":
+                        tree = exclude_patterns_tree
+                    if key == "env.env_variables":
+                        tree = env_variables_tree
+                    if key == "env.encrypted_env_variables":
+                        tree = encrypted_env_variables_tree
                     for val in value:
                         if inherited[val]:
                             icon = INHERITED_TREE_ICON
                         else:
                             icon = TREE_ICON
-                        tags_tree.insert('', val, val, val, icon=icon)
-                    window['backup_opts.tags'].Update(values=tags_tree)
+                        tree.insert('', val, val, val, icon=icon)
+                    window[key].Update(values=tree)
                 return
                         
             # Update units into separate value and unit combobox
@@ -257,15 +289,18 @@ def config_gui(full_config: dict, config_file: str):
 
             if isinstance(value, list):
                 value = "\n".join(value)
+            
             if key in combo_boxes:
-                window[key].Update(combo_boxes[key][value])
+                print("combo key")
+                print(combo_boxes[key][value])
+                window[key].Update(value=combo_boxes[key][value])
             else:
-                window[key].Update(value)
+                print("nOKEy", key)
+                window[key].Update(value=value)
 
             # Enable inheritance icon when needed
             inheritance_key = f"inherited.{key}"
             if inheritance_key in window.AllKeysDict:
-                print(inheritance_key, inherited)
                 if inherited:
                     window[inheritance_key].update(INHERITED_ICON)
                 else:
@@ -273,8 +308,10 @@ def config_gui(full_config: dict, config_file: str):
 
         except KeyError:
             logger.error(f"No GUI equivalent for key {key}.")
+            logger.debug("Trace:", exc_info=True)
         except TypeError as exc:
             logger.error(f"Error: {exc} for key {key}.")
+            logger.debug("Trace:", exc_info=True)
 
     def iter_over_config(
         object_config: dict,
@@ -369,7 +406,6 @@ def config_gui(full_config: dict, config_file: str):
         # Only update global options gui with identified global keys
         for key in full_config.keys():
             if key in ("identity", "global_options"):
-                print(key)
                 global_config.s(key, full_config.g(key))
         iter_over_config(global_config, None, "group", unencrypted, None)
 
@@ -550,11 +586,11 @@ def config_gui(full_config: dict, config_file: str):
                         expand_x=True, expand_y=True)
             ],
             [
-                sg.Input(visible=False, key="--PATHS-ADD-FILE--", enable_events=True),
-                sg.FilesBrowse(_t("generic.add_files"), target="--PATHS-ADD-FILE--"),
-                sg.Input(visible=False, key="--PATHS-ADD-FOLDER--", enable_events=True),
-                sg.FolderBrowse(_t("generic.add_folder"), target="--PATHS-ADD-FOLDER--"),
-                sg.Button(_t("generic.remove_selected"), key="--REMOVE-SELECTED-BACKUP-PATHS--")
+                sg.Input(visible=False, key="--ADD-PATHS-FILE--", enable_events=True),
+                sg.FilesBrowse(_t("generic.add_files"), target="--ADD-PATHS-FILE--"),
+                sg.Input(visible=False, key="--ADD-PATHS-FOLDER--", enable_events=True),
+                sg.FolderBrowse(_t("generic.add_folder"), target="--ADD-PATHS-FOLDER--"),
+                sg.Button(_t("generic.remove_selected"), key="--REMOVE-BACKUP-PATHS--")
             ],
             [
                 sg.Column(
@@ -913,18 +949,52 @@ def config_gui(full_config: dict, config_file: str):
 
         env_col = [
             [
-                sg.Text(
-                    f"{_t('config_gui.env_variables')}\n({_t('config_gui.one_per_line')}\n{_t('config_gui.format_equals')})",
-                    size=(40, 3),
+                sg.Column(
+                    [
+                        [
+                            sg.Button("+", key="--ADD-ENV-VARIABLE--", size=(3, 1))
+                        ],
+                        [
+                            sg.Button("-", key="--REMOVE-ENV-VARIABLE--", size=(3, 1))
+                        ]
+                    ], pad=0,
                 ),
-                sg.Multiline(key="env.env_variables", size=(48, 5)),
+                sg.Column(
+                    [
+                        [
+                            sg.Tree(sg.TreeData(), key="env.env_variables", headings=[_t("generic.value")],
+                                col0_heading=_t('config_gui.env_variables'),
+                                col0_width=1,
+                                auto_size_columns=True,
+                                justification="L",
+                                num_rows=4, expand_x=True, expand_y=True)
+                        ]
+                    ], pad=0, expand_x=True
+                )
             ],
             [
-                sg.Text(
-                    f"{_t('config_gui.encrypted_env_variables')}\n({_t('config_gui.one_per_line')}\n{_t('config_gui.format_equals')})",
-                    size=(40, 3),
+                sg.Column(
+                    [
+                        [
+                            sg.Button("+", key="--ADD-ENCRYPTED-ENV-VARIABLE--", size=(3, 1))
+                        ],
+                        [
+                            sg.Button("-", key="--REMOVE-ENCRYPTED-ENV-VARIABLE--", size=(3, 1))
+                        ]
+                    ], pad=0,
                 ),
-                sg.Multiline(key="env.encrypted_env_variables", size=(48, 5)),
+                sg.Column(
+                    [
+                        [
+                            sg.Tree(sg.TreeData(), key="env.encrypted_env_variables", headings=[_t("generic.value")],
+                                col0_heading=_t('config_gui.encrypted_env_variables'),
+                                col0_width=1,
+                                auto_size_columns=True,
+                                justification="L",
+                                num_rows=4, expand_x=True, expand_y=True)
+                        ]
+                    ], pad=0, expand_x=True
+                )
             ],
             [
                 sg.Text(_t("config_gui.additional_parameters"), size=(40, 1)),
@@ -952,7 +1022,6 @@ def config_gui(full_config: dict, config_file: str):
                     backup_col,
                     font="helvetica 16",
                     key="--tab-backup--",
-                    #element_justification="L",
                     expand_x=True,
                     expand_y=True
                 )
@@ -997,7 +1066,7 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Tab(
-                    _t("config_gui.environment_variables"),
+                    _t("config_gui.env_variables"),
                     env_col,
                     font="helvetica 16",
                     key="--tab-env--",
@@ -1008,7 +1077,6 @@ def config_gui(full_config: dict, config_file: str):
 
         _layout = [
             [sg.Column(object_selector,
-                       #element_justification="L"
                        )],
             [
                 sg.TabGroup(
@@ -1087,7 +1155,6 @@ def config_gui(full_config: dict, config_file: str):
                     identity_col,
                     font="helvetica 16",
                     key="--tab-global-identification--",
-                    #element_justification="L",
                 )
             ],
             [
@@ -1096,7 +1163,6 @@ def config_gui(full_config: dict, config_file: str):
                     global_options_col,
                     font="helvetica 16",
                     key="--tab-global-options--",
-                    #element_justification="L",
                 )
             ],
             [
@@ -1105,7 +1171,6 @@ def config_gui(full_config: dict, config_file: str):
                     scheduled_task_col,
                     font="helvetica 16",
                     key="--tab-global-scheduled_task--",
-                    #element_justification="L",
                 )
             ],
         ]
@@ -1223,103 +1288,87 @@ def config_gui(full_config: dict, config_file: str):
             if ask_manager_password(manager_password):
                 full_config = set_permissions(full_config, values["-OBJECT-SELECT-"])
             continue
-        if event in ("--PATHS-ADD-FILE--", '--PATHS-ADD-FOLDER--'):
-            if event == "--PATHS-ADD-FILE--":
-                node = values["--PATHS-ADD-FILE--"]
+        if event in ("--ADD-PATHS-FILE--", '--ADD-PATHS-FOLDER--'):
+            if event == "--ADD-PATHS-FILE--":
+                node = values["--ADD-PATHS-FILE--"]
                 if object_type == "group":
                     icon = INHERITED_FILE_ICON
                 else:
                     icon = FILE_ICON
-            elif event == '--PATHS-ADD-FOLDER--':
-                node = values['--PATHS-ADD-FOLDER--']
+            elif event == '--ADD-PATHS-FOLDER--':
+                node = values['--ADD-PATHS-FOLDER--']
                 if object_type == "group":
                     icon = INHERITED_FOLDER_ICON
                 else:
                     icon = FOLDER_ICON
             backup_paths_tree.insert('', node, node, node, icon=icon)
             window['backup_opts.paths'].update(values=backup_paths_tree)
-        if event == "--REMOVE-SELECTED-BACKUP-PATHS--":
-            for key in values['backup_opts.paths']:
-                if object_type != "group" and backup_paths_tree.tree_dict[key].icon in (INHERITED_FILE_ICON, INHERITED_FOLDER_ICON):
-                    sg.PopupError(_t("config_gui.cannot_remove_group_inherited_settings"))
-                    continue
-                backup_paths_tree.delete(key)
-            window['backup_opts.paths'].update(values=backup_paths_tree)
         if event in (
             "--ADD-TAG--",
             "--ADD-EXCLUDE-PATTERN--",
             "--ADD-PRE-EXEC-COMMAND--",
             "--ADD-POST-EXEC-COMMAND--",
-            "--ADD-ENV-VARIABLES--",
-            "--ADD-ENCRYPTED-ENV-VARIABLES--",
+            "--ADD-ENV-VARIABLE--",
+            "--ADD-ENCRYPTED-ENV-VARIABLE--",
+            "--REMOVE-BACKUP-PATHS",
             "--REMOVE-TAG--",
-            "--REMOVE-EXCLUDE_PATTERN--"
-
+            "--REMOVE-EXCLUDE-PATTERN--",
+            "--REMOVE-EXCLUDE-FILE--",
+            "--REMOVE-PRE-EXEC-COMMAND--",
+            "--REMOVE-POST-EXEC-COMMAND--",
+            "--REMOVE-ENV-VARIABLE--",
+            "--REMOVE-ENCRYPTED-ENV-VARIABLE--"
         ):
-            if "TAG" in event:
+            if "PATHS" in event:
+                option_key = "backup_opts.paths"
+                tree = backup_paths_tree
+            elif "TAG" in event:
                 popup_text = _t("config_gui.enter_tag")
                 tree = tags_tree
                 option_key = "backup_opts.tags"
-            if "EXCLUDE_PATTERN" in event:
+            elif "EXCLUDE_PATTERN" in event:
                 popup_text = _t("config_gui.enter_pattern")
                 tree = exclude_patterns_tree
                 option_key = "backup_opts.exclude_patterns"
-            if "PRE-EXEC-COMMANDS" in event:
-                popup_text = _t("config_gui.entern_command")
+            elif "EXCLUDE-FILE" in event:
+                tree = exclude_files_tree
+                option_key = "backup_opts.exclude_files"
+            elif "PRE-EXEC-COMMANDS" in event:
+                popup_text = _t("config_gui.enter_command")
                 tree = pre_exec_commands_tree
                 option_key = "backup_opts.pre_exec_commands"
-            if "POST-EXEC-COMMANDS" in event:
-                pass
+            elif "POST-EXEC-COMMANDS" in event:
+                popup_text = _t("config_gui.enter_command")
+                tree = post_exec_commands_tree
+                option_key = "backup_opts.post_exec_commands"
+            elif "ENCRYPTED-ENV-VARIABLE" in event:
+                tree = encrypted_env_variables_tree
+                option_key = "env.encrypted_env_variables"
+            elif "ENV-VARIABLE" in event:
+                tree = env_variables_tree
+                option_key = "env.env_variables"
 
-            
             if event.startswith("--ADD-"):
-                node = sg.PopupGetText(popup_text)
-                if node:
-                    if object_type == "group":
-                        icon = INHERITED_TREE_ICON
-                    else:
-                        icon = TREE_ICON
-                    tree.insert('', node, node, node, icon=icon) 
-            if event.startswith("--REMOVE-"):
-                for key in values[option_key]:
-                    if object_type != "group" and tree.tree_dict[key].icon == INHERITED_TREE_ICON:
-                        sg.PopupError(_t("config_gui.cannot_remove_group_inherited_settings"))
-                        continue
-                    tree.delete(key)
-            window[option_key].Update(values=tree)
-        """
-        if event == "--ADD-TAG--":
-            node = sg.PopupGetText()
-            if node:
                 if object_type == "group":
                     icon = INHERITED_TREE_ICON
                 else:
                     icon = TREE_ICON
-                tags_tree.insert('', node, node, node, icon=icon)
-                window["backup_opts.tags"].Update(values=tags_tree)
-        if event == "--REMOVE-TAG--":
-            for key in values["backup_opts.tags"]:
-                if object_type != "group" and tags_tree.tree_dict[key].icon == INHERITED_TREE_ICON:
-                    sg.Popup(_t("config_gui.cannot_remove_group_inherited_settings"))
-                    continue
-                tags_tree.delete(key)
-                window["backup_opts.tags"].Update(values=tags_tree)
-        if event == "--ADD-EXCLUDE-PATTERN--":
-            node = sg.PopupGetText(_t("config_gui.enter_pattern"))
-            if object_type == "group":
-                icon = INHERITED_TREE_ICON
-            else:
-                icon = TREE_ICON
-            exclude_patterns_tree.insert('', node, node, node, icon=icon)
-            window["backup_opts.exclude_patterns"].Update(values=exclude_patterns_tree)
-        if event == "--REMOVE-EXCLUDE-PATTERN--":
-            for key in values["backup_opts.exclude_patterns"]:
-                if object_type != "group" and exclude_patterns_tree.tree_dict[key].icon == INHERITED_TREE_ICON:
-                    sg.Popup(_t("config_gui.cannot_remove_group_inherited_settings"))
-                    continue
-                    exclude_patterns_tree.delete(key)
-                    window["backup_opts.exclude_patterns"].Update(values=exclude_patterns_tree)
-        """
+                if "ENV-VARIABLE" in event:
+                    var_name = sg.PopupGetText(_t("config_gui.enter_var_name"))
+                    var_value = sg.PopupGetText(_t("config_gui.enter_var_value"))
+                    if var_name and var_value:
+                        tree.insert('', var_name, var_name, var_value, icon=icon)
+                else:
+                    node = sg.PopupGetText(popup_text)
+                    if node:
+                        tree.insert('', node, node, node, icon=icon)
+            if event.startswith("--REMOVE-"):
+                for key in values[option_key]:
+                    if object_type != "group" and tree.tree_dict[key].icon in (INHERITED_TREE_ICON, INHERITED_FILE_ICON, INHERITED_FOLDER_ICON):
+                        sg.PopupError(_t("config_gui.cannot_remove_group_inherited_settings"))
+                        continue
+                    tree.delete(key)
+            window[option_key].Update(values=tree)
         if event == "--ACCEPT--":
             if (
                 not values["repo_opts.repo_password"]
