@@ -225,7 +225,7 @@ def restic_json_to_prometheus(
 
     backup_too_small = False
     if minimum_backup_size_error:
-        if restic_json["data_added"] < int(BytesConverter(str(minimum_backup_size_error).replace(" ", "")).human_iec_bytes):
+        if restic_json["data_added"] < int(BytesConverter(str(minimum_backup_size_error).replace(" ", "")).bytes):
             backup_too_small = True
     good_backup = restic_result and not backup_too_small
 
