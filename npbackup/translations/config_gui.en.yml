@@ -5,7 +5,7 @@ en:
   exclusions: Exclusions
   pre_post: Pre/Post exec
 
-  encrypted_data: Encrypted Data
+  encrypted_data: Encrypted_Data
   compression: Compression
   backup_paths: Backup paths
   use_fs_snapshot: Use VSS snapshots

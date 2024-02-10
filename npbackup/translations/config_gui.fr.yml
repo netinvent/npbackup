@@ -6,7 +6,7 @@ fr:
   pre_post: Pré/Post exec
 
 
-  encrypted_data: Donnée Chiffrée
+  encrypted_data: Donnée_Chiffrée
   compression: Compression
   backup_paths: Chemins à sauvegarder
   use_fs_snapshot: Utiliser les instantanés VSS
