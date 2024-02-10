@@ -206,6 +206,7 @@ def config_gui(full_config: dict, config_file: str):
                 window[key].Disabled = True
             else:
                 window[key].Disabled = False
+
         try:
             # Don't bother to update repo name
             # Also permissions / manager_password are in a separate gui
@@ -218,73 +219,72 @@ def config_gui(full_config: dict, config_file: str):
                     try:
                         if value is None or value == "":
                             return
-                        if not str(value).startswith(configuration.ID_STRING):
+                        if isinstance(value, dict):
+                            for k in value.keys():
+                                value[k] = ENCRYPTED_DATA_PLACEHOLDER
+                        elif not str(value).startswith(configuration.ID_STRING):
                             value = ENCRYPTED_DATA_PLACEHOLDER
                     except (KeyError, TypeError):
                         pass
 
             # Update tree objects
-            if key in (
-                "backup_opts.paths",
+            if key == "backup_opts.paths":
+                for val in value:
+                    if pathlib.Path(val).is_dir():
+                        if inherited[val]:
+                            icon = INHERITED_FOLDER_ICON
+                        else:
+                            icon = FOLDER_ICON
+                    else:
+                        if inherited[val]:
+                            icon = INHERITED_FILE_ICON
+                        else:
+                            icon = FILE_ICON
+                    backup_paths_tree.insert('', val, val, val, icon=icon)
+                window['backup_opts.paths'].update(values=backup_paths_tree)
+                return
+            elif key in (
                 "backup_opts.tags",
-                "backup_opts.exclude_patterns",
-                "backup_opts.exclude_files",
                 "backup_opts.pre_exec_commands",
                 "backup_opts.post_exec_commands",
+                "backup_opts.exclude_files",
+                "backup_opts.exclude_patterns",
                 "prometheus.additional_labels",
                 "env.env_variables",
-                "env.encrypted_env_variables"
+                "env.encrypted_env_variables" 
             ):
-                if not isinstance(value, list):
-                    value = [value]
-                if key == "backup_opts.paths":
-                    for val in value:
-                        if pathlib.Path(val).is_dir():
-                            if inherited[val]:
-                                icon = INHERITED_FOLDER_ICON
-                            else:
-                                icon = FOLDER_ICON
+                if key == "backup_opts.tags":
+                    tree = tags_tree
+                if key == "backup_opts.pre_exec_commands":
+                    tree = pre_exec_commands_tree
+                if key == "backup_opts.post_exec_commands":
+                    tree = post_exec_commands_tree
+                if key == "backup_opts.exclude_files":
+                    tree = exclude_files_tree
+                if key == "backup_opts.exclude_patterns":
+                    tree = exclude_patterns_tree
+                if key == "prometheus.additional_labels":
+                    tree = prometheus_labels_tree
+                if key == "env.env_variables":
+                    tree = env_variables_tree
+                if key == "env.encrypted_env_variables":
+                    tree = encrypted_env_variables_tree
+
+                if isinstance(value, dict):
+                    for var_name, var_value in value.items():
+                        if inherited[var_name]:
+                            icon = INHERITED_TREE_ICON
                         else:
-                            if inherited[val]:
-                                icon = INHERITED_FILE_ICON
-                            else:
-                                icon = FILE_ICON
-                        backup_paths_tree.insert('', val, val, val, icon=icon)
-                    window['backup_opts.paths'].update(values=backup_paths_tree)
-                elif key in (
-                    "backup_opts.tags",
-                    "backup_opts.pre_exec_commands",
-                    "backup_opts.post_exec_commands",
-                    "backup_opts.exclude_files",
-                    "backup_opts.exclude_patterns",
-                    "prometheus.additional_labels",
-                    "env.env_variables",
-                    "env.encrypted_env_variables"
-                
-                ):
-                    if key == "backup_opts.tags":
-                        tree = tags_tree
-                    if key == "backup_opts.pre_exec_commands":
-                        tree = pre_exec_commands_tree
-                    if key == "backup_opts.post_exec_commands":
-                        tree = post_exec_commands_tree
-                    if key == "backup_opts.exclude_files":
-                        tree = exclude_files_tree
-                    if key == "backup_opts.exclude_patterns":
-                        tree = exclude_patterns_tree
-                    if key == "prometheus.additional_labels":
-                        tree = prometheus_labels_tree
-                    if key == "env.env_variables":
-                        tree = env_variables_tree
-                    if key == "env.encrypted_env_variables":
-                        tree = encrypted_env_variables_tree
+                            icon = TREE_ICON
+                        tree.insert('', var_name, var_name, var_value, icon=icon)
+                else:
                     for val in value:
                         if inherited[val]:
                             icon = INHERITED_TREE_ICON
                         else:
                             icon = TREE_ICON
                         tree.insert('', val, val, val, icon=icon)
-                    window[key].Update(values=tree)
+                window[key].Update(values=tree)
                 return
                         
             # Update units into separate value and unit combobox
@@ -299,7 +299,7 @@ def config_gui(full_config: dict, config_file: str):
             if isinstance(value, list):
                 value = "\n".join(value)
             
-            if key in combo_boxes.keys():
+            if key in combo_boxes.keys() and value:
                 window[key].Update(value=combo_boxes[key][value])
             else:
                 window[key].Update(value=value)
@@ -332,8 +332,9 @@ def config_gui(full_config: dict, config_file: str):
         base_object = object_config
 
         def _iter_over_config(object_config: dict, root_key=""):
-            # Special case where env is a dict but we should pass it directly as it to update_gui_values
-            if isinstance(object_config, dict):
+            # We need to handle a special case here where env variables are dicts but shouldn't itered over here
+            # but handled in in update_gui_values
+            if isinstance(object_config, dict) and root_key not in ('env.env_variables', 'env.encrypted_env_variables'):
                 for key in object_config.keys():
                     if root_key:
                         _iter_over_config(
@@ -382,6 +383,14 @@ def config_gui(full_config: dict, config_file: str):
 
         # We also need to clear tree objects
         backup_paths_tree = sg.TreeData()
+        tags_tree = sg.TreeData()
+        exclude_patterns_tree = sg.TreeData()
+        exclude_files_tree = sg.TreeData()
+        pre_exec_commands_tree = sg.TreeData()
+        post_exec_commands_tree = sg.TreeData()
+        prometheus_labels_tree = sg.TreeData()
+        env_variables_tree = sg.TreeData()
+        encrypted_env_variables_tree = sg.TreeData()
 
         object_type, object_name = get_object_from_combo(object_name)
 
@@ -423,7 +432,6 @@ def config_gui(full_config: dict, config_file: str):
         Update full_config with keys from GUI
         keys should always have form section.name or section.subsection.name
         """
-        return
         object_type, object_name = get_object_from_combo(values["-OBJECT-SELECT-"])
         if object_type == "repo":
             object_group = full_config.g(f"repos.{object_name}.repo_group")
@@ -431,6 +439,7 @@ def config_gui(full_config: dict, config_file: str):
             object_group = None
         for key, value in values.items():
             # Don't update placeholders ;)
+            # TODO exclude encrypted env vars
             if value == ENCRYPTED_DATA_PLACEHOLDER:
                 continue
             if not isinstance(key, str) or (isinstance(key, str) and not "." in key):
@@ -439,25 +448,21 @@ def config_gui(full_config: dict, config_file: str):
                 continue
 
             # Handle combo boxes first to transform translation into key
-            if key in combo_boxes:
+            if key in combo_boxes.keys():
                 value = get_key_from_value(combo_boxes[key], value)
             # check whether we need to split into list
             elif not isinstance(value, bool) and not isinstance(value, list):
-                result = value.split("\n")
-                if len(result) > 1:
-                    value = result
+                # Try to convert ints and floats before committing
+                if "." in value:
+                    try:
+                        value = float(value)
+                    except ValueError:
+                        pass
                 else:
-                    # Try to convert ints and floats before committing
-                    if "." in value:
-                        try:
-                            value = float(value)
-                        except ValueError:
-                            pass
-                    else:
-                        try:
-                            value = int(value)
-                        except ValueError:
-                            pass
+                    try:
+                        value = int(value)
+                    except ValueError:
+                        pass
 
             active_object_key = f"{object_type}s.{object_name}.{key}"
             current_value = full_config.g(active_object_key)
@@ -469,9 +474,11 @@ def config_gui(full_config: dict, config_file: str):
                     inheritance_key = f"groups.{object_group}.{key}"
                     # If object is a list, check which values are inherited from group and remove them
                     if isinstance(value, list): # WIP # TODO
-                        for entry in full_config.g(inheritance_key):
-                            if entry in value:
-                                value.remove(entry)
+                        inheritance_list = full_config.g(inheritance_key)
+                        if inheritance_list:
+                            for entry in inheritance_list:
+                                if entry in value:
+                                    value.remove(entry)
                     # check if value is inherited from group
                     if full_config.g(inheritance_key) == value:
                         continue
@@ -596,9 +603,9 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Input(visible=False, key="--ADD-PATHS-FILE--", enable_events=True),
-                sg.FilesBrowse(_t("generic.add_files"), target="--ADD-PATHS-FILE--"),
+                sg.FilesBrowse(_t("generic.add_files"), target="--ADD-BACKUP-PATHS-FILE--"),
                 sg.Input(visible=False, key="--ADD-PATHS-FOLDER--", enable_events=True),
-                sg.FolderBrowse(_t("generic.add_folder"), target="--ADD-PATHS-FOLDER--"),
+                sg.FolderBrowse(_t("generic.add_folder"), target="--ADD-BACKUP-PATHS-FOLDER--"),
                 sg.Button(_t("generic.remove_selected"), key="--REMOVE-BACKUP-PATHS--")
             ],
             [
@@ -701,10 +708,11 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Column(
                     [
                         [
-                            sg.Button("+", key="--ADD-EXCLUDE-FILES--", size=(3, 1))
+                            sg.Input(visible=False, key="--ADD-EXCLUDE-FILE--", enable_events=True),
+                            sg.FilesBrowse('+', target="--ADD-EXCLUDE-FILE--", size=(3, 1)),
                         ],
                         [
-                            sg.Button("-", key="--REMOVE-EXCLUDE-FILES--", size=(3, 1))
+                            sg.Button("-", key="--REMOVE-EXCLUDE-FILE--", size=(3, 1))
                         ]
                     ], pad=0,
                 ),
@@ -1328,21 +1336,33 @@ def config_gui(full_config: dict, config_file: str):
             if ask_manager_password(manager_password):
                 full_config = set_permissions(full_config, values["-OBJECT-SELECT-"])
             continue
-        if event in ("--ADD-PATHS-FILE--", '--ADD-PATHS-FOLDER--'):
-            if event == "--ADD-PATHS-FILE--":
-                node = values["--ADD-PATHS-FILE--"]
+        if event in (
+            "--ADD-BACKUP-PATHS-FILE--",
+            '--ADD-BACKUP-PATHS-FOLDER--',
+            '--ADD-EXCLUDE-FILE--',
+            ):
+            if event in ("--ADD-BACKUP-PATHS-FILE--", '--ADD-EXCLUDE-FILE--'):
+                if event == '--ADD-BACKUP-PATHS-FILE--':
+                    key = 'backup_opts.paths'
+                    tree = backup_paths_tree
+                if event == '--ADD-EXCLUDE-FILE--':
+                    key = 'backup_opts.exclude_files'
+                    tree = exclude_files_tree
+                node = values[event]
                 if object_type == "group":
                     icon = INHERITED_FILE_ICON
                 else:
                     icon = FILE_ICON
-            elif event == '--ADD-PATHS-FOLDER--':
-                node = values['--ADD-PATHS-FOLDER--']
+            elif event == '--ADD-BACKUP-PATHS-FOLDER--':
+                key = 'backup_opts.paths'
+                tree = backup_paths_tree
+                node = values[event]
                 if object_type == "group":
                     icon = INHERITED_FOLDER_ICON
                 else:
                     icon = FOLDER_ICON
-            backup_paths_tree.insert('', node, node, node, icon=icon)
-            window['backup_opts.paths'].update(values=backup_paths_tree)
+            tree.insert('', node, node, node, icon=icon)
+            window[key].update(values=tree)
         if event in (
             "--ADD-TAG--",
             "--ADD-EXCLUDE-PATTERN--",
@@ -1351,7 +1371,7 @@ def config_gui(full_config: dict, config_file: str):
             "--ADD-PROMETHEUS-LABEL--",
             "--ADD-ENV-VARIABLE--",
             "--ADD-ENCRYPTED-ENV-VARIABLE--",
-            "--REMOVE-BACKUP-PATHS",
+            "--REMOVE-BACKUP-PATHS--",
             "--REMOVE-TAG--",
             "--REMOVE-EXCLUDE-PATTERN--",
             "--REMOVE-EXCLUDE-FILE--",
@@ -1368,11 +1388,12 @@ def config_gui(full_config: dict, config_file: str):
                 popup_text = _t("config_gui.enter_tag")
                 tree = tags_tree
                 option_key = "backup_opts.tags"
-            elif "EXCLUDE_PATTERN" in event:
+            elif "EXCLUDE-PATTERN" in event:
                 popup_text = _t("config_gui.enter_pattern")
                 tree = exclude_patterns_tree
                 option_key = "backup_opts.exclude_patterns"
             elif "EXCLUDE-FILE" in event:
+                popup_text = None
                 tree = exclude_files_tree
                 option_key = "backup_opts.exclude_files"
             elif "PRE-EXEC-COMMANDS" in event:
