@@ -279,11 +279,19 @@ def config_gui(full_config: dict, config_file: str):
                         tree.insert('', var_name, var_name, var_value, icon=icon)
                 else:
                     for val in value:
-                        if object_type != "group" and inherited[val]:
-                            icon = INHERITED_TREE_ICON
+                        if  isinstance(val, dict):
+                            for var_name, var_value in val.items():
+                                if object_type != "group" and inherited[var_name]:
+                                    icon = INHERITED_TREE_ICON
+                                else:
+                                    icon = TREE_ICON
+                                tree.insert('', var_name, var_name, var_value, icon=icon)
                         else:
-                            icon = TREE_ICON
-                        tree.insert('', val, val, val, icon=icon)
+                            if object_type != "group" and inherited[val]:
+                                icon = INHERITED_TREE_ICON
+                            else:
+                                icon = TREE_ICON
+                            tree.insert('', val, val, val, icon=icon)
                 window[key].Update(values=tree)
                 return
                         
