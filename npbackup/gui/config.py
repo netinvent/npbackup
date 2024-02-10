@@ -272,14 +272,14 @@ def config_gui(full_config: dict, config_file: str):
 
                 if isinstance(value, dict):
                     for var_name, var_value in value.items():
-                        if inherited[var_name]:
+                        if object_type != "group" and inherited[var_name]:
                             icon = INHERITED_TREE_ICON
                         else:
                             icon = TREE_ICON
                         tree.insert('', var_name, var_name, var_value, icon=icon)
                 else:
                     for val in value:
-                        if inherited[val]:
+                        if object_type != "group" and inherited[val]:
                             icon = INHERITED_TREE_ICON
                         else:
                             icon = TREE_ICON
@@ -1396,11 +1396,11 @@ def config_gui(full_config: dict, config_file: str):
                 popup_text = None
                 tree = exclude_files_tree
                 option_key = "backup_opts.exclude_files"
-            elif "PRE-EXEC-COMMANDS" in event:
+            elif "PRE-EXEC-COMMAND" in event:
                 popup_text = _t("config_gui.enter_command")
                 tree = pre_exec_commands_tree
                 option_key = "backup_opts.pre_exec_commands"
-            elif "POST-EXEC-COMMANDS" in event:
+            elif "POST-EXEC-COMMAND" in event:
                 popup_text = _t("config_gui.enter_command")
                 tree = post_exec_commands_tree
                 option_key = "backup_opts.post_exec_commands"
