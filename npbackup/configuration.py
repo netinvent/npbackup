@@ -638,11 +638,22 @@ def load_config(config_file: Path) -> Optional[dict]:
 
     # Make sure we expand every key that should be a list into a list
     # We'll use iter_over_keys instead of replace_in_iterable to avoid chaning list contents by lists
+    # This basically allows "bad" formatted (ie manually written yaml) to be processed correctly
+    # without having to deal with various errors
     def _make_list(key: str, value: Union[str, int, float, dict, list]) -> Any:
-        if key in ("paths", "tags", "env_variables", "encrypted_env_variables"):
+        if key in (
+            "paths",
+            "tags",
+            "exclude_patterns",
+            "exclude_files",
+            "pre_exec_commands",
+            "post_exec_commands",
+            "additional_labels"
+            "env_variables",
+            "encrypted_env_variables"
+            ):
             if not isinstance(value, list):
                 value = [value]
-            pass
         return value
     iter_over_keys(full_config, _make_list)
 
