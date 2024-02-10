@@ -135,8 +135,8 @@ empty_config_dict = {
             "repo_opts": {},
             "prometheus": {},
             "env": {
-                "env_variables": [],
-                "encrypted_env_variables": [],
+                "env_variables": {},
+                "encrypted_env_variables": {},
             },
         },
     },
@@ -201,7 +201,10 @@ empty_config_dict = {
             "backup_job": "${MACHINE_ID}",
             "group": "${MACHINE_GROUP}",
         },
-        "env": {"env_variables": [], "encrypted_env_variables": []},
+        "env": {
+            "env_variables": {},
+            "encrypted_env_variables": {}
+        },
     },
     "identity": {
         "machine_id": "${HOSTNAME}__${RANDOM}[4]",
