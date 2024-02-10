@@ -231,12 +231,12 @@ def config_gui(full_config: dict, config_file: str):
             if key == "backup_opts.paths":
                 for val in value:
                     if pathlib.Path(val).is_dir():
-                        if inherited[val]:
+                        if object_type != "group" and inherited[val]:
                             icon = INHERITED_FOLDER_ICON
                         else:
                             icon = FOLDER_ICON
                     else:
-                        if inherited[val]:
+                        if object_type != "group" and inherited[val]:
                             icon = INHERITED_FILE_ICON
                         else:
                             icon = FILE_ICON
