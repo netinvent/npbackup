@@ -514,10 +514,15 @@ def get_repo_config(
                         _repo_config.s(key, merged_lists)
                         _config_inheritance.s(key, {})
                         for v in merged_lists:
-                            if v in _group_config.g(key):
-                                _config_inheritance.s(f"{key}.{v}", True)
-                            else:
-                                _config_inheritance.s(f"{key}.{v}", False)
+                            _grp_conf = _group_config.g(key)
+                            # Make sure we test inheritance against possible lists
+                            if not isinstance(_grp_conf, list):
+                                _grp_conf = [_grp_conf]
+                            for _grp_conf_item in _grp_conf:
+                                if v in _grp_conf_item:
+                                    _config_inheritance.s(f"{key}.{v}", True)
+                                else:
+                                    _config_inheritance.s(f"{key}.{v}", False)
                     else:
                         # repo_config may or may not already contain data
                         if not _repo_config:
@@ -546,10 +551,15 @@ def get_repo_config(
 
                             _config_inheritance.s(key, {})
                             for v in merged_lists:
-                                if v in _group_config.g(key):
-                                    _config_inheritance.s(f"{key}.{v}", True)
-                                else:
-                                    _config_inheritance.s(f"{key}.{v}", False)
+                                _grp_conf = _group_config.g(key)
+                                # Make sure we test inheritance against possible lists
+                                if not isinstance(_grp_conf, list):
+                                    _grp_conf = [_grp_conf]
+                                for _grp_conf_item in _grp_conf:
+                                    if v in _grp_conf_item:
+                                        _config_inheritance.s(f"{key}.{v}", True)
+                                    else:
+                                        _config_inheritance.s(f"{key}.{v}", False)
                         else:
                             # In other cases, just keep repo confg
                             _config_inheritance.s(key, False)
