@@ -773,7 +773,7 @@ def _main_gui(viewer_mode: bool):
         no_titlebar=False,
         grab_anywhere=False,
         keep_on_top=False,
-        alpha_channel=0.9,
+        alpha_channel=1.0,
         default_button_element_size=(16, 1),
         right_click_menu=right_click_menu,
         finalize=True,
