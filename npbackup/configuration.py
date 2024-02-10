@@ -466,6 +466,7 @@ def get_repo_config(
         """
         iter over group settings, update repo_config, and produce an identical version of repo_config
         called config_inheritance, where every value is replaced with a boolean which states inheritance status
+        When lists are encountered, merge the lists, but product a dict in config_inheritance with list values: inheritance_bool
         """
         _repo_config = deepcopy(repo_config)
         _group_config = deepcopy(group_config)
@@ -489,17 +490,27 @@ def get_repo_config(
                         _repo_config.s(key, __repo_config)
                         _config_inheritance.s(key, __config_inheritance)
                     elif isinstance(value, list):
-                        # TODO: Lists containing dicts won't be updated in repo_config here
-                        # we need to have
-                        # for elt in list:
-                        #     recurse into elt if elt is dict
                         if isinstance(_repo_config.g(key), list):
+                            
                             merged_lists = _repo_config.g(key) + _group_config.g(key)
                         # Case where repo config already contains non list info but group config has list
                         elif _repo_config.g(key):
                             merged_lists = [_repo_config.g(key)] + _group_config.g(key)
                         else:
                             merged_lists = _group_config.g(key)
+                        
+                        # Special case when merged lists contain multiple dicts, we'll need to merge dicts
+                        # unless lists have other object types than dicts
+                        merged_items_dict = {}
+                        can_replace_merged_list = True
+                        for list_elt in merged_lists:
+                            if isinstance(list_elt, dict):
+                                merged_items_dict.update(list_elt)
+                            else:
+                                can_replace_merged_list = False
+                        if can_replace_merged_list:
+                            merged_lists = merged_items_dict
+
                         _repo_config.s(key, merged_lists)
                         _config_inheritance.s(key, {})
                         for v in merged_lists:
@@ -518,7 +529,27 @@ def get_repo_config(
                         # Case where repo_config contains list but group info has single str
                         elif isinstance(_repo_config.g(key), list) and value:
                             merged_lists = _repo_config.g(key) + [value]
+                            
+                            # Special case when merged lists contain multiple dicts, we'll need to merge dicts
+                            # unless lists have other object types than dicts
+                            merged_items_dict = {}
+                            can_replace_merged_list = True
+                            for list_elt in merged_lists:
+                                if isinstance(list_elt, dict):
+                                    merged_items_dict.update(list_elt)
+                                else:
+                                    can_replace_merged_list = False
+                            if can_replace_merged_list:
+                                merged_lists = merged_items_dict
+
                             _repo_config.s(key, merged_lists)
+
+                            _config_inheritance.s(key, {})
+                            for v in merged_lists:
+                                if v in _group_config.g(key):
+                                    _config_inheritance.s(f"{key}.{v}", True)
+                                else:
+                                    _config_inheritance.s(f"{key}.{v}", False)
                         else:
                             # In other cases, just keep repo confg
                             _config_inheritance.s(key, False)
