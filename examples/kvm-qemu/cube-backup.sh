@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Script to create KVM snapshots using libvirt
+# Have npbackup backup the qcow2 file + the xml file of the VM
+# then have the script erase the snapshot
+
 # Script ver 2023112901
 
 #TODO: support modding XML file from offline domains to remove snapshot and replace by backing file after qemu-img commit
