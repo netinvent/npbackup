@@ -6,21 +6,22 @@ fr:
   pre_post: Pré/Post exec
 
 
-  encrypted_data: Donnée Chiffrée
+  encrypted_data: Donnée_Chiffrée
   compression: Compression
   backup_paths: Chemins à sauvegarder
   use_fs_snapshot: Utiliser les instantanés VSS
   ignore_cloud_files: Exclure le fichiers dans le cloud
   windows_only: Windows seulement
   exclude_patterns: Patterns d'exclusion
-  exclude_files: Fichiers contenant des exclusions
+  exclude_files: Fichiers contenant des patterns d'exclusions
+  exclude_files_larger_than: Exclure les fichiers plus grands que
   excludes_case_ignore: Ignorer la casse des exclusions patterns/fichiers
   windows_always: toujours actif pour Windows
   exclude_cache_dirs: Exclure dossiers cache
   one_file_system: Ne pas suivre les points de montage
   minimum_backup_size_error: Taille minimale en dessous de laquelle la sauvegarde est considérée échouée
   pre_exec_commands: Commandes pré-sauvegarde
-  maximum_exec_time: Temps maximal d'execution (secondes)
+  maximum_exec_time: Temps maximal d'execution
   exec_failure_is_fatal: L'échec d'execution est fatal
   post_exec_commands: Commandes post-sauvegarde
   execute_even_on_backup_error: Executer même si la sauvegarde a échouée
@@ -48,15 +49,15 @@ fr:
   metrics_username: Nom d'utilisateur métriques HTTP
   metrics_password: Mot de passe métriques HTTP
   instance: Instance Prometheus
-  additional_labels: Labels supplémentaires
+  additional_labels: Etiquettes supplémentaires
 
   no_config_available: Aucun fichier de configuration trouvé. Merci d'utiliser --config-file "chemin" pour spécifier un fichier, ou copier un fichier de configuration a côté du binaire NPBackup.
   create_new_config: Souhaitez-vous créer une nouvelle configuration ?
   saved_initial_config: Si vous avez enregistré une configuration, vous pouvez à présent recharger le programme.
   bogus_config_file: Fichier de configuration érroné
 
-  encrypted_environment_variables: Variables d'envrionnement chiffrées (ie TOKENS etc)
-  environment_variables: Variables d'environnement
+  encrypted_env_variables: Variables d'envrionnement chiffrées
+  env_variables: Variables d'environnement
   format_equals: Format variable=valeur
 
   no_runner: Impossible de se connecter au backend. Verifier les logs
@@ -129,6 +130,7 @@ fr:
   are_you_sure_to_delete: Êtes-vous sûr de vouloir supprimer le
   repo_already_exists: Dépot déjà existant
   group_already_exists: Groupe déjà existant
+  cannot_remove_group_inherited_settings: Impossible de supprimer une option héritée de groupe. Veuillez supprimer l'option directement dans la configuration de groupe
 
   # permissions
   set_permissions: Régler les permissions
@@ -141,3 +143,10 @@ fr:
   manager_password_too_short: Le mot de passe gestionnaire est trop court
   
   unknown_error_see_logs: Erreur inconnue, merci de vérifier les journaux
+
+  enter_tag: Entrer tag
+  enter_pattern: Entrer pattern
+  enter_command: Entrer command
+  enter_var_name: Entrer le nom de la variable
+  enter_var_value: Entrer sa valeur
+  enter_label: Entrer étiquette

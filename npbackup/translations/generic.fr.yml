@@ -57,6 +57,7 @@ fr:
   select_file: Selection fichier
   name: Nom
   type: Type
+  value: Valeur
 
   bogus_data_given: Données invalides
 

@@ -7,11 +7,12 @@ __intname__ = "npbackup.gui.config"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023121701"
+__build__ = "2024020501"
 
 
-from typing import List
+from typing import List, Union
 import os
+import pathlib
 from logging import getLogger
 import PySimpleGUI as sg
 import textwrap
@@ -20,7 +21,7 @@ import npbackup.configuration as configuration
 from ofunctions.misc import get_key_from_value
 from npbackup.core.i18n_helper import _t
 from npbackup.path_helper import CURRENT_EXECUTABLE
-from npbackup.customization import INHERITANCE_ICON, FILE_ICON, FOLDER_ICON
+from npbackup.customization import INHERITED_ICON, NON_INHERITED_ICON, FILE_ICON, FOLDER_ICON, INHERITED_FILE_ICON, INHERITED_FOLDER_ICON, TREE_ICON, INHERITED_TREE_ICON
 
 if os.name == "nt":
     from npbackup.windows.task import create_scheduled_task
@@ -73,18 +74,18 @@ def config_gui(full_config: dict, config_file: str):
     )
 
     combo_boxes = {
-        "compression": {
+        "backup_opts.compression": {
             "auto": _t("config_gui.auto"),
             "max": _t("config_gui.max"),
             "off": _t("config_gui.off"),
         },
-        "source_type": {
+        "backup_opts.source_type": {
             "folder_list": _t("config_gui.folder_list"),
             "files_from": _t("config_gui.files_from"),
             "files_from_verbatim": _t("config_gui.files_from_verbatim"),
             "files_from_raw": _t("config_gui.files_from_raw"),
         },
-        "priority": {
+        "backup_opts.priority": {
             "low": _t("config_gui.low"),
             "normal": _t("config_gui.normal"),
             "high": _t("config_gui.high"),
@@ -190,11 +191,22 @@ def config_gui(full_config: dict, config_file: str):
         """
         Update gui values depending on their type
         """
+        nonlocal backup_paths_tree
+        nonlocal tags_tree
+        nonlocal exclude_files_tree
+        nonlocal exclude_patterns_tree
+        nonlocal pre_exec_commands_tree
+        nonlocal post_exec_commands_tree
+        nonlocal prometheus_labels_tree
+        nonlocal env_variables_tree
+        nonlocal encrypted_env_variables_tree
+
         if key in ("repo_uri", "repo_group"):
             if object_type == "group":
                 window[key].Disabled = True
             else:
                 window[key].Disabled = False
+
         try:
             # Don't bother to update repo name
             # Also permissions / manager_password are in a separate gui
@@ -207,27 +219,113 @@ def config_gui(full_config: dict, config_file: str):
                     try:
                         if value is None or value == "":
                             return
-                        if not str(value).startswith(configuration.ID_STRING):
+                        if isinstance(value, dict):
+                            for k in value.keys():
+                                value[k] = ENCRYPTED_DATA_PLACEHOLDER
+                        elif not str(value).startswith(configuration.ID_STRING):
                             value = ENCRYPTED_DATA_PLACEHOLDER
                     except (KeyError, TypeError):
                         pass
 
+            # Update tree objects
+            if key == "backup_opts.paths":
+                for val in value:
+                    if pathlib.Path(val).is_dir():
+                        if object_type != "group" and inherited[val]:
+                            icon = INHERITED_FOLDER_ICON
+                        else:
+                            icon = FOLDER_ICON
+                    else:
+                        if object_type != "group" and inherited[val]:
+                            icon = INHERITED_FILE_ICON
+                        else:
+                            icon = FILE_ICON
+                    backup_paths_tree.insert('', val, val, val, icon=icon)
+                window['backup_opts.paths'].update(values=backup_paths_tree)
+                return
+            elif key in (
+                "backup_opts.tags",
+                "backup_opts.pre_exec_commands",
+                "backup_opts.post_exec_commands",
+                "backup_opts.exclude_files",
+                "backup_opts.exclude_patterns",
+                "prometheus.additional_labels",
+                "env.env_variables",
+                "env.encrypted_env_variables" 
+            ):
+                if key == "backup_opts.tags":
+                    tree = tags_tree
+                if key == "backup_opts.pre_exec_commands":
+                    tree = pre_exec_commands_tree
+                if key == "backup_opts.post_exec_commands":
+                    tree = post_exec_commands_tree
+                if key == "backup_opts.exclude_files":
+                    tree = exclude_files_tree
+                if key == "backup_opts.exclude_patterns":
+                    tree = exclude_patterns_tree
+                if key == "prometheus.additional_labels":
+                    tree = prometheus_labels_tree
+                if key == "env.env_variables":
+                    tree = env_variables_tree
+                if key == "env.encrypted_env_variables":
+                    tree = encrypted_env_variables_tree
+
+                if isinstance(value, dict):
+                    for var_name, var_value in value.items():
+                        if object_type != "group" and inherited[var_name]:
+                            icon = INHERITED_TREE_ICON
+                        else:
+                            icon = TREE_ICON
+                        tree.insert('', var_name, var_name, var_value, icon=icon)
+                else:
+                    for val in value:
+                        if  isinstance(val, dict):
+                            for var_name, var_value in val.items():
+                                if object_type != "group" and inherited[var_name]:
+                                    icon = INHERITED_TREE_ICON
+                                else:
+                                    icon = TREE_ICON
+                                tree.insert('', var_name, var_name, var_value, icon=icon)
+                        else:
+                            if object_type != "group" and inherited[val]:
+                                icon = INHERITED_TREE_ICON
+                            else:
+                                icon = TREE_ICON
+                            tree.insert('', val, val, val, icon=icon)
+                window[key].Update(values=tree)
+                return
+                        
+            # Update units into separate value and unit combobox
+            if key in (
+                "backup_opts.minimum_backup_size_error",
+                "backup_opts.exclude_files_larger_than",
+                "repo_opts.upload_speed",
+                "repo_opts.download_speed"):
+                value, unit = value.split(" ")
+                window[f"{key}_unit"].Update(unit)
+
             if isinstance(value, list):
                 value = "\n".join(value)
-            if key in combo_boxes:
-                window[key].Update(combo_boxes[key][value])
+            
+            if key in combo_boxes.keys() and value:
+                window[key].Update(value=combo_boxes[key][value])
             else:
-                window[key].Update(value)
+                window[key].Update(value=value)
 
             # Enable inheritance icon when needed
             inheritance_key = f"inherited.{key}"
             if inheritance_key in window.AllKeysDict:
-                window[inheritance_key].update(visible=inherited)
+                if inherited:
+                    window[inheritance_key].update(INHERITED_ICON)
+                else:
+                    window[inheritance_key].update(NON_INHERITED_ICON)
 
         except KeyError:
             logger.error(f"No GUI equivalent for key {key}.")
+            logger.debug("Trace:", exc_info=True)
         except TypeError as exc:
             logger.error(f"Error: {exc} for key {key}.")
+            logger.debug("Trace:", exc_info=True)
 
     def iter_over_config(
         object_config: dict,
@@ -242,8 +340,9 @@ def config_gui(full_config: dict, config_file: str):
         base_object = object_config
 
         def _iter_over_config(object_config: dict, root_key=""):
-            # Special case where env is a dict but we should pass it directly as it to update_gui_values
-            if isinstance(object_config, dict):
+            # We need to handle a special case here where env variables are dicts but shouldn't itered over here
+            # but handled in in update_gui_values
+            if isinstance(object_config, dict) and root_key not in ('env.env_variables', 'env.encrypted_env_variables'):
                 for key in object_config.keys():
                     if root_key:
                         _iter_over_config(
@@ -267,6 +366,16 @@ def config_gui(full_config: dict, config_file: str):
         _iter_over_config(object_config, root_key)
 
     def update_object_gui(object_name=None, unencrypted=False):
+        nonlocal backup_paths_tree
+        nonlocal tags_tree
+        nonlocal exclude_files_tree
+        nonlocal exclude_patterns_tree
+        nonlocal pre_exec_commands_tree
+        nonlocal post_exec_commands_tree
+        nonlocal prometheus_labels_tree
+        nonlocal env_variables_tree
+        nonlocal encrypted_env_variables_tree
+        
         # Load fist available repo or group if none given
         if not object_name:
             object_name = get_objects()[0]
@@ -279,6 +388,17 @@ def config_gui(full_config: dict, config_file: str):
                     window[key].Update(sg.TreeData())
                 else:
                     window[key]("")
+
+        # We also need to clear tree objects
+        backup_paths_tree = sg.TreeData()
+        tags_tree = sg.TreeData()
+        exclude_patterns_tree = sg.TreeData()
+        exclude_files_tree = sg.TreeData()
+        pre_exec_commands_tree = sg.TreeData()
+        post_exec_commands_tree = sg.TreeData()
+        prometheus_labels_tree = sg.TreeData()
+        env_variables_tree = sg.TreeData()
+        encrypted_env_variables_tree = sg.TreeData()
 
         object_type, object_name = get_object_from_combo(object_name)
 
@@ -327,6 +447,7 @@ def config_gui(full_config: dict, config_file: str):
             object_group = None
         for key, value in values.items():
             # Don't update placeholders ;)
+            # TODO exclude encrypted env vars
             if value == ENCRYPTED_DATA_PLACEHOLDER:
                 continue
             if not isinstance(key, str) or (isinstance(key, str) and not "." in key):
@@ -335,25 +456,21 @@ def config_gui(full_config: dict, config_file: str):
                 continue
 
             # Handle combo boxes first to transform translation into key
-            if key in combo_boxes:
+            if key in combo_boxes.keys():
                 value = get_key_from_value(combo_boxes[key], value)
             # check whether we need to split into list
-            elif not isinstance(value, bool):
-                result = value.split("\n")
-                if len(result) > 1:
-                    value = result
+            elif not isinstance(value, bool) and not isinstance(value, list):
+                # Try to convert ints and floats before committing
+                if "." in value:
+                    try:
+                        value = float(value)
+                    except ValueError:
+                        pass
                 else:
-                    # Try to convert ints and floats before committing
-                    if "." in value:
-                        try:
-                            value = float(value)
-                        except ValueError:
-                            pass
-                    else:
-                        try:
-                            value = int(value)
-                        except ValueError:
-                            pass
+                    try:
+                        value = int(value)
+                    except ValueError:
+                        pass
 
             active_object_key = f"{object_type}s.{object_name}.{key}"
             current_value = full_config.g(active_object_key)
@@ -364,10 +481,12 @@ def config_gui(full_config: dict, config_file: str):
                 if object_group:
                     inheritance_key = f"groups.{object_group}.{key}"
                     # If object is a list, check which values are inherited from group and remove them
-                    if isinstance(value, list):
-                        for entry in full_config.g(inheritance_key):
-                            if entry in value:
-                                value.remove(entry)
+                    if isinstance(value, list): # WIP # TODO
+                        inheritance_list = full_config.g(inheritance_key)
+                        if inheritance_list:
+                            for entry in inheritance_list:
+                                if entry in value:
+                                    value.remove(entry)
                     # check if value is inherited from group
                     if full_config.g(inheritance_key) == value:
                         continue
@@ -457,6 +576,13 @@ def config_gui(full_config: dict, config_file: str):
         window.close()
         full_config.s(f"repos.{object_name}", repo_config)
         return full_config
+    
+    def is_inherited(key: str, values: Union[str, int, float, list]) -> bool:
+        """
+        Checks if value(s) are inherited from group settings
+        """
+        # TODO
+        return False
 
     def object_layout() -> List[list]:
         """
@@ -473,39 +599,43 @@ def config_gui(full_config: dict, config_file: str):
                     size=(None, None), expand_x=True, justification='R'
                 ),
                 sg.Combo(
-                    list(combo_boxes["source_type"].values()),
+                    list(combo_boxes["backup_opts.source_type"].values()),
                     key="backup_opts.source_type",
                     size=(48, 1),
                 ),
             ],
             [
-                sg.Tree(sg.TreeData(), key="inherited.backup_opts.path", headings=[], 
+                sg.Tree(sg.TreeData(), key="backup_opts.paths", headings=[], 
                         col0_heading=_t("generic.paths"),
                         expand_x=True, expand_y=True)
             ],
             [
-                sg.Input(visible=False, key="--PATHS-ADD-FILE--", enable_events=True),
-                sg.FilesBrowse(_t("generic.add_files"), target="--PATHS-ADD-FILE--"),
-                sg.Input(visible=False, key="--PATHS-ADD-FOLDER--", enable_events=True),
-                sg.FolderBrowse(_t("generic.add_folder"), target="--PATHS-ADD-FOLDER--"),
-                sg.Button(_t("generic.remove_selected"), key="--REMOVE-SELECTED-BACKUP-PATHS--")
+                sg.Input(visible=False, key="--ADD-PATHS-FILE--", enable_events=True),
+                sg.FilesBrowse(_t("generic.add_files"), target="--ADD-BACKUP-PATHS-FILE--"),
+                sg.Input(visible=False, key="--ADD-PATHS-FOLDER--", enable_events=True),
+                sg.FolderBrowse(_t("generic.add_folder"), target="--ADD-BACKUP-PATHS-FOLDER--"),
+                sg.Button(_t("generic.remove_selected"), key="--REMOVE-BACKUP-PATHS--")
             ],
             [
                 sg.Column(
                     [
                         [
                             sg.Text(_t("config_gui.compression"), size=(20, None)),
-                            sg.Combo(list(combo_boxes["compression"].values()), key="backup_opts.compression", size=(20, 1)),
-                            sg.pin(sg.Image(INHERITANCE_ICON, key="inherited.backup_opts.compression", tooltip=_t("config_gui.group_inherited"))),
+                            sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.compression", tooltip=_t("config_gui.group_inherited"), pad=1),
+                            sg.Combo(
+                                list(combo_boxes["backup_opts.compression"].values()),
+                                key="backup_opts.compression",
+                                size=(20, 1), pad=0),
                         ],
                         [
                             sg.Text(_t("config_gui.backup_priority"), size=(20, 1)),
+                            sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.priority", tooltip=_t("config_gui.group_inherited"), pad=1),
                             sg.Combo(
-                                list(combo_boxes["priority"].values()),
+                                list(combo_boxes["backup_opts.priority"].values()),
                                 key="backup_opts.priority",
-                                size=(20, 1),
-                            ),
-                            sg.pin(sg.Image(INHERITANCE_ICON, key="inherited.backup_opts.backup_priority", tooltip=_t("config_gui.group_inherited"))),
+                                size=(20, 1), pad=0
+                            )
+                
                         ],
                         [
                             sg.Column([
@@ -518,7 +648,7 @@ def config_gui(full_config: dict, config_file: str):
                             ], pad=0, size=(40, 80)),
                             sg.Column([
                                 [
-                                    sg.Tree(sg.TreeData(), key="inherited.backup_opts.tags", headings=[],
+                                    sg.Tree(sg.TreeData(), key="backup_opts.tags", headings=[],
                                             col0_heading="Tags", col0_width=30, num_rows=3, expand_x=True, expand_y=True)
                                 ]
                             ], pad=0, size=(300, 80))
@@ -531,13 +661,15 @@ def config_gui(full_config: dict, config_file: str):
                             sg.Text(_t("config_gui.minimum_backup_size_error"), size=(40, 2)),
                         ],
                         [
+                            sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.minimum_backup_size_error", tooltip=_t("config_gui.group_inherited"), pad=1),
                             sg.Input(key="backup_opts.minimum_backup_size_error", size=(8, 1)),
-                            sg.Combo(byte_units, default_value="KB", key="bakcup_opts.minimum_backup_size_error_unit")
+                            sg.Combo(byte_units, default_value=byte_units[3], key="backup_opts.minimum_backup_size_error_unit")
                         ],
                         [
+                            sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.fs_snapshot", tooltip=_t("config_gui.group_inherited"), pad=1),
                             sg.Checkbox(textwrap.fill(f'{_t("config_gui.use_fs_snapshot")}', width=34), key="backup_opts.use_fs_snapshot", size=(40, 1), pad=0),
                         ]
-                    ], pad=0
+                    ]
                 )
             ],
             [
@@ -547,7 +679,7 @@ def config_gui(full_config: dict, config_file: str):
                 ),
             ],
             [
-                
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.additional_backup_only_parameters", tooltip=_t("config_gui.group_inherited"), pad=1),
                 sg.Input(
                     key="backup_opts.additional_backup_only_parameters", size=(100, 1)
                 ),
@@ -557,20 +689,13 @@ def config_gui(full_config: dict, config_file: str):
            
         exclusions_col = [
             [
-                sg.Checkbox("", key="backup_opts.ignore_cloud_files", size=(1, 1)),
-                sg.Text(
-                    textwrap.fill(f'{_t("config_gui.ignore_cloud_files")} ({_t("config_gui.windows_only")})', width=34),
-                    size=(34, 2),
-                ),
-            ],
-            [
                 sg.Column(
                     [
                         [
-                            sg.Button("+", key="--ADD-TAG--", size=(3, 1))
+                            sg.Button("+", key="--ADD-EXCLUDE-PATTERN--", size=(3, 1))
                         ],
                         [
-                            sg.Button("-", key="--REMOVE-TAG--", size=(3, 1))
+                            sg.Button("-", key="--REMOVE-EXCLUDE-PATTERN--", size=(3, 1))
                         ]
                     ], pad=0,
                 ),
@@ -579,84 +704,140 @@ def config_gui(full_config: dict, config_file: str):
                         [
                             sg.Tree(sg.TreeData(), key="backup_opts.exclude_patterns", headings=[],
                                 col0_heading=_t('config_gui.exclude_patterns'),
-                                num_rows=3, expand_x=True, expand_y=True)
+                                num_rows=4, expand_x=True, expand_y=True)
                         ]
                     ], pad=0, expand_x=True
                 )
             ],
             [
+                sg.HSeparator()
+            ],
+            [
+                sg.Column(
+                    [
+                        [
+                            sg.Input(visible=False, key="--ADD-EXCLUDE-FILE--", enable_events=True),
+                            sg.FilesBrowse('+', target="--ADD-EXCLUDE-FILE--", size=(3, 1)),
+                        ],
+                        [
+                            sg.Button("-", key="--REMOVE-EXCLUDE-FILE--", size=(3, 1))
+                        ]
+                    ], pad=0,
+                ),
+                sg.Column(
+                    [
+                        [
+                            sg.Tree(sg.TreeData(), key="backup_opts.exclude_files", headings=[],
+                                col0_heading=_t('config_gui.exclude_files'),
+                                num_rows=4, expand_x=True, expand_y=True)
+                        ]
+                    ], pad=0, expand_x=True
+                )
+            ],
+            [
+                sg.HSeparator()
+            ],
+            [
                 sg.Text(
                     _t("config_gui.exclude_files_larger_than"),
-                    size=(40, 2),
+                    size=(40, 1),
                 ),
-                sg.Input(key="backup_opts.exclude_files_larger_than", size=(50, 1)),
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.exclude_files_larger_than", tooltip=_t("config_gui.group_inherited"), pad=1),
+                sg.Input(key="backup_opts.exclude_files_larger_than", size=(8, 1)),
+                sg.Combo(byte_units, default_value=byte_units[3], key="backup_opts.exclude_files_larger_than_unit")
             ],
             [
-                sg.Text(
-                    f"{_t('config_gui.exclude_files')}\n({_t('config_gui.one_per_line')})",
-                    size=(40, 2),
-                ),
-                sg.Multiline(key="backup_opts.exclude_files", size=(48, 4)),
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.ignore_cloud_files", tooltip=_t("config_gui.group_inherited"), pad=1),
+                sg.Checkbox(f'{_t("config_gui.ignore_cloud_files")} ({_t("config_gui.windows_only")})', key="backup_opts.ignore_cloud_files", size=(None, 1)),
             ],
             [
-                sg.Text(
-                    "{}\n({})".format(
-                        _t("config_gui.excludes_case_ignore"),
-                        _t("config_gui.windows_always"),
-                    ),
-                    size=(40, 2),
-                ),
-                sg.Checkbox("", key="backup_opts.excludes_case_ignore", size=(41, 1)),
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.excludes_case_ignore", tooltip=_t("config_gui.group_inherited"), pad=1),
+                sg.Checkbox(f'{_t("config_gui.excludes_case_ignore")} ({_t("config_gui.windows_always")})', key="backup_opts.excludes_case_ignore", size=(None, 1)),
             ],
             [
-                sg.Text(_t("config_gui.exclude_cache_dirs"), size=(40, 1)),
-                sg.Checkbox("", key="backup_opts.exclude_caches", size=(41, 1)),
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.exclude_caches", tooltip=_t("config_gui.group_inherited"), pad=1),
+                sg.Checkbox(_t("config_gui.exclude_cache_dirs"), key="backup_opts.exclude_caches", size=(None, 1)),
             ],
             [
-                sg.Text(_t("config_gui.one_file_system"), size=(40, 1)),
-                sg.Checkbox("", key="backup_opts.one_file_system", size=(41, 1)),
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.one_file_system", tooltip=_t("config_gui.group_inherited"), pad=1),
+                sg.Checkbox(_t("config_gui.one_file_system"), key="backup_opts.one_file_system", size=(None, 1)),
             ],
         ]
 
         pre_post_col = [
+            [
+                sg.Column(
+                    [
                         [
-                sg.Text(
-                    f"{_t('config_gui.pre_exec_commands')}\n({_t('config_gui.one_per_line')})",
-                    size=(40, 2),
+                            sg.Button("+", key="--ADD-PRE-EXEC-COMMAND--", size=(3, 1))
+                        ],
+                        [
+                            sg.Button("-", key="--REMOVE-PRE-EXEC-COMMAND--", size=(3, 1))
+                        ]
+                    ], pad=0,
                 ),
-                sg.Multiline(key="backup_opts.pre_exec_commands", size=(48, 4)),
+                sg.Column(
+                    [
+                        [
+                            sg.Tree(sg.TreeData(), key="backup_opts.pre_exec_commands", headings=[],
+                                col0_heading=_t('config_gui.pre_exec_commands'),
+                                num_rows=4, expand_x=True, expand_y=True)
+                        ]
+                    ], pad=0, expand_x=True
+                )
             ],
             [
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.pre_exec_per_command_timeout", tooltip=_t("config_gui.group_inherited"), pad=1),
                 sg.Text(_t("config_gui.maximum_exec_time"), size=(40, 1)),
-                sg.Input(key="backup_opts.pre_exec_per_command_timeout", size=(50, 1)),
+                sg.Input(key="backup_opts.pre_exec_per_command_timeout", size=(8, 1)),
+                sg.Text(_t("generic.seconds"))
             ],
             [
-                sg.Text(_t("config_gui.exec_failure_is_fatal"), size=(40, 1)),
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.pre_exec_failure_is_fatal", tooltip=_t("config_gui.group_inherited"), pad=1),
                 sg.Checkbox(
-                    "", key="backup_opts.pre_exec_failure_is_fatal", size=(41, 1)
+                    _t("config_gui.exec_failure_is_fatal"), key="backup_opts.pre_exec_failure_is_fatal", size=(41, 1)
                 ),
             ],
             [
-                sg.Text(
-                    f"{_t('config_gui.post_exec_commands')}\n({_t('config_gui.one_per_line')})",
-                    size=(40, 2),
-                ),
-                sg.Multiline(key="backup_opts.post_exec_commands", size=(48, 4)),
+                sg.HorizontalSeparator()
             ],
             [
+                sg.Column(
+                    [
+                        [
+                            sg.Button("+", key="--ADD-POST-EXEC-COMMAND--", size=(3, 1))
+                        ],
+                        [
+                            sg.Button("-", key="--REMOVE-POST-EXEC-COMMAND--", size=(3, 1))
+                        ]
+                    ], pad=0,
+                ),
+                sg.Column(
+                    [
+                        [
+                            sg.Tree(sg.TreeData(), key="backup_opts.post_exec_commands", headings=[],
+                                col0_heading=_t('config_gui.post_exec_commands'),
+                                num_rows=4, expand_x=True, expand_y=True)
+                        ]
+                    ], pad=0, expand_x=True
+                )
+            ],
+            [
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.post_exec_per_command_timeout", tooltip=_t("config_gui.group_inherited"), pad=1),
                 sg.Text(_t("config_gui.maximum_exec_time"), size=(40, 1)),
-                sg.Input(key="backup_opts.post_exec_per_command_timeout", size=(50, 1)),
+                sg.Input(key="backup_opts.post_exec_per_command_timeout", size=(8, 1)),
+                sg.Text(_t("generic.seconds"))
             ],
             [
-                sg.Text(_t("config_gui.exec_failure_is_fatal"), size=(40, 1)),
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.post_exec_failure_is_fatal", tooltip=_t("config_gui.group_inherited"), pad=1),
                 sg.Checkbox(
-                    "", key="backup_opts.post_exec_failure_is_fatal", size=(41, 1)
+                    _t("config_gui.exec_failure_is_fatal"), key="backup_opts.post_exec_failure_is_fatal", size=(41, 1)
                 ),
             ],
             [
-                sg.Text(_t("config_gui.execute_even_on_backup_error"), size=(40, 1)),
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.execute_even_on_backup_error", tooltip=_t("config_gui.group_inherited"), pad=1),
                 sg.Checkbox(
-                    "",
+                    _t("config_gui.execute_even_on_backup_error"),
                     key="backup_opts.post_exec_execute_even_on_backup_error",
                     size=(41, 1),
                 ),
@@ -666,41 +847,49 @@ def config_gui(full_config: dict, config_file: str):
         repo_col = [
             [
                 sg.Text(_t("config_gui.backup_repo_uri"), size=(40, 1)),
-                sg.Input(key="repo_uri", size=(50, 1)),
+            ],
+            [
+                sg.Image(NON_INHERITED_ICON, pad=1),
+                sg.Input(key="repo_uri", size=(95, 1)),
             ],
             [
                 sg.Text(_t("config_gui.backup_repo_password"), size=(40, 1)),
-                sg.Input(key="repo_opts.repo_password", size=(50, 1)),
+            ],
+            [
+                sg.Image(NON_INHERITED_ICON, key="inherited.repo_opts.repo_password", tooltip=_t("config_gui.group_inherited"), pad=1),
+                sg.Input(key="repo_opts.repo_password", size=(95, 1)),
             ],
             [
                 sg.Text(_t("config_gui.backup_repo_password_command"), size=(40, 1)),
-                sg.Input(key="repo_opts.repo_password_command", size=(50, 1)),
+            ],
+            [
+                sg.Image(NON_INHERITED_ICON, key="inherited.repo_opts.repo_password_command", tooltip=_t("config_gui.group_inherited"), pad=1),
+                sg.Input(key="repo_opts.repo_password_command", size=(95, 1)),
             ],
             [sg.Button(_t("config_gui.set_permissions"), key="--SET-PERMISSIONS--")],
             [
                 sg.Text(_t("config_gui.repo_group"), size=(40, 1)),
-                sg.Input(key="repo_group", size=(50, 1)),
+                sg.Combo(values=[], key="repo_group") # TODO
             ],
             [
-                sg.Text(
-                    "{}\n({})".format(
-                        _t("config_gui.minimum_backup_age"), _t("generic.minutes")
-                    ),
-                    size=(40, 2),
+                sg.Text(_t("config_gui.minimum_backup_age"), size=(40, 2),
                 ),
-                sg.Input(key="repo_opts.minimum_backup_age", size=(50, 1)),
+                sg.Input(key="repo_opts.minimum_backup_age", size=(8, 1)),
+                sg.Text(_t("generic.minutes"))
             ],
             [
                 sg.Text(_t("config_gui.upload_speed"), size=(40, 1)),
-                sg.Input(key="repo_opts.upload_speed", size=(50, 1)),
+                sg.Input(key="repo_opts.upload_speed", size=(8, 1)),
+                sg.Combo(byte_units, default_value=byte_units[3], key="repo_opts.upload_speed_unit")
             ],
             [
                 sg.Text(_t("config_gui.download_speed"), size=(40, 1)),
-                sg.Input(key="repo_opts.download_speed", size=(50, 1)),
+                sg.Input(key="repo_opts.download_speed", size=(8, 1)),
+                sg.Combo(byte_units, default_value=byte_units[3], key="repo_opts.download_speed_unit")
             ],
             [
                 sg.Text(_t("config_gui.backend_connections"), size=(40, 1)),
-                sg.Input(key="repo_opts.backend_connections", size=(50, 1)),
+                sg.Input(key="repo_opts.backend_connections", size=(8, 1)),
             ],
             [sg.HorizontalSeparator()],
             [sg.Text(_t("config_gui.retention_policy"))],
@@ -721,14 +910,17 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Column(
                     [
                         [
+                            sg.Image(NON_INHERITED_ICON, key="inherited.repo_opts.retention_strategy.hourly", tooltip=_t("config_gui.group_inherited"), pad=1),
                             sg.Input(key="repo_opts.retention_strategy.hourly", size=(3, 1)),
                             sg.Text(_t("config_gui.hourly"), size=(20, 1)),
                         ],
                         [
+                            sg.Image(NON_INHERITED_ICON, key="inherited.repo_opts.retention_strategy.daily", tooltip=_t("config_gui.group_inherited"), pad=1),
                             sg.Input(key="repo_opts.retention_strategy.daily", size=(3, 1)),
                             sg.Text(_t("config_gui.daily"), size=(20, 1)),
                         ],
                         [
+                            sg.Image(NON_INHERITED_ICON, key="inherited.repo_opts.retention_strategy.weekly", tooltip=_t("config_gui.group_inherited"), pad=1),
                             sg.Input(key="repo_opts.retention_strategy.weekly", size=(3, 1)),
                             sg.Text(_t("config_gui.weekly"), size=(20, 1)),
                         ]
@@ -737,10 +929,12 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Column(
                     [
                         [
+                            sg.Image(NON_INHERITED_ICON, key="inherited.repo_opts.retention_strategy.monthly", tooltip=_t("config_gui.group_inherited"), pad=1),
                             sg.Input(key="repo_opts.retention_strategy.monthly", size=(3, 1)),
                             sg.Text(_t("config_gui.monthly"), size=(20, 1)),
                         ],
                         [
+                            sg.Image(NON_INHERITED_ICON, key="inherited.repo_opts.retention_strategy.yearly", tooltip=_t("config_gui.group_inherited"), pad=1),
                             sg.Input(key="repo_opts.retention_strategy.yearly", size=(3, 1)),
                             sg.Text(_t("config_gui.yearly"), size=(20, 1)),
                         ]
@@ -752,8 +946,7 @@ def config_gui(full_config: dict, config_file: str):
         prometheus_col = [
             [sg.Text(_t("config_gui.available_variables"))],
             [
-                sg.Text(_t("config_gui.enable_prometheus"), size=(40, 1)),
-                sg.Checkbox("", key="prometheus.metrics", size=(41, 1)),
+                sg.Checkbox(_t("config_gui.enable_prometheus"), key="prometheus.metrics", size=(41, 1)),
             ],
             [
                 sg.Text(_t("config_gui.job_name"), size=(40, 1)),
@@ -784,31 +977,82 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Input(key="prometheus.group", size=(50, 1)),
             ],
             [
-                sg.Text(
-                    f"{_t('config_gui.additional_labels')}\n({_t('config_gui.one_per_line')}\n{_t('config_gui.format_equals')})",
-                    size=(40, 3),
+                sg.Column(
+                    [
+                        [
+                            sg.Button("+", key="--ADD-PROMETHEUS-LABEL--", size=(3, 1))
+                        ],
+                        [
+                            sg.Button("-", key="--REMOVE-PROMETHEUS-LABEL--", size=(3, 1))
+                        ]
+                    ], pad=0,
                 ),
-                sg.Multiline(key="prometheus.additional_labels", size=(48, 3)),
+                sg.Column(
+                    [
+                        [
+                            sg.Tree(sg.TreeData(), key="prometheus.additional_labels", headings=[],
+                                col0_heading=_t('config_gui.additional_labels'),
+                                num_rows=4, expand_x=True, expand_y=True)
+                        ]
+                    ], pad=0, expand_x=True
+                )
             ],
         ]
 
         env_col = [
             [
-                sg.Text(
-                    f"{_t('config_gui.env_variables')}\n({_t('config_gui.one_per_line')}\n{_t('config_gui.format_equals')})",
-                    size=(40, 3),
+                sg.Column(
+                    [
+                        [
+                            sg.Button("+", key="--ADD-ENV-VARIABLE--", size=(3, 1))
+                        ],
+                        [
+                            sg.Button("-", key="--REMOVE-ENV-VARIABLE--", size=(3, 1))
+                        ]
+                    ], pad=0,
                 ),
-                sg.Multiline(key="env.env_variables", size=(48, 5)),
+                sg.Column(
+                    [
+                        [
+                            sg.Tree(sg.TreeData(), key="env.env_variables", headings=[_t("generic.value")],
+                                col0_heading=_t('config_gui.env_variables'),
+                                col0_width=1,
+                                auto_size_columns=True,
+                                justification="L",
+                                num_rows=4, expand_x=True, expand_y=True)
+                        ]
+                    ], pad=0, expand_x=True
+                )
             ],
             [
-                sg.Text(
-                    f"{_t('config_gui.encrypted_env_variables')}\n({_t('config_gui.one_per_line')}\n{_t('config_gui.format_equals')})",
-                    size=(40, 3),
+                sg.Column(
+                    [
+                        [
+                            sg.Button("+", key="--ADD-ENCRYPTED-ENV-VARIABLE--", size=(3, 1))
+                        ],
+                        [
+                            sg.Button("-", key="--REMOVE-ENCRYPTED-ENV-VARIABLE--", size=(3, 1))
+                        ]
+                    ], pad=0,
                 ),
-                sg.Multiline(key="env.encrypted_env_variables", size=(48, 5)),
+                sg.Column(
+                    [
+                        [
+                            sg.Tree(sg.TreeData(), key="env.encrypted_env_variables", headings=[_t("generic.value")],
+                                col0_heading=_t('config_gui.encrypted_env_variables'),
+                                col0_width=1,
+                                auto_size_columns=True,
+                                justification="L",
+                                num_rows=4, expand_x=True, expand_y=True)
+                        ]
+                    ], pad=0, expand_x=True
+                )
             ],
             [
                 sg.Text(_t("config_gui.additional_parameters"), size=(40, 1)),
+            ],
+            [
+                sg.Image(NON_INHERITED_ICON, key="inherited.backup_opts.additional_parameters", tooltip=_t("config_gui.group_inherited"), pad=1),
                 sg.Input(key="backup_opts.additional_parameters", size=(50, 1)),
             ],
         ]
@@ -833,7 +1077,6 @@ def config_gui(full_config: dict, config_file: str):
                     backup_col,
                     font="helvetica 16",
                     key="--tab-backup--",
-                    #element_justification="L",
                     expand_x=True,
                     expand_y=True
                 )
@@ -878,7 +1121,7 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Tab(
-                    _t("config_gui.environment_variables"),
+                    _t("config_gui.env_variables"),
                     env_col,
                     font="helvetica 16",
                     key="--tab-env--",
@@ -889,7 +1132,6 @@ def config_gui(full_config: dict, config_file: str):
 
         _layout = [
             [sg.Column(object_selector,
-                       #element_justification="L"
                        )],
             [
                 sg.TabGroup(
@@ -968,7 +1210,6 @@ def config_gui(full_config: dict, config_file: str):
                     identity_col,
                     font="helvetica 16",
                     key="--tab-global-identification--",
-                    #element_justification="L",
                 )
             ],
             [
@@ -977,7 +1218,6 @@ def config_gui(full_config: dict, config_file: str):
                     global_options_col,
                     font="helvetica 16",
                     key="--tab-global-options--",
-                    #element_justification="L",
                 )
             ],
             [
@@ -986,7 +1226,6 @@ def config_gui(full_config: dict, config_file: str):
                     scheduled_task_col,
                     font="helvetica 16",
                     key="--tab-global-scheduled_task--",
-                    #element_justification="L",
                 )
             ],
         ]
@@ -1067,6 +1306,13 @@ def config_gui(full_config: dict, config_file: str):
 
     backup_paths_tree = sg.TreeData()
     tags_tree = sg.TreeData()
+    exclude_patterns_tree = sg.TreeData()
+    exclude_files_tree = sg.TreeData()
+    pre_exec_commands_tree = sg.TreeData()
+    post_exec_commands_tree = sg.TreeData()
+    prometheus_labels_tree = sg.TreeData()
+    env_variables_tree = sg.TreeData()
+    encrypted_env_variables_tree = sg.TreeData()
 
     # Update gui with first default object (repo or group)
     update_object_gui(get_objects()[0], unencrypted=False)
@@ -1074,15 +1320,14 @@ def config_gui(full_config: dict, config_file: str):
 
     while True:
         event, values = window.read()
+        # Get object type for various delete operations
+        object_type, _ = get_object_from_combo(values["-OBJECT-SELECT-"])
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--CANCEL--"):
             break
         if event == "-OBJECT-SELECT-":
-            try:
-                update_config_dict(full_config, values)
-                update_object_gui(values["-OBJECT-SELECT-"], unencrypted=False)
-                update_global_gui(full_config, unencrypted=False)
-            except AttributeError:
-                continue
+            update_config_dict(full_config, values)
+            update_object_gui(values["-OBJECT-SELECT-"], unencrypted=False)
+            update_global_gui(full_config, unencrypted=False)
         if event == "-OBJECT-DELETE-":
             full_config = delete_object(full_config, values["-OBJECT-SELECT-"])
             update_object_selector()
@@ -1099,29 +1344,106 @@ def config_gui(full_config: dict, config_file: str):
             if ask_manager_password(manager_password):
                 full_config = set_permissions(full_config, values["-OBJECT-SELECT-"])
             continue
-        if event in ("--PATHS-ADD-FILE--", '--PATHS-ADD-FOLDER--'):
-            if event == "--PATHS-ADD-FILE--":
-                node = values["--PATHS-ADD-FILE--"]
-                icon = FILE_ICON
-            elif event == '--PATHS-ADD-FOLDER--':
-                node = values['--PATHS-ADD-FOLDER--']
-                icon = FOLDER_ICON
-            backup_paths_tree.insert('', node, node, node, icon=icon)
-            window['inherited.backup_opts.path'].update(values=backup_paths_tree)
-        if event == "--REMOVE-SELECTED-BACKUP-PATHS--":
-            # TODO: prevent removing inherited values
-            for key in values['inherited.backup_opts.path']:
-                backup_paths_tree.delete(key)
-                window['inherited.backup_opts.path'].update(values=backup_paths_tree)
-        if event == "--ADD-TAG--":
-            node = sg.PopupGetText(_t("config_gui.enter_tag"))
-            if node:
-                tags_tree.insert('', node, node, node)
-                window["inherited.backup_opts.tags"].Update(values=tags_tree)
-        if event == "--REMOVE-TAG--":
-            for key in values["inherited.backup_opts.tags"]:
-                tags_tree.delete(key)
-                window["inherited.backup_opts.tags"].Update(values=tags_tree)
+        if event in (
+            "--ADD-BACKUP-PATHS-FILE--",
+            '--ADD-BACKUP-PATHS-FOLDER--',
+            '--ADD-EXCLUDE-FILE--',
+            ):
+            if event in ("--ADD-BACKUP-PATHS-FILE--", '--ADD-EXCLUDE-FILE--'):
+                if event == '--ADD-BACKUP-PATHS-FILE--':
+                    key = 'backup_opts.paths'
+                    tree = backup_paths_tree
+                if event == '--ADD-EXCLUDE-FILE--':
+                    key = 'backup_opts.exclude_files'
+                    tree = exclude_files_tree
+                node = values[event]
+                if object_type == "group":
+                    icon = INHERITED_FILE_ICON
+                else:
+                    icon = FILE_ICON
+            elif event == '--ADD-BACKUP-PATHS-FOLDER--':
+                key = 'backup_opts.paths'
+                tree = backup_paths_tree
+                node = values[event]
+                if object_type == "group":
+                    icon = INHERITED_FOLDER_ICON
+                else:
+                    icon = FOLDER_ICON
+            tree.insert('', node, node, node, icon=icon)
+            window[key].update(values=tree)
+        if event in (
+            "--ADD-TAG--",
+            "--ADD-EXCLUDE-PATTERN--",
+            "--ADD-PRE-EXEC-COMMAND--",
+            "--ADD-POST-EXEC-COMMAND--",
+            "--ADD-PROMETHEUS-LABEL--",
+            "--ADD-ENV-VARIABLE--",
+            "--ADD-ENCRYPTED-ENV-VARIABLE--",
+            "--REMOVE-BACKUP-PATHS--",
+            "--REMOVE-TAG--",
+            "--REMOVE-EXCLUDE-PATTERN--",
+            "--REMOVE-EXCLUDE-FILE--",
+            "--REMOVE-PRE-EXEC-COMMAND--",
+            "--REMOVE-POST-EXEC-COMMAND--",
+            "--REMOVE-PROMETHEUS-LABEL--",
+            "--REMOVE-ENV-VARIABLE--",
+            "--REMOVE-ENCRYPTED-ENV-VARIABLE--"
+        ):
+            if "PATHS" in event:
+                option_key = "backup_opts.paths"
+                tree = backup_paths_tree
+            elif "TAG" in event:
+                popup_text = _t("config_gui.enter_tag")
+                tree = tags_tree
+                option_key = "backup_opts.tags"
+            elif "EXCLUDE-PATTERN" in event:
+                popup_text = _t("config_gui.enter_pattern")
+                tree = exclude_patterns_tree
+                option_key = "backup_opts.exclude_patterns"
+            elif "EXCLUDE-FILE" in event:
+                popup_text = None
+                tree = exclude_files_tree
+                option_key = "backup_opts.exclude_files"
+            elif "PRE-EXEC-COMMAND" in event:
+                popup_text = _t("config_gui.enter_command")
+                tree = pre_exec_commands_tree
+                option_key = "backup_opts.pre_exec_commands"
+            elif "POST-EXEC-COMMAND" in event:
+                popup_text = _t("config_gui.enter_command")
+                tree = post_exec_commands_tree
+                option_key = "backup_opts.post_exec_commands"
+            elif "PROMETHEUS-LABEL" in event:
+                popup_text = _t("config_gui.enter_label")
+                tree = prometheus_labels_tree
+                option_key = "prometheus.additional_labels"
+            elif "ENCRYPTED-ENV-VARIABLE" in event:
+                tree = encrypted_env_variables_tree
+                option_key = "env.encrypted_env_variables"
+            elif "ENV-VARIABLE" in event:
+                tree = env_variables_tree
+                option_key = "env.env_variables"
+
+            if event.startswith("--ADD-"):
+                if object_type == "group":
+                    icon = INHERITED_TREE_ICON
+                else:
+                    icon = TREE_ICON
+                if "ENV-VARIABLE" in event:
+                    var_name = sg.PopupGetText(_t("config_gui.enter_var_name"))
+                    var_value = sg.PopupGetText(_t("config_gui.enter_var_value"))
+                    if var_name and var_value:
+                        tree.insert('', var_name, var_name, var_value, icon=icon)
+                else:
+                    node = sg.PopupGetText(popup_text)
+                    if node:
+                        tree.insert('', node, node, node, icon=icon)
+            if event.startswith("--REMOVE-"):
+                for key in values[option_key]:
+                    if object_type != "group" and tree.tree_dict[key].icon in (INHERITED_TREE_ICON, INHERITED_FILE_ICON, INHERITED_FOLDER_ICON):
+                        sg.PopupError(_t("config_gui.cannot_remove_group_inherited_settings"))
+                        continue
+                    tree.delete(key)
+            window[option_key].Update(values=tree)
         if event == "--ACCEPT--":
             if (
                 not values["repo_opts.repo_password"]

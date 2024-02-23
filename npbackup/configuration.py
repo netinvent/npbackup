@@ -7,11 +7,11 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024010501"
-__version__ = "2.0.0 for npbackup 2.3.0+"
+__build__ = "2024020201"
+__version__ = "2.0.0 for npbackup 3.0.0+"
 
-MIN_CONF_VERSION = 2.3
-MAX_CONF_VERSION = 2.3
+MIN_CONF_VERSION = 3.0
+MAX_CONF_VERSION = 3.0
 
 from typing import Tuple, Optional, List, Any, Union
 import sys
@@ -26,7 +26,7 @@ import re
 import platform
 from cryptidy import symmetric_encryption as enc
 from ofunctions.random import random_string
-from ofunctions.misc import replace_in_iterable
+from ofunctions.misc import replace_in_iterable, BytesConverter, iter_over_keys
 from npbackup.customization import ID_STRING
 
 
@@ -135,8 +135,8 @@ empty_config_dict = {
             "repo_opts": {},
             "prometheus": {},
             "env": {
-                "env_variables": [],
-                "encrypted_env_variables": [],
+                "env_variables": {},
+                "encrypted_env_variables": {},
             },
         },
     },
@@ -180,7 +180,7 @@ empty_config_dict = {
             # Minimum time between two backups, in minutes
             # Set to zero in order to disable time checks
             "minimum_backup_age": 1440,
-            "upload_speed": 1000000,  # in KiB, use 0 for unlimited upload speed
+            "upload_speed": "100Mb",  # Mb(its) or MB(ytes), use 0 for unlimited upload speed
             "download_speed": 0,  # in KiB, use 0 for unlimited download speed
             "backend_connections": 0,  # Fine tune simultaneous connections to backend, use 0 for standard configuration
             "retention_strategy": {
@@ -201,7 +201,10 @@ empty_config_dict = {
             "backup_job": "${MACHINE_ID}",
             "group": "${MACHINE_GROUP}",
         },
-        "env": {"env_variables": [], "encrypted_env_variables": []},
+        "env": {
+            "env_variables": {},
+            "encrypted_env_variables": {}
+        },
     },
     "identity": {
         "machine_id": "${HOSTNAME}__${RANDOM}[4]",
@@ -349,9 +352,10 @@ def has_random_variables(full_config: dict) -> Tuple[bool, dict]:
 def evaluate_variables(repo_config: dict, full_config: dict) -> dict:
     """
     Replace runtime variables with their corresponding value
+    Also replaces human bytes notation with ints
     """
 
-    def _evaluate_variables(value):
+    def _evaluate_variables(key, value):
         if isinstance(value, str):
             if "${MACHINE_ID}" in value:
                 machine_id = full_config.g("identity.machine_id")
@@ -379,9 +383,26 @@ def evaluate_variables(repo_config: dict, full_config: dict) -> dict:
     count = 0
     maxcount = 4 * 2 * 2
     while count < maxcount:
-        repo_config = replace_in_iterable(repo_config, _evaluate_variables)
+        repo_config = replace_in_iterable(repo_config, _evaluate_variables, callable_wants_key=True)
         count += 1
     return repo_config
+
+
+def expand_units(object_config: dict, unexpand: bool = False) -> dict:
+    """
+    Evaluate human bytes notation
+    eg 50 KB to 500000
+    and 500000 to 50 KB in unexpand mode
+    """
+    def _expand_units(key, value):
+        if key in ("minimum_backup_size_error", "exclude_files_larger_than", "upload_speed", "download_speed"):
+            if unexpand:
+                return BytesConverter(value).human_iec_bytes
+            return BytesConverter(value)
+        return value
+
+    return replace_in_iterable(object_config, _expand_units, callable_wants_key=True)
+
 
 
 def extract_permissions_from_full_config(full_config: dict) -> dict:
@@ -448,6 +469,7 @@ def get_repo_config(
         """
         iter over group settings, update repo_config, and produce an identical version of repo_config
         called config_inheritance, where every value is replaced with a boolean which states inheritance status
+        When lists are encountered, merge the lists, but product a dict in config_inheritance with list values: inheritance_bool
         """
         _repo_config = deepcopy(repo_config)
         _group_config = deepcopy(group_config)
@@ -471,19 +493,39 @@ def get_repo_config(
                         _repo_config.s(key, __repo_config)
                         _config_inheritance.s(key, __config_inheritance)
                     elif isinstance(value, list):
-                        # TODO: Lists containing dicts won't be updated in repo_config here
-                        # we need to have
-                        # for elt in list:
-                        #     recurse into elt if elt is dict
                         if isinstance(_repo_config.g(key), list):
+                            
                             merged_lists = _repo_config.g(key) + _group_config.g(key)
                         # Case where repo config already contains non list info but group config has list
                         elif _repo_config.g(key):
                             merged_lists = [_repo_config.g(key)] + _group_config.g(key)
                         else:
                             merged_lists = _group_config.g(key)
+                        
+                        # Special case when merged lists contain multiple dicts, we'll need to merge dicts
+                        # unless lists have other object types than dicts
+                        merged_items_dict = {}
+                        can_replace_merged_list = True
+                        for list_elt in merged_lists:
+                            if isinstance(list_elt, dict):
+                                merged_items_dict.update(list_elt)
+                            else:
+                                can_replace_merged_list = False
+                        if can_replace_merged_list:
+                            merged_lists = merged_items_dict
+
                         _repo_config.s(key, merged_lists)
-                        _config_inheritance.s(key, True)
+                        _config_inheritance.s(key, {})
+                        for v in merged_lists:
+                            _grp_conf = _group_config.g(key)
+                            # Make sure we test inheritance against possible lists
+                            if not isinstance(_grp_conf, list):
+                                _grp_conf = [_grp_conf]
+                            for _grp_conf_item in _grp_conf:
+                                if v in _grp_conf_item:
+                                    _config_inheritance.s(f"{key}.{v}", True)
+                                else:
+                                    _config_inheritance.s(f"{key}.{v}", False)
                     else:
                         # repo_config may or may not already contain data
                         if not _repo_config:
@@ -495,7 +537,32 @@ def get_repo_config(
                         # Case where repo_config contains list but group info has single str
                         elif isinstance(_repo_config.g(key), list) and value:
                             merged_lists = _repo_config.g(key) + [value]
+                            
+                            # Special case when merged lists contain multiple dicts, we'll need to merge dicts
+                            # unless lists have other object types than dicts
+                            merged_items_dict = {}
+                            can_replace_merged_list = True
+                            for list_elt in merged_lists:
+                                if isinstance(list_elt, dict):
+                                    merged_items_dict.update(list_elt)
+                                else:
+                                    can_replace_merged_list = False
+                            if can_replace_merged_list:
+                                merged_lists = merged_items_dict
+
                             _repo_config.s(key, merged_lists)
+
+                            _config_inheritance.s(key, {})
+                            for v in merged_lists:
+                                _grp_conf = _group_config.g(key)
+                                # Make sure we test inheritance against possible lists
+                                if not isinstance(_grp_conf, list):
+                                    _grp_conf = [_grp_conf]
+                                for _grp_conf_item in _grp_conf:
+                                    if v in _grp_conf_item:
+                                        _config_inheritance.s(f"{key}.{v}", True)
+                                    else:
+                                        _config_inheritance.s(f"{key}.{v}", False)
                         else:
                             # In other cases, just keep repo confg
                             _config_inheritance.s(key, False)
@@ -526,6 +593,7 @@ def get_repo_config(
 
     if eval_variables:
         repo_config = evaluate_variables(repo_config, full_config)
+    repo_config = expand_units(repo_config, unexpand=True)
     return repo_config, config_inheritance
 
 
@@ -540,6 +608,7 @@ def get_group_config(
 
     if eval_variables:
         group_config = evaluate_variables(group_config, full_config)
+    group_config = expand_units(group_config, unexpand=True)
     return group_config
 
 
@@ -579,6 +648,27 @@ def load_config(config_file: Path) -> Optional[dict]:
     if not full_config:
         return None
     config_file_is_updated = False
+
+    # Make sure we expand every key that should be a list into a list
+    # We'll use iter_over_keys instead of replace_in_iterable to avoid chaning list contents by lists
+    # This basically allows "bad" formatted (ie manually written yaml) to be processed correctly
+    # without having to deal with various errors
+    def _make_list(key: str, value: Union[str, int, float, dict, list]) -> Any:
+        if key in (
+            "paths",
+            "tags",
+            "exclude_patterns",
+            "exclude_files",
+            "pre_exec_commands",
+            "post_exec_commands",
+            "additional_labels"
+            "env_variables",
+            "encrypted_env_variables"
+            ):
+            if not isinstance(value, list):
+                value = [value]
+        return value
+    iter_over_keys(full_config, _make_list)
 
     # Check if we need to encrypt some variables
     if not is_encrypted(full_config):

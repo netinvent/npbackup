@@ -5,21 +5,22 @@ en:
   exclusions: Exclusions
   pre_post: Pre/Post exec
 
-  encrypted_data: Encrypted Data
+  encrypted_data: Encrypted_Data
   compression: Compression
   backup_paths: Backup paths
   use_fs_snapshot: Use VSS snapshots
   ignore_cloud_files: Ignore in-cloud files
   windows_only: Windows only
   exclude_patterns: Exclude patterns
-  exclude_files: Files containing exclusions
+  exclude_files: Files containing exclude patterns
   excludes_case_ignore: Ignore case for excludes patterns/files
+  exclude_files_larger_than: Exclude files larger than
   windows_always: always enabled for Windows
   exclude_cache_dirs: Exclude cache dirs
   one_file_system: Do not follow mountpoints
   minimum_backup_size_error: Minimum size under which backup is considered failed
   pre_exec_commands: Pre-exec commands
-  maximum_exec_time: Maximum exec time (seconds)
+  maximum_exec_time: Maximum exec time
   exec_failure_is_fatal: Execution failure is fatal
   post_exec_commands: Post-exec commands
   execute_even_on_backup_error: Execute even if backup failed
@@ -54,7 +55,7 @@ en:
   saved_initial_config: If you saved your configuration, you may now reload this program
   bogus_config_file: Bogus configuration file found
 
-  encrypted_env_variables: Encrypted envrionment variables (ie TOKENS etc)
+  encrypted_env_variables: Encrypted envrionment variables
   env_variables: Environment variables
   format_equals: Format variable=value
 
@@ -127,6 +128,7 @@ en:
   are_you_sure_to_delete: Are you sure you want to delete
   repo_already_exists: Repo already exists
   group_already_exists: Group already exists
+  cannot_remove_group_inherited_settings: Cannot remove group inherited settings. Please remove directly in group configuration
 
   # permissions
   set_permissions: Set permissions
@@ -139,3 +141,10 @@ en:
   manager_password_too_short: Manager password is too short
   
   unknown_error_see_logs: Unknown error, please check logs
+
+  enter_tag: Enter tag
+  enter_pattern: Enter pattern
+  enter_command: Enter command
+  enter_var_name: Enter variable name
+  enter_var_value: Enter variable value
+  enter_labvel: Enter label
