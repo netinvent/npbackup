@@ -19,13 +19,13 @@ from npbackup.configuration import IS_PRIV_BUILD
 
 version_string = f"{__intname__} v{__version__}-{'priv' if IS_PRIV_BUILD else 'pub'}-{sys.version_info[0]}.{sys.version_info[1]}-{python_arch()} {__build__} - {__copyright__}"
 version_dict = {
-    'name': __intname__,
-    'version': __version__,
-    'buildtype': "priv" if IS_PRIV_BUILD else "pub",
-    'os': get_os_identifier(),
-    'arch': python_arch(),
-    'pv': sys.version_info,
-    'comp': "__compiled__" in globals(),
-    'build': __build__,
-    'copyright': __copyright__
+    "name": __intname__,
+    "version": __version__,
+    "buildtype": "priv" if IS_PRIV_BUILD else "pub",
+    "os": get_os_identifier(),
+    "arch": python_arch(),
+    "pv": sys.version_info,
+    "comp": "__compiled__" in globals(),
+    "build": __build__,
+    "copyright": __copyright__,
 }

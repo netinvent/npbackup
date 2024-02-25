@@ -223,7 +223,12 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
 
 def ls_window(repo_config: dict, snapshot_id: str) -> bool:
     result = gui_thread_runner(
-        repo_config, "ls", snapshot=snapshot_id, __stdout=False, __autoclose=True, __compact=True
+        repo_config,
+        "ls",
+        snapshot=snapshot_id,
+        __stdout=False,
+        __autoclose=True,
+        __compact=True,
     )
     if not result["result"]:
         sg.Popup("main_gui.snapshot_is_empty")
@@ -397,12 +402,12 @@ def _main_gui(viewer_mode: bool):
     global logger
 
     parser = ArgumentParser(
-    prog=f"{__intname__}",
-    description="""Portable Network Backup Client\n
+        prog=f"{__intname__}",
+        description="""Portable Network Backup Client\n
         This program is distributed under the GNU General Public License and comes with ABSOLUTELY NO WARRANTY.\n
         This is free software, and you are welcome to redistribute it under certain conditions; Please type --license for more info.""",
-            )
-    
+    )
+
     parser.add_argument(
         "-c",
         "--config-file",
@@ -425,7 +430,7 @@ def _main_gui(viewer_mode: bool):
         type=str,
         default=None,
         required=False,
-        help="Optional path for logfile"
+        help="Optional path for logfile",
     )
     args = parser.parse_args()
     if args.log_file:
@@ -602,7 +607,7 @@ def _main_gui(viewer_mode: bool):
         return None, None
 
     def get_config(config_file: str = None, window: sg.Window = None):
-        full_config, config_file = get_config_file(config_file = config_file)
+        full_config, config_file = get_config_file(config_file=config_file)
         if full_config and config_file:
             repo_config, config_inheritance = npbackup.configuration.get_repo_config(
                 full_config
@@ -621,12 +626,12 @@ def _main_gui(viewer_mode: bool):
             if config_file:
                 window.set_title(f"{SHORT_PRODUCT_NAME} - {config_file}")
             if not viewer_mode and config_file:
-                window['--LAUNCH-BACKUP--'].Update(disabled=False)
-                window['--OPERATIONS--'].Update(disabled=False)
-                window['--FORGET--'].Update(disabled=False)
-                window['--CONFIGURE--'].Update(disabled=False)
+                window["--LAUNCH-BACKUP--"].Update(disabled=False)
+                window["--OPERATIONS--"].Update(disabled=False)
+                window["--FORGET--"].Update(disabled=False)
+                window["--CONFIGURE--"].Update(disabled=False)
             if repo_list:
-                window['-active_repo-'].Update(values=repo_list, value=repo_list[0])
+                window["-active_repo-"].Update(values=repo_list, value=repo_list[0])
         return (
             full_config,
             config_file,
@@ -646,7 +651,7 @@ def _main_gui(viewer_mode: bool):
             backend_type,
             repo_uri,
             repo_list,
-        ) = get_config(config_file = config_file)
+        ) = get_config(config_file=config_file)
     else:
         # Let's try to read standard restic repository env variables
         viewer_repo_uri = os.environ.get("RESTIC_REPOSITORY", None)
@@ -681,7 +686,10 @@ def _main_gui(viewer_mode: bool):
                                 [sg.Text(_t("main_gui.viewer_mode"))]
                                 if viewer_mode
                                 else [],
-                                [sg.Text("{} ".format(_t("main_gui.backup_state"))), sg.Text("", key="-backend_type-")],
+                                [
+                                    sg.Text("{} ".format(_t("main_gui.backup_state"))),
+                                    sg.Text("", key="-backend_type-"),
+                                ],
                                 [
                                     sg.Button(
                                         _t("generic.unknown"),
@@ -696,8 +704,15 @@ def _main_gui(viewer_mode: bool):
                         ),
                     ],
                     [
-                        sg.Text(_t("main_gui.no_config"), font=("Arial", 14), text_color="red", key="-NO-CONFIG-", visible=False)
-                    ] if not viewer_mode
+                        sg.Text(
+                            _t("main_gui.no_config"),
+                            font=("Arial", 14),
+                            text_color="red",
+                            key="-NO-CONFIG-",
+                            visible=False,
+                        )
+                    ]
+                    if not viewer_mode
                     else [],
                     [
                         sg.Text(_t("main_gui.backup_list_to")),
@@ -706,7 +721,7 @@ def _main_gui(viewer_mode: bool):
                             key="-active_repo-",
                             default_value=repo_list[0] if repo_list else None,
                             enable_events=True,
-                            size=(20, 1)
+                            size=(20, 1),
                         ),
                     ]
                     if not viewer_mode
@@ -719,7 +734,7 @@ def _main_gui(viewer_mode: bool):
                             justification="left",
                             key="snapshot-list",
                             select_mode="extended",
-                            size=(None, 10)
+                            size=(None, 10),
                         )
                     ],
                     [
@@ -731,23 +746,31 @@ def _main_gui(viewer_mode: bool):
                         sg.Button(
                             _t("main_gui.launch_backup"),
                             key="--LAUNCH-BACKUP--",
-                            disabled=viewer_mode or (not viewer_mode and not config_file),
-                        ),
-                        sg.Button(_t("main_gui.see_content"), key="--SEE-CONTENT--",
-                            disabled=not viewer_mode and not config_file 
+                            disabled=viewer_mode
+                            or (not viewer_mode and not config_file),
                         ),
                         sg.Button(
-                            _t("generic.forget"), key="--FORGET--", disabled=viewer_mode or (not viewer_mode and not config_file)
+                            _t("main_gui.see_content"),
+                            key="--SEE-CONTENT--",
+                            disabled=not viewer_mode and not config_file,
+                        ),
+                        sg.Button(
+                            _t("generic.forget"),
+                            key="--FORGET--",
+                            disabled=viewer_mode
+                            or (not viewer_mode and not config_file),
                         ),  # TODO , visible=False if repo_config.g("permissions") != "full" else True),
                         sg.Button(
                             _t("main_gui.operations"),
                             key="--OPERATIONS--",
-                            disabled=viewer_mode or (not viewer_mode and not config_file),
+                            disabled=viewer_mode
+                            or (not viewer_mode and not config_file),
                         ),
                         sg.Button(
                             _t("generic.configure"),
                             key="--CONFIGURE--",
-                            disabled=viewer_mode or (not viewer_mode and not config_file),
+                            disabled=viewer_mode
+                            or (not viewer_mode and not config_file),
                         ),
                         sg.Button(
                             _t("main_gui.load_config"),
@@ -793,7 +816,7 @@ def _main_gui(viewer_mode: bool):
             backup_tz = None
             snapshot_list = []
         gui_update_state()
-    
+
     while True:
         event, values = window.read(timeout=60000)
 
@@ -856,9 +879,13 @@ def _main_gui(viewer_mode: bool):
             # Make sure we trigger a GUI refresh when configuration is changed
             event = "--STATE-BUTTON--"
         if event == "--OPEN-REPO--":
-            viewer_repo_uri, viewer_repo_password = viewer_repo_gui(viewer_repo_uri, viewer_repo_password)
+            viewer_repo_uri, viewer_repo_password = viewer_repo_gui(
+                viewer_repo_uri, viewer_repo_password
+            )
             if not viewer_repo_uri or not viewer_repo_password:
-                sg.Popup(_t("main_gui.repo_and_password_cannot_be_empty"), keep_on_top=True)
+                sg.Popup(
+                    _t("main_gui.repo_and_password_cannot_be_empty"), keep_on_top=True
+                )
                 continue
             repo_config = viewer_create_repo(viewer_repo_uri, viewer_repo_password)
             event = "--STATE-BUTTON--"

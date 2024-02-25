@@ -48,9 +48,7 @@ def catch_exceptions(fn: Callable):
         except Exception as exc:
             # pylint: disable=E1101 (no-member)
             operation = fn.__name__
-            logger.error(
-                f"Function {operation} failed with: {exc}", level="error"
-            )
+            logger.error(f"Function {operation} failed with: {exc}", level="error")
             logger.error("Trace:", exc_info=True)
             return None
 

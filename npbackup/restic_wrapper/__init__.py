@@ -30,7 +30,8 @@ from npbackup.__env__ import FAST_COMMANDS_TIMEOUT, CHECK_INTERVAL
 logger = getLogger()
 
 
-fn_name = lambda n=0: sys._getframe(n + 1).f_code.co_name # TODO go to ofunctions.misc
+fn_name = lambda n=0: sys._getframe(n + 1).f_code.co_name  # TODO go to ofunctions.misc
+
 
 class ResticRunner:
     def __init__(
@@ -186,7 +187,7 @@ class ResticRunner:
             self._dry_run = value
         else:
             raise ValueError("Bogus dry run value givne")
-        
+
     @property
     def json_output(self) -> bool:
         return self._json_output
@@ -256,8 +257,7 @@ class ResticRunner:
         errors_allowed: bool = False,
         no_output_queues: bool = False,
         timeout: int = None,
-        stdin: sys.stdin = None
-    
+        stdin: sys.stdin = None,
     ) -> Tuple[bool, str]:
         """
         Executes restic with given command
@@ -271,7 +271,7 @@ class ResticRunner:
             else ""
         )
         _cmd = f'"{self._binary}" {additional_parameters}{cmd}{self.generic_arguments}'
-        
+
         self._executor_running = True
         self.write_logs(f"Running command: [{_cmd}]", level="debug")
         self._make_env()
@@ -512,7 +512,9 @@ class ResticRunner:
                 self.is_init = True
                 return True
         else:
-            if re.search(".*already exists|.*already initialized", output, re.IGNORECASE):
+            if re.search(
+                ".*already exists|.*already initialized", output, re.IGNORECASE
+            ):
                 self.write_logs("Repo is already initialized.", level="info")
                 self.is_init = True
                 return True
@@ -528,7 +530,9 @@ class ResticRunner:
         We'll just check if snapshots can be read
         """
         cmd = "snapshots"
-        self._is_init, output = self.executor(cmd, timeout=FAST_COMMANDS_TIMEOUT, errors_allowed=True)
+        self._is_init, output = self.executor(
+            cmd, timeout=FAST_COMMANDS_TIMEOUT, errors_allowed=True
+        )
         if not self._is_init:
             self.write_logs(output, level="error")
         return self._is_init
@@ -558,7 +562,8 @@ class ResticRunner:
                 if fn.__name__ == "backup":
                     if not self.init():
                         self.write_logs(
-                            f"Could not initialize repo for backup operation", level="critical"
+                            f"Could not initialize repo for backup operation",
+                            level="critical",
                         )
                         return None
                 else:
@@ -572,7 +577,7 @@ class ResticRunner:
             return fn(self, *args, **kwargs)
 
         return wrapper
-    
+
     def convert_to_json_output(self, result, output, msg=None, **kwargs):
         """
         result, output = command_runner results
@@ -589,7 +594,7 @@ class ResticRunner:
                 "result": result,
                 "operation": operation,
                 "args": kwargs,
-                "output": None
+                "output": None,
             }
             if result:
                 if output:
@@ -612,7 +617,7 @@ class ResticRunner:
                             try:
                                 js["output"] = json.loads(line)
                             except json.decoder.JSONDecodeError:
-                                js["output"] = {'data': line}
+                                js["output"] = {"data": line}
                 if msg:
                     self.write_logs(msg, level="info")
             else:
@@ -622,7 +627,7 @@ class ResticRunner:
                 else:
                     js["reason"] = output
             return js
-        
+
         if result:
             if msg:
                 self.write_logs(msg, level="info")
@@ -630,7 +635,6 @@ class ResticRunner:
         if msg:
             self.write_logs(msg, level="error")
         return False
-
 
     @check_if_init
     def list(self, subject: str) -> Union[bool, str, dict]:
@@ -650,7 +654,6 @@ class ResticRunner:
             msg = f"Failed to list {subject} objects:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
-
     @check_if_init
     def ls(self, snapshot: str) -> Union[bool, str, dict]:
         """
@@ -660,7 +663,7 @@ class ResticRunner:
         # snapshot db125b40 of [C:\\GIT\\npbackup] filtered by [] at 2023-01-03 09:41:30.9104257 +0100 CET):
         return output.split("\n", 2)[2]
 
-        Using --json here does not return actual json content, but lines with each file being a json... 
+        Using --json here does not return actual json content, but lines with each file being a json...
 
         """
         kwargs = locals()
@@ -674,7 +677,6 @@ class ResticRunner:
             msg = f"Could not list snapshot {snapshot} content:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
-
     #  @check_if_init  # We don't need to run if init before checking snapshots since if init searches for snapshots
     def snapshots(self) -> Union[bool, str, dict]:
         """
@@ -683,7 +685,7 @@ class ResticRunner:
         """
         kwargs = locals()
         kwargs.pop("self")
-        
+
         cmd = "snapshots"
         result, output = self.executor(cmd, timeout=FAST_COMMANDS_TIMEOUT)
         if result:
@@ -770,7 +772,9 @@ class ResticRunner:
             if exclude_caches:
                 cmd += " --exclude-caches"
             if exclude_files_larger_than:
-                exclude_files_larger_than = int(BytesConverter(exclude_files_larger_than).bytes)
+                exclude_files_larger_than = int(
+                    BytesConverter(exclude_files_larger_than).bytes
+                )
                 cmd += f" --exclude-larger-than {exclude_files_larger_than}"
             if one_file_system:
                 cmd += " --one-file-system"
@@ -799,7 +803,8 @@ class ResticRunner:
             result, output = self.executor(cmd)
 
         if (
-            not read_from_stdin and use_fs_snapshot
+            not read_from_stdin
+            and use_fs_snapshot
             and not result
             and re.search("VSS Error", output, re.IGNORECASE)
         ):
@@ -833,9 +838,10 @@ class ResticRunner:
             msg = f"Could not find path {path}:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
-    
     @check_if_init
-    def restore(self, snapshot: str, target: str, includes: List[str] = None) -> Union[bool, str, dict]:
+    def restore(
+        self, snapshot: str, target: str, includes: List[str] = None
+    ) -> Union[bool, str, dict]:
         """
         Restore given snapshot to directory
         """
@@ -857,7 +863,6 @@ class ResticRunner:
         else:
             msg = f"Data not restored:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
-
 
     @check_if_init
     def forget(
@@ -938,7 +943,6 @@ class ResticRunner:
             msg = "Could not prune repository"
         return self.convert_to_json_output(result, output=output, msg=msg, **kwargs)
 
-
     @check_if_init
     def check(self, read_data: bool = True) -> Union[bool, str, dict]:
         """
@@ -954,7 +958,6 @@ class ResticRunner:
         else:
             msg = "Repo check failed"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
-
 
     @check_if_init
     def repair(self, subject: str) -> Union[bool, str, dict]:
@@ -990,7 +993,7 @@ class ResticRunner:
         else:
             msg = f"Repo unlock failed:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
-    
+
     @check_if_init
     def dump(self, path: str) -> Union[bool, str, dict]:
         """
@@ -1088,7 +1091,7 @@ class ResticRunner:
         if not delta:
             if self.json_output:
                 msg = "No delta given"
-                self.convert_to_json_output(False, None, msg=msg **kwargs)
+                self.convert_to_json_output(False, None, msg=msg**kwargs)
             return False, None
         try:
             # Make sure we run with json support for this one

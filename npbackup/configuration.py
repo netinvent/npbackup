@@ -201,10 +201,7 @@ empty_config_dict = {
             "backup_job": "${MACHINE_ID}",
             "group": "${MACHINE_GROUP}",
         },
-        "env": {
-            "env_variables": {},
-            "encrypted_env_variables": {}
-        },
+        "env": {"env_variables": {}, "encrypted_env_variables": {}},
     },
     "identity": {
         "machine_id": "${HOSTNAME}__${RANDOM}[4]",
@@ -383,7 +380,9 @@ def evaluate_variables(repo_config: dict, full_config: dict) -> dict:
     count = 0
     maxcount = 4 * 2 * 2
     while count < maxcount:
-        repo_config = replace_in_iterable(repo_config, _evaluate_variables, callable_wants_key=True)
+        repo_config = replace_in_iterable(
+            repo_config, _evaluate_variables, callable_wants_key=True
+        )
         count += 1
     return repo_config
 
@@ -394,15 +393,20 @@ def expand_units(object_config: dict, unexpand: bool = False) -> dict:
     eg 50 KB to 500000
     and 500000 to 50 KB in unexpand mode
     """
+
     def _expand_units(key, value):
-        if key in ("minimum_backup_size_error", "exclude_files_larger_than", "upload_speed", "download_speed"):
+        if key in (
+            "minimum_backup_size_error",
+            "exclude_files_larger_than",
+            "upload_speed",
+            "download_speed",
+        ):
             if unexpand:
                 return BytesConverter(value).human_iec_bytes
             return BytesConverter(value)
         return value
 
     return replace_in_iterable(object_config, _expand_units, callable_wants_key=True)
-
 
 
 def extract_permissions_from_full_config(full_config: dict) -> dict:
@@ -435,16 +439,28 @@ def inject_permissions_into_full_config(full_config: dict) -> Tuple[bool, dict]:
         repo_uri = full_config.g(f"repos.{repo}.repo_uri")
         manager_password = full_config.g(f"repos.{repo}.manager_password")
         permissions = full_config.g(f"repos.{repo}.permissions")
-        __saved_manager_password = full_config.g(f"repos.{repo}.__saved_manager_password")
+        __saved_manager_password = full_config.g(
+            f"repos.{repo}.__saved_manager_password"
+        )
 
-        if __saved_manager_password and manager_password and __saved_manager_password == manager_password:
+        if (
+            __saved_manager_password
+            and manager_password
+            and __saved_manager_password == manager_password
+        ):
             updated_full_config = True
-            full_config.s(f"repos.{repo}.repo_uri", (repo_uri, permissions, manager_password))
+            full_config.s(
+                f"repos.{repo}.repo_uri", (repo_uri, permissions, manager_password)
+            )
             full_config.s(f"repos.{repo}.is_protected", True)
         else:
-            logger.info(f"Permissions are already set for repo {repo}. Will not update them unless manager password is given")
- 
-        full_config.d(f"repos.{repo}.__saved_manager_password")  # Don't keep decrypted manager password
+            logger.info(
+                f"Permissions are already set for repo {repo}. Will not update them unless manager password is given"
+            )
+
+        full_config.d(
+            f"repos.{repo}.__saved_manager_password"
+        )  # Don't keep decrypted manager password
         full_config.d(f"repos.{repo}.permissions")
         full_config.d(f"repos.{repo}.manager_password")
     return updated_full_config, full_config
@@ -476,7 +492,7 @@ def get_repo_config(
         _group_config = deepcopy(group_config)
         _config_inheritance = deepcopy(repo_config)
         # Make sure we make the initial config inheritance values False
-        _config_inheritance = replace_in_iterable(_config_inheritance, lambda _ : False)
+        _config_inheritance = replace_in_iterable(_config_inheritance, lambda _: False)
 
         def _inherit_group_settings(
             _repo_config: dict, _group_config: dict, _config_inheritance: dict
@@ -497,14 +513,13 @@ def get_repo_config(
                         _config_inheritance.s(key, __config_inheritance)
                     elif isinstance(value, list):
                         if isinstance(_repo_config.g(key), list):
-                            
                             merged_lists = _repo_config.g(key) + value
                         # Case where repo config already contains non list info but group config has list
                         elif _repo_config.g(key):
                             merged_lists = [_repo_config.g(key)] + value
                         else:
                             merged_lists = value
-                        
+
                         # Special case when merged lists contain multiple dicts, we'll need to merge dicts
                         # unless lists have other object types than dicts
                         merged_items_dict = {}
@@ -541,7 +556,7 @@ def get_repo_config(
                         # Case where repo_config contains list but group info has single str
                         elif isinstance(_repo_config.g(key), list) and value:
                             merged_lists = _repo_config.g(key) + [value]
-                            
+
                             # Special case when merged lists contain multiple dicts, we'll need to merge dicts
                             # unless lists have other object types than dicts
                             merged_items_dict = {}
@@ -667,13 +682,13 @@ def load_config(config_file: Path) -> Optional[dict]:
             "exclude_files",
             "pre_exec_commands",
             "post_exec_commands",
-            "additional_labels"
-            "env_variables",
-            "encrypted_env_variables"
-            ):
+            "additional_labels" "env_variables",
+            "encrypted_env_variables",
+        ):
             if not isinstance(value, list):
                 value = [value]
         return value
+
     iter_over_keys(full_config, _make_list)
 
     # Check if we need to encrypt some variables
@@ -759,6 +774,9 @@ def get_repos_by_group(full_config: dict, group: str) -> List[str]:
     repo_list = []
     if full_config:
         for repo in list(full_config.g("repos").keys()):
-            if full_config.g(f"repos.{repo}.repo_group") == group and group not in repo_list:
+            if (
+                full_config.g(f"repos.{repo}.repo_group") == group
+                and group not in repo_list
+            ):
                 repo_list.append(repo)
     return repo_list

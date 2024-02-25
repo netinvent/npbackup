@@ -42,10 +42,7 @@ logger = logging.getLogger()
 
 def json_error_logging(result: bool, msg: str, level: str):
     if _JSON:
-        js = {
-            "result": result,
-            "reason": msg
-        }
+        js = {"result": result, "reason": msg}
         print(json.dumps(js))
     logger.__getattribute__(level)(msg)
 
@@ -151,13 +148,10 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Dump a specific file to stdout"
+        help="Dump a specific file to stdout",
     )
     parser.add_argument(
-        "--stats",
-        action="store_true",
-        help="Get repository statistics"
-
+        "--stats", action="store_true", help="Get repository statistics"
     )
     parser.add_argument(
         "--raw",
@@ -192,15 +186,13 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Run in JSON API mode. Nothing else than JSON will be printed to stdout",
     )
     parser.add_argument(
-        "--stdin",
-        action="store_true",
-        help="Backup using data from stdin input"
+        "--stdin", action="store_true", help="Backup using data from stdin input"
     )
     parser.add_argument(
         "--stdin-filename",
         type=str,
         default=None,
-        help="Alternate filename for stdin, defaults to 'stdin.data'"
+        help="Alternate filename for stdin, defaults to 'stdin.data'",
     )
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Show verbose output"
@@ -230,7 +222,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Optional path for logfile"
+        help="Optional path for logfile",
     )
     args = parser.parse_args()
 
@@ -249,10 +241,7 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     if args.version:
         if _JSON:
-            print(json.dumps({
-                "result": True,
-                "version": version_dict
-            }))
+            print(json.dumps({"result": True, "version": version_dict}))
         else:
             print(version_string)
         sys.exit(0)
@@ -318,7 +307,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["op_args"] = {
             "force": True,
             "read_from_stdin": True,
-            "stdin_filename": args.stdin_filename if args.stdin_filename else None
+            "stdin_filename": args.stdin_filename if args.stdin_filename else None,
         }
     elif args.backup:
         cli_args["operation"] = "backup"
@@ -394,7 +383,9 @@ def main():
         cli_interface()
         sys.exit(logger.get_worst_logger_level())
     except KeyboardInterrupt as exc:
-        json_error_logging(False, f"Program interrupted by keyboard: {exc}", level="error")
+        json_error_logging(
+            False, f"Program interrupted by keyboard: {exc}", level="error"
+        )
         logger.info("Trace:", exc_info=True)
         # EXIT_CODE 200 = keyboard interrupt
         sys.exit(200)

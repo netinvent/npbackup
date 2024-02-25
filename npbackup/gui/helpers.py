@@ -112,7 +112,7 @@ def gui_thread_runner(
     # So we don't always init repo_config, since runner.group_runner would do that itself
     if __repo_config:
         runner.repo_config = __repo_config
-    
+
     fn = getattr(runner, __fn_name)
     logger.debug(
         f"gui_thread_runner runs {fn.__name__} {'with' if USE_THREADING else 'without'} threads"
@@ -194,7 +194,7 @@ def gui_thread_runner(
                 _t("generic.close"),
                 key="--EXIT--",
                 button_color=(TXT_COLOR_LDR, BG_COLOR_LDR),
-                disabled=True
+                disabled=True,
             )
         ],
     ]

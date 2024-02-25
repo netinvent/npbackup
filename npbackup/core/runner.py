@@ -24,7 +24,11 @@ from command_runner import command_runner
 from ofunctions.threading import threaded
 from ofunctions.platform import os_arch
 from ofunctions.misc import BytesConverter
-from npbackup.restic_metrics import restic_str_output_to_json, restic_json_to_prometheus, upload_metrics
+from npbackup.restic_metrics import (
+    restic_str_output_to_json,
+    restic_json_to_prometheus,
+    upload_metrics,
+)
 from npbackup.restic_wrapper import ResticRunner
 from npbackup.core.restic_source_binary import get_restic_internal_binary
 from npbackup.path_helper import CURRENT_DIR, BASEDIR
@@ -41,9 +45,7 @@ def metric_writer(
     backup_too_small = False
     minimum_backup_size_error = repo_config.g("backup_opts.minimum_backup_size_error")
     try:
-        labels = {
-            "npversion": f"{NAME}{VERSION}"
-        }
+        labels = {"npversion": f"{NAME}{VERSION}"}
         if repo_config.g("prometheus.metrics"):
             labels["instance"] = repo_config.g("prometheus.instance")
             labels["backup_job"] = repo_config.g("prometheus.backup_job")
@@ -51,7 +53,7 @@ def metric_writer(
             no_cert_verify = repo_config.g("prometheus.no_cert_verify")
             destination = repo_config.g("prometheus.destination")
             prometheus_additional_labels = repo_config.g("prometheus.additional_labels")
-            
+
             if not isinstance(prometheus_additional_labels, list):
                 prometheus_additional_labels = [prometheus_additional_labels]
 
@@ -78,7 +80,10 @@ def metric_writer(
             restic_result = restic_str_output_to_json(restic_result, result_string)
 
         errors, metrics, backup_too_small = restic_json_to_prometheus(
-            restic_result=restic_result, restic_json=restic_result, labels=labels, minimum_backup_size_error=minimum_backup_size_error
+            restic_result=restic_result,
+            restic_json=restic_result,
+            labels=labels,
+            minimum_backup_size_error=minimum_backup_size_error,
         )
         if errors or not restic_result:
             logger.error("Restic finished with errors.")
@@ -94,9 +99,7 @@ def metric_writer(
                     logger.info("No metrics authentication present.")
                     authentication = None
                 if not dry_run:
-                    upload_metrics(
-                        destination, authentication, no_cert_verify, metrics
-                    )
+                    upload_metrics(destination, authentication, no_cert_verify, metrics)
                 else:
                     logger.info("Not uploading metrics in dry run mode")
             else:
@@ -178,7 +181,6 @@ class NPBackupRunner:
             msg = f"Bogus verbose parameter given: {value}"
             self.write_logs(msg, level="critical", raise_error="ValueError")
         self._verbose = value
-
 
     @property
     def json_output(self):
@@ -279,7 +281,11 @@ class NPBackupRunner:
             result = fn(self, *args, **kwargs)
             self.exec_time = (datetime.utcnow() - start_time).total_seconds()
             # Optional patch result with exec time
-            if self.restic_runner and self.restic_runner.json_output and isinstance(result, dict):
+            if (
+                self.restic_runner
+                and self.restic_runner.json_output
+                and isinstance(result, dict)
+            ):
                 result["exec_time"] = self.exec_time
             # pylint: disable=E1101 (no-member)
             self.write_logs(
@@ -329,7 +335,7 @@ class NPBackupRunner:
                     js = {
                         "result": False,
                         "operation": operation,
-                        "reason": "backend not ready"
+                        "reason": "backend not ready",
                     }
                     return js
                 self.write_logs(
@@ -375,13 +381,13 @@ class NPBackupRunner:
                 else:
                     # pylint: disable=E1101 (no-member)
                     operation = fn.__name__
-                
+
                 current_permissions = self.repo_config.g("permissions")
                 self.write_logs(
                     f"Permissions required are {required_permissions[operation]}, current permissions are {current_permissions}",
                     level="info",
                 )
-                has_permissions = True # TODO: enforce permissions
+                has_permissions = True  # TODO: enforce permissions
                 if not has_permissions:
                     raise PermissionError
             except (IndexError, KeyError, PermissionError):
@@ -390,7 +396,7 @@ class NPBackupRunner:
                     js = {
                         "result": False,
                         "operation": operation,
-                        "reason": "Not enough permissions"
+                        "reason": "Not enough permissions",
                     }
                     return js
                 return False
@@ -481,7 +487,7 @@ class NPBackupRunner:
                     js = {
                         "result": False,
                         "operation": operation,
-                        "reason": f"Exception: {exc}"
+                        "reason": f"Exception: {exc}",
                     }
                     return js
                 return False
@@ -677,8 +683,14 @@ class NPBackupRunner:
         self.restic_runner.stderr = self.stderr
 
         return True
-    
-    def convert_to_json_output(self, result: bool, output: str = None, backend_js: dict = None, warnings: str = None):
+
+    def convert_to_json_output(
+        self,
+        result: bool,
+        output: str = None,
+        backend_js: dict = None,
+        warnings: str = None,
+    ):
         if self.json_output:
             if backend_js:
                 js = backend_js
@@ -696,7 +708,7 @@ class NPBackupRunner:
                 js["reason"] = output
             return js
         return result
-    
+
     ###########################
     # ACTUAL RUNNER FUNCTIONS #
     ###########################
@@ -796,9 +808,7 @@ class NPBackupRunner:
         )
         # Temporarily disable verbose and enable json result
         self.restic_runner.verbose = False
-        data = self.restic_runner.has_recent_snapshot(
-            self.minimum_backup_age
-        )
+        data = self.restic_runner.has_recent_snapshot(self.minimum_backup_age)
         self.restic_runner.verbose = self.verbose
         if self.json_output:
             return data
@@ -835,7 +845,12 @@ class NPBackupRunner:
     @is_ready
     @apply_config_to_restic_runner
     @catch_exceptions
-    def backup(self, force: bool = False, read_from_stdin: bool = False, stdin_filename: str = "stdin.data") -> bool:
+    def backup(
+        self,
+        force: bool = False,
+        read_from_stdin: bool = False,
+        stdin_filename: str = "stdin.data",
+    ) -> bool:
         """
         Run backup after checking if no recent backup exists, unless force == True
         """
@@ -846,7 +861,9 @@ class NPBackupRunner:
         if not read_from_stdin:
             paths = self.repo_config.g("backup_opts.paths")
             if not paths:
-                msg = f"No paths to backup defined for repo {self.repo_config.g('name')}"
+                msg = (
+                    f"No paths to backup defined for repo {self.repo_config.g('name')}"
+                )
                 self.write_logs(msg, level="critical")
                 return self.convert_to_json_output(False, msg)
 
@@ -877,9 +894,11 @@ class NPBackupRunner:
             if not isinstance(exclude_files, list):
                 exclude_files = [exclude_files]
 
-            excludes_case_ignore = self.repo_config.g("backup_opts.excludes_case_ignore")
+            excludes_case_ignore = self.repo_config.g(
+                "backup_opts.excludes_case_ignore"
+            )
             exclude_caches = self.repo_config.g("backup_opts.exclude_caches")
-            
+
             exclude_files_larger_than = self.repo_config.g(
                 "backup_opts.exclude_files_larger_than"
             )
@@ -888,7 +907,7 @@ class NPBackupRunner:
                     BytesConverter(exclude_files_larger_than)
                 except ValueError:
                     warning = f"Bogus unit for exclude_files_larger_than value given: {exclude_files_larger_than}"
-                    self.write_logs( warning, level="warning")
+                    self.write_logs(warning, level="warning")
                     warnings.append(warning)
                     exclude_files_larger_than = None
                     exclude_files_larger_than = None
@@ -934,7 +953,9 @@ class NPBackupRunner:
         self.json_output = False
         # Since we don't want to close queues nor create a subthread, we need to change behavior here
         # pylint: disable=E1123 (unexpected-keyword-arg)
-        has_recent_snapshots, backup_tz = self.has_recent_snapshot(__close_queues=False, __no_threads=True)
+        has_recent_snapshots, backup_tz = self.has_recent_snapshot(
+            __close_queues=False, __no_threads=True
+        )
         self.json_output = json_output
         # We also need to "reapply" the json setting to backend
         self.restic_runner.json_output = json_output
@@ -957,7 +978,10 @@ class NPBackupRunner:
                     level="info",
                 )
         else:
-            self.write_logs(f"Running backup of piped stdin data as name {stdin_filename} to repo {self.repo_config.g('name')}", level="info")
+            self.write_logs(
+                f"Running backup of piped stdin data as name {stdin_filename} to repo {self.repo_config.g('name')}",
+                level="info",
+            )
 
         pre_exec_commands_success = True
         if pre_exec_commands:
@@ -999,16 +1023,21 @@ class NPBackupRunner:
                 read_from_stdin=read_from_stdin,
                 stdin_filename=stdin_filename,
                 tags=tags,
-                additional_backup_only_parameters=additional_backup_only_parameters
+                additional_backup_only_parameters=additional_backup_only_parameters,
             )
 
-        self.write_logs(f"Restic output:\n{self.restic_runner.backup_result_content}", level="debug")
-        
+        self.write_logs(
+            f"Restic output:\n{self.restic_runner.backup_result_content}", level="debug"
+        )
+
         # Extract backup size from result_string
         # Metrics will not be in json format, since we need to diag cloud issues until
         # there is a fix for https://github.com/restic/restic/issues/4155
         backup_too_small = metric_writer(
-            self.repo_config, result, self.restic_runner.backup_result_content, self.restic_runner.dry_run
+            self.repo_config,
+            result,
+            self.restic_runner.backup_result_content,
+            self.restic_runner.dry_run,
         )
         if backup_too_small:
             self.write_logs("Backup is smaller than expected", level="error")
@@ -1034,10 +1063,15 @@ class NPBackupRunner:
                     )
 
         operation_result = (
-            result and pre_exec_commands_success and post_exec_commands_success and not backup_too_small
+            result
+            and pre_exec_commands_success
+            and post_exec_commands_success
+            and not backup_too_small
         )
         msg = f"Operation finished with {'success' if operation_result else 'failure'}"
-        self.write_logs(msg, level="info" if operation_result else "error",
+        self.write_logs(
+            msg,
+            level="info" if operation_result else "error",
         )
         if not operation_result:
             # patch result if json
@@ -1192,7 +1226,9 @@ class NPBackupRunner:
     @apply_config_to_restic_runner
     @catch_exceptions
     def dump(self, path: str) -> bool:
-        self.write_logs(f"Dumping {path} from {self.repo_config.g('name')}", level="info")
+        self.write_logs(
+            f"Dumping {path} from {self.repo_config.g('name')}", level="info"
+        )
         result = self.restic_runner.dump(path)
         return result
 
@@ -1205,9 +1241,11 @@ class NPBackupRunner:
     @apply_config_to_restic_runner
     @catch_exceptions
     def stats(self) -> bool:
-        self.write_logs(f"Getting stats of repo {self.repo_config.g('name')}", level="info")
+        self.write_logs(
+            f"Getting stats of repo {self.repo_config.g('name')}", level="info"
+        )
         result = self.restic_runner.stats()
-        return result 
+        return result
 
     @threaded
     @close_queues
