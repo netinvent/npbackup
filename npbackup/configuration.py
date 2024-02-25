@@ -487,7 +487,7 @@ def get_repo_config(
                     if isinstance(value, dict):
                         __repo_config, __config_inheritance = _inherit_group_settings(
                             _repo_config.g(key),
-                            _group_config.g(key),
+                            value,
                             _config_inheritance.g(key),
                         )
                         _repo_config.s(key, __repo_config)
@@ -495,12 +495,12 @@ def get_repo_config(
                     elif isinstance(value, list):
                         if isinstance(_repo_config.g(key), list):
                             
-                            merged_lists = _repo_config.g(key) + _group_config.g(key)
+                            merged_lists = _repo_config.g(key) + value
                         # Case where repo config already contains non list info but group config has list
                         elif _repo_config.g(key):
-                            merged_lists = [_repo_config.g(key)] + _group_config.g(key)
+                            merged_lists = [_repo_config.g(key)] + value
                         else:
-                            merged_lists = _group_config.g(key)
+                            merged_lists = value
                         
                         # Special case when merged lists contain multiple dicts, we'll need to merge dicts
                         # unless lists have other object types than dicts
@@ -517,7 +517,7 @@ def get_repo_config(
                         _repo_config.s(key, merged_lists)
                         _config_inheritance.s(key, {})
                         for v in merged_lists:
-                            _grp_conf = _group_config.g(key)
+                            _grp_conf = value
                             # Make sure we test inheritance against possible lists
                             if not isinstance(_grp_conf, list):
                                 _grp_conf = [_grp_conf]
@@ -554,7 +554,7 @@ def get_repo_config(
 
                             _config_inheritance.s(key, {})
                             for v in merged_lists:
-                                _grp_conf = _group_config.g(key)
+                                _grp_conf = value
                                 # Make sure we test inheritance against possible lists
                                 if not isinstance(_grp_conf, list):
                                     _grp_conf = [_grp_conf]
@@ -594,6 +594,7 @@ def get_repo_config(
     if eval_variables:
         repo_config = evaluate_variables(repo_config, full_config)
     repo_config = expand_units(repo_config, unexpand=True)
+
     return repo_config, config_inheritance
 
 
