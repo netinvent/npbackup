@@ -8,7 +8,8 @@ ofunctions.threading>=2.2.0
 ofunctions.platform>=1.5.0
 ofunctions.random
 python-pidfile>=3.0.0
-pysimplegui>=4.6.0
+# pysimplegui 5 has gone commercial, let's keep this version for now
+pysimplegui==4.60.5
 requests
 ruamel.yaml
 psutil
