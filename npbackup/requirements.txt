@@ -2,7 +2,7 @@ command_runner>=1.6.0
 cryptidy>=1.2.2
 python-dateutil
 ofunctions.logger_utils>=2.4.1
-ofunctions.misc>=1.6.4
+ofunctions.misc>=1.7.1
 ofunctions.process>=2.0.0
 ofunctions.threading>=2.2.0
 ofunctions.platform>=1.5.0
