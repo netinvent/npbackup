@@ -471,9 +471,12 @@ def get_repo_config(
         called config_inheritance, where every value is replaced with a boolean which states inheritance status
         When lists are encountered, merge the lists, but product a dict in config_inheritance with list values: inheritance_bool
         """
+
         _repo_config = deepcopy(repo_config)
         _group_config = deepcopy(group_config)
         _config_inheritance = deepcopy(repo_config)
+        # Make sure we make the initial config inheritance values False
+        _config_inheritance = replace_in_iterable(_config_inheritance, lambda _ : False)
 
         def _inherit_group_settings(
             _repo_config: dict, _group_config: dict, _config_inheritance: dict
