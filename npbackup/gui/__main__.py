@@ -683,9 +683,11 @@ def _main_gui(viewer_mode: bool):
                         sg.Column(
                             [
                                 [sg.Text(OEM_STRING, font="Arial 14")],
-                                [sg.Text(_t("main_gui.viewer_mode"))]
-                                if viewer_mode
-                                else [],
+                                (
+                                    [sg.Text(_t("main_gui.viewer_mode"))]
+                                    if viewer_mode
+                                    else []
+                                ),
                                 [
                                     sg.Text("{} ".format(_t("main_gui.backup_state"))),
                                     sg.Text("", key="-backend_type-"),
@@ -703,29 +705,33 @@ def _main_gui(viewer_mode: bool):
                             vertical_alignment="top",
                         ),
                     ],
-                    [
-                        sg.Text(
-                            _t("main_gui.no_config"),
-                            font=("Arial", 14),
-                            text_color="red",
-                            key="-NO-CONFIG-",
-                            visible=False,
-                        )
-                    ]
-                    if not viewer_mode
-                    else [],
-                    [
-                        sg.Text(_t("main_gui.backup_list_to")),
-                        sg.Combo(
-                            repo_list,
-                            key="-active_repo-",
-                            default_value=repo_list[0] if repo_list else None,
-                            enable_events=True,
-                            size=(20, 1),
-                        ),
-                    ]
-                    if not viewer_mode
-                    else [],
+                    (
+                        [
+                            sg.Text(
+                                _t("main_gui.no_config"),
+                                font=("Arial", 14),
+                                text_color="red",
+                                key="-NO-CONFIG-",
+                                visible=False,
+                            )
+                        ]
+                        if not viewer_mode
+                        else []
+                    ),
+                    (
+                        [
+                            sg.Text(_t("main_gui.backup_list_to")),
+                            sg.Combo(
+                                repo_list,
+                                key="-active_repo-",
+                                default_value=repo_list[0] if repo_list else None,
+                                enable_events=True,
+                                size=(20, 1),
+                            ),
+                        ]
+                        if not viewer_mode
+                        else []
+                    ),
                     [
                         sg.Table(
                             values=[[]],

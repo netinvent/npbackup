@@ -570,7 +570,7 @@ class ResticRunner:
                 else:
                     # pylint: disable=E1101 (no-member)
                     self.write_logs(
-                        f"Backend is not ready to perform operation {fn.__name__}", # pylint: disable=E1101 (no-member)
+                        f"Backend is not ready to perform operation {fn.__name__}",  # pylint: disable=E1101 (no-member)
                         level="error",
                     )
                     return None
