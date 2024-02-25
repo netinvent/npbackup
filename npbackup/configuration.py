@@ -525,8 +525,9 @@ def get_repo_config(
                             if not isinstance(_grp_conf, list):
                                 _grp_conf = [_grp_conf]
                             for _grp_conf_item in _grp_conf:
-                                if v in _grp_conf_item:
+                                if v == _grp_conf_item:
                                     _config_inheritance.s(f"{key}.{v}", True)
+                                    break
                                 else:
                                     _config_inheritance.s(f"{key}.{v}", False)
                     else:
@@ -562,8 +563,9 @@ def get_repo_config(
                                 if not isinstance(_grp_conf, list):
                                     _grp_conf = [_grp_conf]
                                 for _grp_conf_item in _grp_conf:
-                                    if v in _grp_conf_item:
+                                    if v == _grp_conf_item:
                                         _config_inheritance.s(f"{key}.{v}", True)
+                                        break
                                     else:
                                         _config_inheritance.s(f"{key}.{v}", False)
                         else:
