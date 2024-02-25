@@ -559,6 +559,7 @@ class ResticRunner:
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
             if not self.is_init:
+                # pylint: disable=E1101 (no-member)
                 if fn.__name__ == "backup":
                     if not self.init():
                         self.write_logs(
@@ -569,7 +570,7 @@ class ResticRunner:
                 else:
                     # pylint: disable=E1101 (no-member)
                     self.write_logs(
-                        f"Backend is not ready to perform operation {fn.__name__}",
+                        f"Backend is not ready to perform operation {fn.__name__}", # pylint: disable=E1101 (no-member)
                         level="error",
                     )
                     return None
