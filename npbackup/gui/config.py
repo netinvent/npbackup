@@ -593,7 +593,6 @@ def config_gui(full_config: dict, config_file: str):
         full_config.s(f"repos.{object_name}", repo_config)
         return full_config
 
-
     def object_layout() -> List[list]:
         """
         Returns the GUI layout depending on the object type
