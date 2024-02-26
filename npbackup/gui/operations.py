@@ -60,15 +60,18 @@ def operations_gui(full_config: dict) -> dict:
                     auto_size_columns=True,
                     justification="left",
                     expand_x=True,
-                    expand_y=True
+                    expand_y=True,
                 )
             ],
             [
                 sg.Push(),
                 sg.Button(_t("generic.cancel"), key="--CANCEL--"),
-                sg.Button(_t("operations_gui.apply_to_selected_groups"), key="--SELECTED_GROUPS--"),
-                sg.Button(_t("operations_gui.apply_to_all"), key="--APPLY_TO_ALL--")
-            ]
+                sg.Button(
+                    _t("operations_gui.apply_to_selected_groups"),
+                    key="--SELECTED_GROUPS--",
+                ),
+                sg.Button(_t("operations_gui.apply_to_all"), key="--APPLY_TO_ALL--"),
+            ],
         ]
 
         select_group_window = sg.Window("Group", selector_layout)
@@ -84,15 +87,15 @@ def operations_gui(full_config: dict) -> dict:
                 repo_list = []
                 for group_index in values["-GROUP_LIST-"]:
                     group_name = group_list[group_index]
-                    print(group_name, configuration.get_repos_by_group(full_config, group_name))
-                    repo_list += configuration.get_repos_by_group(full_config, group_name)
+                    repo_list += configuration.get_repos_by_group(
+                        full_config, group_name
+                    )
                 result = repo_list
                 break
             if event == "--APPLY_TO_ALL--":
                 result = complete_repo_list
                 break
         select_group_window.close()
-        print(result)
         return result
 
     # This is a stupid hack to make sure uri column is large enough
@@ -225,7 +228,7 @@ def operations_gui(full_config: dict) -> dict:
             "--FORGET--",
             "--STANDARD-PRUNE--",
             "--MAX-PRUNE--",
-            "--STATS--"
+            "--STATS--",
         ):
             if not values["repo-list"]:
                 repos = _select_groups()
