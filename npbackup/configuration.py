@@ -181,7 +181,7 @@ empty_config_dict = {
             # Set to zero in order to disable time checks
             "minimum_backup_age": 1440,
             "upload_speed": "100Mb",  # Mb(its) or MB(ytes), use 0 for unlimited upload speed
-            "download_speed": 0,  # in KiB, use 0 for unlimited download speed
+            "download_speed": "0 MB",  # in KiB, use 0 for unlimited download speed
             "backend_connections": 0,  # Fine tune simultaneous connections to backend, use 0 for standard configuration
             "retention_strategy": {
                 "last": 0,
@@ -401,9 +401,14 @@ def expand_units(object_config: dict, unexpand: bool = False) -> dict:
             "upload_speed",
             "download_speed",
         ):
-            if unexpand:
-                return BytesConverter(value).human_iec_bytes
-            return BytesConverter(value)
+            if value:
+                if unexpand:
+                    return BytesConverter(value).human_iec_bytes
+                return BytesConverter(value)
+            else:
+                if unexpand:
+                    return BytesConverter(0).human_iec_bytes
+                return BytesConverter(0)
         return value
 
     return replace_in_iterable(object_config, _expand_units, callable_wants_key=True)
@@ -648,7 +653,7 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
                 conf_version = float(full_config.g("conf_version"))
                 if conf_version < MIN_CONF_VERSION or conf_version > MAX_CONF_VERSION:
                     logger.critical(
-                        f"Config file version {conf_version} is not required version min={MIN_CONF_VERSION}, max={MAX_CONF_VERSION}"
+                        f"Config file version {conf_version} is not in required version range min={MIN_CONF_VERSION}, max={MAX_CONF_VERSION}"
                     )
                     return False
             except (AttributeError, TypeError):
