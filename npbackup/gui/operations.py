@@ -93,7 +93,9 @@ def operations_gui(full_config: dict) -> dict:
                 result = repo_list
                 break
             if event == "--APPLY_TO_ALL--":
-                result = complete_repo_list
+                result = []
+                for value in complete_repo_list:
+                    result.append(value[0])
                 break
         select_group_window.close()
         return result
@@ -281,7 +283,7 @@ def operations_gui(full_config: dict) -> dict:
                 operation = "stats"
                 op_args = {}
                 gui_msg = _t("operations_gui.stats")
-            result = gui_thread_runner(
+            gui_thread_runner(
                 None,
                 "group_runner",
                 operation=operation,
