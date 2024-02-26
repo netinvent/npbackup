@@ -10,7 +10,7 @@ __license__ = "GPL-3.0-only"
 __build__ = "2024020501"
 
 
-from typing import List, Union
+from typing import List, Union, Tuple
 import os
 import pathlib
 from logging import getLogger
@@ -183,7 +183,7 @@ def config_gui(full_config: dict, config_file: str):
         window["-OBJECT-SELECT-"].Update(objects)
         window["-OBJECT-SELECT-"].Update(value=objects[0])
 
-    def get_object_from_combo(combo_value: str) -> (str, str):
+    def get_object_from_combo(combo_value: str) -> Tuple[str, str]:
         """
         Extracts selected object from combobox
         Returns object type and name
@@ -593,12 +593,6 @@ def config_gui(full_config: dict, config_file: str):
         full_config.s(f"repos.{object_name}", repo_config)
         return full_config
 
-    def is_inherited(key: str, values: Union[str, int, float, list]) -> bool:
-        """
-        Checks if value(s) are inherited from group settings
-        """
-        # TODO
-        return False
 
     def object_layout() -> List[list]:
         """
