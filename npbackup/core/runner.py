@@ -722,13 +722,13 @@ class NPBackupRunner:
     # but @catch_exceptions should come last, since we aren't supposed to have errors in decorators
 
     @threaded
+    @catch_exceptions
     @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @catch_exceptions
     def snapshots(self) -> Optional[dict]:
         self.write_logs(
             f"Listing snapshots of repo {self.repo_config.g('name')}", level="info"
@@ -737,13 +737,13 @@ class NPBackupRunner:
         return snapshots
 
     @threaded
+    @catch_exceptions
     @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @catch_exceptions
     def list(self, subject: str) -> Optional[dict]:
         self.write_logs(
             f"Listing {subject} objects of repo {self.repo_config.g('name')}",
@@ -752,13 +752,13 @@ class NPBackupRunner:
         return self.restic_runner.list(subject)
 
     @threaded
+    @catch_exceptions
     @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @catch_exceptions
     def find(self, path: str) -> bool:
         self.write_logs(
             f"Searching for path {path} in repo {self.repo_config.g('name')}",
@@ -770,13 +770,13 @@ class NPBackupRunner:
         return self.convert_to_json_output(result, None)
 
     @threaded
+    @catch_exceptions
     @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @catch_exceptions
     def ls(self, snapshot: str) -> Optional[dict]:
         self.write_logs(
             f"Showing content of snapshot {snapshot} in repo {self.repo_config.g('name')}",
@@ -786,13 +786,13 @@ class NPBackupRunner:
         return result
 
     @threaded
+    @catch_exceptions
     @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @catch_exceptions
     def has_recent_snapshot(self) -> bool:
         """
         Checks for backups in timespan
@@ -838,13 +838,13 @@ class NPBackupRunner:
         return result, backup_tz
 
     @threaded
+    @catch_exceptions
     @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @catch_exceptions
     def backup(
         self,
         force: bool = False,
@@ -1082,13 +1082,13 @@ class NPBackupRunner:
         return self.convert_to_json_output(result, msg)
 
     @threaded
+    @catch_exceptions
     @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @catch_exceptions
     def restore(self, snapshot: str, target: str, restore_includes: List[str]) -> bool:
         self.write_logs(f"Launching restore to {target}", level="info")
         result = self.restic_runner.restore(
@@ -1099,13 +1099,13 @@ class NPBackupRunner:
         return result
 
     @threaded
+    @catch_exceptions
     @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @catch_exceptions
     def forget(
         self, snapshots: Optional[Union[List[str], str]] = None, use_policy: bool = None
     ) -> bool:
@@ -1146,13 +1146,13 @@ class NPBackupRunner:
         return self.convert_to_json_output(result)
 
     @threaded
+    @catch_exceptions
     @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @catch_exceptions
     def check(self, read_data: bool = True) -> bool:
         if read_data:
             self.write_logs(
@@ -1168,13 +1168,13 @@ class NPBackupRunner:
         return result
 
     @threaded
+    @catch_exceptions
     @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @catch_exceptions
     def prune(self, max: bool = False) -> bool:
         self.write_logs(
             f"Pruning snapshots for repo {self.repo_config.g('name')}", level="info"
@@ -1190,13 +1190,13 @@ class NPBackupRunner:
         return result
 
     @threaded
+    @catch_exceptions
     @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @catch_exceptions
     def repair(self, subject: str) -> bool:
         self.write_logs(
             f"Repairing {subject} in repo {self.repo_config.g('name')}", level="info"
@@ -1205,26 +1205,26 @@ class NPBackupRunner:
         return result
 
     @threaded
+    @catch_exceptions
     @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @catch_exceptions
     def unlock(self) -> bool:
         self.write_logs(f"Unlocking repo {self.repo_config.g('name')}", level="info")
         result = self.restic_runner.unlock()
         return result
 
     @threaded
+    @catch_exceptions
     @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @catch_exceptions
     def dump(self, path: str) -> bool:
         self.write_logs(
             f"Dumping {path} from {self.repo_config.g('name')}", level="info"
@@ -1233,13 +1233,13 @@ class NPBackupRunner:
         return result
 
     @threaded
+    @catch_exceptions
     @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @catch_exceptions
     def stats(self) -> bool:
         self.write_logs(
             f"Getting stats of repo {self.repo_config.g('name')}", level="info"
@@ -1248,23 +1248,22 @@ class NPBackupRunner:
         return result
 
     @threaded
+    @catch_exceptions
     @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    @catch_exceptions
     def raw(self, command: str) -> bool:
         self.write_logs(f"Running raw command: {command}", level="info")
         result = self.restic_runner.raw(command=command)
         return result
 
     @threaded
+    @catch_exceptions
     @close_queues
     @exec_timer
-    @has_permission
-    @catch_exceptions
     def group_runner(self, repo_config_list: List, operation: str, **kwargs) -> bool:
         group_result = True
 
