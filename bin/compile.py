@@ -29,7 +29,7 @@ from command_runner import command_runner
 from ofunctions.platform import python_arch, get_os
 
 AUDIENCES = ["public", "private"]
-BUILD_TYPES = ["cli", "gui"]
+BUILD_TYPES = ["cli", "gui", "viewer"]
 
 # Insert parent dir as path se we get to use npbackup as package
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
@@ -41,11 +41,14 @@ from npbackup.customization import (
     PRODUCT_NAME,
     FILE_DESCRIPTION,
     COPYRIGHT,
-    LICENSE_FILE,
 )
 from npbackup.core.restic_source_binary import get_restic_internal_binary
 from npbackup.path_helper import BASEDIR
 import glob
+
+
+LICENSE_FILE = os.path.join(BASEDIR, os.pardir, 'LICENSE')
+print(LICENSE_FILE)
 
 del sys.path[0]
 
@@ -251,7 +254,7 @@ def compile(arch: str, audience: str, build_type: str):
     excludes_dir_source = os.path.join(BASEDIR, os.pardir, excludes_dir)
     excludes_dir_dest = excludes_dir
 
-    NUITKA_OPTIONS = ""
+    NUITKA_OPTIONS = " --clang"
     NUITKA_OPTIONS += " --enable-plugin=data-hiding" if have_nuitka_commercial() else ""
 
     # Stupid fix for synology RS816 where /tmp is mounted with `noexec`.
@@ -367,7 +370,7 @@ if __name__ == "__main__":
         dest="build_type",
         default=None,
         required=False,
-        help="Build CLI or GUI target"
+        help="Build cli, gui or viewer target"
     )
 
     args = parser.parse_args()
@@ -394,7 +397,7 @@ if __name__ == "__main__":
 
         for audience in audiences:
             move_audience_files(audience)
-            npbackup_version = get_metadata(os.path.join(BASEDIR, "__main__.py"))[
+            npbackup_version = get_metadata(os.path.join(BASEDIR, "__version__.py"))[
                 "version"
             ]
             installer_version = get_metadata(
