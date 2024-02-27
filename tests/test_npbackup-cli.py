@@ -5,7 +5,7 @@
 __intname__ = "npbackup_cli_tests"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
-__licence__ = "BSD-3-Clause"
+__license__ = "BSD-3-Clause"
 __build__ = "2024011501"
 __compat__ = "python3.6+"
 
@@ -62,6 +62,16 @@ def test_npbackup_cli_snapshots():
     try:
         with RedirectedStdout() as logs:
             __main__.main()
+    except SystemExit:
+        print(logs)
+
+
+def test_npbackup_cli_create_backup():
+    sys.argv = ['', '-c' 'npbackup-cli-test.conf', '-b']
+    try:
+        with RedirectedStdout() as logs:
+            e = __main__.main()
+            print(e)
     except SystemExit:
         print(logs)
 
