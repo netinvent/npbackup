@@ -662,6 +662,8 @@ def _main_gui(viewer_mode: bool):
             repo_config = None
         config_file = None
         full_config = None
+        backend_type = None
+        
 
     right_click_menu = ["", [_t("generic.destination")]]
     headings = [
