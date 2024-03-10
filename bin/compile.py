@@ -48,7 +48,6 @@ import glob
 
 
 LICENSE_FILE = os.path.join(BASEDIR, os.pardir, 'LICENSE')
-print(LICENSE_FILE)
 
 del sys.path[0]
 
@@ -254,18 +253,21 @@ def compile(arch: str, audience: str, build_type: str):
     excludes_dir_source = os.path.join(BASEDIR, os.pardir, excludes_dir)
     excludes_dir_dest = excludes_dir
 
-    NUITKA_OPTIONS = " --clang"
+    #NUITKA_OPTIONS = " --clang"
+    NUITKA_OPTIONS = ""
     NUITKA_OPTIONS += " --enable-plugin=data-hiding" if have_nuitka_commercial() else ""
 
     # Stupid fix for synology RS816 where /tmp is mounted with `noexec`.
     if "arm" in arch:
         NUITKA_OPTIONS += " --onefile-tempdir-spec=/var/tmp"
 
-    if build_type == "gui":
+    if build_type in ("gui", "viewer"):
         NUITKA_OPTIONS += " --plugin-enable=tk-inter --disable-console"
     else:
         NUITKA_OPTIONS += " --plugin-disable=tk-inter --nofollow-import-to=PySimpleGUI --nofollow-import-to=_tkinter --nofollow-import-to=npbackup.gui"
-        
+
+    if build_type == "gui":
+        NUITKA_OPTIONS +" --nofollow-import-to=npbackup.gui.config --nofollow-import-to=npbackup.__main__"
     if os.name != "nt":
         NUITKA_OPTIONS += " --nofollow-import-to=npbackup.windows"
 
