@@ -692,7 +692,7 @@ class ResticRunner:
         if result:
             msg = "Snapshots listed successfully"
         else:
-            msg = f"Could not list snapshots:n{output}"
+            msg = f"Could not list snapshots:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
     @check_if_init

@@ -209,6 +209,11 @@ signer = SignTool()
 signer.sign(r"c:\path\to\executable", bitness=64)
 ```
 
+Or as singleliner to use in scripts:
+```
+python.exe -c "from windows_tools.signtool import SignTool; s=SignTool(); s.sign(r'C:\GIT\npbackup\BUILDS\public\windows\x64\npbackup-viewer-x64.exe')"
+```
+
 ## Misc
 
 NPBackup supports internationalization and automatically detects system's locale.

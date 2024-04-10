@@ -544,7 +544,7 @@ def _main_gui(viewer_mode: bool):
             snapshots.reverse()  # Let's show newer snapshots first
             for snapshot in snapshots:
                 if re.match(
-                    r"[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]\..*\+[0-2][0-9]:[0-9]{2}",
+                    r"[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]\..*[+-][0-2][0-9]:[0-9]{2}",
                     snapshot["time"],
                 ):
                     snapshot_date = dateutil.parser.parse(snapshot["time"]).strftime(
@@ -662,6 +662,8 @@ def _main_gui(viewer_mode: bool):
             repo_config = None
         config_file = None
         full_config = None
+        backend_type = None
+        
 
     right_click_menu = ["", [_t("generic.destination")]]
     headings = [
@@ -933,7 +935,7 @@ def _main_gui(viewer_mode: bool):
 def main_gui(viewer_mode=False):
     atexit.register(
         npbackup.common.execution_logs,
-        datetime.utcnow(),
+        datetime.now(datetime.UTC),
     )
     # kill_childs normally would not be necessary, but let's just be foolproof here (kills restic subprocess in all cases)
     atexit.register(kill_childs, os.getpid(), grace_period=30)

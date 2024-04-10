@@ -629,13 +629,13 @@ def config_gui(full_config: dict, config_file: str):
             [
                 sg.Input(visible=False, key="--ADD-PATHS-FILE--", enable_events=True),
                 sg.FilesBrowse(
-                    _t("generic.add_files"), target="--ADD-BACKUP-PATHS-FILE--"
+                    _t("generic.add_files"), target="--ADD-PATHS-FILE--"
                 ),
                 sg.Input(visible=False, key="--ADD-PATHS-FOLDER--", enable_events=True),
                 sg.FolderBrowse(
-                    _t("generic.add_folder"), target="--ADD-BACKUP-PATHS-FOLDER--"
+                    _t("generic.add_folder"), target="--ADD-PATHS-FOLDER--"
                 ),
-                sg.Button(_t("generic.remove_selected"), key="--REMOVE-BACKUP-PATHS--"),
+                sg.Button(_t("generic.remove_selected"), key="--REMOVE-PATHS--"),
             ],
             [
                 sg.Column(
@@ -1631,12 +1631,12 @@ def config_gui(full_config: dict, config_file: str):
                 full_config = set_permissions(full_config, values["-OBJECT-SELECT-"])
             continue
         if event in (
-            "--ADD-BACKUP-PATHS-FILE--",
-            "--ADD-BACKUP-PATHS-FOLDER--",
+            "--ADD-PATHS-FILE--",
+            "--ADD-PATHS-FOLDER--",
             "--ADD-EXCLUDE-FILE--",
         ):
-            if event in ("--ADD-BACKUP-PATHS-FILE--", "--ADD-EXCLUDE-FILE--"):
-                if event == "--ADD-BACKUP-PATHS-FILE--":
+            if event in ("--ADD-PATHS-FILE--", "--ADD-EXCLUDE-FILE--"):
+                if event == "--ADD-PATHS-FILE--":
                     key = "backup_opts.paths"
                     tree = backup_paths_tree
                 if event == "--ADD-EXCLUDE-FILE--":
@@ -1647,7 +1647,7 @@ def config_gui(full_config: dict, config_file: str):
                     icon = INHERITED_FILE_ICON
                 else:
                     icon = FILE_ICON
-            elif event == "--ADD-BACKUP-PATHS-FOLDER--":
+            elif event == "--ADD-PATHS-FOLDER--":
                 key = "backup_opts.paths"
                 tree = backup_paths_tree
                 node = values[event]
@@ -1665,7 +1665,7 @@ def config_gui(full_config: dict, config_file: str):
             "--ADD-PROMETHEUS-LABEL--",
             "--ADD-ENV-VARIABLE--",
             "--ADD-ENCRYPTED-ENV-VARIABLE--",
-            "--REMOVE-BACKUP-PATHS--",
+            "--REMOVE-PATHS--",
             "--REMOVE-TAG--",
             "--REMOVE-EXCLUDE-PATTERN--",
             "--REMOVE-EXCLUDE-FILE--",
