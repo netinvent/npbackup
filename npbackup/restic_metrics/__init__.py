@@ -236,7 +236,9 @@ def restic_json_to_prometheus(
 
     prom_metrics.append(
         'restic_backup_failure{{{},timestamp="{}"}} {}'.format(
-            labels, int(datetime.now(timezone.utc).timestamp()), 1 if not good_backup else 0
+            labels,
+            int(datetime.now(timezone.utc).timestamp()),
+            1 if not good_backup else 0,
         )
     )
 

@@ -392,7 +392,7 @@ class NPBackupRunner:
                 current_permissions = self.repo_config.g("permissions")
                 if not current_permissions in required_permissions[operation]:
                     self.write_logs(
-                        f"Permissions required for operation \'{operation}\' are {required_permissions[operation]}, current permissions are {current_permissions}",
+                        f"Permissions required for operation '{operation}' are {required_permissions[operation]}, current permissions are {current_permissions}",
                         level="critical",
                     )
                     raise PermissionError

@@ -452,16 +452,16 @@ def inject_permissions_into_full_config(full_config: dict) -> Tuple[bool, dict]:
             f"repos.{repo}.__current_manager_password"
         )
 
-        if (
-            __current_manager_password and manager_password
-        ):
+        if __current_manager_password and manager_password:
             if __current_manager_password == manager_password:
                 full_config.s(
                     f"repos.{repo}.repo_uri", (repo_uri, permissions, manager_password)
                 )
                 full_config.s(f"repos.{repo}.is_protected", True)
             else:
-                logger.error(f"Wrong manager password given for repo {repo}. Will not update permissions")
+                logger.error(
+                    f"Wrong manager password given for repo {repo}. Will not update permissions"
+                )
         else:
             logger.debug(f"Permissions exist for repo {repo}")
 

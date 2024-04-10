@@ -628,9 +628,7 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Input(visible=False, key="--ADD-PATHS-FILE--", enable_events=True),
-                sg.FilesBrowse(
-                    _t("generic.add_files"), target="--ADD-PATHS-FILE--"
-                ),
+                sg.FilesBrowse(_t("generic.add_files"), target="--ADD-PATHS-FILE--"),
                 sg.Input(visible=False, key="--ADD-PATHS-FOLDER--", enable_events=True),
                 sg.FolderBrowse(
                     _t("generic.add_folder"), target="--ADD-PATHS-FOLDER--"
