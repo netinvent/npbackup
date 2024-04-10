@@ -31,7 +31,6 @@
   !  - Post-execution script can now be force run on error / exit
   !  - Script result now has prometheus metrics
   !- NTP server
-  !-permissions
 
 ## Features
   - New viewer mode allowing to browse/restore restic repositories without any NPBackup configuation
@@ -45,7 +44,8 @@
       !- Implemented scheduled task creator for Windows & Unix
          !(simple list of tasks, actions, stop on error)
     - Implemented repo quick check / full check / repair index / repair snapshots / unlock / forget / prune / dump / stats commands
-  ! Added permissions management
+  - Added per repo permission management
+    - Repos now have backup, restore and full privileges, allowing to restrict access for end users
   - Added snapshot tag to snapshot list on main window
   - Split npbackup into separate CLI and GUI
     - Status window has been refactored so GUI now has full stdout / stderr returns from runner and backend

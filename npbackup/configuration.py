@@ -7,8 +7,8 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024020201"
-__version__ = "2.0.0 for npbackup 3.0.0+"
+__build__ = "2024041101"
+__version__ = "npbackup 3.0.0+"
 
 MIN_CONF_VERSION = 3.0
 MAX_CONF_VERSION = 3.0
@@ -422,13 +422,18 @@ def extract_permissions_from_full_config(full_config: dict) -> dict:
     """
     for repo in full_config.g("repos").keys():
         repo_uri = full_config.g(f"repos.{repo}.repo_uri")
-        if isinstance(repo_uri, tuple):
+        # Extract permissions and manager password from repo_uri if set as string
+        if "," in repo_uri:
+            repo_uri = [item.strip() for item in repo_uri.split(",")]
+        if isinstance(repo_uri, tuple) or isinstance(repo_uri, list):
             repo_uri, permissions, manager_password = repo_uri
             # Overwrite existing permissions / password if it was set in repo_uri
             full_config.s(f"repos.{repo}.repo_uri", repo_uri)
             full_config.s(f"repos.{repo}.permissions", permissions)
             full_config.s(f"repos.{repo}.manager_password", manager_password)
             full_config.s(f"repos.{repo}.__current_manager_password", manager_password)
+        else:
+            logger.info(f"No extra information for repo {repo} found")
     return full_config
 
 
@@ -439,7 +444,6 @@ def inject_permissions_into_full_config(full_config: dict) -> Tuple[bool, dict]:
 
     NPF-SEC-00006: Never inject permissions if some are already present unless current manager password equals initial one
     """
-    updated_full_config = False
     for repo in full_config.g("repos").keys():
         repo_uri = full_config.g(f"repos.{repo}.repo_uri")
         manager_password = full_config.g(f"repos.{repo}.manager_password")
@@ -452,7 +456,6 @@ def inject_permissions_into_full_config(full_config: dict) -> Tuple[bool, dict]:
             __current_manager_password and manager_password
         ):
             if __current_manager_password == manager_password:
-                updated_full_config = True
                 full_config.s(
                     f"repos.{repo}.repo_uri", (repo_uri, permissions, manager_password)
                 )
@@ -467,7 +470,7 @@ def inject_permissions_into_full_config(full_config: dict) -> Tuple[bool, dict]:
         )  # Don't keep decrypted manager password
         full_config.d(f"repos.{repo}.permissions")
         full_config.d(f"repos.{repo}.manager_password")
-    return updated_full_config, full_config
+    return full_config
 
 
 def get_manager_password(full_config: dict, repo_name: str) -> str:
@@ -725,13 +728,7 @@ def load_config(config_file: Path) -> Optional[dict]:
         config_file_is_updated = True
         logger.info("Handling random variables in configuration files")
 
-    # Inject permissions into conf file if needed
-    is_modified, full_config = inject_permissions_into_full_config(full_config)
-    if is_modified:
-        config_file_is_updated = True
-        logger.info("Handling permissions in configuration file")
-
-    # Extract permissions / password from repo
+    # Extract permissions / password from repo if set
     full_config = extract_permissions_from_full_config(full_config)
 
     # save config file if needed
@@ -744,7 +741,7 @@ def load_config(config_file: Path) -> Optional[dict]:
 def save_config(config_file: Path, full_config: dict) -> bool:
     try:
         with open(config_file, "w", encoding="utf-8") as file_handle:
-            _, full_config = inject_permissions_into_full_config(full_config)
+            full_config = inject_permissions_into_full_config(full_config)
 
             if not is_encrypted(full_config):
                 full_config = crypt_config(
@@ -756,6 +753,8 @@ def save_config(config_file: Path, full_config: dict) -> bool:
         full_config = crypt_config(
             full_config, AES_KEY, ENCRYPTED_OPTIONS, operation="decrypt"
         )
+        # We also need to extract permissions again
+        full_config = extract_permissions_from_full_config(full_config)
         return True
     except OSError:
         logger.critical(f"Cannot save configuration file to {config_file}")

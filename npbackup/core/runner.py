@@ -351,6 +351,13 @@ class NPBackupRunner:
     def has_permission(fn: Callable):
         """
         Decorator that checks permissions before running functions
+
+        Possible permissions are:
+        - backup:   Backup and list backups
+        - restore:  Backup, restore and list snapshots
+        - full:     Full permissions
+
+        Only one permission can be set per repo
         """
 
         @wraps(fn)
@@ -383,12 +390,11 @@ class NPBackupRunner:
                     operation = fn.__name__
 
                 current_permissions = self.repo_config.g("permissions")
-                self.write_logs(
-                    f"Permissions required for operation \'{operation}\' are {required_permissions[operation]}, current permissions are {current_permissions}",
-                    level="info",
-                )
-                has_permissions = True  # TODO: enforce permissions
-                if not has_permissions:
+                if not current_permissions in required_permissions[operation]:
+                    self.write_logs(
+                        f"Permissions required for operation \'{operation}\' are {required_permissions[operation]}, current permissions are {current_permissions}",
+                        level="critical",
+                    )
                     raise PermissionError
             except (IndexError, KeyError, PermissionError):
                 self.write_logs("You don't have sufficient permissions", level="error")

@@ -28,7 +28,7 @@ Viewer mode permissions are set to "restore".
 
 # NPF-SEC-00006: Never inject permissions if some are already present
 
-Since v2.3.0, we insert permissions directly into the encrypted repo URI.
+Since v3.0.0, we insert permissions directly into the encrypted repo URI.
 Hence, update permissions should only happen in two cases:
 - CLI: Recreate repo_uri entry and add permission field from YAML file
 - GUI: Enter permission password to update permissions
