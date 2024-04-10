@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 import atexit
 from argparse import ArgumentParser
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 import json
 import ofunctions.logger_utils
@@ -375,7 +375,7 @@ def main():
     # Make sure we log execution time and error state at the end of the program
     atexit.register(
         execution_logs,
-        datetime.utcnow(),
+        datetime.now(timezone.utc),
     )
     # kill_childs normally would not be necessary, but let's just be foolproof here (kills restic subprocess in all cases)
     atexit.register(kill_childs, os.getpid(), grace_period=30)

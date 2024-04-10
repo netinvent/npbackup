@@ -12,7 +12,7 @@ __license__ = "GPL-3.0-only"
 __build__ = "2023121801"
 
 
-from datetime import datetime
+from datetime import datetime, timezone
 from logging import getLogger
 import ofunctions.logger_utils
 
@@ -35,7 +35,7 @@ def execution_logs(start_time: datetime) -> None:
     Makes sense ;)
     """
 
-    end_time = datetime.utcnow()
+    end_time = datetime.now(timezone.utc)
 
     logger_worst_level = 0
     for flt in logger.filters:

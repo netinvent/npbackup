@@ -264,7 +264,7 @@ class ResticRunner:
         errors_allowed is needed since we're testing if repo is already initialized
         no_output_queues is needed since we don't want is_init output to be logged
         """
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         additional_parameters = (
             f" {self.additional_parameters.strip()} "
             if self.additional_parameters
@@ -298,7 +298,7 @@ class ResticRunner:
 
         # _executor_running = False is also set via on_exit function call
         self._executor_running = False
-        self.exec_time = (datetime.utcnow() - start_time).total_seconds
+        self.exec_time = (datetime.now(timezone.utc) - start_time).total_seconds
 
         if exit_code == 0:
             self.last_command_status = True

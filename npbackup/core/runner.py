@@ -16,7 +16,7 @@ import logging
 import tempfile
 import pidfile
 import queue
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 import queue
 from copy import deepcopy
@@ -276,10 +276,10 @@ class NPBackupRunner:
 
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
-            start_time = datetime.utcnow()
+            start_time = datetime.now(timezone.utc)
             # pylint: disable=E1102 (not-callable)
             result = fn(self, *args, **kwargs)
-            self.exec_time = (datetime.utcnow() - start_time).total_seconds()
+            self.exec_time = (datetime.now(timezone.utc) - start_time).total_seconds()
             # Optional patch result with exec time
             if (
                 self.restic_runner

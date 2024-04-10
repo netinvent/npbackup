@@ -22,7 +22,7 @@ from typing import Union, List, Tuple
 import logging
 import platform
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
 from argparse import ArgumentParser
 from ofunctions.misc import BytesConverter, convert_time_to_seconds
 
@@ -236,7 +236,7 @@ def restic_json_to_prometheus(
 
     prom_metrics.append(
         'restic_backup_failure{{{},timestamp="{}"}} {}'.format(
-            labels, int(datetime.utcnow().timestamp()), 1 if not good_backup else 0
+            labels, int(datetime.now(timezone.utc).timestamp()), 1 if not good_backup else 0
         )
     )
 
@@ -431,7 +431,7 @@ def restic_output_2_metrics(restic_result, output, labels=None):
 
     metrics.append(
         'restic_backup_failure{{{},timestamp="{}"}} {}'.format(
-            labels, int(datetime.utcnow().timestamp()), 1 if errors else 0
+            labels, int(datetime.now(timezone.utc).timestamp()), 1 if errors else 0
         )
     )
     return errors, metrics
