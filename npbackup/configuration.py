@@ -428,7 +428,7 @@ def extract_permissions_from_full_config(full_config: dict) -> dict:
             full_config.s(f"repos.{repo}.repo_uri", repo_uri)
             full_config.s(f"repos.{repo}.permissions", permissions)
             full_config.s(f"repos.{repo}.manager_password", manager_password)
-            full_config.s(f"repos.{repo}.__saved_manager_password", manager_password)
+            full_config.s(f"repos.{repo}.__current_manager_password", manager_password)
     return full_config
 
 
@@ -444,27 +444,26 @@ def inject_permissions_into_full_config(full_config: dict) -> Tuple[bool, dict]:
         repo_uri = full_config.g(f"repos.{repo}.repo_uri")
         manager_password = full_config.g(f"repos.{repo}.manager_password")
         permissions = full_config.g(f"repos.{repo}.permissions")
-        __saved_manager_password = full_config.g(
-            f"repos.{repo}.__saved_manager_password"
+        __current_manager_password = full_config.g(
+            f"repos.{repo}.__current_manager_password"
         )
 
         if (
-            __saved_manager_password
-            and manager_password
-            and __saved_manager_password == manager_password
+            __current_manager_password and manager_password
         ):
-            updated_full_config = True
-            full_config.s(
-                f"repos.{repo}.repo_uri", (repo_uri, permissions, manager_password)
-            )
-            full_config.s(f"repos.{repo}.is_protected", True)
+            if __current_manager_password == manager_password:
+                updated_full_config = True
+                full_config.s(
+                    f"repos.{repo}.repo_uri", (repo_uri, permissions, manager_password)
+                )
+                full_config.s(f"repos.{repo}.is_protected", True)
+            else:
+                logger.error(f"Wrong manager password given for repo {repo}. Will not update permissions")
         else:
-            logger.info(
-                f"Permissions are already set for repo {repo}. Will not update them unless manager password is given"
-            )
+            logger.debug(f"Permissions exist for repo {repo}")
 
         full_config.d(
-            f"repos.{repo}.__saved_manager_password"
+            f"repos.{repo}.__current_manager_password"
         )  # Don't keep decrypted manager password
         full_config.d(f"repos.{repo}.permissions")
         full_config.d(f"repos.{repo}.manager_password")
