@@ -546,7 +546,7 @@ def config_gui(full_config: dict, config_file: str):
         layout = [
             [
                 sg.Text(_t("config_gui.permissions"), size=(40, 1)),
-                sg.Combo(permissions, default_value=default_perm, key="-PERMISSIONS-"),
+                sg.Combo(permissions, default_value=default_perm, key="permissions"),
             ],
             [sg.HorizontalSeparator()],
             [
@@ -583,10 +583,12 @@ def config_gui(full_config: dict, config_file: str):
                         _t("config_gui.manager_password_too_short"), keep_on_top=True
                     )
                     continue
-                if not values["-PERMISSIONS-"] in permissions:
+                if not values["permissions"] in permissions:
                     sg.PopupError(_t("generic.bogus_data_given"), keep_on_top=True)
                     continue
-                repo_config.s("permissions", values["-PERMISSIONS-"])
+                # Transform translet permission value into key
+                permission = get_key_from_value(combo_boxes["permissions"], values["permissions"])
+                repo_config.s("permissions", permission)
                 repo_config.s("manager_password", values["-MANAGER-PASSWORD-"])
                 break
         window.close()
