@@ -136,6 +136,7 @@ class NPBackupRunner:
 
         self._dry_run = False
         self._verbose = False
+        self._live_output = False
         self._json_output = False
         self.restic_runner = None
         self.minimum_backup_age = None
@@ -181,6 +182,17 @@ class NPBackupRunner:
             msg = f"Bogus verbose parameter given: {value}"
             self.write_logs(msg, level="critical", raise_error="ValueError")
         self._verbose = value
+
+    @property
+    def live_output(self):
+        return self._live_output
+
+    @live_output.setter
+    def live_output(self, value):
+        if not isinstance(value, bool):
+            msg = f"Bogus live_output parameter given: {value}"
+            self.write_logs(msg, level="critical", raise_error="ValueError")
+        self._live_output = value
 
     @property
     def json_output(self):
@@ -392,7 +404,7 @@ class NPBackupRunner:
                 current_permissions = self.repo_config.g("permissions")
                 if not current_permissions in required_permissions[operation]:
                     self.write_logs(
-                        f"Permissions required for operation '{operation}' are {required_permissions[operation]}, current permissions are {current_permissions}",
+                        f"Required permissions for operation '{operation}' must be in {required_permissions[operation]}, current permission is [{current_permissions}]",
                         level="critical",
                     )
                     raise PermissionError
@@ -684,6 +696,7 @@ class NPBackupRunner:
             self.minimum_backup_age = 0
 
         self.restic_runner.verbose = self.verbose
+        self.restic_runner.live_output = self.live_output
         self.restic_runner.json_output = self.json_output
         self.restic_runner.stdout = self.stdout
         self.restic_runner.stderr = self.stderr

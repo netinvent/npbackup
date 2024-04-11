@@ -46,6 +46,7 @@ class ResticRunner:
         self.repository = str(repository).strip()
         self.password = str(password).strip()
         self._verbose = False
+        self._live_output = False
         self._dry_run = False
         self._json_output = False
 
@@ -176,6 +177,17 @@ class ResticRunner:
             self._verbose = value
         else:
             raise ValueError("Bogus verbose value given")
+        
+    @property
+    def live_output(self) -> bool:
+        return self._live_output
+
+    @live_output.setter
+    def live_output(self, value):
+        if isinstance(value, bool):
+            self._live_output = value
+        else:
+            raise ValueError("Bogus live_output value given")
 
     @property
     def dry_run(self) -> bool:
@@ -289,6 +301,7 @@ class ResticRunner:
             stop_on=self.stop_on,
             on_exit=self.on_exit,
             method="poller",
+            live_output=self._live_output, # Only on CLI non json mode
             check_interval=CHECK_INTERVAL,
             priority=self._priority,
             io_priority=self._priority,
