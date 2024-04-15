@@ -79,13 +79,13 @@ def metric_writer(
         if isinstance(result_string, str):
             restic_result = restic_str_output_to_json(restic_result, result_string)
 
-        errors, metrics, backup_too_small = restic_json_to_prometheus(
+        good_backup, metrics, backup_too_small = restic_json_to_prometheus(
             restic_result=restic_result,
             restic_json=restic_result,
             labels=labels,
             minimum_backup_size_error=minimum_backup_size_error,
         )
-        if errors or not restic_result:
+        if not good_backup or not restic_result:
             logger.error("Restic finished with errors.")
         if repo_config.g("prometheus.metrics") and destination:
             logger.debug("Uploading metrics to {}".format(destination))
