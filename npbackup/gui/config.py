@@ -1664,6 +1664,7 @@ def config_gui(full_config: dict, config_file: str):
         ]
         for tree_data_key in tree_data_keys:
             values[tree_data_key] = []
+            # pylint: disable=E1101 (no-member)
             for node in window[tree_data_key].TreeData.tree_dict.values():
                 if node.values:
                     values[tree_data_key].append(node.values)
