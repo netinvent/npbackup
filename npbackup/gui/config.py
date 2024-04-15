@@ -221,7 +221,13 @@ def config_gui(full_config: dict, config_file: str):
         try:
             # Don't bother to update repo name
             # Also permissions / manager_password are in a separate gui
-            if key in ("name", "permissions", "manager_password", "__current_manager_password", "is_protected"):
+            if key in (
+                "name",
+                "permissions",
+                "manager_password",
+                "__current_manager_password",
+                "is_protected",
+            ):
                 return
             # Don't show sensible info unless unencrypted requested
             if not unencrypted:
@@ -496,7 +502,7 @@ def config_gui(full_config: dict, config_file: str):
                 "repo_opts.download_speed",
             ):
                 value = f"{value} {values[f'{key}_unit']}"
-            
+
             # Don't update unit keys
             if key in (
                 "backup_opts.minimum_backup_size_error_unit",
@@ -505,7 +511,7 @@ def config_gui(full_config: dict, config_file: str):
                 "repo_opts.download_speed_unit",
             ):
                 continue
-        
+
             # Don't bother with inheritance on global options and host identity
             if key.startswith("global_options") or key.startswith("identity"):
                 active_object_key = f"{key}"
@@ -543,7 +549,9 @@ def config_gui(full_config: dict, config_file: str):
             if object_type == "group":
                 print(f"UPDATING {active_object_key} curr={current_value} new={value}")
             else:
-                print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
+                print(
+                    f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}"
+                )
             full_config.s(active_object_key, value)
         return full_config
 
@@ -609,7 +617,9 @@ def config_gui(full_config: dict, config_file: str):
                     sg.PopupError(_t("generic.bogus_data_given"), keep_on_top=True)
                     continue
                 # Transform translet permission value into key
-                permission = get_key_from_value(combo_boxes["permissions"], values["permissions"])
+                permission = get_key_from_value(
+                    combo_boxes["permissions"], values["permissions"]
+                )
                 repo_config.s("permissions", permission)
                 repo_config.s("manager_password", values["-MANAGER-PASSWORD-"])
                 break
@@ -1660,7 +1670,9 @@ def config_gui(full_config: dict, config_file: str):
 
         if event == "-OBJECT-SELECT-":
             # Update full_config with current object before updating
-            full_config = update_config_dict(full_config, current_object_type, current_object_name, values)
+            full_config = update_config_dict(
+                full_config, current_object_type, current_object_name, values
+            )
             current_object_type, current_object_name = object_type, object_name
             update_object_gui(values["-OBJECT-SELECT-"], unencrypted=False)
             update_global_gui(full_config, unencrypted=False)
@@ -1786,7 +1798,9 @@ def config_gui(full_config: dict, config_file: str):
             ):
                 sg.PopupError(_t("config_gui.repo_password_cannot_be_empty"))
                 continue
-            full_config = update_config_dict(full_config, current_object_type, current_object_name, values)
+            full_config = update_config_dict(
+                full_config, current_object_type, current_object_name, values
+            )
             result = configuration.save_config(config_file, full_config)
             if result:
                 sg.Popup(_t("config_gui.configuration_saved"), keep_on_top=True)

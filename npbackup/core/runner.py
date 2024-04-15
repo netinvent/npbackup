@@ -409,7 +409,9 @@ class NPBackupRunner:
                     )
                     raise PermissionError
             except (IndexError, KeyError, PermissionError):
-                self.write_logs("You don't have sufficient permissions", level="critical")
+                self.write_logs(
+                    "You don't have sufficient permissions", level="critical"
+                )
                 if self.json_output:
                     js = {
                         "result": False,

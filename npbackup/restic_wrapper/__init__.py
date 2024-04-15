@@ -177,7 +177,7 @@ class ResticRunner:
             self._verbose = value
         else:
             raise ValueError("Bogus verbose value given")
-        
+
     @property
     def live_output(self) -> bool:
         return self._live_output
@@ -301,7 +301,7 @@ class ResticRunner:
             stop_on=self.stop_on,
             on_exit=self.on_exit,
             method="poller",
-            live_output=self._live_output, # Only on CLI non json mode
+            live_output=self._live_output,  # Only on CLI non json mode
             check_interval=CHECK_INTERVAL,
             priority=self._priority,
             io_priority=self._priority,
@@ -543,7 +543,7 @@ class ResticRunner:
         We'll just check if snapshots can be read
         """
         cmd = "snapshots"
-        
+
         # Disable live output for this check
         live_output = self.live_output
         self.live_output = False
