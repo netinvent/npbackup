@@ -39,6 +39,7 @@ logger = getLogger()
 
 
 # Monkeypatching PySimpleGUI
+# @PySimpleGUI: Why is there no delete method for TreeData ?
 def delete(self, key):
     if key == "":
         return False
@@ -442,7 +443,7 @@ def config_gui(full_config: dict, config_file: str):
             object_config, config_inheritance, object_type, unencrypted, None
         )
 
-    def update_global_gui(full_config, unencrypted=False):
+    def update_global_gui(full_config, unencrypted: bool = False):
         global_config = CommentedMap()
 
         # Only update global options gui with identified global keys
@@ -451,7 +452,7 @@ def config_gui(full_config: dict, config_file: str):
                 global_config.s(key, full_config.g(key))
         iter_over_config(global_config, None, "group", unencrypted, None)
 
-    def update_config_dict(full_config, values):
+    def update_config_dict(full_config, values: dict) -> dict:
         """
         Update full_config with keys from GUI
         keys should always have form section.name or section.subsection.name
@@ -1615,7 +1616,28 @@ def config_gui(full_config: dict, config_file: str):
         object_type, _ = get_object_from_combo(values["-OBJECT-SELECT-"])
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--CANCEL--"):
             break
+
+        # We need to patch values since sg.Tree() only returns selected data from TreeData()
+        # @PysimpleGUI: there should be a get_all_values() method or something
+        tree_data_keys = [
+            "backup_opts.paths",
+            "backup_opts.tags",
+            "backup_opts.pre_exec_commands",
+            "backup_opts.post_exec_commands",
+            "backup_opts.exclude_files",
+            "backup_opts.exclude_patterns",
+            "prometheus.additional_labels",
+            "env.env_variables",
+            "env.encrypted_env_variables",
+        ]
+        for tree_data_key in tree_data_keys:
+            values[tree_data_key] = []
+            for node in window[tree_data_key].TreeData.tree_dict.values():
+                if node.values:
+                    values[tree_data_key].append(node.values)
+
         if event == "-OBJECT-SELECT-":
+            # Update gui with earlier modifications
             full_config = update_config_dict(full_config, values)
             update_object_gui(values["-OBJECT-SELECT-"], unencrypted=False)
             update_global_gui(full_config, unencrypted=False)
