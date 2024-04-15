@@ -543,9 +543,14 @@ class ResticRunner:
         We'll just check if snapshots can be read
         """
         cmd = "snapshots"
+        
+        # Disable live output for this check
+        live_output = self.live_output
+        self.live_output = False
         self._is_init, output = self.executor(
             cmd, timeout=FAST_COMMANDS_TIMEOUT, errors_allowed=True
         )
+        self.live_output = live_output
         if not self._is_init:
             self.write_logs(output, level="error")
         return self._is_init

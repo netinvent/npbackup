@@ -466,9 +466,9 @@ class NPBackupRunner:
                     with pidfile.PIDFile(pid_file):
                         # pylint: disable=E1102 (not-callable)
                         result = fn(self, *args, **kwargs)
-                except pidfile.AlreadyRunningError:
+                except pidfile.AlreadyRunningError as exc:
                     self.write_logs(
-                        f"There is already an {operation} operation running by NPBackup. Will not continue",
+                        f"There is already an {operation} operation running by NPBackup: {exc}. Will not continue",
                         level="critical",
                     )
                     return False
@@ -827,8 +827,11 @@ class NPBackupRunner:
         )
         # Temporarily disable verbose and enable json result
         self.restic_runner.verbose = False
+        # Temporarily disable CLI live output which we don't really need here
+        self.restic_runner.live_output = False
         data = self.restic_runner.has_recent_snapshot(self.minimum_backup_age)
         self.restic_runner.verbose = self.verbose
+        self.restic_runner.live_output = self.live_output
         if self.json_output:
             return data
 

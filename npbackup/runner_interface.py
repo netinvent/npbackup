@@ -34,7 +34,7 @@ def serialize_datetime(obj):
 
 def entrypoint(*args, **kwargs):
     json_output = kwargs.pop("json_output")
-    
+
     npbackup_runner = NPBackupRunner()
     npbackup_runner.repo_config = kwargs.pop("repo_config")
     npbackup_runner.dry_run = kwargs.pop("dry_run")
@@ -46,7 +46,16 @@ def entrypoint(*args, **kwargs):
     )
     if not json_output:
         if not isinstance(result, bool):
-            logger.info(f"{result}")
+
+            # We need to temprarily remove the stdout handler
+            # Since we already get live output from the runner
+            # But we still need to log the result to our logfile
+            for handler in logger.handlers:
+                if handler.stream == sys.stdout:
+                    logger.removeHandler(handler)
+                    break
+            logger.info(f"\n{result}")
+            logger.addHandler(handler)
         logger.info(f"Operation finished with {'success' if result else 'failure'}")
     else:
         print(json.dumps(result, default=serialize_datetime))
