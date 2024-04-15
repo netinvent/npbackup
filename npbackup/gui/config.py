@@ -7,10 +7,10 @@ __intname__ = "npbackup.gui.config"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024020501"
+__build__ = "2024041501"
 
 
-from typing import List, Union, Tuple
+from typing import List, Tuple
 import os
 import pathlib
 from logging import getLogger
