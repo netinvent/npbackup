@@ -452,12 +452,11 @@ def config_gui(full_config: dict, config_file: str):
                 global_config.s(key, full_config.g(key))
         iter_over_config(global_config, None, "group", unencrypted, None)
 
-    def update_config_dict(full_config, values: dict) -> dict:
+    def update_config_dict(full_config, object_type, object_name, values: dict) -> dict:
         """
         Update full_config with keys from GUI
         keys should always have form section.name or section.subsection.name
         """
-        object_type, object_name = get_object_from_combo(values["-OBJECT-SELECT-"])
         if object_type == "repo":
             object_group = full_config.g(f"repos.{object_name}.repo_group")
         else:
@@ -1610,10 +1609,16 @@ def config_gui(full_config: dict, config_file: str):
     update_object_gui(get_objects()[0], unencrypted=False)
     update_global_gui(full_config, unencrypted=False)
 
+    # These contain object name/type so on object change we can update the current object before loading new one
+    current_object_type = None
+    current_object_name = None
+
     while True:
         event, values = window.read()
         # Get object type for various delete operations
-        object_type, _ = get_object_from_combo(values["-OBJECT-SELECT-"])
+        object_type, object_name = get_object_from_combo(values["-OBJECT-SELECT-"])
+        if not current_object_type and not current_object_name:
+            current_object_type, current_object_name = object_type, object_name
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--CANCEL--"):
             break
 
@@ -1637,10 +1642,12 @@ def config_gui(full_config: dict, config_file: str):
                     values[tree_data_key].append(node.values)
 
         if event == "-OBJECT-SELECT-":
-            # Update gui with earlier modifications
-            full_config = update_config_dict(full_config, values)
+            # Update full_config with current object before updating
+            full_config = update_config_dict(full_config, current_object_type, current_object_name, values)
+            current_object_type, current_object_name = object_type, object_name
             update_object_gui(values["-OBJECT-SELECT-"], unencrypted=False)
             update_global_gui(full_config, unencrypted=False)
+            continue
         if event == "-OBJECT-DELETE-":
             full_config = delete_object(full_config, values["-OBJECT-SELECT-"])
             update_object_selector()
@@ -1650,7 +1657,6 @@ def config_gui(full_config: dict, config_file: str):
             update_object_selector()
             continue
         if event == "--SET-PERMISSIONS--":
-            object_type, object_name = get_object_from_combo(values["-OBJECT-SELECT-"])
             manager_password = configuration.get_manager_password(
                 full_config, object_name
             )
@@ -1678,6 +1684,7 @@ def config_gui(full_config: dict, config_file: str):
                 icon = FOLDER_ICON
             tree.insert("", node, node, node, icon=icon)
             window[key].update(values=tree)
+            continue
         if event in (
             "--ADD-TAG--",
             "--ADD-EXCLUDE-PATTERN--",
@@ -1754,6 +1761,7 @@ def config_gui(full_config: dict, config_file: str):
                         continue
                     tree.delete(key)
             window[option_key].Update(values=tree)
+            continue
         if event == "--ACCEPT--":
             if (
                 not values["repo_opts.repo_password"]
@@ -1769,14 +1777,15 @@ def config_gui(full_config: dict, config_file: str):
                 break
             sg.PopupError(_t("config_gui.cannot_save_configuration"), keep_on_top=True)
             logger.info("Could not save configuration")
+            continue
         if event == _t("config_gui.show_decrypted"):
-            object_type, object_name = get_object_from_combo(values["-OBJECT-SELECT-"])
             manager_password = configuration.get_manager_password(
                 full_config, object_name
             )
             if ask_manager_password(manager_password):
                 update_object_gui(values["-OBJECT-SELECT-"], unencrypted=True)
                 update_global_gui(full_config, unencrypted=True)
+            continue
         if event == "create_task":
             if os.name == "nt":
                 result = create_scheduled_task(
@@ -1788,5 +1797,6 @@ def config_gui(full_config: dict, config_file: str):
                     sg.PopupError(_t("config_gui.scheduled_task_creation_failure"))
             else:
                 sg.PopupError(_t("config_gui.scheduled_task_creation_failure"))
+            continue
     window.close()
     return full_config
