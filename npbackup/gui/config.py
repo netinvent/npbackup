@@ -491,8 +491,8 @@ def config_gui(full_config: dict, config_file: str):
             active_object_key = f"{object_type}s.{object_name}.{key}"
             current_value = full_config.g(active_object_key)
 
-            # Don't bother with inheritance on global options
-            if not key.startswith("global_options."):
+            # Don't bother with inheritance on global options and host identity
+            if not key.startswith("global_options.") and not key.startswith("identity."):
                 # Don't update items that have been inherited from groups
                 if object_group:
                     inheritance_key = f"groups.{object_group}.{key}"
@@ -526,7 +526,8 @@ def config_gui(full_config: dict, config_file: str):
             if current_value == value:
                 continue
 
-            # full_config.s(active_object_key, value)
+            full_config.s(active_object_key, value)
+            
         return full_config
         # TODO: Do we actually save every modified object or just the last ?
 
@@ -1769,7 +1770,7 @@ def config_gui(full_config: dict, config_file: str):
             ):
                 sg.PopupError(_t("config_gui.repo_password_cannot_be_empty"))
                 continue
-            full_config = update_config_dict(full_config, values)
+            full_config = update_config_dict(full_config, current_object_type, current_object_name, values)
             result = configuration.save_config(config_file, full_config)
             if result:
                 sg.Popup(_t("config_gui.configuration_saved"), keep_on_top=True)
