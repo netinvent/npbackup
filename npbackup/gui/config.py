@@ -488,6 +488,24 @@ def config_gui(full_config: dict, config_file: str):
                     except ValueError:
                         pass
 
+            # Glue value and units back together for config file
+            if key in (
+                "backup_opts.minimum_backup_size_error",
+                "backup_opts.exclude_files_larger_than",
+                "repo_opts.upload_speed",
+                "repo_opts.download_speed",
+            ):
+                value = f"{value} {values[f'{key}_unit']}"
+            
+            # Don't update unit keys
+            if key in (
+                "backup_opts.minimum_backup_size_error_unit",
+                "backup_opts.exclude_files_larger_than_unit",
+                "repo_opts.upload_speed_unit",
+                "repo_opts.download_speed_unit",
+            ):
+                continue
+        
             # Don't bother with inheritance on global options and host identity
             if key.startswith("global_options") or key.startswith("identity"):
                 active_object_key = f"{key}"
