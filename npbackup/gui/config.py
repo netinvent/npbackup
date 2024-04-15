@@ -488,12 +488,14 @@ def config_gui(full_config: dict, config_file: str):
                     except ValueError:
                         pass
 
-            active_object_key = f"{object_type}s.{object_name}.{key}"
-            current_value = full_config.g(active_object_key)
-
             # Don't bother with inheritance on global options and host identity
-            if not key.startswith("global_options.") and not key.startswith("identity."):
-                # Don't update items that have been inherited from groups
+            if key.startswith("global_options") or key.startswith("identity"):
+                active_object_key = f"{key}"
+                current_value = full_config.g(active_object_key)
+            else:
+                active_object_key = f"{object_type}s.{object_name}.{key}"
+                current_value = full_config.g(active_object_key)
+
                 if object_group:
                     inheritance_key = f"groups.{object_group}.{key}"
                     # If object is a list, check which values are inherited from group and remove them
@@ -511,13 +513,6 @@ def config_gui(full_config: dict, config_file: str):
                         inherited = full_config.g(inheritance_key)
                     else:
                         inherited = False
-    
-            if object_type == "group":
-                print(f"UPDATING {active_object_key} curr={current_value} new={value}")
-            else:
-                print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
-            # if not full_config.g(active_object_key):
-            #    full_config.s(active_object_key, CommentedMap())
 
             # Don't bother to update empty strings, empty lists and None
             if not current_value and not value:
@@ -526,10 +521,13 @@ def config_gui(full_config: dict, config_file: str):
             if current_value == value:
                 continue
 
+            # Finally, update the config dictionary
+            if object_type == "group":
+                print(f"UPDATING {active_object_key} curr={current_value} new={value}")
+            else:
+                print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
             full_config.s(active_object_key, value)
-            
         return full_config
-        # TODO: Do we actually save every modified object or just the last ?
 
     def set_permissions(full_config: dict, object_name: str) -> dict:
         """
@@ -562,7 +560,7 @@ def config_gui(full_config: dict, config_file: str):
                     size=(50, 1),
                     password_char="*",
                 ),
-                # sg.Button(_t("generic.change"), key="--CHANGE-MANAGER-PASSWORD--")
+                # sg.Button(_t("generic.change"), key="--CHANGE-MANAGER-PASSWORD--") # TODO
             ],
             [
                 sg.Push(),
