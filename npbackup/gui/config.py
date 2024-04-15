@@ -511,7 +511,11 @@ def config_gui(full_config: dict, config_file: str):
                         inherited = full_config.g(inheritance_key)
                     else:
                         inherited = False
-            # WIP print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
+    
+            if object_type == "group":
+                print(f"UPDATING {active_object_key} curr={current_value} new={value}")
+            else:
+                print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
             # if not full_config.g(active_object_key):
             #    full_config.s(active_object_key, CommentedMap())
 
@@ -1612,7 +1616,7 @@ def config_gui(full_config: dict, config_file: str):
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--CANCEL--"):
             break
         if event == "-OBJECT-SELECT-":
-            update_config_dict(full_config, values)
+            full_config = update_config_dict(full_config, values)
             update_object_gui(values["-OBJECT-SELECT-"], unencrypted=False)
             update_global_gui(full_config, unencrypted=False)
         if event == "-OBJECT-DELETE-":
@@ -1644,18 +1648,12 @@ def config_gui(full_config: dict, config_file: str):
                     key = "backup_opts.exclude_files"
                     tree = exclude_files_tree
                 node = values[event]
-                if object_type == "group":
-                    icon = INHERITED_FILE_ICON
-                else:
-                    icon = FILE_ICON
+                icon = FILE_ICON
             elif event == "--ADD-PATHS-FOLDER--":
                 key = "backup_opts.paths"
                 tree = backup_paths_tree
                 node = values[event]
-                if object_type == "group":
-                    icon = INHERITED_FOLDER_ICON
-                else:
-                    icon = FOLDER_ICON
+                icon = FOLDER_ICON
             tree.insert("", node, node, node, icon=icon)
             window[key].update(values=tree)
         if event in (
@@ -1711,10 +1709,7 @@ def config_gui(full_config: dict, config_file: str):
                 option_key = "env.env_variables"
 
             if event.startswith("--ADD-"):
-                if object_type == "group":
-                    icon = INHERITED_TREE_ICON
-                else:
-                    icon = TREE_ICON
+                icon = TREE_ICON
                 if "ENV-VARIABLE" in event:
                     var_name = sg.PopupGetText(_t("config_gui.enter_var_name"))
                     var_value = sg.PopupGetText(_t("config_gui.enter_var_value"))
