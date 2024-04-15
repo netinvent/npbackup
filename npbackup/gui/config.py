@@ -220,7 +220,7 @@ def config_gui(full_config: dict, config_file: str):
         try:
             # Don't bother to update repo name
             # Also permissions / manager_password are in a separate gui
-            if key in ("name", "permissions", "manager_password"):
+            if key in ("name", "permissions", "manager_password", "__current_manager_password", "is_protected"):
                 return
             # Don't show sensible info unless unencrypted requested
             if not unencrypted:
@@ -578,6 +578,7 @@ def config_gui(full_config: dict, config_file: str):
                         keep_on_top=True,
                     )
                     continue
+                # TODO: Check password strength in a better way than this ^^
                 if len(values["-MANAGER-PASSWORD-"]) < 8:
                     sg.PopupError(
                         _t("config_gui.manager_password_too_short"), keep_on_top=True
