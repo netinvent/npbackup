@@ -54,7 +54,6 @@ class ResticRunner:
 
         self._binary = None
         self.binary_search_paths = binary_search_paths
-        self._get_binary()
 
         self._is_init = None
         self._exec_time = None
@@ -462,6 +461,8 @@ class ResticRunner:
         if not os.path.isfile(value):
             raise ValueError("Non existent binary given: {}".format(value))
         self._binary = value
+        version = self.binary_version
+        self.write_logs(f"Using binary {version}", level="info")
 
     @property
     def binary_version(self) -> Optional[str]:

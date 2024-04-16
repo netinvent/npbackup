@@ -138,6 +138,7 @@ class NPBackupRunner:
         self._verbose = False
         self._live_output = False
         self._json_output = False
+        self._binary = None
         self.restic_runner = None
         self.minimum_backup_age = None
         self._exec_time = None
@@ -234,6 +235,19 @@ class NPBackupRunner:
         ):
             raise ValueError("Bogus stdout parameter given: {}".format(value))
         self._stderr = value
+
+    @property
+    def binary(self):
+        return self._binary
+
+    @binary.setter
+    def binary(self, value):
+        if (
+            not isinstance(value, str)
+            or not os.path.isfile(value)
+        ):
+            raise ValueError("Backend binary {value} is not readable")
+        self._binary = value
 
     @property
     def has_binary(self) -> bool:
@@ -575,19 +589,6 @@ class NPBackupRunner:
             binary_search_paths=[BASEDIR, CURRENT_DIR],
         )
 
-        if self.restic_runner.binary is None:
-            # Let's try to load our internal binary for dev purposes
-            arch = os_arch()
-            binary = get_restic_internal_binary(arch)
-            if binary:
-                self.restic_runner.binary = binary
-                version = self.restic_runner.binary_version
-                self.write_logs(f"Using dev binary {version}", level="info")
-            else:
-                self._is_ready = False
-                return False
-        return True
-
     def _apply_config_to_restic_runner(self) -> bool:
         if not isinstance(self.restic_runner, ResticRunner):
             self.write_logs("Backend not ready", level="error")
@@ -702,7 +703,18 @@ class NPBackupRunner:
         self.restic_runner.json_output = self.json_output
         self.restic_runner.stdout = self.stdout
         self.restic_runner.stderr = self.stderr
+        if self.binary:
+            self.restic_runner.binary = self.binary
 
+        if self.restic_runner.binary is None:
+            # Let's try to load our internal binary for dev purposes
+            arch = os_arch()
+            binary = get_restic_internal_binary(arch)
+            if binary:
+                self.restic_runner.binary = binary
+            else:
+                self._is_ready = False
+                return False
         return True
 
     def convert_to_json_output(

@@ -229,6 +229,13 @@ This is free software, and you are welcome to redistribute it under certain cond
         action="store_true",
         help="Show full inherited configuration for current repo"
     )
+    parser.add_argument(
+        "--external-backend-binary",
+        type=str,
+        default=None,
+        required=False,
+        help="Full path to alternative external backend binary"
+    )
     args = parser.parse_args()
 
     if args.log_file:
@@ -296,6 +303,14 @@ This is free software, and you are welcome to redistribute it under certain cond
         json_error_logging(False, msg, "critical")
         sys.exit(72)
     
+    binary = None
+    if args.external_backend_binary:
+        binary = args.external_backend_binary
+        if not os.path.isfile(binary):
+            msg = f"External backend binary {binary} cannot be found."
+            json_error_logging(False, msg, "critical")
+            sys.exit(73)
+        
     if args.show_config:
         repo_config = npbackup.configuration.get_anonymous_repo_config(repo_config)
         print(json.dumps(repo_config, indent=4))
@@ -308,6 +323,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         "dry_run": args.dry_run,
         "debug": args.debug,
         "json_output": args.json,
+        "binary": binary,
         "operation": None,
         "op_args": {},
     }

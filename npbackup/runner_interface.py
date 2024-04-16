@@ -34,6 +34,7 @@ def serialize_datetime(obj):
 
 def entrypoint(*args, **kwargs):
     json_output = kwargs.pop("json_output")
+    binary = kwargs.pop("binary", None)
 
     npbackup_runner = NPBackupRunner()
     npbackup_runner.repo_config = kwargs.pop("repo_config")
@@ -41,6 +42,8 @@ def entrypoint(*args, **kwargs):
     npbackup_runner.verbose = kwargs.pop("verbose")
     npbackup_runner.live_output = not json_output
     npbackup_runner.json_output = json_output
+    if binary:
+        npbackup_runner.binary = binary
     result = npbackup_runner.__getattribute__(kwargs.pop("operation"))(
         **kwargs.pop("op_args"), __no_threads=True
     )
