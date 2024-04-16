@@ -14,11 +14,9 @@
       - manages multiple repos with generic key (restic key add) or specified key
 
 ## 3.0.0
-  !- Multi repository support (everything except repo URI can be inherited from groups)
     - Major config file rewrite, now repo can inherit common settings from repo groups
-  !- Group settings for repositories
+
   !- New operation planifier for backups / cleaning / checking repos
-  - Current backup state now shows more precise backup state, including last backup date when relevant
   !- Implemented retention policies
   !  - Optional time server update to make sure we don't drift before doing retention operations
   !  - Optional repo check befoire doing retention operations
@@ -35,6 +33,7 @@
   - New viewer mode allowing to browse/restore restic repositories without any NPBackup configuation
     !- Viewer can have a configuration file
   - Multi repository support
+  - Group settings for repositories
   !- Operation center
     -- GUI operation center allowing to mass execute actions on repos / groups
     !- CLI operation center via `--group-operation --repo-group=default_group`
@@ -57,6 +56,8 @@
   - All bytes units now have automatic conversion of units (K/M/G/T/P bits/bytes or IEC bytes)
   - Refactored GUI and overall UX of configuration
   - New option --show-config to show inheritance in CLI mode (GUI has visual indicators)
+  - Allow using external restic binary via --external-backend-binary parameter in CLI mode
+
 ## Fixes
   - Default exit code is now worst log level called
   - Show anonymized repo uri in GUI
@@ -64,6 +65,7 @@
   - Fix Google cloud storage backend detection in repository uri
 
 ## Misc
+  - Current backup state now shows more precise backup state, including last backup date when relevant
   - Concurrency checks (pidfile checks) are now directly part of the runner
   - Allow a 30 seconds grace period for child processes to close before asking them nicely, and than not nicely to quit
   - Fully refactored prometheus metrics parser to be able to read restic standard or json outputs
