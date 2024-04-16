@@ -351,6 +351,7 @@ def restore_window(
     window = sg.Window(
         _t("main_gui.restoration"), layout=layout, grab_anywhere=True, keep_on_top=False
     )
+    result = None
     while True:
         event, values = window.read()
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "cancel"):
