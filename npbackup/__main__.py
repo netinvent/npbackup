@@ -224,6 +224,11 @@ This is free software, and you are welcome to redistribute it under certain cond
         required=False,
         help="Optional path for logfile",
     )
+    parser.add_argument(
+        "--show-config",
+        action="store_true",
+        help="Show full inherited configuration for current repo"
+    )
     args = parser.parse_args()
 
     if args.log_file:
@@ -290,6 +295,11 @@ This is free software, and you are welcome to redistribute it under certain cond
         msg = "Cannot find repo config"
         json_error_logging(False, msg, "critical")
         sys.exit(72)
+    
+    if args.show_config:
+        repo_config = npbackup.configuration.get_anonymous_repo_config(repo_config)
+        print(json.dumps(repo_config, indent=4))
+        sys.exit(0)
 
     # Prepare program run
     cli_args = {

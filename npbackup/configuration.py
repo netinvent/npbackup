@@ -244,7 +244,7 @@ def get_default_config() -> dict:
     return convert_to(full_config)
 
 
-def key_should_be_encrypted(key, encrypted_options: List[str]):
+def key_should_be_encrypted(key: str, encrypted_options: List[str]):
     """
     Checks whether key should be encrypted
     """
@@ -783,3 +783,27 @@ def get_repos_by_group(full_config: dict, group: str) -> List[str]:
             ):
                 repo_list.append(repo)
     return repo_list
+
+
+def get_anonymous_repo_config(repo_config: dict) -> dict:
+    """
+    Replace each encrypted value with 
+    """
+    def _get_anonymous_repo_config(key: str, value: Any) -> Any:
+        if key_should_be_encrypted(key, ENCRYPTED_OPTIONS):
+            if isinstance(value, list):
+                for i, _ in enumerate(value):
+                    value[i] = "__(o_O)__"
+            else:
+                value = "__(o_O)__"
+        return value
+        
+    # NPF-SEC-00008: Don't show manager password / sensible data with --show-config
+    repo_config.pop("manager_password", None)
+    repo_config.pop("__current_manager_password", None)
+    return replace_in_iterable(
+        repo_config,
+        _get_anonymous_repo_config,
+        callable_wants_key=True,
+        callable_wants_root_key=True,
+    )

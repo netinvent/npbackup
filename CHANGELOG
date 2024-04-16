@@ -16,7 +16,6 @@
 ## 3.0.0
   !- Multi repository support (everything except repo URI can be inherited from groups)
     - Major config file rewrite, now repo can inherit common settings from repo groups
-  !  - New option --show-final-config to show inheritance in cli mode (gui mode has visual indicators)
   !- Group settings for repositories
   !- New operation planifier for backups / cleaning / checking repos
   - Current backup state now shows more precise backup state, including last backup date when relevant
@@ -57,7 +56,7 @@
   - Added minimum backup size upon which we declare that backup has failed
   - All bytes units now have automatic conversion of units (K/M/G/T/P bits/bytes or IEC bytes)
   - Refactored GUI and overall UX of configuration
-
+  - New option --show-config to show inheritance in CLI mode (GUI has visual indicators)
 ## Fixes
   - Default exit code is now worst log level called
   - Show anonymized repo uri in GUI
