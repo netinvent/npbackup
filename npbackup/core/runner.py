@@ -1314,19 +1314,28 @@ class NPBackupRunner:
             },
         }
 
+        js = {"result": None, "details": []}
+
         for repo_config in repo_config_list:
             repo_name = repo_config.g("name")
             self.write_logs(f"Running {operation} for repo {repo_name}", level="info")
             self.repo_config = repo_config
             result = self.__getattribute__(operation)(**kwargs)
-            if result:
-                self.write_logs(
-                    f"Finished {operation} for repo {repo_name}", level="info"
-                )
+            if self.json_output:
+                js["details"].append({repo_name: result})
             else:
-                self.write_logs(
-                    f"Operation {operation} failed for repo {repo_name}", level="error"
-                )
+                if result:
+                    self.write_logs(
+                        f"Finished {operation} for repo {repo_name}", level="info"
+                    )
+                else:
+                    self.write_logs(
+                        f"Operation {operation} failed for repo {repo_name}", level="error"
+                    )
+            if not result:
                 group_result = False
         self.write_logs("Finished execution group operations", level="info")
+        if self.json_output:
+            js["result"] = group_result
+            return js
         return group_result
