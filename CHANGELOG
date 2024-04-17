@@ -1,4 +1,4 @@
-## Current master
+## Shortly planned
  
   ! - Add policy like restic forget --keep-within-daily 30d --keep-within-weekly 1m --keep-within-monthly 1y --keep-within-yearly 3y
   default policy restic forget --keep-within-hourly 72h --keep-within-daily 30d --keep-within-weekly 1m --keep-within-monthly 1y --keep-within-yearly 3y
@@ -12,38 +12,38 @@
       - Launch now
    - NPBackup Operation mode
       - manages multiple repos with generic key (restic key add) or specified key
-
+  !- NTP server
+  !- Viewer can have a configuration file
+ ! - Reimplement autoupgrade
+ 
 ## 3.0.0
-    - Major config file rewrite, now repo can inherit common settings from repo groups
+ - This is a major rewrite that allows using multiple repositories, adds repository groups and implements repository settings inheritance from group settings
 
   !- New operation planifier for backups / cleaning / checking repos
   !- Implemented retention policies
   !  - Optional time server update to make sure we don't drift before doing retention operations
-  !  - Optional repo check befoire doing retention operations
-
-  !- Backup admin password is now stored in a more secure way
-  !- Added backup client privileges
+  !  - Optional repo check before doing retention operations
   !- Pre and post-execution scripts
   !  - Multiple pre and post execution scripts are now allowed
   !  - Post-execution script can now be force run on error / exit
   !  - Script result now has prometheus metrics
-  !- NTP server
+
 
 ## Features
   - New viewer mode allowing to browse/restore restic repositories without any NPBackup configuation
-    !- Viewer can have a configuration file
+
   - Multi repository support
   - Group settings for repositories
   !- Operation center
-    -- GUI operation center allowing to mass execute actions on repos / groups
-    !- CLI operation center via `--group-operation --repo-group=default_group`
+    - GUI operation center allowing to mass execute actions on repos / groups
+    - CLI operation center via `--group-operation --repo-group=somegroup`
     !- Implemented retention policies
     !- Operation planifier allows to create scheduled tasks for operations
       !- Implemented scheduled task creator for Windows & Unix
          !(simple list of tasks, actions, stop on error)
     - Implemented repo quick check / full check / repair index / repair snapshots / unlock / forget / prune / dump / stats commands
   - Added per repo permission management
-    - Repos now have backup, restore and full privileges, allowing to restrict access for end users
+    - Repos now have backup, restore and full privileges, optionally allowing to restrict access for end users
   - Added snapshot tag to snapshot list on main window
   - Split npbackup into separate CLI and GUI
     - Status window has been refactored so GUI now has full stdout / stderr returns from runner and backend
@@ -63,6 +63,7 @@
   - Show anonymized repo uri in GUI
   - Fix deletion failed message for en lang
   - Fix Google cloud storage backend detection in repository uri
+  - Backup admin password is now stored in a more secure way
 
 ## Misc
   - Current backup state now shows more precise backup state, including last backup date when relevant

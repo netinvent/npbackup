@@ -1,21 +1,19 @@
 ## What's planned / considered
 
 ### Daemon mode
-
 Instead of relying on scheduled tasks, we could launch backup & housekeeping operations as deamon.
 Caveats:
  - We need a windows service (nuitka commercial implements one)
  - We need to use apscheduler (wait for v4)
  - We need a resurrect service config for systemd and windows service
 
-### Web interface
-
+### Web interface (planned)
 Since runner can discuss in JSON mode, we could simply wrap it all in FastAPI
 Caveats:
- - We'll need a web interface, with templates, whistles and belles
+ - We'll need a web interface, with templates, whistles and bells
  - We'll probably need an executor (Celery ?) in order to not block threads
 
-### KVM Backup plugin
+### KVM Backup plugin (planned, already exists as external script)
 Since we run cube backup, we could "bake in" full KVM support
 Caveats:
  - We'll need to re-implement libvirt controller class for linux
@@ -28,11 +26,9 @@ In the latter case, shell (bash, zsh, ksh) would need `shopt -o pipefail`, and m
 The pipefail will not be given to npbackup-cli, so we'd need to wrap everything into a script, which defeats the prometheus metrics.
 
 ### Key management
-
 Possibility to add new keys to current repo, and delete old keys if more than one key present
 
-### Provision server
-
+### Provision server (planned)
 Possibility to auto load repo settings for new instances from central server
 We actually could improve upgrade_server to do so
 

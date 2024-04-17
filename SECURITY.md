@@ -39,3 +39,8 @@ Since encryption is symmetric, we need to protect our sensible data.
 Best ways:
 - Compile with alternative aes-key
 - Use --aes-key with alternative aes-key which is protected by system
+
+# NPF-SEC-00008: Don't show manager password / sensible data with --show-config
+
+Since v3.0.0, we have config inheritance. Showing the actual config helps diag issues, but we need to be careful not
+to show actual secrets.
