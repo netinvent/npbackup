@@ -384,6 +384,7 @@ class NPBackupRunner:
         - full:     Full permissions
 
         Only one permission can be set per repo
+        When no permission is set, assume full permissions
         """
 
         @wraps(fn)
@@ -416,7 +417,7 @@ class NPBackupRunner:
                     operation = fn.__name__
 
                 current_permissions = self.repo_config.g("permissions")
-                if not current_permissions in required_permissions[operation]:
+                if current_permissions and not current_permissions in required_permissions[operation]:
                     self.write_logs(
                         f"Required permissions for operation '{operation}' must be in {required_permissions[operation]}, current permission is [{current_permissions}]",
                         level="critical",
