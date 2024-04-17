@@ -71,9 +71,16 @@ This is free software, and you are welcome to redistribute it under certain cond
         "--repo-name",
         dest="repo_name",
         type=str,
-        default="default",
+        default=None,
         required=False,
-        help="Name of the repository to work with. Defaults to 'default'",
+        help="Name of the repository to work with. Defaults to 'default'. In group operation mode, this can be a comma separated list of repo names",
+    )
+    parser.add_argument(
+        "--repo-group",
+        type=str,
+        default=None,
+        required=False,
+        help="Comme separated list of groups to work with. Can accept special name '__all__' to work with all repositories."
     )
     parser.add_argument("-b", "--backup", action="store_true", help="Run a backup")
     parser.add_argument(
@@ -167,11 +174,11 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Check if a recent snapshot exists",
     )
     parser.add_argument(
-        "--restore-include",
+        "--restore-includes",
         type=str,
         default=None,
         required=False,
-        help="Restore only paths within include path",
+        help="Restore only paths within include path, comma separated list accepted",
     )
     parser.add_argument(
         "--snapshot-id",
@@ -236,6 +243,13 @@ This is free software, and you are welcome to redistribute it under certain cond
         required=False,
         help="Full path to alternative external backend binary"
     )
+    parser.add_argument(
+        "--group-operation",
+        type=str,
+        default=None,
+        required=False,
+        help="Launch an operation on a group of repositories given by --repo-group"
+    )
     args = parser.parse_args()
 
     if args.log_file:
@@ -289,19 +303,22 @@ This is free software, and you are welcome to redistribute it under certain cond
             sys.exit(70)
 
     full_config = npbackup.configuration.load_config(CONFIG_FILE)
-    if full_config:
-        repo_config, _ = npbackup.configuration.get_repo_config(
-            full_config, args.repo_name
-        )
-    else:
+    if not full_config:
         msg = "Cannot obtain repo config"
         json_error_logging(False, msg, "critical")
         sys.exit(71)
-
-    if not repo_config:
-        msg = "Cannot find repo config"
-        json_error_logging(False, msg, "critical")
-        sys.exit(72)
+    
+    if not args.group_operation:
+        repo_name = None
+        if not args.repo_name:
+            repo_name = "default"
+        repo_config, _ = npbackup.configuration.get_repo_config(full_config, repo_name)
+        if not repo_config:
+            msg = "Cannot find repo config"
+            json_error_logging(False, msg, "critical")
+            sys.exit(72)
+    else:
+        repo_config = None
     
     binary = None
     if args.external_backend_binary:
@@ -312,6 +329,7 @@ This is free software, and you are welcome to redistribute it under certain cond
             sys.exit(73)
         
     if args.show_config:
+        # Load an anonymous version of the repo config
         repo_config = npbackup.configuration.get_anonymous_repo_config(repo_config)
         print(json.dumps(repo_config, indent=4))
         sys.exit(0)
@@ -328,6 +346,8 @@ This is free software, and you are welcome to redistribute it under certain cond
         "op_args": {},
     }
 
+    # On group operations, we also need to set op_args
+
     if args.stdin:
         cli_args["operation"] = "backup"
         cli_args["op_args"] = {
@@ -335,61 +355,90 @@ This is free software, and you are welcome to redistribute it under certain cond
             "read_from_stdin": True,
             "stdin_filename": args.stdin_filename if args.stdin_filename else None,
         }
-    elif args.backup:
+    elif args.backup or args.group_operation == "backup":
         cli_args["operation"] = "backup"
         cli_args["op_args"] = {"force": args.force}
-    elif args.restore:
+    elif args.restore or args.group_operation == "restore":
+        if args.restore_includes:
+            restore_includes = [include.strip() for include in args.restore_includes.split(',')]
+        else:
+            restore_includes = None
         cli_args["operation"] = "restore"
         cli_args["op_args"] = {
             "snapshot": args.snapshot_id,
             "target": args.restore,
-            "restore_include": args.restore_include,
+            "restore_includes": restore_includes,
         }
-    elif args.snapshots:
+    elif args.snapshots or args.group_operation == "snapshots":
         cli_args["operation"] = "snapshots"
-    elif args.list:
+    elif args.list or args.group_operation == "list":
         cli_args["operation"] = "list"
         cli_args["op_args"] = {"subject": args.list}
-    elif args.ls:
+    elif args.ls or args.group_operation == "ls":
         cli_args["operation"] = "ls"
         cli_args["op_args"] = {"snapshot": args.snapshot_id}
-    elif args.find:
+    elif args.find or args.group_operation == "find":
         cli_args["operation"] = "find"
         cli_args["op_args"] = {"path": args.find}
-    elif args.forget:
+    elif args.forget or args.group_operation == "forget":
         cli_args["operation"] = "forget"
         if args.forget == "policy":
             cli_args["op_args"] = {"use_policy": True}
         else:
             cli_args["op_args"] = {"snapshots": args.forget}
-    elif args.quick_check:
+    elif args.quick_check or args.group_operation == "quick_check":
         cli_args["operation"] = "check"
-    elif args.full_check:
+    elif args.full_check or args.group_operation == "full_check":
         cli_args["operation"] = "check"
         cli_args["op_args"] = {"read_data": True}
-    elif args.prune:
+    elif args.prune or args.group_operation == "prune":
         cli_args["operation"] = "prune"
-    elif args.prune_max:
+    elif args.prune_max or args.group_operation == "prune_max":
         cli_args["operation"] = "prune"
         cli_args["op_args"] = {"max": True}
-    elif args.unlock:
+    elif args.unlock or args.group_operation == "unlock":
         cli_args["operation"] = "unlock"
-    elif args.repair_index:
+    elif args.repair_index or args.group_operation == "repair_index":
         cli_args["operation"] = "repair"
         cli_args["op_args"] = {"subject": "index"}
-    elif args.repair_snapshots:
+    elif args.repair_snapshots or args.group_operation == "repair_snapshots":
         cli_args["operation"] = "repair"
         cli_args["op_args"] = {"subject": "snapshots"}
-    elif args.dump:
+    elif args.dump or args.group_operation == "dump":
         cli_args["operation"] = "dump"
         cli_args["op_args"] = {"path": args.dump}
-    elif args.stats:
+    elif args.stats or args.group_operation == "stats":
         cli_args["operation"] = "stats"
-    elif args.raw:
+    elif args.raw or args.group_operation == "raw":
         cli_args["operation"] = "raw"
         cli_args["op_args"] = {"command": args.raw}
-    elif args.has_recent_snapshot:
+    elif args.has_recent_snapshot or args.group_operation == "has_recent_snapshot":
         cli_args["operation"] = "has_recent_snapshot"
+
+    # Group operation mode
+    repo_config_list = []
+    if args.group_operation:
+        if args.repo_group:
+            groups = [group.strip() for group in args.repo_group.split(',')]
+            for group in groups:
+                repos = npbackup.configuration.get_repos_by_group(full_config, group)
+        elif args.repo_name:
+            repos = [repo.strip() for repo in args.repo_name.split(',')]
+        else:
+            logger.critical("No repository names or groups have been provided for group operation. Please use --repo-group or --repo-name")
+            sys.exit(74)
+        for repo in repos:
+            repo_config, _ = npbackup.configuration.get_repo_config(full_config, repo)
+            repo_config_list.append(repo_config)
+
+        logger.info(f"Running group operations for repos: {', '.join(repos)}")
+
+        cli_args["operation"] = "group_runner"
+        cli_args["op_args"] = {
+            "repo_config_list": repo_config_list,
+            "operation": args.group_operation,
+            **cli_args["op_args"]
+        }
 
     if cli_args["operation"]:
         entrypoint(**cli_args)
