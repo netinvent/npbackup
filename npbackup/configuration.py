@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024041101"
+__build__ = "2024041701"
 __version__ = "npbackup 3.0.0+"
 
 MIN_CONF_VERSION = 3.0
@@ -113,7 +113,7 @@ ENCRYPTED_OPTIONS = [
     "repo_opts.repo_password",
     "repo_opts.repo_password_command",
     "prometheus.http_username",
-    "prometheus.http_username",
+    "prometheus.http_password",
     "env.encrypted_env_variables",
     "global_options.auto_upgrade_server_username",
     "global_options.auto_upgrade_server_password",
@@ -604,9 +604,12 @@ def get_repo_config(
     try:
         # Let's make a copy of config since it's a "pointer object"
         repo_config = deepcopy(full_config.g(f"repos.{repo_name}"))
+        if not repo_config:
+            logger.error(f"No repo with name {repo_name} found in config")
+            return None, None
     except KeyError:
         logger.error(f"No repo with name {repo_name} found in config")
-        return None
+        return None, None
     try:
         repo_group = full_config.g(f"repos.{repo_name}.repo_group")
         group_config = full_config.g(f"groups.{repo_group}")
@@ -774,11 +777,15 @@ def get_group_list(full_config: dict) -> List[str]:
 
 
 def get_repos_by_group(full_config: dict, group: str) -> List[str]:
+    """
+    Return repo list by group
+    If special group __all__ is given, return all repos
+    """
     repo_list = []
     if full_config:
         for repo in list(full_config.g("repos").keys()):
             if (
-                full_config.g(f"repos.{repo}.repo_group") == group
+                (full_config.g(f"repos.{repo}.repo_group") == group or group == "__all__")
                 and group not in repo_list
             ):
                 repo_list.append(repo)
