@@ -23,6 +23,7 @@ from npbackup.runner_interface import entrypoint
 from npbackup.__version__ import version_string, version_dict
 from npbackup.__debug__ import _DEBUG
 from npbackup.common import execution_logs
+from npbackup.core import upgrade_runner
 from npbackup.core.i18n_helper import _t
 
 if os.name == "nt":
@@ -333,6 +334,30 @@ This is free software, and you are welcome to redistribute it under certain cond
         repo_config = npbackup.configuration.get_anonymous_repo_config(repo_config)
         print(json.dumps(repo_config, indent=4))
         sys.exit(0)
+
+    # Try to perform an auto upgrade if needed
+    try:
+        auto_upgrade = full_config["global_options"]["auto_upgrade"]
+    except KeyError:
+        auto_upgrade = True
+    try:
+        auto_upgrade_interval = full_config["global_options"]["auto_upgrade_interval"]
+    except KeyError:
+        auto_upgrade_interval = 10
+
+    if (auto_upgrade and upgrade_runner.need_upgrade(auto_upgrade_interval)) or args.auto_upgrade:
+        if args.auto_upgrade:
+            logger.info("Running user initiated auto upgrade")
+        else:
+            logger.info("Running program initiated auto upgrade")
+        result = upgrade_runner.run_upgrade(full_config)
+        if result:
+            sys.exit(0)
+        elif args.auto_upgrade:
+            logger.error("Auto upgrade failed")
+            sys.exit(23)
+        else:
+            logger.warning("Interval initiated auto upgrade failed")
 
     # Prepare program run
     cli_args = {
