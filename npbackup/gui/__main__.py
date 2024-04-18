@@ -50,7 +50,7 @@ from npbackup.gui.config import config_gui
 from npbackup.gui.operations import operations_gui
 from npbackup.gui.helpers import get_anon_repo_uri, gui_thread_runner
 from npbackup.core.i18n_helper import _t
-from npbackup.core.upgrade_runner import run_upgrade, check_new_version
+from npbackup.core import upgrade_runner
 from npbackup.path_helper import CURRENT_DIR
 from npbackup.__version__ import version_string
 from npbackup.__debug__ import _DEBUG
@@ -64,11 +64,7 @@ sg.theme(PYSIMPLEGUI_THEME)
 sg.SetOptions(icon=OEM_ICON)
 
 
-def about_gui(version_string: str, full_config: dict = None) -> None:
-    if full_config and full_config.g("global_options.auto_upgrade_server_url"):
-        auto_upgrade_result = check_new_version(full_config)
-    else:
-        auto_upgrade_result = None
+def about_gui(version_string: str, full_config: dict = None, auto_upgrade_result: bool = False) -> None:
     if auto_upgrade_result:
         new_version = [
             sg.Button(
@@ -107,7 +103,7 @@ def about_gui(version_string: str, full_config: dict = None) -> None:
             )
             if result == "OK":
                 logger.info("Running GUI initiated upgrade")
-                sub_result = run_upgrade(full_config)
+                sub_result = upgrade_runner.upgrade(full_config)
                 if sub_result:
                     sys.exit(0)
                 else:
@@ -448,6 +444,17 @@ def _main_gui(viewer_mode: bool):
     # TODO
     if args.repo_name:
         repo_name = args.repo_name
+
+    def check_for_auto_upgrade(full_config: dict) -> None:
+        if full_config and full_config.g("global_options.auto_upgrade_server_url"):
+            auto_upgrade_result = upgrade_runner.check_new_version(full_config)
+            if auto_upgrade_result:
+                r = sg.Popup(_t("config_gui.auto_upgrade_launch"), custom_text=(_t("generic.yes"), _t("generic.no")))
+                if r == _t("generic.yes"):
+                    result = upgrade_runner.run_upgrade(full_config)
+                    if not result:
+                        sg.Popup(_t("config_gui.auto_upgrade_failed"))
+
 
     def select_config_file(config_file: str = None) -> None:
         """
@@ -793,6 +800,8 @@ def _main_gui(viewer_mode: bool):
             )
         ]
     ]
+
+    check_for_auto_upgrade(full_config)
 
     window = sg.Window(
         SHORT_PRODUCT_NAME,
