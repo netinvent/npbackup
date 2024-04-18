@@ -12,39 +12,42 @@ Works on x64 **Linux** , **NAS** solutions based on arm/arm64, **Windows** x64 a
 
 ## Features
 
-- Data deduplication and fast zstd compression
-- Client side data encryption
-- Wide storage backend support
-  - local files
-  - SFTP
-  - High performance HTTP REST server
-  - Amazon S3/Minio/Wasabi
-  - Blackblaze B2
-  - Microsoft Azure Blob Storage
-  - Google Cloud Storage
-  - OpenStack Swift
-  - Alibaba Cloud (Aliyun) Object Storage System (OSS)
-- Resume on interrupted backups
-- Full CLI interface for scheduled task usage
+- Multiple repositories support
+  - Repository group settings
+  - Group operations
+- Data deduplication and fast zstd compression*
+- Client side data encryption*
+- Wide storage backend support*
+  - local files*
+  - SFTP*
+  - High performance HTTP REST server*
+  - Amazon S3/Minio/Wasabi*
+  - Blackblaze B2*
+  - Microsoft Azure Blob Storage*
+  - Google Cloud Storage*
+  - OpenStack Swift*
+  - Alibaba Cloud (Aliyun) Object Storage System (OSS)*
+- Resume on interrupted backups*
+- Full CLI interface with all previous options, including --json API mode
   - Checks for recent backups before launching a backup
 - End User GUI
   - Backups create, list, viewer and restore
   - Full configuration interface
-  - Internationalization support (en, fr as of feb 2023)
+  - Internationalization support (en, fr as of Apr 2024)
 - Performance
   - Backup process and IO priority settings
-  - Upload / download speed limits
-  - Remote connectivity concurrency settings
+  - Upload / download speed limits*
+  - Remote connectivity concurrency settings*
 - Comes with full exclusion lists for Linux and Windows
 - First class prometheus support
-  - Restic results metric generatioion
+  - Restic results metric generation
   - Grafana dashboard included
   - node_exporter file collector support
   - Optional push gateway metrics uploading
 - First class Windows support
-  - VSS snapshots
+  - VSS snapshots*
   - Automatic cloud file exclusions (reparse points)
-  - Windows pre-built executables
+  - Windows pre-built executables*
   - Windows installer
 - Additional security
   - Repository uri / password, http metrics and upgrade server passwords are AES-256 encrypted
@@ -57,6 +60,8 @@ Works on x64 **Linux** , **NAS** solutions based on arm/arm64, **Windows** x64 a
 - Easy configuration via YAML file (or via GUI)
 - Remote automatic self upgrade capacity
   - Included upgrade server ready to run in production
+
+(*) Feature provided by [restic](https://restic.net) backup backend
 
 ## About
 
