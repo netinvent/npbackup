@@ -164,7 +164,7 @@ empty_config_dict = {
                 "exclude_files_larger_than": None,
                 "additional_parameters": None,
                 "additional_backup_only_parameters": None,
-                "minimum_backup_size_error": "10MiB",  # allows BytesConverter units
+                "minimum_backup_size_error": "10 MiB",  # allows BytesConverter units
                 "pre_exec_commands": [],
                 "pre_exec_per_command_timeout": 3600,
                 "pre_exec_failure_is_fatal": False,
@@ -180,8 +180,8 @@ empty_config_dict = {
             # Minimum time between two backups, in minutes
             # Set to zero in order to disable time checks
             "minimum_backup_age": 1440,
-            "upload_speed": "100Mb",  # Mb(its) or MB(ytes), use 0 for unlimited upload speed
-            "download_speed": "0 MB",  # in KiB, use 0 for unlimited download speed
+            "upload_speed": "100 Mib",  # Mib(its) or MiB(ytes), use 0 for unlimited upload speed
+            "download_speed": "0",  # in KiB, use 0 for unlimited download speed
             "backend_connections": 0,  # Fine tune simultaneous connections to backend, use 0 for standard configuration
             "retention_strategy": {
                 "last": 0,
@@ -390,8 +390,9 @@ def evaluate_variables(repo_config: dict, full_config: dict) -> dict:
 def expand_units(object_config: dict, unexpand: bool = False) -> dict:
     """
     Evaluate human bytes notation
-    eg 50 KB to 500000
-    and 500000 to 50 KB in unexpand mode
+    eg 50 KB to  50000 bytes
+    eg 50 KiB to 51200 bytes
+    and 50000 to 50 KB in unexpand mode
     """
 
     def _expand_units(key, value):
