@@ -82,7 +82,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Comme separated list of groups to work with. Can accept special name '__all__' to work with all repositories."
+        help="Comme separated list of groups to work with. Can accept special name '__all__' to work with all repositories.",
     )
     parser.add_argument("-b", "--backup", action="store_true", help="Run a backup")
     parser.add_argument(
@@ -237,28 +237,28 @@ This is free software, and you are welcome to redistribute it under certain cond
         "--show-config",
         action="store_true",
         required=False,
-        help="Show full inherited configuration for current repo"
+        help="Show full inherited configuration for current repo",
     )
     parser.add_argument(
         "--manager-password",
         type=str,
         default=None,
         required=False,
-        help="Optional manager password when showing config"
+        help="Optional manager password when showing config",
     )
     parser.add_argument(
         "--external-backend-binary",
         type=str,
         default=None,
         required=False,
-        help="Full path to alternative external backend binary"
+        help="Full path to alternative external backend binary",
     )
     parser.add_argument(
         "--group-operation",
         type=str,
         default=None,
         required=False,
-        help="Launch an operation on a group of repositories given by --repo-group"
+        help="Launch an operation on a group of repositories given by --repo-group",
     )
     args = parser.parse_args()
 
@@ -317,7 +317,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         msg = "Cannot obtain repo config"
         json_error_logging(False, msg, "critical")
         sys.exit(71)
-    
+
     if not args.group_operation:
         repo_name = None
         if not args.repo_name:
@@ -329,7 +329,7 @@ This is free software, and you are welcome to redistribute it under certain cond
             sys.exit(72)
     else:
         repo_config = None
-    
+
     binary = None
     if args.external_backend_binary:
         binary = args.external_backend_binary
@@ -337,7 +337,7 @@ This is free software, and you are welcome to redistribute it under certain cond
             msg = f"External backend binary {binary} cannot be found."
             json_error_logging(False, msg, "critical")
             sys.exit(73)
-        
+
     if args.show_config:
         # NPF-SEC-00009
         # Load an anonymous version of the repo config
@@ -348,11 +348,13 @@ This is free software, and you are welcome to redistribute it under certain cond
                 if __current_manager_password == args.manager_password:
                     show_encrypted = True
                 else:
-                    # NPF-SEC 
-                    sleep(2) # Sleep to avoid brute force attacks
+                    # NPF-SEC
+                    sleep(2)  # Sleep to avoid brute force attacks
                     logger.error("Wrong manager password")
                     sys.exit(74)
-        repo_config = npbackup.configuration.get_anonymous_repo_config(repo_config, show_encrypted=show_encrypted)
+        repo_config = npbackup.configuration.get_anonymous_repo_config(
+            repo_config, show_encrypted=show_encrypted
+        )
         print(json.dumps(repo_config, indent=4))
         sys.exit(0)
 
@@ -366,7 +368,9 @@ This is free software, and you are welcome to redistribute it under certain cond
     except KeyError:
         auto_upgrade_interval = 10
 
-    if (auto_upgrade and upgrade_runner.need_upgrade(auto_upgrade_interval)) or args.auto_upgrade:
+    if (
+        auto_upgrade and upgrade_runner.need_upgrade(auto_upgrade_interval)
+    ) or args.auto_upgrade:
         if args.auto_upgrade:
             logger.info("Running user initiated auto upgrade")
         else:
@@ -406,7 +410,9 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["op_args"] = {"force": args.force}
     elif args.restore or args.group_operation == "restore":
         if args.restore_includes:
-            restore_includes = [include.strip() for include in args.restore_includes.split(',')]
+            restore_includes = [
+                include.strip() for include in args.restore_includes.split(",")
+            ]
         else:
             restore_includes = None
         cli_args["operation"] = "restore"
@@ -465,13 +471,15 @@ This is free software, and you are welcome to redistribute it under certain cond
     repo_config_list = []
     if args.group_operation:
         if args.repo_group:
-            groups = [group.strip() for group in args.repo_group.split(',')]
+            groups = [group.strip() for group in args.repo_group.split(",")]
             for group in groups:
                 repos = npbackup.configuration.get_repos_by_group(full_config, group)
         elif args.repo_name:
-            repos = [repo.strip() for repo in args.repo_name.split(',')]
+            repos = [repo.strip() for repo in args.repo_name.split(",")]
         else:
-            logger.critical("No repository names or groups have been provided for group operation. Please use --repo-group or --repo-name")
+            logger.critical(
+                "No repository names or groups have been provided for group operation. Please use --repo-group or --repo-name"
+            )
             sys.exit(74)
         for repo in repos:
             repo_config, _ = npbackup.configuration.get_repo_config(full_config, repo)
@@ -483,7 +491,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["op_args"] = {
             "repo_config_list": repo_config_list,
             "operation": args.group_operation,
-            **cli_args["op_args"]
+            **cli_args["op_args"],
         }
 
     if cli_args["operation"]:

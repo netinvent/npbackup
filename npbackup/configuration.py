@@ -791,17 +791,17 @@ def get_repos_by_group(full_config: dict, group: str) -> List[str]:
     if full_config:
         for repo in list(full_config.g("repos").keys()):
             if (
-                (full_config.g(f"repos.{repo}.repo_group") == group or group == "__all__")
-                and group not in repo_list
-            ):
+                full_config.g(f"repos.{repo}.repo_group") == group or group == "__all__"
+            ) and group not in repo_list:
                 repo_list.append(repo)
     return repo_list
 
 
 def get_anonymous_repo_config(repo_config: dict, show_encrypted: bool = False) -> dict:
     """
-    Replace each encrypted value with 
+    Replace each encrypted value with
     """
+
     def _get_anonymous_repo_config(key: str, value: Any) -> Any:
         if key_should_be_encrypted(key, ENCRYPTED_OPTIONS):
             if isinstance(value, list):
@@ -810,7 +810,7 @@ def get_anonymous_repo_config(repo_config: dict, show_encrypted: bool = False) -
             else:
                 value = "__(o_O)__"
         return value
-        
+
     # NPF-SEC-00008: Don't show manager password / sensible data with --show-config
     repo_config.pop("manager_password", None)
     repo_config.pop("__current_manager_password", None)

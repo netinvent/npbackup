@@ -286,14 +286,14 @@ def config_gui(full_config: dict, config_file: str):
                     tree = prometheus_labels_tree
 
                 for val in value:
-                        if object_type != "group" and inherited[val]:
-                            icon = INHERITED_TREE_ICON
-                        else:
-                            icon = TREE_ICON
-                        tree.insert("", val, val, val, icon=icon)
+                    if object_type != "group" and inherited[val]:
+                        icon = INHERITED_TREE_ICON
+                    else:
+                        icon = TREE_ICON
+                    tree.insert("", val, val, val, icon=icon)
                 window[key].Update(values=tree)
                 return
-            
+
             if key in ("env.env_variables", "env.encrypted_env_variables"):
                 if key == "env.env_variables":
                     tree = env_variables_tree
@@ -308,7 +308,7 @@ def config_gui(full_config: dict, config_file: str):
                     tree.insert("", skey, skey, values=[val], icon=icon)
                 window[key].Update(values=tree)
                 return
-            
+
             # Update units into separate value and unit combobox
             if key in (
                 "backup_opts.minimum_backup_size_error",
@@ -465,7 +465,6 @@ def config_gui(full_config: dict, config_file: str):
         else:
             object_group = None
 
-
         # We need to patch values since sg.Tree() only returns selected data from TreeData()
         # Hence we'll fill values with a list or a dict depending on our TreeData data structure
         # @PysimpleGUI: there should be a get_all_values() method or something
@@ -495,7 +494,6 @@ def config_gui(full_config: dict, config_file: str):
             for key, node in window[tree_data_key].TreeData.tree_dict.items():
                 if key and node.values:
                     values[tree_data_key][key] = node.values[0]
-
 
         # Special treatment for env.encrypted_env_variables since they might contain an ENCRYPTED_DATA_PLACEHOLDER
         # We need to update the placeholder to the actual value if exists
@@ -585,10 +583,10 @@ def config_gui(full_config: dict, config_file: str):
 
             # Finally, update the config dictionary
             # Debug WIP
-            #if object_type == "group":
-                #print(f"UPDATING {active_object_key} curr={current_value} new={value}")
-            #else:
-                #print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
+            # if object_type == "group":
+            # print(f"UPDATING {active_object_key} curr={current_value} new={value}")
+            # else:
+            # print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
             full_config.s(active_object_key, value)
         return full_config
 
@@ -1126,7 +1124,9 @@ def config_gui(full_config: dict, config_file: str):
             [sg.Button(_t("config_gui.set_permissions"), key="--SET-PERMISSIONS--")],
             [
                 sg.Text(_t("config_gui.repo_group"), size=(40, 1)),
-                sg.Combo(values=configuration.get_group_list(full_config), key="repo_group"),
+                sg.Combo(
+                    values=configuration.get_group_list(full_config), key="repo_group"
+                ),
             ],
             [
                 sg.Text(

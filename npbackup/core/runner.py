@@ -242,10 +242,7 @@ class NPBackupRunner:
 
     @binary.setter
     def binary(self, value):
-        if (
-            not isinstance(value, str)
-            or not os.path.isfile(value)
-        ):
+        if not isinstance(value, str) or not os.path.isfile(value):
             raise ValueError("Backend binary {value} is not readable")
         self._binary = value
 
@@ -417,7 +414,10 @@ class NPBackupRunner:
                     operation = fn.__name__
 
                 current_permissions = self.repo_config.g("permissions")
-                if current_permissions and not current_permissions in required_permissions[operation]:
+                if (
+                    current_permissions
+                    and not current_permissions in required_permissions[operation]
+                ):
                     self.write_logs(
                         f"Required permissions for operation '{operation}' must be in {required_permissions[operation]}, current permission is [{current_permissions}]",
                         level="critical",
@@ -1330,7 +1330,8 @@ class NPBackupRunner:
                     )
                 else:
                     self.write_logs(
-                        f"Operation {operation} failed for repo {repo_name}", level="error"
+                        f"Operation {operation} failed for repo {repo_name}",
+                        level="error",
                     )
             if not result:
                 group_result = False

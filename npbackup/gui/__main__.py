@@ -64,7 +64,9 @@ sg.theme(PYSIMPLEGUI_THEME)
 sg.SetOptions(icon=OEM_ICON)
 
 
-def about_gui(version_string: str, full_config: dict = None, auto_upgrade_result: bool = False) -> None:
+def about_gui(
+    version_string: str, full_config: dict = None, auto_upgrade_result: bool = False
+) -> None:
     if auto_upgrade_result:
         new_version = [
             sg.Button(
@@ -449,12 +451,14 @@ def _main_gui(viewer_mode: bool):
         if full_config and full_config.g("global_options.auto_upgrade_server_url"):
             auto_upgrade_result = upgrade_runner.check_new_version(full_config)
             if auto_upgrade_result:
-                r = sg.Popup(_t("config_gui.auto_upgrade_launch"), custom_text=(_t("generic.yes"), _t("generic.no")))
+                r = sg.Popup(
+                    _t("config_gui.auto_upgrade_launch"),
+                    custom_text=(_t("generic.yes"), _t("generic.no")),
+                )
                 if r == _t("generic.yes"):
                     result = upgrade_runner.run_upgrade(full_config)
                     if not result:
                         sg.Popup(_t("config_gui.auto_upgrade_failed"))
-
 
     def select_config_file(config_file: str = None) -> None:
         """
