@@ -693,7 +693,8 @@ def load_config(config_file: Path) -> Optional[dict]:
             "exclude_files",
             "pre_exec_commands",
             "post_exec_commands",
-            "additional_labels" "env_variables",
+            "additional_labels",
+            "env_variables",
             "encrypted_env_variables",
         ):
             if not isinstance(value, list):
