@@ -105,7 +105,7 @@ def about_gui(
             )
             if result == "OK":
                 logger.info("Running GUI initiated upgrade")
-                sub_result = upgrade_runner.upgrade(full_config)
+                sub_result = upgrade_runner.run_upgrade(full_config)
                 if sub_result:
                     sys.exit(0)
                 else:
