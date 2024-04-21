@@ -44,3 +44,8 @@ Best ways:
 
 Since v3.0.0, we have config inheritance. Showing the actual config helps diag issues, but we need to be careful not
 to show actual secrets.
+
+# NPF-SEC-00009: Manager password in CLI mode
+
+When using `--show-config --manager-password password`, we should only show unencrypted config if password is set.  
+Also, when wrong password is entered, we should wait in order to reduce brute force attacks.
