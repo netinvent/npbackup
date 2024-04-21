@@ -10,6 +10,7 @@ import os
 import sys
 from pathlib import Path
 import atexit
+from time import sleep
 from argparse import ArgumentParser
 from datetime import datetime, timezone
 import logging
@@ -235,7 +236,15 @@ This is free software, and you are welcome to redistribute it under certain cond
     parser.add_argument(
         "--show-config",
         action="store_true",
+        required=False,
         help="Show full inherited configuration for current repo"
+    )
+    parser.add_argument(
+        "--manager-password",
+        type=str,
+        default=None,
+        required=False,
+        help="Optional manager password when showing config"
     )
     parser.add_argument(
         "--external-backend-binary",
@@ -330,8 +339,20 @@ This is free software, and you are welcome to redistribute it under certain cond
             sys.exit(73)
         
     if args.show_config:
+        # NPF-SEC-00009
         # Load an anonymous version of the repo config
-        repo_config = npbackup.configuration.get_anonymous_repo_config(repo_config)
+        show_encrypted = False
+        if args.manager_password:
+            __current_manager_password = repo_config.g("__current_manager_password")
+            if __current_manager_password:
+                if __current_manager_password == args.manager_password:
+                    show_encrypted = True
+                else:
+                    # NPF-SEC 
+                    sleep(2) # Sleep to avoid brute force attacks
+                    logger.error("Wrong manager password")
+                    sys.exit(74)
+        repo_config = npbackup.configuration.get_anonymous_repo_config(repo_config, show_encrypted=show_encrypted)
         print(json.dumps(repo_config, indent=4))
         sys.exit(0)
 

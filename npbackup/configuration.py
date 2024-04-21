@@ -798,7 +798,7 @@ def get_repos_by_group(full_config: dict, group: str) -> List[str]:
     return repo_list
 
 
-def get_anonymous_repo_config(repo_config: dict) -> dict:
+def get_anonymous_repo_config(repo_config: dict, show_encrypted: bool = False) -> dict:
     """
     Replace each encrypted value with 
     """
@@ -814,6 +814,8 @@ def get_anonymous_repo_config(repo_config: dict) -> dict:
     # NPF-SEC-00008: Don't show manager password / sensible data with --show-config
     repo_config.pop("manager_password", None)
     repo_config.pop("__current_manager_password", None)
+    if show_encrypted:
+        return repo_config
     return replace_in_iterable(
         repo_config,
         _get_anonymous_repo_config,
