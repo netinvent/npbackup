@@ -464,6 +464,47 @@ def config_gui(full_config: dict, config_file: str):
             object_group = full_config.g(f"repos.{object_name}.repo_group")
         else:
             object_group = None
+
+
+        # We need to patch values since sg.Tree() only returns selected data from TreeData()
+        # Hence we'll fill values with a list or a dict depending on our TreeData data structure
+        # @PysimpleGUI: there should be a get_all_values() method or something
+        list_tree_data_keys = [
+            "backup_opts.paths",
+            "backup_opts.tags",
+            "backup_opts.pre_exec_commands",
+            "backup_opts.post_exec_commands",
+            "backup_opts.exclude_files",
+            "backup_opts.exclude_patterns",
+            "prometheus.additional_labels",
+        ]
+        for tree_data_key in list_tree_data_keys:
+            values[tree_data_key] = []
+            # pylint: disable=E1101 (no-member)
+            for node in window[tree_data_key].TreeData.tree_dict.values():
+                if node.values:
+                    values[tree_data_key].append(node.values)
+
+        dict_tree_data_keys = [
+            "env.env_variables",
+            "env.encrypted_env_variables",
+        ]
+        for tree_data_key in dict_tree_data_keys:
+            values[tree_data_key] = CommentedMap()
+            # pylint: disable=E1101 (no-member)
+            for key, node in window[tree_data_key].TreeData.tree_dict.items():
+                if key and node.values:
+                    values[tree_data_key][key] = node.values[0]
+
+
+        # Special treatment for env.encrypted_env_variables since they might contain an ENCRYPTED_DATA_PLACEHOLDER
+        # We need to update the placeholder to the actual value if exists
+        for k, v in values["env.encrypted_env_variables"].items():
+            if v == ENCRYPTED_DATA_PLACEHOLDER:
+                values["env.encrypted_env_variables"][k] = full_config.g(
+                    f"{object_type}s.{object_name}.env.encrypted_env_variables.{k}"
+                )
+
         for key, value in values.items():
             # Don't update placeholders ;)
             # TODO exclude encrypted env vars
@@ -543,13 +584,11 @@ def config_gui(full_config: dict, config_file: str):
                 continue
 
             # Finally, update the config dictionary
-            if object_type == "group":
-                # WIP
-                print(f"UPDATING {active_object_key} curr={current_value} new={value}")
-            else:
-                print(
-                    f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}"
-                )
+            # Debug WIP
+            #if object_type == "group":
+                #print(f"UPDATING {active_object_key} curr={current_value} new={value}")
+            #else:
+                #print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
             full_config.s(active_object_key, value)
         return full_config
 
@@ -1646,36 +1685,6 @@ def config_gui(full_config: dict, config_file: str):
             current_object_type, current_object_name = object_type, object_name
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--CANCEL--"):
             break
-
-        # We need to patch values since sg.Tree() only returns selected data from TreeData()
-        # Hence we'll fill values with a list or a dict depending on our TreeData data structure
-        # @PysimpleGUI: there should be a get_all_values() method or something
-        list_tree_data_keys = [
-            "backup_opts.paths",
-            "backup_opts.tags",
-            "backup_opts.pre_exec_commands",
-            "backup_opts.post_exec_commands",
-            "backup_opts.exclude_files",
-            "backup_opts.exclude_patterns",
-            "prometheus.additional_labels",
-        ]
-        for tree_data_key in list_tree_data_keys:
-            values[tree_data_key] = []
-            # pylint: disable=E1101 (no-member)
-            for node in window[tree_data_key].TreeData.tree_dict.values():
-                if node.values:
-                    values[tree_data_key].append(node.values)
-
-        dict_tree_data_keys = [
-            "env.env_variables",
-            "env.encrypted_env_variables",
-        ]
-        for tree_data_key in dict_tree_data_keys:
-            values[tree_data_key] = CommentedMap()
-            # pylint: disable=E1101 (no-member)
-            for key, node in window[tree_data_key].TreeData.tree_dict.items():
-                if key and node.values:
-                    values[tree_data_key][key] = node.values[0]
 
         if event == "-OBJECT-SELECT-":
             # Update full_config with current object before updating
