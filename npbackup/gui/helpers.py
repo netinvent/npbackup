@@ -15,7 +15,7 @@ from logging import getLogger
 from time import sleep
 import re
 import queue
-import PySimpleGUI as sg
+import npbackup.gui.PySimpleGUI as sg
 from npbackup.core.i18n_helper import _t
 from npbackup.customization import (
     LOADER_ANIMATION,

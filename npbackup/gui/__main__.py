@@ -26,7 +26,7 @@ import atexit
 from ofunctions.process import kill_childs
 from ofunctions.threading import threaded
 from ofunctions.misc import BytesConverter
-import PySimpleGUI as sg
+import npbackup.gui.PySimpleGUI as sg
 import _tkinter
 import npbackup.configuration
 import npbackup.common

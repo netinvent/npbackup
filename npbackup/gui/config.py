@@ -14,7 +14,7 @@ from typing import List, Tuple
 import os
 import pathlib
 from logging import getLogger
-import PySimpleGUI as sg
+import npbackup.gui.PySimpleGUI as sg
 import textwrap
 from ruamel.yaml.comments import CommentedMap
 import npbackup.configuration as configuration
