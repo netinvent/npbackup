@@ -7,9 +7,11 @@ en:
   options: Options
   create: Create
   change: Change
+  close: Close
+  finished: Finished
 
-  _yes: Yes
-  _no: No
+  yes: Yes
+  no: No
 
   seconds: seconds
   minutes: minutes
@@ -26,6 +28,7 @@ en:
 
   size: Size
   path: Path
+  paths: Paths
   modification_date: Modification date
 
   content: Content
@@ -43,5 +46,26 @@ en:
 
   scheduled_task: Scheduled task
 
-  delete: Delete
-  deleted: deleted
+  forget: Forget
+  forgotten: Forgotten
+  forgetting: Forgetting
+
+  no_snapshots: No snapshots
+
+  are_you_sure: Are you sure ?
+
+  select_file: Select file
+  name: Name
+  type: Type
+  value: Value
+
+  bogus_data_given: Bogus data given
+
+  please_wait: Please wait
+
+  bad_file: Bad file
+  file_does_not_exist: File does not exist
+
+  add_files: Add files
+  add_folder: Add folder
+  remove_selected: Remove selected

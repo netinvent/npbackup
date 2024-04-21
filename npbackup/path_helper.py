@@ -5,8 +5,8 @@
 
 __intname__ = "npbackup.path_helper"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2023 NetInvent"
-__license__ = "GPL-3.0-only"
+__copyright__ = "Copyright (C) 2023-2024 NetInvent"
+__license__ = "BSD-3-Clause"
 __build__ = "2023012201"
 
 

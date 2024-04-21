@@ -1,6 +1,82 @@
-## Current master
+## Shortly planned
+ 
+  ! - Add policy like restic forget --keep-within-daily 30d --keep-within-weekly 1m --keep-within-monthly 1y --keep-within-yearly 3y
+  default policy restic forget --keep-within-hourly 72h --keep-within-daily 30d --keep-within-weekly 1m --keep-within-monthly 1y --keep-within-yearly 3y
+      - With button to select --keep-x or --keep-within-x
+      - with button to select forget/prune operation
+      - With explanation link to restic
+    - prune operation: default max unsed ?
+    - Operation planifier:
+      - backups
+      - cleaner (forget / check / prune, each having different planification (at least for check --read-data))
+      - Launch now
+   - NPBackup Operation mode
+      - manages multiple repos with generic key (restic key add) or specified key
+  !- NTP server
+  !- Viewer can have a configuration file
+ ! - Reimplement autoupgrade
+ 
+## 3.0.0
+ - This is a major rewrite that allows using multiple repositories, adds repository groups and implements repository settings inheritance from group settings
 
-  ! Add --read-concurrency for better backup parallelism on NVME drives (already default to 2 in 0.16.0)
+  !- New operation planifier for backups / cleaning / checking repos
+  !- Implemented retention policies
+  !  - Optional time server update to make sure we don't drift before doing retention operations
+  !  - Optional repo check before doing retention operations
+  !- Pre and post-execution scripts
+  !  - Multiple pre and post execution scripts are now allowed
+  !  - Post-execution script can now be force run on error / exit
+  !  - Script result now has prometheus metrics
+
+
+## Features
+  - New viewer mode allowing to browse/restore restic repositories without any NPBackup configuation
+
+  - Multi repository support
+  - Group settings for repositories
+  !- Operation center
+    - GUI operation center allowing to mass execute actions on repos / groups
+    - CLI operation center via `--group-operation --repo-group=somegroup`
+    !- Implemented retention policies
+    !- Operation planifier allows to create scheduled tasks for operations
+      !- Implemented scheduled task creator for Windows & Unix
+         !(simple list of tasks, actions, stop on error)
+    - Implemented repo quick check / full check / repair index / repair snapshots / unlock / forget / prune / dump / stats commands
+  - Added per repo permission management
+    - Repos now have backup, restore and full privileges, optionally allowing to restrict access for end users
+  - Added snapshot tag to snapshot list on main window
+  - Split npbackup into separate CLI and GUI
+    - Status window has been refactored so GUI now has full stdout / stderr returns from runner and backend
+  - Implemented file size based exclusion
+  - CLI can now fully operate in API compatible mode via --json parameter
+    - Parses non json compliant restic output
+    - Always returns a result boolean and a reason when failing
+  - CLI now accepts --stdin parameter to backup streams sent to CLI
+  - Added minimum backup size upon which we declare that backup has failed
+  - All bytes units now have automatic conversion of units (K/M/G/T/P bits/bytes or IEC bytes)
+  - Refactored GUI and overall UX of configuration
+  - New option --show-config to show inheritance in CLI mode (GUI has visual indicators)
+  - Allow using external restic binary via --external-backend-binary parameter in CLI mode
+
+## Fixes
+  - Default exit code is now worst log level called
+  - Show anonymized repo uri in GUI
+  - Fix deletion failed message for en lang
+  - Fix Google cloud storage backend detection in repository uri
+  - Backup admin password is now stored in a more secure way
+
+## Misc
+  - Current backup state now shows more precise backup state, including last backup date when relevant
+  - Concurrency checks (pidfile checks) are now directly part of the runner
+  - Allow a 30 seconds grace period for child processes to close before asking them nicely, and than not nicely to quit
+  - Fully refactored prometheus metrics parser to be able to read restic standard or json outputs
+  - Added initial tests
+
+## 2.2.2 - 14/12/2023 (internal build only)
+  - Fixed backup paths of '/' root partitions
+  - Properly display repository init errors
+  - Logs didn't show proper error status
+  - Fixed wrong init detection for S3 backend
 
 ## 2.2.1 - 28/08/2023
   - Added snapshot deletion option in GUI

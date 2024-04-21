@@ -1,0 +1,85 @@
+# NPBackup config file for npbackup v2.2
+# (C) 2022-2023 NetInvent
+
+backup:
+  compression: auto
+  exclude_caches: true
+  exclude_files:
+  #- excludes/generic_excluded_extensions
+  #- excludes/generic_excludes
+  #- excludes/windows_excludes
+  # - excludes/linux_excludes
+  exclude_case_ignore: false   # Exclusions will always have case ignored on Windows systems regarless of this setting
+  one_file_system: true
+  ## Paths can contain multiple values, one per line, without quotation marks
+  paths: ### SOURCE ###
+  source_type: files_from_verbatim
+  use_fs_snapshot: false  # Use VSS snapshot on Windows (needs administrator rights), will fallback to non VSS on failure
+  ignore_cloud_files: false  # Don't complain when pointers to files in cloud (onedrive, nextcloud...) cannot be backed up
+  pre_exec_command: ''
+  pre_exec_timeout: 3600
+  pre_exec_failure_is_fatal: false
+  post_exec_command: ''
+  post_exec_timeout: 3600
+  post_exec_failure_is_fatal: false
+  tags: ### VM ###
+  additional_parameters:
+  priority: low
+
+repo:
+  repository: 
+  password:
+  password_command:
+  # Backup age, in minutes, which is the minimum time between two backups
+  minimum_backup_age: 0
+  upload_speed: 0      # in KiB, use 0 for unlimited upload speed
+  download_speed: 0    # in KiB, use 0 for unlimited download speed
+  backend_connections: 0 # Fine tune simultaneous connections to backend, use 0 for standard configuration
+
+identity:
+  # ${HOSTNAME} is a variable containing the hostname as exposed by platform.node()
+  # ${RANDOM}[n] is a variable containing 'n' random alphanumeric char
+  machine_id: ${HOSTNAME}
+  machine_group:
+
+prometheus:
+  ## Supervision
+  metrics: true
+  # Available variables: ${HOSTNAME}, ${RANDOM}[n], ${MACHINE_ID}, ${MACHINE_GROUP}, ${BACKUP_JOB}
+  backup_job: ### VM ###
+  # Prometheus metrics destination can be a http / https server with optional basic authentication (pushgateway), or a file path for node textfile collector to pickup
+  # example: https://push.monitoring.example.tld/metrics/job/npbackup
+  # example: https://push.monitoring.example.tld/metrics/job/${BACKUP_JOB} where ${BACKUP_JOB} is defined in prometheus_backup_job
+  # example: /var/lib/prometheus/collector/mytextfile
+  destination:
+  no_cert_verify: false
+  # prometheus metrics upload password
+  # private keys
+  http_username:
+  http_password:
+  # prometheus instance, becomes exported_instance when using a push gateway
+  instance: ### VM ###
+
+  # Arbitrary group to filter later backups on
+  group: ${MACHINE_GROUP}
+
+  # Additional prometheus labels
+  additional_labels:
+  - tenant=### TENANT ###
+  - backup_type=server
+env:
+  variables:
+  # - SOME_ENV=Value
+
+options:
+  auto_upgrade: true
+  auto_upgrade_server_url:
+  auto_upgrade_server_username:
+  auto_upgrade_server_password:
+  # every 10 NPBackup runs, we'll try an autoupgrade. Never set this lower than 2 since failed upgrades will prevent backups from succeeding
+  auto_upgrade_interval: 10
+  # Available variables: ${HOSTNAME}, ${RANDOM}[n], ${MACHINE_ID}, ${MACHINE_GROUP}, ${BACKUP_JOB}
+  auto_upgrade_host_identity: ${MACHINE_ID}
+  auto_upgrade_group: ${MACHINE_GROUP}
+
+  backup_admin_password:

@@ -79,7 +79,6 @@ The output of the above command should be something like `b'\xa1JP\r\xff\x11u>?V
 Now copy that string into the file `npbackup/secret_keys.py`, which should look like:
 ```
 AES_KEY = b'\xa1JP\r\xff\x11u>?V\x15\xa1\xfd\xaa&tD\xdd\xf9\xde\x07\x93\xd4\xdd\x87R\xd0eb\x10=/'
-DEFAULT_BACKUP_ADMIN_PASSWORD = "MySuperSecretPassword123"
 ```
 
 Note that we also changed the default backup admin password, which is used to see unencrypted configurations in the GUI.

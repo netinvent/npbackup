@@ -5,10 +5,10 @@
 
 __intname__ = "npbackup.compile"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2023 NetInvent"
+__copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023061101"
-__version__ = "1.8.3"
+__build__ = "2023090101"
+__version__ = "1.9.0"
 
 
 """
@@ -29,6 +29,7 @@ from command_runner import command_runner
 from ofunctions.platform import python_arch, get_os
 
 AUDIENCES = ["public", "private"]
+BUILD_TYPES = ["cli", "gui", "viewer"]
 
 # Insert parent dir as path se we get to use npbackup as package
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
@@ -40,11 +41,13 @@ from npbackup.customization import (
     PRODUCT_NAME,
     FILE_DESCRIPTION,
     COPYRIGHT,
-    LICENSE_FILE,
 )
 from npbackup.core.restic_source_binary import get_restic_internal_binary
 from npbackup.path_helper import BASEDIR
 import glob
+
+
+LICENSE_FILE = os.path.join(BASEDIR, os.pardir, 'LICENSE')
 
 del sys.path[0]
 
@@ -173,19 +176,27 @@ def have_nuitka_commercial():
         return False
 
 
-def compile(arch, audience, no_gui=False):
+def compile(arch: str, audience: str, build_type: str):
+    if build_type not in BUILD_TYPES:
+        print("CANNOT BUILD BOGUS BUILD TYPE")
+        sys.exit(1)
+    source_program = "bin/npbackup-{}".format(build_type)
+    suffix = "-{}-{}".format(build_type, arch)
+
+    if audience == "private":
+        suffix += "-PRIV"
     if os.name == "nt":
-        program_executable = "npbackup.exe"
+        program_executable = "npbackup{}.exe".format(suffix)
         restic_executable = "restic.exe"
         platform = "windows"
     elif sys.platform.lower() == "darwin":
         platform = "darwin"
-        program_executable = "npbackup"
+        program_executable = "npbackup-{}{}".format(platform, suffix)
         restic_executable = "restic"
     else:
-        program_executable = "npbackup"
-        restic_executable = "restic"
         platform = "linux"
+        program_executable = "npbackup-{}{}".format(platform, suffix)
+        restic_executable = "restic"
 
     PACKAGE_DIR = "npbackup"
 
@@ -242,6 +253,7 @@ def compile(arch, audience, no_gui=False):
     excludes_dir_source = os.path.join(BASEDIR, os.pardir, excludes_dir)
     excludes_dir_dest = excludes_dir
 
+    #NUITKA_OPTIONS = " --clang"
     NUITKA_OPTIONS = ""
     NUITKA_OPTIONS += " --enable-plugin=data-hiding" if have_nuitka_commercial() else ""
 
@@ -249,11 +261,13 @@ def compile(arch, audience, no_gui=False):
     if "arm" in arch:
         NUITKA_OPTIONS += " --onefile-tempdir-spec=/var/tmp"
 
-    if no_gui:
-        NUITKA_OPTIONS += " --plugin-disable=tk-inter --nofollow-import-to=PySimpleGUI --nofollow-import-to=_tkinter --nofollow-import-to=npbackup.gui"
+    if build_type in ("gui", "viewer"):
+        NUITKA_OPTIONS += " --plugin-enable=tk-inter --disable-console"
     else:
-        NUITKA_OPTIONS += " --plugin-enable=tk-inter"
+        NUITKA_OPTIONS += " --plugin-disable=tk-inter --nofollow-import-to=PySimpleGUI --nofollow-import-to=_tkinter --nofollow-import-to=npbackup.gui"
 
+    if build_type == "gui":
+        NUITKA_OPTIONS +" --nofollow-import-to=npbackup.gui.config --nofollow-import-to=npbackup.__main__"
     if os.name != "nt":
         NUITKA_OPTIONS += " --nofollow-import-to=npbackup.windows"
 
@@ -267,7 +281,7 @@ def compile(arch, audience, no_gui=False):
         TRADEMARKS,
     )
 
-    CMD = '{} -m nuitka --python-flag=no_docstrings --python-flag=-O {} {} --onefile --include-data-dir="{}"="{}" --include-data-file="{}"="{}" --include-data-file="{}"="{}" --windows-icon-from-ico="{}" --output-dir="{}" bin/npbackup'.format(
+    CMD = '{} -m nuitka --python-flag=no_docstrings --python-flag=-O {} {} --onefile --include-data-dir="{}"="{}" --include-data-file="{}"="{}" --include-data-file="{}"="{}" --windows-icon-from-ico="{}" --output-dir="{}" --output-filename="{}" {}'.format(
         PYTHON_EXECUTABLE,
         NUITKA_OPTIONS,
         EXE_OPTIONS,
@@ -279,6 +293,8 @@ def compile(arch, audience, no_gui=False):
         restic_dest_file,
         icon_file,
         OUTPUT_DIR,
+        program_executable,
+        source_program
     )
 
     print(CMD)
@@ -351,7 +367,12 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--no-gui", action="store_true", default=False, help="Don't compile GUI support"
+        "--build-type",
+        type=str,
+        dest="build_type",
+        default=None,
+        required=False,
+        help="Build cli, gui or viewer target"
     )
 
     args = parser.parse_args()
@@ -366,11 +387,19 @@ if __name__ == "__main__":
         if args.audience.lower() == "all":
             audiences = AUDIENCES
         else:
-            audiences = [args.audience]
+            audiences = [args.audience.lower()]
+
+        if args.build_type:
+            if args.build_type.lower() not in BUILD_TYPES:
+                build_types = BUILD_TYPES
+            else:
+                build_types = [args.build_type.lower()]
+        else:
+            build_types = BUILD_TYPES
 
         for audience in audiences:
             move_audience_files(audience)
-            npbackup_version = get_metadata(os.path.join(BASEDIR, "__main__.py"))[
+            npbackup_version = get_metadata(os.path.join(BASEDIR, "__version__.py"))[
                 "version"
             ]
             installer_version = get_metadata(
@@ -386,21 +415,22 @@ if __name__ == "__main__":
                 print("ERROR: Requested private build but no private data available")
                 errors = True
                 continue
-            result = compile(arch=python_arch(), audience=audience, no_gui=args.no_gui)
-            build_type = "private" if private_build else "public"
-            if result:
-                print(
-                    "SUCCESS: MADE {} build for audience {}".format(
-                        build_type, audience
+            for build_type in build_types:
+                result = compile(arch=python_arch(), audience=audience, build_type=build_type)
+                audience_build = "private" if private_build else "public"
+                if result:
+                    print(
+                        "SUCCESS: MADE {} build for audience {}".format(
+                            audience_build, audience
+                        )
                     )
-                )
-            else:
-                print(
-                    "ERROR: Failed making {} build for audience {}".format(
-                        build_type, audience
+                else:
+                    print(
+                        "ERROR: Failed making {} build for audience {}".format(
+                            audience_build, audience
+                        )
                     )
-                )
-                errors = True
+                    errors = True
         if errors:
             print("ERRORS IN BUILD PROCESS")
         else:

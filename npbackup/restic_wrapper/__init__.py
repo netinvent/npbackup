@@ -5,28 +5,32 @@
 
 __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2022-2023 NetInvent"
+__copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023112901"
-__version__ = "1.7.3"
+__build__ = "2024020501"
+__version__ = "2.0.1"
 
 
 from typing import Tuple, List, Optional, Callable, Union
 import os
+import sys
 from logging import getLogger
 import re
 import json
 from datetime import datetime, timezone
 import dateutil.parser
 import queue
+from functools import wraps
 from command_runner import command_runner
+from ofunctions.misc import BytesConverter
+from npbackup.__debug__ import _DEBUG
+from npbackup.__env__ import FAST_COMMANDS_TIMEOUT, CHECK_INTERVAL
 
 
 logger = getLogger()
 
-# Arbitrary timeout for init / init checks.
-# If init takes more than a minute, we really have a problem
-INIT_TIMEOUT = 60
+
+fn_name = lambda n=0: sys._getframe(n + 1).f_code.co_name  # TODO go to ofunctions.misc
 
 
 class ResticRunner:
@@ -36,14 +40,20 @@ class ResticRunner:
         password: str,
         binary_search_paths: List[str] = None,
     ) -> None:
+        self._stdout = None
+        self._stderr = None
+
         self.repository = str(repository).strip()
         self.password = str(password).strip()
         self._verbose = False
+        self._live_output = False
         self._dry_run = False
-        self._stdout = None
+        self._json_output = False
+
+        self.backup_result_content = None
+
         self._binary = None
         self.binary_search_paths = binary_search_paths
-        self._get_binary()
 
         self._is_init = None
         self._exec_time = None
@@ -76,12 +86,12 @@ class ResticRunner:
         self._stop_on = (
             None  # Function which will make executor abort if result is True
         )
-        self._executor_finished = False  # Internal value to check whether executor is done, accessed via self.executor_finished property
-        self._stdout = None  # Optional outputs when command is run as thread
+        # Internal value to check whether executor is running, accessed via self.executor_running property
+        self._executor_running = False
 
     def on_exit(self) -> bool:
-        self._executor_finished = True
-        return self._executor_finished
+        self._executor_running = False
+        return self._executor_running
 
     def _make_env(self) -> None:
         """
@@ -91,7 +101,7 @@ class ResticRunner:
             try:
                 os.environ["RESTIC_PASSWORD"] = str(self.password)
             except TypeError:
-                logger.error("Bogus restic password")
+                self.write_logs("Bogus restic password", level="critical")
                 self.password = None
         if self.repository:
             try:
@@ -100,11 +110,13 @@ class ResticRunner:
                     self.repository = os.path.expandvars(self.repository)
                 os.environ["RESTIC_REPOSITORY"] = str(self.repository)
             except TypeError:
-                logger.error("Bogus restic repository")
+                self.write_logs("Bogus restic repository", level="critical")
                 self.repository = None
 
         for env_variable, value in self.environment_variables.items():
-            logger.debug('Setting envrionment variable "{}"'.format(env_variable))
+            self.write_logs(
+                f'Setting envrionment variable "{env_variable}"', level="debug"
+            )
             os.environ[env_variable] = value
 
         # Configure default cpu usage when not specifically set
@@ -116,6 +128,7 @@ class ResticRunner:
                 gomaxprocs = nb_cores - 1
             elif nb_cores > 4:
                 gomaxprocs = nb_cores - 2
+            # No need to use write_logs here
             logger.debug("Setting GOMAXPROCS to {}".format(gomaxprocs))
             os.environ["GOMAXPROCS"] = str(gomaxprocs)
 
@@ -146,6 +159,14 @@ class ResticRunner:
         self._stdout = value
 
     @property
+    def stderr(self) -> Optional[Union[int, str, Callable, queue.Queue]]:
+        return self._stderr
+
+    @stderr.setter
+    def stderr(self, value: Optional[Union[int, str, Callable, queue.Queue]]):
+        self._stderr = value
+
+    @property
     def verbose(self) -> bool:
         return self._verbose
 
@@ -157,6 +178,17 @@ class ResticRunner:
             raise ValueError("Bogus verbose value given")
 
     @property
+    def live_output(self) -> bool:
+        return self._live_output
+
+    @live_output.setter
+    def live_output(self, value):
+        if isinstance(value, bool):
+            self._live_output = value
+        else:
+            raise ValueError("Bogus live_output value given")
+
+    @property
     def dry_run(self) -> bool:
         return self._dry_run
 
@@ -166,6 +198,17 @@ class ResticRunner:
             self._dry_run = value
         else:
             raise ValueError("Bogus dry run value givne")
+
+    @property
+    def json_output(self) -> bool:
+        return self._json_output
+
+    @json_output.setter
+    def json_output(self, value: bool):
+        if isinstance(value, bool):
+            self._json_output = value
+        else:
+            raise ValueError("Bogus json_output value givne")
 
     @property
     def ignore_cloud_files(self) -> bool:
@@ -186,65 +229,88 @@ class ResticRunner:
     def exec_time(self, value: int):
         self._exec_time = value
 
+    @property
+    def executor_running(self) -> bool:
+        return self._executor_running
+
+    def write_logs(self, msg: str, level: str, raise_error: str = None):
+        """
+        Write logs to log file and stdout / stderr queues if exist for GUI usage
+        """
+        if level == "warning":
+            logger.warning(msg)
+        elif level == "error":
+            logger.error(msg)
+        elif level == "critical":
+            logger.critical(msg)
+        elif level == "info":
+            logger.info(msg)
+        elif level == "debug":
+            logger.debug(msg)
+        else:
+            raise ValueError("Bogus log level given {level}")
+
+        if msg is None:
+            raise ValueError("None log message received")
+        if self.stdout and (level == "info" or (level == "debug" and _DEBUG)):
+            self.stdout.put(msg)
+        if self.stderr and level in ("critical", "error", "warning"):
+            self.stderr.put(msg)
+
+        if raise_error == "ValueError":
+            raise ValueError(msg)
+        if raise_error:
+            raise Exception(msg)
+
     def executor(
         self,
         cmd: str,
         errors_allowed: bool = False,
+        no_output_queues: bool = False,
         timeout: int = None,
-        live_stream=False,
+        stdin: sys.stdin = None,
     ) -> Tuple[bool, str]:
         """
         Executes restic with given command
-
-        When using live_stream, we'll have command_runner fill stdout queue, which is useful for interactive GUI programs, but slower, especially for ls operation
-
+        errors_allowed is needed since we're testing if repo is already initialized
+        no_output_queues is needed since we don't want is_init output to be logged
         """
-        start_time = datetime.utcnow()
-        self._executor_finished = False
+        start_time = datetime.now(timezone.utc)
         additional_parameters = (
             f" {self.additional_parameters.strip()} "
             if self.additional_parameters
             else ""
         )
         _cmd = f'"{self._binary}" {additional_parameters}{cmd}{self.generic_arguments}'
-        if self.dry_run:
-            _cmd += " --dry-run"
-        logger.debug("Running command: [{}]".format(_cmd))
+
+        self._executor_running = True
+        self.write_logs(f"Running command: [{_cmd}]", level="debug")
         self._make_env()
-        if live_stream:
-            exit_code, output = command_runner(
-                _cmd,
-                timeout=timeout,
-                split_streams=False,
-                encoding="utf-8",
-                live_output=self.verbose,
-                valid_exit_codes=errors_allowed,
-                stdout=self._stdout,
-                stop_on=self.stop_on,
-                on_exit=self.on_exit,
-                method="poller",
-                priority=self.priority,
-                io_priority=self.priority,
-            )
-        else:
-            exit_code, output = command_runner(
-                _cmd,
-                timeout=timeout,
-                split_streams=False,
-                encoding="utf-8",
-                live_output=self.verbose,
-                valid_exit_codes=errors_allowed,
-                stop_on=self.stop_on,
-                on_exit=self.on_exit,
-                method="monitor",
-                priority=self._priority,
-                io_priority=self._priority,
-            )
+
+        exit_code, output = command_runner(
+            _cmd,
+            timeout=timeout,
+            split_streams=False,
+            encoding="utf-8",
+            stdin=stdin,
+            stdout=self.stdout if not no_output_queues else None,
+            stderr=self.stderr if not no_output_queues else None,
+            no_close_queues=True,
+            valid_exit_codes=errors_allowed,
+            stop_on=self.stop_on,
+            on_exit=self.on_exit,
+            method="poller",
+            live_output=self._live_output,  # Only on CLI non json mode
+            check_interval=CHECK_INTERVAL,
+            priority=self._priority,
+            io_priority=self._priority,
+        )
         # Don't keep protected environment variables in memory when not necessary
         self._remove_env()
 
-        self._executor_finished = True
-        self.exec_time = (datetime.utcnow() - start_time).total_seconds
+        # _executor_running = False is also set via on_exit function call
+        self._executor_running = False
+        self.exec_time = (datetime.now(timezone.utc) - start_time).total_seconds
 
         if exit_code == 0:
             self.last_command_status = True
@@ -265,19 +331,19 @@ class ResticRunner:
                     ):
                         is_cloud_error = False
             if is_cloud_error is True:
+                self.last_command_status = True
                 return True, output
+            else:
+                self.write_logs("Some files could not be backed up", level="error")
             # TEMP-FIX-4155-END
         self.last_command_status = False
 
         # From here, we assume that we have errors
         # We'll log them unless we tried to know if the repo is initialized
         if not errors_allowed and output:
+            # We won't write to stdout/stderr queues since command_runner already did that for us
             logger.error(output)
         return False, output
-
-    @property
-    def executor_finished(self) -> bool:
-        return self._executor_finished
 
     def _get_binary(self) -> None:
         """
@@ -306,8 +372,9 @@ class ResticRunner:
             if os.path.isfile(probed_path):
                 self._binary = probed_path
                 return
-        logger.error(
-            "No backup engine binary found. Please install latest binary from restic.net"
+        self.write_logs(
+            "No backup engine binary found. Please install latest binary from restic.net",
+            level="error",
         )
 
     @property
@@ -315,9 +382,10 @@ class ResticRunner:
         return self._limit_upload
 
     @limit_upload.setter
-    def limit_upload(self, value: int):
+    def limit_upload(self, value: str):
         try:
-            value = int(value)
+            # restic uses kbytes as upload speed unit
+            value = int(BytesConverter(value).kbytes)
             if value > 0:
                 self._limit_upload = value
         except TypeError:
@@ -328,9 +396,10 @@ class ResticRunner:
         return self._limit_download
 
     @limit_download.setter
-    def limit_download(self, value: int):
+    def limit_download(self, value: str):
         try:
-            value = int(value)
+            # restic uses kbytes as download speed unit
+            value = int(BytesConverter(value).kbytes)
             if value > 0:
                 self._limit_download = value
         except TypeError:
@@ -353,7 +422,7 @@ class ResticRunner:
                     self._backend_connections = 8
 
         except TypeError:
-            logger.warning("Bogus backend_connections value given.")
+            self.write_logs("Bogus backend_connections value given.", level="warning")
 
     @property
     def additional_parameters(self):
@@ -392,6 +461,8 @@ class ResticRunner:
         if not os.path.isfile(value):
             raise ValueError("Non existent binary given: {}".format(value))
         self._binary = value
+        version = self.binary_version
+        self.write_logs(f"Using binary {version}", level="info")
 
     @property
     def binary_version(self) -> Optional[str]:
@@ -407,10 +478,11 @@ class ResticRunner:
             )
             if exit_code == 0:
                 return output.strip()
-            else:
-                logger.error("Cannot get backend version: {}".format(output))
+            self.write_logs("Cannot get backend version: {output}", level="warning")
         else:
-            logger.error("Cannot get backend version: No binary defined.")
+            self.write_logs(
+                "Cannot get backend version: No binary defined.", level="error"
+            )
         return None
 
     @property
@@ -429,19 +501,23 @@ class ResticRunner:
             )
         if self.verbose:
             args += " -vv"
+        if self.dry_run:
+            args += " --dry-run"
+        if self.json_output:
+            args += " --json"
         return args
 
     def init(
         self,
         repository_version: int = 2,
         compression: str = "auto",
-        errors_allowed: bool = False,
     ) -> bool:
         cmd = "init --repository-version {} --compression {}".format(
             repository_version, compression
         )
         result, output = self.executor(
-            cmd, errors_allowed=errors_allowed, timeout=INIT_TIMEOUT
+            cmd,
+            timeout=FAST_COMMANDS_TIMEOUT,
         )
         if result:
             if re.search(
@@ -450,11 +526,13 @@ class ResticRunner:
                 self.is_init = True
                 return True
         else:
-            if re.search(".*already exists|.*already initialized", output, re.IGNORECASE):
-                logger.info("Repo already initialized.")
+            if re.search(
+                ".*already exists|.*already initialized", output, re.IGNORECASE
+            ):
+                self.write_logs("Repo is already initialized.", level="info")
                 self.is_init = True
                 return True
-            logger.error(f"Cannot contact repo: {output}")
+            self.write_logs(f"Cannot contact repo: {output}", level="error")
             self.is_init = False
             return False
         self.is_init = False
@@ -462,8 +540,20 @@ class ResticRunner:
 
     @property
     def is_init(self):
-        if self._is_init is None:
-            self.init(errors_allowed=True)
+        """
+        We'll just check if snapshots can be read
+        """
+        cmd = "snapshots"
+
+        # Disable live output for this check
+        live_output = self.live_output
+        self.live_output = False
+        self._is_init, output = self.executor(
+            cmd, timeout=FAST_COMMANDS_TIMEOUT, errors_allowed=True
+        )
+        self.live_output = live_output
+        if not self._is_init:
+            self.write_logs(output, level="error")
         return self._is_init
 
     @is_init.setter
@@ -478,177 +568,306 @@ class ResticRunner:
     def last_command_status(self, value: bool):
         self._last_command_status = value
 
-    def list(self, obj: str = "snapshots") -> Optional[list]:
+    # pylint: disable=E0213 (no-self-argument)
+    def check_if_init(fn: Callable):
         """
-        Returns json list of snapshots
+        Decorator to check that we don't do anything unless repo is initialized
+        Also auto init repo when backing up
         """
-        if not self.is_init:
-            return None
-        cmd = "list {} --json".format(obj)
+
+        @wraps(fn)
+        def wrapper(self, *args, **kwargs):
+            if not self.is_init:
+                # pylint: disable=E1101 (no-member)
+                if fn.__name__ == "backup":
+                    if not self.init():
+                        self.write_logs(
+                            f"Could not initialize repo for backup operation",
+                            level="critical",
+                        )
+                        return None
+                else:
+                    # pylint: disable=E1101 (no-member)
+                    self.write_logs(
+                        f"Backend is not ready to perform operation {fn.__name__}",  # pylint: disable=E1101 (no-member)
+                        level="error",
+                    )
+                    return None
+            # pylint: disable=E1102 (not-callable)
+            return fn(self, *args, **kwargs)
+
+        return wrapper
+
+    def convert_to_json_output(self, result, output, msg=None, **kwargs):
+        """
+        result, output = command_runner results
+        msg will be logged and used as reason on failure
+
+        Converts restic --json output to parseable json
+
+        as of restic 0.16.2:
+        restic --list snapshots|index... --json returns brute strings, one per line !
+        """
+        if self.json_output:
+            operation = fn_name(1)
+            js = {
+                "result": result,
+                "operation": operation,
+                "args": kwargs,
+                "output": None,
+            }
+            if result:
+                if output:
+                    if isinstance(output, str):
+                        output = list(filter(None, output.split("\n")))
+                    else:
+                        output = [str(output)]
+                    if len(output) > 1:
+                        output_is_list = True
+                        js["output"] = []
+                    else:
+                        output_is_list = False
+                    for line in output:
+                        if output_is_list:
+                            try:
+                                js["output"].append(json.loads(line))
+                            except json.decoder.JSONDecodeError:
+                                js["output"].append(line)
+                        else:
+                            try:
+                                js["output"] = json.loads(line)
+                            except json.decoder.JSONDecodeError:
+                                js["output"] = {"data": line}
+                if msg:
+                    self.write_logs(msg, level="info")
+            else:
+                if msg:
+                    js["reason"] = msg
+                    self.write_logs(msg, level="error")
+                else:
+                    js["reason"] = output
+            return js
+
+        if result:
+            if msg:
+                self.write_logs(msg, level="info")
+            return output
+        if msg:
+            self.write_logs(msg, level="error")
+        return False
+
+    @check_if_init
+    def list(self, subject: str) -> Union[bool, str, dict]:
+        """
+        Returns list of snapshots
+
+        restic won't really return json content, but rather lines of object without any formatting
+        """
+        kwargs = locals()
+        kwargs.pop("self")
+
+        cmd = "list {}".format(subject)
         result, output = self.executor(cmd)
         if result:
-            try:
-                return json.loads(output)
-            except json.decoder.JSONDecodeError:
-                logger.error("Returned data is not JSON:\n{}".format(output))
-                logger.debug("Trace:", exc_info=True)
-        return None
+            msg = f"Successfully listed {subject} objects"
+        else:
+            msg = f"Failed to list {subject} objects:\n{output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
-    def ls(self, snapshot: str) -> Optional[list]:
+    @check_if_init
+    def ls(self, snapshot: str) -> Union[bool, str, dict]:
         """
-        Returns json list of objects
-        """
-        if not self.is_init:
-            return None
-        cmd = "ls {} --json".format(snapshot)
-        result, output = self.executor(cmd)
-        if result and output:
-            """
-            # When not using --json, we must remove first line since it will contain a heading string like:
-            # snapshot db125b40 of [C:\\GIT\\npbackup] filtered by [] at 2023-01-03 09:41:30.9104257 +0100 CET):
-            return output.split("\n", 2)[2]
+        Returns list of objects in a snapshot
 
-            Using --json here does not return actual json content, but lines with each file being a json... !
-            """
-            try:
-                for line in output.split("\n"):
-                    if line:
-                        yield json.loads(line)
-            except json.decoder.JSONDecodeError:
-                logger.error("Returned data is not JSON:\n{}".format(output))
-                logger.debug("Trace:", exc_info=True)
-        return result
+        # When not using --json, we must remove first line since it will contain a heading string like:
+        # snapshot db125b40 of [C:\\GIT\\npbackup] filtered by [] at 2023-01-03 09:41:30.9104257 +0100 CET):
+        return output.split("\n", 2)[2]
 
-    def snapshots(self) -> Optional[list]:
+        Using --json here does not return actual json content, but lines with each file being a json...
+
         """
-        Returns json list of snapshots
-        """
-        if not self.is_init:
-            return None
-        cmd = "snapshots --json"
+        kwargs = locals()
+        kwargs.pop("self")
+
+        cmd = "ls {}".format(snapshot)
         result, output = self.executor(cmd)
         if result:
-            try:
-                return json.loads(output)
-            except json.decoder.JSONDecodeError:
-                logger.error("Returned data is not JSON:\n{}".format(output))
-                logger.debug("Trace:", exc_info=True)
-                return False
-        return None
+            msg = f"Successfuly listed snapshot {snapshot} content"
+        else:
+            msg = f"Could not list snapshot {snapshot} content:\n{output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
+    #  @check_if_init  # We don't need to run if init before checking snapshots since if init searches for snapshots
+    def snapshots(self) -> Union[bool, str, dict]:
+        """
+        Returns a list of snapshots
+        --json is directly parseable
+        """
+        kwargs = locals()
+        kwargs.pop("self")
+
+        cmd = "snapshots"
+        result, output = self.executor(cmd, timeout=FAST_COMMANDS_TIMEOUT)
+        if result:
+            msg = "Snapshots listed successfully"
+        else:
+            msg = f"Could not list snapshots:\n{output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
+
+    @check_if_init
     def backup(
         self,
-        paths: List[str],
-        source_type: str,
+        paths: List[str] = None,
+        source_type: str = None,
         exclude_patterns: List[str] = [],
         exclude_files: List[str] = [],
-        exclude_case_ignore: bool = False,
+        excludes_case_ignore: bool = False,
         exclude_caches: bool = False,
+        exclude_files_larger_than: str = None,
         use_fs_snapshot: bool = False,
         tags: List[str] = [],
         one_file_system: bool = False,
+        read_from_stdin: bool = False,
+        stdin_filename: str = "stdin.data",
         additional_backup_only_parameters: str = None,
-    ) -> Tuple[bool, str]:
+    ) -> Union[bool, str, dict]:
         """
         Executes restic backup after interpreting all arguments
         """
-        if not self.is_init:
-            return None, None
+        kwargs = locals()
+        kwargs.pop("self")
 
-        # Handle various source types
-        if source_type in ["files_from", "files_from_verbatim", "files_from_raw"]:
-            cmd = "backup"
-            if source_type == "files_from":
-                source_parameter = "--files-from"
-            elif source_type == "files_from_verbatim":
-                source_parameter = "--files-from-verbatim"
-            elif source_type == "files_from_raw":
-                source_parameter = "--files-from-raw"
-            else:
-                logger.error("Bogus source type given")
-                return False, ""
-
-            for path in paths:
-                cmd += ' {} "{}"'.format(source_parameter, path)
+        if read_from_stdin:
+            cmd = "backup --stdin"
+            if stdin_filename:
+                cmd += f' --stdin-filename "{stdin_filename}"'
         else:
-            # make sure path is a list and does not have trailing slashes, unless we're backing up root
-            cmd = "backup {}".format(
-                " ".join(
-                    [
-                        '"{}"'.format(path.rstrip("/\\")) if path != "/" else path
-                        for path in paths
-                    ]
-                )
-            )
+            # Handle various source types
+            if source_type in [
+                "files_from",
+                "files_from_verbatim",
+                "files_from_raw",
+            ]:
+                cmd = "backup"
+                if source_type == "files_from":
+                    source_parameter = "--files-from"
+                elif source_type == "files_from_verbatim":
+                    source_parameter = "--files-from-verbatim"
+                elif source_type == "files_from_raw":
+                    source_parameter = "--files-from-raw"
+                else:
+                    self.write_logs("Bogus source type given", level="error")
+                    return False, ""
 
-        case_ignore_param = ""
-        # Always use case ignore excludes under windows
-        if os.name == "nt" or exclude_case_ignore:
-            case_ignore_param = "i"
-
-        for exclude_pattern in exclude_patterns:
-            if exclude_pattern:
-                cmd += ' --{}exclude "{}"'.format(case_ignore_param, exclude_pattern)
-        for exclude_file in exclude_files:
-            if exclude_file:
-                cmd += ' --{}exclude-file "{}"'.format(case_ignore_param, exclude_file)
-        if exclude_caches:
-            cmd += " --exclude-caches"
-        if one_file_system:
-            cmd += " --one-file-system"
-        if use_fs_snapshot:
-            if os.name == "nt":
-                cmd += " --use-fs-snapshot"
-                logger.info("Using VSS snapshot to backup")
+                for path in paths:
+                    cmd += ' {} "{}"'.format(source_parameter, path)
             else:
-                logger.warning(
-                    "Parameter --use-fs-snapshot was given, which is only compatible with Windows"
+                # make sure path is a list and does not have trailing slashes, unless we're backing up root
+                # We don't need to scan files for ETA, so let's add --no-scan
+                cmd = "backup --no-scan {}".format(
+                    " ".join(
+                        [
+                            '"{}"'.format(path.rstrip("/\\")) if path != "/" else path
+                            for path in paths
+                        ]
+                    )
                 )
+
+            case_ignore_param = ""
+            # Always use case ignore excludes under windows
+            if os.name == "nt" or excludes_case_ignore:
+                case_ignore_param = "i"
+
+            for exclude_pattern in exclude_patterns:
+                if exclude_pattern:
+                    cmd += f' --{case_ignore_param}exclude "{exclude_pattern}"'
+            for exclude_file in exclude_files:
+                if exclude_file:
+                    if os.path.isfile(exclude_file):
+                        cmd += f' --{case_ignore_param}exclude-file "{exclude_file}"'
+                    else:
+                        self.write_logs(
+                            f"Exclude file '{exclude_file}' not found", level="error"
+                        )
+            if exclude_caches:
+                cmd += " --exclude-caches"
+            if exclude_files_larger_than:
+                exclude_files_larger_than = int(
+                    BytesConverter(exclude_files_larger_than).bytes
+                )
+                cmd += f" --exclude-larger-than {exclude_files_larger_than}"
+            if one_file_system:
+                cmd += " --one-file-system"
+            if use_fs_snapshot:
+                if os.name == "nt":
+                    cmd += " --use-fs-snapshot"
+                    self.write_logs("Using VSS snapshot to backup", level="info")
+                else:
+                    self.write_logs(
+                        "Parameter --use-fs-snapshot was given, which is only compatible with Windows",
+                        level="warning",
+                    )
         for tag in tags:
             if tag:
                 tag = tag.strip()
                 cmd += " --tag {}".format(tag)
         if additional_backup_only_parameters:
             cmd += " {}".format(additional_backup_only_parameters)
-        result, output = self.executor(cmd, live_stream=True)
+
+        # Run backup without json output, as we could not compute the cloud errors in json output via regexes
+        json_output = self.json_output
+        self.json_output = False
+        if read_from_stdin:
+            result, output = self.executor(cmd, stdin=sys.stdin.buffer)
+        else:
+            result, output = self.executor(cmd)
 
         if (
-            use_fs_snapshot
+            not read_from_stdin
+            and use_fs_snapshot
             and not result
             and re.search("VSS Error", output, re.IGNORECASE)
         ):
-            logger.warning("VSS cannot be used. Backup will be done without VSS.")
-            result, output = self.executor(
-                cmd.replace(" --use-fs-snapshot", ""), live_stream=True
+            self.write_logs(
+                "VSS cannot be used. Backup will be done without VSS.", level="error"
             )
+            result, output = self.executor(cmd.replace(" --use-fs-snapshot", ""))
+        self.json_output = json_output
         if result:
-            return True, output
-        return False, output
+            msg = "Backend finished backup with success"
+        else:
+            msg = f"Backup failed backup operation:\n{output}"
 
-    def find(self, path: str) -> Optional[list]:
+        self.backup_result_content = output
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
+
+    @check_if_init
+    def find(self, path: str) -> Union[bool, str, dict]:
         """
         Returns find command
+        --json produces a directly parseable format
         """
-        if not self.is_init:
-            return None
-        cmd = 'find "{}" --json'.format(path)
+        kwargs = locals()
+        kwargs.pop("self")
+
+        cmd = f'find "{path}"'
         result, output = self.executor(cmd)
         if result:
-            logger.info("Successfuly found {}".format(path))
-            try:
-                return json.loads(output)
-            except json.decoder.JSONDecodeError:
-                logger.error("Returned data is not JSON:\n{}".format(output))
-                logger.debug("Trace:", exc_info=True)
-        logger.warning("Could not find path: {}".format(path))
-        return None
+            msg = "Find command succeed"
+        else:
+            msg = f"Could not find path {path}:\n{output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
-    def restore(self, snapshot: str, target: str, includes: List[str] = None):
+    @check_if_init
+    def restore(
+        self, snapshot: str, target: str, includes: List[str] = None
+    ) -> Union[bool, str, dict]:
         """
         Restore given snapshot to directory
         """
-        if not self.is_init:
-            return None
+        kwargs = locals()
+        kwargs.pop("self")
+
         case_ignore_param = ""
         # Always use case ignore excludes under windows
         if os.name == "nt":
@@ -660,82 +879,260 @@ class ResticRunner:
                     cmd += ' --{}include "{}"'.format(case_ignore_param, include)
         result, output = self.executor(cmd)
         if result:
-            logger.info("successfully restored data.")
-            return True
-        logger.critical("Data not restored: {}".format(output))
-        return False
+            msg = "successfully restored data"
+        else:
+            msg = f"Data not restored:\n{output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
-    def forget(self, snapshot: str) -> bool:
+    @check_if_init
+    def forget(
+        self,
+        snapshots: Optional[Union[List[str], Optional[str]]] = None,
+        policy: Optional[dict] = None,
+    ) -> Union[bool, str, dict]:
         """
         Execute forget command for given snapshot
         """
-        if not self.is_init:
-            return None
-        cmd = "forget {}".format(snapshot)
+        kwargs = locals()
+        kwargs.pop("self")
+
+        if not snapshots and not policy:
+            self.write_logs(
+                "No valid snapshot or policy defined for pruning", level="error"
+            )
+            return False
+
+        if snapshots:
+            if isinstance(snapshots, list):
+                cmds = []
+                for snapshot in snapshots:
+                    cmds.append(f"forget {snapshot}")
+            else:
+                cmds = [f"forget {snapshots}"]
+        if policy:
+            cmd = "forget"
+            for key, value in policy.items():
+                if key == "keep-tags":
+                    if isinstance(value, list):
+                        for tag in value:
+                            if tag:
+                                cmd += f" --keep-tag {tag}"
+                else:
+                    cmd += f" --{key.replace('_', '-')} {value}"
+            cmds = [cmd]
+
         # We need to be verbose here since server errors will not stop client from deletion attempts
+        verbose = self.verbose
+        self.verbose = True
+        batch_result = True
+        batch_output = ""
+        if cmds:
+            for cmd in cmds:
+                result, output = self.executor(cmd)
+                if result:
+                    self.write_logs("successfully forgot snapshot", level="info")
+                else:
+                    self.write_logs(f"Forget failed\n{output}", level="error")
+                    batch_result = False
+                    batch_output += f"\n{output}"
+        self.verbose = verbose
+        return self.convert_to_json_output(batch_result, batch_output, **kwargs)
+
+    @check_if_init
+    def prune(
+        self, max_unused: Optional[str] = None, max_repack_size: Optional[int] = None
+    ) -> Union[bool, str, dict]:
+        """
+        Prune forgotten snapshots
+        """
+        kwargs = locals()
+        kwargs.pop("self")
+
+        cmd = "prune"
+        if max_unused:
+            cmd += f"--max-unused {max_unused}"
+        if max_repack_size:
+            cmd += f"--max-repack-size {max_repack_size}"
         verbose = self.verbose
         self.verbose = True
         result, output = self.executor(cmd)
         self.verbose = verbose
         if result:
-            logger.info("successfully forgot snapshot.")
-            return True
-        logger.critical("Could not forge snapshot: {}".format(output))
-        return False
+            msg = "Successfully pruned repository"
+        else:
+            msg = "Could not prune repository"
+        return self.convert_to_json_output(result, output=output, msg=msg, **kwargs)
 
-    def raw(self, command: str) -> Tuple[bool, str]:
+    @check_if_init
+    def check(self, read_data: bool = True) -> Union[bool, str, dict]:
+        """
+        Check current repo status
+        """
+        kwargs = locals()
+        kwargs.pop("self")
+
+        cmd = "check{}".format(" --read-data" if read_data else "")
+        result, output = self.executor(cmd)
+        if result:
+            msg = "Repo checked successfully."
+        else:
+            msg = "Repo check failed"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
+
+    @check_if_init
+    def repair(self, subject: str) -> Union[bool, str, dict]:
+        """
+        Check current repo status
+        """
+        kwargs = locals()
+        kwargs.pop("self")
+
+        if subject not in ["index", "snapshots"]:
+            self.write_logs(f"Bogus repair order given: {subject}", level="error")
+            return False
+        cmd = f"repair {subject}"
+        result, output = self.executor(cmd)
+        if result:
+            msg = f"Repo successfully repaired:\n{output}"
+        else:
+            msg = f"Repo repair failed:\n{output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
+
+    @check_if_init
+    def unlock(self) -> Union[bool, str, dict]:
+        """
+        Remove stale locks from repos
+        """
+        kwargs = locals()
+        kwargs.pop("self")
+
+        cmd = f"unlock"
+        result, output = self.executor(cmd)
+        if result:
+            msg = f"Repo successfully unlocked"
+        else:
+            msg = f"Repo unlock failed:\n{output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
+
+    @check_if_init
+    def dump(self, path: str) -> Union[bool, str, dict]:
+        """
+        Dump given file directly to stdout
+        """
+        kwargs = locals()
+        kwargs.pop("self")
+
+        cmd = f'dump "{path}"'
+        result, output = self.executor(cmd)
+        if result:
+            msg = f"File {path} successfully dumped"
+        else:
+            msg = f"Cannot dump file {path}:\n {output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
+
+    @check_if_init
+    def stats(self) -> Union[bool, str, dict]:
+        """
+        Gives various repository statistics
+        """
+        kwargs = locals()
+        kwargs.pop("self")
+
+        cmd = f"stats"
+        result, output = self.executor(cmd)
+        if result:
+            msg = f"Repo statistics command success"
+        else:
+            msg = f"Cannot get repo statistics:\n {output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
+
+    @check_if_init
+    def raw(self, command: str) -> Union[bool, str, dict]:
         """
         Execute plain restic command without any interpretation"
         """
-        if not self.is_init:
-            return None
+        kwargs = locals()
+        kwargs.pop("self")
+
         result, output = self.executor(command)
         if result:
-            logger.info("successfully run raw command:\n{}".format(output))
-            return True, output
-        logger.critical("Raw command failed.")
-        return False, output
+            msg = f"successfully run raw command:\n{output}"
+        else:
+            msg = "Raw command failed:\n{output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
-    def has_snapshot_timedelta(self, delta: int = 1441) -> Optional[datetime]:
+    @staticmethod
+    def _has_recent_snapshot(
+        snapshot_list: List, delta: int = None
+    ) -> Tuple[bool, Optional[datetime]]:
+        """
+        Making the actual comparaison a static method so we can call it from GUI too
+
+        Expects a restic snasphot_list (which is most recent at the end ordered)
+        Returns bool if delta (in minutes) is not reached since last successful backup, and returns the last backup timestamp
+        """
+        backup_ts = datetime(1, 1, 1, 0, 0)
+        # Don't bother to deal with mising delta or snapshot list
+        if not snapshot_list or not delta:
+            return False, backup_ts
+        tz_aware_timestamp = datetime.now(timezone.utc).astimezone()
+
+        # Now just take the last snapshot in list (being the more recent), and check whether it's too old
+        last_snapshot = snapshot_list[-1]
+        if re.match(
+            r"[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9](\.\d*)?(\+[0-2][0-9]:[0-9]{2})?",
+            last_snapshot["time"],
+        ):
+            backup_ts = dateutil.parser.parse(last_snapshot["time"])
+            snapshot_age_minutes = (tz_aware_timestamp - backup_ts).total_seconds() / 60
+            if delta - snapshot_age_minutes > 0:
+                logger.info(
+                    f"Recent snapshot {last_snapshot['short_id']} of {last_snapshot['time']} exists !"
+                )
+                return True, backup_ts
+            return False, backup_ts
+
+    #  @check_if_init  # We don't need to run if init before checking snapshots since if init searches for snapshots
+    def has_recent_snapshot(self, delta: int = None) -> Tuple[bool, Optional[datetime]]:
         """
         Checks if a snapshot exists that is newer that delta minutes
         Eg: if delta = -60 we expect a snapshot newer than an hour ago, and return True if exists
-            if delta = +60 we expect a snpashot newer than one hour in future (!), and return True if exists
-            returns False is too old snapshots exit
-            returns None if no info available
-        """
-        if not self.is_init:
-            return None
-        try:
-            snapshots = self.snapshots()
-            if self.last_command_status is False:
-                return None
-            if not snapshots:
-                return False
+            if delta = +60 we expect a snpashot newer than one hour in future (!)
 
-            tz_aware_timestamp = datetime.now(timezone.utc).astimezone()
-            has_recent_snapshot = False
-            for snapshot in snapshots:
-                if re.match(
-                    r"[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]\..*\+[0-2][0-9]:[0-9]{2}",
-                    snapshot["time"],
-                ):
-                    backup_ts = dateutil.parser.parse(snapshot["time"])
-                    snapshot_age_minutes = (
-                        tz_aware_timestamp - backup_ts
-                    ).total_seconds() / 60
-                    if delta - snapshot_age_minutes > 0:
-                        logger.debug(
-                            "Recent snapshot {} of {} exists !".format(
-                                snapshot["short_id"], snapshot["time"]
-                            )
-                        )
-                        has_recent_snapshot = True
-            if has_recent_snapshot:
-                return backup_ts
-            return False
+            returns True, datetime if exists
+            returns False, datetime if exists but too old
+            returns False, datetime = 0001-01-01T00:00:00 if no snapshots found
+            Returns None, None on error
+        """
+        kwargs = locals()
+        kwargs.pop("self")
+
+        # Don't bother to deal with mising delta
+        if not delta:
+            if self.json_output:
+                msg = "No delta given"
+                self.convert_to_json_output(False, None, msg=msg**kwargs)
+            return False, None
+        try:
+            # Make sure we run with json support for this one
+            json_output = self.json_output
+            self.json_output = True
+            result = self.snapshots()
+            self.json_output = json_output
+            if self.last_command_status is False:
+                if self.json_output:
+                    msg = "Could not check for snapshots"
+                    return self.convert_to_json_output(False, None, msg=msg, **kwargs)
+                return False, None
+            snapshots = result["output"]
+            result, timestamp = self._has_recent_snapshot(snapshots, delta)
+            if self.json_output:
+                return self.convert_to_json_output(result, timestamp, **kwargs)
+            return result, timestamp
         except IndexError as exc:
-            logger.debug("snapshot information missing: {}".format(exc))
+            self.write_logs(f"snapshot information missing: {exc}", level="error")
             logger.debug("Trace", exc_info=True)
             # No 'time' attribute in snapshot ?
-            return None
+            if self.json_output:
+                return self.convert_to_json_output(None, None, **kwargs)
+            return None, None

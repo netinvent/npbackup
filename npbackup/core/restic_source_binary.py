@@ -5,7 +5,7 @@
 
 __intname__ = "npbackup.gui.core.restic_source_binary"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2022-2023 NetInvent"
+__copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2023061102"
 
@@ -19,7 +19,7 @@ from npbackup.path_helper import BASEDIR
 RESTIC_SOURCE_FILES_DIR = os.path.join(BASEDIR, os.pardir, "RESTIC_SOURCE_FILES")
 
 
-def get_restic_internal_binary(arch):
+def get_restic_internal_binary(arch: str) -> str:
     binary = None
     if os.path.isdir(RESTIC_SOURCE_FILES_DIR):
         if os.name == "nt":
@@ -44,4 +44,7 @@ def get_restic_internal_binary(arch):
     if binary:
         guessed_path = glob.glob(os.path.join(RESTIC_SOURCE_FILES_DIR, binary))
         if guessed_path:
-            return guessed_path[0]
+            # Take glob results reversed so we get newer version
+            # Does not always compute, but is g00denough(TM) for our dev
+            return guessed_path[-1]
+    return None

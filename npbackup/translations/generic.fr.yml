@@ -7,9 +7,11 @@ fr:
   options: Options
   create: Créer
   change: Changer
+  close: Fermer
+  finished: Terminé
 
-  _yes: Oui
-  _no: Non
+  yes: Oui
+  no: Non
 
   seconds: secondes
   minutes: minutes
@@ -26,6 +28,7 @@ fr:
 
   size: Taille
   path: Chemin
+  path: Chemins
   modification_date: Date de modification
 
   content: Contenu
@@ -43,5 +46,26 @@ fr:
 
   scheduled_task: Tâche planifiée
 
-  delete: Supprimer
-  deleted: éffacé
+  forget: Oublier
+  forgotten: oublié
+  forgetting: Oubli de 
+
+  no_snapshots: Aucun instantané
+
+  are_you_sure: Etes-vous sûr ?
+
+  select_file: Selection fichier
+  name: Nom
+  type: Type
+  value: Valeur
+
+  bogus_data_given: Données invalides
+
+  please_wait: Merci de patienter
+
+  bad_file: Fichier erroné
+  file_does_not_exist: Fichier inexistant
+
+  add_files: Ajouter fichiers
+  add_folder: Ajouter dossier
+  remove_selected: Enlever la sélection

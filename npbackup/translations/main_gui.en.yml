@@ -1,5 +1,6 @@
 en:
-  loading_data_from_repo: Loading data from repo
+  loading_snapshot_list_from_repo: Loading snapshot list from repo
+  loading_last_snapshot_date: Loading last snapshot date
   this_will_take_a_while: This will take a while
   cannot_get_content: Cannot get content. Pleasse check the logs
   cannot_get_repo_status: Cannot get repo status
@@ -14,7 +15,7 @@ en:
   only_include: Only include
   destination_folder: Destination folder
   backup_state: Backup state
-  backup_list_to: List of backups to
+  backup_list_to: List of backups to repo
   local_folder: Local folder
   external_server: external server
   launch_backup: Launch backup
@@ -23,12 +24,27 @@ en:
   backup_from: Backup from
   backup_activity: Backup activity
   backup_in_progress: Backup in progress
-  backup_done: Backup done in %{seconds} seconds
-  backup_failed: Backup failed in %{seconds} seconds. Please check the logs
+  backup_done: Backup done
+  backup_failed: Backup failed. Please check the logs
   select_backup: Please select a backup
   run_as: run as
   identified_by: identified by
   unknown_repo: Repo format unknown
   repository_not_configured: Repository not configured
   execute_operation: Executing operation
-  delete failed: Deletion failed. Please check the logs
+  forget_failed: Failed to forget. Please check the logs
+  operations: Operations
+  select_config_file: Load config file
+  repo_and_password_cannot_be_empty: Repo and password cannot be empty
+  viewer_mode: Repository view-only mode
+  open_repo: Open repo
+  new_config: New config
+  load_config: Load configuration
+  config_error: Configuration error
+  no_config: Please load / create a configuration before proceeding
+
+  snapshot_is_empty: Snapshot is empty
+
+  # logs
+  last_messages: Last messages
+  error_messages: Error messages

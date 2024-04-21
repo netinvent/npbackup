@@ -1,5 +1,6 @@
 fr:
-  loading_data_from_repo: Chargement d'informations depuis le dépot
+  loading_snapshot_list_from_repo: Chargement liste des instantanés depuis le dépot
+  loading_last_snapshot_date: Chargement date du dernier instantané
   this_will_take_a_while: Cela prendra quelques instants
   cannot_get_content: Impossible d'obtenir le contenu. Veuillez vérifier les journaux
   cannot_get_repo_status: Impossible d'obtenir l'état du dépot
@@ -14,7 +15,7 @@ fr:
   only_include: Inclure seulement
   destination_folder: Dossier de destination
   backup_state: Etat de sauvegarde
-  backup_list_to: Liste des sauvegardes vers
+  backup_list_to: Liste des sauvegardes vers le dépot
   local_folder: Dossier local
   external_server: serveur externalisé
   launch_backup: Sauvegarder
@@ -23,12 +24,26 @@ fr:
   backup_from: Sauvegarde du
   backup_activity: Activité de sauvegarde
   backup_in_progress: Sauvegarde en cours
-  backup_done: Sauvegarde terminée en %{seconds} secondes
-  backup_failed: Sauvegarde échouée en %{seconds} secondes. veuillez vérifier les journaux
+  backup_done: Sauvegarde terminée
+  backup_failed: Sauvegarde échouée. veuillez vérifier les journaux
   select_backup: Veuillez sélectionner une sauvegarde
   run_as: faite en tant que
   identified_by: identifiée en tant que
   unknown_repo: Format de dépot inconnu
   repository_not_configured: Dépot non configuré
   execute_operation: Opération en cours
-  delete_failed: Suppression impossible. Veuillez vérifier les journaux
+  forget_failed: Oubli impossible. Veuillez vérifier les journaux
+  operations: Opérations
+  select_config_file: Charger fichier de configuration
+  repo_and_password_cannot_be_empty: Le dépot et le mot de passe ne peuvent être vides
+  viewer_mode: Mode visualisation de dépot uniquement
+  open_repo: Ouvrir dépot
+  new_config: Nouvelle configuration
+  load_config: Charger configuration
+  config_error: Erreur de configuration
+  no_config: Veuillez charger / créer une configuration avant de procéder
+
+  snapshot_is_empty: L'instantané est vide
+  # logs
+  last_messages: Last messages
+  error_messages: Error messages

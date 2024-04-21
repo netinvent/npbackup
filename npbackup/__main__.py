@@ -3,64 +3,32 @@
 #
 # This file is part of npbackup
 
-__intname__ = "npbackup"
-__author__ = "Orsiris de Jong"
-__site__ = "https://www.netperfect.fr/npbackup"
-__description__ = "NetPerfect Backup Client"
-__copyright__ = "Copyright (C) 2022-2023 NetInvent"
-__license__ = "GPL-3.0-only"
-__build__ = "2023121101"
-__version__ = "2.2.2"
+__intname__ = "npbackup.cli_interface"
 
 
 import os
 import sys
+from pathlib import Path
 import atexit
+from time import sleep
 from argparse import ArgumentParser
-import dateutil.parser
-from datetime import datetime
-import tempfile
-import pidfile
+from datetime import datetime, timezone
+import logging
+import json
 import ofunctions.logger_utils
-from ofunctions.platform import python_arch
 from ofunctions.process import kill_childs
-
-# This is needed so we get no GUI version messages
-try:
-    import PySimpleGUI as sg
-    import _tkinter
-
-    _NO_GUI_ERROR = None
-    _NO_GUI = False
-except ImportError as exc:
-    _NO_GUI_ERROR = str(exc)
-    _NO_GUI = True
-
-from npbackup.customization import (
-    PYSIMPLEGUI_THEME,
-    OEM_ICON,
-    LICENSE_TEXT,
-    LICENSE_FILE,
-)
-from npbackup import configuration
-from npbackup.core.runner import NPBackupRunner
+from npbackup.path_helper import CURRENT_DIR
+from npbackup.customization import LICENSE_TEXT
+import npbackup.configuration
+from npbackup.runner_interface import entrypoint
+from npbackup.__version__ import version_string, version_dict
+from npbackup.__debug__ import _DEBUG
+from npbackup.common import execution_logs
+from npbackup.core import upgrade_runner
 from npbackup.core.i18n_helper import _t
-from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
-from npbackup.core.nuitka_helper import IS_COMPILED
-from npbackup.upgrade_client.upgrader import need_upgrade
-from npbackup.core.upgrade_runner import run_upgrade
-
-if not _NO_GUI:
-    from npbackup.gui.config import config_gui
-    from npbackup.gui.main import main_gui
-    from npbackup.gui.minimize_window import minimize_current_window
-
-    sg.theme(PYSIMPLEGUI_THEME)
-    sg.SetOptions(icon=OEM_ICON)
 
 if os.name == "nt":
     from npbackup.windows.task import create_scheduled_task
-
 
 # Nuitka compat, see https://stackoverflow.com/a/74540217
 try:
@@ -70,76 +38,26 @@ except ImportError:
     pass
 
 
-_DEBUG = False
-_VERBOSE = False
-LOG_FILE = os.path.join(CURRENT_DIR, "{}.log".format(__intname__))
-CONFIG_FILE = os.path.join(CURRENT_DIR, "{}.conf".format(__intname__))
-PID_FILE = os.path.join(tempfile.gettempdir(), "{}.pid".format(__intname__))
+_JSON = False
+logger = logging.getLogger()
 
 
-logger = ofunctions.logger_utils.logger_get_logger(LOG_FILE)
+def json_error_logging(result: bool, msg: str, level: str):
+    if _JSON:
+        js = {"result": result, "reason": msg}
+        print(json.dumps(js))
+    logger.__getattribute__(level)(msg)
 
 
-def execution_logs(start_time: datetime) -> None:
-    """
-    Try to know if logger.warning or worse has been called
-    logger._cache contains a dict of values like {10: boolean, 20: boolean, 30: boolean, 40: boolean, 50: boolean}
-    where
-    10 = debug, 20 = info, 30 = warning, 40 = error, 50 = critical
-    so "if 30 in logger._cache" checks if warning has been triggered
-    ATTENTION: logger._cache does only contain cache of current main, not modules, deprecated in favor of
-    ofunctions.logger_utils.ContextFilterWorstLevel
-
-    ATTENTION: For ofunctions.logger_utils.ContextFilterWorstLevel will only check current logger instance
-    So using logger = getLogger("anotherinstance") will create a separate instance from the one we can inspect
-    Makes sense ;)
-    """
-    end_time = datetime.utcnow()
-
-    logger_worst_level = 0
-    for flt in logger.filters:
-        if isinstance(flt, ofunctions.logger_utils.ContextFilterWorstLevel):
-            logger_worst_level = flt.worst_level
-
-    log_level_reached = "success"
-    try:
-        if logger_worst_level >= 40:
-            log_level_reached = "errors"
-        elif logger_worst_level >= 30:
-            log_level_reached = "warnings"
-    except AttributeError as exc:
-        logger.error("Cannot get worst log level reached: {}".format(exc))
-    logger.info(
-        "ExecTime = {}, finished, state is: {}.".format(
-            end_time - start_time, log_level_reached
-        )
-    )
-    # using sys.exit(code) in a atexit function will swallow the exitcode and render 0
-
-
-def interface():
-    global _DEBUG
-    global _VERBOSE
-    global CONFIG_FILE
+def cli_interface():
+    global _JSON
+    global logger
 
     parser = ArgumentParser(
-        prog="{} {} - {}".format(__description__, __copyright__, __site__),
+        prog=f"{__intname__}",
         description="""Portable Network Backup Client\n
 This program is distributed under the GNU General Public License and comes with ABSOLUTELY NO WARRANTY.\n
 This is free software, and you are welcome to redistribute it under certain conditions; Please type --license for more info.""",
-    )
-
-    parser.add_argument(
-        "--check", action="store_true", help="Check if a recent backup exists"
-    )
-
-    parser.add_argument("-b", "--backup", action="store_true", help="Run a backup")
-
-    parser.add_argument(
-        "--force",
-        action="store_true",
-        default=False,
-        help="Force running a backup regardless of existing backups",
     )
 
     parser.add_argument(
@@ -149,37 +67,31 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Path to alternative configuration file",
+        help="Path to alternative configuration file (defaults to current dir/npbackup.conf)",
     )
-
     parser.add_argument(
-        "--config-gui",
-        action="store_true",
-        default=False,
-        help="Show configuration GUI",
-    )
-
-    parser.add_argument(
-        "-l", "--list", action="store_true", help="Show current snapshots"
-    )
-
-    parser.add_argument(
-        "--ls",
+        "--repo-name",
+        dest="repo_name",
         type=str,
         default=None,
         required=False,
-        help='Show content given snapshot. Use "latest" for most recent snapshot.',
+        help="Name of the repository to work with. Defaults to 'default'. In group operation mode, this can be a comma separated list of repo names",
     )
-
+    parser.add_argument(
+        "--repo-group",
+        type=str,
+        default=None,
+        required=False,
+        help="Comme separated list of groups to work with. Can accept special name '__all__' to work with all repositories.",
+    )
+    parser.add_argument("-b", "--backup", action="store_true", help="Run a backup")
     parser.add_argument(
         "-f",
-        "--find",
-        type=str,
-        default=None,
-        required=False,
-        help="Find full path of given file / directory",
+        "--force",
+        action="store_true",
+        default=False,
+        help="Force running a backup regardless of existing backups age",
     )
-
     parser.add_argument(
         "-r",
         "--restore",
@@ -188,30 +100,109 @@ This is free software, and you are welcome to redistribute it under certain cond
         required=False,
         help="Restore to path given by --restore",
     )
-
     parser.add_argument(
-        "--restore-include",
+        "-s",
+        "--snapshots",
+        action="store_true",
+        default=False,
+        help="Show current snapshots",
+    )
+    parser.add_argument(
+        "--ls",
         type=str,
         default=None,
         required=False,
-        help="Restore only paths within include path",
+        help='Show content given snapshot. Use "latest" for most recent snapshot.',
+    )
+    parser.add_argument(
+        "--find",
+        type=str,
+        default=None,
+        required=False,
+        help="Find full path of given file / directory",
+    )
+    parser.add_argument(
+        "--forget",
+        type=str,
+        default=None,
+        required=False,
+        help='Forget given snapshot, or specify "policy" to apply retention policy',
+    )
+    parser.add_argument(
+        "--quick-check", action="store_true", help="Quick check repository"
+    )
+    parser.add_argument(
+        "--full-check", action="store_true", help="Full check repository"
+    )
+    parser.add_argument("--prune", action="store_true", help="Prune data in repository")
+    parser.add_argument(
+        "--prune-max",
+        action="store_true",
+        help="Prune data in repository reclaiming maximum space",
+    )
+    parser.add_argument("--unlock", action="store_true", help="Unlock repository")
+    parser.add_argument("--repair-index", action="store_true", help="Repair repo index")
+    parser.add_argument(
+        "--repair-snapshots", action="store_true", help="Repair repo snapshots"
+    )
+    parser.add_argument(
+        "--list",
+        type=str,
+        default=None,
+        required=False,
+        help="Show [blobs|packs|index|snapshots|keys|locks] objects",
+    )
+    parser.add_argument(
+        "--dump",
+        type=str,
+        default=None,
+        required=False,
+        help="Dump a specific file to stdout",
+    )
+    parser.add_argument(
+        "--stats", action="store_true", help="Get repository statistics"
+    )
+    parser.add_argument(
+        "--raw",
+        type=str,
+        default=None,
+        required=False,
+        help="Run raw command against backend.",
     )
 
     parser.add_argument(
-        "--restore-from-snapshot",
+        "--has-recent-snapshot",
+        action="store_true",
+        help="Check if a recent snapshot exists",
+    )
+    parser.add_argument(
+        "--restore-includes",
+        type=str,
+        default=None,
+        required=False,
+        help="Restore only paths within include path, comma separated list accepted",
+    )
+    parser.add_argument(
+        "--snapshot-id",
         type=str,
         default="latest",
         required=False,
-        help="Choose which snapshot to restore from. Defaults to latest",
-    )
-
-    parser.add_argument(
-        "--forget", type=str, default=None, required=False, help="Forget snapshot"
+        help="Choose which snapshot to use. Defaults to latest",
     )
     parser.add_argument(
-        "--raw", type=str, default=None, required=False, help="Raw commands"
+        "--json",
+        action="store_true",
+        help="Run in JSON API mode. Nothing else than JSON will be printed to stdout",
     )
-
+    parser.add_argument(
+        "--stdin", action="store_true", help="Backup using data from stdin input"
+    )
+    parser.add_argument(
+        "--stdin-filename",
+        type=str,
+        default=None,
+        help="Alternate filename for stdin, defaults to 'stdin.data'",
+    )
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Show verbose output"
     )
@@ -219,13 +210,11 @@ This is free software, and you are welcome to redistribute it under certain cond
     parser.add_argument(
         "-V", "--version", action="store_true", help="Show program version"
     )
-
     parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Run operations in test mode (no actual modifications",
     )
-
     parser.add_argument(
         "--create-scheduled-task",
         type=str,
@@ -233,311 +222,304 @@ This is free software, and you are welcome to redistribute it under certain cond
         required=False,
         help="Create task that runs every n minutes on Windows",
     )
-
     parser.add_argument("--license", action="store_true", help="Show license")
     parser.add_argument(
         "--auto-upgrade", action="store_true", help="Auto upgrade NPBackup"
     )
     parser.add_argument(
-        "--upgrade-conf",
-        action="store_true",
-        help="Add new configuration elements after upgrade",
+        "--log-file",
+        type=str,
+        default=None,
+        required=False,
+        help="Optional path for logfile",
     )
     parser.add_argument(
-        "--gui-status",
+        "--show-config",
         action="store_true",
-        help="Show status of required modules for GUI to work",
+        required=False,
+        help="Show full inherited configuration for current repo",
     )
-
+    parser.add_argument(
+        "--manager-password",
+        type=str,
+        default=None,
+        required=False,
+        help="Optional manager password when showing config",
+    )
+    parser.add_argument(
+        "--external-backend-binary",
+        type=str,
+        default=None,
+        required=False,
+        help="Full path to alternative external backend binary",
+    )
+    parser.add_argument(
+        "--group-operation",
+        type=str,
+        default=None,
+        required=False,
+        help="Launch an operation on a group of repositories given by --repo-group",
+    )
     args = parser.parse_args()
 
-    version_string = "{} v{}{}{}-{} {} - {} - {}".format(
-        __intname__,
-        __version__,
-        "-PRIV" if configuration.IS_PRIV_BUILD else "",
-        "-P{}".format(sys.version_info[1]),
-        python_arch(),
-        __build__,
-        "GUI disabled" if _NO_GUI else "GUI enabled",
-        __copyright__,
-    )
+    if args.log_file:
+        log_file = args.log_file
+    else:
+        log_file = os.path.join(CURRENT_DIR, "{}.log".format(__intname__))
+
+    if args.json:
+        _JSON = True
+        logger = ofunctions.logger_utils.logger_get_logger(
+            log_file, console=False, debug=_DEBUG
+        )
+    else:
+        logger = ofunctions.logger_utils.logger_get_logger(log_file, debug=_DEBUG)
+
     if args.version:
-        print(version_string)
+        if _JSON:
+            print(json.dumps({"result": True, "version": version_dict}))
+        else:
+            print(version_string)
         sys.exit(0)
 
     logger.info(version_string)
     if args.license:
-        try:
-            with open(LICENSE_FILE, "r", encoding="utf-8") as file_handle:
-                print(file_handle.read())
-        except OSError:
+        if _JSON:
+            print(json.dumps({"result": True, "output": LICENSE_TEXT}))
+        else:
             print(LICENSE_TEXT)
         sys.exit(0)
 
-    if args.gui_status:
-        logger.info("Can run GUI: {}, errors={}".format(not _NO_GUI, _NO_GUI_ERROR))
-        # Don't bother to talk about package manager when compiled with Nuitka
-        if _NO_GUI and not IS_COMPILED:
-            logger.info(
-                'You need tcl/tk 8.6+ and python-tkinter installed for GUI to work. Please use your package manager (example "yum install python-tkinter" or "apt install python3-tk") to install missing dependencies.'
-            )
-        sys.exit(0)
-
-    if args.debug or os.environ.get("_DEBUG", "False").capitalize() == "True":
-        _DEBUG = True
+    if args.debug or _DEBUG:
         logger.setLevel(ofunctions.logger_utils.logging.DEBUG)
 
     if args.verbose:
         _VERBOSE = True
 
-    # Make sure we log execution time and error state at the end of the program
-    if args.backup or args.restore or args.find or args.list or args.check:
-        atexit.register(
-            execution_logs,
-            datetime.utcnow(),
-        )
-
     if args.config_file:
         if not os.path.isfile(args.config_file):
-            logger.critical("Given file {} cannot be read.".format(args.config_file))
-        CONFIG_FILE = args.config_file
+            msg = f"Config file {args.config_file} cannot be read."
+            json_error_logging(False, msg, "critical")
+            sys.exit(70)
+        CONFIG_FILE = Path(args.config_file)
+    else:
+        config_file = Path(f"{CURRENT_DIR}/npbackup.conf")
+        if config_file.exists():
+            CONFIG_FILE = config_file
+            logger.info(f"Loading default configuration file {config_file}")
+        else:
+            msg = "Cannot run without configuration file."
+            json_error_logging(False, msg, "critical")
+            sys.exit(70)
 
-    # Program entry
-    if args.config_gui:
-        try:
-            config_dict = configuration.load_config(CONFIG_FILE)
-            if not config_dict:
-                logger.error("Cannot load config file")
-                sys.exit(24)
-        except FileNotFoundError:
-            logger.warning(
-                'No configuration file found. Please use --config-file "path" to specify one or put a config file into current directory. Will create fresh config file in current directory.'
-            )
-            config_dict = configuration.empty_config_dict
+    full_config = npbackup.configuration.load_config(CONFIG_FILE)
+    if not full_config:
+        msg = "Cannot obtain repo config"
+        json_error_logging(False, msg, "critical")
+        sys.exit(71)
 
-        config_dict = config_gui(config_dict, CONFIG_FILE)
-        sys.exit(0)
+    if not args.group_operation:
+        repo_name = None
+        if not args.repo_name:
+            repo_name = "default"
+        repo_config, _ = npbackup.configuration.get_repo_config(full_config, repo_name)
+        if not repo_config:
+            msg = "Cannot find repo config"
+            json_error_logging(False, msg, "critical")
+            sys.exit(72)
+    else:
+        repo_config = None
 
-    if args.create_scheduled_task:
-        try:
-            result = create_scheduled_task(
-                executable_path=CURRENT_EXECUTABLE,
-                interval_minutes=int(args.create_scheduled_task),
-            )
-            if result:
-                sys.exit(0)
-            else:
-                sys.exit(22)
-        except ValueError:
-            sys.exit(23)
+    binary = None
+    if args.external_backend_binary:
+        binary = args.external_backend_binary
+        if not os.path.isfile(binary):
+            msg = f"External backend binary {binary} cannot be found."
+            json_error_logging(False, msg, "critical")
+            sys.exit(73)
 
-    try:
-        config_dict = configuration.load_config(CONFIG_FILE)
-    except FileNotFoundError:
-        config_dict = None
-
-    if not config_dict:
-        message = _t("config_gui.no_config_available")
-        logger.error(message)
-
-        if config_dict is None and not _NO_GUI:
-            config_dict = configuration.empty_config_dict
-            # If no arguments are passed, assume we are launching the GUI
-            if len(sys.argv) == 1:
-                minimize_current_window()
-                try:
-                    result = sg.Popup(
-                        "{}\n\n{}".format(message, _t("config_gui.create_new_config")),
-                        custom_text=(_t("generic._yes"), _t("generic._no")),
-                        keep_on_top=True,
-                    )
-                    if result == _t("generic._yes"):
-                        config_dict = config_gui(config_dict, CONFIG_FILE)
-                        sg.Popup(_t("config_gui.saved_initial_config"))
-                    else:
-                        logger.error("No configuration created via GUI")
-                        sys.exit(7)
-                except _tkinter.TclError as exc:
-                    logger.info(
-                        'Tkinter error: "{}". Is this a headless server ?'.format(exc)
-                    )
-                    parser.print_help(sys.stderr)
-                    sys.exit(1)
-            sys.exit(7)
-        elif not config_dict:
-            if len(sys.argv) == 1 and not _NO_GUI:
-                sg.Popup(_t("config_gui.bogus_config_file", config_file=CONFIG_FILE))
-            sys.exit(7)
-
-    if args.upgrade_conf:
-        # Whatever we need to add here for future releases
-        # Eg:
-
-        logger.info("Upgrading configuration file to version %s", __version__)
-        try:
-            config_dict["identity"]
-        except KeyError:
-            # Create new section identity, as per upgrade 2.2.0rc2
-            config_dict["identity"] = {"machine_id": "${HOSTNAME}"}
-        configuration.save_config(CONFIG_FILE, config_dict)
+    if args.show_config:
+        # NPF-SEC-00009
+        # Load an anonymous version of the repo config
+        show_encrypted = False
+        if args.manager_password:
+            __current_manager_password = repo_config.g("__current_manager_password")
+            if __current_manager_password:
+                if __current_manager_password == args.manager_password:
+                    show_encrypted = True
+                else:
+                    # NPF-SEC
+                    sleep(2)  # Sleep to avoid brute force attacks
+                    logger.error("Wrong manager password")
+                    sys.exit(74)
+        repo_config = npbackup.configuration.get_anonymous_repo_config(
+            repo_config, show_encrypted=show_encrypted
+        )
+        print(json.dumps(repo_config, indent=4))
         sys.exit(0)
 
     # Try to perform an auto upgrade if needed
     try:
-        auto_upgrade = config_dict["options"]["auto_upgrade"]
+        auto_upgrade = full_config["global_options"]["auto_upgrade"]
     except KeyError:
         auto_upgrade = True
     try:
-        auto_upgrade_interval = config_dict["options"]["interval"]
+        auto_upgrade_interval = full_config["global_options"]["auto_upgrade_interval"]
     except KeyError:
         auto_upgrade_interval = 10
 
-    if (auto_upgrade and need_upgrade(auto_upgrade_interval)) or args.auto_upgrade:
+    if (
+        auto_upgrade and upgrade_runner.need_upgrade(auto_upgrade_interval)
+    ) or args.auto_upgrade:
         if args.auto_upgrade:
             logger.info("Running user initiated auto upgrade")
         else:
             logger.info("Running program initiated auto upgrade")
-        result = run_upgrade(config_dict)
+        result = upgrade_runner.run_upgrade(full_config)
         if result:
             sys.exit(0)
         elif args.auto_upgrade:
+            logger.error("Auto upgrade failed")
             sys.exit(23)
-
-    dry_run = False
-    if args.dry_run:
-        dry_run = True
-
-    npbackup_runner = NPBackupRunner(config_dict=config_dict)
-    npbackup_runner.dry_run = dry_run
-    npbackup_runner.verbose = _VERBOSE
-    if not npbackup_runner.backend_version:
-        logger.critical("No backend available. Cannot continue")
-        sys.exit(25)
-    logger.info("Backend: {}".format(npbackup_runner.backend_version))
-
-    if args.check:
-        if npbackup_runner.check_recent_backups():
-            sys.exit(0)
         else:
-            sys.exit(2)
+            logger.warning("Interval initiated auto upgrade failed")
 
-    if args.list:
-        result = npbackup_runner.list()
-        if result:
-            for snapshot in result:
-                try:
-                    tags = snapshot["tags"]
-                except KeyError:
-                    tags = None
-                logger.info(
-                    "ID: {} Hostname: {}, Username: {}, Tags: {}, source: {}, time: {}".format(
-                        snapshot["short_id"],
-                        snapshot["hostname"],
-                        snapshot["username"],
-                        tags,
-                        snapshot["paths"],
-                        dateutil.parser.parse(snapshot["time"]),
-                    )
-                )
-            sys.exit(0)
+    # Prepare program run
+    cli_args = {
+        "repo_config": repo_config,
+        "verbose": args.verbose,
+        "dry_run": args.dry_run,
+        "debug": args.debug,
+        "json_output": args.json,
+        "binary": binary,
+        "operation": None,
+        "op_args": {},
+    }
+
+    # On group operations, we also need to set op_args
+
+    if args.stdin:
+        cli_args["operation"] = "backup"
+        cli_args["op_args"] = {
+            "force": True,
+            "read_from_stdin": True,
+            "stdin_filename": args.stdin_filename if args.stdin_filename else None,
+        }
+    elif args.backup or args.group_operation == "backup":
+        cli_args["operation"] = "backup"
+        cli_args["op_args"] = {"force": args.force}
+    elif args.restore or args.group_operation == "restore":
+        if args.restore_includes:
+            restore_includes = [
+                include.strip() for include in args.restore_includes.split(",")
+            ]
         else:
-            sys.exit(2)
-
-    if args.ls:
-        result = npbackup_runner.ls(snapshot=args.ls)
-        if result:
-            logger.info("Snapshot content:")
-            for entry in result:
-                logger.info(entry)
-            sys.exit(0)
+            restore_includes = None
+        cli_args["operation"] = "restore"
+        cli_args["op_args"] = {
+            "snapshot": args.snapshot_id,
+            "target": args.restore,
+            "restore_includes": restore_includes,
+        }
+    elif args.snapshots or args.group_operation == "snapshots":
+        cli_args["operation"] = "snapshots"
+    elif args.list or args.group_operation == "list":
+        cli_args["operation"] = "list"
+        cli_args["op_args"] = {"subject": args.list}
+    elif args.ls or args.group_operation == "ls":
+        cli_args["operation"] = "ls"
+        cli_args["op_args"] = {"snapshot": args.snapshot_id}
+    elif args.find or args.group_operation == "find":
+        cli_args["operation"] = "find"
+        cli_args["op_args"] = {"path": args.find}
+    elif args.forget or args.group_operation == "forget":
+        cli_args["operation"] = "forget"
+        if args.forget == "policy":
+            cli_args["op_args"] = {"use_policy": True}
         else:
-            logger.error("Snapshot could not be listed.")
-            sys.exit(2)
+            cli_args["op_args"] = {"snapshots": args.forget}
+    elif args.quick_check or args.group_operation == "quick_check":
+        cli_args["operation"] = "check"
+    elif args.full_check or args.group_operation == "full_check":
+        cli_args["operation"] = "check"
+        cli_args["op_args"] = {"read_data": True}
+    elif args.prune or args.group_operation == "prune":
+        cli_args["operation"] = "prune"
+    elif args.prune_max or args.group_operation == "prune_max":
+        cli_args["operation"] = "prune"
+        cli_args["op_args"] = {"max": True}
+    elif args.unlock or args.group_operation == "unlock":
+        cli_args["operation"] = "unlock"
+    elif args.repair_index or args.group_operation == "repair_index":
+        cli_args["operation"] = "repair"
+        cli_args["op_args"] = {"subject": "index"}
+    elif args.repair_snapshots or args.group_operation == "repair_snapshots":
+        cli_args["operation"] = "repair"
+        cli_args["op_args"] = {"subject": "snapshots"}
+    elif args.dump or args.group_operation == "dump":
+        cli_args["operation"] = "dump"
+        cli_args["op_args"] = {"path": args.dump}
+    elif args.stats or args.group_operation == "stats":
+        cli_args["operation"] = "stats"
+    elif args.raw or args.group_operation == "raw":
+        cli_args["operation"] = "raw"
+        cli_args["op_args"] = {"command": args.raw}
+    elif args.has_recent_snapshot or args.group_operation == "has_recent_snapshot":
+        cli_args["operation"] = "has_recent_snapshot"
 
-    if args.find:
-        result = npbackup_runner.find(path=args.find)
-        if result:
-            sys.exit(0)
+    # Group operation mode
+    repo_config_list = []
+    if args.group_operation:
+        if args.repo_group:
+            groups = [group.strip() for group in args.repo_group.split(",")]
+            for group in groups:
+                repos = npbackup.configuration.get_repos_by_group(full_config, group)
+        elif args.repo_name:
+            repos = [repo.strip() for repo in args.repo_name.split(",")]
         else:
-            sys.exit(2)
-    try:
-        with pidfile.PIDFile(PID_FILE):
-            if args.backup:
-                result = npbackup_runner.backup(force=args.force)
-                if result:
-                    logger.info("Backup finished.")
-                    sys.exit(0)
-                else:
-                    logger.error("Backup operation failed.")
-                    sys.exit(2)
-            if args.restore:
-                result = npbackup_runner.restore(
-                    snapshot=args.restore_from_snapshot,
-                    target=args.restore,
-                    restore_includes=args.restore_include,
-                )
-                if result:
-                    sys.exit(0)
-                else:
-                    sys.exit(2)
+            logger.critical(
+                "No repository names or groups have been provided for group operation. Please use --repo-group or --repo-name"
+            )
+            sys.exit(74)
+        for repo in repos:
+            repo_config, _ = npbackup.configuration.get_repo_config(full_config, repo)
+            repo_config_list.append(repo_config)
 
-            if args.forget:
-                result = npbackup_runner.forget(snapshot=args.forget)
-                if result:
-                    sys.exit(0)
-                else:
-                    sys.exit(2)
+        logger.info(f"Running group operations for repos: {', '.join(repos)}")
 
-            if args.raw:
-                result = npbackup_runner.raw(command=args.raw)
-                if result:
-                    sys.exit(0)
-                else:
-                    sys.exit(2)
+        cli_args["operation"] = "group_runner"
+        cli_args["op_args"] = {
+            "repo_config_list": repo_config_list,
+            "operation": args.group_operation,
+            **cli_args["op_args"],
+        }
 
-    except pidfile.AlreadyRunningError:
-        logger.warning("Backup process already running. Will not continue.")
-        # EXIT_CODE 21 = current backup process already running
-        sys.exit(21)
-
-    if not _NO_GUI:
-        # When no argument is given, let's run the GUI
-        # Also, let's minimize the commandline window so the GUI user isn't distracted
-        minimize_current_window()
-        logger.info("Running GUI")
-        try:
-            with pidfile.PIDFile(PID_FILE):
-                try:
-                    main_gui(config_dict, CONFIG_FILE, version_string)
-                except _tkinter.TclError as exc:
-                    logger.info(
-                        'Tkinter error: "{}". Is this a headless server ?'.format(exc)
-                    )
-                    parser.print_help(sys.stderr)
-                    sys.exit(1)
-        except pidfile.AlreadyRunningError:
-            logger.warning("Backup GUI already running. Will not continue")
-            # EXIT_CODE 21 = current backup process already running
-            sys.exit(21)
+    if cli_args["operation"]:
+        entrypoint(**cli_args)
     else:
-        parser.print_help(sys.stderr)
+        json_error_logging(False, "No operation has been requested", level="warning")
 
 
 def main():
+    # Make sure we log execution time and error state at the end of the program
+    atexit.register(
+        execution_logs,
+        datetime.now(timezone.utc),
+    )
+    # kill_childs normally would not be necessary, but let's just be foolproof here (kills restic subprocess in all cases)
+    atexit.register(kill_childs, os.getpid(), grace_period=30)
     try:
-        # kill_childs normally would not be necessary, but let's just be foolproof here (kills restic subprocess in all cases)
-        atexit.register(
-            kill_childs,
-            os.getpid(),
-        )
-        interface()
+        cli_interface()
+        sys.exit(logger.get_worst_logger_level())
     except KeyboardInterrupt as exc:
-        logger.error("Program interrupted by keyboard. {}".format(exc))
+        json_error_logging(
+            False, f"Program interrupted by keyboard: {exc}", level="error"
+        )
         logger.info("Trace:", exc_info=True)
         # EXIT_CODE 200 = keyboard interrupt
         sys.exit(200)
     except Exception as exc:
-        logger.error("Program interrupted by error. {}".format(exc))
+        json_error_logging(False, f"Program interrupted by error: {exc}", level="error")
         logger.info("Trace:", exc_info=True)
         # EXIT_CODE 201 = Non handled exception
         sys.exit(201)

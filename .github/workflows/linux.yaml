@@ -1,0 +1,35 @@
+name: linux-tests
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        # Python 3.3 and 3.4 have been removed since github won't provide these anymore
+        # As of 2023/01/09, we have removed python 3.5 and 3.6 as they don't work anymore with linux on github
+        # As of 2023/08/30, we have removed python 2.7 since github actions won't provide it anymore
+        python-version: [3.7, 3.8, 3.9, "3.10", "3.11", "3.12", 'pypy-3.6', 'pypy-3.7', 'pypy-3.8', 'pypy-3.10']
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install --upgrade setuptools
+        if [ -f npbackup/requirements.txt ]; then pip install -r npbackup/requirements.txt; fi
+    - name: Generate Report
+      env:
+        RUNNING_ON_GITHUB_ACTIONS: true
+      run: |
+        pip install pytest coverage
+        python -m coverage run -m pytest -vvs tests
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v3

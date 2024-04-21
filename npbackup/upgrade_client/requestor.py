@@ -5,7 +5,7 @@
 
 __intname__ = "ofunctions.requestor"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2014-2023 NetInvent"
+__copyright__ = "Copyright (C) 2014-2024 NetInvent"
 __license__ = "BSD-3-Clause"
 __build__ = "2022072201"
 

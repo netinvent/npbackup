@@ -1,0 +1,17 @@
+fr:
+  configured_repositories: Dépots configurés
+  quick_check: Vérification rapide dépot
+  full_check: Vérification complète dépot
+  repair_index: Réparer les index du dépot
+  repair_snapshots: Réparer les instantanés du dépot
+  unlock: Déblocage de dépot
+  forget_using_retention_policy: Oublier les instantanés en utilisant la stratégie de rétention
+  standard_prune: Opération de purge normale
+  max_prune: Opération de purge la plus efficace
+  stats: Statistiques de dépot
+  apply_to_all: Appliquer à tous les dépots
+  apply_to_selected_groups: Appliquer aux groupes sélectionnés
+  no_groups_selected: Aucun groupe sélectionné
+  add_repo: Ajouter dépot
+  edit_repo: Modifier dépot
+  remove_repo: Supprimer dépot

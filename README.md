@@ -12,47 +12,56 @@ Works on x64 **Linux** , **NAS** solutions based on arm/arm64, **Windows** x64 a
 
 ## Features
 
-- Data deduplication and fast zstd compression
-- Client side data encryption
-- Wide storage backend support
-  - local files
-  - SFTP
-  - High performance HTTP REST server
-  - Amazon S3/Minio/Wasabi
-  - Blackblaze B2
-  - Microsoft Azure Blob Storage
-  - Google Cloud Storage
-  - OpenStack Swift
-  - Alibaba Cloud (Aliyun) Object Storage System (OSS)
-- Resume on interrupted backups
-- Full CLI interface for scheduled task usage
+- Multiple repositories support
+  - Repository group settings
+  - Group operations
+- Data deduplication and fast zstd compression*
+- Client side data encryption*
+- Wide storage backend support*
+  - local files*
+  - SFTP*
+  - High performance HTTP REST server*
+  - Amazon S3/Minio/Wasabi*
+  - Blackblaze B2*
+  - Microsoft Azure Blob Storage*
+  - Google Cloud Storage*
+  - OpenStack Swift*
+  - Alibaba Cloud (Aliyun) Object Storage System (OSS)*
+- Resume on interrupted backups*
+- Full CLI interface with all previous options, including --json API mode
   - Checks for recent backups before launching a backup
 - End User GUI
   - Backups create, list, viewer and restore
   - Full configuration interface
-  - Internationalization support (en, fr as of feb 2023)
+  - Internationalization support (en, fr as of Apr 2024)
 - Performance
   - Backup process and IO priority settings
-  - Upload / download speed limits
-  - Remote connectivity concurrency settings
+  - Upload / download speed limits*
+  - Remote connectivity concurrency settings*
 - Comes with full exclusion lists for Linux and Windows
 - First class prometheus support
-  - Restic results metric generatioion
+  - Restic results metric generation
   - Grafana dashboard included
   - node_exporter file collector support
   - Optional push gateway metrics uploading
 - First class Windows support
-  - VSS snapshots
+  - VSS snapshots*
   - Automatic cloud file exclusions (reparse points)
-  - Windows pre-built executables
+  - Windows pre-built executables*
   - Windows installer
 - Additional security
-  - repository uri / password, http metrics and upgrade server passwords are AES-256 encrypted
+  - Repository uri / password, http metrics and upgrade server passwords are AES-256 encrypted
+  - Repository permissions allowing to limit clients
+    - Backup only permission
+    - Backup, list and restore permissions
+    - Full permissions including destructive operations
   - Encrypted data viewing requires additional password
   - AES-256 keys can't be guessed in executables thanks to Nuitka Commercial compiler
 - Easy configuration via YAML file (or via GUI)
 - Remote automatic self upgrade capacity
   - Included upgrade server ready to run in production
+
+(*) Feature provided by [restic](https://restic.net) backup backend
 
 ## About
 
@@ -167,12 +176,29 @@ The current NPBackup dashboard:
 
 While admin user experience is important, NPBackup also offers a GUI for end user experience, allowing to list all backup contents, navigate and restore files, without the need of an admin. The end user can also check if they have a recent backup completed, and launch backups manually if needed.
 
+## CLI usage
+
+`--group-operation [operation]` allows to run an operation on multiple repos. This paramater also requires `--repo-group` or `--repo-name` parameter. For operations requiring arguments, provide the argument to the original operation parameter.
+`--repo-name` allows to specify one or multiple comma separated repo names
+`--repo-group` allows to specify one or multiple comme separated repo group names
+
 ## Security
 
 NPBackup inherits all security measures of it's backup backend (currently restic with AES-256 client side encryption including metadata), append only mode REST server backend.
 
 On top of those, NPBackup itself encrypts sensible information like the repo uri and password, as well as the metrics http username and password.  
 This ensures that end users can restore data without the need to know any password, without compromising a secret. Note that in order to use this function, one needs to use the compiled version of NPBackup, so AES-256 keys are never exposed. Internally, NPBackup never directly uses the AES-256 key, so even a memory dump won't be enough to get the key.
+
+## Permission restriction system
+
+By default, npbackup is allowed to execute all operations on a repo.  
+There are some situations where an administrator needs to restrict repo operations for end users.  
+In that case, you can set permissions via the GUI or directly in the configuration file.
+
+Permissions are:
+- full: Set by default, allows all including destructive operations
+- restore: Allows everything backup does plus restore, check and dump operations
+- backup: Allows, backup and snapshot/object listing operations
 
 ## Upgrade server
 
@@ -207,6 +233,11 @@ Signing on a Windows machine with Windows SDK installed:
 from windows_tools.signtool import SignTool
 signer = SignTool()
 signer.sign(r"c:\path\to\executable", bitness=64)
+```
+
+Or as singleliner to use in scripts:
+```
+python.exe -c "from windows_tools.signtool import SignTool; s=SignTool(); s.sign(r'C:\GIT\npbackup\BUILDS\public\windows\x64\npbackup-viewer-x64.exe')"
 ```
 
 ## Misc
