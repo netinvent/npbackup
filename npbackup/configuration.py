@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024041701"
+__build__ = "2024042101"
 __version__ = "npbackup 3.0.0+"
 
 MIN_CONF_VERSION = 3.0
@@ -540,6 +540,8 @@ def get_repo_config(
                         if can_replace_merged_list:
                             merged_lists = merged_items_dict
 
+                        # Make sure we avoid duplicates in lists
+                        merged_lists = list(set(merged_lists))
                         _repo_config.s(key, merged_lists)
                         _config_inheritance.s(key, {})
                         for v in merged_lists:
@@ -577,6 +579,8 @@ def get_repo_config(
                             if can_replace_merged_list:
                                 merged_lists = merged_items_dict
 
+                            # Make sure we avoid duplicates in lists
+                            merged_lists = list(set(merged_lists))
                             _repo_config.s(key, merged_lists)
 
                             _config_inheritance.s(key, {})
