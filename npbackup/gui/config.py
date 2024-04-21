@@ -217,6 +217,7 @@ def config_gui(full_config: dict, config_file: str):
                 window[key].Disabled = True
             else:
                 window[key].Disabled = False
+                # Update the combo group selector
                 window[key].Update(value=value)
             return
 
@@ -270,8 +271,6 @@ def config_gui(full_config: dict, config_file: str):
                 "backup_opts.exclude_files",
                 "backup_opts.exclude_patterns",
                 "prometheus.additional_labels",
-                "env.env_variables",
-                "env.encrypted_env_variables",
             ):
                 if key == "backup_opts.tags":
                     tree = tags_tree
@@ -285,38 +284,31 @@ def config_gui(full_config: dict, config_file: str):
                     tree = exclude_patterns_tree
                 if key == "prometheus.additional_labels":
                     tree = prometheus_labels_tree
+
+                for val in value:
+                        if object_type != "group" and inherited[val]:
+                            icon = INHERITED_TREE_ICON
+                        else:
+                            icon = TREE_ICON
+                        tree.insert("", val, val, val, icon=icon)
+                window[key].Update(values=tree)
+                return
+            
+            if key in ("env.env_variables", "env.encrypted_env_variables"):
                 if key == "env.env_variables":
                     tree = env_variables_tree
                 if key == "env.encrypted_env_variables":
                     tree = encrypted_env_variables_tree
 
-                if isinstance(value, dict):
-                    for var_name, var_value in value.items():
-                        if object_type != "group" and inherited[var_name]:
-                            icon = INHERITED_TREE_ICON
-                        else:
-                            icon = TREE_ICON
-                        tree.insert("", var_name, var_name, var_value, icon=icon)
-                else:
-                    for val in value:
-                        if isinstance(val, dict):
-                            for var_name, var_value in val.items():
-                                if object_type != "group" and inherited[var_name]:
-                                    icon = INHERITED_TREE_ICON
-                                else:
-                                    icon = TREE_ICON
-                                tree.insert(
-                                    "", var_name, var_name, var_value, icon=icon
-                                )
-                        else:
-                            if object_type != "group" and inherited[val]:
-                                icon = INHERITED_TREE_ICON
-                            else:
-                                icon = TREE_ICON
-                            tree.insert("", val, val, val, icon=icon)
+                for skey, val in value.items():
+                    if object_type != "group" and inherited[skey]:
+                        icon = INHERITED_TREE_ICON
+                    else:
+                        icon = TREE_ICON
+                    tree.insert("", skey, skey, values=[val], icon=icon)
                 window[key].Update(values=tree)
                 return
-
+            
             # Update units into separate value and unit combobox
             if key in (
                 "backup_opts.minimum_backup_size_error",
@@ -496,7 +488,7 @@ def config_gui(full_config: dict, config_file: str):
                 else:
                     try:
                         value = int(value)
-                    except ValueError:
+                    except (ValueError, TypeError):
                         pass
 
             # Glue value and units back together for config file
@@ -528,7 +520,7 @@ def config_gui(full_config: dict, config_file: str):
                 if object_group:
                     inheritance_key = f"groups.{object_group}.{key}"
                     # If object is a list, check which values are inherited from group and remove them
-                    if isinstance(value, list):  # WIP # TODO
+                    if isinstance(value, list):
                         inheritance_list = full_config.g(inheritance_key)
                         if inheritance_list:
                             for entry in inheritance_list:
@@ -552,6 +544,7 @@ def config_gui(full_config: dict, config_file: str):
 
             # Finally, update the config dictionary
             if object_type == "group":
+                # WIP
                 print(f"UPDATING {active_object_key} curr={current_value} new={value}")
             else:
                 print(
@@ -1655,8 +1648,9 @@ def config_gui(full_config: dict, config_file: str):
             break
 
         # We need to patch values since sg.Tree() only returns selected data from TreeData()
+        # Hence we'll fill values with a list or a dict depending on our TreeData data structure
         # @PysimpleGUI: there should be a get_all_values() method or something
-        tree_data_keys = [
+        list_tree_data_keys = [
             "backup_opts.paths",
             "backup_opts.tags",
             "backup_opts.pre_exec_commands",
@@ -1664,15 +1658,24 @@ def config_gui(full_config: dict, config_file: str):
             "backup_opts.exclude_files",
             "backup_opts.exclude_patterns",
             "prometheus.additional_labels",
-            "env.env_variables",
-            "env.encrypted_env_variables",
         ]
-        for tree_data_key in tree_data_keys:
+        for tree_data_key in list_tree_data_keys:
             values[tree_data_key] = []
             # pylint: disable=E1101 (no-member)
             for node in window[tree_data_key].TreeData.tree_dict.values():
                 if node.values:
                     values[tree_data_key].append(node.values)
+
+        dict_tree_data_keys = [
+            "env.env_variables",
+            "env.encrypted_env_variables",
+        ]
+        for tree_data_key in dict_tree_data_keys:
+            values[tree_data_key] = CommentedMap()
+            # pylint: disable=E1101 (no-member)
+            for key, node in window[tree_data_key].TreeData.tree_dict.items():
+                if key and node.values:
+                    values[tree_data_key][key] = node.values[0]
 
         if event == "-OBJECT-SELECT-":
             # Update full_config with current object before updating
@@ -1774,11 +1777,11 @@ def config_gui(full_config: dict, config_file: str):
 
             if event.startswith("--ADD-"):
                 icon = TREE_ICON
-                if "ENV-VARIABLE" in event:
+                if "ENV-VARIABLE" in event or "ENCRYPTED-ENV-VARIABLE" in event:
                     var_name = sg.PopupGetText(_t("config_gui.enter_var_name"))
                     var_value = sg.PopupGetText(_t("config_gui.enter_var_value"))
                     if var_name and var_value:
-                        tree.insert("", var_name, var_name, var_value, icon=icon)
+                        tree.insert("", var_name, var_name, [var_value], icon=icon)
                 else:
                     node = sg.PopupGetText(popup_text)
                     if node:
