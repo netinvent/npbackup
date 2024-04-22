@@ -13,8 +13,8 @@
    - NPBackup Operation mode
       - manages multiple repos with generic key (restic key add) or specified key
   !- NTP server
-  !- Viewer can have a configuration file
- ! - Reimplement autoupgrade
+  - GUI --help parameter should intercept stdout and show results in a popup
+
  
 ## 3.0.0
  - This is a major rewrite that allows using multiple repositories, adds repository groups and implements repository settings inheritance from group settings
@@ -31,7 +31,7 @@
 
 ## Features
   - New viewer mode allowing to browse/restore restic repositories without any NPBackup configuation
-
+    - Allows setting repository via environment variables, config file or directly in GUI
   - Multi repository support
   - Group settings for repositories
   !- Operation center
@@ -59,7 +59,7 @@
   - Allow using external restic binary via --external-backend-binary parameter in CLI mode
 
 ## Fixes
-  - Default exit code is now worst log level called
+  - Default exit code is now worst log level called unless specific errors are triggered
   - Show anonymized repo uri in GUI
   - Fix deletion failed message for en lang
   - Fix Google cloud storage backend detection in repository uri
@@ -70,6 +70,7 @@
   - Concurrency checks (pidfile checks) are now directly part of the runner
   - Allow a 30 seconds grace period for child processes to close before asking them nicely, and than not nicely to quit
   - Fully refactored prometheus metrics parser to be able to read restic standard or json outputs
+  - Reimplmented auto upgrade after CLI/GUI split
   - Added initial tests
 
 ## 2.2.2 - 14/12/2023 (internal build only)
