@@ -911,18 +911,28 @@ def _main_gui(viewer_mode: bool):
             event = "--STATE-BUTTON--"
         if event == "--LOAD-CONF--":
             (
-                full_config,
-                config_file,
-                repo_config,
-                backup_destination,
-                backend_type,
-                repo_uri,
-                repo_list,
+                _full_config,
+                _config_file,
+                _repo_config,
+                _backup_destination,
+                _backend_type,
+                _repo_uri,
+                _repo_list,
             ) = get_config(window=window)
-            if not viewer_mode and not config_file and not full_config:
-                window["-NO-CONFIG-"].Update(visible=True)
-            elif not viewer_mode:
-                window["-NO-CONFIG-"].Update(visible=False)
+            if _full_config:
+                full_config = _full_config
+                config_file = _config_file
+                repo_config = _repo_config
+                backup_destination = _backup_destination
+                backend_type = _backend_type
+                repo_uri = _repo_uri
+                repo_list = _repo_list
+            else:
+                sg.PopupError(_t("main_gui.cannot_load_config_keep_current"))
+            #if not viewer_mode and not config_file and not full_config:
+            #    window["-NO-CONFIG-"].Update(visible=True)
+            #elif not viewer_mode:
+            #    window["-NO-CONFIG-"].Update(visible=False)
             event = "--STATE-BUTTON--"
         if event == _t("generic.destination"):
             try:
