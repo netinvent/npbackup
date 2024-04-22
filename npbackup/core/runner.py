@@ -344,17 +344,14 @@ class NPBackupRunner:
 
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
-            if not self._is_ready or not self.has_binary:
+            if not self._is_ready:
                 # pylint: disable=E1101 (no-member)
                 if fn.__name__ == "group_runner":
                     operation = kwargs.get("operation")
                 else:
                     # pylint: disable=E1101 (no-member)
                     operation = fn.__name__
-                if not self._is_ready:
-                    msg = f"Runner cannot execute. Backend not ready"
-                else:
-                    msg = f"Runner does not have a valid backend binary"
+                msg = f"Runner cannot execute, backend not ready"
                 if self.stderr:
                     self.stderr.put(msg)
                 if self.json_output:
@@ -366,9 +363,11 @@ class NPBackupRunner:
                     return js
                 self.write_logs(
                     msg,
-                    level="critical",
+                    level="error",
                 )
                 return False
+            # pylint: disable=E1102 (not-callable)
+            return fn(self, *args, **kwargs)
 
         return wrapper
 
@@ -448,7 +447,15 @@ class NPBackupRunner:
 
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
-            if not self._apply_config_to_restic_runner():
+            result = self._apply_config_to_restic_runner()
+            if not result:
+                if self.json_output:
+                    js = {
+                        "result": False,
+                        "operation": "_apply_config_to_restic_runner",
+                        "reason": "Cannot apply config to backend. See logs for more",
+                    }
+                    return js
                 return False
             # pylint: disable=E1102 (not-callable)
             return fn(self, *args, **kwargs)
@@ -715,8 +722,11 @@ class NPBackupRunner:
             if binary:
                 self.restic_runner.binary = binary
             else:
-                self._is_ready = False
-                return False
+                self.restic_runner._get_binary()
+                if self.restic_runner.binary is None:
+                    self.write_logs("No backend binary found", level="error")
+                    self._is_ready = False
+                    return False
         return True
 
     def convert_to_json_output(
