@@ -61,7 +61,10 @@ def entrypoint(*args, **kwargs):
                     break
             logger.info(f"\n{result}")
             logger.addHandler(handler)
-        logger.info(f"Operation finished with {'success' if result else 'failure'}")
+        if result:
+            logger.info(f"Operation finished with success")
+        else:
+            logger.error(f"Operation finished with errors")
     else:
         print(json.dumps(result, default=serialize_datetime))
         sys.exit(0)
