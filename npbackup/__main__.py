@@ -206,7 +206,6 @@ This is free software, and you are welcome to redistribute it under certain cond
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Show verbose output"
     )
-    parser.add_argument("-d", "--debug", action="store_true", help="Run with debugging")
     parser.add_argument(
         "-V", "--version", action="store_true", help="Show program version"
     )
@@ -290,7 +289,7 @@ This is free software, and you are welcome to redistribute it under certain cond
             print(LICENSE_TEXT)
         sys.exit(0)
 
-    if args.debug or _DEBUG:
+    if _DEBUG:
         logger.setLevel(ofunctions.logger_utils.logging.DEBUG)
 
     if args.verbose:
@@ -389,7 +388,6 @@ This is free software, and you are welcome to redistribute it under certain cond
         "repo_config": repo_config,
         "verbose": args.verbose,
         "dry_run": args.dry_run,
-        "debug": args.debug,
         "json_output": args.json,
         "binary": binary,
         "operation": None,
