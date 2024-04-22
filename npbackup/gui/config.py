@@ -250,19 +250,20 @@ def config_gui(full_config: dict, config_file: str):
 
             # Update tree objects
             if key == "backup_opts.paths":
-                for val in value:
-                    if pathlib.Path(val).is_dir():
-                        if object_type != "group" and inherited[val]:
-                            icon = INHERITED_FOLDER_ICON
+                if value:
+                    for val in value:
+                        if pathlib.Path(val).is_dir():
+                            if object_type != "group" and inherited[val]:
+                                icon = INHERITED_FOLDER_ICON
+                            else:
+                                icon = FOLDER_ICON
                         else:
-                            icon = FOLDER_ICON
-                    else:
-                        if object_type != "group" and inherited[val]:
-                            icon = INHERITED_FILE_ICON
-                        else:
-                            icon = FILE_ICON
-                    backup_paths_tree.insert("", val, val, val, icon=icon)
-                window["backup_opts.paths"].update(values=backup_paths_tree)
+                            if object_type != "group" and inherited[val]:
+                                icon = INHERITED_FILE_ICON
+                            else:
+                                icon = FILE_ICON
+                        backup_paths_tree.insert("", val, val, val, icon=icon)
+                    window["backup_opts.paths"].update(values=backup_paths_tree)
                 return
             elif key in (
                 "backup_opts.tags",
@@ -285,13 +286,14 @@ def config_gui(full_config: dict, config_file: str):
                 if key == "prometheus.additional_labels":
                     tree = prometheus_labels_tree
 
-                for val in value:
-                    if object_type != "group" and inherited[val]:
-                        icon = INHERITED_TREE_ICON
-                    else:
-                        icon = TREE_ICON
-                    tree.insert("", val, val, val, icon=icon)
-                window[key].Update(values=tree)
+                if value:
+                    for val in value:
+                        if object_type != "group" and inherited[val]:
+                            icon = INHERITED_TREE_ICON
+                        else:
+                            icon = TREE_ICON
+                        tree.insert("", val, val, val, icon=icon)
+                    window[key].Update(values=tree)
                 return
 
             if key in ("env.env_variables", "env.encrypted_env_variables"):
@@ -300,13 +302,14 @@ def config_gui(full_config: dict, config_file: str):
                 if key == "env.encrypted_env_variables":
                     tree = encrypted_env_variables_tree
 
-                for skey, val in value.items():
-                    if object_type != "group" and inherited[skey]:
-                        icon = INHERITED_TREE_ICON
-                    else:
-                        icon = TREE_ICON
-                    tree.insert("", skey, skey, values=[val], icon=icon)
-                window[key].Update(values=tree)
+                if value:
+                    for skey, val in value.items():
+                        if object_type != "group" and inherited[skey]:
+                            icon = INHERITED_TREE_ICON
+                        else:
+                            icon = TREE_ICON
+                        tree.insert("", skey, skey, values=[val], icon=icon)
+                    window[key].Update(values=tree)
                 return
 
             # Update units into separate value and unit combobox
