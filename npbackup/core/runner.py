@@ -344,30 +344,31 @@ class NPBackupRunner:
 
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
-            if not self._is_ready:
+            if not self._is_ready or not self.has_binary:
                 # pylint: disable=E1101 (no-member)
                 if fn.__name__ == "group_runner":
                     operation = kwargs.get("operation")
                 else:
                     # pylint: disable=E1101 (no-member)
                     operation = fn.__name__
-                msg = f"Runner cannot execute {operation}. Backend not ready"
+                if not self._is_ready:
+                    msg = f"Runner cannot execute. Backend not ready"
+                else:
+                    msg = f"Runner does not have a valid backend binary"
                 if self.stderr:
                     self.stderr.put(msg)
                 if self.json_output:
                     js = {
                         "result": False,
                         "operation": operation,
-                        "reason": "backend not ready",
+                        "reason": msg,
                     }
                     return js
                 self.write_logs(
                     msg,
-                    level="error",
+                    level="critical",
                 )
                 return False
-            # pylint: disable=E1102 (not-callable)
-            return fn(self, *args, **kwargs)
 
         return wrapper
 
