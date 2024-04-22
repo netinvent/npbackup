@@ -72,6 +72,12 @@ While restic is a fanstastic program, NPBackup expands restic by offering a wide
 
 ## Quickstart
 
+NPBackup consists of four programs:
+- npbackup-cli: CLI version of the backup program
+- npbackup-gui: GUI version of the backup program, useful to create YAML config files
+- npbackup-viewer: View and restore restic repositories without configuration
+- upgrade_server: Separate server to provide npbackup clients with newer binaries
+
 You may install npbackup via PyPI or use the pre-built executables.
 
 ### Prebuilt executables
@@ -143,6 +149,12 @@ That password is set at compile-time and should be different depending on the or
 This allows a system admin to see repo URI and passwords, without leaving this information available on the computer.
 
 The configuration file should never be world readable, as one could change the backup admin password, allowing to decrypt other parts of the conf file.
+
+### NPBackup viewer
+
+`npbackup-viewer` provides an easy to use GUI to view contents of various restic repositories, and restore files.  
+It accepts npbackup configuration files, restic style `RESTIC_REPOSITORY` and `RESTIC_PASSWORD` environment variables, and can virtually open any restic repository.
+
 
 ## The difficulty of laptop backups
 

@@ -654,7 +654,20 @@ def _main_gui(viewer_mode: bool):
             repo_list,
         )
 
-    if not viewer_mode:
+    # FN ENTRY POINT
+
+    # Let's try to read standard restic repository env variables
+    viewer_repo_uri = os.environ.get("RESTIC_REPOSITORY", None)
+    viewer_repo_password = os.environ.get("RESTIC_PASSWORD", None)
+    if viewer_mode and not config_file:
+        if viewer_repo_uri and viewer_repo_password:
+            repo_config = viewer_create_repo(viewer_repo_uri, viewer_repo_password)
+        else:
+            repo_config = None
+        config_file = None
+        full_config = None
+        backend_type = None
+    else:
         (
             full_config,
             config_file,
@@ -664,17 +677,7 @@ def _main_gui(viewer_mode: bool):
             repo_uri,
             repo_list,
         ) = get_config(config_file=config_file)
-    else:
-        # Let's try to read standard restic repository env variables
-        viewer_repo_uri = os.environ.get("RESTIC_REPOSITORY", None)
-        viewer_repo_password = os.environ.get("RESTIC_PASSWORD", None)
-        if viewer_repo_uri and viewer_repo_password:
-            repo_config = viewer_create_repo(viewer_repo_uri, viewer_repo_password)
-        else:
-            repo_config = None
-        config_file = None
-        full_config = None
-        backend_type = None
+
 
     right_click_menu = ["", [_t("generic.destination")]]
     headings = [
