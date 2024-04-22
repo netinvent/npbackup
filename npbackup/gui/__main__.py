@@ -400,53 +400,6 @@ def forget_snapshot(repo_config: dict, snapshot_ids: List[str]) -> bool:
 def _main_gui(viewer_mode: bool):
     global logger
 
-    parser = ArgumentParser(
-        prog=f"{__intname__}",
-        description="""Portable Network Backup Client\n
-        This program is distributed under the GNU General Public License and comes with ABSOLUTELY NO WARRANTY.\n
-        This is free software, and you are welcome to redistribute it under certain conditions; Please type --license for more info.""",
-    )
-
-    parser.add_argument(
-        "-c",
-        "--config-file",
-        dest="config_file",
-        type=str,
-        default=None,
-        required=False,
-        help="Path to alternative configuration file (defaults to current dir/npbackup.conf)",
-    )
-    parser.add_argument(
-        "--repo-name",
-        dest="repo_name",
-        type=str,
-        default="default",
-        required=False,
-        help="Name of the repository to work with. Defaults to 'default'",
-    )
-    parser.add_argument(
-        "--log-file",
-        type=str,
-        default=None,
-        required=False,
-        help="Optional path for logfile",
-    )
-    args = parser.parse_args()
-    if args.log_file:
-        log_file = args.log_file
-    else:
-        log_file = os.path.join(CURRENT_DIR, "{}.log".format(__intname__))
-    logger = ofunctions.logger_utils.logger_get_logger(log_file, debug=_DEBUG)
-
-    if args.config_file:
-        config_file = Path(args.config_file)
-    else:
-        config_file = Path(f"{CURRENT_DIR}/npbackup.conf")
-
-    # TODO
-    if args.repo_name:
-        repo_name = args.repo_name
-
     def check_for_auto_upgrade(full_config: dict) -> None:
         if full_config and full_config.g("global_options.auto_upgrade_server_url"):
             auto_upgrade_result = upgrade_runner.check_new_version(full_config)
@@ -618,11 +571,11 @@ def _main_gui(viewer_mode: bool):
                     return full_config, config_file
         return None, None
 
-    def get_config(config_file: str = None, window: sg.Window = None):
+    def get_config(config_file: str = None, window: sg.Window = None, repo_name: str = None) -> Tuple:
         full_config, config_file = get_config_file(config_file=config_file)
         if full_config and config_file:
             repo_config, config_inheritance = npbackup.configuration.get_repo_config(
-                full_config
+                full_config, repo_name=repo_name
             )
             backup_destination = _t("main_gui.local_folder")
             backend_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
@@ -655,6 +608,49 @@ def _main_gui(viewer_mode: bool):
         )
 
     # FN ENTRY POINT
+    parser = ArgumentParser(
+        prog=f"{__intname__}",
+        description="""Portable Network Backup Client\n
+        This program is distributed under the GNU General Public License and comes with ABSOLUTELY NO WARRANTY.\n
+        This is free software, and you are welcome to redistribute it under certain conditions; Please type --license for more info.""",
+    )
+
+    parser.add_argument(
+        "-c",
+        "--config-file",
+        dest="config_file",
+        type=str,
+        default=None,
+        required=False,
+        help="Path to alternative configuration file (defaults to current dir/npbackup.conf)",
+    )
+    parser.add_argument(
+        "--repo-name",
+        dest="repo_name",
+        type=str,
+        default="default",
+        required=False,
+        help="Name of the repository to work with. Defaults to 'default'",
+    )
+    parser.add_argument(
+        "--log-file",
+        type=str,
+        default=None,
+        required=False,
+        help="Optional path for logfile",
+    )
+    args = parser.parse_args()
+    if args.log_file:
+        log_file = args.log_file
+    else:
+        log_file = os.path.join(CURRENT_DIR, "{}.log".format(__intname__))
+    logger = ofunctions.logger_utils.logger_get_logger(log_file, debug=_DEBUG)
+
+    if args.config_file:
+        config_file = Path(args.config_file)
+    else:
+        config_file = Path(f"{CURRENT_DIR}/npbackup.conf")
+
 
     # Let's try to read standard restic repository env variables
     viewer_repo_uri = os.environ.get("RESTIC_REPOSITORY", None)
@@ -676,7 +672,7 @@ def _main_gui(viewer_mode: bool):
             backend_type,
             repo_uri,
             repo_list,
-        ) = get_config(config_file=config_file)
+        ) = get_config(config_file=config_file, repo_name=args.repo_name)
 
 
     right_click_menu = ["", [_t("generic.destination")]]
