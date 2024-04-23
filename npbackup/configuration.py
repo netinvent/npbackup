@@ -402,14 +402,17 @@ def expand_units(object_config: dict, unexpand: bool = False) -> dict:
             "upload_speed",
             "download_speed",
         ):
-            if value:
-                if unexpand:
-                    return BytesConverter(value).human_iec_bytes
-                return BytesConverter(value)
-            else:
-                if unexpand:
-                    return BytesConverter(0).human_iec_bytes
-                return BytesConverter(0)
+            try:
+                if value:
+                    if unexpand:
+                        return BytesConverter(value).human_iec_bytes
+                    return BytesConverter(value)
+                else:
+                    if unexpand:
+                        return BytesConverter(0).human_iec_bytes
+                    return BytesConverter(0)
+            except ValueError:
+                logger.warning(f"Cannot parse bytes value {key}:\"{value}\", keeping as is")
         return value
 
     return replace_in_iterable(object_config, _expand_units, callable_wants_key=True)
