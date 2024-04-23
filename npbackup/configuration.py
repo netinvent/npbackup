@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024042101"
+__build__ = "2024042301"
 __version__ = "npbackup 3.0.0+"
 
 MIN_CONF_VERSION = 3.0
@@ -124,7 +124,7 @@ empty_config_dict = {
     "conf_version": MAX_CONF_VERSION,
     "repos": {
         "default": {
-            "repo_uri": "",
+            "repo_uri": None,
             "permissions": "full",
             "manager_password": None,
             "repo_group": "default_group",
@@ -174,27 +174,27 @@ empty_config_dict = {
                 "post_exec_execute_even_on_backup_error": True,
             },
             "repo_opts": {
-                "repo_password": "",
-                "repo_password_command": "",
+                "repo_password": None,
+                "repo_password_command": None,
                 # Minimum time between two backups, in minutes
                 # Set to zero in order to disable time checks
                 "minimum_backup_age": 1440,
                 "upload_speed": "100 Mib",  # Mib(its) or MiB(ytes), use 0 for unlimited upload speed
-                "download_speed": "0",  # in KiB, use 0 for unlimited download speed
+                "download_speed": "0 Mib",  # in KiB, use 0 for unlimited download speed
                 "backend_connections": 0,  # Fine tune simultaneous connections to backend, use 0 for standard configuration
-                "retention_strategy": {
-                    "last": 0,
+                "retention_policy": {
+                    "last": 3,
                     "hourly": 72,
                     "daily": 30,
                     "weekly": 4,
                     "monthly": 12,
                     "yearly": 3,
                     "tags": [],
-                    "within": True,
+                    "keep_within": True,
                     "ntp_time_server": None,  # TODO
                 },
-                "prune_max_unused": None,
-                "prune_max_repack_size": None,
+                # "prune_max_unused": None,  # TODO
+                # "prune_max_repack_size": None,  # TODO
             },
             "prometheus": {
                 "backup_job": "${MACHINE_ID}",
@@ -205,22 +205,22 @@ empty_config_dict = {
     },
     "identity": {
         "machine_id": "${HOSTNAME}__${RANDOM}[4]",
-        "machine_group": "",
+        "machine_group": None,
     },
     "global_prometheus": {
         "metrics": False,
         "instance": "${MACHINE_ID}",
-        "destination": "",
-        "http_username": "",
-        "http_password": "",
-        "additional_labels": "",
+        "destination": None,
+        "http_username": None,
+        "http_password": None,
+        "additional_labels": None,
     },
     "global_options": {
         "auto_upgrade": True,
         "auto_upgrade_interval": 10,
-        "auto_upgrade_server_url": "",
-        "auto_upgrade_server_username": "",
-        "auto_upgrade_server_password": "",
+        "auto_upgrade_server_url": None,
+        "auto_upgrade_server_username": None,
+        "auto_upgrade_server_password": None,
         "auto_upgrade_host_identity": "${MACHINE_ID}",
         "auto_upgrade_group": "${MACHINE_GROUP}",
     },
