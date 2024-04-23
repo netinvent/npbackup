@@ -28,7 +28,7 @@ fr:
 
   size: Taille
   path: Chemin
-  path: Chemins
+  paths: Chemins
   modification_date: Date de modification
 
   content: Contenu
