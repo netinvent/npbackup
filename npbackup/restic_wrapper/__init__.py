@@ -197,7 +197,7 @@ class ResticRunner:
         if isinstance(value, bool):
             self._dry_run = value
         else:
-            raise ValueError("Bogus dry run value givne")
+            raise ValueError("Bogus dry run value given")
 
     @property
     def json_output(self) -> bool:
@@ -208,7 +208,7 @@ class ResticRunner:
         if isinstance(value, bool):
             self._json_output = value
         else:
-            raise ValueError("Bogus json_output value givne")
+            raise ValueError("Bogus json_output value given")
 
     @property
     def ignore_cloud_files(self) -> bool:

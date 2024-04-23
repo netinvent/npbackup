@@ -212,7 +212,7 @@ This is free software, and you are welcome to redistribute it under certain cond
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Run operations in test mode (no actual modifications",
+        help="Run operations in test mode, no actual modifications",
     )
     parser.add_argument(
         "--create-scheduled-task",
