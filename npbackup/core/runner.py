@@ -442,7 +442,9 @@ class NPBackupRunner:
                         raise PermissionError
                 else:
                     # This happens in viewer mode
-                    self.write_logs("No repo config. Ignoring permission check", level="info")
+                    self.write_logs(
+                        "No repo config. Ignoring permission check", level="info"
+                    )
             except (IndexError, KeyError, PermissionError):
                 self.write_logs(
                     "You don't have sufficient permissions", level="critical"

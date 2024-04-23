@@ -529,7 +529,9 @@ class ResticRunner:
         )
         if result:
             if re.search(
-                r"created restic repository ([a-z0-9]+) at .+|{\"message_type\":\"initialized\"", output, re.IGNORECASE
+                r"created restic repository ([a-z0-9]+) at .+|{\"message_type\":\"initialized\"",
+                output,
+                re.IGNORECASE,
             ):
                 self.write_logs("Repo initialized successfully", level="info")
                 self.is_init = True
