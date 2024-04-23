@@ -443,7 +443,9 @@ def extract_permissions_from_full_config(full_config: dict) -> dict:
                 full_config.s(f"repos.{repo}.repo_uri", repo_uri)
                 full_config.s(f"repos.{repo}.permissions", permissions)
                 full_config.s(f"repos.{repo}.manager_password", manager_password)
-                full_config.s(f"repos.{repo}.__current_manager_password", manager_password)
+                full_config.s(
+                    f"repos.{repo}.__current_manager_password", manager_password
+                )
             else:
                 logger.info(f"No extra information for repo {repo} found")
     return full_config
