@@ -931,7 +931,7 @@ class ResticRunner:
             for cmd in cmds:
                 result, output = self.executor(cmd)
                 if result:
-                    self.write_logs("successfully forgot snapshot", level="info")
+                    self.write_logs(f"successfully forgot {'using retention policy' if policy else 'snapshots ' + snapshots}", level="info")
                 else:
                     self.write_logs(f"Forget failed\n{output}", level="error")
                     batch_result = False
