@@ -45,3 +45,6 @@ But this would need massive sponsoring as I couldn't get the non-paid time to do
 
 ### More backends support
 Rustic is a current alternative backend candidate I tested. Might happen if enough traction.
+
+### Branding manager
+We might want to put all files into `resources` directory and have `customization.py` files generated from there.
