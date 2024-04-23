@@ -1161,18 +1161,17 @@ class NPBackupRunner:
             self.write_logs(f"Forgetting snapshots {snapshots}", level="info")
             result = self.restic_runner.forget(snapshots)
         elif use_policy:
-            # Build policiy
-            # policy = {'keep-within-hourly': 123}
+            # Build policiy from config
             policy = {}
             for entry in ["last", "hourly", "daily", "weekly", "monthly", "yearly"]:
-                value = self.repo_config.g(f"repo_opts.retention_strategy.{entry}")
+                value = self.repo_config.g(f"repo_opts.retention_policy.{entry}")
                 if value:
-                    if not self.repo_config.g("repo_opts.retention_strategy.within"):
+                    if not self.repo_config.g("repo_opts.retention_policy.within"):
                         policy[f"keep-{entry}"] = value
                     else:
                         # We need to add a type value for keep-within
                         policy[f"keep-within-{entry}"] = value
-            keep_tags = self.repo_config.g("repo_opts.retention_strategy.tags")
+            keep_tags = self.repo_config.g("repo_opts.retention_policy.tags")
             if not isinstance(keep_tags, list) and keep_tags:
                 keep_tags = [keep_tags]
                 policy["keep-tags"] = keep_tags
