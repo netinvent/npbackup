@@ -511,9 +511,10 @@ def config_gui(full_config: dict, config_file: str):
             # TODO exclude encrypted env vars
             if value == ENCRYPTED_DATA_PLACEHOLDER:
                 continue
-            if not isinstance(key, str) or (isinstance(key, str) and not "." in key):
+            if not isinstance(key, str) or (isinstance(key, str) and (not "." in key and not key in ("repo_uri", "repo_group"))):
                 # Don't bother with keys that don't contain with "." since they're not in the YAML config file
                 # but are most probably for GUI events
+                # Still, we need to handle repo_uri and repo_group which do not have dot notations since they're root keys
                 continue
 
             # Handle combo boxes first to transform translation into key
@@ -586,10 +587,10 @@ def config_gui(full_config: dict, config_file: str):
 
             # Finally, update the config dictionary
             # Debug WIP
-            # if object_type == "group":
-            # print(f"UPDATING {active_object_key} curr={current_value} new={value}")
-            # else:
-            # print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
+            #if object_type == "group":
+            #    print(f"UPDATING {active_object_key} curr={current_value} new={value}")
+            #else:
+            #    print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
             full_config.s(active_object_key, value)
         return full_config
 
