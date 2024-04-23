@@ -1916,6 +1916,9 @@ def config_gui(full_config: dict, config_file: str):
             ):
                 sg.PopupError(_t("config_gui.repo_password_cannot_be_empty"))
                 continue
+            if object_type != "group" and not values["repo_uri"]:
+                sg.PopupError(_t("config_gui.repo_uri_cannot_be_empty"))
+                continue
             full_config = update_config_dict(
                 full_config, current_object_type, current_object_name, values
             )

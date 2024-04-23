@@ -47,6 +47,8 @@ def get_anon_repo_uri(repository: str) -> Tuple[str, str]:
     """
     Remove user / password part from repository uri
     """
+    if not repository:
+        return "UNDEFINED", None
     backend_type = repository.split(":")[0].upper()
     if backend_type.upper() in ["REST", "SFTP"]:
         res = re.match(
