@@ -429,16 +429,20 @@ class NPBackupRunner:
                     # pylint: disable=E1101 (no-member)
                     operation = fn.__name__
 
-                current_permissions = self.repo_config.g("permissions")
-                if (
-                    current_permissions
-                    and not current_permissions in required_permissions[operation]
-                ):
-                    self.write_logs(
-                        f"Required permissions for operation '{operation}' must be in {required_permissions[operation]}, current permission is [{current_permissions}]",
-                        level="critical",
-                    )
-                    raise PermissionError
+                if self.repo_config:
+                    current_permissions = self.repo_config.g("permissions")
+                    if (
+                        current_permissions
+                        and not current_permissions in required_permissions[operation]
+                    ):
+                        self.write_logs(
+                            f"Required permissions for operation '{operation}' must be in {required_permissions[operation]}, current permission is [{current_permissions}]",
+                            level="critical",
+                        )
+                        raise PermissionError
+                else:
+                    # This happens in viewer mode
+                    self.write_logs("No repo config. Ignoring permission check", level="info")
             except (IndexError, KeyError, PermissionError):
                 self.write_logs(
                     "You don't have sufficient permissions", level="critical"
