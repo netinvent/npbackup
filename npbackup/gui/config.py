@@ -1834,7 +1834,9 @@ def config_gui(full_config: dict, config_file: str):
             manager_password = configuration.get_manager_password(
                 full_config, object_name
             )
-            if ask_manager_password(manager_password):
+            # NPF-SEC-00009
+            env_manager_password = os.environ.get("NPBACKUP_MANAGER_PASSWORD", None)
+            if (env_manager_password and env_manager_password == manager_password) or ask_manager_password(manager_password):
                 update_object_gui(values["-OBJECT-SELECT-"], unencrypted=True)
                 update_global_gui(full_config, unencrypted=True)
             continue

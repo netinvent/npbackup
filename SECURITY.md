@@ -47,5 +47,6 @@ to show actual secrets.
 
 # NPF-SEC-00009: Manager password in CLI mode
 
-When using `--show-config --manager-password password`, we should only show unencrypted config if password is set.  
+When using `--show-config` or right click `show unecrypted`, we should only show unencrypted config if password is set.  
+Envivironmnt variable `NPBACKUP_MANAGER_PASSWORD` will be read to verify access.
 Also, when wrong password is entered, we should wait in order to reduce brute force attacks.
