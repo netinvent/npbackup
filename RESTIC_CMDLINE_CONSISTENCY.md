@@ -68,3 +68,19 @@ snapshot b28b0901 saved
 ```
 {"message_type":"summary","files_new":5,"files_changed":15,"files_unmodified":6058,"dirs_new":0,"dirs_changed":27,"dirs_unmodified":866,"data_blobs":17,"tree_blobs":28,"data_added":281097,"total_files_processed":6078,"total_bytes_processed":122342158,"total_duration":1.2836983,"snapshot_id":"360333437921660a5228a9c1b65a2d97381f0bc135499c6e851acb0ab84b0b0a"}
 ```
+
+### init results inconsistency (v0.16.4)
+
+init command with `--json` parameter doesn't return JSON when it fails
+
+`restic init --json` results
+
+- on success
+```
+{"message_type":"initialized","id":"8daef59e2ac4c86535ae3f7414fcac6534f270077176af3ebddd34c364cac3c2","repository":"c:\\testy"}
+```
+- on already existing repo
+Fatal: create repository at c:\testy failed: config file already exists
+
+- on bogus path
+Fatal: create repository at x:\testy failed: mkdir \\?: La syntaxe du nom de fichier, de répertoire ou de volume est incorrecte.
