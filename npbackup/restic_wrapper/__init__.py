@@ -7,7 +7,7 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024020501"
+__build__ = "2024042301"
 __version__ = "2.0.1"
 
 
@@ -523,6 +523,7 @@ class ResticRunner:
             if re.search(
                 r"created restic repository ([a-z0-9]+) at .+", output, re.IGNORECASE
             ):
+                self.write_logs("Repo initialized successfully", level="info")
                 self.is_init = True
                 return True
         else:
@@ -549,7 +550,7 @@ class ResticRunner:
         live_output = self.live_output
         self.live_output = False
         self._is_init, output = self.executor(
-            cmd, timeout=FAST_COMMANDS_TIMEOUT, errors_allowed=True
+            cmd, timeout=FAST_COMMANDS_TIMEOUT, errors_allowed=True, no_output_queues=True
         )
         self.live_output = live_output
         if not self._is_init:
