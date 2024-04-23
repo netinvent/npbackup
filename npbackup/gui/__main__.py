@@ -228,7 +228,7 @@ def ls_window(repo_config: dict, snapshot_id: str) -> bool:
         __autoclose=True,
         __compact=True,
     )
-    if not result["result"]:
+    if not result or not result["result"]:
         sg.Popup("main_gui.snapshot_is_empty")
         return None, None
     # result is {"result": True, "output": [{snapshot_description}, {entry}, {entry}]}
@@ -492,7 +492,7 @@ def _main_gui(viewer_mode: bool):
             __autoclose=True,
             __compact=True,
         )
-        if not result["result"]:
+        if not result or not result["result"]:
             snapshots = None
         else:
             snapshots = result["output"]
