@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024042402"
-__version__ = "2.0.2"
+__build__ = "2024042301"
+__version__ = "2.0.3"
 
 
 from typing import Tuple, List, Optional, Callable, Union
