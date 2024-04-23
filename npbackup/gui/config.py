@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.config"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024041501"
+__build__ = "2024042301"
 
 
 from typing import List, Tuple
@@ -271,6 +271,7 @@ def config_gui(full_config: dict, config_file: str):
                 "backup_opts.post_exec_commands",
                 "backup_opts.exclude_files",
                 "backup_opts.exclude_patterns",
+                "repo_opts.retention_policy.tags",
                 "prometheus.additional_labels",
             ):
                 if key == "backup_opts.tags":
@@ -283,6 +284,8 @@ def config_gui(full_config: dict, config_file: str):
                     tree = exclude_files_tree
                 if key == "backup_opts.exclude_patterns":
                     tree = exclude_patterns_tree
+                if key == "repo_opts.retention_policy.tags":
+                    tree = retention_policy_tags_tree
                 if key == "prometheus.additional_labels":
                     tree = prometheus_labels_tree
 
@@ -393,6 +396,7 @@ def config_gui(full_config: dict, config_file: str):
         nonlocal tags_tree
         nonlocal exclude_files_tree
         nonlocal exclude_patterns_tree
+        nonlocal retention_policy_tags_tree
         nonlocal pre_exec_commands_tree
         nonlocal post_exec_commands_tree
         nonlocal prometheus_labels_tree
@@ -417,6 +421,7 @@ def config_gui(full_config: dict, config_file: str):
         tags_tree = sg.TreeData()
         exclude_patterns_tree = sg.TreeData()
         exclude_files_tree = sg.TreeData()
+        retention_policy_tags_tree = sg.TreeData()
         pre_exec_commands_tree = sg.TreeData()
         post_exec_commands_tree = sg.TreeData()
         prometheus_labels_tree = sg.TreeData()
@@ -478,6 +483,7 @@ def config_gui(full_config: dict, config_file: str):
             "backup_opts.post_exec_commands",
             "backup_opts.exclude_files",
             "backup_opts.exclude_patterns",
+            "repo_opts.retention_policy.tags",
             "prometheus.additional_labels",
         ]
         for tree_data_key in list_tree_data_keys:
@@ -560,6 +566,11 @@ def config_gui(full_config: dict, config_file: str):
                 active_object_key = f"{object_type}s.{object_name}.{key}"
                 current_value = full_config.g(active_object_key)
 
+                # Special case for nested retention_policy dict which may not exist, we need to create it
+                if key.startswith("repo_opts.retention_policy"):
+                    if not full_config.g(f"{object_type}s.{object_name}.repo_opts.retention_policy"):
+                        full_config.s(f"{object_type}s.{object_name}.repo_opts.retention_policy", CommentedMap())
+
                 if object_group:
                     inheritance_key = f"groups.{object_group}.{key}"
                     # If object is a list, check which values are inherited from group and remove them
@@ -573,10 +584,11 @@ def config_gui(full_config: dict, config_file: str):
                     if full_config.g(inheritance_key) == value:
                         continue
 
-                    if object_group:
-                        inherited = full_config.g(inheritance_key)
-                    else:
-                        inherited = False
+                    # Debug WIP
+                    #if object_group:
+                    #    inherited = full_config.g(inheritance_key)
+                    #else:
+                    #    inherited = False
 
             # Don't bother to update empty strings, empty lists and None
             if not current_value and not value:
@@ -744,8 +756,8 @@ def config_gui(full_config: dict, config_file: str):
                         [
                             sg.Column(
                                 [
-                                    [sg.Button("+", key="--ADD-TAG--", size=(3, 1))],
-                                    [sg.Button("-", key="--REMOVE-TAG--", size=(3, 1))],
+                                    [sg.Button("+", key="--ADD-BACKUP-TAG--", size=(3, 1))],
+                                    [sg.Button("-", key="--REMOVE-BACKUP-TAG--", size=(3, 1))],
                                 ],
                                 pad=0,
                                 size=(40, 80),
@@ -1162,14 +1174,9 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Text(_t("config_gui.backend_connections"), size=(40, 1)),
                 sg.Input(key="repo_opts.backend_connections", size=(8, 1)),
             ],
-            [sg.HorizontalSeparator()],
-            [sg.Text(_t("config_gui.retention_policy"))],
-            [
-                sg.Text(_t("config_gui.optional_ntp_server_uri"), size=(40, 1)),
-                sg.Input(
-                    key="repo_opts.retention_strategy.ntp_time_server", size=(50, 1)
-                ),
-            ],
+        ]
+
+        retention_col = [
             [
                 sg.Column(
                     [
@@ -1183,71 +1190,132 @@ def config_gui(full_config: dict, config_file: str):
                         [
                             sg.Image(
                                 NON_INHERITED_ICON,
-                                key="inherited.repo_opts.retention_strategy.hourly",
+                                key="inherited.repo_opts.retention_policy.last",
                                 tooltip=_t("config_gui.group_inherited"),
                                 pad=1,
                             ),
                             sg.Input(
-                                key="repo_opts.retention_strategy.hourly", size=(3, 1)
+                                key="repo_opts.retention_policy.last", size=(3, 1)
+                            ),
+                            sg.Text(_t("config_gui.last"), size=(20, 1)),
+                        ],
+                        [
+                            sg.Image(
+                                NON_INHERITED_ICON,
+                                key="inherited.repo_opts.retention_policy.hourly",
+                                tooltip=_t("config_gui.group_inherited"),
+                                pad=1,
+                            ),
+                            sg.Input(
+                                key="repo_opts.retention_policy.hourly", size=(3, 1)
                             ),
                             sg.Text(_t("config_gui.hourly"), size=(20, 1)),
                         ],
                         [
                             sg.Image(
                                 NON_INHERITED_ICON,
-                                key="inherited.repo_opts.retention_strategy.daily",
+                                key="inherited.repo_opts.retention_policy.daily",
                                 tooltip=_t("config_gui.group_inherited"),
                                 pad=1,
                             ),
                             sg.Input(
-                                key="repo_opts.retention_strategy.daily", size=(3, 1)
+                                key="repo_opts.retention_policy.daily", size=(3, 1)
                             ),
                             sg.Text(_t("config_gui.daily"), size=(20, 1)),
                         ],
-                        [
-                            sg.Image(
-                                NON_INHERITED_ICON,
-                                key="inherited.repo_opts.retention_strategy.weekly",
-                                tooltip=_t("config_gui.group_inherited"),
-                                pad=1,
-                            ),
-                            sg.Input(
-                                key="repo_opts.retention_strategy.weekly", size=(3, 1)
-                            ),
-                            sg.Text(_t("config_gui.weekly"), size=(20, 1)),
-                        ],
-                    ]
+                    ],
                 ),
                 sg.Column(
                     [
                         [
                             sg.Image(
                                 NON_INHERITED_ICON,
-                                key="inherited.repo_opts.retention_strategy.monthly",
+                                key="inherited.repo_opts.retention_policy.weekly",
                                 tooltip=_t("config_gui.group_inherited"),
                                 pad=1,
                             ),
                             sg.Input(
-                                key="repo_opts.retention_strategy.monthly", size=(3, 1)
+                                key="repo_opts.retention_policy.weekly", size=(3, 1)
+                            ),
+                            sg.Text(_t("config_gui.weekly"), size=(20, 1)),
+                        ],
+                        [
+                            sg.Image(
+                                NON_INHERITED_ICON,
+                                key="inherited.repo_opts.retention_policy.monthly",
+                                tooltip=_t("config_gui.group_inherited"),
+                                pad=1,
+                            ),
+                            sg.Input(
+                                key="repo_opts.retention_policy.monthly", size=(3, 1)
                             ),
                             sg.Text(_t("config_gui.monthly"), size=(20, 1)),
                         ],
                         [
                             sg.Image(
                                 NON_INHERITED_ICON,
-                                key="inherited.repo_opts.retention_strategy.yearly",
+                                key="inherited.repo_opts.retention_policy.yearly",
                                 tooltip=_t("config_gui.group_inherited"),
                                 pad=1,
                             ),
                             sg.Input(
-                                key="repo_opts.retention_strategy.yearly", size=(3, 1)
+                                key="repo_opts.retention_policy.yearly", size=(3, 1)
                             ),
                             sg.Text(_t("config_gui.yearly"), size=(20, 1)),
                         ],
                     ]
                 ),
             ],
+            [
+                sg.Checkbox(_t("config_gui.keep_within"), key="repo_opts.retention_policy.keep_within", size=(40, 1)),
+            ],
+            [
+                sg.Text(_t("config_gui.keep_within_explanation"), size=(40, 1)),
+            ],
+            [
+                sg.HorizontalSeparator()
+            ],
+            [
+                sg.Column(
+                    [
+                        [sg.Button("+", key="--ADD-RETENTION-TAG--", size=(3, 1))],
+                        [
+                            sg.Button(
+                                "-", key="--REMOVE-RETENTION-TAG--", size=(3, 1)
+                            )
+                        ],
+                    ],
+                    pad=0,
+                ),
+                sg.Column(
+                    [
+                        [
+                            sg.Tree(
+                                sg.TreeData(),
+                                key="repo_opts.retention_policy.tags",
+                                headings=[],
+                                col0_heading=_t("config_gui.keep_tags"),
+                                num_rows=4,
+                                expand_x=True,
+                                expand_y=True,
+                            )
+                        ]
+                    ],
+                    pad=0,
+                    expand_x=True,
+                ),
+            ],
+            [
+                sg.HorizontalSeparator()
+            ],
+            [
+                sg.Text(_t("config_gui.optional_ntp_server_uri"), size=(40, 1)),
+                sg.Input(
+                    key="repo_opts.retention_policy.ntp_time_server", size=(50, 1)
+                ),
+            ],
         ]
+            
 
         prometheus_col = [
             [sg.Text(_t("config_gui.available_variables"))],
@@ -1444,6 +1512,16 @@ def config_gui(full_config: dict, config_file: str):
                     expand_x=True,
                     expand_y=True,
                 )
+            ],
+            [
+                sg.Tab(
+                    _t("config_gui.retention_policy"),
+                    retention_col,
+                    font="helvetica 16",
+                    key="--tab-retention--",
+                    expand_x=True,
+                    expand_y=True,
+                )               
             ],
             [
                 sg.Tab(
@@ -1667,6 +1745,7 @@ def config_gui(full_config: dict, config_file: str):
     tags_tree = sg.TreeData()
     exclude_patterns_tree = sg.TreeData()
     exclude_files_tree = sg.TreeData()
+    retention_policy_tags_tree = sg.TreeData()
     pre_exec_commands_tree = sg.TreeData()
     post_exec_commands_tree = sg.TreeData()
     prometheus_labels_tree = sg.TreeData()
@@ -1737,17 +1816,19 @@ def config_gui(full_config: dict, config_file: str):
             window[key].update(values=tree)
             continue
         if event in (
-            "--ADD-TAG--",
+            "--ADD-BACKUP-TAG--",
             "--ADD-EXCLUDE-PATTERN--",
+            "--ADD-RETENTION-TAG--",
             "--ADD-PRE-EXEC-COMMAND--",
             "--ADD-POST-EXEC-COMMAND--",
             "--ADD-PROMETHEUS-LABEL--",
             "--ADD-ENV-VARIABLE--",
             "--ADD-ENCRYPTED-ENV-VARIABLE--",
             "--REMOVE-PATHS--",
-            "--REMOVE-TAG--",
+            "--REMOVE-BACKUP-TAG--",
             "--REMOVE-EXCLUDE-PATTERN--",
             "--REMOVE-EXCLUDE-FILE--",
+            "--REMOVE-RETENTION-TAG--",
             "--REMOVE-PRE-EXEC-COMMAND--",
             "--REMOVE-POST-EXEC-COMMAND--",
             "--REMOVE-PROMETHEUS-LABEL--",
@@ -1757,7 +1838,7 @@ def config_gui(full_config: dict, config_file: str):
             if "PATHS" in event:
                 option_key = "backup_opts.paths"
                 tree = backup_paths_tree
-            elif "TAG" in event:
+            elif "BACKUP-TAG" in event:
                 popup_text = _t("config_gui.enter_tag")
                 tree = tags_tree
                 option_key = "backup_opts.tags"
@@ -1769,6 +1850,10 @@ def config_gui(full_config: dict, config_file: str):
                 popup_text = None
                 tree = exclude_files_tree
                 option_key = "backup_opts.exclude_files"
+            elif "RETENTION-TAG" in event:
+                popup_text = _t("config_gui.enter_tag")
+                tree = retention_policy_tags_tree
+                option_key = "repo_opts.retention_policy.tags"
             elif "PRE-EXEC-COMMAND" in event:
                 popup_text = _t("config_gui.enter_command")
                 tree = pre_exec_commands_tree

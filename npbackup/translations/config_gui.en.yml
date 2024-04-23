@@ -109,12 +109,17 @@ en:
   files_from_raw: From raw
 
   # retention policiy
+  retention_policy: Retention policy
   keep: Keep
-  hourly: hourly copies
-  daily: daily copies
-  weekly: weekly copies
-  monthly: monthly copies
-  yearly: yearly copies
+  last: last snapshots
+  hourly: hourly snapshots
+  daily: daily snapshots
+  weekly: weekly snapshots
+  monthly: monthly snapshots
+  yearly: yearly snapshots
+  keep_within: Keep within
+  keep_within_explanation: Keep only the last n snapshots within the last m snapshots
+  keep_tags: Keep snapshots with the following tags
   optional_ntp_server_uri: Optional NTP server URL
 
   # repo / group managmeent

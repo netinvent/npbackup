@@ -109,14 +109,18 @@ fr:
   files_from_verbatim: Liste depuis un fichier "exact"
   files_from_raw: Liste depuis un fichier "raw"
 
-  # retention policies
-  retention_policy: Politique de conservation
+  # retention policy
+  retention_policy: Politique de rétention
   keep: Garder
-  hourly: copies horaires
-  daily: copies journalières
-  weekly: copies hebdomadaires
-  monthly: copies mensuelles
-  yearly: copies annuelles
+  last: derniers instantanés
+  hourly: instantanés horaires
+  daily: instantanés journalières
+  weekly: instantanés hebdomadaires
+  monthly: instantanés mensuelles
+  yearly: instantanés annuelles
+  keep_within: Garder dans
+  keep_within_explanation: Garder les instantanés dans la période spécifiée
+  keep_tags: Garder les instantanés avec les tags suivants
   optional_ntp_server_uri: URI optionnelle serveur NTP
 
   # repo management
@@ -124,7 +128,7 @@ fr:
   group_inherited: Hérité du groupe
   repo_group_config: Configuration de groupe de dépots
   global_config: Configuration globale
-  select_object: Selectionner l'object à configurer
+  select_object: Selectionner l'objet à configurer
   create_object: Créer un nouveau dépot ou groupe
   delete_object: Supprimer le dépot ou groupe actuel
   are_you_sure_to_delete: Êtes-vous sûr de vouloir supprimer le
