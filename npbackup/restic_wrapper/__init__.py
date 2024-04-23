@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024042301"
-__version__ = "2.0.1"
+__build__ = "2024042401"
+__version__ = "2.0.2"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -502,7 +502,10 @@ class ResticRunner:
         if self.verbose:
             args += " -vv"
         if self.dry_run:
-            args += " --dry-run"
+            # Only some restic commands support --dry-run
+            operation = fn_name(2)
+            if operation in ["backup", "forget", "prune", "restore", "rewrite"]:
+                args += " --dry-run"
         if self.json_output:
             args += " --json"
         return args

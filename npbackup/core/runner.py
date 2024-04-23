@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024010201"
+__build__ = "2024042401"
 
 
 from typing import Optional, Callable, Union, List
@@ -708,6 +708,7 @@ class NPBackupRunner:
             self.minimum_backup_age = 0
 
         self.restic_runner.verbose = self.verbose
+        self.restic_runner.dry_run = self.dry_run
         self.restic_runner.live_output = self.live_output
         self.restic_runner.json_output = self.json_output
         self.restic_runner.stdout = self.stdout
@@ -1051,7 +1052,6 @@ class NPBackupRunner:
                         level="info",
                     )
 
-        self.restic_runner.dry_run = self.dry_run
         if not read_from_stdin:
             result = self.restic_runner.backup(
                 paths=paths,
