@@ -261,31 +261,32 @@ def crypt_config(
 
         def _crypt_config(key: str, value: Any) -> Any:
             if key_should_be_encrypted(key, encrypted_options):
-                if operation == "encrypt":
-                    if (
-                        isinstance(value, str)
-                        and (
-                            not value.startswith(ID_STRING)
-                            or not value.endswith(ID_STRING)
-                        )
-                    ) or not isinstance(value, str):
-                        value = enc.encrypt_message_hf(
-                            value, aes_key, ID_STRING, ID_STRING
-                        ).decode("utf-8")
-                elif operation == "decrypt":
-                    if (
-                        isinstance(value, str)
-                        and value.startswith(ID_STRING)
-                        and value.endswith(ID_STRING)
-                    ):
-                        _, value = enc.decrypt_message_hf(
-                            value,
-                            aes_key,
-                            ID_STRING,
-                            ID_STRING,
-                        )
-                else:
-                    raise ValueError(f"Bogus operation {operation} given")
+                if value is not None:
+                    if operation == "encrypt":
+                        if (
+                            isinstance(value, str)
+                            and (
+                                not value.startswith(ID_STRING)
+                                or not value.endswith(ID_STRING)
+                            )
+                        ) or not isinstance(value, str):
+                            value = enc.encrypt_message_hf(
+                                value, aes_key, ID_STRING, ID_STRING
+                            ).decode("utf-8")
+                    elif operation == "decrypt":
+                        if (
+                            isinstance(value, str)
+                            and value.startswith(ID_STRING)
+                            and value.endswith(ID_STRING)
+                        ):
+                            _, value = enc.decrypt_message_hf(
+                                value,
+                                aes_key,
+                                ID_STRING,
+                                ID_STRING,
+                            )
+                    else:
+                        raise ValueError(f"Bogus operation {operation} given")
             return value
 
         return replace_in_iterable(
@@ -307,10 +308,11 @@ def is_encrypted(full_config: dict) -> bool:
         nonlocal is_encrypted
 
         if key_should_be_encrypted(key, ENCRYPTED_OPTIONS):
-            if isinstance(value, str) and (
-                not value.startswith(ID_STRING) or not value.endswith(ID_STRING)
-            ):
-                is_encrypted = False
+            if value is not None:
+                if isinstance(value, str) and (
+                    not value.startswith(ID_STRING) or not value.endswith(ID_STRING)
+                ):
+                    is_encrypted = False
         return value
 
     replace_in_iterable(
