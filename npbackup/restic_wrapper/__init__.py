@@ -7,7 +7,7 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024042401"
+__build__ = "2024042402"
 __version__ = "2.0.2"
 
 
@@ -22,15 +22,12 @@ import dateutil.parser
 import queue
 from functools import wraps
 from command_runner import command_runner
-from ofunctions.misc import BytesConverter
+from ofunctions.misc import BytesConverter, fn_name
 from npbackup.__debug__ import _DEBUG
 from npbackup.__env__ import FAST_COMMANDS_TIMEOUT, CHECK_INTERVAL
 
 
 logger = getLogger()
-
-
-fn_name = lambda n=0: sys._getframe(n + 1).f_code.co_name  # TODO go to ofunctions.misc
 
 
 class ResticRunner:
