@@ -512,6 +512,14 @@ class ResticRunner:
         repository_version: int = 2,
         compression: str = "auto",
     ) -> bool:
+        """
+        Init repository. Let's make sure we always run in JSON mode so we don't need
+        horrendous regexes to find whether initialized
+
+        --json output when inializing:
+          {"message_type":"initialized","id":"8daef59e2ac4c86535ae3f7414fcac6534f270077176af3ebddd34c364cac3c2","repository":"c:\\testy"}
+        --json output when already initialized (is not json !!!)
+        """
         cmd = "init --repository-version {} --compression {}".format(
             repository_version, compression
         )
@@ -521,7 +529,7 @@ class ResticRunner:
         )
         if result:
             if re.search(
-                r"created restic repository ([a-z0-9]+) at .+", output, re.IGNORECASE
+                r"created restic repository ([a-z0-9]+) at .+|{\"message_type\":\"initialized\"", output, re.IGNORECASE
             ):
                 self.write_logs("Repo initialized successfully", level="info")
                 self.is_init = True
@@ -557,7 +565,7 @@ class ResticRunner:
         )
         self.live_output = live_output
         if not self._is_init:
-            self.write_logs(output, level="error")
+            self.write_logs("Repository is not initialized", level="info")
         return self._is_init
 
     @is_init.setter
@@ -703,7 +711,7 @@ class ResticRunner:
             msg = f"Could not list snapshot {snapshot} content:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
-    #  @check_if_init  # We don't need to run if init before checking snapshots since if init searches for snapshots
+    @check_if_init
     def snapshots(self) -> Union[bool, str, dict]:
         """
         Returns a list of snapshots
