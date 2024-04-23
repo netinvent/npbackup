@@ -120,7 +120,7 @@ en:
   keep_within: Keep within
   keep_within_explanation: Keep only the last n snapshots within the last m snapshots
   keep_tags: Keep snapshots with the following tags
-  optional_ntp_server_uri: Optional NTP server URL
+  optional_ntp_server_uri: Optional NTP server URI
 
   # repo / group managmeent
   repo_group: Repo group

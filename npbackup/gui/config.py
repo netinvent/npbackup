@@ -1325,7 +1325,7 @@ def config_gui(full_config: dict, config_file: str):
             [
                 sg.Text(_t("config_gui.optional_ntp_server_uri"), size=(40, 1)),
                 sg.Input(
-                    key="repo_opts.retention_policy.ntp_time_server", size=(50, 1)
+                    key="repo_opts.retention_policy.ntp_server", size=(50, 1)
                 ),
             ],
         ]

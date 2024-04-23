@@ -24,6 +24,7 @@ from command_runner import command_runner
 from ofunctions.threading import threaded
 from ofunctions.platform import os_arch
 from ofunctions.misc import BytesConverter
+import ntplib
 from npbackup.restic_metrics import (
     restic_str_output_to_json,
     restic_json_to_prometheus,
@@ -116,6 +117,21 @@ def metric_writer(
     except OSError as exc:
         logger.error("Cannot write metric file: ".format(exc))
     return backup_too_small
+
+
+def get_ntp_offset(ntp_server: str) -> Optional[float]:
+    """
+    Get current time offset from ntp server
+    """
+    try:
+        client = ntplib.NTPClient()
+        response = client.request(ntp_server)
+        return response.offset
+    except ntplib.NTPException as exc:
+        logger.error(f"Cannot get NTP offset from {ntp_server}: {exc}")
+    except Exception as exc:
+        logger.error(f"Cannot reach NTP server {ntp_server}: {exc}")
+    return None
 
 
 class NPBackupRunner:
@@ -1161,6 +1177,17 @@ class NPBackupRunner:
             self.write_logs(f"Forgetting snapshots {snapshots}", level="info")
             result = self.restic_runner.forget(snapshots)
         elif use_policy:
+            # Let's check if we can get a valid NTP server offset
+            # If offset is too big, we won't apply policy
+            # Offset should not be higher than 10 minutes, eg 600 seconds
+            ntp_server = self.repo_config.g("repo_opts.retention_policy.ntp_server")
+            if ntp_server:
+                offset = get_ntp_offset(ntp_server)
+                if not offset or offset >= 600:
+                    msg = f"Offset from NTP server {ntp_server} is too high: {int(offset)} seconds. Won't apply policy"
+                    self.write_logs(msg, level="critical")
+                    return self.convert_to_json_output(False, msg)
+
             # Build policiy from config
             policy = {}
             for entry in ["last", "hourly", "daily", "weekly", "monthly", "yearly"]:

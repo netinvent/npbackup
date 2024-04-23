@@ -6,13 +6,12 @@
       - with button to select forget/prune operation
       - With explanation link to restic
     - prune operation: default max unsed ?
-    - Operation planifier:
+    - Operation planifier
       - backups
       - cleaner (forget / check / prune, each having different planification (at least for check --read-data))
       - Launch now
    - NPBackup Operation mode
       - manages multiple repos with generic key (restic key add) or specified key
-  !- NTP server
   - GUI --help parameter should intercept stdout and show results in a popup
 
  
@@ -37,7 +36,9 @@
   !- Operation center
     - GUI operation center allowing to mass execute actions on repos / groups
     - CLI operation center via `--group-operation --repo-group=somegroup`
-    !- Implemented retention policies
+    - Implemented retention policies
+      - Optional time server update to make sure we don't drift before doing retention operations
+      ! Optional repo check before doing retention operations
     !- Operation planifier allows to create scheduled tasks for operations
       !- Implemented scheduled task creator for Windows & Unix
          !(simple list of tasks, actions, stop on error)
@@ -71,6 +72,7 @@
   - Allow a 30 seconds grace period for child processes to close before asking them nicely, and than not nicely to quit
   - Fully refactored prometheus metrics parser to be able to read restic standard or json outputs
   - Reimplmented auto upgrade after CLI/GUI split
+  - --dry-run now works with other commands than backup
   - Added initial tests
 
 ## 2.2.2 - 14/12/2023 (internal build only)
@@ -189,7 +191,7 @@
   - Fix error message in logs when repo is not initialized
 
 ## v2.2.0 - rc1 - 02/02/2023
-  - Added a full auto-upgrade solution:
+  - Added a full auto-upgrade solution
     - Aupgrade client integrated into NPBackup, that can be called manually via --auto-upgrade or automatically run every n backups
     - Upgrade server which servers files and their metadata
   - Added a gui to create a scheduled task under Windows
@@ -241,9 +243,9 @@
   - Fix for ruamel.yaml global objects being modified out of current scope encrypting current config while saving
   - Fix npbackup could not start when no config file was present
   - Drastically improve ls operation speed by changing command_runner method from poller to monitor (no live output) except for backup operation
-  - Compiler:
+  - Compiler
     - Compile python 3.7 and 3.10 targets so we also get to use Windows 7 which can't run python > 3.7
-  - Installer:
+  - Installer
     - Moved task creation process to npbackup so we can recreate tasks on systems where npbackup is already installed
 
 ## v1.8.0
@@ -266,7 +268,7 @@
   - Allow setting additional prometheus labels
   - Fix gui snapshot contents don't show duplicate parents on Windows when backing up 'c:\foo' and 'C:\bar'
   - Internal code cleanup
-  - Installer:
+  - Installer
     - Make sure we don't overwrite destination configuration file if existing
 
 ## v1.5.3

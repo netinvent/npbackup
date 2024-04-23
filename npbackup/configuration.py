@@ -191,7 +191,7 @@ empty_config_dict = {
                     "yearly": 3,
                     "tags": [],
                     "keep_within": True,
-                    "ntp_time_server": None,  # TODO
+                    "ntp_server": None,
                 },
                 # "prune_max_unused": None,  # TODO
                 # "prune_max_repack_size": None,  # TODO
