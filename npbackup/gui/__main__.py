@@ -831,7 +831,7 @@ def _main_gui(viewer_mode: bool):
     if repo_config:
         try:
             current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
-        except ValueError:
+        except (TypeError, ValueError):
             current_state = None
             backup_tz = None
             snapshot_list = []
