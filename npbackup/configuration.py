@@ -431,18 +431,19 @@ def extract_permissions_from_full_config(full_config: dict) -> dict:
     """
     for repo in full_config.g("repos").keys():
         repo_uri = full_config.g(f"repos.{repo}.repo_uri")
-        # Extract permissions and manager password from repo_uri if set as string
-        if "," in repo_uri:
-            repo_uri = [item.strip() for item in repo_uri.split(",")]
-        if isinstance(repo_uri, tuple) or isinstance(repo_uri, list):
-            repo_uri, permissions, manager_password = repo_uri
-            # Overwrite existing permissions / password if it was set in repo_uri
-            full_config.s(f"repos.{repo}.repo_uri", repo_uri)
-            full_config.s(f"repos.{repo}.permissions", permissions)
-            full_config.s(f"repos.{repo}.manager_password", manager_password)
-            full_config.s(f"repos.{repo}.__current_manager_password", manager_password)
-        else:
-            logger.info(f"No extra information for repo {repo} found")
+        if repo_uri:
+            # Extract permissions and manager password from repo_uri if set as string
+            if "," in repo_uri:
+                repo_uri = [item.strip() for item in repo_uri.split(",")]
+            if isinstance(repo_uri, tuple) or isinstance(repo_uri, list):
+                repo_uri, permissions, manager_password = repo_uri
+                # Overwrite existing permissions / password if it was set in repo_uri
+                full_config.s(f"repos.{repo}.repo_uri", repo_uri)
+                full_config.s(f"repos.{repo}.permissions", permissions)
+                full_config.s(f"repos.{repo}.manager_password", manager_password)
+                full_config.s(f"repos.{repo}.__current_manager_password", manager_password)
+            else:
+                logger.info(f"No extra information for repo {repo} found")
     return full_config
 
 
