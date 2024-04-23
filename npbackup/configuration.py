@@ -172,36 +172,36 @@ empty_config_dict = {
                 "post_exec_per_command_timeout": 3600,
                 "post_exec_failure_is_fatal": False,
                 "post_exec_execute_even_on_backup_error": True,
-            }
-        },
-        "repo_opts": {
-            "repo_password": "",
-            "repo_password_command": "",
-            # Minimum time between two backups, in minutes
-            # Set to zero in order to disable time checks
-            "minimum_backup_age": 1440,
-            "upload_speed": "100 Mib",  # Mib(its) or MiB(ytes), use 0 for unlimited upload speed
-            "download_speed": "0",  # in KiB, use 0 for unlimited download speed
-            "backend_connections": 0,  # Fine tune simultaneous connections to backend, use 0 for standard configuration
-            "retention_strategy": {
-                "last": 0,
-                "hourly": 72,
-                "daily": 30,
-                "weekly": 4,
-                "monthly": 12,
-                "yearly": 3,
-                "tags": [],
-                "within": True,
-                "ntp_time_server": None,  # TODO
             },
-            "prune_max_unused": None,
-            "prune_max_repack_size": None,
+            "repo_opts": {
+                "repo_password": "",
+                "repo_password_command": "",
+                # Minimum time between two backups, in minutes
+                # Set to zero in order to disable time checks
+                "minimum_backup_age": 1440,
+                "upload_speed": "100 Mib",  # Mib(its) or MiB(ytes), use 0 for unlimited upload speed
+                "download_speed": "0",  # in KiB, use 0 for unlimited download speed
+                "backend_connections": 0,  # Fine tune simultaneous connections to backend, use 0 for standard configuration
+                "retention_strategy": {
+                    "last": 0,
+                    "hourly": 72,
+                    "daily": 30,
+                    "weekly": 4,
+                    "monthly": 12,
+                    "yearly": 3,
+                    "tags": [],
+                    "within": True,
+                    "ntp_time_server": None,  # TODO
+                },
+                "prune_max_unused": None,
+                "prune_max_repack_size": None,
+            },
+            "prometheus": {
+                "backup_job": "${MACHINE_ID}",
+                "group": "${MACHINE_GROUP}",
+            },
+            "env": {"env_variables": {}, "encrypted_env_variables": {}},
         },
-        "prometheus": {
-            "backup_job": "${MACHINE_ID}",
-            "group": "${MACHINE_GROUP}",
-        },
-        "env": {"env_variables": {}, "encrypted_env_variables": {}},
     },
     "identity": {
         "machine_id": "${HOSTNAME}__${RANDOM}[4]",
@@ -405,14 +405,17 @@ def expand_units(object_config: dict, unexpand: bool = False) -> dict:
             try:
                 if value:
                     if unexpand:
-                        return BytesConverter(value).human_iec_bytes
+                        return BytesConverter(value).human_iec_bits
                     return BytesConverter(value)
                 else:
                     if unexpand:
-                        return BytesConverter(0).human_iec_bytes
+                        return BytesConverter(0).human_iec_bits
                     return BytesConverter(0)
             except ValueError:
-                logger.warning(f"Cannot parse bytes value {key}:\"{value}\", keeping as is")
+                logger.warning(f"Cannot parse bytes value {key}:\"{value}\", setting to zero")
+                if unexpand:
+                    return BytesConverter(0).human_iec_bits
+                return BytesConverter(0)
         return value
 
     return replace_in_iterable(object_config, _expand_units, callable_wants_key=True)
