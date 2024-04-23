@@ -571,7 +571,7 @@ def _main_gui(viewer_mode: bool):
                     return full_config, config_file
         return None, None
 
-    def get_config(config_file: str = None, window: sg.Window = None, repo_name: str = None) -> Tuple:
+    def get_config(config_file: str = None, window: sg.Window = None, repo_name: str = "default") -> Tuple:
         full_config, config_file = get_config_file(config_file=config_file)
         if full_config and config_file:
             repo_config, config_inheritance = npbackup.configuration.get_repo_config(
@@ -929,10 +929,10 @@ def _main_gui(viewer_mode: bool):
                 repo_list = _repo_list
             else:
                 sg.PopupError(_t("main_gui.cannot_load_config_keep_current"))
-            #if not viewer_mode and not config_file and not full_config:
-            #    window["-NO-CONFIG-"].Update(visible=True)
-            #elif not viewer_mode:
-            #    window["-NO-CONFIG-"].Update(visible=False)
+            if not viewer_mode and not config_file and not full_config:
+                window["-NO-CONFIG-"].Update(visible=True)
+            elif not viewer_mode:
+                window["-NO-CONFIG-"].Update(visible=False)
             event = "--STATE-BUTTON--"
         if event == _t("generic.destination"):
             try:
