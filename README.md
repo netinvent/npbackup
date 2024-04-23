@@ -38,6 +38,8 @@ Works on x64 **Linux** , **NAS** solutions based on arm/arm64, **Windows** x64 a
   - Backup process and IO priority settings
   - Upload / download speed limits*
   - Remote connectivity concurrency settings*
+- Per repo / group retention policies
+  - Will also avoid wrong date data destruction via optional NTP queries
 - Comes with full exclusion lists for Linux and Windows
 - First class prometheus support
   - Restic results metric generation

@@ -50,3 +50,8 @@ to show actual secrets.
 When using `--show-config` or right click `show unecrypted`, we should only show unencrypted config if password is set.  
 Envivironmnt variable `NPBACKUP_MANAGER_PASSWORD` will be read to verify access.
 Also, when wrong password is entered, we should wait in order to reduce brute force attacks.
+
+# NPF-SEC-00010: Date attacks
+
+When using retention policies, we need to make sure that current system date is good, in order to avoid wrong retention deletions.  
+When set, an external NTP server is used to get the offset. If offset is high enough (10 min), we avoid executing the retention policies.

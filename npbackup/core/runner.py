@@ -1183,6 +1183,7 @@ class NPBackupRunner:
             self.write_logs(f"Forgetting snapshots {snapshots}", level="info")
             result = self.restic_runner.forget(snapshots)
         elif use_policy:
+            # NPF-SEC-00010
             # Let's check if we can get a valid NTP server offset
             # If offset is too big, we won't apply policy
             # Offset should not be higher than 10 minutes, eg 600 seconds
