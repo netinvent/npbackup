@@ -517,7 +517,10 @@ def config_gui(full_config: dict, config_file: str):
             # TODO exclude encrypted env vars
             if value == ENCRYPTED_DATA_PLACEHOLDER:
                 continue
-            if not isinstance(key, str) or (isinstance(key, str) and (not "." in key and not key in ("repo_uri", "repo_group"))):
+            if not isinstance(key, str) or (
+                isinstance(key, str)
+                and (not "." in key and not key in ("repo_uri", "repo_group"))
+            ):
                 # Don't bother with keys that don't contain with "." since they're not in the YAML config file
                 # but are most probably for GUI events
                 # Still, we need to handle repo_uri and repo_group which do not have dot notations since they're root keys
@@ -568,8 +571,13 @@ def config_gui(full_config: dict, config_file: str):
 
                 # Special case for nested retention_policy dict which may not exist, we need to create it
                 if key.startswith("repo_opts.retention_policy"):
-                    if not full_config.g(f"{object_type}s.{object_name}.repo_opts.retention_policy"):
-                        full_config.s(f"{object_type}s.{object_name}.repo_opts.retention_policy", CommentedMap())
+                    if not full_config.g(
+                        f"{object_type}s.{object_name}.repo_opts.retention_policy"
+                    ):
+                        full_config.s(
+                            f"{object_type}s.{object_name}.repo_opts.retention_policy",
+                            CommentedMap(),
+                        )
 
                 if object_group:
                     inheritance_key = f"groups.{object_group}.{key}"
@@ -585,9 +593,9 @@ def config_gui(full_config: dict, config_file: str):
                         continue
 
                     # Debug WIP
-                    #if object_group:
+                    # if object_group:
                     #    inherited = full_config.g(inheritance_key)
-                    #else:
+                    # else:
                     #    inherited = False
 
             # Don't bother to update empty strings, empty lists and None
@@ -599,9 +607,9 @@ def config_gui(full_config: dict, config_file: str):
 
             # Finally, update the config dictionary
             # Debug WIP
-            #if object_type == "group":
+            # if object_type == "group":
             #    print(f"UPDATING {active_object_key} curr={current_value} new={value}")
-            #else:
+            # else:
             #    print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
             full_config.s(active_object_key, value)
         return full_config
@@ -756,8 +764,18 @@ def config_gui(full_config: dict, config_file: str):
                         [
                             sg.Column(
                                 [
-                                    [sg.Button("+", key="--ADD-BACKUP-TAG--", size=(3, 1))],
-                                    [sg.Button("-", key="--REMOVE-BACKUP-TAG--", size=(3, 1))],
+                                    [
+                                        sg.Button(
+                                            "+", key="--ADD-BACKUP-TAG--", size=(3, 1)
+                                        )
+                                    ],
+                                    [
+                                        sg.Button(
+                                            "-",
+                                            key="--REMOVE-BACKUP-TAG--",
+                                            size=(3, 1),
+                                        )
+                                    ],
                                 ],
                                 pad=0,
                                 size=(40, 80),
@@ -1267,23 +1285,21 @@ def config_gui(full_config: dict, config_file: str):
                 ),
             ],
             [
-                sg.Checkbox(_t("config_gui.keep_within"), key="repo_opts.retention_policy.keep_within", size=(40, 1)),
+                sg.Checkbox(
+                    _t("config_gui.keep_within"),
+                    key="repo_opts.retention_policy.keep_within",
+                    size=(40, 1),
+                ),
             ],
             [
                 sg.Text(_t("config_gui.keep_within_explanation"), size=(40, 1)),
             ],
-            [
-                sg.HorizontalSeparator()
-            ],
+            [sg.HorizontalSeparator()],
             [
                 sg.Column(
                     [
                         [sg.Button("+", key="--ADD-RETENTION-TAG--", size=(3, 1))],
-                        [
-                            sg.Button(
-                                "-", key="--REMOVE-RETENTION-TAG--", size=(3, 1)
-                            )
-                        ],
+                        [sg.Button("-", key="--REMOVE-RETENTION-TAG--", size=(3, 1))],
                     ],
                     pad=0,
                 ),
@@ -1305,9 +1321,7 @@ def config_gui(full_config: dict, config_file: str):
                     expand_x=True,
                 ),
             ],
-            [
-                sg.HorizontalSeparator()
-            ],
+            [sg.HorizontalSeparator()],
             [
                 sg.Text(_t("config_gui.optional_ntp_server_uri"), size=(40, 1)),
                 sg.Input(
@@ -1315,7 +1329,6 @@ def config_gui(full_config: dict, config_file: str):
                 ),
             ],
         ]
-            
 
         prometheus_col = [
             [sg.Text(_t("config_gui.available_variables"))],
@@ -1521,7 +1534,7 @@ def config_gui(full_config: dict, config_file: str):
                     key="--tab-retention--",
                     expand_x=True,
                     expand_y=True,
-                )               
+                )
             ],
             [
                 sg.Tab(
@@ -1922,7 +1935,9 @@ def config_gui(full_config: dict, config_file: str):
             )
             # NPF-SEC-00009
             env_manager_password = os.environ.get("NPBACKUP_MANAGER_PASSWORD", None)
-            if (env_manager_password and env_manager_password == manager_password) or ask_manager_password(manager_password):
+            if (
+                env_manager_password and env_manager_password == manager_password
+            ) or ask_manager_password(manager_password):
                 update_object_gui(values["-OBJECT-SELECT-"], unencrypted=True)
                 update_global_gui(full_config, unencrypted=True)
             continue

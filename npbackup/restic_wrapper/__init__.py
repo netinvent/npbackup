@@ -550,7 +550,10 @@ class ResticRunner:
         live_output = self.live_output
         self.live_output = False
         self._is_init, output = self.executor(
-            cmd, timeout=FAST_COMMANDS_TIMEOUT, errors_allowed=True, no_output_queues=True
+            cmd,
+            timeout=FAST_COMMANDS_TIMEOUT,
+            errors_allowed=True,
+            no_output_queues=True,
         )
         self.live_output = live_output
         if not self._is_init:
@@ -931,7 +934,10 @@ class ResticRunner:
             for cmd in cmds:
                 result, output = self.executor(cmd)
                 if result:
-                    self.write_logs(f"successfully forgot {'using retention policy' if policy else 'snapshots ' + snapshots}", level="info")
+                    self.write_logs(
+                        f"successfully forgot {'using retention policy' if policy else 'snapshots ' + snapshots}",
+                        level="info",
+                    )
                 else:
                     self.write_logs(f"Forget failed\n{output}", level="error")
                     batch_result = False

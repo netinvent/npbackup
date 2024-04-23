@@ -571,7 +571,9 @@ def _main_gui(viewer_mode: bool):
                     return full_config, config_file
         return None, None
 
-    def get_config(config_file: str = None, window: sg.Window = None, repo_name: str = "default") -> Tuple:
+    def get_config(
+        config_file: str = None, window: sg.Window = None, repo_name: str = "default"
+    ) -> Tuple:
         full_config, config_file = get_config_file(config_file=config_file)
         if full_config and config_file:
             repo_config, config_inheritance = npbackup.configuration.get_repo_config(
@@ -651,7 +653,6 @@ def _main_gui(viewer_mode: bool):
     else:
         config_file = Path(f"{CURRENT_DIR}/npbackup.conf")
 
-
     # Let's try to read standard restic repository env variables
     viewer_repo_uri = os.environ.get("RESTIC_REPOSITORY", None)
     viewer_repo_password = os.environ.get("RESTIC_PASSWORD", None)
@@ -673,7 +674,6 @@ def _main_gui(viewer_mode: bool):
             repo_uri,
             repo_list,
         ) = get_config(config_file=config_file, repo_name=args.repo_name)
-
 
     right_click_menu = ["", [_t("generic.destination")]]
     headings = [

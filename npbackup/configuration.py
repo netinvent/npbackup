@@ -412,7 +412,9 @@ def expand_units(object_config: dict, unexpand: bool = False) -> dict:
                         return BytesConverter(0).human_iec_bits
                     return BytesConverter(0)
             except ValueError:
-                logger.warning(f"Cannot parse bytes value {key}:\"{value}\", setting to zero")
+                logger.warning(
+                    f'Cannot parse bytes value {key}:"{value}", setting to zero'
+                )
                 if unexpand:
                     return BytesConverter(0).human_iec_bits
                 return BytesConverter(0)
