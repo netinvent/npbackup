@@ -655,7 +655,9 @@ class ResticRunner:
         if result:
             if msg:
                 self.write_logs(msg, level="info")
-            return output
+            if output:
+                return output
+            return result
         if msg:
             self.write_logs(msg, level="error")
         return False
@@ -934,10 +936,12 @@ class ResticRunner:
             for cmd in cmds:
                 result, output = self.executor(cmd)
                 if result:
+                    msg = f"successfully {'applied retention policy' if policy else 'forgot snapshot'}"
                     self.write_logs(
-                        f"successfully forgot {'using retention policy' if policy else 'snapshots ' + snapshots}",
+                        msg,
                         level="info",
                     )
+                    batch_output += f"\n{msg}"
                 else:
                     self.write_logs(f"Forget failed\n{output}", level="error")
                     batch_result = False
