@@ -235,7 +235,7 @@ def compile(arch: str, audience: str, build_type: str):
 
     license_dest_file = os.path.join(PACKAGE_DIR, os.path.basename(LICENSE_FILE))
 
-    icon_file = os.path.join(PACKAGE_DIR, "resources", "npbackup_icon.ico")
+    icon_file = os.path.join(BASEDIR, os.pardir, "resources", "npbackup_icon.ico")
 
     # Installer specific files, no need for a npbackup package directory here
 
