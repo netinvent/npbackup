@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-version = __version__ = "4.61.0.206 Unreleased"
+version = __version__ = "4.61.0.206 NPF"
 
 _change_log = """
     Changelog since 4.60.0 released to PyPI on 8-May-2022
@@ -485,7 +485,8 @@ _change_log = """
     4.61.0.206
         New Udemy Coupon code
     
-
+    NPF 2024-04-25
+        Disable upgrade api call
     """
 
 __version__ = version.split()[0]  # For PEP 396 and PEP 345
@@ -26995,7 +26996,9 @@ if _mac_should_set_alpha_to_99():
     set_options(alpha_channel=0.99)
 
 
-__perform_upgrade_check()
+# NPF-MOD: Don't want a GUI library to call back home
+# My App doesn't need to be flagged as virus by behavior scanners
+#__perform_upgrade_check()
 
 
 # -------------------------------- ENTRY POINT IF RUN STANDALONE -------------------------------- #
