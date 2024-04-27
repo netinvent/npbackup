@@ -176,7 +176,7 @@ def have_nuitka_commercial():
         return False
 
 
-def compile(arch: str, audience: str, build_type: str):
+def compile(arch: str, audience: str, build_type: str, onefile: bool):
     if build_type not in BUILD_TYPES:
         print("CANNOT BUILD BOGUS BUILD TYPE")
         sys.exit(1)
@@ -265,6 +265,9 @@ def compile(arch: str, audience: str, build_type: str):
         NUITKA_OPTIONS += " --plugin-enable=tk-inter --disable-console"
     else:
         NUITKA_OPTIONS += " --plugin-disable=tk-inter --nofollow-import-to=PySimpleGUI --nofollow-import-to=_tkinter --nofollow-import-to=npbackup.gui"
+    if onefile:
+        NUITKA_OPTIONS += " --onefile"
+
 
     if build_type == "gui":
         NUITKA_OPTIONS +" --nofollow-import-to=npbackup.gui.config --nofollow-import-to=npbackup.__main__"
@@ -281,7 +284,7 @@ def compile(arch: str, audience: str, build_type: str):
         TRADEMARKS,
     )
 
-    CMD = '{} -m nuitka --python-flag=no_docstrings --python-flag=-O {} {} --onefile --include-data-dir="{}"="{}" --include-data-file="{}"="{}" --include-data-file="{}"="{}" --windows-icon-from-ico="{}" --output-dir="{}" --output-filename="{}" {}'.format(
+    CMD = '{} -m nuitka --python-flag=no_docstrings --python-flag=-O {} {} --include-data-dir="{}"="{}" --include-data-file="{}"="{}" --include-data-file="{}"="{}" --windows-icon-from-ico="{}" --output-dir="{}" --output-filename="{}" {}'.format(
         PYTHON_EXECUTABLE,
         NUITKA_OPTIONS,
         EXE_OPTIONS,
@@ -317,7 +320,7 @@ def compile(arch: str, audience: str, build_type: str):
             file_description,
             TRADEMARKS,
         )
-        CMD = '{} -m nuitka --python-flag=no_docstrings --python-flag=-O {} {} --onefile --include-data-file="{}"="{}" --include-data-file="{}"="{}" --include-data-dir="{}"="{}" --windows-icon-from-ico="{}" --windows-uac-admin --output-dir="{}" bin/NPBackupInstaller.py'.format(
+        CMD = '{} -m nuitka --python-flag=no_docstrings --python-flag=-O {} {} --include-data-file="{}"="{}" --include-data-file="{}"="{}" --include-data-dir="{}"="{}" --windows-icon-from-ico="{}" --windows-uac-admin --output-dir="{}" bin/NPBackupInstaller.py'.format(
             PYTHON_EXECUTABLE,
             NUITKA_OPTIONS,
             EXE_OPTIONS,
@@ -375,6 +378,14 @@ if __name__ == "__main__":
         help="Build cli, gui or viewer target"
     )
 
+    parser.add_argument(
+        "--onefile",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Build single file executable (more prone to AV detection)"
+    )
+
     args = parser.parse_args()
 
     # Make sure we get out dev environment back when compilation ends / fails
@@ -416,7 +427,7 @@ if __name__ == "__main__":
                 errors = True
                 continue
             for build_type in build_types:
-                result = compile(arch=python_arch(), audience=audience, build_type=build_type)
+                result = compile(arch=python_arch(), audience=audience, build_type=build_type, onefile=args.onefile)
                 audience_build = "private" if private_build else "public"
                 if result:
                     print(
