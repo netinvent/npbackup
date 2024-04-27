@@ -306,6 +306,7 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool):
     if exit_code != 0:
         errors = True
 
+    """
     # windows only installer compilation
     if os.name == "nt":
         _installer_version = installer_version.split("-")[0]
@@ -338,11 +339,10 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool):
         exit_code, output = command_runner(CMD, timeout=0, live_output=True)
         if exit_code != 0:
             errors = True
-        else:
-            ## Create version file
-            with open(os.path.join(BUILDS_DIR, audience, "VERSION"), "w") as fh:
-                fh.write(npbackup_version)
-
+    """
+    ## Create version file
+    with open(os.path.join(BUILDS_DIR, audience, "VERSION"), "w") as fh:
+        fh.write(npbackup_version)
     print("COMPILE ERRORS", errors)
     return not errors
 
