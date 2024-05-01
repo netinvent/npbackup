@@ -57,3 +57,10 @@ Build target: npbackup-cli-x64.exe
 Result: 4/72 security vendors and no sandboxes flagged this file as malicious
 Link: https://www.virustotal.com/gui/file/1d05616e41534b46657f235878ab3f4fa63365a652b3eda5280624fb610c0578
 
+Build type: Standalone
+Compiler: Nuitka 2.1.6 Commercial
+Backend: gcc 13.2.0
+Signed: Yes (EV Code signing certificate)
+Build target: npbackup-cli-x64.exe
+Result: 2/72 security vendors and no sandboxes flagged this file as malicious
+Link: https://www.virustotal.com/gui/file/88e761959ea4a538b762d193d088358ce04a13d78c20e082a16622e709734f87
