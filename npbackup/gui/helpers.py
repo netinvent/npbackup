@@ -80,6 +80,7 @@ def gui_thread_runner(
     __autoclose: bool = False,
     __gui_msg: str = "",
     __stdout: bool = True,
+    __backend_binary: str = None,
     *args,
     **kwargs,
 ):
@@ -101,6 +102,9 @@ def gui_thread_runner(
         progress_window["-OPERATIONS-PROGRESS-STDOUT-"].update(autoscroll=True)
 
     runner = NPBackupRunner()
+
+    if __backend_binary:
+        runner.binary = __backend_binary
 
     if __stdout:
         stdout_queue = queue.Queue()

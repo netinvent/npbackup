@@ -58,7 +58,7 @@ from npbackup.restic_wrapper import ResticRunner
 
 
 logger = getLogger()
-
+backend_binary = None
 
 sg.theme(PYSIMPLEGUI_THEME)
 sg.SetOptions(icon=OEM_ICON)
@@ -227,6 +227,7 @@ def ls_window(repo_config: dict, snapshot_id: str) -> bool:
         __stdout=False,
         __autoclose=True,
         __compact=True,
+        __backend_binary=backend_binary,
     )
     if not result or not result["result"]:
         sg.Popup("main_gui.snapshot_is_empty")
@@ -330,6 +331,7 @@ def restore_window(
             snapshot=snapshot,
             target=target,
             restore_includes=restore_includes,
+            __backend_binary=backend_binary,
         )
         return result["result"]
 
@@ -379,6 +381,7 @@ def backup(repo_config: dict) -> bool:
         __autoclose=False,
         __compact=False,
         __gui_msg=gui_msg,
+        __backend_binary=backend_binary,
     )
     return result["result"]
 
@@ -393,12 +396,14 @@ def forget_snapshot(repo_config: dict, snapshot_ids: List[str]) -> bool:
         snapshots=snapshot_ids,
         __gui_msg=gui_msg,
         __autoclose=True,
+        __backend_binary=backend_binary,
     )
     return result["result"]
 
 
 def _main_gui(viewer_mode: bool):
     global logger
+    global backend_binary
 
     def check_for_auto_upgrade(full_config: dict) -> None:
         if full_config and full_config.g("global_options.auto_upgrade_server_url"):
@@ -491,6 +496,7 @@ def _main_gui(viewer_mode: bool):
             __gui_msg=gui_msg,
             __autoclose=True,
             __compact=True,
+            __backend_binary=backend_binary,
         )
         if not result or not result["result"]:
             snapshots = None
@@ -641,6 +647,13 @@ def _main_gui(viewer_mode: bool):
         required=False,
         help="Optional path for logfile",
     )
+    parser.add_argument(
+        "--external-backend-binary",
+        type=str,
+        default=None,
+        required=False,
+        help="Full path to alternative external backend binary",
+    )
     args = parser.parse_args()
     if args.log_file:
         log_file = args.log_file
@@ -652,6 +665,15 @@ def _main_gui(viewer_mode: bool):
         config_file = Path(args.config_file)
     else:
         config_file = Path(f"{CURRENT_DIR}/npbackup.conf")
+
+    backend_binary = None
+    if args.external_backend_binary:
+        binary = args.external_backend_binary
+        if not os.path.isfile(binary):
+            msg = f"External backend binary {binary} cannot be found."
+            logger.critical(msg)
+            sg.PopupError(msg)
+            sys.exit(73)
 
     # Let's try to read standard restic repository env variables
     viewer_repo_uri = os.environ.get("RESTIC_REPOSITORY", None)
