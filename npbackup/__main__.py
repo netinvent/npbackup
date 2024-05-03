@@ -322,11 +322,11 @@ This is free software, and you are welcome to redistribute it under certain cond
     else:
         repo_config = None
 
-    binary = None
+    backend_binary = None
     if args.external_backend_binary:
-        binary = args.external_backend_binary
-        if not os.path.isfile(binary):
-            msg = f"External backend binary {binary} cannot be found."
+        backend_binary = args.external_backend_binary
+        if not os.path.isfile(backend_binary):
+            msg = f"External backend binary {backend_binary} cannot be found."
             json_error_logging(False, msg, "critical")
             sys.exit(73)
 
@@ -383,7 +383,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         "verbose": args.verbose,
         "dry_run": args.dry_run,
         "json_output": args.json,
-        "binary": binary,
+        "backend_binary": backend_binary,
         "operation": None,
         "op_args": {},
     }
