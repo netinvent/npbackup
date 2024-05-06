@@ -248,9 +248,10 @@ def key_should_be_encrypted(key: str, encrypted_options: List[str]):
     """
     Checks whether key should be encrypted
     """
-    for option in encrypted_options:
-        if option in key:
-            return True
+    if key:
+        for option in encrypted_options:
+            if option in key:
+                return True
     return False
 
 
