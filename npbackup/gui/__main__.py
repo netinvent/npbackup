@@ -55,10 +55,13 @@ from npbackup.path_helper import CURRENT_DIR
 from npbackup.__version__ import version_string
 from npbackup.__debug__ import _DEBUG
 from npbackup.restic_wrapper import ResticRunner
+from npbackup import key_management
 
 
 logger = getLogger()
 backend_binary = None
+aes_key = key_management.get_aes_key()
+
 
 sg.theme(PYSIMPLEGUI_THEME)
 sg.SetOptions(icon=OEM_ICON)
@@ -451,7 +454,7 @@ def _main_gui(viewer_mode: bool):
                 if not values["-config_file-"] or not config_file.exists():
                     sg.PopupError(_t("generic.file_does_not_exist"))
                     continue
-                full_config = npbackup.configuration.load_config(config_file)
+                full_config = npbackup.configuration.load_config(config_file, aes_key)
                 if not full_config:
                     sg.PopupError(_t("generic.bad_file"))
                     continue
@@ -549,7 +552,7 @@ def _main_gui(viewer_mode: bool):
         Load config file until we got something
         """
         if config_file:
-            full_config = npbackup.configuration.load_config(config_file)
+            full_config = npbackup.configuration.load_config(config_file, aes_key)
             if not config_file.exists():
                 config_file = None
             if not full_config:
@@ -569,7 +572,7 @@ def _main_gui(viewer_mode: bool):
                     )
             if config_file:
                 logger.info(f"Using configuration file {config_file}")
-                full_config = npbackup.configuration.load_config(config_file)
+                full_config = npbackup.configuration.load_config(config_file, aes_key)
                 if not full_config:
                     sg.PopupError(f"{_t('main_gui.config_error')} {config_file}")
                     config_file = None

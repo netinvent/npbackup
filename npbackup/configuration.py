@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024042301"
+__build__ = "2024050301"
 __version__ = "npbackup 3.0.0+"
 
 MIN_CONF_VERSION = 3.0
@@ -690,7 +690,9 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
         return False
 
 
-def load_config(config_file: Path) -> Optional[dict]:
+def load_config(config_file: Path, aes_key: bytes = None) -> Optional[dict]:
+    if not aes_key:
+        aes_key = AES_KEY
     logger.info(f"Loading configuration file {config_file}")
 
     full_config = _load_config_file(config_file)
@@ -726,7 +728,7 @@ def load_config(config_file: Path) -> Optional[dict]:
         config_file_is_updated = True
     # Decrypt variables
     full_config = crypt_config(
-        full_config, AES_KEY, ENCRYPTED_OPTIONS, operation="decrypt"
+        full_config, aes_key, ENCRYPTED_OPTIONS, operation="decrypt"
     )
     if full_config == False:
         if EARLIER_AES_KEY:
@@ -760,20 +762,22 @@ def load_config(config_file: Path) -> Optional[dict]:
     return full_config
 
 
-def save_config(config_file: Path, full_config: dict) -> bool:
+def save_config(config_file: Path, full_config: dict, aes_key: bytes = None) -> bool:
+    if not aes_key:
+        aes_key = AES_KEY
     try:
         with open(config_file, "w", encoding="utf-8") as file_handle:
             full_config = inject_permissions_into_full_config(full_config)
 
             if not is_encrypted(full_config):
                 full_config = crypt_config(
-                    full_config, AES_KEY, ENCRYPTED_OPTIONS, operation="encrypt"
+                    full_config, aes_key, ENCRYPTED_OPTIONS, operation="encrypt"
                 )
             yaml = YAML(typ="rt")
             yaml.dump(full_config, file_handle)
         # Since yaml is a "pointer object", we need to decrypt after saving
         full_config = crypt_config(
-            full_config, AES_KEY, ENCRYPTED_OPTIONS, operation="decrypt"
+            full_config, aes_key, ENCRYPTED_OPTIONS, operation="decrypt"
         )
         # We also need to extract permissions again
         full_config = extract_permissions_from_full_config(full_config)

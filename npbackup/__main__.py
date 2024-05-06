@@ -26,7 +26,7 @@ from npbackup.__debug__ import _DEBUG
 from npbackup.common import execution_logs
 from npbackup.core import upgrade_runner
 from npbackup.core.i18n_helper import _t
-
+from npbackup import key_management
 if os.name == "nt":
     from npbackup.windows.task import create_scheduled_task
 
@@ -304,7 +304,9 @@ This is free software, and you are welcome to redistribute it under certain cond
             json_error_logging(False, msg, "critical")
             sys.exit(70)
 
-    full_config = npbackup.configuration.load_config(CONFIG_FILE)
+    aes_key = key_management.get_aes_key()
+
+    full_config = npbackup.configuration.load_config(CONFIG_FILE, aes_key)
     if not full_config:
         msg = "Cannot obtain repo config"
         json_error_logging(False, msg, "critical")

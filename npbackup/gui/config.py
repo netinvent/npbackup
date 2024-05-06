@@ -31,11 +31,13 @@ from npbackup.customization import (
     TREE_ICON,
     INHERITED_TREE_ICON,
 )
+from npbackup import key_management
 
 if os.name == "nt":
     from npbackup.windows.task import create_scheduled_task
 
 logger = getLogger()
+aes_key = key_management.get_aes_key()
 
 
 # Monkeypatching PySimpleGUI
@@ -1922,7 +1924,7 @@ def config_gui(full_config: dict, config_file: str):
             full_config = update_config_dict(
                 full_config, current_object_type, current_object_name, values
             )
-            result = configuration.save_config(config_file, full_config)
+            result = configuration.save_config(config_file, full_config, aes_key)
             if result:
                 sg.Popup(_t("config_gui.configuration_saved"), keep_on_top=True)
                 logger.info("Configuration saved successfully.")
