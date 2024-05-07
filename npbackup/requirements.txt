@@ -5,7 +5,7 @@ ofunctions.logger_utils>=2.4.1
 ofunctions.misc>=1.8.0
 ofunctions.process>=2.0.0
 ofunctions.threading>=2.2.0
-ofunctions.platform>=1.5.0
+ofunctions.platform>=1.5.1
 ofunctions.random
 python-pidfile>=3.0.0
 # pysimplegui 5 has gone commercial, let's keep an inline version for noww
