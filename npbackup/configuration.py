@@ -46,9 +46,12 @@ try:
     except ImportError:
         EARLIER_AES_KEY = None
 except ImportError:
+    # If no private keys are used, then let's use the public ones
     try:
         from npbackup.secret_keys import AES_KEY
+        from npbackup.obfuscation import obfuscation
 
+        AES_KEY = obfuscation(AES_KEY)
         IS_PRIV_BUILD = False
         try:
             from npbackup.secret_keys import EARLIER_AES_KEY

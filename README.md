@@ -59,6 +59,7 @@ Works on x64 **Linux** , **NAS** solutions based on arm/arm64, **Windows** x64 a
     - Full permissions including destructive operations
   - Encrypted data viewing requires additional password
   - AES-256 keys can't be guessed in executables thanks to Nuitka Commercial compiler
+  - External AES-256 keys are obfuscated
 - Easy configuration via YAML file (or via GUI)
 - Remote automatic self upgrade capacity
   - Included upgrade server ready to run in production
@@ -235,6 +236,8 @@ We also compile our linux target on RHEL 7 in order to be compatible with reason
 
 arm and arm64 builds are compiled on Debian stretch for use with glibc > 2.24.
 Additionnaly, arm builds are compiled without GUI support since they're supposed to fit on smaller devices like NAS / Raspberries.
+
+On most Linux distributions, you might get your glibc version by running `find /usr -name "libc.so.6" -exec "{}" \;`
 
 ## Smart shield, antivirus and reputation
 

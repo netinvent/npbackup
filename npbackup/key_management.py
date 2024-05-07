@@ -8,6 +8,7 @@ __intname__ = "npbackup.get_key"
 
 import os
 from command_runner import command_runner
+from npbackup.obfuscation import obfuscation
 
 
 def get_aes_key():
@@ -32,4 +33,4 @@ def get_aes_key():
                 msg = f"Cannot run encryption key command: {output}"
                 return False, msg
             key = output
-    return key
+    return obfuscation(key)

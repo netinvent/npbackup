@@ -55,3 +55,7 @@ Also, when wrong password is entered, we should wait in order to reduce brute fo
 
 When using retention policies, we need to make sure that current system date is good, in order to avoid wrong retention deletions.  
 When set, an external NTP server is used to get the offset. If offset is high enough (10 min), we avoid executing the retention policies.
+
+# NPF-SEC-00011: Default AES key obfuscation
+
+Using obfuscation() symmetric function in order to not store the bare AES key.
