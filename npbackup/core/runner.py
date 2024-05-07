@@ -676,28 +676,15 @@ class NPBackupRunner:
         except KeyError:
             encrypted_env_variables = []
 
-        # TODO use "normal" YAML syntax
         env_variables += encrypted_env_variables
         expanded_env_vars = {}
-        try:
-            if env_variables:
-                for env_variable in env_variables:
-                    if env_variable:
-                        try:
-                            key, value = env_variable.split("=")
-                            value = os.path.expanduser(value)
-                            value = os.path.expandvars(value)
-                            expanded_env_vars[key.strip()] = value.strip()
-                        except ValueError:
-                            self.write_logs(
-                                f'Bogus environment variable "{env_variable}" defined in configuration.',
-                                level="error",
-                            )
-        except (KeyError, AttributeError, TypeError):
-            self.write_logs(
-                "Bogus environment variables defined in configuration.", level="error"
-            )
-            logger.error("Trace:", exc_info=True)
+        if isinstance(env_variables, list):
+            for env_variable in env_variables:
+                if isinstance(env_variable, dict):
+                    for k, v in env_variable.items():
+                        v = os.path.expanduser(v)
+                        v = os.path.expandvars(v)
+                        expanded_env_vars[k.strip()] = v.strip()
 
         try:
             self.restic_runner.environment_variables = expanded_env_vars
