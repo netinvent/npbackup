@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024042401"
+__build__ = "2024050701"
 
 
 from typing import Optional, Callable, Union, List
@@ -55,26 +55,11 @@ def metric_writer(
             destination = repo_config.g("prometheus.destination")
             prometheus_additional_labels = repo_config.g("prometheus.additional_labels")
 
-            if not isinstance(prometheus_additional_labels, list):
-                prometheus_additional_labels = [prometheus_additional_labels]
-
-            # Configure lables
-            try:
-                if prometheus_additional_labels:
-                    for additional_label in prometheus_additional_labels:
-                        if additional_label:
-                            try:
-                                label, value = additional_label.split("=")
-                                labels[label.strip()] = value.strip()
-                            except ValueError:
-                                logger.error(
-                                    'Bogus additional label "{}" defined in configuration.'.format(
-                                        additional_label
-                                    )
-                                )
-            except (KeyError, AttributeError, TypeError):
-                logger.error("Bogus additional labels defined in configuration.")
-                logger.debug("Trace:", exc_info=True)
+            if isinstance(prometheus_additional_labels, list):
+                for additional_label in prometheus_additional_labels:
+                    if isinstance(additional_label, dict):
+                        for k, v in additional_label.items():
+                            labels[k] = v
 
         # If result was a str, we need to transform it into json first
         if isinstance(result_string, str):
