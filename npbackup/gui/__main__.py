@@ -532,7 +532,7 @@ def _main_gui(viewer_mode: bool):
                 try:
                     tags = snapshot["tags"]
                     if isinstance(tags, list):
-                        tags = ",".join(tags)
+                        tags = ", ".join(tags)
                     snapshot_tags = tags
                 except KeyError:
                     snapshot_tags = ""
