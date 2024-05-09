@@ -12,7 +12,7 @@ __build__ = "2023032101"
 
 import os
 from logging import getLogger
-from locale import getdefaultlocale
+from locale import getlocale
 import i18n
 from npbackup.path_helper import BASEDIR
 
@@ -24,7 +24,7 @@ TRANSLATIONS_DIR = os.path.join(BASEDIR, "translations")
 
 # getdefaultlocale returns a tuple like ('fr-FR', 'cp1251')
 # Let's only use the fr part, so other french speaking countries also have french translation
-_locale = os.environ.get("NPBACKUP_LOCALE", getdefaultlocale()[0])
+_locale = os.environ.get("NPBACKUP_LOCALE", getlocale()[0])
 try:
     _locale, _ = _locale.split("_")
 except (ValueError, AttributeError):
