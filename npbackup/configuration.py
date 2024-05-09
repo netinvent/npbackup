@@ -28,6 +28,7 @@ from cryptidy import symmetric_encryption as enc
 from ofunctions.random import random_string
 from ofunctions.misc import replace_in_iterable, BytesConverter, iter_over_keys
 from npbackup.customization import ID_STRING
+from npbackup import key_management
 
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
@@ -63,6 +64,9 @@ except ImportError:
 
 
 logger = getLogger()
+opt_aes_key = key_management.get_aes_key()
+if opt_aes_key:
+    AES_KEY = opt_aes_key
 
 
 # Monkeypatching ruamel.yaml ordreddict so we get to use pseudo dot notations
@@ -301,7 +305,7 @@ def crypt_config(
         )
     except Exception as exc:
         logger.error(f"Cannot {operation} configuration: {exc}.")
-        logger.info("Trace:", exc_info=True)
+        logger.debug("Trace:", exc_info=True)
         return False
 
 
@@ -719,9 +723,8 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
         return False
 
 
-def load_config(config_file: Path, aes_key: bytes = None) -> Optional[dict]:
-    if not aes_key:
-        aes_key = AES_KEY
+def load_config(config_file: Path) -> Optional[dict]:
+
     logger.info(f"Loading configuration file {config_file}")
 
     full_config = _load_config_file(config_file)
@@ -757,7 +760,7 @@ def load_config(config_file: Path, aes_key: bytes = None) -> Optional[dict]:
         config_file_is_updated = True
     # Decrypt variables
     full_config = crypt_config(
-        full_config, aes_key, ENCRYPTED_OPTIONS, operation="decrypt"
+        full_config, AES_KEY, ENCRYPTED_OPTIONS, operation="decrypt"
     )
     if full_config == False:
         if EARLIER_AES_KEY:
@@ -791,22 +794,20 @@ def load_config(config_file: Path, aes_key: bytes = None) -> Optional[dict]:
     return full_config
 
 
-def save_config(config_file: Path, full_config: dict, aes_key: bytes = None) -> bool:
-    if not aes_key:
-        aes_key = AES_KEY
+def save_config(config_file: Path, full_config: dict) -> bool:
     try:
         with open(config_file, "w", encoding="utf-8") as file_handle:
             full_config = inject_permissions_into_full_config(full_config)
 
             if not is_encrypted(full_config):
                 full_config = crypt_config(
-                    full_config, aes_key, ENCRYPTED_OPTIONS, operation="encrypt"
+                    full_config, AES_KEY, ENCRYPTED_OPTIONS, operation="encrypt"
                 )
             yaml = YAML(typ="rt")
             yaml.dump(full_config, file_handle)
         # Since yaml is a "pointer object", we need to decrypt after saving
         full_config = crypt_config(
-            full_config, aes_key, ENCRYPTED_OPTIONS, operation="decrypt"
+            full_config, AES_KEY, ENCRYPTED_OPTIONS, operation="decrypt"
         )
         # We also need to extract permissions again
         full_config = extract_permissions_from_full_config(full_config)

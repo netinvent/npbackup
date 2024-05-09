@@ -1,4 +1,5 @@
-This folder may contain private overrides for NPBackup secrets.
+This folder may contain overrides for NPBackup secrets.
+If these files exist, NPBackup will be compiled as "private build".
 
 Overrides are used by default if found at execution time.
 

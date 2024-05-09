@@ -26,7 +26,6 @@ from npbackup.__debug__ import _DEBUG
 from npbackup.common import execution_logs
 from npbackup.core import upgrade_runner
 from npbackup.core.i18n_helper import _t
-from npbackup import key_management
 
 if os.name == "nt":
     from npbackup.windows.task import create_scheduled_task
@@ -253,6 +252,13 @@ This is free software, and you are welcome to redistribute it under certain cond
         required=False,
         help="Launch an operation on a group of repositories given by --repo-group",
     )
+    parser.add_argument(
+        "--create-key",
+        type=str,
+        default=False,
+        required=False,
+        help="Create a new encryption key, requires a file path",
+    )
     args = parser.parse_args()
 
     if args.log_file:
@@ -283,6 +289,13 @@ This is free software, and you are welcome to redistribute it under certain cond
             print(LICENSE_TEXT)
         sys.exit(0)
 
+    if args.create_key:
+        result = key_management.create_key_file(args.create_key)
+        if result:
+            sys.exit(0)
+        else:
+            sys.exit(1)
+
     if _DEBUG:
         logger.setLevel(ofunctions.logger_utils.logging.DEBUG)
 
@@ -305,9 +318,7 @@ This is free software, and you are welcome to redistribute it under certain cond
             json_error_logging(False, msg, "critical")
             sys.exit(70)
 
-    aes_key = key_management.get_aes_key()
-
-    full_config = npbackup.configuration.load_config(CONFIG_FILE, aes_key)
+    full_config = npbackup.configuration.load_config(CONFIG_FILE)
     if not full_config:
         msg = "Cannot obtain repo config"
         json_error_logging(False, msg, "critical")

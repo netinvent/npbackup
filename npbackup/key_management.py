@@ -7,8 +7,13 @@ __intname__ = "npbackup.get_key"
 
 
 import os
+from logging import getLogger
 from command_runner import command_runner
+from cryptidy.symmetric_encryption import generate_key
 from npbackup.obfuscation import obfuscation
+
+
+logger = getLogger()
 
 
 def get_aes_key():
@@ -28,9 +33,20 @@ def get_aes_key():
     else:
         key_command = os.environ.get("NPBACKUP_KEY_COMMAND", None)
         if key_command:
-            exit_code, output = command_runner(key_command, shell=True)
+            exit_code, output = command_runner(key_command, encoding=False, shell=True)
             if exit_code != 0:
                 msg = f"Cannot run encryption key command: {output}"
                 return False, msg
-            key = output
+            key = bytes(output)
     return obfuscation(key)
+
+
+def create_key_file(key_location: str):
+    try:
+        with open(key_location, "wb") as key_file:
+            key_file.write(obfuscation(generate_key()))
+            logger.info(f"Encryption key file created at {key_location}")
+            return True
+    except OSError as exc:
+        logger.critical("Cannot create encryption key file: {exc}")
+        return False

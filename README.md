@@ -199,10 +199,25 @@ While admin user experience is important, NPBackup also offers a GUI for end use
 
 ## Security
 
-NPBackup inherits all security measures of it's backup backend (currently restic with AES-256 client side encryption including metadata), append only mode REST server backend.
+NPBackup inherits all security measures of it's backup backend (currently restic with AES-256 client side encryption including metadata) and all security options from it's storage backends.
 
 On top of those, NPBackup itself encrypts sensible information like the repo uri and password, as well as the metrics http username and password.  
-This ensures that end users can restore data without the need to know any password, without compromising a secret. Note that in order to use this function, one needs to use the compiled version of NPBackup, so AES-256 keys are never exposed. Internally, NPBackup never directly uses the AES-256 key, so even a memory dump won't be enough to get the key.
+This ensures that end users can backup/restore data without the need to know any password, avoiding secret compromission.  
+Note that NPBackup uses an AES-256 key itself, in order to encrypt sensible data. The public (git) version of NPBackup uses the default encryption key that comes with the official NPBackup repo.
+
+You can generate a new AES-256 key with `npbackup-cli --create-key npbackup.key` and use it via an environment variable:
+
+Use a file
+```
+export NPBACKUP_KEY_LOCATION=/path/to/npbackup.key
+```
+
+Use a command that provides the key as it's output
+```
+export NPBACKUP_KEY_COMMAND=my_key_command
+```
+
+You may also compile your own NPBackup executables that directly contain the AES-256 key. See instructions in PRIVATE directory to setup keys.
 
 ## Permission restriction system
 
