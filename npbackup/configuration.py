@@ -376,6 +376,8 @@ def evaluate_variables(repo_config: dict, full_config: dict) -> dict:
 
             if "${HOSTNAME}" in value:
                 value = value.replace("${HOSTNAME}", platform.node())
+        if value == "":
+            value = None
         return value
 
     # We need to make a loop to catch all nested variables (ie variable in a variable)

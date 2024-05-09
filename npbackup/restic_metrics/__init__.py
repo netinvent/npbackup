@@ -178,7 +178,8 @@ def restic_json_to_prometheus(
     """
     _labels = []
     for key, value in labels.items():
-        _labels.append(f'{key.strip()}="{value.strip()}"')
+        if value:
+            _labels.append(f'{key.strip()}="{value.strip()}"')
     labels = ",".join(_labels)
 
     # Take last line of restic output
