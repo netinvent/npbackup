@@ -371,7 +371,7 @@ def evaluate_variables(repo_config: dict, full_config: dict) -> dict:
                 )
 
             if "${BACKUP_JOB}" in value:
-                backup_job = repo_config.g("backup_opts.backup_job")
+                backup_job = repo_config.g("prometheus.backup_job")
                 value = value.replace("${BACKUP_JOB}", backup_job if backup_job else "")
 
             if "${HOSTNAME}" in value:
