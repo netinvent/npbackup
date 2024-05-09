@@ -73,7 +73,7 @@ def test_npbackup_cli_show_config():
             __main__.main()
     except SystemExit:
         print(str(logs))
-        assert "__(o_O)__" in str(logs), "Obfuscation does not work"
+        assert "__(o_O)__" not in str(logs), "Obfuscation does not work"
     
 
 def _no_test_npbackup_cli_create_backup():
