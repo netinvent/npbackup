@@ -521,7 +521,10 @@ def main():
     atexit.register(kill_childs, os.getpid(), grace_period=30)
     try:
         cli_interface()
-        sys.exit(logger.get_worst_logger_level())
+        worst_error = logger.get_worst_logger_level()
+        if worst_error >= logging.WARNING:
+            sys.exit(worst_error)
+        sys.exit()
     except KeyboardInterrupt as exc:
         json_error_logging(
             False, f"Program interrupted by keyboard: {exc}", level="error"
