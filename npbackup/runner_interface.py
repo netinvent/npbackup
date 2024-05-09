@@ -68,7 +68,3 @@ def entrypoint(*args, **kwargs):
     else:
         print(json.dumps(result, default=serialize_datetime))
         sys.exit(0)
-
-
-def auto_upgrade(full_config: dict):
-    pass  # TODO
