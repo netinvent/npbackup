@@ -7,7 +7,7 @@ __intname__ = "npbackup.compile"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023090101"
+__build__ = "2024050901"
 __version__ = "1.9.0"
 
 
@@ -287,10 +287,12 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool):
         TRADEMARKS,
     )
 
-    CMD = '{} -m nuitka --python-flag=no_docstrings --python-flag=-O {} {} --include-data-dir="{}"="{}" --include-data-file="{}"="{}" --include-data-file="{}"="{}" --windows-icon-from-ico="{}" --output-dir="{}" --output-filename="{}" {}'.format(
+    CMD = '{} -m nuitka --python-flag=no_docstrings --python-flag=-O {} {} --include-data-dir="{}"="{}" --include-data-dir="{}"="{}" --include-data-file="{}"="{}" --include-data-file="{}"="{}" --windows-icon-from-ico="{}" --output-dir="{}" --output-filename="{}" {}'.format(
         PYTHON_EXECUTABLE,
         NUITKA_OPTIONS,
         EXE_OPTIONS,
+        excludes_dir_source,
+        excludes_dir_dest,
         translations_dir_source,
         translations_dir_dest,
         LICENSE_FILE,
