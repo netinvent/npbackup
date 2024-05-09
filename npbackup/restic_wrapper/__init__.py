@@ -568,7 +568,7 @@ class ResticRunner:
         self.live_output = live_output
         if not self._is_init:
             self.write_logs("Repository is not initialized", level="info")
-        return self._is_init
+        return self._is_init, output
 
     @is_init.setter
     def is_init(self, value: bool):
@@ -591,22 +591,23 @@ class ResticRunner:
 
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
-            if not self.is_init:
+            is_init, output = self.is_init
+            if not is_init:
                 # pylint: disable=E1101 (no-member)
                 if fn.__name__ == "backup":
-                    if not self.init():
+                    init, output = self.init()
+                    if not init:
+                        msg = f"Could not initialize repo for backup operation"
                         self.write_logs(
-                            f"Could not initialize repo for backup operation",
+                            msg,
                             level="critical",
                         )
-                        return None
+                        return self.convert_to_json_output(False, output=output, msg=msg)
                 else:
                     # pylint: disable=E1101 (no-member)
-                    self.write_logs(
-                        f"Backend is not ready to perform operation {fn.__name__}",  # pylint: disable=E1101 (no-member)
-                        level="error",
-                    )
-                    return None
+                    msg = f"Backend is not ready to perform operation {fn.__name__}. Is the backend initialized ?",  # pylint: disable=E1101 (no-member)
+                    self.write_logs(msg, level="error")
+                    return self.convert_to_json_output(False, output=output, msg=msg)
             # pylint: disable=E1102 (not-callable)
             return fn(self, *args, **kwargs)
 
@@ -658,8 +659,11 @@ class ResticRunner:
                 if msg:
                     js["reason"] = msg
                     self.write_logs(msg, level="error")
-                else:
-                    js["reason"] = output
+                if output:
+                    try:
+                        js["output"] = json.loads(output)
+                    except json.decoder.JSONDecodeError:
+                        js["output"] = {"data": output}
             return js
 
         if result:

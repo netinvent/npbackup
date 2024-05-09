@@ -580,7 +580,7 @@ class NPBackupRunner:
                 self.write_logs(
                     f"Function {operation} failed with: {exc}", level="error"
                 )
-                logger.info("Trace:", exc_info=True)
+                logger.debug("Trace:", exc_info=True)
                 if self.json_output:
                     js = {
                         "result": False,
