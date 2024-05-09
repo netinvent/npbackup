@@ -254,7 +254,9 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool):
     excludes_dir_dest = excludes_dir
 
     #NUITKA_OPTIONS = " --clang"
-    NUITKA_OPTIONS = ""
+    # As of Nuitka v1.8, `-c` parameter is used to prevent fork bomb self execution
+    # We don't need this, so let's disable it so we can use `-c`as `--config-file` shortcut
+    NUITKA_OPTIONS = " --no-deployment-flag=self-execution"
     NUITKA_OPTIONS += " --enable-plugin=data-hiding" if have_nuitka_commercial() else ""
 
     if build_type in ("gui", "viewer"):
