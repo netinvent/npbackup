@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024050701"
+__build__ = "2024050901"
 
 
 from typing import Optional, Callable, Union, List
@@ -75,7 +75,14 @@ def metric_writer(
             logger.error("Restic finished with errors.")
         if repo_config.g("prometheus.metrics") and destination:
             logger.debug("Uploading metrics to {}".format(destination))
-            if destination.lower().startswith("http"):
+            dest = destination.lower()
+            if dest.startswith("http"):
+                if not 'metrics' in dest:
+                    logger.error("Destination does not contain 'metrics' keyword. Not uploading.")
+                    return backup_too_small
+                if not 'job' in dest:
+                    logger.error("Destination does not contain 'job' keyword. Not uploading.")
+                    return backup_too_small
                 try:
                     authentication = (
                         repo_config.g("prometheus.http_username"),
