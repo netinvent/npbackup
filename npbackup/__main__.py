@@ -27,6 +27,7 @@ from npbackup.__debug__ import _DEBUG
 from npbackup.common import execution_logs
 from npbackup.core import upgrade_runner
 from npbackup.core.i18n_helper import _t
+from npbackup import key_management
 
 if os.name == "nt":
     from npbackup.windows.task import create_scheduled_task
