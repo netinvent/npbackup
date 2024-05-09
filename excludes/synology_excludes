@@ -1,0 +1,2 @@
+# Don't backup system related directories from Synology NAS
+/volume*/@*
