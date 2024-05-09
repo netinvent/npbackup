@@ -7,7 +7,6 @@ __intname__ = "npbackup.gui.main"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023121701"
 
 
 from typing import List, Optional, Tuple
@@ -21,6 +20,7 @@ import ofunctions.logger_utils
 from datetime import datetime, timezone
 import dateutil
 from time import sleep
+from tempfile import gettempdir
 from ruamel.yaml.comments import CommentedMap
 import atexit
 from ofunctions.process import kill_childs
@@ -659,7 +659,10 @@ def _main_gui(viewer_mode: bool):
     if args.log_file:
         log_file = args.log_file
     else:
-        log_file = os.path.join(CURRENT_DIR, "{}.log".format(__intname__))
+        if os.name == "nt":
+            log_file = os.path.join(gettempdir(), "{}.log".format(__intname__))
+        else:
+            log_file = "/var/log/{}.log".format(__intname__)
     logger = ofunctions.logger_utils.logger_get_logger(log_file, debug=_DEBUG)
 
     if args.config_file:

@@ -13,6 +13,7 @@ import atexit
 from time import sleep
 from argparse import ArgumentParser
 from datetime import datetime, timezone
+from tempfile import gettempdir
 import logging
 import json
 import ofunctions.logger_utils
@@ -264,7 +265,10 @@ This is free software, and you are welcome to redistribute it under certain cond
     if args.log_file:
         log_file = args.log_file
     else:
-        log_file = os.path.join(CURRENT_DIR, "{}.log".format(__intname__))
+        if os.name == "nt":
+            log_file = os.path.join(gettempdir(), "{}.log".format(__intname__))
+        else:
+            log_file = "/var/log/{}.log".format(__intname__)
 
     if args.json:
         _JSON = True
