@@ -607,7 +607,7 @@ class ResticRunner:
                         )
                 else:
                     # pylint: disable=E1101 (no-member)
-                    msg = f"Backend is not ready to perform operation {fn.__name__}. Repo maybe inaccessible or not initialized"  # pylint: disable=E1101 (no-member)
+                    msg = f"Backend is not ready to perform operation {fn.__name__}. Repo maybe inaccessible or not initialized. You can try to run a backup to initialize the repository."  # pylint: disable=E1101 (no-member)
                     return self.convert_to_json_output(False, output=output, msg=msg)
             # pylint: disable=E1102 (not-callable)
             return fn(self, *args, **kwargs)
