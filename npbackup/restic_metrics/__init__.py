@@ -35,7 +35,7 @@ def restic_str_output_to_json(
     restic_exit_status: Union[bool, int], output: str
 ) -> dict:
     """
-    Parsse restic output when used without `--json` parameter
+    Parse restic output when used without `--json` parameter
     """
     if restic_exit_status is False or (
         restic_exit_status is not True and restic_exit_status != 0
@@ -163,7 +163,7 @@ def restic_str_output_to_json(
                 logger.error("Trace:", exc_info=True)
             errors = True
 
-    metrics["errors"] = errors
+    metrics["errors"] = 1 if errors else 0
     return metrics
 
 
@@ -207,25 +207,29 @@ def restic_json_to_prometheus(
             if key.startswith(starters):
                 for enders in ("new", "changed", "unmodified"):
                     if key.endswith(enders):
-                        prom_metrics.append(
-                            f'restic_{starters}{{{labels},state="{enders}",action="backup"}} {value}'
-                        )
-                        skip = True
+                        if value is not None:
+                            prom_metrics.append(
+                                f'restic_{starters}{{{labels},state="{enders}",action="backup"}} {value}'
+                            )
+                            skip = True
         if skip:
             continue
         if key == "total_files_processed":
-            prom_metrics.append(
-                f'restic_files{{{labels},state="total",action="backup"}} {value}'
-            )
-            continue
+            if value is not None:
+                prom_metrics.append(
+                    f'restic_files{{{labels},state="total",action="backup"}} {value}'
+                )
+                continue
         if key == "total_bytes_processed":
-            prom_metrics.append(
-                f'restic_snasphot_size_bytes{{{labels},action="backup",type="processed"}} {value}'
-            )
-            continue
+            if value is not None:
+                prom_metrics.append(
+                    f'restic_snasphot_size_bytes{{{labels},action="backup",type="processed"}} {value}'
+                )
+                continue
         if "duration" in key:
             key += "_seconds"
-        prom_metrics.append(f'restic_{key}{{{labels},action="backup"}} {value}')
+        if value is not None:
+            prom_metrics.append(f'restic_{key}{{{labels},action="backup"}} {value}')
 
     backup_too_small = False
     if minimum_backup_size_error:
