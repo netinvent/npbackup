@@ -634,7 +634,7 @@ def get_repo_config(
     except KeyError:
         logger.error(f"No repo with name {repo_name} found in config")
         return None, None
-    
+
     # Merge prometheus global settings with repo settings
     prometheus_backup_job = None
     try:
@@ -651,7 +651,7 @@ def get_repo_config(
         repo_config.s("prometheus", deepcopy(full_config.g("global_prometheus")))
     except KeyError:
         logger.debug("No global prometheus settings found")
-    
+
     if prometheus_backup_job:
         repo_config.s("prometheus.backup_job", prometheus_backup_job)
     if prometheus_group:

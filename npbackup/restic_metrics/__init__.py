@@ -469,7 +469,9 @@ def upload_metrics(destination: str, authentication, no_cert_verify: bool, metri
         if result.status_code == 200:
             logger.info("Metrics pushed succesfully.")
         else:
-            logger.warning(f"Could not push metrics: {result.status_code}: {result.text}")
+            logger.warning(
+                f"Could not push metrics: {result.status_code}: {result.text}"
+            )
     except Exception as exc:
         logger.error(f"Cannot upload metrics: {exc}")
         logger.debug("Trace:", exc_info=True)

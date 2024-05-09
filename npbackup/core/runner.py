@@ -77,11 +77,15 @@ def metric_writer(
             logger.debug("Uploading metrics to {}".format(destination))
             dest = destination.lower()
             if dest.startswith("http"):
-                if not 'metrics' in dest:
-                    logger.error("Destination does not contain 'metrics' keyword. Not uploading.")
+                if not "metrics" in dest:
+                    logger.error(
+                        "Destination does not contain 'metrics' keyword. Not uploading."
+                    )
                     return backup_too_small
-                if not 'job' in dest:
-                    logger.error("Destination does not contain 'job' keyword. Not uploading.")
+                if not "job" in dest:
+                    logger.error(
+                        "Destination does not contain 'job' keyword. Not uploading."
+                    )
                     return backup_too_small
                 try:
                     authentication = (
