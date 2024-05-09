@@ -605,8 +605,7 @@ class ResticRunner:
                         return self.convert_to_json_output(False, output=output, msg=msg)
                 else:
                     # pylint: disable=E1101 (no-member)
-                    msg = f"Backend is not ready to perform operation {fn.__name__}. Is the backend initialized ?",  # pylint: disable=E1101 (no-member)
-                    self.write_logs(msg, level="error")
+                    msg = f"Backend is not ready to perform operation {fn.__name__}. Is the backend initialized ?"  # pylint: disable=E1101 (no-member)
                     return self.convert_to_json_output(False, output=output, msg=msg)
             # pylint: disable=E1102 (not-callable)
             return fn(self, *args, **kwargs)
