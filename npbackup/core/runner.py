@@ -23,7 +23,7 @@ from copy import deepcopy
 from command_runner import command_runner
 from ofunctions.threading import threaded
 from ofunctions.platform import os_arch
-from ofunctions.misc import BytesConverter
+from ofunctions.misc import BytesConverter, fn_name
 import ntplib
 from npbackup.restic_metrics import (
     restic_str_output_to_json,
@@ -44,7 +44,10 @@ def metric_writer(
     repo_config: dict, restic_result: bool, result_string: str, dry_run: bool
 ) -> bool:
     backup_too_small = False
-    minimum_backup_size_error = repo_config.g("backup_opts.minimum_backup_size_error")
+    operation = fn_name(1)
+    operation_success = True
+    metrics = []
+
     try:
         labels = {"npversion": f"{NAME}{VERSION}"}
         if repo_config.g("prometheus.metrics"):
@@ -61,18 +64,52 @@ def metric_writer(
                         for k, v in additional_label.items():
                             labels[k] = v
 
-        # If result was a str, we need to transform it into json first
-        if isinstance(result_string, str):
-            restic_result = restic_str_output_to_json(restic_result, result_string)
+        # We only analyse backup output of restic
+        if operation == "backup":
+            minimum_backup_size_error = repo_config.g(
+                "backup_opts.minimum_backup_size_error"
+            )
 
-        good_backup, metrics, backup_too_small = restic_json_to_prometheus(
-            restic_result=restic_result,
-            restic_json=restic_result,
-            labels=labels,
-            minimum_backup_size_error=minimum_backup_size_error,
-        )
-        if not good_backup or not restic_result:
+            # If result was a str, we need to transform it into json first
+            if isinstance(result_string, str):
+                restic_result = restic_str_output_to_json(restic_result, result_string)
+
+            operation_success, metrics, backup_too_small = restic_json_to_prometheus(
+                restic_result=restic_result,
+                restic_json=restic_result,
+                labels=labels,
+                minimum_backup_size_error=minimum_backup_size_error,
+            )
+        if not operation_success or not restic_result:
             logger.error("Restic finished with errors.")
+
+        """
+        Add a metric for informing if any warning raised while executing npbackup_tasks
+
+        CRITICAL = 50 will be 3 in this metric, but should not really exist
+        ERROR = 40 will be 2 in this metric
+        WARNING = 30 will be 1 in this metric
+        INFO = 20 will be 0
+        """
+        worst_exec_level = logger.get_worst_logger_level()
+        if worst_exec_level == 50:
+            exec_state = 3
+        elif worst_exec_level == 40:
+            exec_state = 2
+        elif worst_exec_level == 30:
+            exec_state = 1
+        else:
+            exec_state = 0
+
+        _labels = []
+        for key, value in labels.items():
+            if value:
+                _labels.append(f'{key.strip()}="{value.strip()}"')
+        labels = ",".join(_labels)
+        metrics.append(
+            f'npbackup_exec_state{{{labels},action="{operation}"}} {exec_state}'
+        )
+
         if repo_config.g("prometheus.metrics") and destination:
             logger.debug("Uploading metrics to {}".format(destination))
             dest = destination.lower()
@@ -101,7 +138,7 @@ def metric_writer(
                     logger.info("Not uploading metrics in dry run mode")
             else:
                 try:
-                    with open(destination, "w") as file_handle:
+                    with open(destination, "a") as file_handle:
                         for metric in metrics:
                             file_handle.write(metric + "\n")
                 except OSError as exc:
@@ -1149,6 +1186,7 @@ class NPBackupRunner:
             target=target,
             includes=restore_includes,
         )
+        metric_writer(self.repo_config, result, None, self.dry_run)
         return result
 
     @threaded
@@ -1207,6 +1245,7 @@ class NPBackupRunner:
                 level="critical",
                 raise_error=True,
             )
+        metric_writer(self.repo_config, result, None, self.dry_run)
         return self.convert_to_json_output(result)
 
     @threaded
@@ -1229,6 +1268,13 @@ class NPBackupRunner:
                 level="info",
             )
         result = self.restic_runner.check(read_data)
+        metric_writer(
+            self.repo_config,
+            result,
+            None,
+            self.restic_runner.dry_run,
+        )
+        metric_writer(self.repo_config, result, None, self.dry_run)
         return result
 
     @threaded
@@ -1251,6 +1297,7 @@ class NPBackupRunner:
             )
         else:
             result = self.restic_runner.prune()
+        metric_writer(self.repo_config, result, None, self.dry_run)
         return result
 
     @threaded
@@ -1266,6 +1313,7 @@ class NPBackupRunner:
             f"Repairing {subject} in repo {self.repo_config.g('name')}", level="info"
         )
         result = self.restic_runner.repair(subject)
+        metric_writer(self.repo_config, result, None, self.dry_run)
         return result
 
     @threaded
@@ -1279,6 +1327,7 @@ class NPBackupRunner:
     def unlock(self) -> bool:
         self.write_logs(f"Unlocking repo {self.repo_config.g('name')}", level="info")
         result = self.restic_runner.unlock()
+        metric_writer(self.repo_config, result, None, self.dry_run)
         return result
 
     @threaded
