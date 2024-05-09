@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.helpers"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023122201"
+__build__ = "2024050901"
 
 
 from typing import Tuple, Callable
@@ -81,6 +81,7 @@ def gui_thread_runner(
     __gui_msg: str = "",
     __stdout: bool = True,
     __backend_binary: str = None,
+    __ignore_errors: bool = False,
     *args,
     **kwargs,
 ):
@@ -288,7 +289,7 @@ def gui_thread_runner(
             sleep(0.2)
             break
 
-        if stderr_has_messages:
+        if stderr_has_messages and not __ignore_errors:
             _upgrade_from_compact_view()
             # Make sure we will keep the window visible since we have errors
             __autoclose = False
@@ -296,7 +297,7 @@ def gui_thread_runner(
     progress_window["--EXIT--"].Update(disabled=False)
     # Keep the window open until user has done something
     progress_window["-LOADER-ANIMATION-"].Update(visible=False)
-    if not __autoclose or stderr_has_messages:
+    if (not __autoclose or stderr_has_messages) and not __ignore_errors:
         while not progress_window.is_closed():
             event, _ = progress_window.read()
             if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--EXIT--"):

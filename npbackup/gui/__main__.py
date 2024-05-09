@@ -59,6 +59,7 @@ from npbackup.restic_wrapper import ResticRunner
 
 logger = getLogger()
 backend_binary = None
+FIRST_GUI_RUN = True
 
 
 sg.theme(PYSIMPLEGUI_THEME)
@@ -487,6 +488,8 @@ def _main_gui(viewer_mode: bool):
         window["snapshot-list"].Update(snapshot_list)
 
     def get_gui_data(repo_config: dict) -> Tuple[bool, List[str]]:
+        global FIRST_GUI_RUN
+
         window["--STATE-BUTTON--"].Update(
             _t("generic.please_wait"), button_color="orange"
         )
@@ -498,7 +501,9 @@ def _main_gui(viewer_mode: bool):
             __autoclose=True,
             __compact=True,
             __backend_binary=backend_binary,
+            __ignore_errors=FIRST_GUI_RUN,
         )
+        FIRST_GUI_RUN = False
         if not result or not result["result"]:
             snapshots = None
         else:

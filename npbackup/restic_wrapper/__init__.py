@@ -567,7 +567,7 @@ class ResticRunner:
         )
         self.live_output = live_output
         if not self._is_init:
-            self.write_logs("Repository is not initialized", level="info")
+            self.write_logs("Repository is not initialized or accessible", level="info")
         return self._is_init, output
 
     @is_init.setter
@@ -602,10 +602,12 @@ class ResticRunner:
                             msg,
                             level="critical",
                         )
-                        return self.convert_to_json_output(False, output=output, msg=msg)
+                        return self.convert_to_json_output(
+                            False, output=output, msg=msg
+                        )
                 else:
                     # pylint: disable=E1101 (no-member)
-                    msg = f"Backend is not ready to perform operation {fn.__name__}. Is the backend initialized ?"  # pylint: disable=E1101 (no-member)
+                    msg = f"Backend is not ready to perform operation {fn.__name__}. Repo maybe inaccessible or not initialized"  # pylint: disable=E1101 (no-member)
                     return self.convert_to_json_output(False, output=output, msg=msg)
             # pylint: disable=E1102 (not-callable)
             return fn(self, *args, **kwargs)
