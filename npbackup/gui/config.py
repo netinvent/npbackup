@@ -208,7 +208,7 @@ def config_gui(full_config: dict, config_file: str):
         nonlocal exclude_patterns_tree
         nonlocal pre_exec_commands_tree
         nonlocal post_exec_commands_tree
-        nonlocal prometheus_labels_tree
+        nonlocal global_prometheus_labels_tree
         nonlocal env_variables_tree
         nonlocal encrypted_env_variables_tree
 
@@ -280,7 +280,6 @@ def config_gui(full_config: dict, config_file: str):
                 "backup_opts.exclude_files",
                 "backup_opts.exclude_patterns",
                 "repo_opts.retention_policy.tags",
-                "global_prometheus.additional_labels",
             ):
                 if key == "backup_opts.tags":
                     tree = tags_tree
@@ -294,8 +293,6 @@ def config_gui(full_config: dict, config_file: str):
                     tree = exclude_patterns_tree
                 if key == "repo_opts.retention_policy.tags":
                     tree = retention_policy_tags_tree
-                if key == "prometheus.additional_labels":
-                    tree = prometheus_labels_tree
 
                 if value:
                     for val in value:
@@ -307,11 +304,13 @@ def config_gui(full_config: dict, config_file: str):
                     window[key].Update(values=tree)
                 return
 
-            if key in ("env.env_variables", "env.encrypted_env_variables"):
+            if key in ("env.env_variables", "env.encrypted_env_variables", "global_prometheus.additional_labels"):
                 if key == "env.env_variables":
                     tree = env_variables_tree
                 if key == "env.encrypted_env_variables":
                     tree = encrypted_env_variables_tree
+                if key == "global_prometheus.additional_labels":
+                    tree = global_prometheus_labels_tree
 
                 if value:
                     for skey, val in value.items():
@@ -376,6 +375,7 @@ def config_gui(full_config: dict, config_file: str):
             if isinstance(object_config, dict) and root_key not in (
                 "env.env_variables",
                 "env.encrypted_env_variables",
+                "global_prometheus.additional_labels",
             ):
                 for key in object_config.keys():
                     if root_key:
@@ -407,7 +407,6 @@ def config_gui(full_config: dict, config_file: str):
         nonlocal retention_policy_tags_tree
         nonlocal pre_exec_commands_tree
         nonlocal post_exec_commands_tree
-        nonlocal prometheus_labels_tree
         nonlocal env_variables_tree
         nonlocal encrypted_env_variables_tree
 
@@ -432,7 +431,6 @@ def config_gui(full_config: dict, config_file: str):
         retention_policy_tags_tree = sg.TreeData()
         pre_exec_commands_tree = sg.TreeData()
         post_exec_commands_tree = sg.TreeData()
-        prometheus_labels_tree = sg.TreeData()
         env_variables_tree = sg.TreeData()
         encrypted_env_variables_tree = sg.TreeData()
 
@@ -463,7 +461,11 @@ def config_gui(full_config: dict, config_file: str):
         )
 
     def update_global_gui(full_config, unencrypted: bool = False):
+        nonlocal global_prometheus_labels_tree
+
         global_config = CommentedMap()
+
+        global_prometheus_labels_tree = sg.TreeData()
 
         # Only update global options gui with identified global keys
         for key in full_config.keys():
@@ -601,10 +603,10 @@ def config_gui(full_config: dict, config_file: str):
                         continue
 
                     # Debug WIP
-                    if object_group:
-                        inherited = full_config.g(inheritance_key)
-                    else:
-                        inherited = False
+                    #if object_group:
+                    #    inherited = full_config.g(inheritance_key)
+                    #else:
+                    #    inherited = False
 
             # Don't bother to update empty strings, empty lists and None
             if not current_value and not value:
@@ -615,11 +617,17 @@ def config_gui(full_config: dict, config_file: str):
 
             # Finally, update the config dictionary
             # Debug WIP
-            if object_type == "group":
-                print(f"UPDATING {active_object_key} curr={current_value} new={value}")
-            else:
-                print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
-            full_config.s(active_object_key, value)
+            #if object_type == "group":
+            #    print(f"UPDATING {active_object_key} curr={current_value} new={value}")
+            #else:
+            #    print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
+            # We need to create parent ket if not exist
+            try:
+                full_config.s(active_object_key, value)
+            except KeyError:
+                parent_key = ".".join(active_object_key.split(".")[:-1])
+                full_config.s(parent_key, CommentedMap())
+                full_config.s(active_object_key, value)
         return full_config
 
     def set_permissions(full_config: dict, object_name: str) -> dict:
@@ -1631,8 +1639,11 @@ def config_gui(full_config: dict, config_file: str):
                             sg.Tree(
                                 sg.TreeData(),
                                 key="global_prometheus.additional_labels",
-                                headings=[],
+                                headings=[_t("generic.value")],
                                 col0_heading=_t("config_gui.additional_labels"),
+                                col0_width=1,
+                                auto_size_columns=True,
+                                justification="L",
                                 num_rows=4,
                                 expand_x=True,
                                 expand_y=True,
@@ -1675,7 +1686,7 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Tab(
-                    _t("config_gui.global_prometheus"),
+                    _t("config_gui.prometheus_config"),
                     global_prometheus_col,
                     font="helvetica 16",
                     key="--tab-global-prometheus--",
@@ -1781,7 +1792,7 @@ def config_gui(full_config: dict, config_file: str):
     retention_policy_tags_tree = sg.TreeData()
     pre_exec_commands_tree = sg.TreeData()
     post_exec_commands_tree = sg.TreeData()
-    prometheus_labels_tree = sg.TreeData()
+    global_prometheus_labels_tree = sg.TreeData()
     env_variables_tree = sg.TreeData()
     encrypted_env_variables_tree = sg.TreeData()
 
@@ -1897,8 +1908,8 @@ def config_gui(full_config: dict, config_file: str):
                 option_key = "backup_opts.post_exec_commands"
             elif "PROMETHEUS-LABEL" in event:
                 popup_text = _t("config_gui.enter_label")
-                tree = prometheus_labels_tree
-                option_key = "prometheus.additional_labels"
+                tree = global_prometheus_labels_tree
+                option_key = "global_prometheus.additional_labels"
             elif "ENCRYPTED-ENV-VARIABLE" in event:
                 tree = encrypted_env_variables_tree
                 option_key = "env.encrypted_env_variables"
@@ -1911,6 +1922,11 @@ def config_gui(full_config: dict, config_file: str):
                 if "ENV-VARIABLE" in event or "ENCRYPTED-ENV-VARIABLE" in event:
                     var_name = sg.PopupGetText(_t("config_gui.enter_var_name"))
                     var_value = sg.PopupGetText(_t("config_gui.enter_var_value"))
+                    if var_name and var_value:
+                        tree.insert("", var_name, var_name, [var_value], icon=icon)
+                elif "PROMETHEUS-LABEL" in event:
+                    var_name = sg.PopupGetText(_t("config_gui.enter_label_name"))
+                    var_value = sg.PopupGetText(_t("config_gui.enter_label_value"))
                     if var_name and var_value:
                         tree.insert("", var_name, var_name, [var_value], icon=icon)
                 else:
