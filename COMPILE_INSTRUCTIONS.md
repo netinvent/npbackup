@@ -98,6 +98,8 @@ On Linux, run the following commands after adjusting the paths:
 ```
 cd /opt/npbackup
 export PYTHONPATH=/opt/npbackup
+# Optional path for external tkinter library (if not installed via dnf/apt)
+export LD_LIBRARY_PATH=/usr/local/lib
 python3 bin/compile.py --audience private
 ```
 
