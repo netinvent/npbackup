@@ -226,7 +226,6 @@ def config_gui(full_config: dict, config_file: str):
             # Also permissions / manager_password are in a separate gui
             # And we don't want to show __current_manager_password
             # Also, don't update global prometheus options here but in global options
-
             if key in (
                 "name",
                 "permissions",
@@ -238,8 +237,7 @@ def config_gui(full_config: dict, config_file: str):
                 "prometheus.instance",
                 "prometheus.http_username",
                 "prometheus.http_password",
-                "prometheus.additional_labels"
-            ):
+            ) or key.startswith("prometheus.additional_labels"):
                 return
             # Don't show sensible info unless unencrypted requested
             if not unencrypted:
