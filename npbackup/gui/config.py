@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.config"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024042301"
+__build__ = "2024051001"
 
 
 from typing import List, Tuple
@@ -225,12 +225,20 @@ def config_gui(full_config: dict, config_file: str):
             # Don't bother to update repo name
             # Also permissions / manager_password are in a separate gui
             # And we don't want to show __current_manager_password
+            # Also, don't update global prometheus options here but in global options
+
             if key in (
                 "name",
                 "permissions",
                 "manager_password",
                 "__current_manager_password",
                 "is_protected",
+                "prometheus.metrics",
+                "prometheus.destination",
+                "prometheus.instance",
+                "prometheus.http_username",
+                "prometheus.http_password",
+                "prometheus.additional_labels"
             ):
                 return
             # Don't show sensible info unless unencrypted requested
@@ -272,7 +280,7 @@ def config_gui(full_config: dict, config_file: str):
                 "backup_opts.exclude_files",
                 "backup_opts.exclude_patterns",
                 "repo_opts.retention_policy.tags",
-                "prometheus.additional_labels",
+                "global_prometheus.additional_labels",
             ):
                 if key == "backup_opts.tags":
                     tree = tags_tree
@@ -327,8 +335,8 @@ def config_gui(full_config: dict, config_file: str):
                 value, unit = value.split(" ")
                 window[f"{key}_unit"].Update(unit)
 
-            if isinstance(value, list):
-                value = "\n".join(value)
+            #if isinstance(value, list):
+            #    value = "\n".join(value)
 
             if key in combo_boxes.keys() and value:
                 window[key].Update(value=combo_boxes[key][value])
@@ -459,7 +467,7 @@ def config_gui(full_config: dict, config_file: str):
 
         # Only update global options gui with identified global keys
         for key in full_config.keys():
-            if key in ("identity", "global_options"):
+            if key in ("identity", "global_prometheus", "global_options"):
                 global_config.s(key, full_config.g(key))
         iter_over_config(global_config, None, "group", unencrypted, None)
 
@@ -484,7 +492,7 @@ def config_gui(full_config: dict, config_file: str):
             "backup_opts.exclude_files",
             "backup_opts.exclude_patterns",
             "repo_opts.retention_policy.tags",
-            "prometheus.additional_labels",
+            "global_prometheus.additional_labels",
         ]
         for tree_data_key in list_tree_data_keys:
             values[tree_data_key] = []
@@ -562,7 +570,7 @@ def config_gui(full_config: dict, config_file: str):
                 continue
 
             # Don't bother with inheritance on global options and host identity
-            if key.startswith("global_options") or key.startswith("identity"):
+            if key.startswith("global_options") or key.startswith("identity") or key.startswith("global_prometheus"):
                 active_object_key = f"{key}"
                 current_value = full_config.g(active_object_key)
             else:
@@ -593,10 +601,10 @@ def config_gui(full_config: dict, config_file: str):
                         continue
 
                     # Debug WIP
-                    # if object_group:
-                    #    inherited = full_config.g(inheritance_key)
-                    # else:
-                    #    inherited = False
+                    if object_group:
+                        inherited = full_config.g(inheritance_key)
+                    else:
+                        inherited = False
 
             # Don't bother to update empty strings, empty lists and None
             if not current_value and not value:
@@ -607,10 +615,10 @@ def config_gui(full_config: dict, config_file: str):
 
             # Finally, update the config dictionary
             # Debug WIP
-            # if object_type == "group":
-            #    print(f"UPDATING {active_object_key} curr={current_value} new={value}")
-            # else:
-            #    print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
+            if object_type == "group":
+                print(f"UPDATING {active_object_key} curr={current_value} new={value}")
+            else:
+                print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
             full_config.s(active_object_key, value)
         return full_config
 
@@ -1331,69 +1339,12 @@ def config_gui(full_config: dict, config_file: str):
         prometheus_col = [
             [sg.Text(_t("config_gui.available_variables"))],
             [
-                sg.Checkbox(
-                    _t("config_gui.enable_prometheus"),
-                    key="prometheus.metrics",
-                    size=(41, 1),
-                ),
-            ],
-            [
                 sg.Text(_t("config_gui.job_name"), size=(40, 1)),
                 sg.Input(key="prometheus.backup_job", size=(50, 1)),
             ],
             [
-                sg.Text(_t("config_gui.metrics_destination"), size=(40, 1)),
-                sg.Input(key="prometheus.destination", size=(50, 1)),
-            ],
-            [
-                sg.Text(_t("config_gui.no_cert_verify"), size=(40, 1)),
-                sg.Checkbox("", key="prometheus.no_cert_verify", size=(41, 1)),
-            ],
-            [
-                sg.Text(_t("config_gui.metrics_username"), size=(40, 1)),
-                sg.Input(key="prometheus.http_username", size=(50, 1)),
-            ],
-            [
-                sg.Text(_t("config_gui.metrics_password"), size=(40, 1)),
-                sg.Input(key="prometheus.http_password", size=(50, 1)),
-            ],
-            [
-                sg.Text(_t("config_gui.instance"), size=(40, 1)),
-                sg.Input(key="prometheus.instance", size=(50, 1)),
-            ],
-            [
                 sg.Text(_t("generic.group"), size=(40, 1)),
                 sg.Input(key="prometheus.group", size=(50, 1)),
-            ],
-            [
-                sg.Column(
-                    [
-                        [sg.Button("+", key="--ADD-PROMETHEUS-LABEL--", size=(3, 1))],
-                        [
-                            sg.Button(
-                                "-", key="--REMOVE-PROMETHEUS-LABEL--", size=(3, 1)
-                            )
-                        ],
-                    ],
-                    pad=0,
-                ),
-                sg.Column(
-                    [
-                        [
-                            sg.Tree(
-                                sg.TreeData(),
-                                key="prometheus.additional_labels",
-                                headings=[],
-                                col0_heading=_t("config_gui.additional_labels"),
-                                num_rows=4,
-                                expand_x=True,
-                                expand_y=True,
-                            )
-                        ]
-                    ],
-                    pad=0,
-                    expand_x=True,
-                ),
             ],
         ]
 
@@ -1632,6 +1583,69 @@ def config_gui(full_config: dict, config_file: str):
             [sg.HorizontalSeparator()],
         ]
 
+
+        global_prometheus_col = [
+            [sg.Text(_t("config_gui.available_variables"))],
+            [
+                sg.Checkbox(
+                    _t("config_gui.enable_prometheus"),
+                    key="global_prometheus.metrics",
+                    size=(41, 1),
+                ),
+            ],
+            [
+                sg.Text(_t("config_gui.metrics_destination"), size=(40, 1)),
+                sg.Input(key="global_prometheus.destination", size=(50, 1)),
+            ],
+            [
+                sg.Text(_t("config_gui.no_cert_verify"), size=(40, 1)),
+                sg.Checkbox("", key="global_prometheus.no_cert_verify", size=(41, 1)),
+            ],
+            [
+                sg.Text(_t("config_gui.metrics_username"), size=(40, 1)),
+                sg.Input(key="global_prometheus.http_username", size=(50, 1)),
+            ],
+            [
+                sg.Text(_t("config_gui.metrics_password"), size=(40, 1)),
+                sg.Input(key="global_prometheus.http_password", size=(50, 1)),
+            ],
+            [
+                sg.Text(_t("config_gui.instance"), size=(40, 1)),
+                sg.Input(key="global_prometheus.instance", size=(50, 1)),
+            ],
+            [
+                sg.Column(
+                    [
+                        [sg.Button("+", key="--ADD-PROMETHEUS-LABEL--", size=(3, 1))],
+                        [
+                            sg.Button(
+                                "-", key="--REMOVE-PROMETHEUS-LABEL--", size=(3, 1)
+                            )
+                        ],
+                    ],
+                    pad=0,
+                ),
+                sg.Column(
+                    [
+                        [
+                            sg.Tree(
+                                sg.TreeData(),
+                                key="global_prometheus.additional_labels",
+                                headings=[],
+                                col0_heading=_t("config_gui.additional_labels"),
+                                num_rows=4,
+                                expand_x=True,
+                                expand_y=True,
+                            )
+                        ]
+                    ],
+                    pad=0,
+                    expand_x=True,
+                ),
+            ],
+        ]
+
+
         scheduled_task_col = [
             [
                 sg.Text(_t("config_gui.create_scheduled_task_every")),
@@ -1657,6 +1671,14 @@ def config_gui(full_config: dict, config_file: str):
                     global_options_col,
                     font="helvetica 16",
                     key="--tab-global-options--",
+                )
+            ],
+            [
+                sg.Tab(
+                    _t("config_gui.global_prometheus"),
+                    global_prometheus_col,
+                    font="helvetica 16",
+                    key="--tab-global-prometheus--",
                 )
             ],
             [
