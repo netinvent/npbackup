@@ -154,4 +154,6 @@ fr:
   enter_command: Entrer command
   enter_var_name: Entrer le nom de la variable
   enter_var_value: Entrer sa valeur
+  enter_label_name: Entrer le nom de l'étiquette
+  enter_label_value: Entrer la valeur de l'étiquette
   enter_label: Entrer étiquette
