@@ -438,7 +438,6 @@ def _main_gui(viewer_mode: bool):
             ],
         ]
         window = sg.Window("Configuration File", layout=layout)
-        config_file = None
         while True:
             action = None
             event, values = window.read()
@@ -447,6 +446,7 @@ def _main_gui(viewer_mode: bool):
                 break
             if event == "--NEW-CONFIG--":
                 action = event
+                config_file = Path(values["-config_file-"])
                 break
             if event == "--ACCEPT--":
                 config_file = Path(values["-config_file-"])
@@ -554,22 +554,25 @@ def _main_gui(viewer_mode: bool):
         """
         Load config file until we got something
         """
+        config_exists = True
+        full_config = None
         if config_file:
-            full_config = npbackup.configuration.load_config(config_file)
             if not config_file.exists():
-                config_file = None
-            if not full_config:
-                return full_config, config_file
+                config_exists = False
+            else:
+                full_config = npbackup.configuration.load_config(config_file)
+                if full_config:
+                    return full_config, config_file
         else:
-            config_file = None
+            config_file = "npbackup.conf"
+            config_exists = False
 
         while True:
-            if not config_file or not config_file.exists():
-                config_file, action = select_config_file()
+            if not config_exists or not config_file.exists():
+                config_file, action = select_config_file(config_file=config_file)
                 if action == "--CANCEL--":
                     break
                 if action == "--NEW-CONFIG--":
-                    config_file = "npbackup.conf"
                     full_config = config_gui(
                         npbackup.configuration.get_default_config(), config_file
                     )
@@ -578,24 +581,25 @@ def _main_gui(viewer_mode: bool):
                 full_config = npbackup.configuration.load_config(config_file)
                 if not full_config:
                     sg.PopupError(f"{_t('main_gui.config_error')} {config_file}")
-                    config_file = None
+                    config_exists = False
                 else:
-                    return full_config, config_file
-        return None, None
+                    config_exists = True
+                    break
+        return full_config, config_file
+        # TODO WIP return None, None
 
     def get_config(
         config_file: str = None, window: sg.Window = None, repo_name: str = "default"
     ) -> Tuple:
         full_config, config_file = get_config_file(config_file=config_file)
         if full_config and config_file:
-            repo_config, config_inheritance = npbackup.configuration.get_repo_config(
+            repo_config, _ = npbackup.configuration.get_repo_config(
                 full_config, repo_name=repo_name
             )
             backup_destination = _t("main_gui.local_folder")
             backend_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
         else:
             repo_config = None
-            config_inheritance = None
             backup_destination = "None"
             backend_type = "None"
             repo_uri = "None"
@@ -604,8 +608,9 @@ def _main_gui(viewer_mode: bool):
         if window:
             if config_file:
                 window.set_title(f"{SHORT_PRODUCT_NAME} - {config_file}")
-            if not viewer_mode and config_file:
+            if not viewer_mode and full_config:
                 window["--LAUNCH-BACKUP--"].Update(disabled=False)
+                window["--SEE-CONTENT--"].Update(disabled=False)
                 window["--OPERATIONS--"].Update(disabled=False)
                 window["--FORGET--"].Update(disabled=False)
                 window["--CONFIGURE--"].Update(disabled=False)
@@ -796,30 +801,30 @@ def _main_gui(viewer_mode: bool):
                             _t("main_gui.launch_backup"),
                             key="--LAUNCH-BACKUP--",
                             disabled=viewer_mode
-                            or (not viewer_mode and not config_file),
+                            or (not viewer_mode and not full_config),
                         ),
                         sg.Button(
                             _t("main_gui.see_content"),
                             key="--SEE-CONTENT--",
-                            disabled=not viewer_mode and not config_file,
+                            disabled=not viewer_mode and not full_config,
                         ),
                         sg.Button(
                             _t("generic.forget"),
                             key="--FORGET--",
                             disabled=viewer_mode
-                            or (not viewer_mode and not config_file),
+                            or (not viewer_mode and not full_config),
                         ),  # TODO , visible=False if repo_config.g("permissions") != "full" else True),
                         sg.Button(
                             _t("main_gui.operations"),
                             key="--OPERATIONS--",
                             disabled=viewer_mode
-                            or (not viewer_mode and not config_file),
+                            or (not viewer_mode and not full_config),
                         ),
                         sg.Button(
                             _t("generic.configure"),
                             key="--CONFIGURE--",
                             disabled=viewer_mode
-                            or (not viewer_mode and not config_file),
+                            or (not viewer_mode and not full_config),
                         ),
                         sg.Button(
                             _t("main_gui.load_config"),
@@ -949,7 +954,7 @@ def _main_gui(viewer_mode: bool):
                 _backend_type,
                 _repo_uri,
                 _repo_list,
-            ) = get_config(window=window)
+            ) = get_config(window=window, config_file=config_file)
             if _full_config:
                 full_config = _full_config
                 config_file = _config_file
