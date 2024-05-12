@@ -302,7 +302,11 @@ def config_gui(full_config: dict, config_file: str):
                     window[key].Update(values=tree)
                 return
 
-            if key in ("env.env_variables", "env.encrypted_env_variables", "global_prometheus.additional_labels"):
+            if key in (
+                "env.env_variables",
+                "env.encrypted_env_variables",
+                "global_prometheus.additional_labels",
+            ):
                 if key == "env.env_variables":
                     tree = env_variables_tree
                 if key == "env.encrypted_env_variables":
@@ -332,7 +336,7 @@ def config_gui(full_config: dict, config_file: str):
                 value, unit = value.split(" ")
                 window[f"{key}_unit"].Update(unit)
 
-            #if isinstance(value, list):
+            # if isinstance(value, list):
             #    value = "\n".join(value)
 
             if key in combo_boxes.keys() and value:
@@ -570,7 +574,11 @@ def config_gui(full_config: dict, config_file: str):
                 continue
 
             # Don't bother with inheritance on global options and host identity
-            if key.startswith("global_options") or key.startswith("identity") or key.startswith("global_prometheus"):
+            if (
+                key.startswith("global_options")
+                or key.startswith("identity")
+                or key.startswith("global_prometheus")
+            ):
                 active_object_key = f"{key}"
                 current_value = full_config.g(active_object_key)
             else:
@@ -601,9 +609,9 @@ def config_gui(full_config: dict, config_file: str):
                         continue
 
                     # Debug WIP
-                    #if object_group:
+                    # if object_group:
                     #    inherited = full_config.g(inheritance_key)
-                    #else:
+                    # else:
                     #    inherited = False
 
             # Don't bother to update empty strings, empty lists and None
@@ -615,9 +623,9 @@ def config_gui(full_config: dict, config_file: str):
 
             # Finally, update the config dictionary
             # Debug WIP
-            #if object_type == "group":
+            # if object_type == "group":
             #    print(f"UPDATING {active_object_key} curr={current_value} new={value}")
-            #else:
+            # else:
             #    print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
             # We need to create parent ket if not exist
             try:
@@ -1589,7 +1597,6 @@ def config_gui(full_config: dict, config_file: str):
             [sg.HorizontalSeparator()],
         ]
 
-
         global_prometheus_col = [
             [sg.Text(_t("config_gui.available_variables"))],
             [
@@ -1653,7 +1660,6 @@ def config_gui(full_config: dict, config_file: str):
                 ),
             ],
         ]
-
 
         scheduled_task_col = [
             [
