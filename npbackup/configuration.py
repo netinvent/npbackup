@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024050301"
+__build__ = "2024051301"
 __version__ = "npbackup 3.0.0+"
 
 MIN_CONF_VERSION = 3.0
@@ -736,7 +736,7 @@ def load_config(config_file: Path) -> Optional[dict]:
     # We'll use iter_over_keys instead of replace_in_iterable to avoid chaning list contents by lists
     # This basically allows "bad" formatted (ie manually written yaml) to be processed correctly
     # without having to deal with various errors
-    def _make_list(key: str, value: Union[str, int, float, dict, list]) -> Any:
+    def _make_struct(key: str, value: Union[str, int, float, dict, list]) -> Any:
         if key in (
             "paths",
             "tags",
@@ -744,15 +744,25 @@ def load_config(config_file: Path) -> Optional[dict]:
             "exclude_files",
             "pre_exec_commands",
             "post_exec_commands",
+        ):
+            if not isinstance(value, list):
+                if value is not None:
+                    value = [value]
+                else:
+                    value = []
+        
+        if key in (
             "additional_labels",
             "env_variables",
             "encrypted_env_variables",
         ):
-            if not isinstance(value, list):
-                value = [value]
+            if not isinstance(value, dict):
+                if value is None:
+                    value = CommentedMap()
         return value
 
-    iter_over_keys(full_config, _make_list)
+    iter_over_keys(full_config, _make_struct)
+
 
     # Check if we need to encrypt some variables
     if not is_encrypted(full_config):
