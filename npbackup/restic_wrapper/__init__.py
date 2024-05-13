@@ -595,7 +595,7 @@ class ResticRunner:
             if not is_init:
                 # pylint: disable=E1101 (no-member)
                 if fn.__name__ == "backup":
-                    init, output = self.init()
+                    init = self.init()
                     if not init:
                         msg = f"Could not initialize repo for backup operation"
                         self.write_logs(
@@ -603,7 +603,7 @@ class ResticRunner:
                             level="critical",
                         )
                         return self.convert_to_json_output(
-                            False, output=output, msg=msg
+                            False, msg=msg
                         )
                 else:
                     # pylint: disable=E1101 (no-member)
