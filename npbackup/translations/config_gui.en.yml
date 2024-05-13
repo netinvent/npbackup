@@ -43,7 +43,7 @@ en:
   available_variables_id: Available variables ${HOSTNAME}, ${RANDOM}[n] where n is the number of random chars
   enable_prometheus: Enable prometheus metrics
   job_name: Job name (backup_job)
-  metrics_destination: Metrics destination (URI / file)
+  metrics_destination: Metrics destination (Push URI / file)
   no_cert_verify: Do not verify SSL certificate
   metrics_username: HTTP metrics username
   metrics_password: HTTP metrics password
@@ -57,7 +57,6 @@ en:
 
   encrypted_env_variables: Encrypted envrionment variables
   env_variables: Environment variables
-  format_equals: Format variable=value
 
   no_runner: Cannot connect to backend. Please see logs
   runner_not_configured: Backend not configured properly. Please see logs
