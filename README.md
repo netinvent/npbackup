@@ -238,7 +238,7 @@ The upgrade server runs a python asgi web server with integrated HTTP basic auth
 ## Compilation
 
 In order to fully protect the AES key that is needed to support NPBackup, one can compile the program with Nuitka.
-Compiling needs restic binary for the target platform in `RESTIC_SOURCE_FILES` folder, files must be named `restic_{version}_{platform}_{arch}[.extension]` like provided by restic.net or [github](github.com/restic/restic)
+Compiling needs restic binary for the target platform in `RESTIC_SOURCE_FILES` folder, files must be named `restic_{version}_{platform}_{arch}[.extension]` like provided by restic.net or [github](https://github.com/restic/restic)
 Linux binaries need to be made executable in the `RESTIC_SOURCE_FILES` folder.
 
 You'll need to change the default AES key in `secrets.py`, see the documentation in the file itself.
