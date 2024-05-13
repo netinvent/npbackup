@@ -574,10 +574,13 @@ def get_repo_config(
                                 _grp_conf = [_grp_conf]
                             for _grp_conf_item in _grp_conf:
                                 if v == _grp_conf_item:
-                                    _config_inheritance.s(f"{key}.{v}", True)
+                                    # We need to avoid using dot notation here since value might contain dots
+                                    _config_inheritance.g(key)[v] = True
+                                    # _config_inheritance.s(fr"{key}.{v}", True)
                                     break
                                 else:
-                                    _config_inheritance.s(f"{key}.{v}", False)
+                                    _config_inheritance.g(key)[v] = False
+                                    #_config_inheritance.s(fr"{key}.{v}", False)
                     else:
                         # repo_config may or may not already contain data
                         if not _repo_config:
@@ -614,10 +617,12 @@ def get_repo_config(
                                     _grp_conf = [_grp_conf]
                                 for _grp_conf_item in _grp_conf:
                                     if v == _grp_conf_item:
-                                        _config_inheritance.s(f"{key}.{v}", True)
+                                        _config_inheritance.g(key)[v] = True
+                                        #_config_inheritance.s(f"{key}.{v}", True)
                                         break
                                     else:
-                                        _config_inheritance.s(f"{key}.{v}", False)
+                                        _config_inheritance.g(key)[v] = False
+                                        #_config_inheritance.s(f"{key}.{v}", False)
                         else:
                             # In other cases, just keep repo confg
                             _config_inheritance.s(key, False)
