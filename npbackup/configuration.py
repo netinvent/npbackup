@@ -580,7 +580,7 @@ def get_repo_config(
                                     break
                                 else:
                                     _config_inheritance.g(key)[v] = False
-                                    #_config_inheritance.s(fr"{key}.{v}", False)
+                                    # _config_inheritance.s(fr"{key}.{v}", False)
                     else:
                         # repo_config may or may not already contain data
                         if not _repo_config:
@@ -618,11 +618,11 @@ def get_repo_config(
                                 for _grp_conf_item in _grp_conf:
                                     if v == _grp_conf_item:
                                         _config_inheritance.g(key)[v] = True
-                                        #_config_inheritance.s(f"{key}.{v}", True)
+                                        # _config_inheritance.s(f"{key}.{v}", True)
                                         break
                                     else:
                                         _config_inheritance.g(key)[v] = False
-                                        #_config_inheritance.s(f"{key}.{v}", False)
+                                        # _config_inheritance.s(f"{key}.{v}", False)
                         else:
                             # In other cases, just keep repo confg
                             _config_inheritance.s(key, False)
@@ -755,7 +755,7 @@ def load_config(config_file: Path) -> Optional[dict]:
                     value = [value]
                 else:
                     value = []
-        
+
         if key in (
             "additional_labels",
             "env_variables",
@@ -767,7 +767,6 @@ def load_config(config_file: Path) -> Optional[dict]:
         return value
 
     iter_over_keys(full_config, _make_struct)
-
 
     # Check if we need to encrypt some variables
     if not is_encrypted(full_config):
