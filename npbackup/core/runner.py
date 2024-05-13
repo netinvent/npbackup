@@ -330,9 +330,9 @@ class NPBackupRunner:
         if msg is None:
             raise ValueError("None log message received")
         if self.stdout and (level == "info" or (level == "debug" and _DEBUG)):
-            self.stdout.put(msg)
+            self.stdout.put(f"\n{msg}")
         if self.stderr and level in ("critical", "error", "warning"):
-            self.stderr.put(msg)
+            self.stderr.put(f"\n{msg}")
 
         if raise_error == "ValueError":
             raise ValueError(msg)
