@@ -58,11 +58,12 @@ def metric_writer(
             destination = repo_config.g("prometheus.destination")
             prometheus_additional_labels = repo_config.g("prometheus.additional_labels")
 
-            if isinstance(prometheus_additional_labels, list):
-                for additional_label in prometheus_additional_labels:
-                    if isinstance(additional_label, dict):
-                        for k, v in additional_label.items():
-                            labels[k] = v
+            if isinstance(prometheus_additional_labels, dict):
+                 for k, v in prometheus_additional_labels.items():
+                    labels[k] = v
+            else:
+                logger.error(f"Bogus value in configuration for {key}: {value}")
+    
 
         # We only analyse backup output of restic
         if operation == "backup":
