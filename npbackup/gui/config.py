@@ -293,13 +293,18 @@ def config_gui(full_config: dict, config_file: str):
                     tree = retention_policy_tags_tree
 
                 if value:
-                    for val in value:
-                        if object_type != "group" and inherited[val]:
-                            icon = INHERITED_TREE_ICON
-                        else:
-                            icon = TREE_ICON
-                        tree.insert("", val, val, val, icon=icon)
-                    window[key].Update(values=tree)
+                    if isinstance(value, list):
+                        for val in value:
+                            if val is None:
+                                continue
+                            if object_type != "group" and inherited[val]:
+                                icon = INHERITED_TREE_ICON
+                            else:
+                                icon = TREE_ICON
+                            tree.insert("", val, val, val, icon=icon)
+                        window[key].Update(values=tree)
+                    else:
+                        logger.error(rf"Bgous configuration value for {key}: {value}")
                 return
 
             if key in (
@@ -315,13 +320,16 @@ def config_gui(full_config: dict, config_file: str):
                     tree = global_prometheus_labels_tree
 
                 if value:
-                    for skey, val in value.items():
-                        if object_type != "group" and inherited[skey]:
-                            icon = INHERITED_TREE_ICON
-                        else:
-                            icon = TREE_ICON
-                        tree.insert("", skey, skey, values=[val], icon=icon)
-                    window[key].Update(values=tree)
+                    if isinstance(value, dict):
+                        for skey, val in value.items():
+                            if object_type != "group" and inherited[skey]:
+                                icon = INHERITED_TREE_ICON
+                            else:
+                                icon = TREE_ICON
+                            tree.insert("", skey, skey, values=[val], icon=icon)
+                        window[key].Update(values=tree)
+                    else:
+                        logger.error(f"Bogus configuration value for {key}: {value}")
                 return
 
             # Update units into separate value and unit combobox
@@ -496,7 +504,6 @@ def config_gui(full_config: dict, config_file: str):
             "backup_opts.exclude_files",
             "backup_opts.exclude_patterns",
             "repo_opts.retention_policy.tags",
-            "global_prometheus.additional_labels",
         ]
         for tree_data_key in list_tree_data_keys:
             values[tree_data_key] = []
@@ -508,6 +515,7 @@ def config_gui(full_config: dict, config_file: str):
         dict_tree_data_keys = [
             "env.env_variables",
             "env.encrypted_env_variables",
+            "global_prometheus.additional_labels",
         ]
         for tree_data_key in dict_tree_data_keys:
             values[tree_data_key] = CommentedMap()
