@@ -223,7 +223,7 @@ empty_config_dict = {
         "additional_labels": None,
     },
     "global_options": {
-        "auto_upgrade": True,
+        "auto_upgrade": False,
         "auto_upgrade_interval": 10,
         "auto_upgrade_server_url": None,
         "auto_upgrade_server_username": None,
