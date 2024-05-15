@@ -602,17 +602,17 @@ class ResticRunner:
                             msg,
                             level="critical",
                         )
-                        return self.convert_to_json_output(False, msg=msg)
+                        return self.convert_to_json_output(False, output=msg)
                 else:
                     # pylint: disable=E1101 (no-member)
-                    msg = f"Backend is not ready to perform operation {fn.__name__}. Repo maybe inaccessible or not initialized. You can try to run a backup to initialize the repository."  # pylint: disable=E1101 (no-member)
-                    return self.convert_to_json_output(False, output=output, msg=msg)
+                    msg = f"Backend is not ready to perform operation {fn.__name__}. Repo maybe inaccessible or not initialized. You can try to run a backup to initialize the repository:\n{output}."  # pylint: disable=E1101 (no-member)
+                    return self.convert_to_json_output(False, msg=msg)
             # pylint: disable=E1102 (not-callable)
             return fn(self, *args, **kwargs)
 
         return wrapper
 
-    def convert_to_json_output(self, result, output, msg=None, **kwargs):
+    def convert_to_json_output(self, result, output=None, msg=None, **kwargs):
         """
         result, output = command_runner results
         msg will be logged and used as reason on failure
@@ -1135,7 +1135,7 @@ class ResticRunner:
         if not delta:
             if self.json_output:
                 msg = "No delta given"
-                self.convert_to_json_output(False, None, msg=msg**kwargs)
+                self.convert_to_json_output(False, None, msg=msg, **kwargs)
             return False, None
         try:
             # Make sure we run with json support for this one
