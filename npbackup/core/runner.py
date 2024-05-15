@@ -109,7 +109,7 @@ def metric_writer(
         metrics.append(
             f'npbackup_exec_state{{{labels},action="{operation}"}} {exec_state}'
         )
-
+        logger.debug("Metrics computed:\n{}".format('\n'.join(metrics)))
         if repo_config.g("prometheus.metrics") and destination:
             logger.debug("Uploading metrics to {}".format(destination))
             dest = destination.lower()
@@ -146,9 +146,11 @@ def metric_writer(
                         "Cannot write metrics file {}: {}".format(destination, exc)
                     )
     except KeyError as exc:
-        logger.info("Metrics not configured: {}".format(exc))
+        logger.info("Metrics error: {}".format(exc))
+        logger.debug("Trace:", exc_info=True)
     except OSError as exc:
         logger.error("Cannot write metric file: ".format(exc))
+        logger.debug("Trace:", exc_info=True)
     return backup_too_small
 
 

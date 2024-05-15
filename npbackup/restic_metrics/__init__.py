@@ -196,9 +196,9 @@ def restic_json_to_prometheus(
     if not isinstance(restic_json, dict):
         try:
             restic_json = json.loads(restic_json)
-        except json.JSONDecodeError as exc:
-            logger.error("Cannot decode JSON")
-            raise ValueError("Bogus data given, except a json dict or string")
+        except (json.JSONDecodeError, TypeError) as exc:
+            logger.error("Cannot decode JSON from restic data")
+            restic_json = {}
 
     prom_metrics = []
     for key, value in restic_json.items():
@@ -233,9 +233,12 @@ def restic_json_to_prometheus(
 
     backup_too_small = False
     if minimum_backup_size_error:
-        if not restic_json["total_bytes_processed"] or restic_json[
-            "total_bytes_processed"
-        ] < int(BytesConverter(str(minimum_backup_size_error).replace(" ", "")).bytes):
+        try:
+            if not restic_json["total_bytes_processed"] or restic_json[
+                "total_bytes_processed"
+            ] < int(BytesConverter(str(minimum_backup_size_error).replace(" ", "")).bytes):
+                backup_too_small = True
+        except KeyError:
             backup_too_small = True
     good_backup = restic_result and not backup_too_small
 
