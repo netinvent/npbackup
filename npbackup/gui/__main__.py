@@ -586,7 +586,6 @@ def _main_gui(viewer_mode: bool):
                     config_exists = True
                     break
         return full_config, config_file
-        # TODO WIP return None, None
 
     def get_config(
         config_file: str = None, window: sg.Window = None, repo_name: str = "default"
@@ -841,9 +840,8 @@ def _main_gui(viewer_mode: bool):
     ]
 
     check_for_auto_upgrade(full_config)
-
     window = sg.Window(
-        SHORT_PRODUCT_NAME,
+        f"{SHORT_PRODUCT_NAME} - {config_file}",
         layout,
         default_element_size=(12, 1),
         text_justification="r",
