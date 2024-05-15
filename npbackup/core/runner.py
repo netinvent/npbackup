@@ -1090,7 +1090,7 @@ class NPBackupRunner:
                     pre_exec_commands_success = False
                 else:
                     self.write_logs(
-                        "Pre-execution of command {pre_exec_command} success with:\n{output}.",
+                        f"Pre-execution of command {pre_exec_command} succeeded with:\n{output}",
                         level="info",
                     )
 
@@ -1148,7 +1148,7 @@ class NPBackupRunner:
                         warnings.append(msg)
                 else:
                     self.write_logs(
-                        f"Post-execution of command {post_exec_command} success with:\n{output}.",
+                        f"Post-execution of command {post_exec_command} succeeded with:\n{output}",
                         level="info",
                     )
 
