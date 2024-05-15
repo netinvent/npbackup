@@ -34,7 +34,7 @@ fr:
   minimum_backup_age: Délai minimal entre deux sauvegardes
   backup_repo_uri: URI / chemin local dépot de sauvegarde
   backup_repo_password: Mot de passe (chiffrement) dépot de sauvegarde
-  backup_repo_password_command: Commande qui retourne le mot de passe chiffrement dépot
+  backup_repo_password_command: Commande qui retourne le mot de passe de chiffrement dépot
   upload_speed: Vitesse limite de téléversement (KB/s)
   download_speed: Vitesse limite de téléchargement (KB/s)
   backend_connections: Connexions simultanées au dépot
@@ -90,7 +90,7 @@ fr:
   machine_group: Groupe machine
 
   show_decrypted: Voir déchiffré
-  no_manager_password_set: Mot de passe gestionnaire non initialisé, ne peut montrer la version déchiffrée
+  no_manager_password_defined: Mot de passe gestionnaire non initialisé, ne peut montrer la version déchiffrée
 
   # compression
   auto: Automatique

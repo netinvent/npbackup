@@ -47,7 +47,7 @@ Using `--show-config` should hide sensible data, and manager password.
 # NPF-SEC-00009: Option to show sensible data
 
 When using `--show-config` or right click `show unecrypted`, we should only show unencrypted config if password is set.  
-Envivironmnt variable `NPBACKUP_MANAGER_PASSWORD` will be read to verify access.
+Environment variable `NPBACKUP_MANAGER_PASSWORD` will be read to verify access, or GUI may ask for password.
 Also, when wrong password is entered, we should wait in order to reduce brute force attacks.
 
 # NPF-SEC-00010: Date attacks

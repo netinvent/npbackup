@@ -212,15 +212,6 @@ def config_gui(full_config: dict, config_file: str):
         nonlocal env_variables_tree
         nonlocal encrypted_env_variables_tree
 
-        if key in ("repo_uri", "repo_group"):
-            if object_type == "group":
-                window[key].Disabled = True
-            else:
-                window[key].Disabled = False
-                # Update the combo group selector
-                window[key].Update(value=value)
-            return
-
         try:
             # Don't bother to update repo name
             # Also permissions / manager_password are in a separate gui
@@ -239,6 +230,8 @@ def config_gui(full_config: dict, config_file: str):
                 "prometheus.http_password",
             ) or key.startswith("prometheus.additional_labels"):
                 return
+            
+            # NPF-SEC-00009
             # Don't show sensible info unless unencrypted requested
             if not unencrypted:
                 # Use last part of key only
@@ -253,6 +246,15 @@ def config_gui(full_config: dict, config_file: str):
                             value = ENCRYPTED_DATA_PLACEHOLDER
                     except (KeyError, TypeError):
                         pass
+
+            if key in ("repo_uri", "repo_group"):
+                if object_type == "group":
+                    window[key].Disabled = True
+                else:
+                    window[key].Disabled = False
+                    # Update the combo group selector
+                    window[key].Update(value=value)
+                return
 
             # Update tree objects
             if key == "backup_opts.paths":
@@ -1174,7 +1176,7 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Input(key="repo_opts.repo_password", size=(95, 1)),
             ],
             [
-                sg.Text(_t("config_gui.backup_repo_password_command"), size=(40, 1)),
+                sg.Text(_t("config_gui.backup_repo_password_command"), size=(95, 1)),
             ],
             [
                 sg.Image(
@@ -1846,7 +1848,7 @@ def config_gui(full_config: dict, config_file: str):
             manager_password = configuration.get_manager_password(
                 full_config, object_name
             )
-            if ask_manager_password(manager_password):
+            if not manager_password or ask_manager_password(manager_password):
                 full_config = set_permissions(full_config, values["-OBJECT-SELECT-"])
             continue
         if event in (
@@ -1986,6 +1988,9 @@ def config_gui(full_config: dict, config_file: str):
             )
             # NPF-SEC-00009
             env_manager_password = os.environ.get("NPBACKUP_MANAGER_PASSWORD", None)
+            if not manager_password:
+                sg.PopupError(_t("config_gui.no_manager_password_defined"))
+                continue
             if (
                 env_manager_password and env_manager_password == manager_password
             ) or ask_manager_password(manager_password):

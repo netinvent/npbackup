@@ -89,7 +89,7 @@ en:
   machine_group: Machine group
 
   show_decrypted: Show decrypted
-  no_manager_password_set: No managert password set, cannot show unencrypted
+  no_manager_password_defined: No manager password defined, cannot show unencrypted
 
   # compression
   auto: Automatic
