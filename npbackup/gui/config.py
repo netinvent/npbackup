@@ -361,10 +361,10 @@ def config_gui(full_config: dict, config_file: str):
                     window[inheritance_key].update(NON_INHERITED_ICON)
 
         except KeyError:
-            logger.error(f"No GUI equivalent for key {key}.")
+            logger.error(f"Key {key} has no GUI equivalent")
             logger.debug("Trace:", exc_info=True)
         except TypeError as exc:
-            logger.error(f"Error: {exc} for key {key}.")
+            logger.error(f"Error: Trying to update GUI with key {key} produced error: {exc}")
             logger.debug("Trace:", exc_info=True)
 
     def iter_over_config(
