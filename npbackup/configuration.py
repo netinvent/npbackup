@@ -833,13 +833,19 @@ def save_config(config_file: Path, full_config: dict) -> bool:
 
 def get_repo_list(full_config: dict) -> List[str]:
     if full_config:
-        return list(full_config.g("repos").keys())
+        try:
+            return list(full_config.g("repos").keys())
+        except AttributeError:
+            pass
     return []
 
 
 def get_group_list(full_config: dict) -> List[str]:
     if full_config:
-        return list(full_config.g("groups").keys())
+        try:
+            return list(full_config.g("groups").keys())
+        except AttributeError:
+            pass
     return []
 
 
