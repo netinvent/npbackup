@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024051301"
+__build__ = "2024051501"
 __version__ = "npbackup 3.0.0+"
 
 MIN_CONF_VERSION = 3.0
@@ -220,7 +220,7 @@ empty_config_dict = {
         "destination": None,
         "http_username": None,
         "http_password": None,
-        "additional_labels": None,
+        "additional_labels": [],
     },
     "global_options": {
         "auto_upgrade": False,
@@ -572,15 +572,18 @@ def get_repo_config(
                             # Make sure we test inheritance against possible lists
                             if not isinstance(_grp_conf, list):
                                 _grp_conf = [_grp_conf]
-                            for _grp_conf_item in _grp_conf:
-                                if v == _grp_conf_item:
-                                    # We need to avoid using dot notation here since value might contain dots
-                                    _config_inheritance.g(key)[v] = True
-                                    # _config_inheritance.s(fr"{key}.{v}", True)
-                                    break
-                                else:
-                                    _config_inheritance.g(key)[v] = False
-                                    # _config_inheritance.s(fr"{key}.{v}", False)
+                            if _grp_conf:
+                                for _grp_conf_item in _grp_conf:
+                                    if v == _grp_conf_item:
+                                        # We need to avoid using dot notation here since value might contain dots
+                                        _config_inheritance.g(key)[v] = True
+                                        # _config_inheritance.s(f"{key}.{v}", True)
+                                        break
+                                    else:
+                                        _config_inheritance.g(key)[v] = False
+                                        # _config_inheritance.s(f"{key}.{v}", False)
+                            else:
+                                _config_inheritance.g(key)[v] = False
                     else:
                         # repo_config may or may not already contain data
                         if not _repo_config:
@@ -615,14 +618,17 @@ def get_repo_config(
                                 # Make sure we test inheritance against possible lists
                                 if not isinstance(_grp_conf, list):
                                     _grp_conf = [_grp_conf]
-                                for _grp_conf_item in _grp_conf:
-                                    if v == _grp_conf_item:
-                                        _config_inheritance.g(key)[v] = True
-                                        # _config_inheritance.s(f"{key}.{v}", True)
-                                        break
-                                    else:
-                                        _config_inheritance.g(key)[v] = False
-                                        # _config_inheritance.s(f"{key}.{v}", False)
+                                if _grp_conf:
+                                    for _grp_conf_item in _grp_conf:
+                                        if v == _grp_conf_item:
+                                            _config_inheritance.g(key)[v] = True
+                                            # _config_inheritance.s(f"{key}.{v}", True)
+                                            break
+                                        else:
+                                            _config_inheritance.g(key)[v] = False
+                                            # _config_inheritance.s(f"{key}.{v}", False)
+                                else:
+                                    _config_inheritance.g(key)[v] = False
                         else:
                             # In other cases, just keep repo confg
                             _config_inheritance.s(key, False)
