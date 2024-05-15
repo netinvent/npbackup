@@ -1,6 +1,6 @@
-# Retired since v2.3.0, replaced by NPF-SEC-00007
 # NPF-SEC-00001: SECURITY-ADMIN-BACKUP-PASSWORD ONLY AVAILABLE ON PRIVATE COMPILED BUILDS
 
+Note: This security entry has been retired since v2.3.0, and totally reimplemented in v3.0  
 In gui.config we have a function that allows to show unencrypted values of the yaml config file
 While this is practical, it should never be allowed on non compiled builds or with the default backup admin password
 
@@ -17,7 +17,7 @@ Password command is also not logged.
 
 # NPF-SEC-00004: Client should never know the repo password
 
-Partially covered with password_command feature.
+Partially covered with password_command feature, and alternative aes key management.
 We should have a central password server that holds repo passwords, so password is never actually stored in config.
 This will prevent local backups, so we need to think of a better zero knowledge strategy here.
 
@@ -38,14 +38,13 @@ Hence, update permissions should only happen in two cases:
 Since encryption is symmetric, we need to protect our sensible data.
 Best ways:
 - Compile with alternative aes-key
-- Use --aes-key with alternative aes-key which is protected by system
+- Use `NPBACKUP_KEY_LOCATION` or `NPBACKUP_KEY_COMMAND` to specify alternative AES keys
 
 # NPF-SEC-00008: Don't show manager password / sensible data with --show-config
 
-Since v3.0.0, we have config inheritance. Showing the actual config helps diag issues, but we need to be careful not
-to show actual secrets.
+Using `--show-config` should hide sensible data, and manager password.
 
-# NPF-SEC-00009: Manager password in CLI mode
+# NPF-SEC-00009: Option to show sensible data
 
 When using `--show-config` or right click `show unecrypted`, we should only show unencrypted config if password is set.  
 Envivironmnt variable `NPBACKUP_MANAGER_PASSWORD` will be read to verify access.
