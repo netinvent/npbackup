@@ -735,7 +735,6 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
 
 
 def load_config(config_file: Path) -> Optional[dict]:
-
     logger.info(f"Loading configuration file {config_file}")
 
     full_config = _load_config_file(config_file)

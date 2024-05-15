@@ -236,7 +236,9 @@ def restic_json_to_prometheus(
         try:
             if not restic_json["total_bytes_processed"] or restic_json[
                 "total_bytes_processed"
-            ] < int(BytesConverter(str(minimum_backup_size_error).replace(" ", "")).bytes):
+            ] < int(
+                BytesConverter(str(minimum_backup_size_error).replace(" ", "")).bytes
+            ):
                 backup_too_small = True
         except KeyError:
             backup_too_small = True

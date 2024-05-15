@@ -51,7 +51,6 @@ def entrypoint(*args, **kwargs):
     )
     if not json_output:
         if not isinstance(result, bool):
-
             # We need to temprarily remove the stdout handler
             # Since we already get live output from the runner
             # But we still need to log the result to our logfile

@@ -109,7 +109,7 @@ def metric_writer(
         metrics.append(
             f'npbackup_exec_state{{{labels},action="{operation}"}} {exec_state}'
         )
-        logger.debug("Metrics computed:\n{}".format('\n'.join(metrics)))
+        logger.debug("Metrics computed:\n{}".format("\n".join(metrics)))
         if repo_config.g("prometheus.metrics") and destination:
             logger.debug("Uploading metrics to {}".format(destination))
             dest = destination.lower()
