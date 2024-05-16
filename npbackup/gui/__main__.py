@@ -938,7 +938,8 @@ def _main_gui(viewer_mode: bool):
                 continue
             full_config = config_gui(full_config, config_file)
             # Make sure we trigger a GUI refresh when configuration is changed
-            event = "--STATE-BUTTON--"
+            # Also make sure we retrigger get_config
+            event = "--LOAD-CONF--"
         if event == "--OPEN-REPO--":
             viewer_repo_uri, viewer_repo_password = viewer_repo_gui(
                 viewer_repo_uri, viewer_repo_password
