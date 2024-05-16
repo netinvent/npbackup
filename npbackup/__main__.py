@@ -312,18 +312,17 @@ This is free software, and you are welcome to redistribute it under certain cond
             msg = f"Config file {args.config_file} cannot be read."
             json_error_logging(False, msg, "critical")
             sys.exit(70)
-        CONFIG_FILE = Path(args.config_file)
+        config_file = Path(args.config_file)
     else:
         config_file = Path(f"{CURRENT_DIR}/npbackup.conf")
         if config_file.exists():
-            CONFIG_FILE = config_file
             logger.info(f"Loading default configuration file {config_file}")
         else:
             msg = "Cannot run without configuration file."
             json_error_logging(False, msg, "critical")
             sys.exit(70)
 
-    full_config = npbackup.configuration.load_config(CONFIG_FILE)
+    full_config = npbackup.configuration.load_config(config_file)
     if not full_config:
         msg = "Cannot obtain repo config"
         json_error_logging(False, msg, "critical")

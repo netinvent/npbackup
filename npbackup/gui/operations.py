@@ -243,10 +243,13 @@ def operations_gui(full_config: dict) -> dict:
             if not repos:
                 continue
             for repo_name in repos:
-                repo_config, config_inheritance = configuration.get_repo_config(
+                repo_config, __annotations__ = configuration.get_repo_config(
                     full_config, repo_name
                 )
                 repo_config_list.append(repo_config)
+            operation = None
+            op_args = None
+            gui_msg = None
             if event == "--FORGET--":
                 operation = "forget"
                 op_args = {"use_policy": True}
@@ -283,16 +286,19 @@ def operations_gui(full_config: dict) -> dict:
                 operation = "stats"
                 op_args = {}
                 gui_msg = _t("operations_gui.stats")
-            gui_thread_runner(
-                None,
-                "group_runner",
-                operation=operation,
-                repo_config_list=repo_config_list,
-                __autoclose=False,
-                __compact=False,
-                __gui_msg=gui_msg,
-                **op_args,
-            )
+            if operation:
+                gui_thread_runner(
+                    None,
+                    "group_runner",
+                    operation=operation,
+                    repo_config_list=repo_config_list,
+                    __autoclose=False,
+                    __compact=False,
+                    __gui_msg=gui_msg,
+                    **op_args,
+                )
+            else:
+                logger.error(f"Bogus operation: {operation}")
 
             event = "---STATE-UPDATE---"
         if event == "---STATE-UPDATE---":

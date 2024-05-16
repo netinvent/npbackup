@@ -123,7 +123,7 @@ class ResticRunner:
                 gomaxprocs = nb_cores
             elif 2 <= nb_cores <= 4:
                 gomaxprocs = nb_cores - 1
-            elif nb_cores > 4:
+            else:
                 gomaxprocs = nb_cores - 2
             # No need to use write_logs here
             logger.debug("Setting GOMAXPROCS to {}".format(gomaxprocs))

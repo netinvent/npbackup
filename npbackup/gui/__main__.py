@@ -79,7 +79,8 @@ def about_gui(
         ]
     elif auto_upgrade_result is False:
         new_version = [sg.Text(_t("generic.is_uptodate"))]
-    elif auto_upgrade_result is None:
+    else:
+        # auto_upgrade_result is None
         new_version = [sg.Text(_t("config_gui.auto_upgrade_disabled"))]
     layout = [
         [sg.Text(version_string)],
@@ -462,6 +463,11 @@ def _main_gui(viewer_mode: bool):
         return config_file, action
 
     def gui_update_state() -> None:
+        nonlocal current_state
+        nonlocal backup_tz
+        nonlocal backend_type
+        nonlocal snapshot_list
+
         if current_state:
             window["--STATE-BUTTON--"].Update(
                 "{}: {}".format(
@@ -699,6 +705,7 @@ def _main_gui(viewer_mode: bool):
         config_file = None
         full_config = None
         backend_type = None
+        repo_list = []
     else:
         (
             full_config,
@@ -975,7 +982,9 @@ def _main_gui(viewer_mode: bool):
                         destination_string = repo_config.g("repo_uri").split("@")[-1]
                     else:
                         destination_string = repo_config.g("repo_uri")
-                sg.PopupNoFrame(destination_string)
+                    sg.PopupNoFrame(destination_string)
+                else:
+                    sg.PopupNoFrame(_t("main_gui.unknown_repo"))
             except (TypeError, KeyError):
                 sg.PopupNoFrame(_t("main_gui.unknown_repo"))
         if event == "--ABOUT--":

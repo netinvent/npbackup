@@ -62,7 +62,9 @@ def metric_writer(
                 for k, v in prometheus_additional_labels.items():
                     labels[k] = v
             else:
-                logger.error(f"Bogus value in configuration for {key}: {value}")
+                logger.error(f"Bogus value in configuration for prometheus additional labels: {prometheus_additional_labels}")
+        else:
+            destination = None
 
         # We only analyse backup output of restic
         if operation == "backup":
@@ -110,8 +112,8 @@ def metric_writer(
             f'npbackup_exec_state{{{labels},action="{operation}"}} {exec_state}'
         )
         logger.debug("Metrics computed:\n{}".format("\n".join(metrics)))
-        if repo_config.g("prometheus.metrics") and destination:
-            logger.debug("Uploading metrics to {}".format(destination))
+        if destination:
+            logger.debug("Sending metrics to {}".format(destination))
             dest = destination.lower()
             if dest.startswith("http"):
                 if not "metrics" in dest:
@@ -138,6 +140,7 @@ def metric_writer(
                     logger.info("Not uploading metrics in dry run mode")
             else:
                 try:
+                    # We use append so if prometheus text collector did not get data yet, we'll not wipe it
                     with open(destination, "a") as file_handle:
                         for metric in metrics:
                             file_handle.write(metric + "\n")
@@ -1247,6 +1250,7 @@ class NPBackupRunner:
                 level="critical",
                 raise_error=True,
             )
+            result = False
         metric_writer(self.repo_config, result, None, self.dry_run)
         return self.convert_to_json_output(result)
 
