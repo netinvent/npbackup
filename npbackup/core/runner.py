@@ -65,6 +65,7 @@ def metric_writer(
                 logger.error(f"Bogus value in configuration for prometheus additional labels: {prometheus_additional_labels}")
         else:
             destination = None
+            no_cert_verify = False
 
         # We only analyse backup output of restic
         if operation == "backup":

@@ -479,6 +479,7 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     # Group operation mode
     repo_config_list = []
+    repos = []
     if args.group_operation:
         if args.repo_group:
             groups = [group.strip() for group in args.repo_group.split(",")]

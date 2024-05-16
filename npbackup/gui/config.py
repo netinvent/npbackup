@@ -198,7 +198,7 @@ def config_gui(full_config: dict, config_file: str):
             object_name = combo_value[len("Group: ") :]
         else:
             object_type = None
-            object_type = None
+            object_name = None
         return object_type, object_name
 
     def update_gui_values(key, value, inherited, object_type, unencrypted):
@@ -1868,6 +1868,10 @@ def config_gui(full_config: dict, config_file: str):
             "--ADD-PATHS-FOLDER--",
             "--ADD-EXCLUDE-FILE--",
         ):
+            tree = None
+            node = None
+            icon = None
+            key = None
             if event in ("--ADD-PATHS-FILE--", "--ADD-EXCLUDE-FILE--"):
                 if event == "--ADD-PATHS-FILE--":
                     key = "backup_opts.paths"
@@ -1882,11 +1886,6 @@ def config_gui(full_config: dict, config_file: str):
                 tree = backup_paths_tree
                 node = values[event]
                 icon = FOLDER_ICON
-            else:
-                tree = None
-                node = None
-                icon = None
-                key = None
             if tree:
                 tree.insert("", node, node, node, icon=icon)
                 window[key].update(values=tree)
@@ -1911,8 +1910,9 @@ def config_gui(full_config: dict, config_file: str):
             "--REMOVE-ENV-VARIABLE--",
             "--REMOVE-ENCRYPTED-ENV-VARIABLE--",
         ):
+            popup_text = None
+            option_key = None
             if "PATHS" in event:
-                popup_text = None
                 option_key = "backup_opts.paths"
                 tree = backup_paths_tree
             elif "BACKUP-TAG" in event:
@@ -1949,9 +1949,6 @@ def config_gui(full_config: dict, config_file: str):
             elif "ENV-VARIABLE" in event:
                 tree = env_variables_tree
                 option_key = "env.env_variables"
-            else:
-                popup_text = "Bogus popup_text because of bogus event"
-                option_key = None
 
             if event.startswith("--ADD-"):
                 icon = TREE_ICON
