@@ -770,6 +770,7 @@ def config_gui(full_config: dict, config_file: str):
                 sg.FolderBrowse(
                     _t("generic.add_folder"), target="--ADD-PATHS-FOLDER--"
                 ),
+                sg.Button(_t("generic.add_manually"), key="--ADD-PATHS-MANUALLY--"),
                 sg.Button(_t("generic.remove_selected"), key="--REMOVE-PATHS--"),
             ],
             [
@@ -946,6 +947,11 @@ def config_gui(full_config: dict, config_file: str):
                             sg.FilesBrowse(
                                 "+", target="--ADD-EXCLUDE-FILE--", size=(3, 1)
                             ),
+                        ],
+                        [
+                            sg.Button(
+                                "M", key="--ADD-EXCLUDE-FILE-MANUALLY--", size=(3, 1)
+                            )
                         ],
                         [sg.Button("-", key="--REMOVE-EXCLUDE-FILE--", size=(3, 1))],
                     ],
@@ -1866,7 +1872,9 @@ def config_gui(full_config: dict, config_file: str):
         if event in (
             "--ADD-PATHS-FILE--",
             "--ADD-PATHS-FOLDER--",
+            "--ADD-PATHS-MANUALLY--",
             "--ADD-EXCLUDE-FILE--",
+            "--ADD-EXCLUDE-FILE-MANUALLY--",
         ):
             tree = None
             node = None
@@ -1886,6 +1894,19 @@ def config_gui(full_config: dict, config_file: str):
                 tree = backup_paths_tree
                 node = values[event]
                 icon = FOLDER_ICON
+            elif event == "--ADD-PATHS-MANUALLY--":
+                key = "backup_opts.paths"
+                tree = backup_paths_tree
+                node = sg.PopupGetText(_t("generic.add_manually"))
+                if os.path.exists(node) and os.path.isdir(node):
+                    icon = FOLDER_ICON
+                else:
+                    icon = FILE_ICON
+            elif event == "--ADD-EXCLUDE-FILE-MANUALLY--":
+                key = "backup_opts.exclude_files"
+                tree = exclude_files_tree
+                node = sg.PopupGetText(_t("generic.add_manually"))
+                icon = FILE_ICON
             if tree:
                 tree.insert("", node, node, node, icon=icon)
                 window[key].update(values=tree)
