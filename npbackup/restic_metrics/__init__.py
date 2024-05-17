@@ -462,7 +462,6 @@ def upload_metrics(destination: str, authentication, no_cert_verify: bool, metri
         data = ""
         for metric in metrics:
             data += f"{metric}\n"
-        logger.debug(f"metrics:\n{data}")
         result = requests.post(
             destination,
             headers=headers,
