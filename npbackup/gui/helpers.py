@@ -10,7 +10,7 @@ __license__ = "GPL-3.0-only"
 __build__ = "2024050901"
 
 
-from typing import Tuple, Callable
+from typing import Tuple
 from logging import getLogger
 from time import sleep
 import re
@@ -239,7 +239,7 @@ def gui_thread_runner(
         kwargs = {**kwargs, **{"__no_threads": True}}
         result = runner.__getattribute__(fn.__name__)(*args, **kwargs)
     while True:
-        # No idea why pylint thingks that UpdateAnimation does not exist in PySimpleGUI
+        # No idea why pylint thinks that UpdateAnimation does not exist in PySimpleGUI
         # pylint: disable=E1101 (no-member)
         progress_window["-LOADER-ANIMATION-"].UpdateAnimation(
             LOADER_ANIMATION, time_between_frames=100
