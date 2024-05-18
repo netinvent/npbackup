@@ -1907,7 +1907,7 @@ def config_gui(full_config: dict, config_file: str):
                 tree = exclude_files_tree
                 node = sg.PopupGetText(_t("generic.add_manually"))
                 icon = FILE_ICON
-            if tree:
+            if tree and node:
                 tree.insert("", node, node, node, icon=icon)
                 window[key].update(values=tree)
             continue
