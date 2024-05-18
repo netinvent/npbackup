@@ -525,6 +525,8 @@ class NPBackupRunner:
                     }
                     return js
                 return False
+            if self.dry_run:
+                logger.warning("Running in dry mode. No modifications will be done")
             # pylint: disable=E1102 (not-callable)
             return fn(self, *args, **kwargs)
 
