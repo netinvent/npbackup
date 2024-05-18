@@ -1023,16 +1023,6 @@ class NPBackupRunner:
             exclude_files_larger_than = self.repo_config.g(
                 "backup_opts.exclude_files_larger_than"
             )
-            if exclude_files_larger_than:
-                try:
-                    BytesConverter(exclude_files_larger_than)
-                except ValueError:
-                    warning = f"Bogus unit for exclude_files_larger_than value given: {exclude_files_larger_than}"
-                    self.write_logs(warning, level="warning")
-                    warnings.append(warning)
-                    exclude_files_larger_than = None
-                    exclude_files_larger_than = None
-
             one_file_system = (
                 self.repo_config.g("backup_opts.one_file_system")
                 if os.name != "nt"
