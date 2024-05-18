@@ -41,10 +41,9 @@ logger = logging.getLogger()
 
 
 def metric_writer(
-    repo_config: dict, restic_result: bool, result_string: str, dry_run: bool
+    repo_config: dict, restic_result: bool, result_string: str, operation: str, dry_run: bool
 ) -> bool:
     backup_too_small = False
-    operation = fn_name(1)
     operation_success = True
     metrics = []
 
@@ -57,6 +56,7 @@ def metric_writer(
             no_cert_verify = repo_config.g("prometheus.no_cert_verify")
             destination = repo_config.g("prometheus.destination")
             prometheus_additional_labels = repo_config.g("prometheus.additional_labels")
+            repo_name = repo_config.g("name")
 
             if isinstance(prometheus_additional_labels, dict):
                 for k, v in prometheus_additional_labels.items():
@@ -68,13 +68,13 @@ def metric_writer(
         else:
             destination = None
             no_cert_verify = False
+            repo_name = None
 
         # We only analyse backup output of restic
         if operation == "backup":
             minimum_backup_size_error = repo_config.g(
                 "backup_opts.minimum_backup_size_error"
             )
-
             # If result was a str, we need to transform it into json first
             if isinstance(result_string, str):
                 restic_result = restic_str_output_to_json(restic_result, result_string)
@@ -111,8 +111,13 @@ def metric_writer(
             if value:
                 _labels.append(f'{key.strip()}="{value.strip()}"')
         labels = ",".join(_labels)
+
+        if operation != "backup":
+            metrics.append(
+                f'npbackup_oper_state{{{labels},action="{operation}",repo="{repo_name}"}} {0 if restic_result else 1}'
+            )
         metrics.append(
-            f'npbackup_exec_state{{{labels},action="{operation}"}} {exec_state}'
+            f'npbackup_exec_state{{{labels}}} {exec_state}'
         )
         logger.debug("Metrics computed:\n{}".format("\n".join(metrics)))
         if destination:
@@ -589,6 +594,8 @@ class NPBackupRunner:
                     f"Function {operation} failed with: {exc}", level="error"
                 )
                 logger.debug("Trace:", exc_info=True)
+                # In case of error, we really need to write metrics
+                metric_writer(self.repo_config, False, None, fn.__name__, self.dry_run)
                 if self.json_output:
                     js = {
                         "result": False,
@@ -599,6 +606,19 @@ class NPBackupRunner:
                 return False
 
         return wrapper
+    
+    def metrics(fn: Callable):
+        """
+        Write prometheus metrics
+        """
+
+        @wraps(fn)
+        def wrapper(self, *args, **kwargs):
+            result = fn(self, *args, **kwargs)
+            metric_writer(self.repo_config, result, None, fn.__name__, self.dry_run)
+            return result
+        return wrapper
+
 
     def create_restic_runner(self) -> bool:
         can_run = True
@@ -1135,6 +1155,7 @@ class NPBackupRunner:
             self.repo_config,
             result,
             self.restic_runner.backup_result_content,
+            "backup",
             self.restic_runner.dry_run,
         )
         if backup_too_small:
@@ -1181,6 +1202,7 @@ class NPBackupRunner:
 
     @threaded
     @catch_exceptions
+    @metrics
     @close_queues
     @exec_timer
     @check_concurrency
@@ -1189,16 +1211,15 @@ class NPBackupRunner:
     @apply_config_to_restic_runner
     def restore(self, snapshot: str, target: str, restore_includes: List[str]) -> bool:
         self.write_logs(f"Launching restore to {target}", level="info")
-        result = self.restic_runner.restore(
+        return self.restic_runner.restore(
             snapshot=snapshot,
             target=target,
             includes=restore_includes,
         )
-        metric_writer(self.repo_config, result, None, self.dry_run)
-        return result
 
     @threaded
     @catch_exceptions
+    @metrics
     @close_queues
     @exec_timer
     @check_concurrency
@@ -1254,11 +1275,11 @@ class NPBackupRunner:
                 raise_error=True,
             )
             result = False
-        metric_writer(self.repo_config, result, None, self.dry_run)
         return self.convert_to_json_output(result)
 
     @threaded
     @catch_exceptions
+    @metrics
     @close_queues
     @exec_timer
     @check_concurrency
@@ -1276,18 +1297,11 @@ class NPBackupRunner:
                 f"Running metadata consistency check of repository {self.repo_config.g('name')}",
                 level="info",
             )
-        result = self.restic_runner.check(read_data)
-        metric_writer(
-            self.repo_config,
-            result,
-            None,
-            self.restic_runner.dry_run,
-        )
-        metric_writer(self.repo_config, result, None, self.dry_run)
-        return result
+        return self.restic_runner.check(read_data)
 
     @threaded
     @catch_exceptions
+    @metrics
     @close_queues
     @exec_timer
     @check_concurrency
@@ -1306,11 +1320,11 @@ class NPBackupRunner:
             )
         else:
             result = self.restic_runner.prune()
-        metric_writer(self.repo_config, result, None, self.dry_run)
         return result
 
     @threaded
     @catch_exceptions
+    @metrics
     @close_queues
     @exec_timer
     @check_concurrency
@@ -1321,12 +1335,12 @@ class NPBackupRunner:
         self.write_logs(
             f"Repairing {subject} in repo {self.repo_config.g('name')}", level="info"
         )
-        result = self.restic_runner.repair(subject)
-        metric_writer(self.repo_config, result, None, self.dry_run)
-        return result
+        return self.restic_runner.repair(subject)
+
 
     @threaded
     @catch_exceptions
+    @metrics
     @close_queues
     @exec_timer
     @check_concurrency
@@ -1335,9 +1349,7 @@ class NPBackupRunner:
     @apply_config_to_restic_runner
     def unlock(self) -> bool:
         self.write_logs(f"Unlocking repo {self.repo_config.g('name')}", level="info")
-        result = self.restic_runner.unlock()
-        metric_writer(self.repo_config, result, None, self.dry_run)
-        return result
+        return self.restic_runner.unlock()
 
     @threaded
     @catch_exceptions
@@ -1371,6 +1383,7 @@ class NPBackupRunner:
 
     @threaded
     @catch_exceptions
+    @metrics
     @close_queues
     @exec_timer
     @check_concurrency
@@ -1379,8 +1392,7 @@ class NPBackupRunner:
     @apply_config_to_restic_runner
     def raw(self, command: str) -> bool:
         self.write_logs(f"Running raw command: {command}", level="info")
-        result = self.restic_runner.raw(command=command)
-        return result
+        return self.restic_runner.raw(command=command)
 
     @threaded
     @catch_exceptions
@@ -1420,6 +1432,7 @@ class NPBackupRunner:
                     )
             if not result:
                 group_result = False
+            metric_writer(repo_config, result, None, operation, self.dry_run)
         self.write_logs("Finished execution group operations", level="info")
         if self.json_output:
             js["result"] = group_result
