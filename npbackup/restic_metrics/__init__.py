@@ -197,7 +197,7 @@ def restic_json_to_prometheus(
         try:
             restic_json = json.loads(restic_json)
         except (json.JSONDecodeError, TypeError) as exc:
-            logger.error("Cannot decode JSON from restic data")
+            logger.error("Cannot decode JSON from restic data: {exc}")
             restic_json = {}
 
     prom_metrics = []
