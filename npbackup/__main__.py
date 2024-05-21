@@ -3,7 +3,7 @@
 #
 # This file is part of npbackup
 
-__intname__ = "npbackup.cli_interface"
+__intname__ = "npbackup-cli"
 
 
 import os
