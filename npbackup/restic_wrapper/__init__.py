@@ -814,6 +814,20 @@ class ResticRunner:
                 exclude_files_larger_than = int(
                     BytesConverter(exclude_files_larger_than).bytes
                 )
+
+            if exclude_files_larger_than:
+                try:
+                    # Default --exclude_larger_than unit is bytes
+                    exclude_files_larger_than = int(BytesConverter(exclude_files_larger_than))
+                except ValueError:
+                    warning = f"Bogus unit for exclude_files_larger_than value given: {exclude_files_larger_than}"
+                    self.write_logs(warning, level="warning")
+                    exclude_files_larger_than = None
+                # In case of conversion to 0, avoid setting this value
+                if exclude_files_larger_than == 0:
+                    exclude_files_larger_than = None
+                print("EXCLUD", exclude_files_larger_than)
+
                 cmd += f" --exclude-larger-than {exclude_files_larger_than}"
             if one_file_system:
                 cmd += " --one-file-system"
