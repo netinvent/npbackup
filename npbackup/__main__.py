@@ -162,7 +162,11 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Dump a specific file to stdout",
     )
     parser.add_argument(
-        "--stats", action="store_true", help="Get repository statistics"
+        "--stats",
+        type=str,
+        default=None,
+        required=False,
+        help="Get repository statistics. If snapshot id is given, only snapshots statistics will be shown."
     )
     parser.add_argument(
         "--raw",
@@ -471,6 +475,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["op_args"] = {"path": args.dump}
     elif args.stats or args.group_operation == "stats":
         cli_args["operation"] = "stats"
+        cli_args["op_args"] = {"subject": args.stats}
     elif args.raw or args.group_operation == "raw":
         cli_args["operation"] = "raw"
         cli_args["op_args"] = {"command": args.raw}

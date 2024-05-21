@@ -477,7 +477,7 @@ class NPBackupRunner:
                         and not current_permissions in required_permissions[operation]
                     ):
                         self.write_logs(
-                            f"Required permissions for operation '{operation}' must be in {required_permissions[operation]}, current permission is [{current_permissions}]",
+                            f"Required permissions for operation '{operation}' must be one of {', '.join(required_permissions[operation])}, current permission is '{current_permissions}'",
                             level="critical",
                         )
                         raise PermissionError
@@ -1362,11 +1362,11 @@ class NPBackupRunner:
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    def stats(self) -> bool:
+    def stats(self, subject: str = None) -> bool:
         self.write_logs(
             f"Getting stats of repo {self.repo_config.g('name')}", level="info"
         )
-        result = self.restic_runner.stats()
+        result = self.restic_runner.stats(subject)
         return result
 
     @threaded

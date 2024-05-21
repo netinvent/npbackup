@@ -1055,7 +1055,7 @@ class ResticRunner:
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
     @check_if_init
-    def stats(self) -> Union[bool, str, dict]:
+    def stats(self, subject: str = None) -> Union[bool, str, dict]:
         """
         Gives various repository statistics
         """
@@ -1063,6 +1063,8 @@ class ResticRunner:
         kwargs.pop("self")
 
         cmd = f"stats"
+        if subject:
+            cmd += f" {subject}"
         result, output = self.executor(cmd)
         if result:
             msg = f"Repo statistics command success"
