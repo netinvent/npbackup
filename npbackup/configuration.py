@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024051501"
+__build__ = "2024052201"
 __version__ = "npbackup 3.0.0+"
 
 MIN_CONF_VERSION = 3.0
@@ -529,7 +529,7 @@ def get_repo_config(
             _repo_config: dict, _group_config: dict, _config_inheritance: dict
         ) -> Tuple[dict, dict]:
             if isinstance(_group_config, dict):
-                if not _repo_config:
+                if _repo_config is None:
                     # Initialize blank if not set
                     _repo_config = CommentedMap()
                     _config_inheritance = CommentedMap()
@@ -586,14 +586,14 @@ def get_repo_config(
                                 _config_inheritance.g(key)[v] = False
                     else:
                         # repo_config may or may not already contain data
-                        if not _repo_config:
+                        if _repo_config is None:
                             _repo_config = CommentedMap()
                             _config_inheritance = CommentedMap()
-                        if not _repo_config.g(key):
+                        if _repo_config.g(key) is None:
                             _repo_config.s(key, value)
                             _config_inheritance.s(key, True)
                         # Case where repo_config contains list but group info has single str
-                        elif isinstance(_repo_config.g(key), list) and value:
+                        elif isinstance(_repo_config.g(key), list) and value is not None:
                             merged_lists = _repo_config.g(key) + [value]
 
                             # Special case when merged lists contain multiple dicts, we'll need to merge dicts
