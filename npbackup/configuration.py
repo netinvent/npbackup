@@ -593,7 +593,9 @@ def get_repo_config(
                             _repo_config.s(key, value)
                             _config_inheritance.s(key, True)
                         # Case where repo_config contains list but group info has single str
-                        elif isinstance(_repo_config.g(key), list) and value is not None:
+                        elif (
+                            isinstance(_repo_config.g(key), list) and value is not None
+                        ):
                             merged_lists = _repo_config.g(key) + [value]
 
                             # Special case when merged lists contain multiple dicts, we'll need to merge dicts

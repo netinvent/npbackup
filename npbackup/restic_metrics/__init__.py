@@ -232,7 +232,9 @@ def restic_json_to_prometheus(
             prom_metrics.append(f'restic_{key}{{{labels},action="backup"}} {value}')
 
     try:
-        processed_bytes = BytesConverter(str(restic_json['total_bytes_processed'])).human
+        processed_bytes = BytesConverter(
+            str(restic_json["total_bytes_processed"])
+        ).human
         logger.info(f"Processed {processed_bytes} of data")
     except Exception:
         logger.error(f"Cannot find processed bytes: {exc}")

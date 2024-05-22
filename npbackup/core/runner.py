@@ -41,7 +41,11 @@ logger = logging.getLogger()
 
 
 def metric_writer(
-    repo_config: dict, restic_result: bool, result_string: str, operation: str, dry_run: bool
+    repo_config: dict,
+    restic_result: bool,
+    result_string: str,
+    operation: str,
+    dry_run: bool,
 ) -> bool:
     backup_too_small = False
     operation_success = True
@@ -116,9 +120,7 @@ def metric_writer(
             metrics.append(
                 f'npbackup_oper_state{{{labels},action="{operation}",repo="{repo_name}"}} {0 if restic_result else 1}'
             )
-        metrics.append(
-            f'npbackup_exec_state{{{labels}}} {exec_state}'
-        )
+        metrics.append(f"npbackup_exec_state{{{labels}}} {exec_state}")
         logger.debug("Metrics computed:\n{}".format("\n".join(metrics)))
         if destination:
             logger.debug("Sending metrics to {}".format(destination))
@@ -608,7 +610,7 @@ class NPBackupRunner:
                 return False
 
         return wrapper
-    
+
     def metrics(fn: Callable):
         """
         Write prometheus metrics
@@ -619,8 +621,8 @@ class NPBackupRunner:
             result = fn(self, *args, **kwargs)
             metric_writer(self.repo_config, result, None, fn.__name__, self.dry_run)
             return result
-        return wrapper
 
+        return wrapper
 
     def create_restic_runner(self) -> bool:
         can_run = True
@@ -1328,7 +1330,6 @@ class NPBackupRunner:
             f"Repairing {subject} in repo {self.repo_config.g('name')}", level="info"
         )
         return self.restic_runner.repair(subject)
-
 
     @threaded
     @catch_exceptions

@@ -818,7 +818,9 @@ class ResticRunner:
             if exclude_files_larger_than:
                 try:
                     # Default --exclude_larger_than unit is bytes
-                    exclude_files_larger_than = int(BytesConverter(exclude_files_larger_than))
+                    exclude_files_larger_than = int(
+                        BytesConverter(exclude_files_larger_than)
+                    )
                 except ValueError:
                     warning = f"Bogus unit for exclude_files_larger_than value given: {exclude_files_larger_than}"
                     self.write_logs(warning, level="warning")

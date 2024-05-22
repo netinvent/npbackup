@@ -166,7 +166,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Get repository statistics. If snapshot id is given, only snapshots statistics will be shown."
+        help="Get repository statistics. If snapshot id is given, only snapshots statistics will be shown.",
     )
     parser.add_argument(
         "--raw",
