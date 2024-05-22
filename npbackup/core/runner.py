@@ -618,6 +618,7 @@ class NPBackupRunner:
 
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
+            # pylint: disable=E1102 (not-callable)
             result = fn(self, *args, **kwargs)
             metric_writer(self.repo_config, result, None, fn.__name__, self.dry_run)
             return result

@@ -236,7 +236,7 @@ def restic_json_to_prometheus(
             str(restic_json["total_bytes_processed"])
         ).human
         logger.info(f"Processed {processed_bytes} of data")
-    except Exception:
+    except Exception as exc:
         logger.error(f"Cannot find processed bytes: {exc}")
     backup_too_small = False
     if minimum_backup_size_error:
