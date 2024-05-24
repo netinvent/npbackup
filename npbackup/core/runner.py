@@ -599,6 +599,7 @@ class NPBackupRunner:
                 )
                 logger.debug("Trace:", exc_info=True)
                 # In case of error, we really need to write metrics
+                # pylint: disable=E1101 (no-member)
                 metric_writer(self.repo_config, False, None, fn.__name__, self.dry_run)
                 if self.json_output:
                     js = {
@@ -620,6 +621,7 @@ class NPBackupRunner:
         def wrapper(self, *args, **kwargs):
             # pylint: disable=E1102 (not-callable)
             result = fn(self, *args, **kwargs)
+            # pylint: disable=E1101 (no-member)
             metric_writer(self.repo_config, result, None, fn.__name__, self.dry_run)
             return result
 
