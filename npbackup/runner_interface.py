@@ -9,7 +9,7 @@ __site__ = "https://www.netperfect.fr/npbackup"
 __description__ = "NetPerfect Backup Client"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024010201"
+__build__ = "2024052501"
 
 
 import sys
@@ -35,6 +35,7 @@ def serialize_datetime(obj):
 def entrypoint(*args, **kwargs):
     repo_config = kwargs.pop("repo_config")
     json_output = kwargs.pop("json_output")
+    operation = kwargs.pop("operation")
     backend_binary = kwargs.pop("backend_binary", None)
 
     npbackup_runner = NPBackupRunner()
@@ -46,20 +47,23 @@ def entrypoint(*args, **kwargs):
     npbackup_runner.json_output = json_output
     if backend_binary:
         npbackup_runner.binary = backend_binary
-    result = npbackup_runner.__getattribute__(kwargs.pop("operation"))(
+    result = npbackup_runner.__getattribute__(operation)(
         **kwargs.pop("op_args"), __no_threads=True
     )
     if not json_output:
         if not isinstance(result, bool):
             # We need to temprarily remove the stdout handler
             # Since we already get live output from the runner
+            # Unless operation is "ls", because it's too slow for command_runner poller method that allows live_output
             # But we still need to log the result to our logfile
-            for handler in logger.handlers:
-                if handler.stream == sys.stdout:
-                    logger.removeHandler(handler)
-                    break
+            if not operation == "ls":
+                for handler in logger.handlers:
+                    if handler.stream == sys.stdout:
+                        logger.removeHandler(handler)
+                        break
             logger.info(f"\n{result}")
-            logger.addHandler(handler)
+            if not operation == "ls":
+                logger.addHandler(handler)
         if result:
             logger.info(f"Operation finished with success")
         else:

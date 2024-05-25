@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024042301"
-__version__ = "2.0.3"
+__build__ = "2024052501"
+__version__ = "2.1.0"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -264,6 +264,7 @@ class ResticRunner:
         cmd: str,
         errors_allowed: bool = False,
         no_output_queues: bool = False,
+        method: str = "poller",
         timeout: int = None,
         stdin: sys.stdin = None,
     ) -> Tuple[bool, str]:
@@ -290,14 +291,16 @@ class ResticRunner:
             split_streams=False,
             encoding="utf-8",
             stdin=stdin,
-            stdout=self.stdout if not no_output_queues else None,
-            stderr=self.stderr if not no_output_queues else None,
+            stdout=self.stdout if not no_output_queues and method == "poller" else None,
+            stderr=self.stderr if not no_output_queues and method == "poller" else None,
             no_close_queues=True,
             valid_exit_codes=errors_allowed,
             stop_on=self.stop_on,
             on_exit=self.on_exit,
-            method="poller",
-            live_output=self._live_output,  # Only on CLI non json mode
+            method=method,
+            # Live output is only useful in CLI non json mode
+            # But must not be used with ls since restic may produce too much output
+            live_output=self._live_output if method != "monitor" else False,
             check_interval=CHECK_INTERVAL,
             priority=self._priority,
             io_priority=self._priority,
@@ -704,12 +707,14 @@ class ResticRunner:
 
         Using --json here does not return actual json content, but lines with each file being a json...
 
+        Also, restic may return millions of lines, which command_runner will be slow to read in poller mode
+        so we need to setup monitor mode in this one
         """
         kwargs = locals()
         kwargs.pop("self")
 
         cmd = "ls {}".format(snapshot)
-        result, output = self.executor(cmd)
+        result, output = self.executor(cmd, method="monitor")
         if result:
             msg = f"Successfuly listed snapshot {snapshot} content"
         else:
