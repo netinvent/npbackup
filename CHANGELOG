@@ -58,13 +58,20 @@
   - Refactored GUI and overall UX of configuration
   - New option --show-config to show inheritance in CLI mode (GUI has visual indicators)
   - Allow using external restic binary via --external-backend-binary parameter in CLI mode
+  - GUI: Restore window is now faster
+  - Prometheus metrics:
+    - Metrics are now created for all types of operation
+    - Metrics have npbackup execution state
+  - Dry mode now works for all operations where restic supports dry-mode
+  
 
 ## Fixes
   - Default exit code is now worst log level called unless specific errors are triggered
-  - Show anonymized repo uri in GUI
   - Fix deletion failed message for en lang
   - Fix Google cloud storage backend detection in repository uri
   - Backup admin password is now stored in a more secure way
+  - GUI: Restore window now closes correctly when using the window control button
+  - GUI: Show anonymized repo uri in GUI
 
 ## Misc
   - Current backup state now shows more precise backup state, including last backup date when relevant
@@ -72,8 +79,8 @@
   - Allow a 30 seconds grace period for child processes to close before asking them nicely, and than not nicely to quit
   - Fully refactored prometheus metrics parser to be able to read restic standard or json outputs
   - Reimplmented auto upgrade after CLI/GUI split
-  - --dry-run now works with other commands than backup
   - Added initial tests
+  - Exclude lists have been updated
 
 ## 2.2.2 - 14/12/2023 (internal build only)
   - Fixed backup paths of '/' root partitions
