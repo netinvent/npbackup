@@ -25,6 +25,7 @@ from ruamel.yaml.comments import CommentedMap
 import atexit
 from ofunctions.process import kill_childs
 from ofunctions.threading import threaded
+from threading import Thread
 from ofunctions.misc import BytesConverter
 import npbackup.gui.PySimpleGUI as sg
 import _tkinter
@@ -278,13 +279,12 @@ def ls_window(repo_config: dict, snapshot_id: str) -> bool:
             text_color=TXT_COLOR_LDR,
         )
     sg.PopupAnimated(None)
-    treedata = thread.result()
 
     left_col = [
         [sg.Text(backup_id)],
         [
             sg.Tree(
-                data=treedata,
+                data=thread.result(),
                 headings=[_t("generic.size"), _t("generic.modification_date")],
                 auto_size_columns=True,
                 select_mode=sg.TABLE_SELECT_MODE_EXTENDED,
@@ -306,11 +306,16 @@ def ls_window(repo_config: dict, snapshot_id: str) -> bool:
     ]
     layout = [[sg.Column(left_col, element_justification="C")]]
     window = sg.Window(
-        _t("generic.content"), layout=layout, grab_anywhere=True, keep_on_top=False
+        _t("generic.content"), layout=layout, grab_anywhere=True, keep_on_top=False,
+        enable_close_attempted_event=True
     )
+
+    # Reclaim memory fro thread result
+    thread = None
+
     while True:
         event, values = window.read()
-        if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "quit"):
+        if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "quit", "-WINDOW CLOSE ATTEMPED-"):
             break
         if event == "restore_to":
             if not values["-TREE-"]:
@@ -318,6 +323,10 @@ def ls_window(repo_config: dict, snapshot_id: str) -> bool:
                 continue
             restore_window(repo_config, snapshot_id, values["-TREE-"])
 
+    # Closing a big sg.Tree is really slow
+    # We can workaround this by emptying the Tree with a new sg.TreeData() object
+    # before closing the window
+    window["-TREE-"].update(values=sg.TreeData())
     window.close()
     return True
 
