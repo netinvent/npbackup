@@ -306,8 +306,11 @@ def ls_window(repo_config: dict, snapshot_id: str) -> bool:
     ]
     layout = [[sg.Column(left_col, element_justification="C")]]
     window = sg.Window(
-        _t("generic.content"), layout=layout, grab_anywhere=True, keep_on_top=False,
-        enable_close_attempted_event=True
+        _t("generic.content"),
+        layout=layout,
+        grab_anywhere=True,
+        keep_on_top=False,
+        enable_close_attempted_event=True,
     )
 
     # Reclaim memory fro thread result

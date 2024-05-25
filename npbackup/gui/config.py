@@ -1815,7 +1815,7 @@ def config_gui(full_config: dict, config_file: str):
         default_button_element_size=(16, 1),
         right_click_menu=right_click_menu,
         finalize=True,
-        enable_close_attempted_event=True
+        enable_close_attempted_event=True,
     )
 
     backup_paths_tree = sg.TreeData()
@@ -1843,7 +1843,12 @@ def config_gui(full_config: dict, config_file: str):
         object_type, object_name = get_object_from_combo(values["-OBJECT-SELECT-"])
         if not current_object_type and not current_object_name:
             current_object_type, current_object_name = object_type, object_name
-        if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--CANCEL--", "-WINDOW CLOSE ATTEMPTED-"):
+        if event in (
+            sg.WIN_CLOSED,
+            sg.WIN_X_EVENT,
+            "--CANCEL--",
+            "-WINDOW CLOSE ATTEMPTED-",
+        ):
             break
 
         if event == "-OBJECT-SELECT-":
