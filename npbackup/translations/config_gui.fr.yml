@@ -156,3 +156,5 @@ fr:
   enter_label_name: Entrer le nom de l'étiquette
   enter_label_value: Entrer la valeur de l'étiquette
   enter_label: Entrer étiquette
+
+  suggested_encrypted_env_variables: Variables chiffrées suggérées

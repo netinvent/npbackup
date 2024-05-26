@@ -1460,6 +1460,18 @@ def config_gui(full_config: dict, config_file: str):
                 ),
             ],
             [
+                sg.Text(_t("config_gui.suggested_encrypted_env_variables"), size=(40, 1)),
+            ],
+            [
+                sg.Multiline("\
+AWS:                  AWS_ACCESS_KEY_ID  AWS_SECRET_ACCESS_KEY\n\
+AZURE:                AZURE_ACCOUNT_KEY  AZURE_ACCOUNT_SAS  AZURE_ACCOUNT_NAME\n\
+B2:                   B2_ACCOUNT_ID      B2_ACCOUNT_KEY\n\
+Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
+"
+                            , size=(80, 4), disabled=True, font=("Courier", 12), no_scrollbar=True),
+            ],
+            [
                 sg.Text(_t("config_gui.additional_parameters"), size=(40, 1)),
             ],
             [
@@ -1469,7 +1481,7 @@ def config_gui(full_config: dict, config_file: str):
                     tooltip=_t("config_gui.group_inherited"),
                     pad=1,
                 ),
-                sg.Input(key="backup_opts.additional_parameters", size=(50, 1)),
+                sg.Input(key="backup_opts.additional_parameters", size=(100, 1)),
             ],
         ]
 

@@ -155,3 +155,5 @@ en:
   enter_label_name: Enter label name
   enter_label_value: Enter label value
   enter_labvel: Enter label
+
+  suggested_encrypted_env_variables: Suggested encrypted environment variables
