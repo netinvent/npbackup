@@ -470,7 +470,7 @@ class ResticRunner:
             _cmd = "{} version".format(self._binary)
             exit_code, output = command_runner(
                 _cmd,
-                timeout=60,
+                timeout=FAST_COMMANDS_TIMEOUT,
                 split_streams=False,
                 encoding="utf-8",
                 priority=self._priority,
