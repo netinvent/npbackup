@@ -218,13 +218,11 @@ def config_gui(full_config: dict, config_file: str):
         try:
             # Don't bother to update repo name
             # Also permissions / manager_password are in a separate gui
-            # And we don't want to show __current_manager_password
             # Also, don't update global prometheus options here but in global options
             if key in (
                 "name",
                 "permissions",
                 "manager_password",
-                "__current_manager_password",
                 "is_protected",
                 "prometheus.metrics",
                 "prometheus.destination",
@@ -670,15 +668,17 @@ def config_gui(full_config: dict, config_file: str):
             full_config, object_name, eval_variables=False
         )
         permissions = list(combo_boxes["permissions"].values())
-        default_perm = repo_config.g("permissions")
-        if not default_perm:
-            default_perm = permissions[-1]
+        current_perm = repo_config.g("permissions")
+        if not current_perm:
+            current_perm = permissions[-1]
+        else:
+            current_perm = combo_boxes["permissions"][current_perm]
         manager_password = repo_config.g("manager_password")
 
         layout = [
             [
                 sg.Text(_t("config_gui.permissions"), size=(40, 1)),
-                sg.Combo(permissions, default_value=default_perm, key="permissions"),
+                sg.Combo(permissions, default_value=current_perm, key="permissions"),
             ],
             [sg.HorizontalSeparator()],
             [
@@ -725,6 +725,7 @@ def config_gui(full_config: dict, config_file: str):
                 )
                 repo_config.s("permissions", permission)
                 repo_config.s("manager_password", values["-MANAGER-PASSWORD-"])
+                repo_config.s("update_manager_password", True)
                 break
         window.close()
         full_config.s(f"repos.{object_name}", repo_config)

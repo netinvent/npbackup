@@ -356,11 +356,11 @@ This is free software, and you are welcome to redistribute it under certain cond
         # NPF-SEC-00009
         # Load an anonymous version of the repo config
         show_encrypted = False
-        manager_password = os.environ.get("NPBACKUP_MANAGER_PASSWORD", None)
-        if manager_password:
-            __current_manager_password = repo_config.g("__current_manager_password")
-            if __current_manager_password:
-                if __current_manager_password == manager_password:
+        session_manager_password = os.environ.get("NPBACKUP_MANAGER_PASSWORD", None)
+        if session_manager_password:
+            manager_password = repo_config.g("manager_password")
+            if manager_password:
+                if manager_password == session_manager_password:
                     show_encrypted = True
                 else:
                     # NPF-SEC

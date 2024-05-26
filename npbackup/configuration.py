@@ -453,9 +453,6 @@ def extract_permissions_from_full_config(full_config: dict) -> dict:
                 full_config.s(f"repos.{repo}.repo_uri", repo_uri)
                 full_config.s(f"repos.{repo}.permissions", permissions)
                 full_config.s(f"repos.{repo}.manager_password", manager_password)
-                full_config.s(
-                    f"repos.{repo}.__current_manager_password", manager_password
-                )
             else:
                 logger.info(f"No extra information for repo {repo} found")
     return full_config
@@ -472,25 +469,20 @@ def inject_permissions_into_full_config(full_config: dict) -> Tuple[bool, dict]:
         repo_uri = full_config.g(f"repos.{repo}.repo_uri")
         manager_password = full_config.g(f"repos.{repo}.manager_password")
         permissions = full_config.g(f"repos.{repo}.permissions")
-        __current_manager_password = full_config.g(
-            f"repos.{repo}.__current_manager_password"
+        update_manager_password = full_config.g(
+            f"repos.{repo}.update_manager_password"
         )
-
-        if __current_manager_password and manager_password:
-            if __current_manager_password == manager_password:
+        print(update_manager_password, manager_password)
+        if update_manager_password and manager_password:
                 full_config.s(
                     f"repos.{repo}.repo_uri", (repo_uri, permissions, manager_password)
                 )
                 full_config.s(f"repos.{repo}.is_protected", True)
-            else:
-                logger.error(
-                    f"Wrong manager password given for repo {repo}. Will not update permissions"
-                )
         else:
             logger.debug(f"Permissions exist for repo {repo}")
 
         full_config.d(
-            f"repos.{repo}.__current_manager_password"
+            f"repos.{repo}.update_manager_password"
         )  # Don't keep decrypted manager password
         full_config.d(f"repos.{repo}.permissions")
         full_config.d(f"repos.{repo}.manager_password")
@@ -887,7 +879,7 @@ def get_anonymous_repo_config(repo_config: dict, show_encrypted: bool = False) -
 
     # NPF-SEC-00008: Don't show manager password / sensible data with --show-config
     repo_config.pop("manager_password", None)
-    repo_config.pop("__current_manager_password", None)
+    repo_config.pop("update_manager_password", None)
     if show_encrypted:
         return repo_config
     return replace_in_iterable(
