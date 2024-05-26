@@ -186,7 +186,7 @@ empty_config_dict = {
                 # Minimum time between two backups, in minutes
                 # Set to zero in order to disable time checks
                 "minimum_backup_age": 1440,
-                "upload_speed": "100 Mib",  # Mib(its) or MiB(ytes), use 0 for unlimited upload speed
+                "upload_speed": "800 Mib",  # Mib(its) or MiB(ytes), use 0 for unlimited upload speed
                 "download_speed": "0 Mib",  # in KiB, use 0 for unlimited download speed
                 "backend_connections": 0,  # Fine tune simultaneous connections to backend, use 0 for standard configuration
                 "retention_policy": {
@@ -409,18 +409,22 @@ def expand_units(object_config: dict, unexpand: bool = False) -> dict:
 
     def _expand_units(key, value):
         if key in (
-            "minimum_backup_size_error",
-            "exclude_files_larger_than",
-            "upload_speed",
-            "download_speed",
+            "minimum_backup_size_error",  # Bytes default
+            "exclude_files_larger_than",  # Bytes default
+            "upload_speed",               # Bits default
+            "download_speed",             # Bits default
         ):
             try:
                 if value:
                     if unexpand:
+                        if key in ("minimum_backup_size_error", "exclude_files_larger_than"):
+                            return BytesConverter(value).human_iec_bytes
                         return BytesConverter(value).human_iec_bits
                     return BytesConverter(value)
                 else:
                     if unexpand:
+                        if key in ("minimum_backup_size_error", "exclude_files_larger_than"):
+                            return BytesConverter(0).human_iec_bytes
                         return BytesConverter(0).human_iec_bits
                     return BytesConverter(0)
             except ValueError:
@@ -428,6 +432,8 @@ def expand_units(object_config: dict, unexpand: bool = False) -> dict:
                     f'Cannot parse bytes value {key}:"{value}", setting to zero'
                 )
                 if unexpand:
+                    if key in ("minimum_backup_size_error", "exclude_files_larger_than"):
+                        return BytesConverter(0).human_iec_bytes
                     return BytesConverter(0).human_iec_bits
                 return BytesConverter(0)
         return value
