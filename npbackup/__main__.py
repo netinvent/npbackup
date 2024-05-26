@@ -134,7 +134,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         "--quick-check", action="store_true", help="Quick check repository"
     )
     parser.add_argument(
-        "--full-check", action="store_true", help="Full check repository"
+        "--full-check", action="store_true", help="Full check repository (read all data)"
     )
     parser.add_argument("--prune", action="store_true", help="Prune data in repository")
     parser.add_argument(
@@ -454,6 +454,7 @@ This is free software, and you are welcome to redistribute it under certain cond
             cli_args["op_args"] = {"snapshots": args.forget}
     elif args.quick_check or args.group_operation == "quick_check":
         cli_args["operation"] = "check"
+        cli_args["op_args"] = {"read_data": False}
     elif args.full_check or args.group_operation == "full_check":
         cli_args["operation"] = "check"
         cli_args["op_args"] = {"read_data": True}
