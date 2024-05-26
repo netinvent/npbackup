@@ -469,15 +469,13 @@ def inject_permissions_into_full_config(full_config: dict) -> Tuple[bool, dict]:
         repo_uri = full_config.g(f"repos.{repo}.repo_uri")
         manager_password = full_config.g(f"repos.{repo}.manager_password")
         permissions = full_config.g(f"repos.{repo}.permissions")
-        update_manager_password = full_config.g(
-            f"repos.{repo}.update_manager_password"
-        )
+        update_manager_password = full_config.g(f"repos.{repo}.update_manager_password")
         print(update_manager_password, manager_password)
         if update_manager_password and manager_password:
-                full_config.s(
-                    f"repos.{repo}.repo_uri", (repo_uri, permissions, manager_password)
-                )
-                full_config.s(f"repos.{repo}.is_protected", True)
+            full_config.s(
+                f"repos.{repo}.repo_uri", (repo_uri, permissions, manager_password)
+            )
+            full_config.s(f"repos.{repo}.is_protected", True)
         else:
             logger.debug(f"Permissions exist for repo {repo}")
 
