@@ -833,7 +833,6 @@ class ResticRunner:
                 # In case of conversion to 0, avoid setting this value
                 if exclude_files_larger_than == 0:
                     exclude_files_larger_than = None
-                print("EXCLUD", exclude_files_larger_than)
 
                 cmd += f" --exclude-larger-than {exclude_files_larger_than}"
             if one_file_system:
