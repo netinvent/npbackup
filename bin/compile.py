@@ -334,7 +334,9 @@ def create_tar(platform: str, arch: str, audience: str, build_type: str, output_
     compiled_output = os.path.join(output_dir, "npbackup-{}{}".format(build_type, nuitka_standalone_suffix))
     new_compiled_output = compiled_output[:-len(nuitka_standalone_suffix)]
     shutil.move(compiled_output, new_compiled_output)
-    cmd = f"rm -f { new_compiled_output} > /dev/null 2>&1; tar -czf {output_dir}/npbackup-{platform}-{arch}-{build_type}-{audience}.tar.gz -C {new_compiled_output}/"
+    target_archive = f"{output_dir}/npbackup-{platform}-{arch}-{build_type}-{audience}.tar.gz"
+    cmd = f"rm -f {target_archive} > /dev/null 2>&1; tar -czf {target_archive} -C {output_dir} ./{os.path.basename(new_compiled_output)}"
+    print(f"Creating tar {target_archive}")
     exit_code, output = command_runner(cmd, timeout=0, live_output=True, shell=True)
     shutil.move(new_compiled_output, compiled_output)
     if exit_code != 0:
@@ -342,6 +344,7 @@ def create_tar(platform: str, arch: str, audience: str, build_type: str, output_
         print(output)
         return False
     return True
+
 
 class AudienceAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
