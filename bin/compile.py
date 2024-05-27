@@ -91,7 +91,7 @@ def get_metadata(package_file):
 def check_private_build(audience):
     private = None
     try:
-        import PRIVATE._private_secret_keysx
+        import PRIVATE._private_secret_keys
 
         print("INFO: Building with private secret key")
         private = True
@@ -107,7 +107,7 @@ def check_private_build(audience):
 
     # Drop private files if exist in memory
     try:
-        del PRIVATE._private_secret_keysx
+        del PRIVATE._private_secret_keys
     except Exception:
         pass
 
