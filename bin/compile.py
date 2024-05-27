@@ -7,8 +7,8 @@ __intname__ = "npbackup.compile"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024050901"
-__version__ = "1.9.0"
+__build__ = "2024052201"
+__version__ = "2.0.0"
 
 
 """
@@ -91,7 +91,7 @@ def get_metadata(package_file):
 def check_private_build(audience):
     private = None
     try:
-        import PRIVATE._private_secret_keys
+        import PRIVATE._private_secret_keysx
 
         print("INFO: Building with private secret key")
         private = True
@@ -107,7 +107,7 @@ def check_private_build(audience):
 
     # Drop private files if exist in memory
     try:
-        del PRIVATE._private_secret_keys
+        del PRIVATE._private_secret_keysx
     except Exception:
         pass
 
@@ -181,22 +181,37 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool):
         print("CANNOT BUILD BOGUS BUILD TYPE")
         sys.exit(1)
     source_program = "bin/npbackup-{}".format(build_type)
-    suffix = "-{}-{}".format(build_type, arch)
 
-    if audience == "private":
-        suffix += "-PRIV"
-    if os.name == "nt":
-        program_executable = "npbackup{}.exe".format(suffix)
-        restic_executable = "restic.exe"
-        platform = "windows"
-    elif sys.platform.lower() == "darwin":
-        platform = "darwin"
-        program_executable = "npbackup-{}{}".format(platform, suffix)
-        restic_executable = "restic"
+    if onefile:
+        suffix = "-{}-{}".format(build_type, arch)
+
+        if audience == "private":
+            suffix += "-PRIV"
+        if os.name == "nt":
+            program_executable = "npbackup{}.exe".format(suffix)
+            restic_executable = "restic.exe"
+            platform = "windows"
+        elif sys.platform.lower() == "darwin":
+            platform = "darwin"
+            program_executable = "npbackup-{}{}".format(platform, suffix)
+            restic_executable = "restic"
+        else:
+            platform = "linux"
+            program_executable = "npbackup-{}{}".format(platform, suffix)
+            restic_executable = "restic"
     else:
-        platform = "linux"
-        program_executable = "npbackup-{}{}".format(platform, suffix)
-        restic_executable = "restic"
+        if os.name == "nt":
+            program_executable = "npbackup-{}.exe".format(build_type)
+            restic_executable = "restic.exe"
+            platform = "windows"
+        elif sys.platform.lower() == "darwin":
+            platform = "darwin"
+            program_executable = "npbackup-{}".format(build_type)
+            restic_executable = "restic"
+        else:
+            platform = "linux"
+            program_executable = "npbackup-{}".format(build_type)
+            restic_executable = "restic"
 
     PACKAGE_DIR = "npbackup"
 
@@ -236,18 +251,6 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool):
     license_dest_file = os.path.join(PACKAGE_DIR, os.path.basename(LICENSE_FILE))
 
     icon_file = os.path.join(BASEDIR, os.pardir, "resources", "npbackup_icon.ico")
-
-    # Installer specific files, no need for a npbackup package directory here
-
-    program_executable_path = os.path.join(OUTPUT_DIR, program_executable)
-
-    dist_conf_file_source = get_conf_dist_file(audience)
-    if not dist_conf_file_source:
-        print("Stopped {} compilation".format(audience))
-        return
-    dist_conf_file_dest = os.path.basename(
-        dist_conf_file_source.replace("_private_", "")
-    )
 
     excludes_dir = "excludes"
     excludes_dir_source = os.path.join(BASEDIR, os.pardir, excludes_dir)
@@ -311,46 +314,26 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool):
     if exit_code != 0:
         errors = True
 
-    """
-    # windows only installer compilation
-    if os.name == "nt":
-        _installer_version = installer_version.split("-")[0]
-        PRODUCT_VERSION = _installer_version + ".0"
-        FILE_VERSION = _installer_version + ".0"
-        EXE_OPTIONS = '--company-name="{}" --product-name="{}" --file-version="{}" --product-version="{}" --copyright="{}" --file-description="{}" --trademarks="{}"'.format(
-            COMPANY_NAME,
-            PRODUCT_NAME,
-            FILE_VERSION,
-            PRODUCT_VERSION,
-            COPYRIGHT,
-            file_description,
-            TRADEMARKS,
-        )
-        CMD = '{} -m nuitka --python-flag=no_docstrings --python-flag=-O {} {} --include-data-file="{}"="{}" --include-data-file="{}"="{}" --include-data-dir="{}"="{}" --windows-icon-from-ico="{}" --windows-uac-admin --output-dir="{}" bin/NPBackupInstaller.py'.format(
-            PYTHON_EXECUTABLE,
-            NUITKA_OPTIONS,
-            EXE_OPTIONS,
-            program_executable_path,
-            program_executable,
-            dist_conf_file_source,
-            dist_conf_file_dest,
-            excludes_dir_source,
-            excludes_dir_dest,
-            icon_file,
-            OUTPUT_DIR,
-        )
-
-        print(CMD)
-        exit_code, output = command_runner(CMD, timeout=0, live_output=True)
-        if exit_code != 0:
-            errors = True
-    """
     ## Create version file
     with open(os.path.join(BUILDS_DIR, audience, "VERSION"), "w") as fh:
         fh.write(npbackup_version)
-    print("COMPILE ERRORS", errors)
+    print(f"COMPILED {'WITH SUCCESS' if not errors else 'WITH ERRORS'}")
+    if not onefile:
+        if not create_tar(platform=platform, arch=arch, audience=audience, build_type=build_type, output_dir=OUTPUT_DIR):
+            errors = True
     return not errors
 
+
+def create_tar(platform: str, arch: str, audience: str, build_type: str, output_dir: str):
+    """
+    Create tar releases for each compiled version
+    """
+    cmd = "tar -czf {}/npbackup-{}-{}-{}-{}.tar.gz -C {} .".format(os.path.dirname(output_dir), platform, arch, audience, build_type, output_dir)
+    exit_code, output = command_runner(cmd, timeout=0, live_output=True)
+    if exit_code != 0:
+        print(f"ERROR: Cannot create tar file for {platform} {arch} {audience} {build_type}")
+        return False
+    return True
 
 class AudienceAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
