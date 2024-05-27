@@ -330,12 +330,12 @@ def create_tar(platform: str, arch: str, audience: str, build_type: str, output_
     Create tar releases for each compiled version
     """
     nuitka_standalone_suffix = ".dist"
-    output = os.path.join(output_dir, "npbackup-{}{}".format(build_type, nuitka_standalone_suffix))
-    new_output = output[:-len(nuitka_standalone_suffix)]
-    shutil.move(output, new_output)
-    cmd = "tar -czf {}/npbackup-{}-{}-{}-{}.tar.gz -C {} .".format(output_dir, platform, arch, audience, build_type, new_output)
+    compiled_output = os.path.join(output_dir, "npbackup-{}{}".format(build_type, nuitka_standalone_suffix))
+    new_compiled_output = compiled_output[:-len(nuitka_standalone_suffix)]
+    shutil.move(compiled_output, new_compiled_output)
+    cmd = "tar -czf {}/npbackup-{}-{}-{}-{}.tar.gz -C {} .".format(output_dir, platform, arch, audience, build_type, new_compiled_output)
     exit_code, output = command_runner(cmd, timeout=0, live_output=True)
-    shutil.move(new_output, output)
+    shutil.move(new_compiled_output, compiled_output)
     if exit_code != 0:
         print(f"ERROR: Cannot create tar file for {platform} {arch} {audience} {build_type}")
         return False
