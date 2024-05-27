@@ -134,7 +134,9 @@ This is free software, and you are welcome to redistribute it under certain cond
         "--quick-check", action="store_true", help="Quick check repository"
     )
     parser.add_argument(
-        "--full-check", action="store_true", help="Full check repository (read all data)"
+        "--full-check",
+        action="store_true",
+        help="Full check repository (read all data)",
     )
     parser.add_argument("--prune", action="store_true", help="Prune data in repository")
     parser.add_argument(
@@ -256,7 +258,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Launch an operation on a group of repositories given by --repo-group",
+        help="Launch an operation on a group of repositories given by --repo-group or --repo-name. Valid group operations are [backup|restore|snapshots|list|ls|find|forget|quick_check|full_check|prune|prune_max|unlock|repair_index|repair_snapshots|dump|stats|raw|has_recent_snapshot]",
     )
     parser.add_argument(
         "--create-key",

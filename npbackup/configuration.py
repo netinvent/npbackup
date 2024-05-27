@@ -411,19 +411,25 @@ def expand_units(object_config: dict, unexpand: bool = False) -> dict:
         if key in (
             "minimum_backup_size_error",  # Bytes default
             "exclude_files_larger_than",  # Bytes default
-            "upload_speed",               # Bits default
-            "download_speed",             # Bits default
+            "upload_speed",  # Bits default
+            "download_speed",  # Bits default
         ):
             try:
                 if value:
                     if unexpand:
-                        if key in ("minimum_backup_size_error", "exclude_files_larger_than"):
+                        if key in (
+                            "minimum_backup_size_error",
+                            "exclude_files_larger_than",
+                        ):
                             return BytesConverter(value).human_iec_bytes
                         return BytesConverter(value).human_iec_bits
                     return BytesConverter(value)
                 else:
                     if unexpand:
-                        if key in ("minimum_backup_size_error", "exclude_files_larger_than"):
+                        if key in (
+                            "minimum_backup_size_error",
+                            "exclude_files_larger_than",
+                        ):
                             return BytesConverter(0).human_iec_bytes
                         return BytesConverter(0).human_iec_bits
                     return BytesConverter(0)
@@ -432,7 +438,10 @@ def expand_units(object_config: dict, unexpand: bool = False) -> dict:
                     f'Cannot parse bytes value {key}:"{value}", setting to zero'
                 )
                 if unexpand:
-                    if key in ("minimum_backup_size_error", "exclude_files_larger_than"):
+                    if key in (
+                        "minimum_backup_size_error",
+                        "exclude_files_larger_than",
+                    ):
                         return BytesConverter(0).human_iec_bytes
                     return BytesConverter(0).human_iec_bits
                 return BytesConverter(0)
