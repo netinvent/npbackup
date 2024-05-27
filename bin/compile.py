@@ -320,8 +320,9 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool):
         fh.write(npbackup_version)
     print(f"COMPILED {'WITH SUCCESS' if not errors else 'WITH ERRORS'}")
     if not onefile:
-        if not create_tar(platform=platform, arch=arch, audience=audience, build_type=build_type, output_dir=OUTPUT_DIR):
-            errors = True
+        if os.name != "nt":
+            if not create_tar(platform=platform, arch=arch, audience=audience, build_type=build_type, output_dir=OUTPUT_DIR):
+                errors = True
     return not errors
 
 
@@ -333,11 +334,12 @@ def create_tar(platform: str, arch: str, audience: str, build_type: str, output_
     compiled_output = os.path.join(output_dir, "npbackup-{}{}".format(build_type, nuitka_standalone_suffix))
     new_compiled_output = compiled_output[:-len(nuitka_standalone_suffix)]
     shutil.move(compiled_output, new_compiled_output)
-    cmd = "tar -czf {}/npbackup-{}-{}-{}-{}.tar.gz -C {} .".format(output_dir, platform, arch, audience, build_type, new_compiled_output)
-    exit_code, output = command_runner(cmd, timeout=0, live_output=True)
+    cmd = f"rm -f { new_compiled_output} > /dev/null 2>&1; tar -czf {output_dir}/npbackup-{platform}-{arch}-{build_type}-{audience}.tar.gz -C {new_compiled_output}/"
+    exit_code, output = command_runner(cmd, timeout=0, live_output=True, shell=True)
     shutil.move(new_compiled_output, compiled_output)
     if exit_code != 0:
-        print(f"ERROR: Cannot create tar file for {platform} {arch} {audience} {build_type}")
+        print(f"ERROR: Cannot create tar file for {platform} {arch} {audience} {build_type}:")
+        print(output)
         return False
     return True
 
