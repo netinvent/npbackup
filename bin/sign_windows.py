@@ -7,8 +7,8 @@ __intname__ = "npbackup.sign_windows"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024050101"
-__version__ = "1.1.0"
+__build__ = "2024052701"
+__version__ = "1.1.1"
 
 
 import os
@@ -21,7 +21,7 @@ except ImportError:
 basepath = r"C:\GIT\npbackup\BUILDS"
 audiences = ["private", "public"]
 arches = ["x86", "x64"]
-binaries = ["npbackup-cli", "npbackup-gui", "npbackup-viewer", "NPBackupInstaller"]
+binaries = ["npbackup-cli", "npbackup-gui", "npbackup-viewer"]
 
 signer = SignTool()
 

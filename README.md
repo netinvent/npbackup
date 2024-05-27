@@ -50,7 +50,6 @@ Works on x64 **Linux** , **NAS** solutions based on arm/arm64, **Windows** x64 a
   - VSS snapshots*
   - Automatic cloud file exclusions (reparse points)
   - Windows pre-built executables*
-  - Windows installer
 - Additional security
   - Repository uri / password, http metrics and upgrade server passwords are AES-256 encrypted
   - Repository permissions allowing to limit clients
@@ -86,7 +85,7 @@ You may install npbackup via PyPI or use the pre-built executables.
 ### Prebuilt executables
 On linux, copy `npbackup` executable to `/usr/local/bin` and make it executable via `chmod +x /usr/local/bin/npbackup`. Any distribution with glibc >= 2.17 should do.
 
-On Windows, you can directly execute `npbackup.exe` or use `NPBackupInstaller.exe` to install NPBackup into program files and create a run schedule.
+On Windows, you can directly execute `npbackup.exe` that comes in the zip archive.
 The x64 binary is compatible with Windows 10+. The x86 binary is compatible with windows Vista and higher. On those old systems, you might need to install Visual C runtime 2015.
 
 ### PyPI installation
@@ -105,7 +104,7 @@ Also copy the `excludes` directory if you plan to use the prefilled bigger exclu
 You can adjust the parameters directly in the file, or via a config GUI by launching `npbackup --config-file=npbackup.conf --config-gui`
 
 Once configured, you can launch manual backups via `npbackup --backup`. Those can be scheduled.
-Windows schedule is created automatically by the installer program. On Linux, you'll have to create a cronjob or a systemd timer.
+Windows schedule can be created from the configuration page. On Linux, you'll have to create a cronjob or a systemd timer.
 
 Since NPBackup is configured to only proceed with backups when no recent backups are detected, you should consider scheduling npbackup executions quite often.
 The default schedule should be somewhere around 15 minutes.

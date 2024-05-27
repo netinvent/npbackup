@@ -81,6 +81,7 @@
   - Reimplmented auto upgrade after CLI/GUI split
   - Added initial tests
   - Exclude lists have been updated
+  - Removed Windows installer from the project. We need to come up with a better solution
 
 ## 2.2.2 - 14/12/2023 (internal build only)
   - Fixed backup paths of '/' root partitions

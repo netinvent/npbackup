@@ -8,7 +8,6 @@ While this is practical, it should never be allowed on non compiled builds or wi
 
 All these commands are run with npbackup held privileges.
 In order to avoid a potential attack, the config file has to be world readable only.
-We need to document this, and perhaps add a line in installer script
 
 # NPF-SEC-00003: Avoid password command divulgation
 

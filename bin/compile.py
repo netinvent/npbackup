@@ -407,9 +407,6 @@ if __name__ == "__main__":
             npbackup_version = get_metadata(os.path.join(BASEDIR, "__version__.py"))[
                 "version"
             ]
-            installer_version = get_metadata(
-                os.path.join(BASEDIR, os.pardir, "bin", "NPBackupInstaller.py")
-            )["version"]
 
             private_build = check_private_build(audience)
             if private_build and audience != "private":
