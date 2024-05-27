@@ -682,7 +682,15 @@ def _main_gui(viewer_mode: bool):
         required=False,
         help="Full path to alternative external backend binary",
     )
+    parser.add_argument(
+        "-V", "--version", action="store_true", help="Show program version"
+    )
     args = parser.parse_args()
+
+    if args.version:
+        print(version_string)
+        sys.exit(0)
+
     if args.log_file:
         log_file = args.log_file
     else:
