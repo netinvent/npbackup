@@ -23,6 +23,7 @@ Nuitka compilation script tested for
 
 import sys
 import os
+import shutil
 import argparse
 import atexit
 from command_runner import command_runner
@@ -328,8 +329,12 @@ def create_tar(platform: str, arch: str, audience: str, build_type: str, output_
     """
     Create tar releases for each compiled version
     """
-    cmd = "tar -czf {}/npbackup-{}-{}-{}-{}.tar.gz -C {} .".format(os.path.dirname(output_dir), platform, arch, audience, build_type, output_dir)
+    output = os.path.join(output_dir, "npbackup-{}.dist".format(build_type))
+    new_output = output.rstrip(".dist")
+    shutil.move(output, new_output)
+    cmd = "tar -czf {}/npbackup-{}-{}-{}-{}.tar.gz -C {} .".format(output_dir, platform, arch, audience, build_type, output_dir)
     exit_code, output = command_runner(cmd, timeout=0, live_output=True)
+    shutil.move(new_output, output)
     if exit_code != 0:
         print(f"ERROR: Cannot create tar file for {platform} {arch} {audience} {build_type}")
         return False
