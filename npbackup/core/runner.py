@@ -563,9 +563,9 @@ class NPBackupRunner:
                     with pidfile.PIDFile(pid_file):
                         # pylint: disable=E1102 (not-callable)
                         result = fn(self, *args, **kwargs)
-                except pidfile.AlreadyRunningError as exc:
+                except pidfile.AlreadyRunningError:
                     self.write_logs(
-                        f"There is already an {operation} operation running by NPBackup: {exc}. Will not continue",
+                        f"There is already an {operation} operation running by NPBackup. Will not continue",
                         level="critical",
                     )
                     return False
@@ -1247,7 +1247,7 @@ class NPBackupRunner:
             for entry in ["last", "hourly", "daily", "weekly", "monthly", "yearly"]:
                 value = self.repo_config.g(f"repo_opts.retention_policy.{entry}")
                 if value:
-                    if not self.repo_config.g("repo_opts.retention_policy.within"):
+                    if not self.repo_config.g("repo_opts.retention_policy.keep_within"):
                         policy[f"keep-{entry}"] = value
                     else:
                         # We need to add a type value for keep-within
