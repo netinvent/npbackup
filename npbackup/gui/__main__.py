@@ -216,10 +216,11 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
             )
         # Since the thread is heavily CPU bound, let's add a minimal
         # arbitrary sleep time to let GUI update
-        # In a 130k entry scenario, this added less than a second on a 25 second run
+        # In a 130k entry scenario, using count % 1000 added less than a second on a 25 second run
         count += 1
-        if not count % 1000:
+        if not count % 2000:
             sleep(0.0001)
+            logger.debug(f"Processed {count} entries")
     return treedata
 
 
