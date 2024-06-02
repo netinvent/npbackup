@@ -468,7 +468,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["op_args"] = {"subject": args.list}
     elif args.ls or args.group_operation == "ls":
         cli_args["operation"] = "ls"
-        cli_args["op_args"] = {"snapshot": args.snapshot_id}
+        cli_args["op_args"] = {"snapshot": args.ls}
     elif args.find or args.group_operation == "find":
         cli_args["operation"] = "find"
         cli_args["op_args"] = {"path": args.find}
