@@ -220,13 +220,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         action="store_true",
         help="Run operations in test mode, no actual modifications",
     )
-    parser.add_argument(
-        "--create-scheduled-task",
-        type=str,
-        default=None,
-        required=False,
-        help="Create task that runs every n minutes on Windows",
-    )
+    
     parser.add_argument("--license", action="store_true", help="Show license")
     parser.add_argument(
         "--auto-upgrade", action="store_true", help="Auto upgrade NPBackup"
@@ -264,6 +258,13 @@ This is free software, and you are welcome to redistribute it under certain cond
         default=False,
         required=False,
         help="Create a new encryption key, requires a file path",
+    )
+    parser.add_argument(
+        "--create-scheduled-task",
+        type=str,
+        default=None,
+        required=False,
+        help="Create a scheduled task, specify an argument interval via interval=minutes, or hour=hour,minute=minute for a daily task",
     )
     args = parser.parse_args()
 
@@ -328,6 +329,34 @@ This is free software, and you are welcome to redistribute it under certain cond
         msg = "Cannot obtain repo config"
         json_error_logging(False, msg, "critical")
         sys.exit(71)
+
+    if args.create_scheduled_task:
+        try:
+            if "interval" in args.create_scheduled_task:
+                interval = args.create_scheduled_task.split("=")[1].strip()
+                result = create_scheduled_task(config_file, interval_minutes=int(interval))
+            elif "hour" in args.create_scheduled_task and "minute" in args.create_scheduled_task:
+                hours, minutes = args.create_scheduled_task.split(",")
+                print(hours, minutes)
+                hour = hours.split("=")[1].strip()
+                minute = minutes.split("=")[1].strip()
+                result = create_scheduled_task(config_file, hour=int(hour), minute=int(minute))
+                if not result:
+                    msg = "Scheduled task creation failed"
+                    json_error_logging(False, msg, "critical")
+                    sys.exit(72)
+                else:
+                    msg = "Scheduled task created successfully"
+                    json_error_logging(True, msg, "info")
+                    sys.exit(0)
+            else:
+                msg = "Invalid interval or hour and minute given for scheduled task"
+                json_error_logging(False, msg, "critical")
+        except (TypeError, ValueError, IndexError) as exc:
+            logger.debug("Trace:", exc_info=True)
+            msg = f"Bogus data given for scheduled task: {exc}"
+            json_error_logging(False, msg, "critical")
+        sys.exit(72)
 
     if not args.group_operation:
         repo_name = None
