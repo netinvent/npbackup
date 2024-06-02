@@ -342,7 +342,6 @@ This is free software, and you are welcome to redistribute it under certain cond
                 and "minute" in args.create_scheduled_task
             ):
                 hours, minutes = args.create_scheduled_task.split(",")
-                print(hours, minutes)
                 hour = hours.split("=")[1].strip()
                 minute = minutes.split("=")[1].strip()
                 result = create_scheduled_task(
