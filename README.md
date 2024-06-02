@@ -229,6 +229,11 @@ Permissions are:
 - restore: Allows everything backup does plus restore, check and dump operations
 - backup: Allows, backup and snapshot/object listing operations
 
+## Logs
+
+On Unix, logs will be found in `/var/log` unless the directory is not writable. In that case, we'll write into a temporary directory.  
+On Windows, logs will be found in the temp directory defined in `%TEMP%` variable or `%WINDIR%\TEMP` for system tasks.
+
 ## Upgrade server
 
 NPBackup comes with integrated auto upgrade function that will run regardless of program failures, in order to lessen the maintenance burden.  
