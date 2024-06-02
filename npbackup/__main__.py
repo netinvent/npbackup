@@ -220,7 +220,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         action="store_true",
         help="Run operations in test mode, no actual modifications",
     )
-    
+
     parser.add_argument("--license", action="store_true", help="Show license")
     parser.add_argument(
         "--auto-upgrade", action="store_true", help="Auto upgrade NPBackup"
@@ -334,13 +334,20 @@ This is free software, and you are welcome to redistribute it under certain cond
         try:
             if "interval" in args.create_scheduled_task:
                 interval = args.create_scheduled_task.split("=")[1].strip()
-                result = create_scheduled_task(config_file, interval_minutes=int(interval))
-            elif "hour" in args.create_scheduled_task and "minute" in args.create_scheduled_task:
+                result = create_scheduled_task(
+                    config_file, interval_minutes=int(interval)
+                )
+            elif (
+                "hour" in args.create_scheduled_task
+                and "minute" in args.create_scheduled_task
+            ):
                 hours, minutes = args.create_scheduled_task.split(",")
                 print(hours, minutes)
                 hour = hours.split("=")[1].strip()
                 minute = minutes.split("=")[1].strip()
-                result = create_scheduled_task(config_file, hour=int(hour), minute=int(minute))
+                result = create_scheduled_task(
+                    config_file, hour=int(hour), minute=int(minute)
+                )
                 if not result:
                     msg = "Scheduled task creation failed"
                     json_error_logging(False, msg, "critical")
