@@ -27,6 +27,10 @@ TRADEMARKS = "NetInvent (C)"
 PRODUCT_NAME = "NPBackup Network Backup Client"
 SHORT_PRODUCT_NAME = "NPBackup"
 
+# Task names
+TASK_AUTHOR = "NetPerfect Opensource Initiative"
+TASK_URI = f"\\{PROGRAM_NAME}"
+
 # Arbitrary string
 ID_STRING = "__NPBACKUP__"
 

@@ -81,7 +81,8 @@ fr:
   auto_upgrade_disabled: Mise à niveau automatique désactivée ou serveur injoignable
 
   create_scheduled_task_every: Créer une tâche planifiée toutes les
-  scheduled_task_explanation: Sous Linux, merci de créer une entrée crontab comme `npbackup --backup --config-file /etc/npbackup.conf`
+  create_scheduled_task_at: Créer une tâche planifiée à
+  scheduled_task_explanation: Les tâches planifiées peuvent être crées à heure fixe pour réaliser des sauvegardes serveur, ou toutes les x minutes, auquel cas la sauvegarde aura lieue uniquement si le temps minimal entre deux sauvegardes est dépassé, ce qui est adapté aux ordinateurs portables qui ont des heures de travail flexibles.
   scheduled_task_creation_success: Tâche planifiée crée avec succès
   scheduled_task_creation_failure: Impossible de créer la tâche planifiée. Veuillez consulter les journaux pour plus de détails
 

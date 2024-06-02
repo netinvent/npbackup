@@ -28,9 +28,7 @@ from npbackup.common import execution_logs
 from npbackup.core import upgrade_runner
 from npbackup.core.i18n_helper import _t
 from npbackup import key_management
-
-if os.name == "nt":
-    from npbackup.windows.task import create_scheduled_task
+from npbackup.task import create_scheduled_task
 
 # Nuitka compat, see https://stackoverflow.com/a/74540217
 try:
@@ -306,9 +304,6 @@ This is free software, and you are welcome to redistribute it under certain cond
             sys.exit(0)
         else:
             sys.exit(1)
-
-    if _DEBUG:
-        logger.setLevel(ofunctions.logger_utils.logging.DEBUG)
 
     if args.verbose:
         _VERBOSE = True
