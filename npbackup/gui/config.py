@@ -20,7 +20,9 @@ from ruamel.yaml.comments import CommentedMap
 import npbackup.configuration as configuration
 from ofunctions.misc import get_key_from_value
 from npbackup.core.i18n_helper import _t
-from npbackup.path_helper import CURRENT_EXECUTABLE
+from npbackup.__version__ import IS_COMPILED
+from npbackup.path_helper import CURRENT_DIR
+from npbackup.__debug__ import _DEBUG
 from npbackup.customization import (
     INHERITED_ICON,
     NON_INHERITED_ICON,
@@ -31,9 +33,7 @@ from npbackup.customization import (
     TREE_ICON,
     INHERITED_TREE_ICON,
 )
-
-if os.name == "nt":
-    from npbackup.windows.task import create_scheduled_task
+from npbackup.task import create_scheduled_task
 
 logger = getLogger()
 
@@ -1709,16 +1709,6 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             ],
         ]
 
-        scheduled_task_col = [
-            [
-                sg.Text(_t("config_gui.create_scheduled_task_every")),
-                sg.Input(key="scheduled_task_interval", size=(4, 1)),
-                sg.Text(_t("generic.minutes")),
-                sg.Button(_t("generic.create"), key="create_task"),
-            ],
-            [sg.Text(_t("config_gui.scheduled_task_explanation"))],
-        ]
-
         tab_group_layout = [
             [
                 sg.Tab(
@@ -1742,14 +1732,6 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     global_prometheus_col,
                     font="helvetica 16",
                     key="--tab-global-prometheus--",
-                )
-            ],
-            [
-                sg.Tab(
-                    _t("generic.scheduled_task"),
-                    scheduled_task_col,
-                    font="helvetica 16",
-                    key="--tab-global-scheduled_task--",
                 )
             ],
         ]
@@ -1778,6 +1760,31 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             ]
         ]
 
+        scheduled_task_col = [
+            [
+                sg.Text(
+                    textwrap.fill(
+                        f"{_t('config_gui.scheduled_task_explanation')}", width=120
+                    ),
+                    size=(100, 4),
+                )
+            ],
+            [
+                sg.Text(_t("config_gui.create_scheduled_task_every"), size=(40, 1)),
+                sg.Input(key="scheduled_task_interval", size=(4, 1)),
+                sg.Text(_t("generic.minutes"), size=(10, 1)),
+                sg.Button(_t("generic.create"), key="create_interval_task"),
+            ],
+            [
+                sg.Text(_t("config_gui.create_scheduled_task_at"), size=(40, 1)),
+                sg.Input(key="scheduled_task_hour", size=(4, 1)),
+                sg.Text(_t("generic.hours"), size=(10, 1)),
+                sg.Input(key="scheduled_task_minute", size=(4, 1)),
+                sg.Text(_t("generic.minutes"), size=(10, 1)),
+                sg.Button(_t("generic.create"), key="create_daily_task"),
+            ],
+        ]
+
         tab_group_layout = [
             [
                 sg.Tab(
@@ -1797,6 +1804,14 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     expand_x=True,
                     expand_y=True,
                     pad=0,
+                )
+            ],
+            [
+                sg.Tab(
+                    _t("generic.scheduled_task"),
+                    scheduled_task_col,
+                    font="helvetica 16",
+                    key="--tab-global-scheduled_task--",
                 )
             ],
         ]
@@ -2063,17 +2078,22 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 update_object_gui(values["-OBJECT-SELECT-"], unencrypted=True)
                 update_global_gui(full_config, unencrypted=True)
             continue
-        if event == "create_task":
-            if os.name == "nt":
+        if event in ("create_interval_task", "create_daily_task"):
+            try:
                 result = create_scheduled_task(
-                    CURRENT_EXECUTABLE, values["scheduled_task_interval"]
+                    config_file,
+                    values["scheduled_task_interval"],
+                    values["scheduled_task_hour"],
+                    values["scheduled_task_minute"],
                 )
                 if result:
                     sg.Popup(_t("config_gui.scheduled_task_creation_success"))
                 else:
                     sg.PopupError(_t("config_gui.scheduled_task_creation_failure"))
-            else:
-                sg.PopupError(_t("config_gui.scheduled_task_creation_failure"))
+            except ValueError as exc:
+                sg.PopupError(
+                    _t("config_gui.scheduled_task_creation_failure") + f": {exc}"
+                )
             continue
     window.close()
     return full_config
