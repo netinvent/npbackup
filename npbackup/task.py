@@ -219,7 +219,7 @@ def create_scheduled_task_windows(
             )
         )
         return False
-    print(SCHEDULED_TASK_FILE_CONTENT)
+
     # Setup task
     command_runner(
         'schtasks /DELETE /TN "{}" /F'.format(PROGRAM_NAME),
