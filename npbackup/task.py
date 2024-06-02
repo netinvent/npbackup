@@ -94,19 +94,21 @@ def create_scheduled_task_unix(
 ):
     executable_dir = os.path.dirname(cli_executable_path)
     if "python" in sys.executable:
-        cli_executable_path = sys.executable + " " + cli_executable_path
+        cli_executable_path = f'"{sys.executable}" "{cli_executable_path}"'
+    else:
+        cli_executable_path = f'"{cli_executable_path}"'
     cron_file = "/etc/cron.d/npbackup"
     if interval_minutes:
-        TASK_ARGS = f"-c {config_file} --backup"
+        TASK_ARGS = f'-c "{config_file}" --backup'
         trigger = f"*/{interval_minutes} * * * *"
     elif hour and minute:
-        TASK_ARGS = f"-c {config_file} --backup --force"
+        TASK_ARGS = f'-c "{config_file}" --backup --force'
         trigger = f"{minute} {hour} * * *"
     else:
         raise ValueError("Bogus trigger given")
 
     crontab_entry = (
-        f'{trigger} cd "{executable_dir}" && "{cli_executable_path}" {TASK_ARGS}'
+        f'{trigger} cd "{executable_dir}" && {cli_executable_path} {TASK_ARGS}\n'
     )
     try:
         with open("/etc/cron.d/npbackup", "w") as file_handle:
