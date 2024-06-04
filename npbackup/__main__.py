@@ -126,7 +126,14 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help='Forget given snapshot, or specify "policy" to apply retention policy',
+        help='Forget given snapshot',
+    )
+    parser.add_argument(
+        "--policy",
+        type=str,
+        default=None,
+        required=False,
+        help="Apply retention policy to snapshots",
     )
     parser.add_argument(
         "--quick-check", action="store_true", help="Quick check repository"
@@ -250,7 +257,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Launch an operation on a group of repositories given by --repo-group or --repo-name. Valid group operations are [backup|restore|snapshots|list|ls|find|forget|quick_check|full_check|prune|prune_max|unlock|repair_index|repair_snapshots|dump|stats|raw|has_recent_snapshot]",
+        help="Launch an operation on a group of repositories given by --repo-group or --repo-name. Valid group operations are [backup|restore|snapshots|list|ls|find|policy|quick_check|full_check|prune|prune_max|unlock|repair_index|repair_snapshots|dump|stats|raw|has_recent_snapshot]",
     )
     parser.add_argument(
         "--create-key",
@@ -478,12 +485,12 @@ This is free software, and you are welcome to redistribute it under certain cond
     elif args.find or args.group_operation == "find":
         cli_args["operation"] = "find"
         cli_args["op_args"] = {"path": args.find}
-    elif args.forget or args.group_operation == "forget":
+    elif args.forget:
         cli_args["operation"] = "forget"
-        if args.forget == "policy":
-            cli_args["op_args"] = {"use_policy": True}
-        else:
-            cli_args["op_args"] = {"snapshots": args.forget}
+        cli_args["op_args"] = {"snapshots": args.forget}
+    elif args.policy or args.group_operation == "policy":
+        cli_args["operation"] = "forget"
+        cli_args["op_args"] = {"use_policy": True}
     elif args.quick_check or args.group_operation == "quick_check":
         cli_args["operation"] = "check"
         cli_args["op_args"] = {"read_data": False}
@@ -516,6 +523,14 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["operation"] = "has_recent_snapshot"
 
     # Group operation mode
+    if args.group_operation not in ("backup", "restore", "snapshots", "list", "ls", "find", "policy", "quick_check", "full_check", "prune", "prune_max", "unlock", "repair_index", "repair_snapshots", "dump", "stats", "raw", "has_recent_snapshot"):
+        logger.critical(
+            f"Invalid group operation {args.group_operation}. Valid operations are [backup|restore|snapshots|list|ls|find|policy|quick_check|full_check|prune|prune_max|unlock|repair_index|repair_snapshots|dump|stats|raw|has_recent_snapshot]"
+        )
+        sys.exit(74)
+    # Special case where "policy" means "forget"
+    if args.group_operation == "policy":
+        args.group_operation = "forget"
     repo_config_list = []
     repos = []
     if args.group_operation:
