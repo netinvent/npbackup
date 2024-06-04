@@ -1156,7 +1156,9 @@ class NPBackupRunner:
             self.restic_runner.dry_run,
         )
         if backup_too_small:
-            self.write_logs("Backup is smaller than configured minmium backup size", level="error")
+            self.write_logs(
+                "Backup is smaller than configured minmium backup size", level="error"
+            )
 
         post_exec_commands_success = True
         if post_exec_commands:

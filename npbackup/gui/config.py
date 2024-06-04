@@ -656,7 +656,14 @@ def config_gui(full_config: dict, config_file: str):
                 full_config.s(active_object_key, value)
 
         # Remove injected global prometheus config
-        for prom_key in ('metrics', 'destination', 'additional_labels', 'instance', 'http_username', 'http_password'):
+        for prom_key in (
+            "metrics",
+            "destination",
+            "additional_labels",
+            "instance",
+            "http_username",
+            "http_password",
+        ):
             full_config.d(f"repos.{object_name}.prometheus.{prom_key}")
         return full_config
 
