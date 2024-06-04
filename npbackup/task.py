@@ -42,7 +42,10 @@ def create_scheduled_task(
         logger.error("Bogus interval given")
         return False
     
-    if hour > 24 or minute > 60:
+    if interval_minutes < 0:
+        logger.error("Bogus interval given")
+        return False
+    if hour > 24 or minute > 60 or hour < 0 or minute < 0:
         logger.error("Bogus hour or minute given")
         return False
 
@@ -102,10 +105,10 @@ def create_scheduled_task_unix(
     else:
         cli_executable_path = f'"{cli_executable_path}"'
     cron_file = "/etc/cron.d/npbackup"
-    if interval_minutes:
+    if interval_minutes is not None:
         TASK_ARGS = f'-c "{config_file}" --backup'
         trigger = f"*/{interval_minutes} * * * *"
-    elif (hour and minute) or hour == 0 or minute == 0:
+    elif hour is not None and minute is not None:
         TASK_ARGS = f'-c "{config_file}" --backup --force'
         trigger = f"{minute} {hour} * * *"
     else:
@@ -139,7 +142,7 @@ def create_scheduled_task_windows(
         runner = cli_executable_path
         task_args = ""
     temp_task_file = os.path.join(tempfile.gettempdir(), "backup_task.xml")
-    if interval_minutes:
+    if interval_minutes is not None:
         task_args = f'{task_args}-c "{config_file}" --backup'
         start_date = datetime.datetime.now().replace(microsecond=0).isoformat()
         trigger = f"""<TimeTrigger>
@@ -151,7 +154,7 @@ def create_scheduled_task_windows(
             <ExecutionTimeLimit>P1D</ExecutionTimeLimit>
             <Enabled>true</Enabled>
             </TimeTrigger>"""
-    elif (hour and minute) or hour == 0 or minute == 0:
+    elif hour is not None and minute is not None:
         task_args = f'{task_args}-c "{config_file}" --backup --force'
         start_date = (
             datetime.datetime.now()
