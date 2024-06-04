@@ -7,7 +7,7 @@ __intname__ = "npbackup.task"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024060401"
+__build__ = "2024060402"
 
 
 import sys
@@ -40,6 +40,10 @@ def create_scheduled_task(
             minute = int(minute)
     except ValueError:
         logger.error("Bogus interval given")
+        return False
+    
+    if hour > 24 or minute > 60:
+        logger.error("Bogus hour or minute given")
         return False
 
     if os.name == "nt":
@@ -101,7 +105,7 @@ def create_scheduled_task_unix(
     if interval_minutes:
         TASK_ARGS = f'-c "{config_file}" --backup'
         trigger = f"*/{interval_minutes} * * * *"
-    elif hour and minute:
+    elif (hour and minute) or hour == 0 or minute == 0:
         TASK_ARGS = f'-c "{config_file}" --backup --force'
         trigger = f"{minute} {hour} * * *"
     else:
@@ -147,7 +151,7 @@ def create_scheduled_task_windows(
             <ExecutionTimeLimit>P1D</ExecutionTimeLimit>
             <Enabled>true</Enabled>
             </TimeTrigger>"""
-    elif hour and minute:
+    elif (hour and minute) or hour == 0 or minute == 0:
         task_args = f'{task_args}-c "{config_file}" --backup --force'
         start_date = (
             datetime.datetime.now()
