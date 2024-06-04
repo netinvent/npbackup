@@ -1247,11 +1247,16 @@ class NPBackupRunner:
             for entry in ["last", "hourly", "daily", "weekly", "monthly", "yearly"]:
                 value = self.repo_config.g(f"repo_opts.retention_policy.{entry}")
                 if value:
-                    if not self.repo_config.g("repo_opts.retention_policy.keep_within"):
+                    if not self.repo_config.g("repo_opts.retention_policy.keep_within") or entry == "last":
                         policy[f"keep-{entry}"] = value
                     else:
                         # We need to add a type value for keep-within
-                        policy[f"keep-within-{entry}"] = value
+                        unit = entry[0:1]
+                        # Patch weeks to days since restic --keep-within doesn't support weeks
+                        if unit == "w":
+                            unit = "d"
+                            value = value * 7
+                        policy[f"keep-within-{entry}"] = f"{value}{unit}"
             keep_tags = self.repo_config.g("repo_opts.retention_policy.tags")
             if not isinstance(keep_tags, list) and keep_tags:
                 keep_tags = [keep_tags]
