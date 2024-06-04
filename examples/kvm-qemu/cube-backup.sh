@@ -125,7 +125,7 @@ function run_backup {
         rm -f "${NPBACKUP_CONF_FILE}"
         cp "${NPBACKUP_CONF_FILE_TEMPLATE}" "${NPBACKUP_CONF_FILE}"
         sed -i "s%### TENANT ###%${tenant}%g" "${NPBACKUP_CONF_FILE}"
-        sed -i "s%### SOURCE ###%- ${BACKUP_FILE_LIST}%g" "${NPBACKUP_CONF_FILE}"
+        sed -i "s%### SOURCE ###%${BACKUP_FILE_LIST}%g" "${NPBACKUP_CONF_FILE}"
         sed -i "s%### VM ###%${vm}%g" "${NPBACKUP_CONF_FILE}"
 
         "$NPBACKUP_EXECUTABLE" --config-file "${NPBACKUP_CONF_FILE}" --backup --force >> "$LOG_FILE" 2>&1
