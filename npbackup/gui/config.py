@@ -654,6 +654,10 @@ def config_gui(full_config: dict, config_file: str):
                 parent_key = ".".join(active_object_key.split(".")[:-1])
                 full_config.s(parent_key, CommentedMap())
                 full_config.s(active_object_key, value)
+
+        # Remove injected global prometheus config
+        for prom_key in ('metrics', 'destination', 'additional_labels', 'instance', 'http_username', 'http_password'):
+            full_config.d(f"repos.{object_name}.prometheus.{prom_key}")
         return full_config
 
     def set_permissions(full_config: dict, object_name: str) -> dict:
