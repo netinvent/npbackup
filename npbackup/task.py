@@ -41,7 +41,7 @@ def create_scheduled_task(
     except ValueError:
         logger.error("Bogus interval given")
         return False
-    
+
     if interval_minutes < 0:
         logger.error("Bogus interval given")
         return False
