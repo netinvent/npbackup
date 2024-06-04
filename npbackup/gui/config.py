@@ -1936,7 +1936,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 key = "backup_opts.paths"
                 tree = backup_paths_tree
                 node = sg.PopupGetText(_t("generic.add_manually"))
-                if os.path.exists(node) and os.path.isdir(node):
+                if node and os.path.exists(node) and os.path.isdir(node):
                     icon = FOLDER_ICON
                 else:
                     icon = FILE_ICON
