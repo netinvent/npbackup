@@ -57,3 +57,7 @@ When set, an external NTP server is used to get the offset. If offset is high en
 # NPF-SEC-00011: Default AES key obfuscation
 
 Using obfuscation() symmetric function in order to not store the bare AES key.
+
+# NPF-SEC-00012: Don't add PRIVATE directory to wheel / bdist builds
+
+The PRIVATE directory might contain alternative AES keys and obfuscation functions which should never be bundled for a PyPI release.
