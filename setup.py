@@ -8,8 +8,8 @@ __intname__ = "npbackup.setup"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023012901"
-__setup_ver__ = "1.1.0"
+__build__ = "2024060401"
+__setup_ver__ = "1.2.0"
 
 
 PACKAGE_NAME = "npbackup"
@@ -88,7 +88,7 @@ class BinaryDistribution(setuptools.Distribution):
 
 package_path = os.path.abspath(PACKAGE_NAME)
 for path in ["__main__.py", PACKAGE_NAME + ".py"]:
-    package_file = os.path.join(package_path, "__main__.py")
+    package_file = os.path.join(package_path, "__version__.py")
     if os.path.isfile(package_file):
         break
 metadata = get_metadata(package_file)
@@ -98,11 +98,14 @@ long_description = _read_file("README.md")
 package_data = {"": ["translations/*.yml"]}
 
 # if os.name == "nt":
-scripts = ["misc/npbackup.cmd"]
+scripts = ["misc/npbackup-cli.cmd"]
 #    console_scripts = []
 # else:
 #    scripts = []
-console_scripts = ["npbackup = npbackup.__main__:main"]
+console_scripts = [
+    "npbackup-cli = npbackup.__main__:main",
+    "npbackup-gui = npbackup.gui.__main__:main_gui",
+    "npbackup-viewer = npbackup.gui.viewer:viewer_gui",]
 
 setuptools.setup(
     name=PACKAGE_NAME,

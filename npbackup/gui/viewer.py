@@ -12,5 +12,9 @@ __license__ = "GPL-3.0-only"
 from npbackup.gui.__main__ import main_gui
 
 
-if __name__ == "__main__":
+def viewer_gui():
     main_gui(viewer_mode=True)
+
+
+if __name__ == "__main__":
+    viewer_gui()
