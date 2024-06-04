@@ -64,7 +64,6 @@ en:
 
   configuration_saved: Configuration saved
   cannot_save_configuration: Could not save configuration. See logs for further info
-  repo_password_cannot_be_empty: Repo password or password command cannot be empty
   repo_uri_cannot_be_empty: Repo URI / path cannot be empty
   set_manager_password: Manager password
   wrong_password: Wrong password

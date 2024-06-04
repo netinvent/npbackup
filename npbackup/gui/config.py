@@ -2044,12 +2044,6 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             window[option_key].Update(values=tree)
             continue
         if event == "--ACCEPT--":
-            if (
-                not values["repo_opts.repo_password"]
-                and not values["repo_opts.repo_password_command"]
-            ):
-                sg.PopupError(_t("config_gui.repo_password_cannot_be_empty"))
-                continue
             if object_type != "group" and not values["repo_uri"]:
                 sg.PopupError(_t("config_gui.repo_uri_cannot_be_empty"))
                 continue

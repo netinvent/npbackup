@@ -65,7 +65,6 @@ fr:
 
   configuration_saved: Configuration sauvegardée
   cannot_save_configuration: Impossible d'enregistrer la configuration. Veuillez consulter les journaux pour plus de détails
-  repo_password_cannot_be_empty: Le mot de passe du dépot ou la commande de mot de passe ne peuvent être vides
   repo_uri_cannot_be_empty: L'URI / chemin local dépot de sauvegarde ne peut-être vide
   set_manager_password: Mot de passe gestionnaire
   wrong_password: Mot de passe érroné
