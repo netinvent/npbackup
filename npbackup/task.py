@@ -7,7 +7,7 @@ __intname__ = "npbackup.task"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024060101"
+__build__ = "2024060401"
 
 
 import sys
@@ -93,7 +93,7 @@ def create_scheduled_task_unix(
     minute: int = None,
 ):
     executable_dir = os.path.dirname(cli_executable_path)
-    if "python" in sys.executable:
+    if "python" in sys.executable and not IS_COMPILED:
         cli_executable_path = f'"{sys.executable}" "{cli_executable_path}"'
     else:
         cli_executable_path = f'"{cli_executable_path}"'
@@ -128,7 +128,7 @@ def create_scheduled_task_windows(
     minute: int = None,
 ):
     executable_dir = os.path.dirname(cli_executable_path)
-    if "python" in sys.executable:
+    if "python" in sys.executable and not IS_COMPILED:
         runner = sys.executable
         task_args = f'"{cli_executable_path}" '
     else:
