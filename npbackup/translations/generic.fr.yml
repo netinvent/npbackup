@@ -70,3 +70,5 @@ fr:
   add_folder: Ajouter dossier
   add_manually: Ajouter manuellement
   remove_selected: Enlever la sélection
+
+  refresh: Recharger les informations du dépot

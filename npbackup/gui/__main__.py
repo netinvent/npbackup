@@ -769,7 +769,7 @@ def _main_gui(viewer_mode: bool):
                                 ],
                                 [
                                     sg.Button(
-                                        _t("generic.unknown"),
+                                        _t("generic.refresh"),
                                         key="--STATE-BUTTON--",
                                         button_color=("white", "grey"),
                                     )
@@ -890,7 +890,10 @@ def _main_gui(viewer_mode: bool):
     window.read(timeout=0.01)
     if not config_file and not full_config and not viewer_mode:
         window["-NO-CONFIG-"].Update(visible=True)
-    if repo_config:
+
+
+    # Don't load repo info on first load, unless we're dealing with viewer
+    if repo_config and viewer_mode:
         try:
             current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
         except (TypeError, ValueError):
