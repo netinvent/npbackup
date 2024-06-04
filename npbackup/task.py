@@ -7,7 +7,7 @@ __intname__ = "npbackup.task"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024060402"
+__build__ = "2024060501"
 
 
 import sys
@@ -42,11 +42,15 @@ def create_scheduled_task(
         logger.error("Bogus interval given")
         return False
 
-    if interval_minutes < 0:
+    if isinstance(interval_minutes, int) and interval_minutes < 1:
         logger.error("Bogus interval given")
         return False
-    if hour > 24 or minute > 60 or hour < 0 or minute < 0:
-        logger.error("Bogus hour or minute given")
+    if isinstance(hour, int) and isinstance(minute, int):
+        if hour > 24 or minute > 60 or hour < 0 or minute < 0:
+            logger.error("Bogus hour or minute given")
+            return False
+    if interval_minutes is None and (hour is None or minute is None):
+        logger.error("No interval or time given")
         return False
 
     if os.name == "nt":
