@@ -27,7 +27,7 @@ import platform
 from cryptidy import symmetric_encryption as enc
 from ofunctions.random import random_string
 from ofunctions.misc import replace_in_iterable, BytesConverter, iter_over_keys
-from npbackup.customization import ID_STRING
+from resources.customization import ID_STRING
 from npbackup import key_management
 
 

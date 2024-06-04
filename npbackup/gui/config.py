@@ -23,7 +23,7 @@ from npbackup.core.i18n_helper import _t
 from npbackup.__version__ import IS_COMPILED
 from npbackup.path_helper import CURRENT_DIR
 from npbackup.__debug__ import _DEBUG
-from npbackup.customization import (
+from resources.customization import (
     INHERITED_ICON,
     NON_INHERITED_ICON,
     FILE_ICON,

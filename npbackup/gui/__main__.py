@@ -31,7 +31,7 @@ import npbackup.gui.PySimpleGUI as sg
 import _tkinter
 import npbackup.configuration
 import npbackup.common
-from npbackup.customization import (
+from resources.customization import (
     OEM_STRING,
     OEM_LOGO,
     BG_COLOR_LDR,

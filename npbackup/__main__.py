@@ -19,7 +19,7 @@ import json
 import ofunctions.logger_utils
 from ofunctions.process import kill_childs
 from npbackup.path_helper import CURRENT_DIR
-from npbackup.customization import LICENSE_TEXT
+from resources.customization import LICENSE_TEXT
 import npbackup.configuration
 from npbackup.runner_interface import entrypoint
 from npbackup.__version__ import version_string, version_dict

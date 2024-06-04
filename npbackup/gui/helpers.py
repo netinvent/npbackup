@@ -17,7 +17,7 @@ import re
 import queue
 import npbackup.gui.PySimpleGUI as sg
 from npbackup.core.i18n_helper import _t
-from npbackup.customization import (
+from resources.customization import (
     LOADER_ANIMATION,
     BG_COLOR_LDR,
     TXT_COLOR_LDR,
@@ -25,7 +25,7 @@ from npbackup.customization import (
 from npbackup.core.runner import NPBackupRunner
 from npbackup.__debug__ import _DEBUG
 from npbackup.__env__ import GUI_CHECK_INTERVAL
-from npbackup.customization import PYSIMPLEGUI_THEME, OEM_ICON
+from resources.customization import PYSIMPLEGUI_THEME, OEM_ICON
 
 logger = getLogger()
 

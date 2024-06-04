@@ -36,7 +36,7 @@ BUILD_TYPES = ["cli", "gui", "viewer"]
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
 
 
-from npbackup.customization import (
+from resources.customization import (
     COMPANY_NAME,
     TRADEMARKS,
     PRODUCT_NAME,

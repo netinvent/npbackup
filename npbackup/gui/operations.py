@@ -15,7 +15,7 @@ import npbackup.gui.PySimpleGUI as sg
 import npbackup.configuration as configuration
 from npbackup.core.i18n_helper import _t
 from npbackup.gui.helpers import get_anon_repo_uri, gui_thread_runner
-from npbackup.customization import (
+from resources.customization import (
     OEM_STRING,
     OEM_LOGO,
 )

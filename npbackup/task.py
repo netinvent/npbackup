@@ -16,7 +16,7 @@ from logging import getLogger
 import tempfile
 from command_runner import command_runner
 import datetime
-from npbackup.customization import TASK_AUTHOR, TASK_URI, PROGRAM_NAME
+from resources.customization import TASK_AUTHOR, TASK_URI, PROGRAM_NAME
 from npbackup.path_helper import CURRENT_DIR
 from npbackup.__version__ import IS_COMPILED
 
