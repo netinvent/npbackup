@@ -1,11 +1,17 @@
 ## What's planned / considered
 
-### Daemon mode
+### Daemon mode (planned)
 Instead of relying on scheduled tasks, we could launch backup & housekeeping operations as deamon.
 Caveats:
  - We need a windows service (nuitka commercial implements one)
  - We need to use apscheduler (wait for v4)
  - We need a resurrect service config for systemd and windows service
+ - Upgrade checks will be done via service
+
+### Fallback (considered)
+ - Repository uri should allow to have a fallback server
+ - Prometheus support should have a push gateway fallback server option.
+ - Upgrade server should have a fallback server
 
 ### Web interface (planned)
 Since runner can discuss in JSON mode, we could simply wrap it all in FastAPI
@@ -48,3 +54,6 @@ Rustic is a current alternative backend candidate I tested. Might happen if enou
 
 ### Branding manager
 We might want to put all files into `resources` directory and have `customization.py` files generated from there.
+
+### New installer
+We might need to code an installer script for Linux, and perhaps a NSIS installer for Windows.
