@@ -1247,7 +1247,10 @@ class NPBackupRunner:
             for entry in ["last", "hourly", "daily", "weekly", "monthly", "yearly"]:
                 value = self.repo_config.g(f"repo_opts.retention_policy.{entry}")
                 if value:
-                    if not self.repo_config.g("repo_opts.retention_policy.keep_within") or entry == "last":
+                    if (
+                        not self.repo_config.g("repo_opts.retention_policy.keep_within")
+                        or entry == "last"
+                    ):
                         policy[f"keep-{entry}"] = value
                     else:
                         # We need to add a type value for keep-within
