@@ -111,11 +111,12 @@ def create_scheduled_task_unix(
         f'{trigger} cd "{executable_dir}" && {cli_executable_path} {TASK_ARGS}\n'
     )
     try:
-        with open("/etc/cron.d/npbackup", "w") as file_handle:
+        with open(cron_file, "w") as file_handle:
             file_handle.write(crontab_entry)
     except OSError as exc:
         logger.error("Could not write to file  {}: {}".format(cron_file, exc))
         return False
+    logger.info("Task created successfully as {cron_file}")
     return True
 
 
