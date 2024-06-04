@@ -273,7 +273,8 @@ Official binaries for Windows provided by NetInvent are signed with a certificat
 Also, official binaries are compiled using Nuitka Commercial grade, which is more secure in storing secrets.  
 
 Pre-compiled builds for Windows have been code signed with NetInvent's EV certificate, using [windows_tools.signtool](github.com/netinvent/windows_tools)  
-Signing on a Windows machine with Windows SDK installed:
+Signing on a Windows machine with Windows SDK installed can be done via `bin\sign_windows.py` script.  
+Alternatively, you can sign executables via:
 ```
 from windows_tools.signtool import SignTool
 signer = SignTool()
