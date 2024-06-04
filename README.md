@@ -155,7 +155,9 @@ The configuration file should never be world readable, as one could change the b
 ### NPBackup viewer
 
 `npbackup-viewer` provides an easy to use GUI to view contents of various restic repositories, and restore files.  
-It accepts npbackup configuration files, restic style `RESTIC_REPOSITORY` and `RESTIC_PASSWORD` environment variables, and can virtually open any restic repository.
+It accepts npbackup configuration files, restic style `RESTIC_REPOSITORY` and `RESTIC_PASSWORD` environment variables, and can virtually open and restore any restic repository.  
+Any optional S3/AWS/Google configuration can be set via the same environment variables restic uses.  
+If no configuration file nor environment variables are set, it will ask for repository and password settings.  
 
 
 ## The difficulty of laptop backups
