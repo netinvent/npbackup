@@ -718,7 +718,7 @@ def _main_gui(viewer_mode: bool):
     # Let's try to read standard restic repository env variables
     viewer_repo_uri = os.environ.get("RESTIC_REPOSITORY", None)
     viewer_repo_password = os.environ.get("RESTIC_PASSWORD", None)
-    if viewer_mode and not config_file:
+    if viewer_mode and not config_file or (config_file and not config_file.exists()):
         if viewer_repo_uri and viewer_repo_password:
             repo_config = viewer_create_repo(viewer_repo_uri, viewer_repo_password)
         else:
