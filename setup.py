@@ -156,6 +156,12 @@ setuptools.setup(
         "linux",
         "gui",
         "cli",
+        "restic",
+        "viewer",
+        "kvm",
+        "qemu",
+        "grafana",
+        "prometheus"
     ],
     long_description=long_description,
     long_description_content_type="text/markdown",
