@@ -120,7 +120,6 @@ fr:
   monthly: instantanés mensuelles
   yearly: instantanés annuelles
   keep_within: Garder les instantanées dans une période relative au dernier instantané
-  keep_within_explanation: Garder les instantanés dans la période spécifiée
   keep_tags: Garder les instantanés avec les tags suivants
   optional_ntp_server_uri: URI optionnelle serveur NTP
 

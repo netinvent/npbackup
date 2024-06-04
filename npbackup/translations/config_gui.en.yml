@@ -119,7 +119,6 @@ en:
   monthly: monthly snapshots
   yearly: yearly snapshots
   keep_within: Keep snapshots within time period relative to current snapshot
-  keep_within_explanation: Keep only the last n snapshots within the last m snapshots
   keep_tags: Keep snapshots with the following tags
   optional_ntp_server_uri: Optional NTP server URI
 

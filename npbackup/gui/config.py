@@ -1339,11 +1339,8 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Checkbox(
                     _t("config_gui.keep_within"),
                     key="repo_opts.retention_policy.keep_within",
-                    size=(40, 1),
+                    size=(100, 1),
                 ),
-            ],
-            [
-                sg.Text(_t("config_gui.keep_within_explanation"), size=(40, 1)),
             ],
             [sg.HorizontalSeparator()],
             [
