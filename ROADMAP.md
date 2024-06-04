@@ -1,4 +1,4 @@
-## What's planned / considered
+## What's planned / considered post v3
 
 ### Daemon mode (planned)
 Instead of relying on scheduled tasks, we could launch backup & housekeeping operations as deamon.
