@@ -130,9 +130,8 @@ This is free software, and you are welcome to redistribute it under certain cond
     )
     parser.add_argument(
         "--policy",
-        type=str,
-        default=None,
-        required=False,
+        action="store_true",
+        default=False,
         help="Apply retention policy to snapshots",
     )
     parser.add_argument(
