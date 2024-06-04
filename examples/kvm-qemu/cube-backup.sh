@@ -4,7 +4,7 @@
 # Have npbackup backup the qcow2 file + the xml file of the VM
 # then have the script erase the snapshot
 
-# Script ver 2023112901
+# Script ver 2024060401 for NPBackup V3
 
 #TODO: support modding XML file from offline domains to remove snapshot and replace by backing file after qemu-img commit
 
@@ -23,6 +23,7 @@ BACKUP_IDENTIFIER="CUBE-BACKUP-NP.$(date +"%Y%m%dT%H%M%S" --utc)"
 BACKUP_FILE_LIST="${ROOT_DIR}/npbackup_cube_file.lst"
 NPBACKUP_CONF_FILE_TEMPLATE="${ROOT_DIR}/npbackup.cube.template"
 NPBACKUP_CONF_FILE="${ROOT_DIR}/npbackup-cube.conf"
+NPBACKUP_EXECUTABLE="/usr/local/bin/npbackup-cli/npbackup-cli"
 
 function log {
         local line="${1}"
@@ -97,13 +98,13 @@ function get_tenant {
         local vm="${1}"
 
         # $(NF-1) means last column -1
-        tenant=$(echo ${vm} |awk -F'.' '{print $(NF-1)}')
+        tenant=$(echo "${vm}" |awk -F'.' '{print $(NF-1)}')
         # Special case for me
-        if [ ${tenant} == "npf" ]; then
+        if [ "${tenant}" == "npf" ]; then
                 tenant="netperfect"
         fi
         # return this
-        if [ "${tenant}" != "" ] then
+        if [ "${tenant}" != "" ]; then
             echo "${tenant}"
         else
             echo "unknown_tenant"
@@ -124,10 +125,10 @@ function run_backup {
         rm -f "${NPBACKUP_CONF_FILE}"
         cp "${NPBACKUP_CONF_FILE_TEMPLATE}" "${NPBACKUP_CONF_FILE}"
         sed -i "s%### TENANT ###%${tenant}%g" "${NPBACKUP_CONF_FILE}"
-        sed -i "s%### SOURCE ###%${BACKUP_FILE_LIST}%g" "${NPBACKUP_CONF_FILE}"
+        sed -i "s%### SOURCE ###%- ${BACKUP_FILE_LIST}%g" "${NPBACKUP_CONF_FILE}"
         sed -i "s%### VM ###%${vm}%g" "${NPBACKUP_CONF_FILE}"
 
-        /usr/local/bin/npbackup --config-file "${NPBACKUP_CONF_FILE}" --backup --force >> "$LOG_FILE" 2>&1
+        "$NPBACKUP_EXECUTABLE" --config-file "${NPBACKUP_CONF_FILE}" --backup --force >> "$LOG_FILE" 2>&1
         if [ $? -ne 0 ]; then
                 log "Backup failure"
         else
