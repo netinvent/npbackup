@@ -161,7 +161,7 @@ setuptools.setup(
         "kvm",
         "qemu",
         "grafana",
-        "prometheus"
+        "vss",
     ],
     long_description=long_description,
     long_description_content_type="text/markdown",
