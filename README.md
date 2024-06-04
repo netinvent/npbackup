@@ -241,6 +241,13 @@ On Windows, logs will be found in the temp directory defined in `%TEMP%` variabl
 NPBackup comes with integrated auto upgrade function that will run regardless of program failures, in order to lessen the maintenance burden.  
 The upgrade server runs a python asgi web server with integrated HTTP basic authentication, that can further be put behind an SSL proxy like HaProxy.
 
+## Customization
+
+NPBackup is fully customizable and branding can be done easily.  
+You'll find all images and icons in the `resources` directory. Feel free to update those files. Once updated, you must run `update_custom_resources.py` to regenerate the `customization.py` file corresponding entries.  
+The file `customization.py` also contains OEM strings that can be safely changed, except for the license text which must stay unaltered.
+
+
 ## Compilation
 
 In order to fully protect the AES key that is needed to support NPBackup, one can compile the program with Nuitka.
