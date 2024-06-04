@@ -116,7 +116,7 @@ def create_scheduled_task_unix(
     except OSError as exc:
         logger.error("Could not write to file  {}: {}".format(cron_file, exc))
         return False
-    logger.info("Task created successfully as {cron_file}")
+    logger.info(f"Task created successfully as {cron_file}")
     return True
 
 
