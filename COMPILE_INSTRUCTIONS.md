@@ -81,8 +81,6 @@ Now copy that string into the file `npbackup/secret_keys.py`, which should look 
 AES_KEY = b'\xa1JP\r\xff\x11u>?V\x15\xa1\xfd\xaa&tD\xdd\xf9\xde\x07\x93\xd4\xdd\x87R\xd0eb\x10=/'
 ```
 
-Note that we also changed the default backup admin password, which is used to see unencrypted configurations in the GUI.
-
 ## Actual compilation
 
 Easiest way to compile NPBackup is to run the `bin/compile.py` script, which can build public (the executables on github) or private (your executables).
