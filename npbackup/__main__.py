@@ -523,7 +523,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["operation"] = "has_recent_snapshot"
 
     # Group operation mode
-    if args.group_operation not in (
+    if args.group_operation and args.group_operation not in (
         "backup",
         "restore",
         "snapshots",
