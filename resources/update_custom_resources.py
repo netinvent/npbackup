@@ -1,0 +1,68 @@
+#! /usr/bin/env python
+#  -*- coding: utf-8 -*-
+#
+# This file is part of npbackup
+
+__intname__ = "npbackup.customization_creator"
+__author__ = "Orsiris de Jong"
+__copyright__ = "Copyright (C) 2024 NetInvent"
+__license__ = "GPL-3.0-only"
+__build__ = "2024060401"
+__version__ = "1.0.0"
+
+import os
+import re
+import base64
+from npbackup.path_helper import BASEDIR
+
+
+"""
+Launching this file will update customization.py inline png images and gif animations with files from resources directory, if exist
+"""
+
+def image_to_data_url(filename, as_url: bool = False):
+    ext = filename.split('.')[-1]
+    with open(filename, 'rb') as f:
+        img = f.read()
+    if as_url:
+        return f'data:image/{ext};base64,' + base64.b64encode(img).decode('utf-8')
+    else:
+        return base64.b64encode(img).decode('utf-8')
+
+
+def update_custom_icons():
+    """
+    Update customization.py file with icon content
+    """
+
+    custom_resources = {
+        'FOLDER_ICON': 'folder_icon.png',
+        'INHERITED_FOLDER_ICON': 'inherited_folder_icon.png',
+        'FILE_ICON': 'file_icon.png',
+        'INHERITED_FILE_ICON': 'inherited_file_icon.png',
+        'TREE_ICON': 'tree_icon.png',
+        'INHERITED_TREE_ICON': 'inherited_tree_icon.png',
+        'NON_INHERITED_ICON': 'non_inherited_icon.png',
+        'LOADING_ANIMATION': 'loading.gif',
+        'OEM_LOGO': 'oem_logo.png',
+        'OEM_ICON': 'oem_icon.png'
+    }
+
+    resources_dir = os.path.join(BASEDIR, os.path.pardir, 'resources')
+    customization_py = os.path.join(resources_dir, 'customization.py')
+    with open(customization_py, 'r') as f:
+        customization = f.read()
+    for var_name, file in custom_resources.items():
+        file_path = os.path.join(resources_dir, file)
+        print(file_path)
+        if os.path.exists(file_path):
+            print(f"Updating {var_name} with {file_path}")
+            encoded_b64 = image_to_data_url(file_path)
+            customization = re.sub(f'{var_name} = b".*"', f'{var_name} = b"{encoded_b64}"', customization)      
+        else:
+            print("No file found for", var_name)
+    with open(customization_py, 'w') as f:
+        f.write(customization)
+
+if __name__ == '__main__':
+    update_custom_icons()
