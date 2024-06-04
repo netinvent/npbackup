@@ -126,7 +126,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help='Forget given snapshot',
+        help="Forget given snapshot",
     )
     parser.add_argument(
         "--policy",
@@ -523,7 +523,26 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["operation"] = "has_recent_snapshot"
 
     # Group operation mode
-    if args.group_operation not in ("backup", "restore", "snapshots", "list", "ls", "find", "policy", "quick_check", "full_check", "prune", "prune_max", "unlock", "repair_index", "repair_snapshots", "dump", "stats", "raw", "has_recent_snapshot"):
+    if args.group_operation not in (
+        "backup",
+        "restore",
+        "snapshots",
+        "list",
+        "ls",
+        "find",
+        "policy",
+        "quick_check",
+        "full_check",
+        "prune",
+        "prune_max",
+        "unlock",
+        "repair_index",
+        "repair_snapshots",
+        "dump",
+        "stats",
+        "raw",
+        "has_recent_snapshot",
+    ):
         logger.critical(
             f"Invalid group operation {args.group_operation}. Valid operations are [backup|restore|snapshots|list|ls|find|policy|quick_check|full_check|prune|prune_max|unlock|repair_index|repair_snapshots|dump|stats|raw|has_recent_snapshot]"
         )

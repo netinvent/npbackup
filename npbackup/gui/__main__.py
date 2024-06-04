@@ -891,7 +891,6 @@ def _main_gui(viewer_mode: bool):
     if not config_file and not full_config and not viewer_mode:
         window["-NO-CONFIG-"].Update(visible=True)
 
-
     # Don't load repo info on first load, unless we're dealing with viewer
     if repo_config and viewer_mode:
         try:
