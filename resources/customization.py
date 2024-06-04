@@ -31,9 +31,6 @@ SHORT_PRODUCT_NAME = "NPBackup"
 TASK_AUTHOR = "NetPerfect Opensource Initiative"
 TASK_URI = f"\\{PROGRAM_NAME}"
 
-# Arbitrary string
-ID_STRING = "__NPBACKUP__"
-
 # PySimpleGUI theme
 # Valid list: ['Black', 'BlueMono', 'BluePurple', 'BrightColors', 'BrownBlue', 'Dark', 'Dark2', 'DarkAmber', 'DarkBlack', 'DarkBlack1', 'DarkBlue', 'DarkBlue1', 'DarkBlue10', 'DarkBlue11', 'DarkBlue12', 'DarkBlue13', 'DarkBlue14', 'DarkBlue15', 'DarkBlue16', 'DarkBlue17', 'DarkBlue2', 'DarkBlue3', 'DarkBlue4', 'DarkBlue5', 'DarkBlue6', 'DarkBlue7', 'DarkBlue8', 'DarkBlue9', 'DarkBrown', 'DarkBrown1', 'DarkBrown2', 'DarkBrown3', 'DarkBrown4', 'DarkBrown5', 'DarkBrown6', 'DarkBrown7', 'DarkGreen', 'DarkGreen1', 'DarkGreen2', 'DarkGreen3', 'DarkGreen4', 'DarkGreen5', 'DarkGreen6', 'DarkGreen7', 'DarkGrey', 'DarkGrey1', 'DarkGrey10', 'DarkGrey11', 'DarkGrey12', 'DarkGrey13', 'DarkGrey14', 'DarkGrey15', 'DarkGrey2', 'DarkGrey3', 'DarkGrey4', 'DarkGrey5', 'DarkGrey6', 'DarkGrey7', 'DarkGrey8', 'DarkGrey9', 'DarkPurple', 'DarkPurple1', 'DarkPurple2', 'DarkPurple3', 'DarkPurple4', 'DarkPurple5', 'DarkPurple6', 'DarkPurple7', 'DarkRed', 'DarkRed1', 'DarkRed2', 'DarkTanBlue', 'DarkTeal', 'DarkTeal1', 'DarkTeal10', 'DarkTeal11', 'DarkTeal12', 'DarkTeal2', 'DarkTeal3', 'DarkTeal4', 'DarkTeal5', 'DarkTeal6', 'DarkTeal7', 'DarkTeal8', 'DarkTeal9', 'Default', 'Default1', 'DefaultNoMoreNagging', 'GrayGrayGray', 'Green', 'GreenMono', 'GreenTan', 'HotDogStand', 'Kayak', 'LightBlue', 'LightBlue1', 'LightBlue2', 'LightBlue3', 'LightBlue4', 'LightBlue5', 'LightBlue6', 'LightBlue7', 'LightBrown', 'LightBrown1', 'LightBrown10', 'LightBrown11', 'LightBrown12', 'LightBrown13', 'LightBrown2', 'LightBrown3', 'LightBrown4', 'LightBrown5', 'LightBrown6', 'LightBrown7', 'LightBrown8', 'LightBrown9', 'LightGray1', 'LightGreen', 'LightGreen1', 'LightGreen10', 'LightGreen2', 'LightGreen3', 'LightGreen4', 'LightGreen5', 'LightGreen6', 'LightGreen7', 'LightGreen8', 'LightGreen9', 'LightGrey', 'LightGrey1', 'LightGrey2', 'LightGrey3', 'LightGrey4', 'LightGrey5', 'LightGrey6', 'LightPurple', 'LightTeal', 'LightYellow', 'Material1', 'Material2', 'NeutralBlue', 'Purple', 'Python', 'PythonPlus', 'Reddit', 'Reds', 'SandyBeach', 'SystemDefault', 'SystemDefault1', 'SystemDefaultForReal', 'Tan', 'TanBlue', 'TealMono', 'Topanga']
 PYSIMPLEGUI_THEME = "Reddit"
@@ -60,6 +57,7 @@ LOADER_ANIMATION = b"R0lGODlhoAAYAKEAALy+vOTm5P7+/gAAACH/C05FVFNDQVBFMi4wAwEAAAA
 INHERITED_ICON = b"iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAACxEAAAsRAX9kX5EAAAGrSURBVChTVZHPaxNRFIW/mbSZRNt0+iOpiiIRQ1dW1EShC0V05UK7EOxCXYgbIaDYleBCd2L/D6HUaheCLkXc1KBU3BYROhYF66Ilk9hm5nneG0S9cO97cL9z7zszHrT2vHnJ4oH9THW3wRiyUAfdPXsqfc97MHGs/tC3vcow7C5kDQvYTAVbcZJC5xd829gOLOsERkBRgtESjA0pQyjrLAoZHdS95PHj58YhoQUnsJNzOYi+Rly/NUvl8EnGaw1uNm8Tx20N9Mj7OwMig2yDan+fYebGHa5dvkC89o5O1OLR/SbDpRwD2p4k1pFDsyfNP3/F8ckJZqbPEfRrlLJ+tCZBgby2S+Aie5Lq6pc14k4XT2Dt1DT+eIMjZ67weT2CPtjpOfKv6YPVvYxY1xKsflrCbLWI1r872GhD71+BrRcvnWbpxWveLq84yGYQ5PU1MkHyn0AbRipDPHs6R/PuY7xigxNTV6lW9xGODTqnfzxojo+fS53w7Pk6Kx+fkKYpm5ttwlA/QdHeUjHZcAlm44XFex/K5bBijOm6lotdygRPWCc2wfvlntzDb05pgebgjy0sAAAAAElFTkSuQmCC"
 NON_INHERITED_ICON = b"iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAACxAAAAsQAa0jvXUAAAAQSURBVChTYxgFo4AqgIEBAAJMAAH8Lw67AAAAAElFTkSuQmCC"
 
+# Please don't change the license text which is a legal requirement.
 LICENSE_TEXT = """
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
@@ -736,3 +734,5 @@ the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 <https://www.gnu.org/licenses/why-not-lgpl.html>.
 """
+# Arbitrary string that should not be changed unless you know exactly what you are doing
+ID_STRING = "__NPBACKUP__"
