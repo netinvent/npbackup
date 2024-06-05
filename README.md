@@ -6,9 +6,12 @@
 
 # NPBackup
 
-A secure and efficient file backup solution that fits both system administrators (CLI) and end users (GUI)
+A secure and efficient file backup solution that fits both system administrators (CLI) and end users (GUI)  
+Includes an orchestrator that can schedule checks and retention policy operations on groups of backup repositories.
 
 Works on x64 **Linux** , **NAS** solutions based on arm/arm64, **Windows** x64 and x86 and MacOS X.
+
+![image](img/interface_v3.0.0.png)
 
 ## V3 Release candidate available
 Please check https://github.com/netinvent/npbackup/releases
@@ -123,24 +126,18 @@ The YAML configuration file encrypts sensible data so the end user doesn't have 
 Just run the npbackup executable and configure it.
 Prebuilt binaries can be found [here](https://github.com/netinvent/npbackup/releases)
 
-![image](img/interface_v2.2.0.png)
+![image](img/restore_window_v3.0.0.png)
 
-Main minimalistic interface allows to: 
- - List current backups
- - Launch a manual backup
- - See if last backup is recent enough
+Restore window allows to browse through backups and select what files to restore.  
+**There is also a viewer mode that allows to browse all restic repositories without the need to configure anything, see below**
 
-![image](img/restore_window_v2.2.0.png)
-
-Restore window allows to browse through backups and select what files to restore.
-
-![image](img/configuration_v2.2.0.png)
+![image](img/configuration_v3.0.0.png)
 
 Configuration allows to edit the YAML configuration files directly as end user
 
-![image](img/backup_window_v2.2.0.png)
+![image](img/orchestrator_v3.0..0.png)
 
-Backup process is interactive when GUI is used
+Orchestrator GUI allows to run commands on multiple repositories or groups.
 
 **Security**
 NPBackup' security model relies on symmetric encryption of all sensible data that allows to access a repository.  
@@ -162,6 +159,7 @@ It accepts npbackup configuration files, restic style `RESTIC_REPOSITORY` and `R
 Any optional S3/AWS/Google configuration can be set via the same environment variables restic uses.  
 If no configuration file nor environment variables are set, it will ask for repository and password settings.  
 
+![image](img/viewer_v3.0..0.png)
 
 ## The difficulty of laptop backups
 
@@ -196,6 +194,9 @@ The current NPBackup dashboard:
 While admin user experience is important, NPBackup also offers a GUI for end user experience, allowing to list all backup contents, navigate and restore files, without the need of an admin. The end user can also check if they have a recent backup completed, and launch backups manually if needed.
 
 ## CLI usage
+
+`npbackup-cli` has all the functions the GUI has, and can run on any headless server.  
+It also has a `--json` parameter which guarantees parseable output.
 
 `--group-operation [operation]` allows to run an operation on multiple repos. This paramater also requires `--repo-group` or `--repo-name` parameter. For operations requiring arguments, provide the argument to the original operation parameter.
 `--repo-name` allows to specify one or multiple comma separated repo names
