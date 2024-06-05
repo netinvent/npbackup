@@ -135,7 +135,7 @@ Restore window allows to browse through backups and select what files to restore
 
 Configuration allows to edit the YAML configuration files directly as end user
 
-![image](img/orchestrator_v3.0..0.png)
+![image](img/orchestrator_v3.0.0.png)
 
 Orchestrator GUI allows to run commands on multiple repositories or groups.
 
