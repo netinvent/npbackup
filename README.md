@@ -10,6 +10,9 @@ A secure and efficient file backup solution that fits both system administrators
 
 Works on x64 **Linux** , **NAS** solutions based on arm/arm64, **Windows** x64 and x86 and MacOS X.
 
+## V3 Release candidate available
+Please check https://github.com/netinvent/npbackup/releases
+
 ## Features
 
 - Multiple repositories support
