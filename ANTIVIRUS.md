@@ -1,9 +1,7 @@
 ## Antivirus reports from various Nuitka builds for Windows
 
 ### 2024/03/10
-
 #### Viewer compilation
-
 Build type: Onefile
 Compiler: Nuitka 2.1 Commercial
 Backend: gcc 13.2.0
@@ -38,9 +36,7 @@ Link: https://www.virustotal.com/gui/file/31fbd01a763b25111c879b61c79b5045c1a95d
 
 
 ### 2024/04/27
-
 #### CLI compilation for 3.0.0-beta2
-
 Build type: Onefile
 Compiler: Nuitka 2.1.6 Commercial
 Backend: gcc 13.2.0
@@ -64,3 +60,21 @@ Signed: Yes (EV Code signing certificate)
 Build target: npbackup-cli-x64.exe
 Result: 2/72 security vendors and no sandboxes flagged this file as malicious
 Link: https://www.virustotal.com/gui/file/88e761959ea4a538b762d193d088358ce04a13d78c20e082a16622e709734f87
+
+### 2024/06/05
+#### CLI compilation for 3.0.0-rc1
+Build type: Standalone
+Compiler: Nuitka 2.2.1 Commercial
+Backend: gcc 13.2.0
+Signed: No
+Build target: npbackup-cli.exe
+Result: 5/74 security vendors and no sandboxes flagged this file as malicious
+Link: https://www.virustotal.com/gui/file/864154e9ed5756225192467f4d6636cd1322f207cdfa4d4d798a75e1255bb326
+
+Build type: Standalone
+Compiler: Nuitka 2.2.1 Commercial
+Backend: gcc 13.2.0
+Signed: Yes (EV Code signing certificate)
+Build target: npbackup-cli.exe
+Result: 5/74 security vendors and no sandboxes flagged this file as malicious
+Link: https://www.virustotal.com/gui/file/2778043151df967a98c3ceeca46868a873453c45947383874b98e1d94312bb12
