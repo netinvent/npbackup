@@ -159,7 +159,7 @@ It accepts npbackup configuration files, restic style `RESTIC_REPOSITORY` and `R
 Any optional S3/AWS/Google configuration can be set via the same environment variables restic uses.  
 If no configuration file nor environment variables are set, it will ask for repository and password settings.  
 
-![image](img/viewer_v3.0..0.png)
+![image](img/viewer_v3.0.0.png)
 
 ## The difficulty of laptop backups
 
