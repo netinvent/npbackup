@@ -114,7 +114,7 @@ def create_scheduled_task_unix(
         trigger = f"*/{interval_minutes} * * * *"
     elif hour is not None and minute is not None:
         TASK_ARGS = f'-c "{config_file}" --backup --force'
-        trigger = f"{minute} {hour} * * *"
+        trigger = f"{minute} {hour} * * * root"
     else:
         raise ValueError("Bogus trigger given")
 
