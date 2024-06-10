@@ -128,6 +128,7 @@ function run_backup {
         sed -i "s%### SOURCE ###%${BACKUP_FILE_LIST}%g" "${NPBACKUP_CONF_FILE}"
         sed -i "s%### VM ###%${vm}%g" "${NPBACKUP_CONF_FILE}"
 
+        cd "$(dirname "$NPBACKUP_EXECUTABLE")"
         "$NPBACKUP_EXECUTABLE" --config-file "${NPBACKUP_CONF_FILE}" --backup --force >> "$LOG_FILE" 2>&1
         if [ $? -ne 0 ]; then
                 log "Backup failure"
