@@ -1076,23 +1076,24 @@ class NPBackupRunner:
             "backup_opts.additional_backup_only_parameters"
         )
 
-        # Check if backup is required, no need to be verbose, but we'll make sure we don't get a json result here
-        self.restic_runner.verbose = False
-        json_output = self.json_output
-        self.json_output = False
-        # Since we don't want to close queues nor create a subthread, we need to change behavior here
-        # pylint: disable=E1123 (unexpected-keyword-arg)
-        has_recent_snapshots, backup_tz = self.has_recent_snapshot(
-            __close_queues=False, __no_threads=True
-        )
-        self.json_output = json_output
-        # We also need to "reapply" the json setting to backend
-        self.restic_runner.json_output = json_output
-        if has_recent_snapshots and not force:
-            msg = "No backup necessary"
-            self.write_logs(msg, level="info")
-            return self.convert_to_json_output(True, msg)
-        self.restic_runner.verbose = self.verbose
+        if not force:
+            # Check if backup is required, no need to be verbose, but we'll make sure we don't get a json result here
+            self.restic_runner.verbose = False
+            json_output = self.json_output
+            self.json_output = False
+            # Since we don't want to close queues nor create a subthread, we need to change behavior here
+            # pylint: disable=E1123 (unexpected-keyword-arg)
+            has_recent_snapshots, _ = self.has_recent_snapshot(
+                __close_queues=False, __no_threads=True
+            )
+            self.json_output = json_output
+            # We also need to "reapply" the json setting to backend
+            self.restic_runner.json_output = json_output
+            if has_recent_snapshots:
+                msg = "No backup necessary"
+                self.write_logs(msg, level="info")
+                return self.convert_to_json_output(True, msg)
+            self.restic_runner.verbose = self.verbose
 
         # Run backup here
         if not read_from_stdin:
