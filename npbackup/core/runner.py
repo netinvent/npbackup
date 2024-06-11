@@ -865,6 +865,20 @@ class NPBackupRunner:
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
+    def init(self) -> bool:
+        self.write_logs(
+            f"Initializing repo  {self.repo_config.g('name')}", level="info"
+        )
+        return self.restic_runner.init()
+
+    @threaded
+    @catch_exceptions
+    @close_queues
+    @exec_timer
+    @check_concurrency
+    @has_permission
+    @is_ready
+    @apply_config_to_restic_runner
     def snapshots(self) -> Optional[dict]:
         self.write_logs(
             f"Listing snapshots of repo {self.repo_config.g('name')}", level="info"

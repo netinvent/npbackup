@@ -181,7 +181,11 @@ This is free software, and you are welcome to redistribute it under certain cond
         required=False,
         help="Run raw command against backend.",
     )
-
+    parser.add_argument(
+        "--init",
+        action="store_true",
+        help="Manually initialize a repo (is done automatically on first backup)",
+    )
     parser.add_argument(
         "--has-recent-snapshot",
         action="store_true",
@@ -231,7 +235,6 @@ This is free software, and you are welcome to redistribute it under certain cond
         action="store_true",
         help="Run operations without cache",
     )
-
     parser.add_argument("--license", action="store_true", help="Show license")
     parser.add_argument(
         "--auto-upgrade", action="store_true", help="Auto upgrade NPBackup"
@@ -526,6 +529,8 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["op_args"] = {"command": args.raw}
     elif args.has_recent_snapshot or args.group_operation == "has_recent_snapshot":
         cli_args["operation"] = "has_recent_snapshot"
+    elif args.init:
+        cli_args["operation"] = "init"
 
     # Group operation mode
     if args.group_operation and args.group_operation not in (
