@@ -107,7 +107,7 @@ groups:
       env_variables: {}
       encrypted_env_variables: {}
 identity:
-  machine_id: ${HOSTNAME}${RANDOM}[4]
+  machine_id: ${HOSTNAME}_${RANDOM}[4]
   machine_group:
 global_prometheus:
   metrics: false
