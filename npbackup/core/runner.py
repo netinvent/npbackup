@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024050901"
+__build__ = "2024061101"
 
 
 from typing import Optional, Callable, Union, List
@@ -203,6 +203,7 @@ class NPBackupRunner:
         self._live_output = False
         self._json_output = False
         self._binary = None
+        self._no_cache = False
         self.restic_runner = None
         self.minimum_backup_age = None
         self._exec_time = None
@@ -236,6 +237,17 @@ class NPBackupRunner:
             msg = f"Bogus dry_run parameter given: {value}"
             self.write_logs(msg, level="critical", raise_error="ValueError")
         self._dry_run = value
+
+    @property
+    def no_cache(self):
+        return self._no_cache
+
+    @no_cache.setter
+    def no_cache(self, value):
+        if not isinstance(value, bool):
+            msg = f"Bogus no_cache parameter given: {value}"
+            self.write_logs(msg, level="critical", raise_error="ValueError")
+        self._no_cache = value
 
     @property
     def verbose(self):
@@ -786,6 +798,7 @@ class NPBackupRunner:
 
         self.restic_runner.verbose = self.verbose
         self.restic_runner.dry_run = self.dry_run
+        self.restic_runner.no_cache = self.no_cache
         self.restic_runner.live_output = self.live_output
         self.restic_runner.json_output = self.json_output
         self.restic_runner.stdout = self.stdout

@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024052501"
-__version__ = "2.1.0"
+__build__ = "2024060101"
+__version__ = "2.2.0"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -45,6 +45,7 @@ class ResticRunner:
         self._verbose = False
         self._live_output = False
         self._dry_run = False
+        self._no_cache = False
         self._json_output = False
 
         self.backup_result_content = None
@@ -194,7 +195,18 @@ class ResticRunner:
         if isinstance(value, bool):
             self._dry_run = value
         else:
-            raise ValueError("Bogus dry run value given")
+            raise ValueError("Bogus dry_run value given")
+
+    @property
+    def no_cache(self) -> bool:
+        return self._no_cache
+
+    @no_cache.setter
+    def no_cache(self, value: bool):
+        if isinstance(value, bool):
+            self._no_cache = value
+        else:
+            raise ValueError("Bogus no_cache value given")
 
     @property
     def json_output(self) -> bool:
@@ -508,6 +520,8 @@ class ResticRunner:
                 args += " --dry-run"
         if self.json_output:
             args += " --json"
+        if self.no_cache:
+            args += " --no-cache"
         return args
 
     def init(

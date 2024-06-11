@@ -226,6 +226,11 @@ This is free software, and you are welcome to redistribute it under certain cond
         action="store_true",
         help="Run operations in test mode, no actual modifications",
     )
+    parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Run operations without cache",
+    )
 
     parser.add_argument("--license", action="store_true", help="Show license")
     parser.add_argument(
@@ -444,6 +449,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         "dry_run": args.dry_run,
         "json_output": args.json,
         "backend_binary": backend_binary,
+        "no_cache": args.no_cache,
         "operation": None,
         "op_args": {},
     }

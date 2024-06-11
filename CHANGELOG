@@ -40,6 +40,7 @@
     - Metrics have npbackup execution state
   - Dry mode now works for all operations where restic supports dry-mode
   - Implemented scheduled task creator for Windows & Unix
+  - Added --no-cache option to disable cache for restic operations
 
 ## Fixes
   - Default exit code is now worst log level called unless specific errors are triggered
