@@ -89,9 +89,12 @@ NPBackup consists of four programs:
 You may install npbackup via PyPI or use the pre-built executables.
 
 ### Prebuilt executables
-On linux, copy `npbackup` executable to `/usr/local/bin` and make it executable via `chmod +x /usr/local/bin/npbackup`. Any distribution with glibc >= 2.17 should do.
+On linux, uncompress the NPBackup tar.gz corresponding to your platform to `/usr/local/bin`, or wherever you want.  
+You'll get `/usr/local/bin/npbackup-cli`, `/usr/local/bin/npbackup-gui` or `/usr/local/bin/npbackup-viewer` depending on the flavor you have chosen. 
+You'll need to have write permissionds to `/var/log`. If not, you can specify an alternative log file via `--log-file /my/writable/path/npbackup.log`  
+Any distribution with glibc >= 2.17 should do.
 
-On Windows, you can directly execute `npbackup.exe` that comes in the zip archive.
+On Windows, you should decompress zip archive and run the executable inside it.
 The x64 binary is compatible with Windows 10+. The x86 binary is compatible with windows Vista and higher. On those old systems, you might need to install Visual C runtime 2015.
 
 ### PyPI installation
