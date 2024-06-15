@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.helpers"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024050901"
+__build__ = "2024061501"
 
 
 from typing import Tuple
@@ -144,7 +144,7 @@ def gui_thread_runner(
         [
             sg.Multiline(
                 key="-OPERATIONS-PROGRESS-STDOUT-",
-                size=(70, 5),
+                size=(70, 15),
                 visible=not __compact,
                 autoscroll=False,  # Setting autoscroll=True on not visible Multiline takes seconds on updates
             )
@@ -161,7 +161,7 @@ def gui_thread_runner(
         [
             sg.Multiline(
                 key="-OPERATIONS-PROGRESS-STDERR-",
-                size=(70, 10),
+                size=(70, 5),
                 visible=not __compact,
                 autoscroll=True,
             )
@@ -258,10 +258,11 @@ def gui_thread_runner(
                 if stdout_data is None:
                     logger.debug("gui_thread_runner got stdout queue close signal")
                     read_stdout_queue = False
-                    progress_window["-OPERATIONS-PROGRESS-STDOUT-"].Update(
-                        "\n", append=True
-                    )
+                    #progress_window["-OPERATIONS-PROGRESS-STDOUT-"].Update(
+                    #    "\n", append=True
+                    #)
                 else:
+                    stdout_data = stdout_data.strip("\r\n")
                     progress_window["-OPERATIONS-PROGRESS-STDOUT-"].Update(
                         f"\n{stdout_data}", append=True
                     )
@@ -276,16 +277,11 @@ def gui_thread_runner(
                 if stderr_data is None:
                     logger.debug("gui_thread_runner got stderr queue close signal")
                     read_stderr_queue = False
-                    progress_window["-OPERATIONS-PROGRESS-STDERR-"].Update(
-                        "\n", append=True
-                    )
                 else:
                     stderr_has_messages = True
-                    # if __compact:
-                    # for key in progress_window.AllKeysDict:
-                    #    progress_window[key].Update(visible=True)
+                    stderr_data = stderr_data.strip("\r\n")
                     progress_window["-OPERATIONS-PROGRESS-STDERR-"].Update(
-                        f"{stderr_data}", append=True
+                        f"\n{stderr_data}", append=True
                     )
 
         read_queues = read_stdout_queue or read_stderr_queue
