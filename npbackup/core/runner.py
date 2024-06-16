@@ -760,13 +760,13 @@ class NPBackupRunner:
             self.write_logs("Bogus additional parameters given", level="warning")
 
         try:
-            env_variables = self.repo_config.g("env.variables")
+            env_variables = self.repo_config.g("env.env_variables")
             if not isinstance(env_variables, list):
                 env_variables = [env_variables]
         except KeyError:
             env_variables = []
         try:
-            encrypted_env_variables = self.repo_config.g("env.encrypted_variables")
+            encrypted_env_variables = self.repo_config.g("env.encrypted_env_variables")
             if not isinstance(encrypted_env_variables, list):
                 encrypted_env_variables = [encrypted_env_variables]
         except KeyError:
