@@ -609,15 +609,15 @@ def get_repo_config(
                                 _config_inheritance.g(key)[v] = False
                     else:
                         # repo_config may or may not already contain data
-                        if _repo_config is None:
+                        if _repo_config is None or _repo_config == "":
                             _repo_config = CommentedMap()
                             _config_inheritance = CommentedMap()
-                        if _repo_config.g(key) is None:
+                        if _repo_config.g(key) is None or _repo_config.g(key) == "":
                             _repo_config.s(key, value)
                             _config_inheritance.s(key, True)
                         # Case where repo_config contains list but group info has single str
                         elif (
-                            isinstance(_repo_config.g(key), list) and value is not None
+                            isinstance(_repo_config.g(key), list) and value is not None and value != ""
                         ):
                             merged_lists = _repo_config.g(key) + [value]
 
