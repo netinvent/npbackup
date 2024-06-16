@@ -129,6 +129,7 @@ ENCRYPTED_OPTIONS = [
 # This is what a config file looks like
 empty_config_dict = {
     "conf_version": MAX_CONF_VERSION,
+    "audience": None,
     "repos": {
         "default": {
             "repo_uri": None,
@@ -836,9 +837,9 @@ def load_config(config_file: Path) -> Optional[dict]:
 
 def save_config(config_file: Path, full_config: dict) -> bool:
     try:
+        full_config = inject_permissions_into_full_config(full_config)
+        full_config.s("audience", "private" if IS_PRIV_BUILD else "public")
         with open(config_file, "w", encoding="utf-8") as file_handle:
-            full_config = inject_permissions_into_full_config(full_config)
-
             if not is_encrypted(full_config):
                 full_config = crypt_config(
                     full_config, AES_KEY, ENCRYPTED_OPTIONS, operation="encrypt"
