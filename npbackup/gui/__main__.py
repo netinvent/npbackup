@@ -451,7 +451,7 @@ def _main_gui(viewer_mode: bool):
                 sg.Button(_t("generic.accept"), key="--ACCEPT--"),
             ],
         ]
-        window = sg.Window("Configuration File", layout=layout)
+        window = sg.Window("Configuration File", layout=layout, keep_on_top=True)
         while True:
             action = None
             event, values = window.read()
