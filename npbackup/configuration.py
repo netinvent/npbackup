@@ -486,6 +486,9 @@ def extract_permissions_from_full_config(full_config: dict) -> dict:
                 full_config.s(f"repos.{repo}.manager_password", manager_password)
             else:
                 logger.info(f"No extra information for repo {repo} found")
+                # If no permissions are set, we get to use default permissions
+                full_config.s(f"repos.{repo}.permissions", empty_config_dict["repos"]["default"]["permissions"])
+                full_config.s(f"repos.{repo}.manager_password", None)
     return full_config
 
 
@@ -905,8 +908,9 @@ def get_anonymous_repo_config(repo_config: dict, show_encrypted: bool = False) -
                 value = "__(o_O)__"
         return value
 
-    # NPF-SEC-00008: Don't show manager password / sensible data with --show-config
-    repo_config.pop("manager_password", None)
+    # NPF-SEC-00008: Don't show manager password / sensible data with --show-config unless it's empty
+    if repo_config.get("manager_password", None):
+        repo_config["manager_password"] = "__(x_X)__"
     repo_config.pop("update_manager_password", None)
     if show_encrypted:
         return repo_config
