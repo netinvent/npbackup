@@ -146,7 +146,8 @@ def gui_thread_runner(
                 key="-OPERATIONS-PROGRESS-STDOUT-",
                 size=(70, 15),
                 visible=not __compact,
-                autoscroll=False,  # Setting autoscroll=True on not visible Multiline takes seconds on updates
+                # Setting autoscroll=True on not visible Multiline takes seconds on updates
+                autoscroll=False if __fn_name == "backup" else True,
             )
         ],
         [
