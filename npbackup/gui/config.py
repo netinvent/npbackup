@@ -64,6 +64,9 @@ def delete(self, key):
 sg.TreeData.delete = delete
 
 
+ENCRYPTED_DATA_PLACEHOLDER = "<{}>".format(_t("config_gui.encrypted_data"))
+
+
 def ask_manager_password(manager_password: str) -> bool:
     if manager_password:
         if sg.PopupGetText(
@@ -110,8 +113,6 @@ def config_gui(full_config: dict, config_file: str):
     }
 
     byte_units = ["B", "KB", "KiB", "MB", "MiB", "GB", "GiB", "TB", "TiB", "PB", "PiB"]
-
-    ENCRYPTED_DATA_PLACEHOLDER = "<{}>".format(_t("config_gui.encrypted_data"))
 
     def get_objects() -> List[str]:
         """
