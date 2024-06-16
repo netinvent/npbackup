@@ -472,6 +472,7 @@ class NPBackupRunner:
                 "restore": ["restore", "full"],
                 "dump": ["restore", "full"],
                 "check": ["restore", "full"],
+                "init": ["full"],
                 "list": ["full"],
                 "unlock": ["full"],
                 "repair": ["full"],
