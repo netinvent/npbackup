@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024052201"
+__build__ = "2024061601"
 __version__ = "npbackup 3.0.0+"
 
 MIN_CONF_VERSION = 3.0
@@ -233,6 +233,13 @@ empty_config_dict = {
     },
 }
 
+def convert_to_commented_map(
+    source_dict,
+):
+    if isinstance(source_dict, dict):
+        return CommentedMap({k: convert_to_commented_map(v) for k, v in source_dict.items()})
+    else:
+        return source_dict
 
 def get_default_config() -> dict:
     """
@@ -240,15 +247,23 @@ def get_default_config() -> dict:
     """
     full_config = deepcopy(empty_config_dict)
 
-    def convert_to(
-        source_dict,
-    ):
-        if isinstance(source_dict, dict):
-            return CommentedMap({k: convert_to(v) for k, v in source_dict.items()})
-        else:
-            return source_dict
+    return convert_to_commented_map(full_config)
 
-    return convert_to(full_config)
+
+def get_default_repo_config() -> dict:
+    """
+    Returns a repo config dict as nested CommentedMaps (used by ruamel.yaml to keep comments intact)
+    """
+    repo_config = deepcopy(empty_config_dict["repos"]["default"])
+    return convert_to_commented_map(repo_config)
+
+
+def get_default_group_config() -> dict:
+    """
+    Returns a group config dict as nested CommentedMaps (used by ruamel.yaml to keep comments intact)
+    """
+    group_config = deepcopy(empty_config_dict["groups"]["default_group"])
+    return convert_to_commented_map(group_config)
 
 
 def key_should_be_encrypted(key: str, encrypted_options: List[str]):
