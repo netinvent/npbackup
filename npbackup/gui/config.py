@@ -150,15 +150,15 @@ def config_gui(full_config: dict, config_file: str):
             if event == "--ACCEPT--":
                 object_type = values["-OBJECT-TYPE-"]
                 object_name = values["-OBJECT-NAME-"]
-                if object_type == "repo":
-                    if full_config.g(f"repos.{object_name}"):
+                if object_type == "repos":
+                    if full_config.g(f"{object_type}.{object_name}"):
                         sg.PopupError(
                             _t("config_gui.repo_already_exists"), keep_on_top=True
                         )
                         continue
-                    full_config.s(f"repos.{object_name}", CommentedMap())
-                elif object_type == "group":
-                    if full_config.g(f"groups.{object_name}"):
+                    full_config.s(f"{object_type}.{object_name}", CommentedMap())
+                elif object_type == "groups":
+                    if full_config.g(f"{object_type}.{object_name}"):
                         sg.PopupError(
                             _t("config_gui.group_already_exists"), keep_on_top=True
                         )
@@ -176,7 +176,7 @@ def config_gui(full_config: dict, config_file: str):
             _t("config_gui.are_you_sure_to_delete") + f" {object_type} {object_name} ?"
         )
         if result:
-            full_config.d(f"{object_type}s.{object_name}")
+            full_config.d(f"{object_type}.{object_name}")
             update_object_gui(None, unencrypted=False)
         return full_config
 
@@ -192,10 +192,10 @@ def config_gui(full_config: dict, config_file: str):
         """
 
         if combo_value.startswith("Repo: "):
-            object_type = "repo"
+            object_type = "repos"
             object_name = combo_value[len("Repo: ") :]
         elif combo_value.startswith("Group: "):
-            object_type = "group"
+            object_type = "groups"
             object_name = combo_value[len("Group: ") :]
         else:
             object_type = None
@@ -258,7 +258,7 @@ def config_gui(full_config: dict, config_file: str):
                         pass
 
             if key in ("repo_uri", "repo_group"):
-                if object_type == "group":
+                if object_type == "groups":
                     window[key].Disabled = True
                 else:
                     window[key].Disabled = False
@@ -271,12 +271,12 @@ def config_gui(full_config: dict, config_file: str):
                 if value:
                     for val in value:
                         if pathlib.Path(val).is_dir():
-                            if object_type != "group" and inherited[val]:
+                            if object_type != "groups" and inherited[val]:
                                 icon = INHERITED_FOLDER_ICON
                             else:
                                 icon = FOLDER_ICON
                         else:
-                            if object_type != "group" and inherited[val]:
+                            if object_type != "groups" and inherited[val]:
                                 icon = INHERITED_FILE_ICON
                             else:
                                 icon = FILE_ICON
@@ -311,7 +311,7 @@ def config_gui(full_config: dict, config_file: str):
                         for val in value:
                             if val is None:
                                 continue
-                            if object_type != "group" and inherited[val]:
+                            if object_type != "groups" and inherited[val]:
                                 icon = INHERITED_TREE_ICON
                             else:
                                 icon = TREE_ICON
@@ -337,7 +337,7 @@ def config_gui(full_config: dict, config_file: str):
                 if value:
                     if isinstance(value, dict):
                         for skey, val in value.items():
-                            if object_type != "group" and inherited[skey]:
+                            if object_type != "groups" and inherited[skey]:
                                 icon = INHERITED_TREE_ICON
                             else:
                                 icon = TREE_ICON
@@ -463,7 +463,7 @@ def config_gui(full_config: dict, config_file: str):
 
         object_type, object_name = get_object_from_combo(object_name)
 
-        if object_type == "repo":
+        if object_type == "repos":
             object_config, config_inheritance = configuration.get_repo_config(
                 full_config, object_name, eval_variables=False
             )
@@ -472,7 +472,7 @@ def config_gui(full_config: dict, config_file: str):
             window["repo_uri"].Update(visible=True)
             window["--SET-PERMISSIONS--"].Update(visible=True)
 
-        elif object_type == "group":
+        elif object_type == "groups":
             object_config = configuration.get_group_config(
                 full_config, object_name, eval_variables=False
             )
@@ -509,8 +509,8 @@ def config_gui(full_config: dict, config_file: str):
         Update full_config with keys from GUI
         keys should always have form section.name or section.subsection.name
         """
-        if object_type == "repo":
-            object_group = full_config.g(f"repos.{object_name}.repo_group")
+        if object_type == "repos":
+            object_group = full_config.g(f"{object_type}.{object_name}.repo_group")
         else:
             object_group = None
 
@@ -550,7 +550,7 @@ def config_gui(full_config: dict, config_file: str):
         for k, v in values["env.encrypted_env_variables"].items():
             if v == ENCRYPTED_DATA_PLACEHOLDER:
                 values["env.encrypted_env_variables"][k] = full_config.g(
-                    f"{object_type}s.{object_name}.env.encrypted_env_variables.{k}"
+                    f"{object_type}.{object_name}.env.encrypted_env_variables.{k}"
                 )
 
         for key, value in values.items():
@@ -611,21 +611,21 @@ def config_gui(full_config: dict, config_file: str):
                 active_object_key = f"{key}"
                 current_value = full_config.g(active_object_key)
             else:
-                active_object_key = f"{object_type}s.{object_name}.{key}"
+                active_object_key = f"{object_type}.{object_name}.{key}"
                 current_value = full_config.g(active_object_key)
 
                 # Special case for nested retention_policy dict which may not exist, we need to create it
                 if key.startswith("repo_opts.retention_policy"):
                     if not full_config.g(
-                        f"{object_type}s.{object_name}.repo_opts.retention_policy"
+                        f"{object_type}.{object_name}.repo_opts.retention_policy"
                     ):
                         full_config.s(
-                            f"{object_type}s.{object_name}.repo_opts.retention_policy",
+                            f"{object_type}.{object_name}.repo_opts.retention_policy",
                             CommentedMap(),
                         )
 
                 if object_group:
-                    inheritance_key = f"groups.{object_group}.{key}"
+                    inheritance_key = f"{object_type}.{object_group}.{key}"
                     # If object is a list, check which values are inherited from group and remove them
                     if isinstance(value, list):
                         inheritance_list = full_config.g(inheritance_key)
@@ -652,7 +652,7 @@ def config_gui(full_config: dict, config_file: str):
 
             # Finally, update the config dictionary
             # Debug WIP
-            # if object_type == "group":
+            # if object_type == "groups":
             #    print(f"UPDATING {active_object_key} curr={current_value} new={value}")
             # else:
             #    print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
@@ -676,24 +676,21 @@ def config_gui(full_config: dict, config_file: str):
             full_config.d(f"repos.{object_name}.prometheus.{prom_key}")
         return full_config
 
-    def set_permissions(full_config: dict, object_name: str) -> dict:
+    def set_permissions(full_config: dict, object_type: str, object_name: str) -> dict:
         """
         Sets repo wide repo_uri / password / permissions
         """
         object_type, object_name = get_object_from_combo(object_name)
-        if object_type == "group":
+        if object_type == "groups":
             sg.PopupError(_t("config_gui.permissions_only_for_repos"))
             return full_config
-        repo_config, _ = configuration.get_repo_config(
-            full_config, object_name, eval_variables=False
-        )
         permissions = list(combo_boxes["permissions"].values())
-        current_perm = repo_config.g("permissions")
+        current_perm = full_config.g(f"{object_type}.{object_name}.permissions")
         if not current_perm:
             current_perm = permissions[-1]
         else:
             current_perm = combo_boxes["permissions"][current_perm]
-        manager_password = repo_config.g("manager_password")
+        manager_password = full_config.g(f"{object_type}.{object_name}.manager_password")
 
         layout = [
             [
@@ -743,12 +740,11 @@ def config_gui(full_config: dict, config_file: str):
                 permission = get_key_from_value(
                     combo_boxes["permissions"], values["permissions"]
                 )
-                repo_config.s("permissions", permission)
-                repo_config.s("manager_password", values["-MANAGER-PASSWORD-"])
-                repo_config.s("update_manager_password", True)
+                full_config.s(f"{object_type}.{object_name}.permissions", permission)
+                full_config.s(f"{object_type}.{object_name}.manager_password", values["-MANAGER-PASSWORD-"])
+                full_config.s(f"{object_type}.{object_name}.update_manager_password", True)
                 break
         window.close()
-        full_config.s(f"repos.{object_name}", repo_config)
         return full_config
 
     def object_layout() -> List[list]:
@@ -1936,7 +1932,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 full_config, object_name
             )
             if not manager_password or ask_manager_password(manager_password):
-                full_config = set_permissions(full_config, values["-OBJECT-SELECT-"])
+                full_config = set_permissions(full_config, object_type=object_type, object_name=values["-OBJECT-SELECT-"])
                 update_object_gui(values["-OBJECT-SELECT-"])
             continue
         if event in (
@@ -2059,7 +2055,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                         tree.insert("", node, node, node, icon=icon)
             if event.startswith("--REMOVE-"):
                 for key in values[option_key]:
-                    if object_type != "group" and tree.tree_dict[key].icon in (
+                    if object_type != "groups" and tree.tree_dict[key].icon in (
                         INHERITED_TREE_ICON,
                         INHERITED_FILE_ICON,
                         INHERITED_FOLDER_ICON,
@@ -2072,7 +2068,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             window[option_key].Update(values=tree)
             continue
         if event == "--ACCEPT--":
-            if object_type != "group" and not values["repo_uri"]:
+            if object_type != "groups" and not values["repo_uri"]:
                 sg.PopupError(_t("config_gui.repo_uri_cannot_be_empty"))
                 continue
             full_config = update_config_dict(

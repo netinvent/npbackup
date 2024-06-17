@@ -480,18 +480,23 @@ def inject_permissions_into_full_config(full_config: dict) -> Tuple[bool, dict]:
 
     NPF-SEC-00006: Never inject permissions if some are already present unless current manager password equals initial one
     """
-    for repo in full_config.g("repos").keys():
-        repo_uri = full_config.g(f"repos.{repo}.repo_uri")
-        manager_password = full_config.g(f"repos.{repo}.manager_password")
-        permissions = full_config.g(f"repos.{repo}.permissions")
-        update_manager_password = full_config.g(f"repos.{repo}.update_manager_password")
-        if update_manager_password and manager_password:
-            full_config.s(
-                f"repos.{repo}.repo_uri", (repo_uri, permissions, manager_password)
-            )
-            full_config.s(f"repos.{repo}.is_protected", True)
-        else:
-            logger.debug(f"Permissions exist for repo {repo}")
+    for object_type in ("repos", "groups"):
+        for object_name in full_config.g(object_type).keys():
+            repo_uri = full_config.g(f"{object_type}.{object_name}.repo_uri")
+            manager_password = full_config.g(f"{object_type}.{object_name}.manager_password")
+            permissions = full_config.g(f"{object_type}.{object_name}.permissions")
+            update_manager_password = full_config.g(f"{object_type}.{object_name}.update_manager_password")
+            print("update need", update_manager_password, manager_password, f"{object_type}.{object_name}")
+            if update_manager_password and manager_password:
+                full_config.s(
+                    f"{object_type}.{object_name}.repo_uri", (repo_uri, permissions, manager_password)
+                )
+                full_config.s(f"{object_type}.{object_name}.is_protected", True)
+            elif manager_password:
+                full_config.s(f"{object_type}.{object_name}.is_protected", True)
+                logger.debug(f"Permissions exist for {object_type} {object_name}")
+            else:
+                full_config.s(f"{object_type}.{object_name}.is_protected", False)
 
         full_config.d(
             f"repos.{repo}.update_manager_password"
