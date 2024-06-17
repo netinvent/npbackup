@@ -143,6 +143,8 @@ en:
   full_perms: Full permissions
   setting_permissions_requires_manager_password: Setting permissions requires manager password
   manager_password_too_short: Manager password is too short
+  current_permissions: Current permissions
+  manager_password_set: Manager password initialized
   
   unknown_error_see_logs: Unknown error, please check logs
 

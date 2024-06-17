@@ -222,15 +222,23 @@ def config_gui(full_config: dict, config_file: str):
             # Also, don't update global prometheus options here but in global options
             if key in (
                 "name",
-                "permissions",
-                "manager_password",
                 "is_protected",
                 "prometheus.metrics",
                 "prometheus.destination",
                 "prometheus.instance",
                 "prometheus.http_username",
                 "prometheus.http_password",
+                "update_manager_password"
             ) or key.startswith("prometheus.additional_labels"):
+                return
+            if key == "permissions":
+                window["current_permissions"].Update(combo_boxes["permissions"][value])
+                return
+            if key == "manager_password":
+                if value:
+                    window["manager_password_set"].Update(_t("generic.yes"))
+                else:
+                    window["manager_password_set"].Update(_t("generic.no"))
                 return
 
             # NPF-SEC-00009
@@ -1218,7 +1226,18 @@ def config_gui(full_config: dict, config_file: str):
                 ),
                 sg.Input(key="repo_opts.repo_password_command", size=(95, 1)),
             ],
-            [sg.Button(_t("config_gui.set_permissions"), key="--SET-PERMISSIONS--")],
+            [
+                
+                sg.Text(_t("config_gui.current_permissions"), size=(40, 1)),
+                sg.Text("Default", key="current_permissions", size=(25, 1))
+            ],
+            [
+                sg.Text(_t("config_gui.manager_password_set"), size=(40, 1)),
+                sg.Text(_t("generic.no"), key="manager_password_set", size=(25, 1))
+            ],
+            [
+                sg.Button(_t("config_gui.set_permissions"), key="--SET-PERMISSIONS--")
+            ],
             [
                 sg.Text(_t("config_gui.repo_group"), size=(40, 1)),
                 sg.Combo(
@@ -1918,6 +1937,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             )
             if not manager_password or ask_manager_password(manager_password):
                 full_config = set_permissions(full_config, values["-OBJECT-SELECT-"])
+                update_object_gui(values["-OBJECT-SELECT-"])
             continue
         if event in (
             "--ADD-PATHS-FILE--",
