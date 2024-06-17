@@ -57,3 +57,6 @@ We might want to put all files into `resources` directory and have `customizatio
 
 ### New installer
 We might need to code an installer script for Linux, and perhaps a NSIS installer for Windows.
+
+### Security
+Check that the config file is not world writable, so nobody can inject pre/post commands
