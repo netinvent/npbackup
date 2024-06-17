@@ -273,7 +273,7 @@ def operations_gui(full_config: dict) -> dict:
             if not repos:
                 continue
             for repo_name in repos:
-                repo_config, __annotations__ = configuration.get_repo_config(
+                repo_config, __annotations__ = get_repo_config(
                     full_config, repo_name
                 )
                 repo_config_list.append(repo_config)
