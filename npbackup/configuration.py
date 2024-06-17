@@ -488,8 +488,8 @@ def extract_permissions_from_full_config(full_config: dict) -> dict:
                 else:
                     logger.info(f"No extra information for {object_type} {object_name} found")
                     # If no permissions are set, we get to use default permissions
-                    full_config.s(f"repos.{repo}.permissions", empty_config_dict["repos"]["default"]["permissions"])
-                    full_config.s(f"repos.{repo}.manager_password", None)
+                    full_config.s(f"{object_type}.{object_name}.permissions", empty_config_dict["repos"]["default"]["permissions"])
+                    full_config.s(f"{object_type}.{object_name}.manager_password", None)
     return full_config
 
 
