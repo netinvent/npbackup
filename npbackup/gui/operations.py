@@ -7,34 +7,38 @@ __intname__ = "npbackup.gui.operations"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024010301"
+__build__ = "2024061601"
 
 
+import os
 from logging import getLogger
 import npbackup.gui.PySimpleGUI as sg
-import npbackup.configuration as configuration
+from npbackup.configuration import get_repo_config, get_group_list, get_repos_by_group, get_manager_password
 from npbackup.core.i18n_helper import _t
 from npbackup.gui.helpers import get_anon_repo_uri, gui_thread_runner
 from resources.customization import (
     OEM_STRING,
     OEM_LOGO,
 )
+from npbackup.gui.config import ENCRYPTED_DATA_PLACEHOLDER, ask_manager_password
 
 
 logger = getLogger(__intname__)
 
 
-def gui_update_state(window, full_config: dict) -> list:
+def gui_update_state(window, full_config: dict, unencrypted: str = None) -> list:
     repo_list = []
     try:
         for repo_name in full_config.g("repos"):
-            repo_config, _ = configuration.get_repo_config(full_config, repo_name)
+            repo_config, _ = get_repo_config(full_config, repo_name)
             if repo_config.g(f"repo_uri") and (
                 repo_config.g(f"repo_opts.repo_password")
                 or repo_config.g(f"repo_opts.repo_password_command")
             ):
                 backend_type, repo_uri = get_anon_repo_uri(repo_config.g(f"repo_uri"))
                 repo_group = repo_config.g("repo_group")
+                if not unencrypted and unencrypted != repo_name:
+                    repo_uri = ENCRYPTED_DATA_PLACEHOLDER
                 repo_list.append([repo_name, repo_group, backend_type, repo_uri])
             else:
                 logger.warning("Incomplete operations repo {}".format(repo_name))
@@ -50,7 +54,7 @@ def operations_gui(full_config: dict) -> dict:
     """
 
     def _select_groups():
-        group_list = configuration.get_group_list(full_config)
+        group_list = get_group_list(full_config)
         selector_layout = [
             [
                 sg.Table(
@@ -87,7 +91,7 @@ def operations_gui(full_config: dict) -> dict:
                 repo_list = []
                 for group_index in values["-GROUP_LIST-"]:
                     group_name = group_list[group_index]
-                    repo_list += configuration.get_repos_by_group(
+                    repo_list += get_repos_by_group(
                         full_config, group_name
                     )
                 result = repo_list
@@ -195,6 +199,8 @@ def operations_gui(full_config: dict) -> dict:
             )
         ]
     ]
+   
+    right_click_menu = ["", [_t("config_gui.show_decrypted")]]
 
     window = sg.Window(
         "Configuration",
@@ -208,6 +214,7 @@ def operations_gui(full_config: dict) -> dict:
         keep_on_top=False,
         alpha_channel=1.0,
         default_button_element_size=(20, 1),
+        right_click_menu=right_click_menu,
         finalize=True,
     )
 
@@ -221,6 +228,29 @@ def operations_gui(full_config: dict) -> dict:
 
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--EXIT--"):
             break
+        if event == _t("config_gui.show_decrypted"):
+            try:
+                object_name = complete_repo_list[values["repo-list"][0]][0]
+            except Exception as exc:
+                logger.debug("Trace:", exc_info=True)
+                object_name = None
+            finally:
+                if not object_name:
+                    sg.PopupError(_t("operations_gui.no_repo_selected"), keep_on_top=True)
+                    continue
+            manager_password = get_manager_password(
+                full_config, object_name
+            )
+            # NPF-SEC-00009
+            env_manager_password = os.environ.get("NPBACKUP_MANAGER_PASSWORD", None)
+            if not manager_password:
+                sg.PopupError(_t("config_gui.no_manager_password_defined"), keep_on_top=True)
+                continue
+            if (
+                env_manager_password and env_manager_password == manager_password
+            ) or ask_manager_password(manager_password):
+                complete_repo_list = gui_update_state(window, full_config, unencrypted=object_name)
+            continue
         if event in (
             "--QUICK-CHECK--",
             "--FULL-CHECK--",
@@ -243,7 +273,7 @@ def operations_gui(full_config: dict) -> dict:
             if not repos:
                 continue
             for repo_name in repos:
-                repo_config, __annotations__ = configuration.get_repo_config(
+                repo_config, __annotations__ = get_repo_config(
                     full_config, repo_name
                 )
                 repo_config_list.append(repo_config)

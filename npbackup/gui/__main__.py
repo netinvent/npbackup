@@ -323,7 +323,7 @@ def ls_window(repo_config: dict, snapshot_id: str) -> bool:
             break
         if event == "restore_to":
             if not values["-TREE-"]:
-                sg.PopupError(_t("main_gui.select_folder"))
+                sg.PopupError(_t("main_gui.select_folder"), keep_on_top=True)
                 continue
             restore_window(repo_config, snapshot_id, values["-TREE-"])
 
@@ -451,7 +451,7 @@ def _main_gui(viewer_mode: bool):
                 sg.Button(_t("generic.accept"), key="--ACCEPT--"),
             ],
         ]
-        window = sg.Window("Configuration File", layout=layout)
+        window = sg.Window("Configuration File", layout=layout, keep_on_top=True)
         while True:
             action = None
             event, values = window.read()
@@ -465,11 +465,11 @@ def _main_gui(viewer_mode: bool):
             if event == "--ACCEPT--":
                 config_file = Path(values["-config_file-"])
                 if not values["-config_file-"] or not config_file.exists():
-                    sg.PopupError(_t("generic.file_does_not_exist"))
+                    sg.PopupError(_t("generic.file_does_not_exist"), keep_on_top=True)
                     continue
                 full_config = npbackup.configuration.load_config(config_file)
                 if not full_config:
-                    sg.PopupError(_t("generic.bad_file"))
+                    sg.PopupError(_t("generic.bad_file"), keep_on_top=True)
                     continue
                 break
         window.close()
@@ -599,7 +599,7 @@ def _main_gui(viewer_mode: bool):
                 logger.info(f"Using configuration file {config_file}")
                 full_config = npbackup.configuration.load_config(config_file)
                 if not full_config:
-                    sg.PopupError(f"{_t('main_gui.config_error')} {config_file}")
+                    sg.PopupError(f"{_t('main_gui.config_error')} {config_file}", keep_on_top=True)
                     config_exists = False
                 else:
                     config_exists = True
@@ -712,7 +712,7 @@ def _main_gui(viewer_mode: bool):
         if not os.path.isfile(binary):
             msg = f"External backend binary {binary} cannot be found."
             logger.critical(msg)
-            sg.PopupError(msg)
+            sg.PopupError(msg, keep_on_top=True)
             sys.exit(73)
 
     # Let's try to read standard restic repository env variables
@@ -916,17 +916,17 @@ def _main_gui(viewer_mode: bool):
                 current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
                 gui_update_state()
             else:
-                sg.PopupError("Repo not existent in config")
+                sg.PopupError("Repo not existent in config", keep_on_top=True)
                 continue
         if event == "--LAUNCH-BACKUP--":
             if not full_config:
-                sg.PopupError(_t("main_gui.no_config"))
+                sg.PopupError(_t("main_gui.no_config"), keep_on_top=True)
                 continue
             backup(repo_config)
             event = "--STATE-BUTTON--"
         if event == "--SEE-CONTENT--":
             if not repo_config:
-                sg.PopupError(_t("main_gui.no_config"))
+                sg.PopupError(_t("main_gui.no_config"), keep_on_top=True)
                 continue
             if not values["snapshot-list"]:
                 sg.Popup(_t("main_gui.select_backup"), keep_on_top=True)
@@ -938,7 +938,7 @@ def _main_gui(viewer_mode: bool):
             ls_window(repo_config, snapshot_to_see)
         if event == "--FORGET--":
             if not full_config:
-                sg.PopupError(_t("main_gui.no_config"))
+                sg.PopupError(_t("main_gui.no_config"), keep_on_top=True)
                 continue
             if not values["snapshot-list"]:
                 sg.Popup(_t("main_gui.select_backup"), keep_on_top=True)
@@ -951,13 +951,13 @@ def _main_gui(viewer_mode: bool):
             event = "--STATE-BUTTON--"
         if event == "--OPERATIONS--":
             if not full_config:
-                sg.PopupError(_t("main_gui.no_config"))
+                sg.PopupError(_t("main_gui.no_config"), keep_on_top=True)
                 continue
             full_config = operations_gui(full_config)
             event = "--STATE-BUTTON--"
         if event == "--CONFIGURE--":
             if not full_config:
-                sg.PopupError(_t("main_gui.no_config"))
+                sg.PopupError(_t("main_gui.no_config"), keep_on_top=True)
                 continue
             full_config = config_gui(full_config, config_file)
             # Make sure we trigger a GUI refresh when configuration is changed
@@ -993,7 +993,7 @@ def _main_gui(viewer_mode: bool):
                 repo_uri = _repo_uri
                 repo_list = _repo_list
             else:
-                sg.PopupError(_t("main_gui.cannot_load_config_keep_current"))
+                sg.PopupError(_t("main_gui.cannot_load_config_keep_current"), keep_on_top=True)
             if not viewer_mode and not config_file and not full_config:
                 window["-NO-CONFIG-"].Update(visible=True)
             elif not viewer_mode:

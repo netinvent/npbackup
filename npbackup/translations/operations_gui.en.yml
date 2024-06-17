@@ -15,3 +15,4 @@ en:
   add_repo: Add repo
   edit_repo: Edit repo
   remove_repo: Remove repo
+  no_repo_selected: No repo selected

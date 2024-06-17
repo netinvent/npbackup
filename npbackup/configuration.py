@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024061601"
+__build__ = "2024061701"
 __version__ = "npbackup 3.0.0+"
 
 MIN_CONF_VERSION = 3.0
@@ -472,23 +472,24 @@ def extract_permissions_from_full_config(full_config: dict) -> dict:
     repo_config objects in memory are always "expanded"
     This function is in order to expand when loading config
     """
-    for repo in full_config.g("repos").keys():
-        repo_uri = full_config.g(f"repos.{repo}.repo_uri")
-        if repo_uri:
-            # Extract permissions and manager password from repo_uri if set as string
-            if "," in repo_uri:
-                repo_uri = [item.strip() for item in repo_uri.split(",")]
-            if isinstance(repo_uri, tuple) or isinstance(repo_uri, list):
-                repo_uri, permissions, manager_password = repo_uri
-                # Overwrite existing permissions / password if it was set in repo_uri
-                full_config.s(f"repos.{repo}.repo_uri", repo_uri)
-                full_config.s(f"repos.{repo}.permissions", permissions)
-                full_config.s(f"repos.{repo}.manager_password", manager_password)
-            else:
-                logger.info(f"No extra information for repo {repo} found")
-                # If no permissions are set, we get to use default permissions
-                full_config.s(f"repos.{repo}.permissions", empty_config_dict["repos"]["default"]["permissions"])
-                full_config.s(f"repos.{repo}.manager_password", None)
+    for object_type in ("repos", "groups"):
+        for object_name in full_config.g(object_type).keys():
+            repo_uri = full_config.g(f"{object_type}.{object_name}.repo_uri")
+            if repo_uri:
+                # Extract permissions and manager password from repo_uri if set as string
+                if "," in repo_uri:
+                    repo_uri = [item.strip() for item in repo_uri.split(",")]
+                if isinstance(repo_uri, tuple) or isinstance(repo_uri, list):
+                    repo_uri, permissions, manager_password = repo_uri
+                    # Overwrite existing permissions / password if it was set in repo_uri
+                    full_config.s(f"{object_type}.{object_name}.repo_uri", repo_uri)
+                    full_config.s(f"{object_type}.{object_name}.permissions", permissions)
+                    full_config.s(f"{object_type}.{object_name}.manager_password", manager_password)
+                else:
+                    logger.info(f"No extra information for {object_type} {object_name} found")
+                    # If no permissions are set, we get to use default permissions
+                    full_config.s(f"repos.{repo}.permissions", empty_config_dict["repos"]["default"]["permissions"])
+                    full_config.s(f"repos.{repo}.manager_password", None)
     return full_config
 
 
@@ -499,24 +500,28 @@ def inject_permissions_into_full_config(full_config: dict) -> Tuple[bool, dict]:
 
     NPF-SEC-00006: Never inject permissions if some are already present unless current manager password equals initial one
     """
-    for repo in full_config.g("repos").keys():
-        repo_uri = full_config.g(f"repos.{repo}.repo_uri")
-        manager_password = full_config.g(f"repos.{repo}.manager_password")
-        permissions = full_config.g(f"repos.{repo}.permissions")
-        update_manager_password = full_config.g(f"repos.{repo}.update_manager_password")
-        if update_manager_password and manager_password:
-            full_config.s(
-                f"repos.{repo}.repo_uri", (repo_uri, permissions, manager_password)
-            )
-            full_config.s(f"repos.{repo}.is_protected", True)
-        else:
-            logger.debug(f"Permissions exist for repo {repo}")
+    for object_type in ("repos", "groups"):
+        for object_name in full_config.g(object_type).keys():
+            repo_uri = full_config.g(f"{object_type}.{object_name}.repo_uri")
+            manager_password = full_config.g(f"{object_type}.{object_name}.manager_password")
+            permissions = full_config.g(f"{object_type}.{object_name}.permissions")
+            update_manager_password = full_config.g(f"{object_type}.{object_name}.update_manager_password")
+            if update_manager_password and manager_password:
+                full_config.s(
+                    f"{object_type}.{object_name}.repo_uri", (repo_uri, permissions, manager_password)
+                )
+                full_config.s(f"{object_type}.{object_name}.is_protected", True)
+            elif manager_password:
+                full_config.s(f"{object_type}.{object_name}.is_protected", True)
+                logger.debug(f"Permissions exist for {object_type} {object_name}")
+            else:
+                full_config.s(f"{object_type}.{object_name}.is_protected", False)
 
-        full_config.d(
-            f"repos.{repo}.update_manager_password"
-        )  # Don't keep decrypted manager password
-        full_config.d(f"repos.{repo}.permissions")
-        full_config.d(f"repos.{repo}.manager_password")
+            full_config.d(
+                f"{object_type}.{object_name}.update_manager_password"
+            )  # Don't keep decrypted manager password
+            full_config.d(f"{object_type}.{object_name}.permissions")
+            full_config.d(f"{object_type}.{object_name}.manager_password")
     return full_config
 
 
