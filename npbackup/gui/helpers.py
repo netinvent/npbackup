@@ -147,7 +147,7 @@ def gui_thread_runner(
                 size=(70, 15),
                 visible=not __compact,
                 # Setting autoscroll=True on not visible Multiline takes seconds on updates
-                autoscroll=False if __fn_name == "backup" else True,
+                autoscroll=False if __fn_name in ("backup", "list") else True,
             )
         ],
         [
