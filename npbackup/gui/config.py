@@ -159,7 +159,7 @@ def config_gui(full_config: dict, config_file: str):
                     full_config.s(f"{object_type}.{object_name}", CommentedMap())
                 elif object_type == "groups":
                     if full_config.g(f"{object_type}.{object_name}"):
-                    full_config.s(f"{object_type}.{object_name}", configuration.get_default_repo_config())
+                        full_config.s(f"{object_type}.{object_name}", configuration.get_default_repo_config())
                 elif object_type == "groups":
                     if full_config.g(f"{object_type}.{object_name}"):
                         sg.PopupError(
@@ -258,7 +258,7 @@ def config_gui(full_config: dict, config_file: str):
                 # Use last part of key only
                 if key in configuration.ENCRYPTED_OPTIONS:
                     try:
-                        if value is None or value == "":
+                        if value is None:
                             return
                         if isinstance(value, dict):
                             for k in value.keys():
@@ -483,6 +483,8 @@ def config_gui(full_config: dict, config_file: str):
             # Enable settings only valid for repos
             window["repo_uri"].Update(visible=True)
             window["--SET-PERMISSIONS--"].Update(visible=True)
+            window["current_permissions"].Update(visible=True)
+            window["manager_password_set"].Update(visible=True)
 
         elif object_type == "groups":
             object_config = configuration.get_group_config(
@@ -493,11 +495,12 @@ def config_gui(full_config: dict, config_file: str):
             # Disable settings only valid for repos
             window["repo_uri"].Update(visible=False)
             window["--SET-PERMISSIONS--"].Update(visible=False)
+            window["current_permissions"].Update(visible=False)
+            window["manager_password_set"].Update(visible=False)
 
         else:
             object_config = None
             config_inheritance = None
-
 
         # Now let's iter over the whole config object and update keys accordingly
         iter_over_config(
