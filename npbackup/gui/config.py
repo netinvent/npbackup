@@ -73,7 +73,7 @@ def ask_manager_password(manager_password: str) -> bool:
             _t("config_gui.set_manager_password"), password_char="*"
         ) == str(manager_password):
             return True
-        sg.PopupError(_t("config_gui.wrong_password"))
+        sg.PopupError(_t("config_gui.wrong_password"), keep_on_top=True)
         return False
     return True
 
@@ -684,7 +684,7 @@ def config_gui(full_config: dict, config_file: str):
         """
         object_type, object_name = get_object_from_combo(object_name)
         if object_type == "groups":
-            sg.PopupError(_t("config_gui.permissions_only_for_repos"))
+            sg.PopupError(_t("config_gui.permissions_only_for_repos"), keep_on_top=True)
             return full_config
         permissions = list(combo_boxes["permissions"].values())
         current_perm = full_config.g(f"{object_type}.{object_name}.permissions")
@@ -2065,7 +2065,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                         INHERITED_FOLDER_ICON,
                     ):
                         sg.PopupError(
-                            _t("config_gui.cannot_remove_group_inherited_settings")
+                            _t("config_gui.cannot_remove_group_inherited_settings"), keep_on_top=True
                         )
                         continue
                     tree.delete(key)
@@ -2073,7 +2073,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             continue
         if event == "--ACCEPT--":
             if object_type != "groups" and not values["repo_uri"]:
-                sg.PopupError(_t("config_gui.repo_uri_cannot_be_empty"))
+                sg.PopupError(_t("config_gui.repo_uri_cannot_be_empty"), keep_on_top=True)
                 continue
             full_config = update_config_dict(
                 full_config, current_object_type, current_object_name, values
@@ -2093,7 +2093,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             # NPF-SEC-00009
             env_manager_password = os.environ.get("NPBACKUP_MANAGER_PASSWORD", None)
             if not manager_password:
-                sg.PopupError(_t("config_gui.no_manager_password_defined"))
+                sg.PopupError(_t("config_gui.no_manager_password_defined"), keep_on_top=True)
                 continue
             if (
                 env_manager_password and env_manager_password == manager_password
@@ -2112,10 +2112,10 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 if result:
                     sg.Popup(_t("config_gui.scheduled_task_creation_success"))
                 else:
-                    sg.PopupError(_t("config_gui.scheduled_task_creation_failure"))
+                    sg.PopupError(_t("config_gui.scheduled_task_creation_failure"), keep_on_top=True)
             except ValueError as exc:
                 sg.PopupError(
-                    _t("config_gui.scheduled_task_creation_failure") + f": {exc}"
+                    _t("config_gui.scheduled_task_creation_failure") + f": {exc}", keep_on_top=True
                 )
             continue
     window.close()

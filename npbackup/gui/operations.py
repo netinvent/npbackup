@@ -236,7 +236,7 @@ def operations_gui(full_config: dict) -> dict:
                 object_name = None
             finally:
                 if not object_name:
-                    sg.PopupError(_t("operations_gui.no_repo_selected"))
+                    sg.PopupError(_t("operations_gui.no_repo_selected"), keep_on_top=True)
                     continue
             manager_password = get_manager_password(
                 full_config, object_name
@@ -244,7 +244,7 @@ def operations_gui(full_config: dict) -> dict:
             # NPF-SEC-00009
             env_manager_password = os.environ.get("NPBACKUP_MANAGER_PASSWORD", None)
             if not manager_password:
-                sg.PopupError(_t("config_gui.no_manager_password_defined"))
+                sg.PopupError(_t("config_gui.no_manager_password_defined"), keep_on_top=True)
                 continue
             if (
                 env_manager_password and env_manager_password == manager_password
