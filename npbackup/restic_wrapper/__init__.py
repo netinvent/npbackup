@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024060101"
-__version__ = "2.2.0"
+__build__ = "2024061601"
+__version__ = "2.2.1"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -25,6 +25,7 @@ from command_runner import command_runner
 from ofunctions.misc import BytesConverter, fn_name
 from npbackup.__debug__ import _DEBUG
 from npbackup.__env__ import FAST_COMMANDS_TIMEOUT, CHECK_INTERVAL
+from npbackup.path_helper import CURRENT_DIR
 
 
 logger = getLogger()
@@ -823,6 +824,11 @@ class ResticRunner:
                 if exclude_file:
                     if os.path.isfile(exclude_file):
                         cmd += f' --{case_ignore_param}exclude-file "{exclude_file}"'
+                    elif os.path.isfile(os.path.join(CURRENT_DIR, os.path.basename(exclude_file))):
+                        cmd += f' --{case_ignore_param}exclude-file "{os.path.join(CURRENT_DIR, os.path.basename(exclude_file))}"'
+                        self.write_logs(
+                            f"Expanding exclude file path to {CURRENT_DIR}", level="info"
+                        )
                     else:
                         self.write_logs(
                             f"Exclude file '{exclude_file}' not found", level="error"

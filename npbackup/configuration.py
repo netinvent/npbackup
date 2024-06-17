@@ -129,6 +129,7 @@ ENCRYPTED_OPTIONS = [
 # This is what a config file looks like
 empty_config_dict = {
     "conf_version": MAX_CONF_VERSION,
+    "audience": None,
     "repos": {
         "default": {
             "repo_uri": None,
@@ -233,6 +234,13 @@ empty_config_dict = {
     },
 }
 
+def convert_to_commented_map(
+    source_dict,
+):
+    if isinstance(source_dict, dict):
+        return CommentedMap({k: convert_to_commented_map(v) for k, v in source_dict.items()})
+    else:
+        return source_dict
 
 def get_default_config() -> dict:
     """
@@ -240,15 +248,23 @@ def get_default_config() -> dict:
     """
     full_config = deepcopy(empty_config_dict)
 
-    def convert_to(
-        source_dict,
-    ):
-        if isinstance(source_dict, dict):
-            return CommentedMap({k: convert_to(v) for k, v in source_dict.items()})
-        else:
-            return source_dict
+    return convert_to_commented_map(full_config)
 
-    return convert_to(full_config)
+
+def get_default_repo_config() -> dict:
+    """
+    Returns a repo config dict as nested CommentedMaps (used by ruamel.yaml to keep comments intact)
+    """
+    repo_config = deepcopy(empty_config_dict["repos"]["default"])
+    return convert_to_commented_map(repo_config)
+
+
+def get_default_group_config() -> dict:
+    """
+    Returns a group config dict as nested CommentedMaps (used by ruamel.yaml to keep comments intact)
+    """
+    group_config = deepcopy(empty_config_dict["groups"]["default_group"])
+    return convert_to_commented_map(group_config)
 
 
 def key_should_be_encrypted(key: str, encrypted_options: List[str]):
@@ -471,6 +487,9 @@ def extract_permissions_from_full_config(full_config: dict) -> dict:
                     full_config.s(f"{object_type}.{object_name}.manager_password", manager_password)
                 else:
                     logger.info(f"No extra information for {object_type} {object_name} found")
+                    # If no permissions are set, we get to use default permissions
+                    full_config.s(f"repos.{repo}.permissions", empty_config_dict["repos"]["default"]["permissions"])
+                    full_config.s(f"repos.{repo}.manager_password", None)
     return full_config
 
 
@@ -595,15 +614,15 @@ def get_repo_config(
                                 _config_inheritance.g(key)[v] = False
                     else:
                         # repo_config may or may not already contain data
-                        if _repo_config is None:
+                        if _repo_config is None or _repo_config == "":
                             _repo_config = CommentedMap()
                             _config_inheritance = CommentedMap()
-                        if _repo_config.g(key) is None:
+                        if _repo_config.g(key) is None or _repo_config.g(key) == "":
                             _repo_config.s(key, value)
                             _config_inheritance.s(key, True)
                         # Case where repo_config contains list but group info has single str
                         elif (
-                            isinstance(_repo_config.g(key), list) and value is not None
+                            isinstance(_repo_config.g(key), list) and value is not None and value != ""
                         ):
                             merged_lists = _repo_config.g(key) + [value]
 
@@ -826,9 +845,9 @@ def load_config(config_file: Path) -> Optional[dict]:
 
 def save_config(config_file: Path, full_config: dict) -> bool:
     try:
+        full_config = inject_permissions_into_full_config(full_config)
+        full_config.s("audience", "private" if IS_PRIV_BUILD else "public")
         with open(config_file, "w", encoding="utf-8") as file_handle:
-            full_config = inject_permissions_into_full_config(full_config)
-
             if not is_encrypted(full_config):
                 full_config = crypt_config(
                     full_config, AES_KEY, ENCRYPTED_OPTIONS, operation="encrypt"
@@ -894,8 +913,9 @@ def get_anonymous_repo_config(repo_config: dict, show_encrypted: bool = False) -
                 value = "__(o_O)__"
         return value
 
-    # NPF-SEC-00008: Don't show manager password / sensible data with --show-config
-    repo_config.pop("manager_password", None)
+    # NPF-SEC-00008: Don't show manager password / sensible data with --show-config unless it's empty
+    if repo_config.get("manager_password", None):
+        repo_config["manager_password"] = "__(x_X)__"
     repo_config.pop("update_manager_password", None)
     if show_encrypted:
         return repo_config

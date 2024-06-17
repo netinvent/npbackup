@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.config"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024051001"
+__build__ = "2024061601"
 
 
 from typing import List, Tuple
@@ -159,16 +159,20 @@ def config_gui(full_config: dict, config_file: str):
                     full_config.s(f"{object_type}.{object_name}", CommentedMap())
                 elif object_type == "groups":
                     if full_config.g(f"{object_type}.{object_name}"):
+                    full_config.s(f"{object_type}.{object_name}", configuration.get_default_repo_config())
+                elif object_type == "groups":
+                    if full_config.g(f"{object_type}.{object_name}"):
                         sg.PopupError(
                             _t("config_gui.group_already_exists"), keep_on_top=True
                         )
                         continue
-                    full_config.s(f"groups.{object_name}", CommentedMap())
+                    full_config.s(f"groups.{object_name}", configuration.get_default_group_config())
                 else:
                     raise ValueError("Bogus object type given")
+                break
         window.close()
         update_object_gui(full_config, None, unencrypted=False)
-        return full_config
+        return full_config, object_name, object_type
 
     def delete_object(full_config: dict, object_name: str) -> dict:
         object_type, object_name = get_object_from_combo(object_name)
@@ -180,10 +184,17 @@ def config_gui(full_config: dict, config_file: str):
             update_object_gui(full_config, None, unencrypted=False)
         return full_config
 
-    def update_object_selector() -> None:
-        objects = get_objects()
-        window["-OBJECT-SELECT-"].Update(objects)
-        window["-OBJECT-SELECT-"].Update(value=objects[0])
+    def update_object_selector(object_name: str = None, object_type: str = None) -> None:
+        object_list = get_objects()
+        if not object_name or not object_type:
+            object = object_list[0]
+        else:
+            object = f"{object_type.capitalize()}: {object_name}"
+        print(object_list)
+        print(object)
+        
+        window["-OBJECT-SELECT-"].Update(values=object_list)
+        window["-OBJECT-SELECT-"].Update(value=object)
 
     def get_object_from_combo(combo_value: str) -> Tuple[str, str]:
         """
@@ -1926,8 +1937,8 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             update_object_selector()
             continue
         if event == "-OBJECT-CREATE-":
-            full_config = create_object(full_config)
-            update_object_selector()
+            full_config, object_name, object_type = create_object(full_config)
+            update_object_selector(object_name, object_type)
             continue
         if event == "--SET-PERMISSIONS--":
             manager_password = configuration.get_manager_password(
