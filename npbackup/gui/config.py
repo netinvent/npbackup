@@ -167,7 +167,7 @@ def config_gui(full_config: dict, config_file: str):
                 else:
                     raise ValueError("Bogus object type given")
         window.close()
-        update_object_gui(None, unencrypted=False)
+        update_object_gui(full_config, None, unencrypted=False)
         return full_config
 
     def delete_object(full_config: dict, object_name: str) -> dict:
@@ -177,7 +177,7 @@ def config_gui(full_config: dict, config_file: str):
         )
         if result:
             full_config.d(f"{object_type}.{object_name}")
-            update_object_gui(None, unencrypted=False)
+            update_object_gui(full_config, None, unencrypted=False)
         return full_config
 
     def update_object_selector() -> None:
@@ -426,7 +426,7 @@ def config_gui(full_config: dict, config_file: str):
 
         _iter_over_config(object_config, root_key)
 
-    def update_object_gui(object_name=None, unencrypted=False):
+    def update_object_gui(full_config: dict, object_name: str = None, unencrypted: bool = False):
         nonlocal backup_paths_tree
         nonlocal tags_tree
         nonlocal exclude_files_tree
@@ -436,6 +436,7 @@ def config_gui(full_config: dict, config_file: str):
         nonlocal post_exec_commands_tree
         nonlocal env_variables_tree
         nonlocal encrypted_env_variables_tree
+
 
         # Load fist available repo or group if none given
         if not object_name:
@@ -485,6 +486,7 @@ def config_gui(full_config: dict, config_file: str):
         else:
             object_config = None
             config_inheritance = None
+
 
         # Now let's iter over the whole config object and update keys accordingly
         iter_over_config(
@@ -1889,7 +1891,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
     encrypted_env_variables_tree = sg.TreeData()
 
     # Update gui with first default object (repo or group)
-    update_object_gui(get_objects()[0], unencrypted=False)
+    update_object_gui(full_config, get_objects()[0], unencrypted=False)
     update_global_gui(full_config, unencrypted=False)
 
     # These contain object name/type so on object change we can update the current object before loading new one
@@ -1916,7 +1918,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 full_config, current_object_type, current_object_name, values
             )
             current_object_type, current_object_name = object_type, object_name
-            update_object_gui(values["-OBJECT-SELECT-"], unencrypted=False)
+            update_object_gui(full_config, values["-OBJECT-SELECT-"], unencrypted=False)
             update_global_gui(full_config, unencrypted=False)
             continue
         if event == "-OBJECT-DELETE-":
@@ -1932,8 +1934,10 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 full_config, object_name
             )
             if not manager_password or ask_manager_password(manager_password):
+                # We need to update full_config with current GUI values before using modifying it
+                full_config = update_config_dict(full_config, current_object_type, current_object_name, values)
                 full_config = set_permissions(full_config, object_type=object_type, object_name=values["-OBJECT-SELECT-"])
-                update_object_gui(values["-OBJECT-SELECT-"])
+                update_object_gui(full_config, values["-OBJECT-SELECT-"])
             continue
         if event in (
             "--ADD-PATHS-FILE--",
@@ -2094,7 +2098,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             if (
                 env_manager_password and env_manager_password == manager_password
             ) or ask_manager_password(manager_password):
-                update_object_gui(values["-OBJECT-SELECT-"], unencrypted=True)
+                update_object_gui(full_config, values["-OBJECT-SELECT-"], unencrypted=True)
                 update_global_gui(full_config, unencrypted=True)
             continue
         if event in ("create_interval_task", "create_daily_task"):
