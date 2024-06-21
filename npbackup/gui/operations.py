@@ -234,10 +234,9 @@ def operations_gui(full_config: dict) -> dict:
             except Exception as exc:
                 logger.debug("Trace:", exc_info=True)
                 object_name = None
-            finally:
-                if not object_name:
-                    sg.PopupError(_t("operations_gui.no_repo_selected"), keep_on_top=True)
-                    continue
+            if not object_name:
+                sg.PopupError(_t("operations_gui.no_repo_selected"), keep_on_top=True)
+                continue
             manager_password = get_manager_password(
                 full_config, object_name
             )
