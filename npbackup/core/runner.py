@@ -151,7 +151,7 @@ def metric_writer(
             else:
                 try:
                     # We use append so if prometheus text collector did not get data yet, we'll not wipe it
-                    with open(destination, "a") as file_handle:
+                    with open(destination, "a", encoding="utf-8") as file_handle:
                         for metric in metrics:
                             file_handle.write(metric + "\n")
                 except OSError as exc:

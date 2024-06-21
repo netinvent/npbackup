@@ -316,7 +316,7 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool):
         errors = True
 
     ## Create version file
-    with open(os.path.join(BUILDS_DIR, audience, "VERSION"), "w") as fh:
+    with open(os.path.join(BUILDS_DIR, audience, "VERSION"), "w", encoding="utf-8") as fh:
         fh.write(npbackup_version)
     print(f"COMPILED {'WITH SUCCESS' if not errors else 'WITH ERRORS'}")
     if not onefile:

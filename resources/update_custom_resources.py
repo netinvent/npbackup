@@ -50,7 +50,7 @@ def update_custom_icons():
 
     resources_dir = os.path.join(BASEDIR, os.path.pardir, 'resources')
     customization_py = os.path.join(resources_dir, 'customization.py')
-    with open(customization_py, 'r') as f:
+    with open(customization_py, 'r', encoding="utf-8") as f:
         customization = f.read()
     for var_name, file in custom_resources.items():
         file_path = os.path.join(resources_dir, file)
@@ -61,7 +61,7 @@ def update_custom_icons():
             customization = re.sub(f'{var_name} = b".*"', f'{var_name} = b"{encoded_b64}"', customization)      
         else:
             print("No file found for", var_name)
-    with open(customization_py, 'w') as f:
+    with open(customization_py, 'w', encoding="utf-8") as f:
         f.write(customization)
 
 if __name__ == '__main__':

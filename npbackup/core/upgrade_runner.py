@@ -37,7 +37,7 @@ def need_upgrade(upgrade_interval: int) -> bool:
 
     def _write_count(file: str, count: int) -> bool:
         try:
-            with open(file, "w") as fpw:
+            with open(file, "w", encoding="utf-8") as fpw:
                 fpw.write(str(count))
                 return True
         except OSError:
@@ -46,7 +46,7 @@ def need_upgrade(upgrade_interval: int) -> bool:
 
     def _get_count(file: str) -> Optional[int]:
         try:
-            with open(file, "r") as fpr:
+            with open(file, "r", encoding="utf-8") as fpr:
                 count = int(fpr.read())
                 return count
         except OSError:
