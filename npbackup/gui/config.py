@@ -922,7 +922,7 @@ def config_gui(full_config: dict, config_file: str):
                         [
                             sg.Image(
                                 NON_INHERITED_ICON,
-                                key="inherited.backup_opts.fs_snapshot",
+                                key="inherited.backup_opts.use_fs_snapshot",
                                 tooltip=_t("config_gui.group_inherited"),
                                 pad=1,
                             ),
@@ -1026,15 +1026,15 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [sg.HSeparator()],
             [
-                sg.Text(
-                    _t("config_gui.exclude_files_larger_than"),
-                    size=(40, 1),
-                ),
                 sg.Image(
                     NON_INHERITED_ICON,
                     key="inherited.backup_opts.exclude_files_larger_than",
                     tooltip=_t("config_gui.group_inherited"),
                     pad=1,
+                ),
+                sg.Text(
+                    _t("config_gui.exclude_files_larger_than"),
+                    size=(40, 1),
                 ),
                 sg.Input(key="backup_opts.exclude_files_larger_than", size=(8, 1)),
                 sg.Combo(
@@ -1210,7 +1210,7 @@ def config_gui(full_config: dict, config_file: str):
             [
                 sg.Image(
                     NON_INHERITED_ICON,
-                    key="inherited.backup_opts.execute_even_on_backup_error",
+                    key="inherited.backup_opts.post_exec_execute_even_on_backup_error",
                     tooltip=_t("config_gui.group_inherited"),
                     pad=1,
                 ),
@@ -1256,15 +1256,23 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Text(_t("config_gui.current_permissions"), size=(40, 1)),
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.repo_opts.permissions",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
                 sg.Text("Default", key="current_permissions", size=(25, 1)),
             ],
             [
                 sg.Text(_t("config_gui.manager_password_set"), size=(40, 1)),
+                sg.Image(NON_INHERITED_ICON, pad=1),
                 sg.Text(_t("generic.no"), key="manager_password_set", size=(25, 1)),
             ],
             [sg.Button(_t("config_gui.set_permissions"), key="--SET-PERMISSIONS--")],
             [
                 sg.Text(_t("config_gui.repo_group"), size=(40, 1)),
+                sg.Image(NON_INHERITED_ICON, pad=1),
                 sg.Combo(
                     values=configuration.get_group_list(full_config), key="repo_group"
                 ),
@@ -1274,11 +1282,23 @@ def config_gui(full_config: dict, config_file: str):
                     _t("config_gui.minimum_backup_age"),
                     size=(40, 2),
                 ),
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.repo_opts.minimum_backup_age",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
                 sg.Input(key="repo_opts.minimum_backup_age", size=(8, 1)),
                 sg.Text(_t("generic.minutes")),
             ],
             [
                 sg.Text(_t("config_gui.upload_speed"), size=(40, 1)),
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.repo_opts.upload_speed",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
                 sg.Input(key="repo_opts.upload_speed", size=(8, 1)),
                 sg.Combo(
                     byte_units,
@@ -1288,6 +1308,12 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Text(_t("config_gui.download_speed"), size=(40, 1)),
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.repo_opts.download_speed",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
                 sg.Input(key="repo_opts.download_speed", size=(8, 1)),
                 sg.Combo(
                     byte_units,
@@ -1297,6 +1323,12 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Text(_t("config_gui.backend_connections"), size=(40, 1)),
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.repo_opts.backend_connections",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
                 sg.Input(key="repo_opts.backend_connections", size=(8, 1)),
             ],
         ]
@@ -1392,6 +1424,12 @@ def config_gui(full_config: dict, config_file: str):
                 ),
             ],
             [
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.repo_opts.retention_policy.keep_within",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
                 sg.Checkbox(
                     _t("config_gui.keep_within"),
                     key="repo_opts.retention_policy.keep_within",
@@ -1427,6 +1465,12 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [sg.HorizontalSeparator()],
             [
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.repo_opts.retention_policy.ntp_server",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
                 sg.Text(_t("config_gui.optional_ntp_server_uri"), size=(40, 1)),
                 sg.Input(key="repo_opts.retention_policy.ntp_server", size=(50, 1)),
             ],
@@ -1436,10 +1480,22 @@ def config_gui(full_config: dict, config_file: str):
             [sg.Text(_t("config_gui.available_variables"))],
             [
                 sg.Text(_t("config_gui.job_name"), size=(40, 1)),
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.prometheus.backup_job",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
                 sg.Input(key="prometheus.backup_job", size=(50, 1)),
             ],
             [
                 sg.Text(_t("generic.group"), size=(40, 1)),
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.prometheus.group",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
                 sg.Input(key="prometheus.group", size=(50, 1)),
             ],
         ]
