@@ -484,9 +484,11 @@ _change_log = """
         Fixed docstring for execute_command_subprocess.  The command description was incorrect
     4.61.0.206
         New Udemy Coupon code
-    
     NPF 2024-04-25
-        Disable upgrade api call
+    Disable upgrade api call
+    NPF 2024-07-23
+    Add a try except block around refresh_debugger() for Nuitka compilation
+
     """
 
 __version__ = version.split()[0]  # For PEP 396 and PEP 345
@@ -24727,18 +24729,21 @@ def _refresh_debugger():
     # frame = inspect.currentframe()
     # frame = inspect.currentframe().f_back
 
-    frame, *others = inspect.stack()[1]
     try:
-        debugger.locals = frame.f_back.f_locals
-        debugger.globals = frame.f_back.f_globals
-    finally:
-        del frame
-    if debugger.popout_window:
-        rc = debugger._refresh_floating_window()
-    if debugger.watcher_window:
-        rc = debugger._refresh_main_debugger_window(debugger.locals, debugger.globals)
-    Window._read_call_from_debugger = False
-    return rc
+        frame, *others = inspect.stack()[1]
+        try:
+            debugger.locals = frame.f_back.f_locals
+            debugger.globals = frame.f_back.f_globals
+        finally:
+            del frame
+        if debugger.popout_window:
+            rc = debugger._refresh_floating_window()
+        if debugger.watcher_window:
+            rc = debugger._refresh_main_debugger_window(debugger.locals, debugger.globals)
+        Window._read_call_from_debugger = False
+        return rc
+    except:
+        return None
 
 
 def _debugger_window_is_open():
@@ -26999,6 +27004,7 @@ if _mac_should_set_alpha_to_99():
 # NPF-MOD: Don't want a GUI library to call back home
 # My App doesn't need to be flagged as virus by behavior scanners
 #__perform_upgrade_check()
+
 
 
 # -------------------------------- ENTRY POINT IF RUN STANDALONE -------------------------------- #
