@@ -144,8 +144,8 @@ fr:
   full_perms: Accès total
   setting_permissions_requires_manager_password: Un mot de passe gestionnaire est requis pour définir des permissions
   manager_password_too_short: Le mot de passe gestionnaire est trop court
-  current_permissions: Permissions actives
-  manager_password_set: Mot de passe gestionnaire initialisé
+  current_permissions: Permissions actives (non herité)
+  manager_password_set: Mot de passe gestionnaire initialisé (non hérité)
 
   unknown_error_see_logs: Erreur inconnue, merci de vérifier les journaux
 
