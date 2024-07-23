@@ -26,15 +26,14 @@ for platform in "windows_386" "windows_amd64" "linux_arm" "linux_arm64" "linux_a
 	            	errors=true
         	else
                 	if [ -f "${restic_filename}.bz2" ]; then
-            			bzip2 -d "${restic_filename}.bz2"
-						chmod +x "${restic_filename}"
+            			bzip2 -d "${restic_filename}.bz2" && chmod +x "${restic_filename}"
 			elif [ -f "${restic_filename}.zip" ]; then
 				unzip "${restic_filename}.zip"
 			else
 				echo "Archive ${restic_filename} not found"
 				errors=true
 			fi
-            		if [ $? -ne 0 ]; then
+            	if [ $? -ne 0 ]; then
                 		echo "Failed to decompress ${restic_filename}.bz2"
                 		errors=true
         		fi
