@@ -18,7 +18,7 @@ import npbackup.gui.PySimpleGUI as sg
 import textwrap
 from ruamel.yaml.comments import CommentedMap
 import npbackup.configuration as configuration
-from ofunctions.misc import get_key_from_value
+from ofunctions.misc import get_key_from_value, BytesConverter
 from npbackup.core.i18n_helper import _t
 from npbackup.__version__ import IS_COMPILED
 from npbackup.path_helper import CURRENT_DIR
@@ -378,9 +378,6 @@ def config_gui(full_config: dict, config_file: str):
                 value, unit = value.split(" ")
                 window[f"{key}_unit"].Update(unit)
 
-            # if isinstance(value, list):
-            #    value = "\n".join(value)
-
             if key in combo_boxes.keys() and value:
                 window[key].Update(value=combo_boxes[key][value])
             else:
@@ -661,6 +658,15 @@ def config_gui(full_config: dict, config_file: str):
                     # check if value is inherited from group
                     if full_config.g(inheritance_key) == value:
                         continue
+                    # we also need to compare inherited values with current values for BytesConverter values
+                    if key in (
+                        "backup_opts.minimum_backup_size_error",
+                        "backup_opts.exclude_files_larger_than",
+                        "repo_opts.upload_speed",
+                        "repo_opts.download_speed",
+                    ):
+                        if BytesConverter(full_config.g(inheritance_key)).bytes == BytesConverter(value).bytes:
+                            continue
 
                     # Debug WIP
                     # if object_group:
