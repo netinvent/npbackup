@@ -234,13 +234,17 @@ empty_config_dict = {
     },
 }
 
+
 def convert_to_commented_map(
     source_dict,
 ):
     if isinstance(source_dict, dict):
-        return CommentedMap({k: convert_to_commented_map(v) for k, v in source_dict.items()})
+        return CommentedMap(
+            {k: convert_to_commented_map(v) for k, v in source_dict.items()}
+        )
     else:
         return source_dict
+
 
 def get_default_config() -> dict:
     """
@@ -483,12 +487,22 @@ def extract_permissions_from_full_config(full_config: dict) -> dict:
                     repo_uri, permissions, manager_password = repo_uri
                     # Overwrite existing permissions / password if it was set in repo_uri
                     full_config.s(f"{object_type}.{object_name}.repo_uri", repo_uri)
-                    full_config.s(f"{object_type}.{object_name}.permissions", permissions)
-                    full_config.s(f"{object_type}.{object_name}.manager_password", manager_password)
+                    full_config.s(
+                        f"{object_type}.{object_name}.permissions", permissions
+                    )
+                    full_config.s(
+                        f"{object_type}.{object_name}.manager_password",
+                        manager_password,
+                    )
                 else:
-                    logger.info(f"No extra information for {object_type} {object_name} found")
+                    logger.info(
+                        f"No extra information for {object_type} {object_name} found"
+                    )
                     # If no permissions are set, we get to use default permissions
-                    full_config.s(f"{object_type}.{object_name}.permissions", empty_config_dict["repos"]["default"]["permissions"])
+                    full_config.s(
+                        f"{object_type}.{object_name}.permissions",
+                        empty_config_dict["repos"]["default"]["permissions"],
+                    )
                     full_config.s(f"{object_type}.{object_name}.manager_password", None)
     return full_config
 
@@ -503,12 +517,17 @@ def inject_permissions_into_full_config(full_config: dict) -> Tuple[bool, dict]:
     for object_type in ("repos", "groups"):
         for object_name in full_config.g(object_type).keys():
             repo_uri = full_config.g(f"{object_type}.{object_name}.repo_uri")
-            manager_password = full_config.g(f"{object_type}.{object_name}.manager_password")
+            manager_password = full_config.g(
+                f"{object_type}.{object_name}.manager_password"
+            )
             permissions = full_config.g(f"{object_type}.{object_name}.permissions")
-            update_manager_password = full_config.g(f"{object_type}.{object_name}.update_manager_password")
+            update_manager_password = full_config.g(
+                f"{object_type}.{object_name}.update_manager_password"
+            )
             if update_manager_password and manager_password:
                 full_config.s(
-                    f"{object_type}.{object_name}.repo_uri", (repo_uri, permissions, manager_password)
+                    f"{object_type}.{object_name}.repo_uri",
+                    (repo_uri, permissions, manager_password),
                 )
                 full_config.s(f"{object_type}.{object_name}.is_protected", True)
             elif manager_password:
@@ -622,7 +641,9 @@ def get_repo_config(
                             _config_inheritance.s(key, True)
                         # Case where repo_config contains list but group info has single str
                         elif (
-                            isinstance(_repo_config.g(key), list) and value is not None and value != ""
+                            isinstance(_repo_config.g(key), list)
+                            and value is not None
+                            and value != ""
                         ):
                             merged_lists = _repo_config.g(key) + [value]
 

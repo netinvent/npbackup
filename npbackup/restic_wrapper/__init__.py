@@ -824,10 +824,13 @@ class ResticRunner:
                 if exclude_file:
                     if os.path.isfile(exclude_file):
                         cmd += f' --{case_ignore_param}exclude-file "{exclude_file}"'
-                    elif os.path.isfile(os.path.join(CURRENT_DIR, os.path.basename(exclude_file))):
+                    elif os.path.isfile(
+                        os.path.join(CURRENT_DIR, os.path.basename(exclude_file))
+                    ):
                         cmd += f' --{case_ignore_param}exclude-file "{os.path.join(CURRENT_DIR, os.path.basename(exclude_file))}"'
                         self.write_logs(
-                            f"Expanding exclude file path to {CURRENT_DIR}", level="info"
+                            f"Expanding exclude file path to {CURRENT_DIR}",
+                            level="info",
                         )
                     else:
                         self.write_logs(

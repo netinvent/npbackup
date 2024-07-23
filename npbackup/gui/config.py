@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.config"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024061601"
+__build__ = "2024072301"
 
 
 from typing import List, Tuple
@@ -159,14 +159,20 @@ def config_gui(full_config: dict, config_file: str):
                     full_config.s(f"{object_type}.{object_name}", CommentedMap())
                 elif object_type == "groups":
                     if full_config.g(f"{object_type}.{object_name}"):
-                        full_config.s(f"{object_type}.{object_name}", configuration.get_default_repo_config())
+                        full_config.s(
+                            f"{object_type}.{object_name}",
+                            configuration.get_default_repo_config(),
+                        )
                 elif object_type == "groups":
                     if full_config.g(f"{object_type}.{object_name}"):
                         sg.PopupError(
                             _t("config_gui.group_already_exists"), keep_on_top=True
                         )
                         continue
-                    full_config.s(f"groups.{object_name}", configuration.get_default_group_config())
+                    full_config.s(
+                        f"groups.{object_name}",
+                        configuration.get_default_group_config(),
+                    )
                 else:
                     raise ValueError("Bogus object type given")
                 break
@@ -184,7 +190,9 @@ def config_gui(full_config: dict, config_file: str):
             update_object_gui(full_config, None, unencrypted=False)
         return full_config
 
-    def update_object_selector(object_name: str = None, object_type: str = None) -> None:
+    def update_object_selector(
+        object_name: str = None, object_type: str = None
+    ) -> None:
         object_list = get_objects()
         if not object_name or not object_type:
             object = object_list[0]
@@ -192,7 +200,7 @@ def config_gui(full_config: dict, config_file: str):
             object = f"{object_type.capitalize()}: {object_name}"
         print(object_list)
         print(object)
-        
+
         window["-OBJECT-SELECT-"].Update(values=object_list)
         window["-OBJECT-SELECT-"].Update(value=object)
 
@@ -239,7 +247,7 @@ def config_gui(full_config: dict, config_file: str):
                 "prometheus.instance",
                 "prometheus.http_username",
                 "prometheus.http_password",
-                "update_manager_password"
+                "update_manager_password",
             ) or key.startswith("prometheus.additional_labels"):
                 return
             if key == "permissions":
@@ -437,7 +445,9 @@ def config_gui(full_config: dict, config_file: str):
 
         _iter_over_config(object_config, root_key)
 
-    def update_object_gui(full_config: dict, object_name: str = None, unencrypted: bool = False):
+    def update_object_gui(
+        full_config: dict, object_name: str = None, unencrypted: bool = False
+    ):
         nonlocal backup_paths_tree
         nonlocal tags_tree
         nonlocal exclude_files_tree
@@ -447,7 +457,6 @@ def config_gui(full_config: dict, config_file: str):
         nonlocal post_exec_commands_tree
         nonlocal env_variables_tree
         nonlocal encrypted_env_variables_tree
-
 
         # Load fist available repo or group if none given
         if not object_name:
@@ -706,7 +715,9 @@ def config_gui(full_config: dict, config_file: str):
             current_perm = permissions[-1]
         else:
             current_perm = combo_boxes["permissions"][current_perm]
-        manager_password = full_config.g(f"{object_type}.{object_name}.manager_password")
+        manager_password = full_config.g(
+            f"{object_type}.{object_name}.manager_password"
+        )
 
         layout = [
             [
@@ -757,8 +768,13 @@ def config_gui(full_config: dict, config_file: str):
                     combo_boxes["permissions"], values["permissions"]
                 )
                 full_config.s(f"{object_type}.{object_name}.permissions", permission)
-                full_config.s(f"{object_type}.{object_name}.manager_password", values["-MANAGER-PASSWORD-"])
-                full_config.s(f"{object_type}.{object_name}.update_manager_password", True)
+                full_config.s(
+                    f"{object_type}.{object_name}.manager_password",
+                    values["-MANAGER-PASSWORD-"],
+                )
+                full_config.s(
+                    f"{object_type}.{object_name}.update_manager_password", True
+                )
                 break
         window.close()
         return full_config
@@ -1239,17 +1255,14 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Input(key="repo_opts.repo_password_command", size=(95, 1)),
             ],
             [
-                
                 sg.Text(_t("config_gui.current_permissions"), size=(40, 1)),
-                sg.Text("Default", key="current_permissions", size=(25, 1))
+                sg.Text("Default", key="current_permissions", size=(25, 1)),
             ],
             [
                 sg.Text(_t("config_gui.manager_password_set"), size=(40, 1)),
-                sg.Text(_t("generic.no"), key="manager_password_set", size=(25, 1))
+                sg.Text(_t("generic.no"), key="manager_password_set", size=(25, 1)),
             ],
-            [
-                sg.Button(_t("config_gui.set_permissions"), key="--SET-PERMISSIONS--")
-            ],
+            [sg.Button(_t("config_gui.set_permissions"), key="--SET-PERMISSIONS--")],
             [
                 sg.Text(_t("config_gui.repo_group"), size=(40, 1)),
                 sg.Combo(
@@ -1949,8 +1962,14 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             )
             if not manager_password or ask_manager_password(manager_password):
                 # We need to update full_config with current GUI values before using modifying it
-                full_config = update_config_dict(full_config, current_object_type, current_object_name, values)
-                full_config = set_permissions(full_config, object_type=object_type, object_name=values["-OBJECT-SELECT-"])
+                full_config = update_config_dict(
+                    full_config, current_object_type, current_object_name, values
+                )
+                full_config = set_permissions(
+                    full_config,
+                    object_type=object_type,
+                    object_name=values["-OBJECT-SELECT-"],
+                )
                 update_object_gui(full_config, values["-OBJECT-SELECT-"])
             continue
         if event in (
@@ -2079,7 +2098,8 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                         INHERITED_FOLDER_ICON,
                     ):
                         sg.PopupError(
-                            _t("config_gui.cannot_remove_group_inherited_settings"), keep_on_top=True
+                            _t("config_gui.cannot_remove_group_inherited_settings"),
+                            keep_on_top=True,
                         )
                         continue
                     tree.delete(key)
@@ -2087,7 +2107,9 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             continue
         if event == "--ACCEPT--":
             if object_type != "groups" and not values["repo_uri"]:
-                sg.PopupError(_t("config_gui.repo_uri_cannot_be_empty"), keep_on_top=True)
+                sg.PopupError(
+                    _t("config_gui.repo_uri_cannot_be_empty"), keep_on_top=True
+                )
                 continue
             full_config = update_config_dict(
                 full_config, current_object_type, current_object_name, values
@@ -2107,12 +2129,16 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             # NPF-SEC-00009
             env_manager_password = os.environ.get("NPBACKUP_MANAGER_PASSWORD", None)
             if not manager_password:
-                sg.PopupError(_t("config_gui.no_manager_password_defined"), keep_on_top=True)
+                sg.PopupError(
+                    _t("config_gui.no_manager_password_defined"), keep_on_top=True
+                )
                 continue
             if (
                 env_manager_password and env_manager_password == manager_password
             ) or ask_manager_password(manager_password):
-                update_object_gui(full_config, values["-OBJECT-SELECT-"], unencrypted=True)
+                update_object_gui(
+                    full_config, values["-OBJECT-SELECT-"], unencrypted=True
+                )
                 update_global_gui(full_config, unencrypted=True)
             continue
         if event in ("create_interval_task", "create_daily_task"):
@@ -2126,10 +2152,14 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 if result:
                     sg.Popup(_t("config_gui.scheduled_task_creation_success"))
                 else:
-                    sg.PopupError(_t("config_gui.scheduled_task_creation_failure"), keep_on_top=True)
+                    sg.PopupError(
+                        _t("config_gui.scheduled_task_creation_failure"),
+                        keep_on_top=True,
+                    )
             except ValueError as exc:
                 sg.PopupError(
-                    _t("config_gui.scheduled_task_creation_failure") + f": {exc}", keep_on_top=True
+                    _t("config_gui.scheduled_task_creation_failure") + f": {exc}",
+                    keep_on_top=True,
                 )
             continue
     window.close()

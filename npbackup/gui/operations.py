@@ -13,7 +13,12 @@ __build__ = "2024061601"
 import os
 from logging import getLogger
 import npbackup.gui.PySimpleGUI as sg
-from npbackup.configuration import get_repo_config, get_group_list, get_repos_by_group, get_manager_password
+from npbackup.configuration import (
+    get_repo_config,
+    get_group_list,
+    get_repos_by_group,
+    get_manager_password,
+)
 from npbackup.core.i18n_helper import _t
 from npbackup.gui.helpers import get_anon_repo_uri, gui_thread_runner
 from resources.customization import (
@@ -91,9 +96,7 @@ def operations_gui(full_config: dict) -> dict:
                 repo_list = []
                 for group_index in values["-GROUP_LIST-"]:
                     group_name = group_list[group_index]
-                    repo_list += get_repos_by_group(
-                        full_config, group_name
-                    )
+                    repo_list += get_repos_by_group(full_config, group_name)
                 result = repo_list
                 break
             if event == "--APPLY_TO_ALL--":
@@ -199,7 +202,7 @@ def operations_gui(full_config: dict) -> dict:
             )
         ]
     ]
-   
+
     right_click_menu = ["", [_t("config_gui.show_decrypted")]]
 
     window = sg.Window(
@@ -237,18 +240,20 @@ def operations_gui(full_config: dict) -> dict:
             if not object_name:
                 sg.PopupError(_t("operations_gui.no_repo_selected"), keep_on_top=True)
                 continue
-            manager_password = get_manager_password(
-                full_config, object_name
-            )
+            manager_password = get_manager_password(full_config, object_name)
             # NPF-SEC-00009
             env_manager_password = os.environ.get("NPBACKUP_MANAGER_PASSWORD", None)
             if not manager_password:
-                sg.PopupError(_t("config_gui.no_manager_password_defined"), keep_on_top=True)
+                sg.PopupError(
+                    _t("config_gui.no_manager_password_defined"), keep_on_top=True
+                )
                 continue
             if (
                 env_manager_password and env_manager_password == manager_password
             ) or ask_manager_password(manager_password):
-                complete_repo_list = gui_update_state(window, full_config, unencrypted=object_name)
+                complete_repo_list = gui_update_state(
+                    window, full_config, unencrypted=object_name
+                )
             continue
         if event in (
             "--QUICK-CHECK--",
@@ -272,9 +277,7 @@ def operations_gui(full_config: dict) -> dict:
             if not repos:
                 continue
             for repo_name in repos:
-                repo_config, __annotations__ = get_repo_config(
-                    full_config, repo_name
-                )
+                repo_config, __annotations__ = get_repo_config(full_config, repo_name)
                 repo_config_list.append(repo_config)
             operation = None
             op_args = None

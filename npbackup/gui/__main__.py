@@ -599,7 +599,9 @@ def _main_gui(viewer_mode: bool):
                 logger.info(f"Using configuration file {config_file}")
                 full_config = npbackup.configuration.load_config(config_file)
                 if not full_config:
-                    sg.PopupError(f"{_t('main_gui.config_error')} {config_file}", keep_on_top=True)
+                    sg.PopupError(
+                        f"{_t('main_gui.config_error')} {config_file}", keep_on_top=True
+                    )
                     config_exists = False
                 else:
                     config_exists = True
@@ -993,7 +995,9 @@ def _main_gui(viewer_mode: bool):
                 repo_uri = _repo_uri
                 repo_list = _repo_list
             else:
-                sg.PopupError(_t("main_gui.cannot_load_config_keep_current"), keep_on_top=True)
+                sg.PopupError(
+                    _t("main_gui.cannot_load_config_keep_current"), keep_on_top=True
+                )
             if not viewer_mode and not config_file and not full_config:
                 window["-NO-CONFIG-"].Update(visible=True)
             elif not viewer_mode:

@@ -259,9 +259,9 @@ def gui_thread_runner(
                 if stdout_data is None:
                     logger.debug("gui_thread_runner got stdout queue close signal")
                     read_stdout_queue = False
-                    #progress_window["-OPERATIONS-PROGRESS-STDOUT-"].Update(
+                    # progress_window["-OPERATIONS-PROGRESS-STDOUT-"].Update(
                     #    "\n", append=True
-                    #)
+                    # )
                 else:
                     stdout_data = stdout_data.strip("\r\n")
                     progress_window["-OPERATIONS-PROGRESS-STDOUT-"].Update(
