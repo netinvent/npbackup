@@ -641,7 +641,7 @@ def config_gui(full_config: dict, config_file: str):
                         )
 
                 if object_group:
-                    inheritance_key = f"{object_type}.{object_group}.{key}"
+                    inheritance_key = f"groups.{object_group}.{key}"
                     # If object is a list, check which values are inherited from group and remove them
                     if isinstance(value, list):
                         inheritance_list = full_config.g(inheritance_key)
