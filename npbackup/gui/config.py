@@ -665,7 +665,10 @@ def config_gui(full_config: dict, config_file: str):
                         "repo_opts.upload_speed",
                         "repo_opts.download_speed",
                     ):
-                        if BytesConverter(full_config.g(inheritance_key)).bytes == BytesConverter(value).bytes:
+                        if (
+                            BytesConverter(full_config.g(inheritance_key)).bytes
+                            == BytesConverter(value).bytes
+                        ):
                             continue
 
                     # Debug WIP
