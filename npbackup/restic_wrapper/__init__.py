@@ -263,8 +263,10 @@ class ResticRunner:
         if msg is None:
             raise ValueError("None log message received")
         if self.stdout and (level == "info" or (level == "debug" and _DEBUG)):
+            # pylint: disable=E1101 (no-member)
             self.stdout.put(msg)
         if self.stderr and level in ("critical", "error", "warning"):
+            # pylint: disable=E1101 (no-member)
             self.stderr.put(msg)
 
         if raise_error == "ValueError":
@@ -287,6 +289,7 @@ class ResticRunner:
         no_output_queues is needed since we don't want is_init output to be logged
         """
         start_time = datetime.now(timezone.utc)
+        # pylint: disable=E1101 (no-member)
         additional_parameters = (
             f" {self.additional_parameters.strip()} "
             if self.additional_parameters
