@@ -1262,12 +1262,7 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Text(_t("config_gui.current_permissions"), size=(40, 1)),
-                sg.Image(
-                    NON_INHERITED_ICON,
-                    key="inherited.repo_opts.permissions",
-                    tooltip=_t("config_gui.group_inherited"),
-                    pad=1,
-                ),
+                sg.Image(NON_INHERITED_ICON, pad=1),
                 sg.Text("Default", key="current_permissions", size=(25, 1)),
             ],
             [
