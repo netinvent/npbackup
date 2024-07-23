@@ -148,8 +148,11 @@ def config_gui(full_config: dict, config_file: str):
             if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--CANCEL--"):
                 break
             if event == "--ACCEPT--":
-                object_type = values["-OBJECT-TYPE-"]
+                object_type = 'groups' if values["-OBJECT-TYPE-"] == 'group' else 'repos'
                 object_name = values["-OBJECT-NAME-"]
+                if object_name is None or object_name == "":
+                    sg.PopupError(_t("config_gui.object_name_cannot_be_empty"), keep_on_top=True)
+                    continue
                 if object_type == "repos":
                     if full_config.g(f"{object_type}.{object_name}"):
                         sg.PopupError(
@@ -157,12 +160,11 @@ def config_gui(full_config: dict, config_file: str):
                         )
                         continue
                     full_config.s(f"{object_type}.{object_name}", CommentedMap())
-                elif object_type == "groups":
-                    if full_config.g(f"{object_type}.{object_name}"):
-                        full_config.s(
-                            f"{object_type}.{object_name}",
-                            configuration.get_default_repo_config(),
-                        )
+                    full_config.s(
+                        f"{object_type}.{object_name}",
+                        configuration.get_default_repo_config(),
+                    )
+                    break
                 elif object_type == "groups":
                     if full_config.g(f"{object_type}.{object_name}"):
                         sg.PopupError(
@@ -173,9 +175,9 @@ def config_gui(full_config: dict, config_file: str):
                         f"groups.{object_name}",
                         configuration.get_default_group_config(),
                     )
+                    break
                 else:
                     raise ValueError("Bogus object type given")
-                break
         window.close()
         update_object_gui(full_config, None, unencrypted=False)
         return full_config, object_name, object_type
@@ -198,8 +200,6 @@ def config_gui(full_config: dict, config_file: str):
             object = object_list[0]
         else:
             object = f"{object_type.capitalize()}: {object_name}"
-        print(object_list)
-        print(object)
 
         window["-OBJECT-SELECT-"].Update(values=object_list)
         window["-OBJECT-SELECT-"].Update(value=object)
