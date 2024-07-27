@@ -46,7 +46,7 @@ def gui_update_state(window, full_config: dict, unencrypted: str = None) -> list
                     repo_uri = ENCRYPTED_DATA_PLACEHOLDER
                 repo_list.append([repo_name, repo_group, backend_type, repo_uri])
             else:
-                logger.warning("Incomplete operations repo {}".format(repo_name))
+                logger.warning("Incomplete URI/password for repo {}".format(repo_name))
     except KeyError:
         logger.info("No operations repos configured")
     window["repo-list"].update(repo_list)
