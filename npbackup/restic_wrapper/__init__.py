@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024061601"
-__version__ = "2.2.1"
+__build__ = "2024072701"
+__version__ = "2.2.2"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -320,6 +320,7 @@ class ResticRunner:
             check_interval=CHECK_INTERVAL,
             priority=self._priority,
             io_priority=self._priority,
+            windows_no_window=True
         )
         # Don't keep protected environment variables in memory when not necessary
         self._remove_env()
