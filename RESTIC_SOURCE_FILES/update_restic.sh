@@ -13,7 +13,8 @@ for platform in "windows_386" "windows_amd64" "linux_arm" "linux_arm64" "linux_a
 	    if [ ! -f "${restic_filename}" ]; then
         	echo "Moving earlier version to archive"
         	[ -d ARCHIVES ] || mkdir ARCHIVES
-        	mv restic_*_${platform} ARCHIVES/ > /dev/null 2>&1
+        	mv -f restic_*_${platform} ARCHIVES/ > /dev/null 2>&1
+			mv -f restic_*_${platform}.exe ARCHIVES/ > /dev/null 2>&1
         	echo "Downloading ${restic_filename}"
 		if [ "${platform:0:7}" == "windows" ]; then
 			ext=zip
