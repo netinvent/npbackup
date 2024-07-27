@@ -40,7 +40,8 @@
     - Metrics have npbackup execution state
   - Dry mode now works for all operations where restic supports dry-mode
   - Implemented scheduled task creator for Windows & Unix
-  - Added --no-cache option to disable cache for restic operations
+  - Added --no-cache option to disable cache for restic operations (neeeded on RO systems)
+  
 
 ## Fixes
   - Default exit code is now worst log level called unless specific errors are triggered
@@ -49,6 +50,7 @@
   - Backup admin password is now stored in a more secure way
   - GUI: Restore window now closes correctly when using the window control button
   - GUI: Show anonymized repo uri in GUI
+  - GUI: Exec error should always stay on top
 
 ## Misc
   - Current backup state now shows more precise backup state, including last backup date when relevant
@@ -59,6 +61,7 @@
   - Added initial tests
   - Exclude lists have been updated
   - Removed Windows installer from the project. We need to come up with a better solution
+  - Added manual --init command (already executed by first backup)
 
 ## 2.2.2 - 14/12/2023 (internal build only)
   - Fixed backup paths of '/' root partitions
