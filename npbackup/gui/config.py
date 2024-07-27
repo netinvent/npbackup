@@ -395,6 +395,7 @@ def config_gui(full_config: dict, config_file: str):
                 # We don't need a better split here since the value string comes from BytesConverter
                 # which always provides "0 MiB" or "5 KB" etc.
                 if value is not None:
+                    unit = None
                     try:
                         matches = re.search(r"(\d+(?:\.\d+)?)\s*(\w*)", value)
                         if matches:
