@@ -8,13 +8,14 @@ __author__ = "Orsiris de Jong"
 __site__ = "https://www.netperfect.fr/npbackup"
 __description__ = "NetPerfect Backup Client"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
-__build__ = "2024011201"
+__build__ = "2024072701"
 
 
 import os
 from typing import Callable
 from functools import wraps
 from logging import getLogger
+import json
 
 
 logger = getLogger()
@@ -53,3 +54,12 @@ def catch_exceptions(fn: Callable):
             return None
 
     return wrapper
+
+
+def fmt_json(js: dict):
+    """
+    Just a quick and dirty shorthand for pretty print which doesn't require pprint
+    to be loaded
+    """
+    js = json.dumps(js, indent=4)
+    return js
