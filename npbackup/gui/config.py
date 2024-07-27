@@ -12,6 +12,7 @@ __build__ = "2024072301"
 
 from typing import List, Tuple
 import os
+import re
 import pathlib
 from logging import getLogger
 import npbackup.gui.PySimpleGUI as sg
@@ -22,7 +23,7 @@ from ofunctions.misc import get_key_from_value, BytesConverter
 from npbackup.core.i18n_helper import _t
 from npbackup.__version__ import IS_COMPILED
 from npbackup.path_helper import CURRENT_DIR
-from npbackup.__debug__ import _DEBUG
+from npbackup.__debug__ import _DEBUG, fmt_json
 from resources.customization import (
     INHERITED_ICON,
     NON_INHERITED_ICON,
@@ -126,6 +127,8 @@ def config_gui(full_config: dict, config_file: str):
         return object_list
 
     def create_object(full_config: dict) -> dict:
+        object_type = None
+        object_name = None
         layout = [
             [
                 sg.Text(_t("generic.type")),
@@ -183,17 +186,20 @@ def config_gui(full_config: dict, config_file: str):
                 else:
                     raise ValueError("Bogus object type given")
         window.close()
-        update_object_gui(full_config, None, unencrypted=False)
-        return full_config, object_name, object_type
+        if object_type and object_name:
+            update_object_gui(full_config, object_type, object_name, unencrypted=False)
+            update_global_gui(full_config, unencrypted=False)
+        return full_config, object_type, object_name
 
-    def delete_object(full_config: dict, object_name: str) -> dict:
-        object_type, object_name = get_object_from_combo(object_name)
+    def delete_object(full_config: dict, full_object_name: str) -> dict:
+        object_type, object_name = get_object_from_combo(full_object_name)
         result = sg.PopupYesNo(
             _t("config_gui.are_you_sure_to_delete") + f" {object_type} {object_name} ?"
         )
         if result:
             full_config.d(f"{object_type}.{object_name}")
             update_object_gui(full_config, None, unencrypted=False)
+            update_global_gui(full_config, unencrypted=False)
         return full_config
 
     def update_object_selector(
@@ -232,6 +238,7 @@ def config_gui(full_config: dict, config_file: str):
     def update_gui_values(key, value, inherited, object_type, unencrypted):
         """
         Update gui values depending on their type
+        This not called directly, but rather from update_object_gui which calls iter_over_config which calls this function
         """
         nonlocal backup_paths_tree
         nonlocal tags_tree
@@ -274,12 +281,12 @@ def config_gui(full_config: dict, config_file: str):
                 # Use last part of key only
                 if key in configuration.ENCRYPTED_OPTIONS:
                     try:
-                        if value is None:
-                            return
                         if isinstance(value, dict):
                             for k in value.keys():
                                 value[k] = ENCRYPTED_DATA_PLACEHOLDER
-                        elif not str(value).startswith(configuration.ID_STRING):
+                        elif value is not None and not str(value).startswith(
+                            configuration.ID_STRING
+                        ):
                             value = ENCRYPTED_DATA_PLACEHOLDER
                     except (KeyError, TypeError):
                         pass
@@ -287,10 +294,14 @@ def config_gui(full_config: dict, config_file: str):
             if key in ("repo_uri", "repo_group"):
                 if object_type == "groups":
                     window[key].Disabled = True
+                    window[key].Update(value=None)
                 else:
                     window[key].Disabled = False
                     # Update the combo group selector
-                    window[key].Update(value=value)
+                    if value is None:
+                        window[key].Update(value="")
+                    else:
+                        window[key].Update(value=value)
                 return
 
             # Update tree objects
@@ -383,8 +394,21 @@ def config_gui(full_config: dict, config_file: str):
             ):
                 # We don't need a better split here since the value string comes from BytesConverter
                 # which always provides "0 MiB" or "5 KB" etc.
-                value, unit = value.split(" ")
-                window[f"{key}_unit"].Update(unit)
+                if value is not None:
+                    try:
+                        matches = re.search(r"(\d+(?:\.\d+)?)\s*(\w*)", value)
+                        if matches:
+                            value = str(matches.group(1))
+                            unit = str(matches.group(2))
+                    except (TypeError, IndexError, AttributeError):
+                        logger.error(
+                            f"Error decoding value {value} of key {key}. Setting default value"
+                        )
+                        value = "0"
+                        unit = "MiB"
+                    window[key].Update(value)
+                    window[f"{key}_unit"].Update(unit)
+                return
 
             if key in combo_boxes.keys() and value:
                 window[key].Update(value=combo_boxes[key][value])
@@ -451,8 +475,14 @@ def config_gui(full_config: dict, config_file: str):
         _iter_over_config(object_config, root_key)
 
     def update_object_gui(
-        full_config: dict, object_name: str = None, unencrypted: bool = False
+        full_config: dict,
+        object_type: str = None,
+        object_name: str = None,
+        unencrypted: bool = False,
     ):
+        """
+        Reload current object configuration settings to GUI
+        """
         nonlocal backup_paths_tree
         nonlocal tags_tree
         nonlocal exclude_files_tree
@@ -465,7 +495,7 @@ def config_gui(full_config: dict, config_file: str):
 
         # Load fist available repo or group if none given
         if not object_name:
-            object_name = get_objects()[0]
+            object_type, object_name = get_object_from_combo(get_objects()[0])
 
         # First we need to clear the whole GUI to reload new values
         for key in window.AllKeysDict:
@@ -487,7 +517,6 @@ def config_gui(full_config: dict, config_file: str):
         env_variables_tree = sg.TreeData()
         encrypted_env_variables_tree = sg.TreeData()
 
-        object_type, object_name = get_object_from_combo(object_name)
         if object_type == "repos":
             object_config, config_inheritance = configuration.get_repo_config(
                 full_config, object_name, eval_variables=False
@@ -585,7 +614,6 @@ def config_gui(full_config: dict, config_file: str):
 
         for key, value in values.items():
             # Don't update placeholders ;)
-            # TODO exclude encrypted env vars
             if value == ENCRYPTED_DATA_PLACEHOLDER:
                 continue
             if not isinstance(key, str) or (
@@ -683,12 +711,6 @@ def config_gui(full_config: dict, config_file: str):
                         ):
                             continue
 
-                    # Debug WIP
-                    # if object_group:
-                    #    inherited = full_config.g(inheritance_key)
-                    # else:
-                    #    inherited = False
-
             # Don't bother to update empty strings, empty lists and None
             if not current_value and not value:
                 continue
@@ -696,13 +718,6 @@ def config_gui(full_config: dict, config_file: str):
             if current_value == value:
                 continue
 
-            # Finally, update the config dictionary
-            # Debug WIP
-            # if object_type == "groups":
-            #    print(f"UPDATING {active_object_key} curr={current_value} new={value}")
-            # else:
-            #    print(f"UPDATING {active_object_key} curr={current_value} inherited={inherited} new={value}")
-            # We need to create parent ket if not exist
             try:
                 full_config.s(active_object_key, value)
             except KeyError:
@@ -753,7 +768,6 @@ def config_gui(full_config: dict, config_file: str):
                     size=(50, 1),
                     password_char="*",
                 ),
-                # sg.Button(_t("generic.change"), key="--CHANGE-MANAGER-PASSWORD--") # TODO
             ],
             [
                 sg.Push(),
@@ -774,10 +788,13 @@ def config_gui(full_config: dict, config_file: str):
                         keep_on_top=True,
                     )
                     continue
-                # TODO: Check password strength in a better way than this ^^
-                if len(values["-MANAGER-PASSWORD-"]) < 8:
+                # Courtesy of https://uibakery.io/regex-library/password-regex-python
+                if not re.findall(
+                    r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$",
+                    values["-MANAGER-PASSWORD-"],
+                ):
                     sg.PopupError(
-                        _t("config_gui.manager_password_too_short"), keep_on_top=True
+                        _t("config_gui.manager_password_too_simple"), keep_on_top=True
                     )
                     continue
                 if not values["permissions"] in permissions:
@@ -1989,7 +2006,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
     encrypted_env_variables_tree = sg.TreeData()
 
     # Update gui with first default object (repo or group)
-    update_object_gui(full_config, get_objects()[0], unencrypted=False)
+    update_object_gui(full_config, unencrypted=False)
     update_global_gui(full_config, unencrypted=False)
 
     # These contain object name/type so on object change we can update the current object before loading new one
@@ -2016,7 +2033,9 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 full_config, current_object_type, current_object_name, values
             )
             current_object_type, current_object_name = object_type, object_name
-            update_object_gui(full_config, values["-OBJECT-SELECT-"], unencrypted=False)
+            update_object_gui(
+                full_config, current_object_type, current_object_name, unencrypted=False
+            )
             update_global_gui(full_config, unencrypted=False)
             continue
         if event == "-OBJECT-DELETE-":
@@ -2024,10 +2043,13 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             update_object_selector()
             continue
         if event == "-OBJECT-CREATE-":
-            full_config, object_name, object_type = create_object(full_config)
-            update_object_selector(object_name, object_type)
-            current_object_type = object_type
-            current_object_name = object_name
+            full_config, _object_type, _object_name = create_object(full_config)
+            if _object_type and _object_name:
+                object_type = _object_type
+                object_name = _object_name
+                update_object_selector(object_name, object_type)
+                current_object_type = object_type
+                current_object_name = object_name
             continue
         if event == "--SET-PERMISSIONS--":
             manager_password = configuration.get_manager_password(
@@ -2043,7 +2065,13 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     object_type=current_object_type,
                     object_name=current_object_name,
                 )
-                update_object_gui(full_config, values["-OBJECT-SELECT-"])
+                update_object_gui(
+                    full_config,
+                    current_object_type,
+                    current_object_name,
+                    unencrypted=False,
+                )
+                update_global_gui(full_config, unencrypted=False)
             continue
         if event in (
             "--ADD-PATHS-FILE--",
@@ -2210,7 +2238,10 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 env_manager_password and env_manager_password == manager_password
             ) or ask_manager_password(manager_password):
                 update_object_gui(
-                    full_config, values["-OBJECT-SELECT-"], unencrypted=True
+                    full_config,
+                    current_object_type,
+                    current_object_name,
+                    unencrypted=True,
                 )
                 update_global_gui(full_config, unencrypted=True)
             continue

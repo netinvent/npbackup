@@ -143,7 +143,7 @@ en:
   restore_perms: Backup, verify and restore
   full_perms: Full permissions
   setting_permissions_requires_manager_password: Setting permissions requires manager password
-  manager_password_too_short: Manager password is too short
+  manager_password_too_simple: Manager password needs at least 8 uppercase, lowercase and digits characters
   current_permissions: Current permissions (no inheritance)
   manager_password_set: Manager password initialized (no inheritance)
   
