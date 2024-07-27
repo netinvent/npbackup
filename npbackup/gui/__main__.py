@@ -1039,7 +1039,7 @@ def main_gui(viewer_mode=False):
         logger.critical(f'Tkinter error: "{exc}". Is this a headless server ?')
         sys.exit(250)
     except Exception as exc:
-        sg.Popup(_t("config_gui.unknown_error_see_logs") + f": {exc}")
+        sg.Popup(_t("config_gui.unknown_error_see_logs") + f": {exc}", keep_on_top=True)
         logger.critical(f"GUI Execution error {exc}")
         logger.info("Trace:", exc_info=True)
         sys.exit(251)
