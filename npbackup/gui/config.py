@@ -148,10 +148,14 @@ def config_gui(full_config: dict, config_file: str):
             if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--CANCEL--"):
                 break
             if event == "--ACCEPT--":
-                object_type = 'groups' if values["-OBJECT-TYPE-"] == 'group' else 'repos'
+                object_type = (
+                    "groups" if values["-OBJECT-TYPE-"] == "group" else "repos"
+                )
                 object_name = values["-OBJECT-NAME-"]
                 if object_name is None or object_name == "":
-                    sg.PopupError(_t("config_gui.object_name_cannot_be_empty"), keep_on_top=True)
+                    sg.PopupError(
+                        _t("config_gui.object_name_cannot_be_empty"), keep_on_top=True
+                    )
                     continue
                 if object_type == "repos":
                     if full_config.g(f"{object_type}.{object_name}"):
@@ -219,8 +223,10 @@ def config_gui(full_config: dict, config_file: str):
         else:
             object_type = None
             object_name = None
-            logger.error(f"Could not obtain object_type and object_name from {combo_value}")
-    
+            logger.error(
+                f"Could not obtain object_type and object_name from {combo_value}"
+            )
+
         return object_type, object_name
 
     def update_gui_values(key, value, inherited, object_type, unencrypted):
@@ -667,9 +673,13 @@ def config_gui(full_config: dict, config_file: str):
                         "repo_opts.upload_speed",
                         "repo_opts.download_speed",
                     ):
-                        if full_config.g(inheritance_key) is not None and value is not None and (
-                            BytesConverter(full_config.g(inheritance_key)).bytes
-                            == BytesConverter(value).bytes
+                        if (
+                            full_config.g(inheritance_key) is not None
+                            and value is not None
+                            and (
+                                BytesConverter(full_config.g(inheritance_key)).bytes
+                                == BytesConverter(value).bytes
+                            )
                         ):
                             continue
 
