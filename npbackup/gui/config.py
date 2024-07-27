@@ -172,7 +172,7 @@ def config_gui(full_config: dict, config_file: str):
                         )
                         continue
                     full_config.s(
-                        f"groups.{object_name}",
+                        f"{object_type}.{object_name}",
                         configuration.get_default_group_config(),
                     )
                     break
@@ -199,7 +199,8 @@ def config_gui(full_config: dict, config_file: str):
         if not object_name or not object_type:
             object = object_list[0]
         else:
-            object = f"{object_type.capitalize()}: {object_name}"
+            # We need to remove the "s" and the end if we want our comobox name to be usable later
+            object = f"{object_type.rstrip('s').capitalize()}: {object_name}"
 
         window["-OBJECT-SELECT-"].Update(values=object_list)
         window["-OBJECT-SELECT-"].Update(value=object)
@@ -209,7 +210,6 @@ def config_gui(full_config: dict, config_file: str):
         Extracts selected object from combobox
         Returns object type and name
         """
-
         if combo_value.startswith("Repo: "):
             object_type = "repos"
             object_name = combo_value[len("Repo: ") :]
@@ -219,6 +219,8 @@ def config_gui(full_config: dict, config_file: str):
         else:
             object_type = None
             object_name = None
+            logger.error(f"Could not obtain object_type and object_name from {combo_value}")
+    
         return object_type, object_name
 
     def update_gui_values(key, value, inherited, object_type, unencrypted):
@@ -480,7 +482,6 @@ def config_gui(full_config: dict, config_file: str):
         encrypted_env_variables_tree = sg.TreeData()
 
         object_type, object_name = get_object_from_combo(object_name)
-
         if object_type == "repos":
             object_config, config_inheritance = configuration.get_repo_config(
                 full_config, object_name, eval_variables=False
@@ -507,6 +508,7 @@ def config_gui(full_config: dict, config_file: str):
         else:
             object_config = None
             config_inheritance = None
+            logger.error(f"Bogus object {object_type}.{object_name}")
 
         # Now let's iter over the whole config object and update keys accordingly
         iter_over_config(
@@ -665,7 +667,7 @@ def config_gui(full_config: dict, config_file: str):
                         "repo_opts.upload_speed",
                         "repo_opts.download_speed",
                     ):
-                        if (
+                        if full_config.g(inheritance_key) is not None and value is not None and (
                             BytesConverter(full_config.g(inheritance_key)).bytes
                             == BytesConverter(value).bytes
                         ):
@@ -714,7 +716,6 @@ def config_gui(full_config: dict, config_file: str):
         """
         Sets repo wide repo_uri / password / permissions
         """
-        object_type, object_name = get_object_from_combo(object_name)
         if object_type == "groups":
             sg.PopupError(_t("config_gui.permissions_only_for_repos"), keep_on_top=True)
             return full_config
@@ -2015,6 +2016,8 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
         if event == "-OBJECT-CREATE-":
             full_config, object_name, object_type = create_object(full_config)
             update_object_selector(object_name, object_type)
+            current_object_type = object_type
+            current_object_name = object_name
             continue
         if event == "--SET-PERMISSIONS--":
             manager_password = configuration.get_manager_password(
@@ -2027,8 +2030,8 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 )
                 full_config = set_permissions(
                     full_config,
-                    object_type=object_type,
-                    object_name=values["-OBJECT-SELECT-"],
+                    object_type=current_object_type,
+                    object_name=current_object_name,
                 )
                 update_object_gui(full_config, values["-OBJECT-SELECT-"])
             continue
