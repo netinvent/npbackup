@@ -320,7 +320,7 @@ class ResticRunner:
             check_interval=CHECK_INTERVAL,
             priority=self._priority,
             io_priority=self._priority,
-            windows_no_window=True
+            windows_no_window=True,
         )
         # Don't keep protected environment variables in memory when not necessary
         self._remove_env()
