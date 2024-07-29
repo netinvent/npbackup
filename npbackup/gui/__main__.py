@@ -467,7 +467,11 @@ def _main_gui(viewer_mode: bool):
                 if not values["-config_file-"] or not config_file.exists():
                     sg.PopupError(_t("generic.file_does_not_exist"), keep_on_top=True)
                     continue
-                full_config = npbackup.configuration.load_config(config_file)
+                try:
+                    full_config = npbackup.configuration.load_config(config_file)
+                except EnvironmentError as exc:
+                    sg.PopupError(exc, keep_on_top=True)
+                    continue
                 if not full_config:
                     sg.PopupError(_t("generic.bad_file"), keep_on_top=True)
                     continue
@@ -579,7 +583,11 @@ def _main_gui(viewer_mode: bool):
             if not config_file.exists():
                 config_exists = False
             else:
-                full_config = npbackup.configuration.load_config(config_file)
+                try:
+                    full_config = npbackup.configuration.load_config(config_file)
+                except EnvironmentError as exc:
+                    sg.PopupError(exc, keep_on_top=True)
+                    return None, None
                 if full_config:
                     return full_config, config_file
         else:
@@ -597,15 +605,19 @@ def _main_gui(viewer_mode: bool):
                     )
             if config_file:
                 logger.info(f"Using configuration file {config_file}")
-                full_config = npbackup.configuration.load_config(config_file)
-                if not full_config:
-                    sg.PopupError(
-                        f"{_t('main_gui.config_error')} {config_file}", keep_on_top=True
-                    )
-                    config_exists = False
+                try:
+                    full_config = npbackup.configuration.load_config(config_file)
+                except EnvironmentError as exc:
+                    sg.PopupError(exc, keep_on_top=True)
                 else:
-                    config_exists = True
-                    break
+                    if not full_config:
+                        sg.PopupError(
+                            f"{_t('main_gui.config_error')} {config_file}", keep_on_top=True
+                        )
+                        config_exists = False
+                    else:
+                        config_exists = True
+                        break
         return full_config, config_file
 
     def get_config(

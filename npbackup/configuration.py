@@ -839,14 +839,16 @@ def load_config(config_file: Path) -> Optional[dict]:
                 full_config, EARLIER_AES_KEY, ENCRYPTED_OPTIONS, operation="decrypt"
             )
             if full_config == False:
-                logger.critical("Cannot decrypt config file with earlier key")
-                sys.exit(12)
+                msg = "Cannot decrypt config file with earlier key"
+                logger.critical(msg)
+                raise EnvironmentError(msg)
             else:
                 config_file_is_updated = True
                 logger.warning("Successfully migrated encryption key")
         else:
-            logger.critical("Cannot decrypt config file")
-            sys.exit(11)
+            msg = "Cannot decrypt config file"
+            logger.critical(msg)
+            raise EnvironmentError(msg)
 
     # Check if we need to expand random vars
     is_modified, full_config = has_random_variables(full_config)
