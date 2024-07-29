@@ -612,7 +612,8 @@ def _main_gui(viewer_mode: bool):
                 else:
                     if not full_config:
                         sg.PopupError(
-                            f"{_t('main_gui.config_error')} {config_file}", keep_on_top=True
+                            f"{_t('main_gui.config_error')} {config_file}",
+                            keep_on_top=True,
                         )
                         config_exists = False
                     else:
