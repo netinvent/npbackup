@@ -571,12 +571,13 @@ This is free software, and you are welcome to redistribute it under certain cond
             groups = [group.strip() for group in args.repo_group.split(",")]
             for group in groups:
                 repos = npbackup.configuration.get_repos_by_group(full_config, group)
+                if repos is None or repos == []:
+                    json_error_logging(False, "No corresponding repo found", level="error")
+                    sys.exit(74)
         elif args.repo_name:
             repos = [repo.strip() for repo in args.repo_name.split(",")]
         else:
-            logger.critical(
-                "No repository names or groups have been provided for group operation. Please use --repo-group or --repo-name"
-            )
+            json_error_logging(False, "No repository names or groups have been provided for group operation. Please use --repo-group or --repo-name", level="critical")
             sys.exit(74)
         for repo in repos:
             repo_config, _ = npbackup.configuration.get_repo_config(full_config, repo)
