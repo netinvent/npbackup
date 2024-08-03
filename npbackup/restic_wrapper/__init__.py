@@ -707,6 +707,11 @@ class ResticRunner:
         kwargs = locals()
         kwargs.pop("self")
 
+        if not subject:
+            return self.convert_to_json_output(
+                False, None, msg="list expects an object type given by --list", **kwargs
+            )
+
         cmd = "list {}".format(subject)
         result, output = self.executor(cmd)
         if result:
@@ -731,6 +736,11 @@ class ResticRunner:
         """
         kwargs = locals()
         kwargs.pop("self")
+
+        if not snapshot:
+            return self.convert_to_json_output(
+                False, None, msg="ls expects a snapshot id given by --ls", **kwargs
+            )
 
         cmd = "ls {}".format(snapshot)
         result, output = self.executor(cmd, method="monitor")
@@ -915,6 +925,11 @@ class ResticRunner:
         """
         kwargs = locals()
         kwargs.pop("self")
+
+        if not path:
+            return self.convert_to_json_output(
+                False, None, msg="find expects aa path given by --find", **kwargs
+            )
 
         cmd = f'find "{path}"'
         result, output = self.executor(cmd)
