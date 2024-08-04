@@ -15,7 +15,7 @@ import os
 import re
 import pathlib
 from logging import getLogger
-import npbackup.gui.PySimpleGUI as sg
+import FreeSimpleGUI as sg
 import textwrap
 from ruamel.yaml.comments import CommentedMap
 import npbackup.configuration as configuration
@@ -39,8 +39,8 @@ from npbackup.task import create_scheduled_task
 logger = getLogger()
 
 
-# Monkeypatching PySimpleGUI
-# @PySimpleGUI: Why is there no delete method for TreeData ?
+# Monkeypatching SimpleGUI
+# @SimpleGUI: Why is there no delete method for TreeData ?
 def delete(self, key):
     if key == "":
         return False
@@ -82,7 +82,7 @@ def ask_manager_password(manager_password: str) -> bool:
 def config_gui(full_config: dict, config_file: str):
     logger.info("Launching configuration GUI")
 
-    # Don't let PySimpleGUI handle key errros since we might have new keys in config file
+    # Don't let SimpleGUI handle key errros since we might have new keys in config file
     sg.set_options(
         suppress_raise_key_errors=True,
         suppress_error_popups=True,
@@ -581,7 +581,7 @@ def config_gui(full_config: dict, config_file: str):
 
         # We need to patch values since sg.Tree() only returns selected data from TreeData()
         # Hence we'll fill values with a list or a dict depending on our TreeData data structure
-        # @PysimpleGUI: there should be a get_all_values() method or something
+        # @simpleGUI: there should be a get_all_values() method or something
         list_tree_data_keys = [
             "backup_opts.paths",
             "backup_opts.tags",

@@ -27,7 +27,7 @@ from ofunctions.process import kill_childs
 from ofunctions.threading import threaded
 from threading import Thread
 from ofunctions.misc import BytesConverter
-import npbackup.gui.PySimpleGUI as sg
+import FreeSimpleGUI as sg
 import _tkinter
 import npbackup.configuration
 import npbackup.common
@@ -43,7 +43,7 @@ from resources.customization import (
     FOLDER_ICON,
     FILE_ICON,
     LICENSE_TEXT,
-    PYSIMPLEGUI_THEME,
+    SIMPLEGUI_THEME,
     OEM_ICON,
     SHORT_PRODUCT_NAME,
 )
@@ -63,7 +63,7 @@ backend_binary = None
 FIRST_GUI_RUN = True
 
 
-sg.theme(PYSIMPLEGUI_THEME)
+sg.theme(SIMPLEGUI_THEME)
 sg.SetOptions(icon=OEM_ICON)
 
 

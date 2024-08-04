@@ -12,7 +12,7 @@ __build__ = "2024061601"
 
 import os
 from logging import getLogger
-import npbackup.gui.PySimpleGUI as sg
+import FreeSimpleGUI as sg
 from npbackup.configuration import (
     get_repo_config,
     get_group_list,
