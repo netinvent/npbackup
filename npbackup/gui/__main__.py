@@ -25,7 +25,6 @@ from ruamel.yaml.comments import CommentedMap
 import atexit
 from ofunctions.process import kill_childs
 from ofunctions.threading import threaded
-from threading import Thread
 from ofunctions.misc import BytesConverter
 import npbackup.gui.PySimpleGUI as sg
 import _tkinter
