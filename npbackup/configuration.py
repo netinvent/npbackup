@@ -914,7 +914,7 @@ def get_repos_by_group(full_config: dict, group: str) -> List[str]:
     """
     repo_list = []
     if full_config:
-        for repo in list(full_config.g("repos").keys()):
+        for repo in get_repo_list(full_config):
             if (
                 full_config.g(f"repos.{repo}.repo_group") == group or group == "__all__"
             ) and group not in repo_list:
