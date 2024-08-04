@@ -75,7 +75,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Name of the repository to work with. Defaults to 'default'. In group operation mode, this can be a comma separated list of repo names",
+        help="Name of the repository to work with. Defaults to 'default'. In group operation mode, this can be a comma separated list of repo names. Can accept special name '__all__' to work with all repositories.",
     )
     parser.add_argument(
         "--repo-group",
@@ -577,7 +577,10 @@ This is free software, and you are welcome to redistribute it under certain cond
                     )
                     sys.exit(74)
         elif args.repo_name:
-            repos = [repo.strip() for repo in args.repo_name.split(",")]
+            if args.repo_name == "__all__":
+                repos = npbackup.configuration.get_repo_list(full_config)
+            else:
+                repos = [repo.strip() for repo in args.repo_name.split(",")]
         else:
             json_error_logging(
                 False,
