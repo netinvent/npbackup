@@ -160,6 +160,11 @@ def config_gui(full_config: dict, config_file: str):
                         _t("config_gui.object_name_cannot_be_empty"), keep_on_top=True
                     )
                     continue
+                if object_name == "__all__":
+                    sg.PopupError(
+                        _t("config_gui.object_name_cannot_be_all"), keep_on_top=True
+                    )
+                    continue
                 if object_type == "repos":
                     if full_config.g(f"{object_type}.{object_name}"):
                         sg.PopupError(
