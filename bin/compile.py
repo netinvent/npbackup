@@ -320,13 +320,12 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool):
         fh.write(npbackup_version)
     print(f"COMPILED {'WITH SUCCESS' if not errors else 'WITH ERRORS'}")
     if not onefile:
-        if os.name != "nt":
-            if not create_tar(platform=platform, arch=arch, audience=audience, build_type=build_type, output_dir=OUTPUT_DIR):
-                errors = True
+        if not create_archive(platform=platform, arch=arch, audience=audience, build_type=build_type, output_dir=OUTPUT_DIR):
+            errors = True
     return not errors
 
 
-def create_tar(platform: str, arch: str, audience: str, build_type: str, output_dir: str):
+def create_archive(platform: str, arch: str, audience: str, build_type: str, output_dir: str):
     """
     Create tar releases for each compiled version
     """
@@ -335,12 +334,19 @@ def create_tar(platform: str, arch: str, audience: str, build_type: str, output_
     new_compiled_output = compiled_output[:-len(nuitka_standalone_suffix)]
     shutil.move(compiled_output, new_compiled_output)
     target_archive = f"{output_dir}/npbackup-{platform}-{arch}-{build_type}-{audience}.tar.gz"
-    cmd = f"rm -f {target_archive} > /dev/null 2>&1; tar -czf {target_archive} -C {output_dir} ./{os.path.basename(new_compiled_output)}"
-    print(f"Creating tar {target_archive}")
+    if os.path.isfile(target_archive):
+        os.remove(target_archive)
+    if os.name == 'nt':
+        # This supposes Windows 10 that comes with tar
+        # This tar version will create a plain zip file when used with -a (and without -z which creates gzip files)
+        cmd = f"tar -a -c -f {target_archive} -C {output_dir} {os.path.basename(new_compiled_output)}"
+    else:
+        cmd = f"tar -czf {target_archive} -C {output_dir} ./{os.path.basename(new_compiled_output)}"
+    print(f"Creating archive {target_archive}")
     exit_code, output = command_runner(cmd, timeout=0, live_output=True, shell=True)
     shutil.move(new_compiled_output, compiled_output)
     if exit_code != 0:
-        print(f"ERROR: Cannot create tar file for {platform} {arch} {audience} {build_type}:")
+        print(f"ERROR: Cannot create archive file for {platform} {arch} {audience} {build_type}:")
         print(output)
         return False
     return True
