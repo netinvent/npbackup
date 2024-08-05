@@ -15,7 +15,10 @@ __build__ = "2024050901"
 # This is the default key that comes with NPBackup.. You should change it (and keep a backup copy in case you need to decrypt a config file data)
 # You can overwrite this by copying this file to `../PRIVATE/_private_secret_keys.py` and generating a new key
 # Obtain a new key with:
+# python3 -c "from cryptidy import symmetric_encryption as s; print(s.generate_key())"
+# You may also create a new keyfile via
 # npbackup-cli --create-key keyfile.key
+# Given keyfile can then be loaded via environment variables, see documentation for more
 
 AES_KEY = b"\xc3T\xdci\xe3[s\x87o\x96\x8f\xe5\xee.>\xf1,\x94\x8d\xfe\x0f\xea\x11\x05 \xa0\xe9S\xcf\x82\xad|"
 
