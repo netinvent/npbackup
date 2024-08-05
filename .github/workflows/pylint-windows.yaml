@@ -30,22 +30,22 @@ jobs:
       run: |
         python -m pip install pylint
         # Do not run pylint on python 3.3 because isort is not available for python 3.3, don't run on python 3.4 because pylint: disable=xxxx does not exist
-        python -m pylint --disable=C,W,R --max-line-length=127 --ignore PySimpleGUI.py npbackup
+        python -m pylint --disable=C,W,R --max-line-length=127 npbackup
         python -m pylint --disable=C,W,R --max-line-length=127 upgrade_server/upgrade_server
     - name: Lint with flake8
       #if: ${{ matrix.python-version == '3.12' }}
       run: |
         python -m pip install flake8
         # stop the build if there are Python syntax errors or undefined names
-        python -m flake8 --count --select=E9,F63,F7,F82 --show-source --statistics --exclude PySimpleGUI.py npbackup
+        python -m flake8 --count --select=E9,F63,F7,F82 --show-source --statistics npbackup
         python -m flake8 --count --select=E9,F63,F7,F82 --show-source --statistics upgrade_server/upgrade_server
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        python -m flake8 --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude PySimpleGUI.py npbackup
+        python -m flake8 --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics npbackup
         python -m flake8 --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics upgrade_server/upgrade_server
     - name: Lint with Black
       # Don't run on python < 3.6 since black does not exist there, run only once
       #if: ${{ matrix.python-version == '3.12' }}
       run: |
         pip install black
-        python -m black --check --exclude PySimpleGUI.py npbackup
+        python -m black --check npbackup
         python -m black --check upgrade_server/upgrade_server

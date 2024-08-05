@@ -15,7 +15,7 @@ from logging import getLogger
 from time import sleep
 import re
 import queue
-import npbackup.gui.PySimpleGUI as sg
+import FreeSimpleGUI as sg
 from npbackup.core.i18n_helper import _t
 from resources.customization import (
     LOADER_ANIMATION,
@@ -25,12 +25,12 @@ from resources.customization import (
 from npbackup.core.runner import NPBackupRunner
 from npbackup.__debug__ import _DEBUG
 from npbackup.__env__ import GUI_CHECK_INTERVAL
-from resources.customization import PYSIMPLEGUI_THEME, OEM_ICON
+from resources.customization import SIMPLEGUI_THEME, OEM_ICON
 
 logger = getLogger()
 
 
-sg.theme(PYSIMPLEGUI_THEME)
+sg.theme(SIMPLEGUI_THEME)
 sg.SetOptions(icon=OEM_ICON)
 
 
@@ -240,7 +240,7 @@ def gui_thread_runner(
         kwargs = {**kwargs, **{"__no_threads": True}}
         result = runner.__getattribute__(fn.__name__)(*args, **kwargs)
     while True:
-        # No idea why pylint thinks that UpdateAnimation does not exist in PySimpleGUI
+        # No idea why pylint thinks that UpdateAnimation does not exist in SimpleGUI
         # pylint: disable=E1101 (no-member)
         progress_window["-LOADER-ANIMATION-"].UpdateAnimation(
             LOADER_ANIMATION, time_between_frames=100

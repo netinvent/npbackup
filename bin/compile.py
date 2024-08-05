@@ -266,7 +266,7 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool):
     if build_type in ("gui", "viewer"):
         NUITKA_OPTIONS += " --plugin-enable=tk-inter --disable-console"
     else:
-        NUITKA_OPTIONS += " --plugin-disable=tk-inter --nofollow-import-to=PySimpleGUI --nofollow-import-to=_tkinter --nofollow-import-to=npbackup.gui"
+        NUITKA_OPTIONS += " --plugin-disable=tk-inter --nofollow-import-to=FreeSimpleGUI --nofollow-import-to=_tkinter --nofollow-import-to=npbackup.gui"
     if onefile:
         NUITKA_OPTIONS += " --onefile"
         # Stupid fix for synology RS816 where /tmp is mounted with `noexec`.
