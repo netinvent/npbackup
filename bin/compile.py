@@ -332,8 +332,14 @@ def create_archive(platform: str, arch: str, audience: str, build_type: str, out
     nuitka_standalone_suffix = ".dist"
     compiled_output = os.path.join(output_dir, "npbackup-{}{}".format(build_type, nuitka_standalone_suffix))
     new_compiled_output = compiled_output[:-len(nuitka_standalone_suffix)]
+    if os.path.isdir(new_compiled_output):
+        shutil.rmtree(new_compiled_output)
     shutil.move(compiled_output, new_compiled_output)
-    target_archive = f"{output_dir}/npbackup-{platform}-{arch}-{build_type}-{audience}.tar.gz"
+    if os.name == "nt":
+        archive_extension="zip"
+    else:
+        archive_extension="tar.gz"
+    target_archive = f"{output_dir}/npbackup-{platform}-{arch}-{build_type}-{audience}.{archive_extension}"
     if os.path.isfile(target_archive):
         os.remove(target_archive)
     if os.name == 'nt':
