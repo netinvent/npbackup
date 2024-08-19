@@ -976,7 +976,7 @@ def _main_gui(viewer_mode: bool):
             full_config = config_gui(full_config, config_file)
             # Make sure we trigger a GUI refresh when configuration is changed
             # Also make sure we retrigger get_config
-            event = "--LOAD-CONF--"
+            event = "--LOAD-EXISTING-CONF--"
         if event == "--OPEN-REPO--":
             viewer_repo_uri, viewer_repo_password = viewer_repo_gui(
                 viewer_repo_uri, viewer_repo_password
@@ -988,7 +988,11 @@ def _main_gui(viewer_mode: bool):
                 continue
             repo_config = viewer_create_repo(viewer_repo_uri, viewer_repo_password)
             event = "--STATE-BUTTON--"
-        if event == "--LOAD-CONF--":
+        if event == "--LOAD-CONF--" or event == "--LOAD-EXISTING-CONF--":
+            if event == "--LOAD-EXISTING-CONF--":
+                cfg_file = config_file
+            else:
+                cfg_file = None
             (
                 _full_config,
                 _config_file,
@@ -997,7 +1001,7 @@ def _main_gui(viewer_mode: bool):
                 _backend_type,
                 _repo_uri,
                 _repo_list,
-            ) = get_config(window=window, config_file=None)
+            ) = get_config(window=window, config_file=cfg_file)
             if _full_config:
                 full_config = _full_config
                 config_file = _config_file
