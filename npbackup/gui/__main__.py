@@ -997,7 +997,7 @@ def _main_gui(viewer_mode: bool):
                 _backend_type,
                 _repo_uri,
                 _repo_list,
-            ) = get_config(window=window, config_file=config_file)
+            ) = get_config(window=window, config_file=None)
             if _full_config:
                 full_config = _full_config
                 config_file = _config_file
