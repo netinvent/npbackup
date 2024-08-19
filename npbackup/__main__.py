@@ -286,7 +286,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         log_file = args.log_file
     else:
         if os.name == "nt":
-            log_file = os.path.join(gettempdir(), "{}.log".format(__intname__))
+            log_file = os.path.join(CURRENT_DIR, "{}.log".format(__intname__))
         else:
             log_file = "/var/log/{}.log".format(__intname__)
 

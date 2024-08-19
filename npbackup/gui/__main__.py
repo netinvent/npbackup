@@ -710,7 +710,7 @@ def _main_gui(viewer_mode: bool):
         log_file = args.log_file
     else:
         if os.name == "nt":
-            log_file = os.path.join(gettempdir(), "{}.log".format(__intname__))
+            log_file = os.path.join(CURRENT_DIR, "{}.log".format(__intname__))
         else:
             log_file = "/var/log/{}.log".format(__intname__)
     logger = ofunctions.logger_utils.logger_get_logger(log_file, debug=_DEBUG)
