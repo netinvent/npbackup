@@ -7,7 +7,7 @@ __intname__ = "npbackup.task"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024060501"
+__build__ = "2024081901"
 
 
 import sys
@@ -17,7 +17,7 @@ import tempfile
 from command_runner import command_runner
 import datetime
 from resources.customization import TASK_AUTHOR, TASK_URI, PROGRAM_NAME
-from npbackup.path_helper import CURRENT_DIR
+from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
 from npbackup.__version__ import IS_COMPILED
 
 logger = getLogger()
@@ -53,46 +53,17 @@ def create_scheduled_task(
         logger.error("No interval or time given")
         return False
 
-    if os.name == "nt":
-        possible_paths = [
-            CURRENT_DIR,
-            os.path.join(os.path.dirname(CURRENT_DIR), "npbackup-cli"),
-            os.path.join(os.environ["PROGRAMFILES"], PROGRAM_NAME),
-            os.path.join(os.environ["PROGRAMFILES(X86)"], PROGRAM_NAME),
-        ]
-    else:
-        possible_paths = [
-            CURRENT_DIR,
-            os.path.join(os.path.dirname(CURRENT_DIR), "npbackup-cli"),
-            "/usr/local/bin",
-            "/usr/bin",
-            "/bin",
-        ]
-
-    cli_executable = "npbackup-cli" + (
-        ".exe" if os.name == "nt" and IS_COMPILED else ""
-    )
-    cli_executable_path = None
-    for path in possible_paths:
-        possible_cli_executable_path = os.path.join(path, cli_executable)
-        if os.path.exists(os.path.join(path, possible_cli_executable_path)):
-            cli_executable_path = possible_cli_executable_path
-            break
-    if not cli_executable_path:
-        logger.error("Could not find path for npbackup-cli executable")
-        return False
-
     # Make sure we have a full path to config_file if relative path is given
     if not os.path.isabs(config_file):
         config_file = os.path.join(CURRENT_DIR, config_file)
 
     if os.name == "nt":
         return create_scheduled_task_windows(
-            config_file, cli_executable_path, interval_minutes, hour, minute
+            config_file, CURRENT_EXECUTABLE, interval_minutes, hour, minute
         )
     else:
         return create_scheduled_task_unix(
-            config_file, cli_executable_path, interval_minutes, hour, minute
+            config_file, CURRENT_EXECUTABLE, interval_minutes, hour, minute
         )
 
 
@@ -110,10 +81,10 @@ def create_scheduled_task_unix(
         cli_executable_path = f'"{cli_executable_path}"'
     cron_file = "/etc/cron.d/npbackup"
     if interval_minutes is not None:
-        TASK_ARGS = f'-c "{config_file}" --backup'
+        TASK_ARGS = f'-c "{config_file}" --backup --run-as-cli'
         trigger = f"*/{interval_minutes} * * * *"
     elif hour is not None and minute is not None:
-        TASK_ARGS = f'-c "{config_file}" --backup --force'
+        TASK_ARGS = f'-c "{config_file}" --backup --force --run-as-cli'
         trigger = f"{minute} {hour} * * * root"
     else:
         raise ValueError("Bogus trigger given")
@@ -147,7 +118,7 @@ def create_scheduled_task_windows(
         task_args = ""
     temp_task_file = os.path.join(tempfile.gettempdir(), "backup_task.xml")
     if interval_minutes is not None:
-        task_args = f'{task_args}-c "{config_file}" --backup'
+        task_args = f'{task_args}-c "{config_file}" --backup --run-as-cli'
         start_date = datetime.datetime.now().replace(microsecond=0).isoformat()
         trigger = f"""<TimeTrigger>
             <Repetition>
@@ -159,7 +130,7 @@ def create_scheduled_task_windows(
             <Enabled>true</Enabled>
             </TimeTrigger>"""
     elif hour is not None and minute is not None:
-        task_args = f'{task_args}-c "{config_file}" --backup --force'
+        task_args = f'{task_args}-c "{config_file}" --backup --force --run-as-cli'
         start_date = (
             datetime.datetime.now()
             .replace(microsecond=0, hour=hour, minute=minute, second=0)
