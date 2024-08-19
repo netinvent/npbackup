@@ -1331,10 +1331,13 @@ class NPBackupRunner:
         # Add special keywors __no_threads since we're already threaded in housekeeping function
         # Also, pass it as kwargs to make linter happy
         kwargs = {"__no_threads": True}
+        # pylint: disable=E1123 (unexpected-keyword-arg)
         check_result = self.check(**kwargs)
         if check_result:
+            # pylint: disable=E1123 (unexpected-keyword-arg)
             forget_result = self.forget(use_policy=True, **kwargs)
             if forget_result:
+                # pylint: disable=E1123 (unexpected-keyword-arg)
                 prune_result = self.prune(**kwargs)
                 result = prune_result
             else:
