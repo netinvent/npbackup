@@ -380,7 +380,11 @@ def config_gui(full_config: dict, config_file: str):
                 if value:
                     if isinstance(value, dict):
                         for skey, val in value.items():
-                            if object_type != "groups" and inherited and inherited[skey]:
+                            if (
+                                object_type != "groups"
+                                and inherited
+                                and inherited[skey]
+                            ):
                                 icon = INHERITED_TREE_ICON
                             else:
                                 icon = TREE_ICON

@@ -48,7 +48,7 @@ from npbackup.path_helper import BASEDIR
 import glob
 
 
-LICENSE_FILE = os.path.join(BASEDIR, os.pardir, 'LICENSE')
+LICENSE_FILE = os.path.join(BASEDIR, os.pardir, "LICENSE")
 
 del sys.path[0]
 
@@ -257,7 +257,7 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool):
     excludes_dir_source = os.path.join(BASEDIR, os.pardir, excludes_dir)
     excludes_dir_dest = excludes_dir
 
-    #NUITKA_OPTIONS = " --clang"
+    # NUITKA_OPTIONS = " --clang"
     # As of Nuitka v1.8, `-c` parameter is used to prevent fork bomb self execution
     # We don't need this, so let's disable it so we can use `-c`as `--config-file` shortcut
     NUITKA_OPTIONS = " --no-deployment-flag=self-execution"
@@ -275,9 +275,11 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool):
     else:
         NUITKA_OPTIONS += " --standalone"
 
-
     if build_type == "gui":
-        NUITKA_OPTIONS +" --nofollow-import-to=npbackup.gui.config --nofollow-import-to=npbackup.__main__"
+        (
+            NUITKA_OPTIONS
+            + " --nofollow-import-to=npbackup.gui.config --nofollow-import-to=npbackup.__main__"
+        )
     if os.name != "nt":
         NUITKA_OPTIONS += " --nofollow-import-to=npbackup.windows"
 
@@ -306,7 +308,7 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool):
         icon_file,
         OUTPUT_DIR,
         program_executable,
-        source_program
+        source_program,
     )
 
     print(CMD)
@@ -316,33 +318,45 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool):
         errors = True
 
     ## Create version file
-    with open(os.path.join(BUILDS_DIR, audience, "VERSION"), "w", encoding="utf-8") as fh:
+    with open(
+        os.path.join(BUILDS_DIR, audience, "VERSION"), "w", encoding="utf-8"
+    ) as fh:
         fh.write(npbackup_version)
     print(f"COMPILED {'WITH SUCCESS' if not errors else 'WITH ERRORS'}")
     if not onefile:
-        if not create_archive(platform=platform, arch=arch, audience=audience, build_type=build_type, output_dir=OUTPUT_DIR):
+        if not create_archive(
+            platform=platform,
+            arch=arch,
+            audience=audience,
+            build_type=build_type,
+            output_dir=OUTPUT_DIR,
+        ):
             errors = True
     return not errors
 
 
-def create_archive(platform: str, arch: str, audience: str, build_type: str, output_dir: str):
+def create_archive(
+    platform: str, arch: str, audience: str, build_type: str, output_dir: str
+):
     """
     Create tar releases for each compiled version
     """
     nuitka_standalone_suffix = ".dist"
-    compiled_output = os.path.join(output_dir, "npbackup-{}{}".format(build_type, nuitka_standalone_suffix))
-    new_compiled_output = compiled_output[:-len(nuitka_standalone_suffix)]
+    compiled_output = os.path.join(
+        output_dir, "npbackup-{}{}".format(build_type, nuitka_standalone_suffix)
+    )
+    new_compiled_output = compiled_output[: -len(nuitka_standalone_suffix)]
     if os.path.isdir(new_compiled_output):
         shutil.rmtree(new_compiled_output)
     shutil.move(compiled_output, new_compiled_output)
     if os.name == "nt":
-        archive_extension="zip"
+        archive_extension = "zip"
     else:
-        archive_extension="tar.gz"
+        archive_extension = "tar.gz"
     target_archive = f"{output_dir}/npbackup-{platform}-{arch}-{build_type}-{audience}.{archive_extension}"
     if os.path.isfile(target_archive):
         os.remove(target_archive)
-    if os.name == 'nt':
+    if os.name == "nt":
         # This supposes Windows 10 that comes with tar
         # This tar version will create a plain zip file when used with -a (and without -z which creates gzip files)
         cmd = f"tar -a -c -f {target_archive} -C {output_dir} {os.path.basename(new_compiled_output)}"
@@ -352,7 +366,9 @@ def create_archive(platform: str, arch: str, audience: str, build_type: str, out
     exit_code, output = command_runner(cmd, timeout=0, live_output=True, shell=True)
     shutil.move(new_compiled_output, compiled_output)
     if exit_code != 0:
-        print(f"ERROR: Cannot create archive file for {platform} {arch} {audience} {build_type}:")
+        print(
+            f"ERROR: Cannot create archive file for {platform} {arch} {audience} {build_type}:"
+        )
         print(output)
         return False
     return True
@@ -386,7 +402,7 @@ if __name__ == "__main__":
         dest="build_type",
         default=None,
         required=False,
-        help="Build cli, gui or viewer target"
+        help="Build cli, gui or viewer target",
     )
 
     parser.add_argument(
@@ -394,7 +410,7 @@ if __name__ == "__main__":
         action="store_true",
         default=False,
         required=False,
-        help="Build single file executable (more prone to AV detection)"
+        help="Build single file executable (more prone to AV detection)",
     )
 
     args = parser.parse_args()
@@ -435,7 +451,12 @@ if __name__ == "__main__":
                 errors = True
                 continue
             for build_type in build_types:
-                result = compile(arch=python_arch(), audience=audience, build_type=build_type, onefile=args.onefile)
+                result = compile(
+                    arch=python_arch(),
+                    audience=audience,
+                    build_type=build_type,
+                    onefile=args.onefile,
+                )
                 audience_build = "private" if private_build else "public"
                 if result:
                     print(

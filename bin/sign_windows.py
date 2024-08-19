@@ -12,6 +12,7 @@ __version__ = "1.1.2"
 
 
 import os
+
 try:
     from windows_tools.signtool import SignTool
 except ImportError:
@@ -28,8 +29,12 @@ signer = SignTool()
 for audience in audiences:
     for arch in arches:
         for binary in binaries:
-            one_file_exe_path = exe_path = os.path.join(basepath, audience, "windows", arch, binary + f"-{arch}.exe")
-            standalone_exe_path = os.path.join(basepath, audience, "windows", arch, binary + ".dist", binary + f".exe")
+            one_file_exe_path = exe_path = os.path.join(
+                basepath, audience, "windows", arch, binary + f"-{arch}.exe"
+            )
+            standalone_exe_path = os.path.join(
+                basepath, audience, "windows", arch, binary + ".dist", binary + f".exe"
+            )
             for exe_file in (one_file_exe_path, standalone_exe_path):
                 if os.path.isfile(exe_file):
                     print(f"Signing {exe_file}")
