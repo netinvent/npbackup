@@ -132,7 +132,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         "--policy",
         action="store_true",
         default=False,
-        help="Apply retention policy to snapshots",
+        help="Apply retention policy to snapshots (forget snapshots)",
     )
     parser.add_argument(
         "--quick-check", action="store_true", help="Quick check repository"
