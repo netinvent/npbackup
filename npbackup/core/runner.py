@@ -477,6 +477,7 @@ class NPBackupRunner:
                 "unlock": ["full"],
                 "repair": ["full"],
                 "forget": ["full"],
+                "housekeeping": ["full"],
                 "prune": ["full"],
                 "raw": ["full"],
             }
@@ -1311,6 +1312,33 @@ class NPBackupRunner:
                 raise_error=True,
             )
             result = False
+        return self.convert_to_json_output(result)
+
+    @threaded
+    @catch_exceptions
+    @metrics
+    @close_queues
+    @exec_timer
+    @check_concurrency
+    @has_permission
+    @is_ready
+    @apply_config_to_restic_runner
+    def housekeeping(self) -> bool:
+        """
+        Runs check, forget and prune in one go
+        """
+        self.write_logs("Running housekeeping", level="info")
+        check_result = self.check(__no_threads=True)
+        if check_result:
+            forget_result = self.forget(use_policy=True, __no_threads=True)
+            if forget_result:
+                prune_result = self.prune(__no_threads=True)
+                result = prune_result
+            else:
+                result = forget_result
+        else:
+            result = check_result
+
         return self.convert_to_json_output(result)
 
     @threaded

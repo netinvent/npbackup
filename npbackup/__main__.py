@@ -135,6 +135,12 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Apply retention policy to snapshots (forget snapshots)",
     )
     parser.add_argument(
+        "--housekeeping",
+        action="store_true",
+        default=False,
+        help="Run --check, --policy and --prune in one go",
+    )
+    parser.add_argument(
         "--quick-check", action="store_true", help="Quick check repository"
     )
     parser.add_argument(
@@ -503,6 +509,9 @@ This is free software, and you are welcome to redistribute it under certain cond
     elif args.policy or args.group_operation == "policy":
         cli_args["operation"] = "forget"
         cli_args["op_args"] = {"use_policy": True}
+    elif args.housekeeping or args.group_operation == "housekeeping":
+        cli_args["operation"] = "housekeeping"
+        cli_args["op_args"] = {}
     elif args.quick_check or args.group_operation == "quick_check":
         cli_args["operation"] = "check"
         cli_args["op_args"] = {"read_data": False}
@@ -545,7 +554,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         "ls",
         "find",
         "policy",
-        "quick_check",
+        "housekeeping" "quick_check",
         "full_check",
         "prune",
         "prune_max",
@@ -558,7 +567,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         "has_recent_snapshot",
     ):
         logger.critical(
-            f"Invalid group operation {args.group_operation}. Valid operations are [backup|restore|snapshots|list|ls|find|policy|quick_check|full_check|prune|prune_max|unlock|repair_index|repair_snapshots|dump|stats|raw|has_recent_snapshot]"
+            f"Invalid group operation {args.group_operation}. Valid operations are [backup|restore|snapshots|list|ls|find|policy|housekeeping|quick_check|full_check|prune|prune_max|unlock|repair_index|repair_snapshots|dump|stats|raw|has_recent_snapshot]"
         )
         sys.exit(74)
     # Special case where "policy" means "forget"
