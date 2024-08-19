@@ -1328,11 +1328,14 @@ class NPBackupRunner:
         Runs check, forget and prune in one go
         """
         self.write_logs("Running housekeeping", level="info")
-        check_result = self.check(__no_threads=True)
+        # Add special keywors __no_threads since we're already threaded in housekeeping function
+        # Also, pass it as kwargs to make linter happy
+        kwargs = {"__no_threads": True}
+        check_result = self.check(**kwargs)
         if check_result:
-            forget_result = self.forget(use_policy=True, __no_threads=True)
+            forget_result = self.forget(use_policy=True, **kwargs)
             if forget_result:
-                prune_result = self.prune(__no_threads=True)
+                prune_result = self.prune(**kwargs)
                 result = prune_result
             else:
                 result = forget_result
