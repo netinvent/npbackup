@@ -8,9 +8,10 @@ __author__ = "Orsiris de Jong"
 __site__ = "https://www.netperfect.fr/npbackup"
 __description__ = "NetPerfect Backup Client"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
-__build__ = "2024072701"
+__build__ = "2024081901"
 
 
+import sys
 import os
 from typing import Callable
 from functools import wraps
@@ -25,6 +26,12 @@ logger = getLogger()
 # Else, a simple true or false will suffice
 __SPECIAL_DEBUG_STRING = ""
 __debug_os_env = os.environ.get("_DEBUG", "False").strip("'\"")
+
+
+if not __SPECIAL_DEBUG_STRING:
+    if "--debug" in sys.argv:
+        _DEBUG = True
+        sys.argv.pop(sys.argv.index("--debug"))
 
 
 if not "_DEBUG" in globals():
