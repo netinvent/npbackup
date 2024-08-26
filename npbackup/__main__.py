@@ -280,11 +280,18 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Create a new encryption key, requires a file path",
     )
     parser.add_argument(
-        "--create-scheduled-task",
+        "--create-backup-scheduled-task",
         type=str,
         default=None,
         required=False,
-        help="Create a scheduled task, specify an argument interval via interval=minutes, or hour=hour,minute=minute for a daily task",
+        help="Create a scheduled backup task, specify an argument interval via interval=minutes, or hour=hour,minute=minute for a daily task",
+    )
+    parser.add_argument(
+        "--create-housekeeping-scheduled-task",
+        type=str,
+        default=None,
+        required=False,
+        help="Create a scheduled housekeeping task, specify hour=hour,minute=minute for a daily task",
     )
     args = parser.parse_args()
 
@@ -354,22 +361,26 @@ This is free software, and you are welcome to redistribute it under certain cond
         json_error_logging(False, msg, "critical")
         sys.exit(71)
 
-    if args.create_scheduled_task:
+    if args.create_backup_scheduled_task or args.create_housekeeping_scheduled_task:
         try:
             if "interval" in args.create_scheduled_task:
                 interval = args.create_scheduled_task.split("=")[1].strip()
                 result = create_scheduled_task(
-                    config_file, interval_minutes=int(interval)
+                    config_file, type="backup", interval_minutes=int(interval)
                 )
             elif (
                 "hour" in args.create_scheduled_task
                 and "minute" in args.create_scheduled_task
             ):
+                if args.create_backup_scheduled_task:
+                    type = "backup"
+                if args.create_housekeeping_scheduled_task:
+                    type = "housekeeping"
                 hours, minutes = args.create_scheduled_task.split(",")
                 hour = hours.split("=")[1].strip()
                 minute = minutes.split("=")[1].strip()
                 result = create_scheduled_task(
-                    config_file, hour=int(hour), minute=int(minute)
+                    config_file, type=type, hour=int(hour), minute=int(minute)
                 )
                 if not result:
                     msg = "Scheduled task creation failed"

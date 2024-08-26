@@ -79,8 +79,9 @@ fr:
   auto_upgrade_failed: Procédure de mise à niveau échouée, veuillez consulter les journaux pour plus de détails
   auto_upgrade_disabled: Mise à niveau automatique désactivée ou serveur injoignable
 
-  create_scheduled_task_every: Créer une tâche planifiée toutes les
-  create_scheduled_task_at: Créer une tâche planifiée à
+  create_backup_scheduled_task_every: Créer une tâche planifiée de sauvegarde toutes les
+  create_backup_scheduled_task_at: Créer une tâche planifiée de sauvegarde tous les jours à
+  create_housekeeping_schedule_task_at: Créer une tpache planifiée de maintenance tous les jours à
   scheduled_task_explanation: Les tâches planifiées peuvent être crées à heure fixe pour réaliser des sauvegardes serveur, ou toutes les x minutes, auquel cas la sauvegarde aura lieue uniquement si le temps minimal entre deux sauvegardes est dépassé, ce qui est adapté aux ordinateurs portables qui ont des heures de travail flexibles.
   scheduled_task_creation_success: Tâche planifiée crée avec succès
   scheduled_task_creation_failure: Impossible de créer la tâche planifiée. Veuillez consulter les journaux pour plus de détails

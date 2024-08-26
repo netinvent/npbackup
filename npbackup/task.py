@@ -7,7 +7,7 @@ __intname__ = "npbackup.task"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024081901"
+__build__ = "2024082601"
 
 
 import sys
@@ -24,7 +24,7 @@ logger = getLogger()
 
 
 def create_scheduled_task(
-    config_file: str, interval_minutes: int = None, hour: int = None, minute: int = None
+    config_file: str, type: str, interval_minutes: int = None, hour: int = None, minute: int = None
 ):
     """
     Creates a scheduled task for NPBackup
@@ -40,6 +40,10 @@ def create_scheduled_task(
             minute = int(minute)
     except ValueError:
         logger.error("Bogus interval given")
+        return False
+    
+    if type not in ("backup", "housekeeping"):
+        logger.error("Undefined task type")
         return False
 
     if isinstance(interval_minutes, int) and interval_minutes < 1:
@@ -59,16 +63,17 @@ def create_scheduled_task(
 
     if os.name == "nt":
         return create_scheduled_task_windows(
-            config_file, CURRENT_EXECUTABLE, interval_minutes, hour, minute
+            config_file, type, CURRENT_EXECUTABLE, interval_minutes, hour, minute
         )
     else:
         return create_scheduled_task_unix(
-            config_file, CURRENT_EXECUTABLE, interval_minutes, hour, minute
+            config_file, type, CURRENT_EXECUTABLE, interval_minutes, hour, minute
         )
 
 
 def create_scheduled_task_unix(
     config_file,
+    type,
     cli_executable_path,
     interval_minutes: int = None,
     hour: int = None,
@@ -80,11 +85,12 @@ def create_scheduled_task_unix(
     else:
         cli_executable_path = f'"{cli_executable_path}"'
     cron_file = "/etc/cron.d/npbackup"
+
     if interval_minutes is not None:
-        TASK_ARGS = f'-c "{config_file}" --backup --run-as-cli'
+        TASK_ARGS = f'-c "{config_file}" --{type} --run-as-cli'
         trigger = f"*/{interval_minutes} * * * *"
     elif hour is not None and minute is not None:
-        TASK_ARGS = f'-c "{config_file}" --backup --force --run-as-cli'
+        TASK_ARGS = f'-c "{config_file}" --{type} --force --run-as-cli'
         trigger = f"{minute} {hour} * * * root"
     else:
         raise ValueError("Bogus trigger given")
@@ -92,9 +98,24 @@ def create_scheduled_task_unix(
     crontab_entry = (
         f'{trigger} cd "{executable_dir}" && {cli_executable_path} {TASK_ARGS}\n'
     )
+
+    crontab_file = []
+
+    try:
+        with open(cron_file, "r", encoding="utf-8") as file_handle:
+            current_crontab = file_handle.readlines()
+            for line in current_crontab:
+                if "--{type}" in line:
+                    logger.info("Replacing existing task")
+                    crontab_file.append(crontab_entry)
+                else:
+                    crontab_file.append(line)
+    except OSError as exc:
+        crontab_file.append(crontab_entry)
+
     try:
         with open(cron_file, "w", encoding="utf-8") as file_handle:
-            file_handle.write(crontab_entry)
+            file_handle.writelines(crontab_file)
     except OSError as exc:
         logger.error("Could not write to file  {}: {}".format(cron_file, exc))
         return False
@@ -104,6 +125,7 @@ def create_scheduled_task_unix(
 
 def create_scheduled_task_windows(
     config_file,
+    type,
     cli_executable_path,
     interval_minutes: int = None,
     hour: int = None,
@@ -117,8 +139,11 @@ def create_scheduled_task_windows(
         runner = cli_executable_path
         task_args = ""
     temp_task_file = os.path.join(tempfile.gettempdir(), "backup_task.xml")
+
+    task_name = f"{PROGRAM_NAME} {type}"
+
     if interval_minutes is not None:
-        task_args = f'{task_args}-c "{config_file}" --backup --run-as-cli'
+        task_args = f'{task_args}-c "{config_file}" --{type} --run-as-cli'
         start_date = datetime.datetime.now().replace(microsecond=0).isoformat()
         trigger = f"""<TimeTrigger>
             <Repetition>
@@ -205,15 +230,15 @@ def create_scheduled_task_windows(
 
     # Setup task
     command_runner(
-        'schtasks /DELETE /TN "{}" /F'.format(PROGRAM_NAME),
+        'schtasks /DELETE /TN "{}" /F'.format(task_name),
         valid_exit_codes=[0, 1],
         windows_no_window=True,
         encoding="cp437",
     )
-    logger.info("Creating scheduled task {}".format(PROGRAM_NAME))
+    logger.info("Creating scheduled task {}".format(task_name))
     exit_code, output = command_runner(
         'schtasks /CREATE /TN "{}" /XML "{}" /RU System /F'.format(
-            PROGRAM_NAME, temp_task_file
+            task_name, temp_task_file
         ),
         windows_no_window=True,
         encoding="cp437",

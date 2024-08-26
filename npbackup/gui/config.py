@@ -1921,18 +1921,29 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 )
             ],
             [
-                sg.Text(_t("config_gui.create_scheduled_task_every"), size=(40, 1)),
+                sg.Text(_t("config_gui.create_backup_scheduled_task_every"), size=(40, 1)),
                 sg.Input(key="scheduled_task_interval", size=(4, 1)),
                 sg.Text(_t("generic.minutes"), size=(10, 1)),
-                sg.Button(_t("generic.create"), key="create_interval_task"),
+                sg.Button(_t("generic.create"), key="create_backup_interval_task"),
             ],
             [
-                sg.Text(_t("config_gui.create_scheduled_task_at"), size=(40, 1)),
+                sg.Text(_t("config_gui.create_backup_scheduled_task_at"), size=(40, 1)),
                 sg.Input(key="scheduled_task_hour", size=(4, 1)),
                 sg.Text(_t("generic.hours"), size=(10, 1)),
                 sg.Input(key="scheduled_task_minute", size=(4, 1)),
                 sg.Text(_t("generic.minutes"), size=(10, 1)),
-                sg.Button(_t("generic.create"), key="create_daily_task"),
+                sg.Button(_t("generic.create"), key="create_backup_daily_task"),
+            ],
+            [
+                sg.HorizontalSeparator(),
+            ],
+            [
+                sg.Text(_t("config_gui.create_housekeeping_scheduled_task_at"), size=(40, 1)),
+                sg.Input(key="scheduled_task_hour", size=(4, 1)),
+                sg.Text(_t("generic.hours"), size=(10, 1)),
+                sg.Input(key="scheduled_task_minute", size=(4, 1)),
+                sg.Text(_t("generic.minutes"), size=(10, 1)),
+                sg.Button(_t("generic.create"), key="create_housekeeping_daily_task"),
             ],
         ]
 
@@ -2255,10 +2266,15 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 )
                 update_global_gui(full_config, unencrypted=True)
             continue
-        if event in ("create_interval_task", "create_daily_task"):
+        if event in ("create_backup_interval_task", "create_backup_daily_task", "create_housekeeping_daily_task"):
             try:
+                if event == "create_housekeeping_daily_task":
+                    type = "housekeeping"
+                else:
+                    type = "backup"
                 result = create_scheduled_task(
                     config_file,
+                    type=type,
                     values["scheduled_task_interval"],
                     values["scheduled_task_hour"],
                     values["scheduled_task_minute"],
