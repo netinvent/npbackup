@@ -7,7 +7,7 @@ __intname__ = "npbackup.task"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024082601"
+__build__ = "2024090101"
 
 
 import sys
@@ -65,6 +65,11 @@ def create_scheduled_task(
     if not os.path.isabs(config_file):
         config_file = os.path.join(CURRENT_DIR, config_file)
 
+    if interval_minutes:
+        logger.info(f"Creating scheduled task {type} to run every {interval_minutes} minutes")
+    elif hour and minute:
+        logger.info(f"Creating scheduled task {type} to run at everyday at {hour}h{minute}")
+
     if os.name == "nt":
         return create_scheduled_task_windows(
             config_file, type, CURRENT_EXECUTABLE, interval_minutes, hour, minute
@@ -94,7 +99,11 @@ def create_scheduled_task_unix(
         TASK_ARGS = f'-c "{config_file}" --{type} --run-as-cli'
         trigger = f"*/{interval_minutes} * * * *"
     elif hour is not None and minute is not None:
-        TASK_ARGS = f'-c "{config_file}" --{type} --force --run-as-cli'
+        if type == "backup":
+            force_opt = " --force"
+        else:
+            force_opt = ""
+        TASK_ARGS = f'-c "{config_file}" --{type}{force_opt} --run-as-cli'
         trigger = f"{minute} {hour} * * * root"
     else:
         raise ValueError("Bogus trigger given")
@@ -110,10 +119,14 @@ def create_scheduled_task_unix(
             current_crontab = file_handle.readlines()
             for line in current_crontab:
                 if "--{type}" in line:
-                    logger.info("Replacing existing task")
+                    logger.info(f"Replacing existing {type} task")
                     crontab_file.append(crontab_entry)
+                    replaced = True
                 else:
                     crontab_file.append(line)
+            if not replaced:
+                logger.info(f"Adding new {type} task")
+                crontab_file.append(crontab_entry)
     except OSError as exc:
         crontab_file.append(crontab_entry)
 
