@@ -1924,15 +1924,15 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 sg.Text(
                     _t("config_gui.create_backup_scheduled_task_every"), size=(40, 1)
                 ),
-                sg.Input(key="scheduled_task_interval", size=(4, 1)),
+                sg.Input(key="scheduled_backup_task_interval", size=(4, 1)),
                 sg.Text(_t("generic.minutes"), size=(10, 1)),
                 sg.Button(_t("generic.create"), key="create_backup_interval_task"),
             ],
             [
                 sg.Text(_t("config_gui.create_backup_scheduled_task_at"), size=(40, 1)),
-                sg.Input(key="scheduled_task_hour", size=(4, 1)),
+                sg.Input(key="scheduled_backup_task_hour", size=(4, 1)),
                 sg.Text(_t("generic.hours"), size=(10, 1)),
-                sg.Input(key="scheduled_task_minute", size=(4, 1)),
+                sg.Input(key="scheduled_backup_task_minute", size=(4, 1)),
                 sg.Text(_t("generic.minutes"), size=(10, 1)),
                 sg.Button(_t("generic.create"), key="create_backup_daily_task"),
             ],
@@ -1943,9 +1943,9 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 sg.Text(
                     _t("config_gui.create_housekeeping_scheduled_task_at"), size=(40, 1)
                 ),
-                sg.Input(key="scheduled_task_hour", size=(4, 1)),
+                sg.Input(key="scheduled_housekeeping_task_hour", size=(4, 1)),
                 sg.Text(_t("generic.hours"), size=(10, 1)),
-                sg.Input(key="scheduled_task_minute", size=(4, 1)),
+                sg.Input(key="scheduled_housekeeping_task_minute", size=(4, 1)),
                 sg.Text(_t("generic.minutes"), size=(10, 1)),
                 sg.Button(_t("generic.create"), key="create_housekeeping_daily_task"),
             ],
@@ -2278,18 +2278,21 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             try:
                 if event == "create_housekeeping_daily_task":
                     type = "housekeeping"
+                    hour = values["scheduled_housekeeping_task_hour"]
+                    minute = values["scheduled_housekeeping_task_minute"]
                 else:
                     type = "backup"
                 if event == "create_backup_interval_task":
-                    interval = values["scheduled_task_interval"]
+                    interval = values["scheduled_backup_task_interval"]
                 else:
-                    interval = None
+                    hour = values["scheduled_backup_task_hour"]
+                    minute = values["scheduled_backup_task_minute"]
                 result = create_scheduled_task(
                     config_file=config_file,
                     type=type,
                     interval_minutes=interval,
-                    hour=values["scheduled_task_hour"],
-                    minute=values["scheduled_task_minute"],
+                    hour=hour,
+                    minute=minute,
                 )
                 if result:
                     sg.Popup(_t("config_gui.scheduled_task_creation_success"), keep_on_top=True)
