@@ -861,24 +861,28 @@ def config_gui(full_config: dict, config_file: str):
                     expand_y=True,
                 )
             ],
-            [
-                sg.Text(_t("config_gui.stdin_from_command"))
-            ],
+            [sg.Text(_t("config_gui.stdin_from_command"))],
             [
                 sg.Image(
-                                NON_INHERITED_ICON,
-                                key="inherited.backup_opts.stdin_from_command",
-                                tooltip=_t("config_gui.group_inherited"),
-                                pad=1,
-                            ),
+                    NON_INHERITED_ICON,
+                    key="inherited.backup_opts.stdin_from_command",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
                 sg.Input(key="backup_opts.stdin_from_command", size=(100, 1)),
             ],
             [
                 sg.Input(visible=False, key="--ADD-PATHS-FILE--", enable_events=True),
-                sg.FilesBrowse(_t("generic.add_files"), target="--ADD-PATHS-FILE--", key="--ADD-PATHS-FILE-BUTTON--"),
+                sg.FilesBrowse(
+                    _t("generic.add_files"),
+                    target="--ADD-PATHS-FILE--",
+                    key="--ADD-PATHS-FILE-BUTTON--",
+                ),
                 sg.Input(visible=False, key="--ADD-PATHS-FOLDER--", enable_events=True),
                 sg.FolderBrowse(
-                    _t("generic.add_folder"), target="--ADD-PATHS-FOLDER--", key="--ADD-PATHS-FOLDER-BUTTON--"
+                    _t("generic.add_folder"),
+                    target="--ADD-PATHS-FOLDER--",
+                    key="--ADD-PATHS-FOLDER-BUTTON--",
                 ),
                 sg.Button(_t("generic.add_manually"), key="--ADD-PATHS-MANUALLY--"),
                 sg.Button(_t("generic.remove_selected"), key="--REMOVE-PATHS--"),
@@ -2113,7 +2117,10 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 update_global_gui(full_config, unencrypted=False)
             continue
         if event == "backup_opts.source_type":
-            value = get_key_from_value(combo_boxes["backup_opts.source_type"], values["backup_opts.source_type"])
+            value = get_key_from_value(
+                combo_boxes["backup_opts.source_type"],
+                values["backup_opts.source_type"],
+            )
             if value == "stdin_from_command":
                 window["backup_opts.paths"].update(visible=False)
                 window["--ADD-PATHS-FILE-BUTTON--"].update(disabled=True)
@@ -2336,7 +2343,10 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     minute=minute,
                 )
                 if result:
-                    sg.Popup(_t("config_gui.scheduled_task_creation_success"), keep_on_top=True)
+                    sg.Popup(
+                        _t("config_gui.scheduled_task_creation_success"),
+                        keep_on_top=True,
+                    )
                 else:
                     sg.PopupError(
                         _t("config_gui.scheduled_task_creation_failure"),

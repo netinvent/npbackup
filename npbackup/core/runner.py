@@ -1011,7 +1011,7 @@ class NPBackupRunner:
         """
         # Possible warnings to add to json output
         warnings = []
-        
+
         stdin_from_command = self.repo_config.g("backup_opts.stdin_from_command")
         if not read_from_stdin and not stdin_from_command:
             # Preflight checks
@@ -1116,7 +1116,7 @@ class NPBackupRunner:
         if stdin_from_command:
             self.write_logs(
                 f"Running backup of given command stdout as name {stdin_filename} to repo {self.repo_config.g('name')}",
-                level="info"
+                level="info",
             )
         elif stdin_filename:
             self.write_logs(

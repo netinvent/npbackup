@@ -279,7 +279,7 @@ def gui_thread_runner(
                     logger.debug("gui_thread_runner got stdout queue close signal")
                     read_stdout_queue = False
                 else:
-                    stdout_cache += stdout_data.strip("\r\n") + '\n'
+                    stdout_cache += stdout_data.strip("\r\n") + "\n"
                     # So the FreeSimpleGUI update implementation is **really** slow to update multiline when autoscroll=True
                     # and there's too much invisible text
                     # we need to create a cache that's updated once
@@ -297,7 +297,7 @@ def gui_thread_runner(
                     read_stderr_queue = False
                 else:
                     stderr_has_messages = True
-                    stderr_cache += stderr_data.strip("\r\n") + '\n'
+                    stderr_cache += stderr_data.strip("\r\n") + "\n"
 
         read_queues = read_stdout_queue or read_stderr_queue
 

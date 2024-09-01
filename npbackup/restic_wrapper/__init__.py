@@ -883,7 +883,6 @@ class ResticRunner:
                         level="warning",
                     )
 
-
         for tag in tags:
             if tag:
                 tag = tag.strip()

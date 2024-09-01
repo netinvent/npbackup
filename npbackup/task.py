@@ -66,9 +66,13 @@ def create_scheduled_task(
         config_file = os.path.join(CURRENT_DIR, config_file)
 
     if interval_minutes:
-        logger.info(f"Creating scheduled task {type} to run every {interval_minutes} minutes")
+        logger.info(
+            f"Creating scheduled task {type} to run every {interval_minutes} minutes"
+        )
     elif hour and minute:
-        logger.info(f"Creating scheduled task {type} to run at everyday at {hour}h{minute}")
+        logger.info(
+            f"Creating scheduled task {type} to run at everyday at {hour}h{minute}"
+        )
 
     if os.name == "nt":
         return create_scheduled_task_windows(
