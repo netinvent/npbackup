@@ -24,7 +24,11 @@ logger = getLogger()
 
 
 def create_scheduled_task(
-    config_file: str, type: str, interval_minutes: int = None, hour: int = None, minute: int = None
+    config_file: str,
+    type: str,
+    interval_minutes: int = None,
+    hour: int = None,
+    minute: int = None,
 ):
     """
     Creates a scheduled task for NPBackup
@@ -41,7 +45,7 @@ def create_scheduled_task(
     except ValueError:
         logger.error("Bogus interval given")
         return False
-    
+
     if type not in ("backup", "housekeeping"):
         logger.error("Undefined task type")
         return False

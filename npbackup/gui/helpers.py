@@ -297,7 +297,7 @@ def gui_thread_runner(
                     read_stderr_queue = False
                 else:
                     stderr_has_messages = True
-                    stderr_cache += stderr_data.strip("\r\n")    
+                    stderr_cache += stderr_data.strip("\r\n")
 
         read_queues = read_stdout_queue or read_stderr_queue
 
