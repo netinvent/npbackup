@@ -59,7 +59,10 @@ from npbackup.restic_wrapper import ResticRunner
 
 logger = getLogger()
 backend_binary = None
-FIRST_GUI_RUN = True
+
+# This bool allows to not show errors on freshly configured repos or first runs, when repo isn't initialized yet
+# Also prevents showing errors when config was just changed
+GUI_STATUS_IGNORE_ERRORS = True
 
 
 sg.theme(SIMPLEGUI_THEME)
@@ -419,6 +422,7 @@ def forget_snapshot(repo_config: dict, snapshot_ids: List[str]) -> bool:
 def _main_gui(viewer_mode: bool):
     global logger
     global backend_binary
+    global GUI_STATUS_IGNORE_ERRORS
 
     def check_for_auto_upgrade(full_config: dict) -> None:
         if full_config and full_config.g("global_options.auto_upgrade_server_url"):
@@ -510,7 +514,7 @@ def _main_gui(viewer_mode: bool):
         window["snapshot-list"].Update(snapshot_list)
 
     def get_gui_data(repo_config: dict) -> Tuple[bool, List[str]]:
-        global FIRST_GUI_RUN
+        global GUI_STATUS_IGNORE_ERRORS
 
         window["--STATE-BUTTON--"].Update(
             _t("generic.please_wait"), button_color="orange"
@@ -523,9 +527,9 @@ def _main_gui(viewer_mode: bool):
             __autoclose=True,
             __compact=True,
             __backend_binary=backend_binary,
-            __ignore_errors=FIRST_GUI_RUN,
+            __ignore_errors=GUI_STATUS_IGNORE_ERRORS,
         )
-        FIRST_GUI_RUN = False
+        GUI_STATUS_IGNORE_ERRORS = False
         if not result or not result["result"]:
             snapshots = None
         else:
@@ -576,6 +580,8 @@ def _main_gui(viewer_mode: bool):
         """
         Load config file until we got something
         """
+        global GUI_STATUS_IGNORE_ERRORS
+
         config_exists = True
         full_config = None
         if config_file:
@@ -606,6 +612,7 @@ def _main_gui(viewer_mode: bool):
                 logger.info(f"Using configuration file {config_file}")
                 try:
                     full_config = npbackup.configuration.load_config(config_file)
+                    GUI_STATUS_IGNORE_ERRORS = True
                 except EnvironmentError as exc:
                     sg.PopupError(exc, keep_on_top=True)
                 else:
@@ -905,8 +912,7 @@ def _main_gui(viewer_mode: bool):
     if not config_file and not full_config and not viewer_mode:
         window["-NO-CONFIG-"].Update(visible=True)
 
-    # Don't load repo info on first load, unless we're dealing with viewer
-    if repo_config and viewer_mode:
+    if repo_config:
         try:
             current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
         except (TypeError, ValueError):
@@ -974,6 +980,7 @@ def _main_gui(viewer_mode: bool):
                 sg.PopupError(_t("main_gui.no_config"), keep_on_top=True)
                 continue
             full_config = config_gui(full_config, config_file)
+            GUI_STATUS_IGNORE_ERRORS = True
             # Make sure we trigger a GUI refresh when configuration is changed
             # Also make sure we retrigger get_config
             event = "--LOAD-EXISTING-CONF--"
