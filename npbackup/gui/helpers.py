@@ -15,6 +15,7 @@ from logging import getLogger
 from time import sleep
 import re
 import queue
+import time
 import FreeSimpleGUI as sg
 from npbackup.core.i18n_helper import _t
 from resources.customization import (
@@ -102,6 +103,16 @@ def gui_thread_runner(
         progress_window["--EXPAND--"].Update(visible=False)
         progress_window["-OPERATIONS-PROGRESS-STDOUT-"].update(autoscroll=True)
 
+    def _update_gui_from_cache(_stdout_cache: str = None, _stderr_cache: str = None):
+        if _stdout_cache:
+            progress_window["-OPERATIONS-PROGRESS-STDOUT-"].Update(
+                _stdout_cache[-1000:]
+            )
+        if _stderr_cache:
+            progress_window["-OPERATIONS-PROGRESS-STDERR-"].Update(
+                f"\n{_stderr_cache}", append=True
+            )
+
     runner = NPBackupRunner()
 
     if __backend_binary:
@@ -146,8 +157,9 @@ def gui_thread_runner(
                 key="-OPERATIONS-PROGRESS-STDOUT-",
                 size=(70, 15),
                 visible=not __compact,
-                # Setting autoscroll=True on not visible Multiline takes seconds on updates
-                autoscroll=False if __fn_name in ("backup", "list") else True,
+                # Setting autoscroll=True on not visible Multiline takes
+                # huge time depending on the amount of text (up to minutes for 80k chars)
+                autoscroll=False,
             )
         ],
         [
@@ -234,12 +246,19 @@ def gui_thread_runner(
     read_stdout_queue = __stdout
     read_stderr_queue = True
     read_queues = True
+
+    stdout_cache = ""
+    stderr_cache = ""
+
     if USE_THREADING:
         thread = fn(*args, **kwargs)
     else:
         kwargs = {**kwargs, **{"__no_threads": True}}
         result = runner.__getattribute__(fn.__name__)(*args, **kwargs)
+
+    start_time = time.monotonic()
     while True:
+
         # No idea why pylint thinks that UpdateAnimation does not exist in SimpleGUI
         # pylint: disable=E1101 (no-member)
         progress_window["-LOADER-ANIMATION-"].UpdateAnimation(
@@ -259,14 +278,12 @@ def gui_thread_runner(
                 if stdout_data is None:
                     logger.debug("gui_thread_runner got stdout queue close signal")
                     read_stdout_queue = False
-                    # progress_window["-OPERATIONS-PROGRESS-STDOUT-"].Update(
-                    #    "\n", append=True
-                    # )
                 else:
-                    stdout_data = stdout_data.strip("\r\n")
-                    progress_window["-OPERATIONS-PROGRESS-STDOUT-"].Update(
-                        f"\n{stdout_data}", append=True
-                    )
+                    stdout_cache += stdout_data.strip("\r\n")
+                    # So the FreeSimpleGUI update implementation is **really** slow to update multiline when autoscroll=True
+                    # and there's too much invisible text
+                    # we need to create a cache that's updated once
+                    # every second or so in order to not block the GUI waiting for GUI redraw
 
         # Read stderr queue
         if read_stderr_queue:
@@ -280,10 +297,7 @@ def gui_thread_runner(
                     read_stderr_queue = False
                 else:
                     stderr_has_messages = True
-                    stderr_data = stderr_data.strip("\r\n")
-                    progress_window["-OPERATIONS-PROGRESS-STDERR-"].Update(
-                        f"\n{stderr_data}", append=True
-                    )
+                    stderr_cache += stderr_data.strip("\r\n")    
 
         read_queues = read_stdout_queue or read_stderr_queue
 
@@ -296,6 +310,14 @@ def gui_thread_runner(
             _upgrade_from_compact_view()
             # Make sure we will keep the window visible since we have errors
             __autoclose = False
+
+        if start_time - time.monotonic() > 1:
+            _update_gui_from_cache(stdout_cache, stderr_cache)
+            stdout_cache = ""
+            stderr_cache = ""
+            start_time = time.monotonic()
+
+    _update_gui_from_cache(stdout_cache, stderr_cache)
 
     progress_window["--EXIT--"].Update(disabled=False)
     # Keep the window open until user has done something
