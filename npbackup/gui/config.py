@@ -2280,15 +2280,19 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     type = "housekeeping"
                 else:
                     type = "backup"
+                if event == "create_backup_interval_task":
+                    interval = values["scheduled_task_interval"]
+                else:
+                    interval = None
                 result = create_scheduled_task(
                     config_file=config_file,
                     type=type,
-                    interval_minutes=values["scheduled_task_interval"],
+                    interval_minutes=interval,
                     hour=values["scheduled_task_hour"],
                     minute=values["scheduled_task_minute"],
                 )
                 if result:
-                    sg.Popup(_t("config_gui.scheduled_task_creation_success"))
+                    sg.Popup(_t("config_gui.scheduled_task_creation_success"), keep_on_top=True)
                 else:
                     sg.PopupError(
                         _t("config_gui.scheduled_task_creation_failure"),

@@ -115,11 +115,15 @@ def create_scheduled_task_unix(
     crontab_file = []
 
     try:
+        replaced = False
         with open(cron_file, "r", encoding="utf-8") as file_handle:
             current_crontab = file_handle.readlines()
             for line in current_crontab:
-                if "--{type}" in line:
+                if f"--{type}" in line:
                     logger.info(f"Replacing existing {type} task")
+                    if replaced:
+                        logger.info(f"Skipping duplicate {type} task")
+                        continue
                     crontab_file.append(crontab_entry)
                     replaced = True
                 else:
