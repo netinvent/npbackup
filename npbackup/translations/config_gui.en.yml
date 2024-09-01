@@ -108,6 +108,7 @@ en:
   files_from: From file
   files_from_verbatim: From verbatim
   files_from_raw: From raw
+  stdin_from_command: Standard input from command
 
   # retention policiy
   retention_policy: Retention policy

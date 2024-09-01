@@ -1011,9 +1011,10 @@ class NPBackupRunner:
         """
         # Possible warnings to add to json output
         warnings = []
-
-        # Preflight checks
-        if not read_from_stdin:
+        
+        stdin_from_command = self.repo_config.g("backup_opts.stdin_from_command")
+        if not read_from_stdin and not stdin_from_command:
+            # Preflight checks
             paths = self.repo_config.g("backup_opts.paths")
             if not paths:
                 msg = (
@@ -1112,7 +1113,17 @@ class NPBackupRunner:
             self.restic_runner.verbose = self.verbose
 
         # Run backup here
-        if not read_from_stdin:
+        if stdin_from_command:
+            self.write_logs(
+                f"Running backup of given command stdout as name {stdin_filename} to repo {self.repo_config.g('name')}",
+                level="info"
+            )
+        elif stdin_filename:
+            self.write_logs(
+                f"Running backup of piped stdin data as name {stdin_filename} to repo {self.repo_config.g('name')}",
+                level="info",
+            )
+        else:
             if source_type not in ["folder_list", None]:
                 self.write_logs(
                     f"Running backup of files in {paths} list to repo {self.repo_config.g('name')}",
@@ -1123,11 +1134,6 @@ class NPBackupRunner:
                     f"Running backup of {paths} to repo {self.repo_config.g('name')}",
                     level="info",
                 )
-        else:
-            self.write_logs(
-                f"Running backup of piped stdin data as name {stdin_filename} to repo {self.repo_config.g('name')}",
-                level="info",
-            )
 
         pre_exec_commands_success = True
         if pre_exec_commands:
@@ -1149,7 +1155,21 @@ class NPBackupRunner:
                         level="info",
                     )
 
-        if not read_from_stdin:
+        if read_from_stdin:
+            result = self.restic_runner.backup(
+                read_from_stdin=read_from_stdin,
+                stdin_filename=stdin_filename,
+                tags=tags,
+                additional_backup_only_parameters=additional_backup_only_parameters,
+            )
+        elif stdin_from_command:
+            result = self.restic_runner.backup(
+                stdin_from_command=stdin_from_command,
+                stdin_filename=stdin_filename,
+                tags=tags,
+                additional_backup_only_parameters=additional_backup_only_parameters,
+            )
+        else:
             result = self.restic_runner.backup(
                 paths=paths,
                 source_type=source_type,
@@ -1160,13 +1180,6 @@ class NPBackupRunner:
                 exclude_files_larger_than=exclude_files_larger_than,
                 one_file_system=one_file_system,
                 use_fs_snapshot=use_fs_snapshot,
-                tags=tags,
-                additional_backup_only_parameters=additional_backup_only_parameters,
-            )
-        else:
-            result = self.restic_runner.backup(
-                read_from_stdin=read_from_stdin,
-                stdin_filename=stdin_filename,
                 tags=tags,
                 additional_backup_only_parameters=additional_backup_only_parameters,
             )

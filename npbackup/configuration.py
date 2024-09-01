@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024061701"
+__build__ = "2024090101"
 __version__ = "npbackup 3.0.0+"
 
 MIN_CONF_VERSION = 3.0
@@ -153,6 +153,7 @@ empty_config_dict = {
             "backup_opts": {
                 "paths": [],
                 "source_type": None,
+                "stdin_from_command": None,
                 "tags": [],
                 "compression": "auto",
                 "use_fs_snapshot": True,

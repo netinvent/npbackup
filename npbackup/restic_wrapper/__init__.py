@@ -295,7 +295,7 @@ class ResticRunner:
             if self.additional_parameters
             else ""
         )
-        _cmd = f'"{self._binary}" {additional_parameters}{cmd}{self.generic_arguments}'
+        _cmd = f'"{self._binary}"{additional_parameters}{self.generic_arguments} {cmd}'
 
         self._executor_running = True
         self.write_logs(f"Running command: [{_cmd}]", level="debug")
@@ -781,6 +781,7 @@ class ResticRunner:
         tags: List[str] = [],
         one_file_system: bool = False,
         read_from_stdin: bool = False,
+        stdin_from_command: str = None,
         stdin_filename: str = "stdin.data",
         additional_backup_only_parameters: str = None,
     ) -> Union[bool, str, dict]:
@@ -790,11 +791,9 @@ class ResticRunner:
         kwargs = locals()
         kwargs.pop("self")
 
-        if read_from_stdin:
-            cmd = "backup --stdin"
-            if stdin_filename:
-                cmd += f' --stdin-filename "{stdin_filename}"'
-        else:
+        cmd = "backup"
+
+        if not read_from_stdin and not stdin_from_command:
             # Handle various source types
             if source_type in [
                 "files_from",
@@ -883,12 +882,23 @@ class ResticRunner:
                         "Parameter --use-fs-snapshot was given, which is only compatible with Windows",
                         level="warning",
                     )
+
+
         for tag in tags:
             if tag:
                 tag = tag.strip()
                 cmd += " --tag {}".format(tag)
         if additional_backup_only_parameters:
             cmd += " {}".format(additional_backup_only_parameters)
+
+        if read_from_stdin:
+            cmd += " --stdin"
+            if stdin_filename:
+                cmd += f' --stdin-filename "{stdin_filename}"'
+        if stdin_from_command:
+            if stdin_filename:
+                cmd += f' --stdin-filename "{stdin_filename}"'
+            cmd += f" --stdin-from-command -- {stdin_from_command}"
 
         # Run backup without json output, as we could not compute the cloud errors in json output via regexes
         json_output = self.json_output
