@@ -2276,17 +2276,20 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             "create_housekeeping_daily_task",
         ):
             try:
+                interval = None
+                hour = None
+                minute = None
                 if event == "create_housekeeping_daily_task":
                     type = "housekeeping"
                     hour = values["scheduled_housekeeping_task_hour"]
                     minute = values["scheduled_housekeeping_task_minute"]
                 else:
                     type = "backup"
-                if event == "create_backup_interval_task":
-                    interval = values["scheduled_backup_task_interval"]
-                else:
-                    hour = values["scheduled_backup_task_hour"]
-                    minute = values["scheduled_backup_task_minute"]
+                    if event == "create_backup_interval_task":
+                        interval = values["scheduled_backup_task_interval"]
+                    else:
+                        hour = values["scheduled_backup_task_hour"]
+                        minute = values["scheduled_backup_task_minute"]
                 result = create_scheduled_task(
                     config_file=config_file,
                     type=type,
