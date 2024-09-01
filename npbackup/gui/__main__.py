@@ -725,7 +725,11 @@ def _main_gui(viewer_mode: bool):
     if args.config_file:
         config_file = Path(args.config_file).absolute()
     else:
-        config_file = Path(f"{CURRENT_DIR}/npbackup.conf")
+        config_file = Path(f"{CURRENT_DIR}/npbackup.conf").absolute()
+        if not config_file.is_file():
+            config_file = Path(f"./npbackup.conf").absolute()
+            if not config_file.is_file():
+                config_file = None
 
     backend_binary = None
     if args.external_backend_binary:
