@@ -140,7 +140,7 @@ def create_scheduled_task_windows(
         task_args = ""
     temp_task_file = os.path.join(tempfile.gettempdir(), "backup_task.xml")
 
-    task_name = f"{PROGRAM_NAME} {type}"
+    task_name = f"{PROGRAM_NAME} - {type.capitalize()}"
 
     if interval_minutes is not None:
         task_args = f'{task_args}-c "{config_file}" --{type} --run-as-cli'
