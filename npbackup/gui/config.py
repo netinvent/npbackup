@@ -2273,11 +2273,11 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 else:
                     type = "backup"
                 result = create_scheduled_task(
-                    config_file,
+                    config_file=config_file,
                     type=type,
-                    values["scheduled_task_interval"],
-                    values["scheduled_task_hour"],
-                    values["scheduled_task_minute"],
+                    interval_minutes=values["scheduled_task_interval"],
+                    hour=values["scheduled_task_hour"],
+                    minute=values["scheduled_task_minute"],
                 )
                 if result:
                     sg.Popup(_t("config_gui.scheduled_task_creation_success"))
