@@ -7,8 +7,8 @@ __intname__ = "npbackup.compile"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024052201"
-__version__ = "2.0.0"
+__build__ = "2024090301"
+__version__ = "2.0.1"
 
 
 """
@@ -177,11 +177,12 @@ def have_nuitka_commercial():
         return False
 
 
-def compile(arch: str, audience: str, build_type: str, onefile: bool):
+def compile(arch: str, audience: str, build_type: str, onefile: bool, create_tar_only: bool):
     if build_type not in BUILD_TYPES:
         print("CANNOT BUILD BOGUS BUILD TYPE")
         sys.exit(1)
     source_program = "bin/npbackup-{}".format(build_type)
+
 
     if onefile:
         suffix = "-{}-{}".format(build_type, arch)
@@ -226,6 +227,7 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool):
 
     # npbackup compilation
     # Strip possible version suffixes '-dev'
+    print(npbackup_version)
     _npbackup_version = npbackup_version.split("-")[0]
     PRODUCT_VERSION = _npbackup_version + ".0"
     FILE_VERSION = _npbackup_version + ".0"
@@ -311,18 +313,20 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool):
         source_program,
     )
 
-    print(CMD)
     errors = False
-    exit_code, output = command_runner(CMD, timeout=0, live_output=True)
-    if exit_code != 0:
-        errors = True
+    if not create_tar_only:
+        print(CMD)
+        exit_code, output = command_runner(CMD, timeout=0, live_output=True)
+        if exit_code != 0:
+            errors = True
 
-    ## Create version file
-    with open(
-        os.path.join(BUILDS_DIR, audience, "VERSION"), "w", encoding="utf-8"
-    ) as fh:
-        fh.write(npbackup_version)
-    print(f"COMPILED {'WITH SUCCESS' if not errors else 'WITH ERRORS'}")
+        ## Create version file
+        with open(
+            os.path.join(BUILDS_DIR, audience, "VERSION"), "w", encoding="utf-8"
+        ) as fh:
+            fh.write(npbackup_version)
+        print(f"COMPILED {'WITH SUCCESS' if not errors else 'WITH ERRORS'}")
+
     if not onefile:
         if not create_archive(
             platform=platform,
@@ -413,6 +417,14 @@ if __name__ == "__main__":
         help="Build single file executable (more prone to AV detection)",
     )
 
+    parser.add_argument(
+        "--create-tar-only",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Only create tar files, shortcut when we need to package signed binaries"
+    )
+
     args = parser.parse_args()
 
     # Make sure we get out dev environment back when compilation ends / fails
@@ -420,6 +432,7 @@ if __name__ == "__main__":
         move_audience_files,
         "private",
     )
+
     try:
         errors = False
         if args.audience.lower() == "all":
@@ -435,42 +448,47 @@ if __name__ == "__main__":
         else:
             build_types = BUILD_TYPES
 
-        for audience in audiences:
-            move_audience_files(audience)
-            npbackup_version = get_metadata(os.path.join(BASEDIR, "__version__.py"))[
-                "version"
-            ]
+        create_tar_only = args.create_tar_only
 
-            private_build = check_private_build(audience)
-            if private_build and audience != "private":
-                print("ERROR: Requested public build but private data available")
-                errors = True
-                continue
-            elif not private_build and audience != "public":
-                print("ERROR: Requested private build but no private data available")
-                errors = True
-                continue
+        for audience in audiences:
+            npbackup_version = get_metadata(os.path.join(BASEDIR, "__version__.py"))[
+                    "version"
+                ]
+            if not create_tar_only:
+                move_audience_files(audience)
+
+                private_build = check_private_build(audience)
+                if private_build and audience != "private":
+                    print("ERROR: Requested public build but private data available")
+                    errors = True
+                    continue
+                elif not private_build and audience != "public":
+                    print("ERROR: Requested private build but no private data available")
+                    errors = True
+                    continue
             for build_type in build_types:
                 result = compile(
                     arch=python_arch(),
                     audience=audience,
                     build_type=build_type,
                     onefile=args.onefile,
+                    create_tar_only=create_tar_only
                 )
-                audience_build = "private" if private_build else "public"
-                if result:
-                    print(
-                        "SUCCESS: MADE {} build for audience {}".format(
-                            audience_build, audience
+                if not create_tar_only:
+                    audience_build = "private" if private_build else "public"
+                    if result:
+                        print(
+                            "SUCCESS: MADE {} build for audience {}".format(
+                                audience_build, audience
+                            )
                         )
-                    )
-                else:
-                    print(
-                        "ERROR: Failed making {} build for audience {}".format(
-                            audience_build, audience
+                    else:
+                        print(
+                            "ERROR: Failed making {} build for audience {}".format(
+                                audience_build, audience
+                            )
                         )
-                    )
-                    errors = True
+                        errors = True
         if errors:
             print("ERRORS IN BUILD PROCESS")
         else:
