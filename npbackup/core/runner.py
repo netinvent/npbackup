@@ -1013,7 +1013,13 @@ class NPBackupRunner:
         warnings = []
 
         stdin_from_command = self.repo_config.g("backup_opts.stdin_from_command")
-        if not read_from_stdin and not stdin_from_command:
+        source_type = self.repo_config.g("backup_opts.source_type")
+        if source_type in (
+            None,
+            "folder_list",
+            "files_from_verbatim",
+            "files_from_raw",
+        ):
             # Preflight checks
             paths = self.repo_config.g("backup_opts.paths")
             if not paths:
@@ -1038,8 +1044,6 @@ class NPBackupRunner:
                 msg = f"No backup source given for repo {self.repo_config.g('name')}"
                 self.write_logs(msg, level="critical")
                 return self.convert_to_json_output(False, msg)
-
-            source_type = self.repo_config.g("backup_opts.source_type")
 
             # MSWindows does not support one-file-system option
             exclude_patterns = self.repo_config.g("backup_opts.exclude_patterns")
@@ -1112,18 +1116,13 @@ class NPBackupRunner:
                 return self.convert_to_json_output(True, msg)
             self.restic_runner.verbose = self.verbose
 
-        # Run backup here
-        if stdin_from_command:
-            self.write_logs(
-                f"Running backup of given command stdout as name {stdin_filename} to repo {self.repo_config.g('name')}",
-                level="info",
-            )
-        elif stdin_filename:
-            self.write_logs(
-                f"Running backup of piped stdin data as name {stdin_filename} to repo {self.repo_config.g('name')}",
-                level="info",
-            )
-        else:
+        # Run backup preps here
+        if source_type in (
+            None,
+            "folder_list",
+            "files_from_verbatim",
+            "files_from_raw",
+        ):
             if source_type not in ["folder_list", None]:
                 self.write_logs(
                     f"Running backup of files in {paths} list to repo {self.repo_config.g('name')}",
@@ -1134,6 +1133,18 @@ class NPBackupRunner:
                     f"Running backup of {paths} to repo {self.repo_config.g('name')}",
                     level="info",
                 )
+        elif source_type == "stdin_from_command" and stdin_from_command:
+            self.write_logs(
+                f"Running backup of given command stdout as name {stdin_filename} to repo {self.repo_config.g('name')}",
+                level="info",
+            )
+        elif read_from_stdin:
+            self.write_logs(
+                f"Running backup of piped stdin data as name {stdin_filename} to repo {self.repo_config.g('name')}",
+                level="info",
+            )
+        else:
+            raise ValueError("Unknown source type given")
 
         pre_exec_commands_success = True
         if pre_exec_commands:
@@ -1155,21 +1166,13 @@ class NPBackupRunner:
                         level="info",
                     )
 
-        if read_from_stdin:
-            result = self.restic_runner.backup(
-                read_from_stdin=read_from_stdin,
-                stdin_filename=stdin_filename,
-                tags=tags,
-                additional_backup_only_parameters=additional_backup_only_parameters,
-            )
-        elif stdin_from_command:
-            result = self.restic_runner.backup(
-                stdin_from_command=stdin_from_command,
-                stdin_filename=stdin_filename,
-                tags=tags,
-                additional_backup_only_parameters=additional_backup_only_parameters,
-            )
-        else:
+        # Run actual backup here
+        if source_type in (
+            None,
+            "folder_list",
+            "files_from_verbatim",
+            "files_from_raw",
+        ):
             result = self.restic_runner.backup(
                 paths=paths,
                 source_type=source_type,
@@ -1183,6 +1186,22 @@ class NPBackupRunner:
                 tags=tags,
                 additional_backup_only_parameters=additional_backup_only_parameters,
             )
+        elif source_type == "stdin_from_command" and stdin_from_command:
+            result = self.restic_runner.backup(
+                stdin_from_command=stdin_from_command,
+                stdin_filename=stdin_filename,
+                tags=tags,
+                additional_backup_only_parameters=additional_backup_only_parameters,
+            )
+        elif read_from_stdin:
+            result = self.restic_runner.backup(
+                read_from_stdin=read_from_stdin,
+                stdin_filename=stdin_filename,
+                tags=tags,
+                additional_backup_only_parameters=additional_backup_only_parameters,
+            )
+        else:
+            raise ValueError("Bogus backup source type given")
 
         self.write_logs(
             f"Restic output:\n{self.restic_runner.backup_result_content}", level="debug"

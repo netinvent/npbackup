@@ -152,6 +152,7 @@ empty_config_dict = {
         "default_group": {
             "backup_opts": {
                 "paths": [],
+                # Accepted values are None, "folder_list", "files_from_verbatim", "files_from_raw", "stdin_from_command"
                 "source_type": None,
                 "stdin_from_command": None,
                 "tags": [],
