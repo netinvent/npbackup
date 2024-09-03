@@ -565,7 +565,8 @@ This is free software, and you are welcome to redistribute it under certain cond
         "ls",
         "find",
         "policy",
-        "housekeeping" "quick_check",
+        "housekeeping",
+        "quick_check",
         "full_check",
         "prune",
         "prune_max",
@@ -581,9 +582,6 @@ This is free software, and you are welcome to redistribute it under certain cond
             f"Invalid group operation {args.group_operation}. Valid operations are [backup|restore|snapshots|list|ls|find|policy|housekeeping|quick_check|full_check|prune|prune_max|unlock|repair_index|repair_snapshots|dump|stats|raw|has_recent_snapshot]"
         )
         sys.exit(74)
-    # Special case where "policy" means "forget"
-    if args.group_operation == "policy":
-        args.group_operation = "forget"
     repo_config_list = []
     repos = []
     if args.group_operation:
@@ -626,10 +624,11 @@ This is free software, and you are welcome to redistribute it under certain cond
             sys.exit(74)
         logger.info(f"Running group operations for repos: {', '.join(repos)}")
 
+        op = cli_args["operation"]
         cli_args["operation"] = "group_runner"
         cli_args["op_args"] = {
             "repo_config_list": repo_config_list,
-            "operation": args.group_operation,
+            "operation": op,
             **cli_args["op_args"],
         }
 
