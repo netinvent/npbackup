@@ -268,6 +268,7 @@ def config_gui(full_config: dict, config_file: str):
                 "prometheus.instance",
                 "prometheus.http_username",
                 "prometheus.http_password",
+                "prometheus.no_cert_verify",
                 "update_manager_password",
             ) or key.startswith("prometheus.additional_labels"):
                 return
@@ -581,6 +582,8 @@ def config_gui(full_config: dict, config_file: str):
         """
         if object_type == "repos":
             object_group = full_config.g(f"{object_type}.{object_name}.repo_group")
+            if not object_group:
+                logger.warning(f"Current repo {object_name} has no group")
         else:
             object_group = None
 
@@ -623,6 +626,7 @@ def config_gui(full_config: dict, config_file: str):
                     f"{object_type}.{object_name}.env.encrypted_env_variables.{k}"
                 )
 
+        # Now that we have dealt with data preparation, let's loop over the key, value sets
         for key, value in values.items():
             # Don't update placeholders ;)
             if value == ENCRYPTED_DATA_PLACEHOLDER:
@@ -670,7 +674,6 @@ def config_gui(full_config: dict, config_file: str):
                 "repo_opts.download_speed_unit",
             ):
                 continue
-
             # Don't bother with inheritance on global options and host identity
             if (
                 key.startswith("global_options")
@@ -702,8 +705,10 @@ def config_gui(full_config: dict, config_file: str):
                             for entry in inheritance_list:
                                 if entry in value:
                                     value.remove(entry)
-                    # check if value is inherited from group
+                    
+                    # check if value is inherited from group, and if so, delete it from repo config
                     if full_config.g(inheritance_key) == value:
+                        full_config.d(active_object_key)
                         continue
                     # we also need to compare inherited values with current values for BytesConverter values
                     if key in (
@@ -723,7 +728,8 @@ def config_gui(full_config: dict, config_file: str):
                             continue
 
             # Don't bother to update empty strings, empty lists and None
-            if not current_value and not value:
+            # unless we have False, or 0, which or course need to be updated
+            if not current_value and value in (None, "", []):
                 continue
             # Don't bother to update values which haven't changed
             if current_value == value:
@@ -744,6 +750,7 @@ def config_gui(full_config: dict, config_file: str):
             "instance",
             "http_username",
             "http_password",
+            "no_cert_verify"
         ):
             full_config.d(f"repos.{object_name}.prometheus.{prom_key}")
         return full_config
