@@ -224,6 +224,7 @@ empty_config_dict = {
         "http_username": None,
         "http_password": None,
         "additional_labels": [],
+        "no_cert_verify": False,
     },
     "global_options": {
         "auto_upgrade": False,
