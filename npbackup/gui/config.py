@@ -705,7 +705,7 @@ def config_gui(full_config: dict, config_file: str):
                             for entry in inheritance_list:
                                 if entry in value:
                                     value.remove(entry)
-                    
+
                     # check if value is inherited from group, and if so, delete it from repo config
                     if full_config.g(inheritance_key) == value:
                         full_config.d(active_object_key)
@@ -750,7 +750,7 @@ def config_gui(full_config: dict, config_file: str):
             "instance",
             "http_username",
             "http_password",
-            "no_cert_verify"
+            "no_cert_verify",
         ):
             full_config.d(f"repos.{object_name}.prometheus.{prom_key}")
         return full_config
