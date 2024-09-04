@@ -1,7 +1,7 @@
 en:
   configured_repositories: Configured repositories
-  quick_check: Quick check of repo
-  full_check: Full check of repo
+  quick_check: Quick repo check
+  full_check: Full repo check
   repair_index: Repair repo index
   repair_snapshots: Repair repo snapshots
   unlock: Unlock repo
