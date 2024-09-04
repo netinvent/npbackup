@@ -46,6 +46,7 @@ Please check https://github.com/netinvent/npbackup/releases
   - Remote connectivity concurrency settings*
 - Per repo / group retention policies
   - Will also avoid wrong date data destruction via optional NTP queries
+- Housekeeping option which will perform check, forget and prune in one run
 - Comes with full exclusion lists for Linux and Windows
 - First class prometheus support
   - Restic results metric generation
@@ -76,13 +77,14 @@ Please check https://github.com/netinvent/npbackup/releases
 So, a new backup solution out of nowhere, packed with too much features for it's own good ? Not really !
 
 NPBackup relies on the well known [restic](https://restic.net) backup program, which has been battle proven for years.
-While restic is a fanstastic program, NPBackup expands restic by offering a wider set of features.
+While restic is a fanstastic program, NPBackup expands restic by offering a wider set of features.  
+Still, NPBackup repos are basically managed by restic, and can be viewed / restored / maintained by restic.
 
 ## Quickstart
 
 NPBackup consists of four programs:
 - npbackup-cli: CLI version of the backup program
-- npbackup-gui: GUI version of the backup program, useful to create YAML config files
+- npbackup-gui: GUI version of the backup program, useful to create YAML config files and for end users, can also act as cli
 - npbackup-viewer: View and restore restic repositories without configuration
 - upgrade_server: Separate server to provide npbackup clients with newer binaries
 
@@ -126,7 +128,7 @@ The YAML configuration file encrypts sensible data so the end user doesn't have 
 
 ## Quickstart GUI
 
-Just run the npbackup executable and configure it.
+Just run the npbackup-gui executable and configure it.  
 Prebuilt binaries can be found [here](https://github.com/netinvent/npbackup/releases)
 
 ![image](img/restore_window_v3.0.0.png)
@@ -177,10 +179,9 @@ Once done, NPBackup can send backup results in Prometheus format directly to a p
 
 ## A good server backup solution
 
-Server backups can be achieved by setting up a scheduled task / cron job.
+Server backups can be achieved by setting up a scheduled task / cron job manually or via integrated task creation.
 
-Of course, since NPBackup supports pre-exec and post-exec commands, it can be used to backup various services like virtual hosts or databases where snapshot/dump operations are required.
-When run on a server, prometheus support can be shifted from a push gateway to a file, which will be picked up by node_exporter file collector.:
+Of course, since NPBackup supports pre-exec and post-exec commands, it can be used to backup various services like virtual hosts or databases where snapshot/dump operations are required (especially with new stdin_from_command parameter).  
 
 ## Monitoring
 
@@ -204,6 +205,8 @@ It also has a `--json` parameter which guarantees parseable output.
 `--group-operation [operation]` allows to run an operation on multiple repos. This paramater also requires `--repo-group` or `--repo-name` parameter. For operations requiring arguments, provide the argument to the original operation parameter.
 `--repo-name` allows to specify one or multiple comma separated repo names
 `--repo-group` allows to specify one or multiple comme separated repo group names
+
+`npbackup-gui` can also act as cli if run with `--run-as-cli` parameter, allowing to use a single executable for GUI and tasks.
 
 ## Security
 
@@ -241,7 +244,8 @@ Permissions are:
 ## Logs
 
 On Unix, logs will be found in `/var/log` unless the directory is not writable. In that case, we'll write into a temporary directory.  
-On Windows, logs will be found in the temp directory defined in `%TEMP%` variable or `%WINDIR%\TEMP` for system tasks.
+On Windows, logs will be found in the current directory, or in temp directory defined in `%TEMP%` variable or `%WINDIR%\TEMP` when current directory isn't writable.  
+You can also use `--log-file` to specify an alternative log file path.
 
 ## Upgrade server
 
@@ -253,7 +257,6 @@ The upgrade server runs a python asgi web server with integrated HTTP basic auth
 NPBackup is fully customizable and branding can be done easily.  
 You'll find all images and icons in the `resources` directory. Feel free to update those files. Once updated, you must run `update_custom_resources.py` to regenerate the `customization.py` file corresponding entries.  
 The file `customization.py` also contains OEM strings that can be safely changed, except for the license text which must stay unaltered.
-
 
 ## Compilation
 
