@@ -764,7 +764,7 @@ def _get_config_file_checksum(config_file: Path) -> str:
     """
     It's nice to log checksums of config file to see whenever it was changed
     """
-    with open(config_file, 'rb') as fh:
+    with open(config_file, "rb") as fh:
         hash = 0
         while True:
             s = fh.read(65536)
@@ -797,7 +797,9 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
                     f"Cannot read conf version from config file {config_file}, which seems bogus"
                 )
                 return False
-            logger.info(f"Loaded config {_get_config_file_checksum(config_file)} in {config_file.absolute()}")
+            logger.info(
+                f"Loaded config {_get_config_file_checksum(config_file)} in {config_file.absolute()}"
+            )
             return full_config
     except OSError:
         logger.critical(f"Cannot load configuration file from {config_file}")
