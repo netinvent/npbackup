@@ -453,7 +453,7 @@ class NPBackupRunner:
 
         Possible permissions are:
         - backup:   Backup and list backups
-        - restore:  Backup, restore and list snapshots
+        - restore:  Backup, restore, recover and list snapshots
         - full:     Full permissions
 
         Only one permission can be set per repo

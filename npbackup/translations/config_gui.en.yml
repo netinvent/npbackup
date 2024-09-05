@@ -143,7 +143,7 @@ en:
   permissions_only_for_repos: Permissions can only be applied for repos
   permissions: Permissions
   backup_perms: Backup only
-  restore_perms: Backup, verify and restore
+  restore_perms: Backup, verify, recover and restore
   full_perms: Full permissions
   setting_permissions_requires_manager_password: Setting permissions requires manager password
   manager_password_too_simple: Manager password needs at least 8 uppercase, lowercase and digits characters

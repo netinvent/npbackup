@@ -818,7 +818,7 @@ def config_gui(full_config: dict, config_file: str):
                 if not values["permissions"] in permissions:
                     sg.PopupError(_t("generic.bogus_data_given"), keep_on_top=True)
                     continue
-                # Transform translet permission value into key
+                # Transform translated permission value into key
                 permission = get_key_from_value(
                     combo_boxes["permissions"], values["permissions"]
                 )
