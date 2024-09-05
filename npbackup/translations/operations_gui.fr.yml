@@ -3,6 +3,8 @@ fr:
   quick_check: Vérification rapide dépot
   full_check: Vérification complète dépot
   repair_index: Réparer les index du dépot
+  repair_packs: Réparer les blocs du dépot
+  pack_ids: Identifiants de blocs
   repair_snapshots: Réparer les instantanés du dépot
   unlock: Déblocage de dépot
   forget_using_retention_policy: Oublier les instantanés en utilisant la stratégie de rétention

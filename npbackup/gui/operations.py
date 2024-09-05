@@ -169,7 +169,9 @@ def operations_gui(full_config: dict) -> dict:
                     ],
                     [
                         sg.Button(
-                            _t("operations_gui.unlock"), key="--UNLOCK--", size=(45, 1)
+                            _t("operations_gui.repair_packs"),
+                            key="--REPAIR-PACKS--",
+                            size=(45, 1),
                         ),
                         sg.Button(
                             _t("operations_gui.forget_using_retention_policy"),
@@ -191,10 +193,13 @@ def operations_gui(full_config: dict) -> dict:
                     ],
                     [
                         sg.Button(
+                            _t("operations_gui.unlock"), key="--UNLOCK--", size=(45, 1)
+                        ),
+                        sg.Button(
                             _t("operations_gui.stats"),
                             key="--STATS--",
                             size=(45, 1),
-                        )
+                        ),
                     ],
                     [sg.Button(_t("generic.quit"), key="--EXIT--")],
                 ],
@@ -259,6 +264,7 @@ def operations_gui(full_config: dict) -> dict:
             "--QUICK-CHECK--",
             "--FULL-CHECK--",
             "--REPAIR-INDEX--",
+            "--REPAIR-PACKS--",
             "--REPAIR-SNAPSHOTS--",
             "--UNLOCK--",
             "--FORGET--",
@@ -302,6 +308,16 @@ def operations_gui(full_config: dict) -> dict:
                 operation = "repair"
                 op_args = {"subject": "index"}
                 gui_msg = _t("operations_gui.repair_index")
+            if event == "--REPAIR-PACKS--":
+                operation = "repair"
+                pack_ids = sg.popup_get_text(
+                    _t("operations_gui.repair_packs"), keep_on_top=True
+                )
+                op_args = {
+                    "subject": "packs",
+                    "pack_ids": pack_ids,
+                }
+                gui_msg = _t("operations_gui.repair_pack")
             if event == "--REPAIR-SNAPSHOTS--":
                 operation = "repair"
                 op_args = {"subject": "snapshots"}
@@ -331,6 +347,7 @@ def operations_gui(full_config: dict) -> dict:
                 )
             else:
                 logger.error(f"Bogus operation: {operation}")
+                sg.popup_error(f"Bogus operation: {operation}", keep_on_top=True)
 
             event = "---STATE-UPDATE---"
         if event == "---STATE-UPDATE---":

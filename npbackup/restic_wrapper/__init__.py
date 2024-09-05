@@ -1075,17 +1075,19 @@ class ResticRunner:
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
     @check_if_init
-    def repair(self, subject: str) -> Union[bool, str, dict]:
+    def repair(self, subject: str, pack_ids) -> Union[bool, str, dict]:
         """
         Check current repo status
         """
         kwargs = locals()
         kwargs.pop("self")
 
-        if subject not in ["index", "snapshots"]:
+        if subject not in ["index", "packs", "snapshots"]:
             self.write_logs(f"Bogus repair order given: {subject}", level="error")
             return False
         cmd = f"repair {subject}"
+        if pack_ids:
+            cmd += f" {pack_ids}"
         result, output = self.executor(cmd)
         if result:
             msg = f"Repo successfully repaired:\n{output}"

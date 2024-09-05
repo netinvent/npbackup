@@ -3,6 +3,8 @@ en:
   quick_check: Quick repo check
   full_check: Full repo check
   repair_index: Repair repo index
+  repair_packs: Repair repo packs
+  pack_ids: Pack IDs
   repair_snapshots: Repair repo snapshots
   unlock: Unlock repo
   forget_using_retention_policy: Forget using retention polic

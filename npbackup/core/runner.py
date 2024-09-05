@@ -1431,11 +1431,11 @@ class NPBackupRunner:
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    def repair(self, subject: str) -> bool:
+    def repair(self, subject: str, pack_ids: str = None) -> bool:
         self.write_logs(
             f"Repairing {subject} in repo {self.repo_config.g('name')}", level="info"
         )
-        return self.restic_runner.repair(subject)
+        return self.restic_runner.repair(subject, pack_ids)
 
     @threaded
     @catch_exceptions
