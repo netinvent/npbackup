@@ -917,8 +917,6 @@ class NPBackupRunner:
             level="info",
         )
         result = self.restic_runner.find(path=path)
-        if result:
-            self.write_logs(f"Found path in:\n{result}", level="info")
         return self.convert_to_json_output(result, None)
 
     @threaded
