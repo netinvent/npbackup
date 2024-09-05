@@ -472,6 +472,7 @@ class NPBackupRunner:
                 "restore": ["restore", "full"],
                 "dump": ["restore", "full"],
                 "check": ["restore", "full"],
+                "recover": ["restore", "full"],
                 "init": ["full"],
                 "list": ["full"],
                 "unlock": ["full"],
@@ -1436,6 +1437,21 @@ class NPBackupRunner:
             f"Repairing {subject} in repo {self.repo_config.g('name')}", level="info"
         )
         return self.restic_runner.repair(subject, pack_ids)
+
+    @threaded
+    @catch_exceptions
+    @metrics
+    @close_queues
+    @exec_timer
+    @check_concurrency
+    @has_permission
+    @is_ready
+    @apply_config_to_restic_runner
+    def recover(self) -> bool:
+        self.write_logs(
+            f"Recovering snapshots in repo {self.repo_config.g('name')}", level="info"
+        )
+        return self.restic_runner.recover()
 
     @threaded
     @catch_exceptions

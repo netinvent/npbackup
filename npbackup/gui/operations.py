@@ -196,6 +196,13 @@ def operations_gui(full_config: dict) -> dict:
                             _t("operations_gui.unlock"), key="--UNLOCK--", size=(45, 1)
                         ),
                         sg.Button(
+                            _t("operations_gui.recover"),
+                            key="--RECOVER--",
+                            size=(45, 1),
+                        ),
+                    ],
+                    [
+                        sg.Button(
                             _t("operations_gui.stats"),
                             key="--STATS--",
                             size=(45, 1),
@@ -266,6 +273,7 @@ def operations_gui(full_config: dict) -> dict:
             "--REPAIR-INDEX--",
             "--REPAIR-PACKS--",
             "--REPAIR-SNAPSHOTS--",
+            "--RECOVER--",
             "--UNLOCK--",
             "--FORGET--",
             "--STANDARD-PRUNE--",
@@ -317,11 +325,15 @@ def operations_gui(full_config: dict) -> dict:
                     "subject": "packs",
                     "pack_ids": pack_ids,
                 }
-                gui_msg = _t("operations_gui.repair_pack")
+                gui_msg = _t("operations_gui.repair_packs")
             if event == "--REPAIR-SNAPSHOTS--":
                 operation = "repair"
                 op_args = {"subject": "snapshots"}
                 gui_msg = _t("operations_gui.repair_snapshots")
+            if event == "--RECOVER--":
+                operation = "recover"
+                op_args = {}
+                gui_msg = _t("operations_gui.recover")
             if event == "--STANDARD-PRUNE--":
                 operation = "prune"
                 op_args = {}

@@ -1096,6 +1096,22 @@ class ResticRunner:
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
     @check_if_init
+    def recover(self) -> Union[bool, str, dict]:
+        """
+        Try to recover lost snapshots
+        """
+        kwargs = locals()
+        kwargs.pop("self")
+
+        cmd = f"recover"
+        result, output = self.executor(cmd)
+        if result:
+            msg = f"Recovery succees"
+        else:
+            msg = f"Recovery failed:\n{output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
+
+    @check_if_init
     def unlock(self) -> Union[bool, str, dict]:
         """
         Remove stale locks from repos

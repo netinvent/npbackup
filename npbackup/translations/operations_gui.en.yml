@@ -6,6 +6,7 @@ en:
   repair_packs: Repair repo packs
   pack_ids: Pack IDs
   repair_snapshots: Repair repo snapshots
+  recover: Recover deleted snapshots
   unlock: Unlock repo
   forget_using_retention_policy: Forget using retention polic
   standard_prune: Normal prune data

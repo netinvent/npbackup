@@ -166,6 +166,9 @@ This is free software, and you are welcome to redistribute it under certain cond
         "--repair-snapshots", action="store_true", help="Repair repo snapshots"
     )
     parser.add_argument(
+        "--recover", action="store_true", help="Recover lost repo snapshots"
+    )
+    parser.add_argument(
         "--list",
         type=str,
         default=None,
@@ -276,7 +279,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Launch an operation on a group of repositories given by --repo-group or --repo-name. Valid group operations are [backup|restore|snapshots|list|ls|find|policy|quick_check|full_check|prune|prune_max|unlock|repair_index|repair_packs|repair_snapshots|dump|stats|raw|has_recent_snapshot]",
+        help="Launch an operation on a group of repositories given by --repo-group or --repo-name. Valid group operations are [backup|restore|snapshots|list|ls|find|policy|quick_check|full_check|prune|prune_max|unlock|repair_index|repair_packs|repair_snapshots|recover|dump|stats|raw|has_recent_snapshot]",
     )
     parser.add_argument(
         "--create-key",
@@ -554,6 +557,8 @@ This is free software, and you are welcome to redistribute it under certain cond
     elif args.repair_snapshots or args.group_operation == "repair_snapshots":
         cli_args["operation"] = "repair"
         cli_args["op_args"] = {"subject": "snapshots"}
+    elif args.recover or args.group_operation == "recover":
+        cli_args["operation"] = "recover"
     elif args.dump or args.group_operation == "dump":
         cli_args["operation"] = "dump"
         cli_args["op_args"] = {"path": args.dump}
@@ -586,13 +591,14 @@ This is free software, and you are welcome to redistribute it under certain cond
         "repair_index",
         "repair_packs",
         "repair_snapshots",
+        "recover",
         "dump",
         "stats",
         "raw",
         "has_recent_snapshot",
     ):
         logger.critical(
-            f"Invalid group operation {args.group_operation}. Valid operations are [backup|restore|snapshots|list|ls|find|policy|housekeeping|quick_check|full_check|prune|prune_max|unlock|repair_index|repair_packs|repair_snapshots|dump|stats|raw|has_recent_snapshot]"
+            f"Invalid group operation {args.group_operation}. Valid operations are [backup|restore|snapshots|list|ls|find|policy|housekeeping|quick_check|full_check|prune|prune_max|unlock|repair_index|repair_packs|repair_snapshots|recover|dump|stats|raw|has_recent_snapshot]"
         )
         sys.exit(74)
     repo_config_list = []
