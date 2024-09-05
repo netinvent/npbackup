@@ -9,8 +9,8 @@ fr:
   restore: Restaurer
   restoration: Restauration
   restore_in_progress: Restauration en cours
-  restore_done: Restauration terminée en %{seconds} secondes
-  restore_failed: Restauration échouée en %{seconds} secondes. veuillez vérifier les journaux
+  restore_done: Restauration terminée avec succès
+  restore_failed: Restauration échouées. veuillez vérifier les journaux
   select_folder: Veuillez sélectionner un dossier
   only_include: Inclure seulement
   destination_folder: Dossier de destination

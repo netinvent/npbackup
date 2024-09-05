@@ -9,8 +9,8 @@ en:
   restore: Restore
   restoration: Restoration
   restore_in_progress: Restore in progress
-  restore_done: Restore done in %{seconds} seconds
-  restore_failed: Restore failed in %{seconds} seconds. Please check the logs
+  restore_done: Restore done successfully
+  restore_failed: Restore failed. Please check the logs
   select_folder: Please select a folder
   only_include: Only include
   destination_folder: Destination folder

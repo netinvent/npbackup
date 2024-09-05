@@ -350,6 +350,7 @@ def restore_window(
             target=target,
             restore_includes=restore_includes,
             __backend_binary=backend_binary,
+            __autoclose=True,
         )
         return result["result"]
 
@@ -375,14 +376,16 @@ def restore_window(
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "cancel"):
             break
         if event == "restore":
-            # on_success = _t("main_gui.restore_done")
-            # on_failure = _t("main_gui.restore_failed")
             result = _restore_window(
                 repo_config,
                 snapshot=snapshot_id,
                 target=values["-RESTORE-FOLDER-"],
                 restore_includes=restore_include,
             )
+            if result:
+                sg.popup(_t("main_gui.restore_done"), keep_on_top=True)
+            else:
+                sg.popup(_t("main_gui.restore_failed"), keep_on_top=True)
             break
     window.close()
     return result
