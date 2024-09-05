@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024090101"
+__build__ = "2024090401"
 __version__ = "npbackup 3.0.0+"
 
 MIN_CONF_VERSION = 3.0
@@ -24,6 +24,7 @@ from ruamel.yaml.comments import CommentedMap
 from logging import getLogger
 import re
 import platform
+import zlib
 from cryptidy import symmetric_encryption as enc
 from ofunctions.random import random_string
 from ofunctions.misc import replace_in_iterable, BytesConverter, iter_over_keys
@@ -759,6 +760,20 @@ def get_group_config(
     return group_config
 
 
+def _get_config_file_checksum(config_file: Path) -> str:
+    """
+    It's nice to log checksums of config file to see whenever it was changed
+    """
+    with open(config_file, 'rb') as fh:
+        hash = 0
+        while True:
+            s = fh.read(65536)
+            if not s:
+                break
+            hash = zlib.crc32(s, hash)
+        return "%08X" % (hash & 0xFFFFFFFF)
+
+
 def _load_config_file(config_file: Path) -> Union[bool, dict]:
     """
     Checks whether config file is valid
@@ -768,7 +783,7 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
             yaml = YAML(typ="rt")
             full_config = yaml.load(file_handle)
             if not full_config:
-                logger.critical("Config file seems empty !")
+                logger.critical(f"Config file {config_file} seems empty !")
                 return False
             try:
                 conf_version = float(full_config.g("conf_version"))
@@ -779,9 +794,10 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
                     return False
             except (AttributeError, TypeError):
                 logger.critical(
-                    "Cannot read conf version from config file, which seems bogus"
+                    f"Cannot read conf version from config file {config_file}, which seems bogus"
                 )
                 return False
+            logger.info(f"Loaded config {_get_config_file_checksum(config_file)} in {config_file.absolute()}")
             return full_config
     except OSError:
         logger.critical(f"Cannot load configuration file from {config_file}")
@@ -789,8 +805,6 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
 
 
 def load_config(config_file: Path) -> Optional[dict]:
-    logger.info(f"Loading configuration file {config_file}")
-
     full_config = _load_config_file(config_file)
     if not full_config:
         return None
