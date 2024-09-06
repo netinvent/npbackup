@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024090601"
-__version__ = "2.2.3"
+__build__ = "2024090602"
+__version__ = "2.2.4"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -843,18 +843,22 @@ class ResticRunner:
                 if exclude_file:
                     if os.path.isfile(exclude_file):
                         cmd += f' --{case_ignore_param}exclude-file "{exclude_file}"'
-                    elif os.path.isfile(
-                        os.path.join(CURRENT_DIR, os.path.basename(exclude_file))
-                    ):
-                        cmd += f' --{case_ignore_param}exclude-file "{os.path.join(CURRENT_DIR, os.path.basename(exclude_file))}"'
-                        self.write_logs(
-                            f"Expanding exclude file path to {CURRENT_DIR}",
-                            level="info",
-                        )
                     else:
                         self.write_logs(
-                            f"Exclude file '{exclude_file}' not found", level="error"
+                            f"Trying to expanding exclude file path to {os.path.join(CURRENT_DIR, 'excludes', os.path.basename(exclude_file))}",
+                            level="info",
                         )
+                        if os.path.isfile(
+                            os.path.join(CURRENT_DIR, 'excludes', os.path.basename(exclude_file))
+                        ):
+                            
+                            cmd += f' --{case_ignore_param}exclude-file "{os.path.join(CURRENT_DIR, os.path.basename(exclude_file))}"'
+
+                        else:
+                            self.write_logs(
+                                f"Exclude file '{exclude_file}' not found", level="error"
+                            )
+                        
             if exclude_caches:
                 cmd += " --exclude-caches"
             if exclude_files_larger_than:
