@@ -259,7 +259,7 @@ def restic_json_to_prometheus(
         )
     )
 
-    return good_backup, prom_metrics, backup_too_small
+    return restic_result, prom_metrics, backup_too_small
 
 
 def restic_output_2_metrics(restic_result, output, labels=None):
