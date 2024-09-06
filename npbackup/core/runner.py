@@ -117,7 +117,7 @@ def metric_writer(
         labels = ",".join(_labels)
 
         metrics.append(
-            f'npbackup_exec_state{{{labels},action="{operation},repo_name="{repo_name}",timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {exec_state}'
+            f'npbackup_exec_state{{{labels},action="{operation}",repo_name="{repo_name}",timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {exec_state}'
         )
         logger.debug("Metrics computed:\n{}".format("\n".join(metrics)))
         if destination:
