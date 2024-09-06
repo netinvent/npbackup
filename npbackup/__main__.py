@@ -363,7 +363,7 @@ This is free software, and you are welcome to redistribute it under certain cond
     try:
         full_config = npbackup.configuration.load_config(config_file)
     except EnvironmentError as exc:
-        json_error_logging(False, msg, "critical")
+        json_error_logging(False, exc, "critical")
         sys.exit(12)
     if not full_config:
         msg = "Cannot obtain repo config"
