@@ -299,6 +299,14 @@ class ResticRunner:
         )
         _cmd = f'"{self._binary}"{additional_parameters}{self.generic_arguments} {cmd}'
 
+        if self.dry_run:
+            # Only some restic commands support --dry-run, and it must be added after the main command
+            # eg restic --dry-run backup / doesn't work
+            # but restic backup / --dry-run does
+            operation = fn_name(2)
+            if operation in ["backup", "forget", "prune", "restore", "rewrite"]:
+                args += " --dry-run"
+        
         self._executor_running = True
         self.write_logs(f"Running command: [{_cmd}]", level="debug")
         self._make_env()
@@ -520,11 +528,6 @@ class ResticRunner:
             )
         if self.verbose:
             args += " -vv"
-        if self.dry_run:
-            # Only some restic commands support --dry-run
-            operation = fn_name(2)
-            if operation in ["backup", "forget", "prune", "restore", "rewrite"]:
-                args += " --dry-run"
         if self.json_output:
             args += " --json"
         if self.no_cache:
