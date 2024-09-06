@@ -66,9 +66,9 @@ def entrypoint(*args, **kwargs):
             if not operation == "ls":
                 logger.addHandler(handler)
         if result:
-            logger.info(f"Operation finished with success")
+            logger.info(f"Operation finished")
         else:
-            logger.error(f"Operation finished with errors")
+            logger.error(f"Operation finished")
     else:
         print(json.dumps(result, default=serialize_datetime))
         sys.exit(0)
