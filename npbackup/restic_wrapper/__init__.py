@@ -849,16 +849,19 @@ class ResticRunner:
                             level="info",
                         )
                         if os.path.isfile(
-                            os.path.join(CURRENT_DIR, 'excludes', os.path.basename(exclude_file))
+                            os.path.join(
+                                CURRENT_DIR, "excludes", os.path.basename(exclude_file)
+                            )
                         ):
-                            
+
                             cmd += f' --{case_ignore_param}exclude-file "{os.path.join(CURRENT_DIR, os.path.basename(exclude_file))}"'
 
                         else:
                             self.write_logs(
-                                f"Exclude file '{exclude_file}' not found", level="error"
+                                f"Exclude file '{exclude_file}' not found",
+                                level="error",
                             )
-                        
+
             if exclude_caches:
                 cmd += " --exclude-caches"
             if exclude_files_larger_than:
