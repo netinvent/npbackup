@@ -847,18 +847,17 @@ class ResticRunner:
                     if os.path.isfile(exclude_file):
                         cmd += f' --{case_ignore_param}exclude-file "{exclude_file}"'
                     else:
+                        expansion_path = os.path.join(
+                            CURRENT_DIR, "excludes", os.path.basename(exclude_file)
+                        )
                         self.write_logs(
-                            f"Trying to expanding exclude file path to {os.path.join(CURRENT_DIR, 'excludes', os.path.basename(exclude_file))}",
+                            f"Trying to expanding exclude file path to {expansion_path}",
                             level="info",
                         )
-                        if os.path.isfile(
-                            os.path.join(
-                                CURRENT_DIR, "excludes", os.path.basename(exclude_file)
+                        if os.path.isfile(expansion_path):
+                            cmd += (
+                                f' --{case_ignore_param}exclude-file "{expansion_path}"'
                             )
-                        ):
-
-                            cmd += f' --{case_ignore_param}exclude-file "{os.path.join(CURRENT_DIR, os.path.basename(exclude_file))}"'
-
                         else:
                             self.write_logs(
                                 f"Exclude file '{exclude_file}' not found",
