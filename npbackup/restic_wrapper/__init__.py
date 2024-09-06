@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024072701"
-__version__ = "2.2.2"
+__build__ = "2024090601"
+__version__ = "2.2.3"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -136,7 +136,7 @@ class ResticRunner:
         Unsets repository & password environment, we don't need to keep that data when not requested
         """
         os.environ["RESTIC_PASSWORD"] = "o_O"
-        os.environ["RESTIC_REPOSITORY"] = self.repository.split(":")[0] + ":o_O"
+        os.environ["RESTIC_REPOSITORY"] = self.repository.split(":")[0] + ":_(o_O)_hidden_by_npbackup"
 
         for env_variable in self.environment_variables.keys():
             os.environ[env_variable] = "__ooOO(° °)OOoo__"
@@ -590,6 +590,7 @@ class ResticRunner:
         self.live_output = live_output
         if not self._is_init:
             self.write_logs("Repository is not initialized or accessible", level="info")
+            output = output.replace(self.repository, self.repository.split(":")[0] + ":_(o_O)_hidden_by_npbackup") 
         return self._is_init, output
 
     @is_init.setter
