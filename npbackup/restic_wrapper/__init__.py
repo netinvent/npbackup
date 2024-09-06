@@ -283,7 +283,7 @@ class ResticRunner:
         no_output_queues: bool = False,
         method: str = "poller",
         timeout: int = None,
-        stdin: sys.stdin = None,
+        stdin = None,
     ) -> Tuple[bool, str]:
         """
         Executes restic with given command
