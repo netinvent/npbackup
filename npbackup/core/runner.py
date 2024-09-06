@@ -116,12 +116,8 @@ def metric_writer(
                 _labels.append(f'{key.strip()}="{value.strip()}"')
         labels = ",".join(_labels)
 
-        if operation != "backup":
-            metrics.append(
-                f'npbackup_oper_state{{{labels},action="{operation}",repo="{repo_name}"}} {0 if restic_result else 1}'
-            )
         metrics.append(
-            f'npbackup_exec_state{{{labels},action="{operation}"}} {exec_state}'
+            f'npbackup_exec_state{{{labels},action="{operation},repo_name="{repo_name}",timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {exec_state}'
         )
         logger.debug("Metrics computed:\n{}".format("\n".join(metrics)))
         if destination:
