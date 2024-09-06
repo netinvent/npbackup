@@ -1362,25 +1362,29 @@ class NPBackupRunner:
     @apply_config_to_restic_runner
     def housekeeping(self) -> bool:
         """
-        Runs check, forget and prune in one go
+        Runs unlock, check, forget and prune in one go
         """
         self.write_logs("Running housekeeping", level="info")
         # Add special keywors __no_threads since we're already threaded in housekeeping function
         # Also, pass it as kwargs to make linter happy
         kwargs = {"__no_threads": True}
         # pylint: disable=E1123 (unexpected-keyword-arg)
-        check_result = self.check(**kwargs)
-        if check_result:
-            # pylint: disable=E1123 (unexpected-keyword-arg)
-            forget_result = self.forget(use_policy=True, **kwargs)
-            if forget_result:
+        unlock_result = self.unlock(**kwargs)
+        if unlock_result:
+            check_result = self.check(**kwargs, read_data=False)
+            if check_result:
                 # pylint: disable=E1123 (unexpected-keyword-arg)
-                prune_result = self.prune(**kwargs)
-                result = prune_result
+                forget_result = self.forget(use_policy=True, **kwargs)
+                if forget_result:
+                    # pylint: disable=E1123 (unexpected-keyword-arg)
+                    prune_result = self.prune(**kwargs)
+                    result = prune_result
+                else:
+                    result = forget_result
             else:
-                result = forget_result
+                result = check_result
         else:
-            result = check_result
+            result = unlock_result
 
         return self.convert_to_json_output(result)
 
