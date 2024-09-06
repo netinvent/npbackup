@@ -110,7 +110,8 @@ fr:
   files_from_verbatim: Liste depuis un fichier "exact"
   files_from_raw: Liste depuis un fichier "raw"
   stdin_from_command: Entrée standard depuis une commande
-
+  stdin_filename: Nom optionel pour les données sauvegardées depuis l'entrée standard
+  
   # retention policy
   retention_policy: Politique de rétention
   keep: Garder

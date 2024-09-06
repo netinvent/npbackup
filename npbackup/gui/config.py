@@ -878,6 +878,16 @@ def config_gui(full_config: dict, config_file: str):
                 ),
                 sg.Input(key="backup_opts.stdin_from_command", size=(100, 1)),
             ],
+            [sg.Text(_t("config_gui.stdin_filename"))],
+            [
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.backup_opts.stdin_filename",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
+                sg.Input(key="backup_opts.stdin_filename", size=(100, 1)),
+            ],
             [
                 sg.Input(visible=False, key="--ADD-PATHS-FILE--", enable_events=True),
                 sg.FilesBrowse(

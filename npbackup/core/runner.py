@@ -1004,7 +1004,7 @@ class NPBackupRunner:
         self,
         force: bool = False,
         read_from_stdin: bool = False,
-        stdin_filename: str = "stdin.data",
+        stdin_filename: str = None,
     ) -> bool:
         """
         Run backup after checking if no recent backup exists, unless force == True
@@ -1013,6 +1013,10 @@ class NPBackupRunner:
         warnings = []
 
         stdin_from_command = self.repo_config.g("backup_opts.stdin_from_command")
+        if not stdin_filename:
+            stdin_filename = self.repo_config.g("backup_opts.stdin_filename")
+            if not stdin_filename:
+                stdin_filename = "stdin.data"
         source_type = self.repo_config.g("backup_opts.source_type")
         if source_type in (
             None,
