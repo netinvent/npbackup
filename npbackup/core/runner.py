@@ -120,7 +120,9 @@ def metric_writer(
             metrics.append(
                 f'npbackup_oper_state{{{labels},action="{operation}",repo="{repo_name}"}} {0 if restic_result else 1}'
             )
-        metrics.append(f'npbackup_exec_state{{{labels}}},action="{operation}" {exec_state}')
+        metrics.append(
+            f'npbackup_exec_state{{{labels},action="{operation}"}} {exec_state}'
+        )
         logger.debug("Metrics computed:\n{}".format("\n".join(metrics)))
         if destination:
             logger.debug("Sending metrics to {}".format(destination))
