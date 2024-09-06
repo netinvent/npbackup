@@ -707,7 +707,9 @@ def config_gui(full_config: dict, config_file: str):
                                     value.remove(entry)
 
                     # check if value is inherited from group, and if so, delete it from repo config
-                    if full_config.g(inheritance_key) == value:
+                    # Also add a foolproof test since people could add repo_group to a group config
+                    # We're not allowing recursive groups !
+                    if full_config.g(inheritance_key) == value and key != "repo_group":
                         full_config.d(active_object_key)
                         continue
                     # we also need to compare inherited values with current values for BytesConverter values
