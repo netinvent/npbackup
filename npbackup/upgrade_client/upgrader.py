@@ -7,11 +7,12 @@ __intname__ = "npbackup.upgrade_client.upgrader"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2024041801"
+__build__ = "2024090601"
 
 
-from typing import Optional
 import os
+import sys
+import shutil
 from logging import getLogger
 import hashlib
 import tempfile
@@ -21,7 +22,7 @@ from ofunctions.platform import get_os, python_arch
 from ofunctions.process import kill_childs
 from command_runner import deferred_command
 from npbackup.upgrade_client.requestor import Requestor
-from npbackup.path_helper import CURRENT_EXECUTABLE
+from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
 from npbackup.core.nuitka_helper import IS_COMPILED
 from npbackup.__version__ import __version__ as npbackup_version
 
@@ -142,56 +143,75 @@ def auto_upgrader(
         logger.error("Invalid checksum, won't upgrade")
         return False
 
-    downloaded_executable = os.path.join(tempfile.gettempdir(), file_info["filename"])
-    with open(downloaded_executable, "wb") as fh:
+    downloaded_archive = os.path.join(tempfile.gettempdir(), file_info["filename"])
+    with open(downloaded_archive, "wb") as fh:
         fh.write(file_data)
-    logger.info("Upgrade file written to %s", downloaded_executable)
+    logger.info("Upgrade file written to %s", downloaded_archive)
 
     log_file = os.path.join(tempfile.gettempdir(), file_info["filename"] + ".log")
     logger.info("Logging upgrade to %s", log_file)
 
-    # Actual upgrade process
-    backup_executable = CURRENT_EXECUTABLE + ".old"
+    upgrade_dist = os.path.join(tempfile.gettempdir(), "npbackup_upgrade_dist")
+    try:
+        # File should contain a single directory 'npbackup-cli' or 'npbackup-gui' with all files in it
+        shutil.unpack_archive(downloaded_archive, upgrade_dist)
+    except Exception as exc:
+        logger.critical(f"Upgrade failed. Cannot uncompress downloaded dist: {exc}")
+        return False
+
+    backup_dist = os.path.join(tempfile.gettempdir(), "npbackup_backup_dist")
 
     # Inplace upgrade script, gets executed after main program has exited
-    if os.name == "nt":
+    if os.name == "not":
         cmd = (
             f'echo "Launching upgrade" >> {log_file} 2>&1 && '
-            f'del /F /Q "{backup_executable}" >> NUL 2>&1 && '
-            f'echo "Renaming earlier executable from {CURRENT_EXECUTABLE} to {backup_executable}" >> {log_file} 2>&1 && '
-            f'move /Y "{CURRENT_EXECUTABLE}" "{backup_executable}" >> {log_file} 2>&1 && '
-            f'echo "Copying new executable from {downloaded_executable} to {CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && '
-            f'copy /Y "{downloaded_executable}" "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && '
-            f'del "{downloaded_executable}" >> {log_file} 2>&1 && '
+            f'echo "Moving earlier dist from {CURRENT_DIR} to {backup_dist}" >> {log_file} 2>&1 && '
+            f'move /Y "{CURRENT_DIR}" "{backup_dist}" >> {log_file} 2>&1 && '
+            f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> {log_file} 2>&1 && '
+            f'move /Y "{upgrade_dist}" "{CURRENT_DIR}" >> {log_file} 2>&1 && '
             f'echo "Loading new executable" >> {log_file} 2>&1 && '
-            f'"{CURRENT_EXECUTABLE}" --upgrade-conf >> {log_file} 2>&1 || '
+            f'"{CURRENT_EXECUTABLE}" --version >> {log_file} 2>&1 & '
+            f"IF %ERRORLEVEL% NEQ 0 ( "
             f'echo "New executable failed. Rolling back" >> {log_file} 2>&1 && '
-            f'del /F /Q "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && '
-            f'move /Y "{backup_executable}" "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1'
+            f"rd /S /Q {CURRENT_DIR} >> {log_file} 2>&1 && "
+            f'move /Y "{backup_dist}" "{CURRENT_DIR}" >> {log_file} 2>&1 '
+            f") ELSE ( "
+            f'echo "Upgrade successful" >> {log_file} 2>&1 && '
+            f"rd /S /Q {backup_dist} >> {log_file} 2>&1 && "
+            f'echo "Running new version as planned:" >> {log_file} 2>&1 && '
+            f'echo "{CURRENT_EXECUTABLE} {" ".join(sys.argv[1:])}" 2>&1 && '
+            f'"{CURRENT_EXECUTABLE}" {" ".join(sys.argv[1:])}'
+            f")"
         )
     else:
         cmd = (
             f'echo "Launching upgrade" >> {log_file} 2>&1 && '
-            f'rm -f "{backup_executable}" >> /dev/null 2>&1 && '
-            f'echo "Renaming earlier executable from {CURRENT_EXECUTABLE} to {backup_executable}" >> {log_file} 2>&1 && '
-            f'mv -f "{CURRENT_EXECUTABLE}" "{backup_executable}" >> {log_file} 2>&1 && '
-            f'echo "Copying new executable from {downloaded_executable} to {CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && '
-            f'alias cp=cp && cp -f "{downloaded_executable}" "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && '
-            f'rm -f "{downloaded_executable}" >> {log_file} 2>&1 && '
+            f'echo "Moving earlier dist from {CURRENT_DIR} to {backup_dist}" >> {log_file} 2>&1 && '
+            f'mv -f "{CURRENT_DIR}" "{backup_dist}" >> {log_file} 2>&1 && '
+            f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> {log_file} 2>&1 && '
+            f'mv -f "{upgrade_dist}" "{CURRENT_DIR}" >> {log_file} 2>&1 && '
             f'echo "Adding executable bit to new executable" >> {log_file} 2>&1 && '
             f'chmod +x {CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && '
             f'echo "Loading new executable" >> {log_file} 2>&1 && '
-            f'"{CURRENT_EXECUTABLE}" --upgrade-conf >> {log_file} 2>&1 || '
+            f'"{CURRENT_EXECUTABLE}" --version >> {log_file} 2>&1; '
+            f'"if [ $? -ne 0 ]; then '
             f'echo "New executable failed. Rolling back" >> {log_file} 2>&1 && '
-            f'rm -f "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && '
-            f'mv -f "{backup_executable}" "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1'
+            f'rm -f "{CURRENT_DIR}" >> {log_file} 2>&1 && '
+            f'mv -f "{backup_dist}" "{CURRENT_DIR}" >> {log_file} 2>&1; '
+            f" else "
+            f'echo "Upgrade successful" >> {log_file} 2>&1 && '
+            f'rm -f "{backup_dist}" >> {log_file} 2>&1 && '
+            f'echo "Running new version as planned:" >> {log_file} 2>&1 && '
+            f'echo "{CURRENT_EXECUTABLE} {" ".join(sys.argv[1:])}" 2>&1 && '
+            f'"{CURRENT_EXECUTABLE}" {" ".join(sys.argv[1:])}; '
+            f"fi"
         )
 
     # We still need to unregister previous kill_childs function se we can actually make the upgrade happen
     atexit.unregister(kill_childs)
 
     logger.info(
-        "Launching upgrade. Current process will quit. Upgrade starts in %s seconds. Upgrade is done by OS logged in %s",
+        "Launching upgrade. Current process will quit. Upgrade starts in %s seconds. Upgrade is done by OS and logged in %s",
         UPGRADE_DEFER_TIME,
         log_file,
     )
