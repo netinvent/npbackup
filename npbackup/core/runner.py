@@ -452,8 +452,8 @@ class NPBackupRunner:
         Decorator that checks permissions before running functions
 
         Possible permissions are:
-        - backup:   Backup and list backups
-        - restore:  Backup, restore, recover and list snapshots
+        - backup:   Init, Backup and list backups
+        - restore:  Init, Backup, restore, recover and list snapshots
         - full:     Full permissions
 
         Only one permission can be set per repo
@@ -463,6 +463,7 @@ class NPBackupRunner:
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
             required_permissions = {
+                "init": ["backup", "restore", "full"],
                 "backup": ["backup", "restore", "full"],
                 "has_recent_snapshot": ["backup", "restore", "full"],
                 "snapshots": ["backup", "restore", "full"],
