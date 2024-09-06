@@ -305,7 +305,7 @@ class ResticRunner:
             # but restic backup / --dry-run does
             operation = fn_name(2)
             if operation in ["backup", "forget", "prune", "restore", "rewrite"]:
-                args += " --dry-run"
+                cmd += " --dry-run"
 
         self._executor_running = True
         self.write_logs(f"Running command: [{_cmd}]", level="debug")
