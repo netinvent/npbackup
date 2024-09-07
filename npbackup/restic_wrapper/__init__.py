@@ -934,9 +934,9 @@ class ResticRunner:
             result, output = self.executor(cmd.replace(" --use-fs-snapshot", ""))
         self.json_output = json_output
         if result:
-            msg = "Backend finished backup with success"
+            msg = "Backend finished with success"
         else:
-            msg = f"Backup failed backup operation:\n{output}"
+            msg = f"Backend failed operation:\n{output}"
 
         self.backup_result_content = output
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
