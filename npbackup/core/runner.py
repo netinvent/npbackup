@@ -871,6 +871,7 @@ class NPBackupRunner:
 
     @threaded
     @catch_exceptions
+    @metrics
     @close_queues
     @exec_timer
     @check_concurrency
@@ -885,6 +886,7 @@ class NPBackupRunner:
 
     @threaded
     @catch_exceptions
+    @metrics
     @close_queues
     @exec_timer
     @check_concurrency
@@ -900,6 +902,7 @@ class NPBackupRunner:
 
     @threaded
     @catch_exceptions
+    @metrics
     @close_queues
     @exec_timer
     @check_concurrency
@@ -915,6 +918,7 @@ class NPBackupRunner:
 
     @threaded
     @catch_exceptions
+    @metrics
     @close_queues
     @exec_timer
     @check_concurrency
@@ -931,6 +935,7 @@ class NPBackupRunner:
 
     @threaded
     @catch_exceptions
+    @metrics
     @close_queues
     @exec_timer
     @check_concurrency
@@ -1485,6 +1490,7 @@ class NPBackupRunner:
 
     @threaded
     @catch_exceptions
+    @metrics
     @close_queues
     @exec_timer
     @check_concurrency
@@ -1500,6 +1506,7 @@ class NPBackupRunner:
 
     @threaded
     @catch_exceptions
+    @metrics
     @close_queues
     @exec_timer
     @check_concurrency
