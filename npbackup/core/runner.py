@@ -119,7 +119,7 @@ def metric_writer(
         metrics.append(
             f'npbackup_exec_state{{{labels},action="{operation}",repo_name="{repo_name}",timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {exec_state}'
         )
-        
+
         # Add upgrade state if upgrades activated
         upgrade_state = os.environ.get("NPBACKUP_UPGRADE_STATE", None)
         try:

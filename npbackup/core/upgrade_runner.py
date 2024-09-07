@@ -119,6 +119,6 @@ def run_upgrade(full_config: dict, ignore_errors: bool = False) -> bool:
         auto_upgrade_host_identity=auto_upgrade_host_identity,
         installed_version=npbackup_version,
         group=group,
-        ignore_errors=ignore_errors
+        ignore_errors=ignore_errors,
     )
     return result

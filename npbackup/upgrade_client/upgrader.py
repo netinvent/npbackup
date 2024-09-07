@@ -42,7 +42,9 @@ def sha256sum_data(data):
     return sha256.hexdigest()
 
 
-def _check_new_version(upgrade_url: str, username: str, password: str, ignore_errors: bool = False) -> bool:
+def _check_new_version(
+    upgrade_url: str, username: str, password: str, ignore_errors: bool = False
+) -> bool:
     """
     Check if we have a newer version of npbackup
     """
@@ -122,13 +124,15 @@ def auto_upgrader(
     We must check that we run a compiled binary first
     We assume that we run a onefile nuitka binary
     """
-    if not IS_COMPILED and False: #WIP
+    if not IS_COMPILED and False:  # WIP
         logger.info(
             "Auto upgrade will only upgrade compiled verions. Please use 'pip install --upgrade npbackup' instead"
         )
         return False
 
-    res = _check_new_version(upgrade_url, username, password, ignore_errors=ignore_errors)
+    res = _check_new_version(
+        upgrade_url, username, password, ignore_errors=ignore_errors
+    )
     # Let's set a global environment variable which we can check later in metrics
     os.environ["NPBACKUP_UPGRADE_STATE"] = "0"
     if not res:

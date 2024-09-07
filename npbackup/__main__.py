@@ -468,7 +468,9 @@ This is free software, and you are welcome to redistribute it under certain cond
             logger.info("Running program initiated auto upgrade")
         # Don't log upgrade check errors if we're in auto upgrade mode
         # since it will change the whole exit code of the program
-        result = upgrade_runner.run_upgrade(full_config, ignore_errors=False if args.auto_upgrade else True)
+        result = upgrade_runner.run_upgrade(
+            full_config, ignore_errors=False if args.auto_upgrade else True
+        )
         if result:
             sys.exit(0)
         elif args.auto_upgrade:
