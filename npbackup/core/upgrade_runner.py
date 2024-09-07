@@ -99,7 +99,7 @@ def check_new_version(full_config: dict) -> bool:
         return _check_new_version(upgrade_url, username, password)
 
 
-def run_upgrade(full_config: dict) -> bool:
+def run_upgrade(full_config: dict, ignore_errors: bool = False) -> bool:
     upgrade_url = full_config.g("global_options.auto_upgrade_server_url")
     username = full_config.g("global_options.auto_upgrade_server_username")
     password = full_config.g("global_options.auto_upgrade_server_password")
@@ -119,5 +119,6 @@ def run_upgrade(full_config: dict) -> bool:
         auto_upgrade_host_identity=auto_upgrade_host_identity,
         installed_version=npbackup_version,
         group=group,
+        ignore_errors=ignore_errors
     )
     return result

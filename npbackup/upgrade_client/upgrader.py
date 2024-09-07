@@ -20,8 +20,8 @@ import atexit
 from packaging import version
 from ofunctions.platform import get_os, python_arch
 from ofunctions.process import kill_childs
+from ofunctions.requestor import Requestor
 from command_runner import deferred_command
-from npbackup.upgrade_client.requestor import Requestor
 from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
 from npbackup.core.nuitka_helper import IS_COMPILED
 from npbackup.__version__ import __version__ as npbackup_version
@@ -42,7 +42,7 @@ def sha256sum_data(data):
     return sha256.hexdigest()
 
 
-def _check_new_version(upgrade_url: str, username: str, password: str) -> bool:
+def _check_new_version(upgrade_url: str, username: str, password: str, ignore_errors: bool = False) -> bool:
     """
     Check if we have a newer version of npbackup
     """
@@ -54,24 +54,40 @@ def _check_new_version(upgrade_url: str, username: str, password: str) -> bool:
     requestor = Requestor(upgrade_url, username, password)
     requestor.app_name = "npbackup" + npbackup_version
     requestor.user_agent = __intname__
+    requestor.ignore_errors = ignore_errors
     requestor.create_session(authenticated=True)
     server_ident = requestor.data_model()
     if server_ident is False:
-        logger.error("Cannot reach upgrade server")
+        if ignore_errors:
+            logger.info("Cannt reach upgrade server")
+        else:
+            logger.error("Cannot reach upgrade server")
         return None
     try:
         if not server_ident["app"] == "npbackup.upgrader":
-            logger.error("Current server is not a recognized NPBackup update server")
+            msg = "Current server is not a recognized NPBackup update server"
+            if ignore_errors:
+                logger.info(msg)
+            else:
+                logger.error(msg)
             return None
     except (KeyError, TypeError):
-        logger.error("Current server is not a NPBackup update server")
+        msg = "Current server is not a NPBackup update server"
+        if ignore_errors:
+            logger.info(msg)
+        else:
+            logger.error(msg)
         return None
 
     result = requestor.data_model("current_version")
     try:
         online_version = result["version"]
     except KeyError:
-        logger.error("Upgrade server failed to provide proper version info")
+        msg = "Upgrade server failed to provide proper version info"
+        if ignore_errors:
+            logger.info(msg)
+        else:
+            logger.error(msg)
         return None
     else:
         if online_version:
@@ -98,6 +114,7 @@ def auto_upgrader(
     auto_upgrade_host_identity: str = None,
     installed_version: str = None,
     group: str = None,
+    ignore_errors: bool = False,
 ) -> bool:
     """
     Auto upgrade binary NPBackup distributions
@@ -105,13 +122,18 @@ def auto_upgrader(
     We must check that we run a compiled binary first
     We assume that we run a onefile nuitka binary
     """
-    if not IS_COMPILED:
+    if not IS_COMPILED and False: #WIP
         logger.info(
             "Auto upgrade will only upgrade compiled verions. Please use 'pip install --upgrade npbackup' instead"
         )
         return False
 
-    if not _check_new_version(upgrade_url, username, password):
+    res = _check_new_version(upgrade_url, username, password, ignore_errors=ignore_errors)
+    # Let's set a global environment variable which we can check later in metrics
+    os.environ["NPBACKUP_UPGRADE_STATE"] = "0"
+    if not res:
+        if res is None:
+            os.environ["NPBACKUP_UPGRADE_STATE"] = "1"
         return False
     requestor = Requestor(upgrade_url, username, password)
     requestor.create_session(authenticated=True)
