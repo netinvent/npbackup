@@ -131,7 +131,9 @@ def metric_writer(
             pass
 
         logger.debug("Metrics computed:\n{}".format("\n".join(metrics)))
-        if destination:
+        if destination and dry_run:
+            logger.info("Dry run mode. Not sending metrics.")
+        elif destination:
             logger.debug("Sending metrics to {}".format(destination))
             dest = destination.lower()
             if dest.startswith("http"):
@@ -153,10 +155,8 @@ def metric_writer(
                 except KeyError:
                     logger.info("No metrics authentication present.")
                     authentication = None
-                if not dry_run:
-                    upload_metrics(destination, authentication, no_cert_verify, metrics)
-                else:
-                    logger.info("Not uploading metrics in dry run mode")
+
+                upload_metrics(destination, authentication, no_cert_verify, metrics)
             else:
                 try:
                     # We use append so if prometheus text collector did not get data yet, we'll not wipe it
