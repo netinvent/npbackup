@@ -152,7 +152,7 @@ cython_debug/
 #.idea/
 
 RESTIC_SOURCE_FILES/restic*
-RESTIC_SOURCE_FILES/ARCHIVE
+RESTIC_SOURCE_FILES/ARCHIVES
 _private*
 _NOUSE_private*
 NOUSE_private*
