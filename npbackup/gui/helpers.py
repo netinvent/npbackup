@@ -258,7 +258,6 @@ def gui_thread_runner(
 
     start_time = time.monotonic()
     while True:
-
         # No idea why pylint thinks that UpdateAnimation does not exist in SimpleGUI
         # pylint: disable=E1101 (no-member)
         progress_window["-LOADER-ANIMATION-"].UpdateAnimation(
