@@ -262,9 +262,12 @@ The file `customization.py` also contains OEM strings that can be safely changed
 
 In order to fully protect the AES key that is needed to support NPBackup, one can compile the program with Nuitka.
 Compiling needs restic binary for the target platform in `RESTIC_SOURCE_FILES` folder, files must be named `restic_{version}_{platform}_{arch}[.extension]` like provided by restic.net or [github](https://github.com/restic/restic)
-Linux binaries need to be made executable in the `RESTIC_SOURCE_FILES` folder.
+Linux binaries need to be made executable in the `RESTIC_SOURCE_FILES` folder.  
+You can use `update_restic.sh` script in `RESTIC_SOURCE_FILES` to download binaries.
 
 You'll need to change the default AES key in `secrets.py`, see the documentation in the file itself.
+
+One you're setup, you need to install compilation tools, see `requirements-compilation.txt` file.
 
 Compile options are available in `compile.py`.
 
@@ -282,7 +285,7 @@ Official binaries for Windows provided by NetInvent are signed with a certificat
 Also, official binaries are compiled using Nuitka Commercial grade, which is more secure in storing secrets.  
 
 Pre-compiled builds for Windows have been code signed with NetInvent's EV certificate, using [windows_tools.signtool](github.com/netinvent/windows_tools)  
-Signing on a Windows machine with Windows SDK installed can be done via `bin\sign_windows.py` script.  
+Signing on a Windows machine with Windows SDK installed can be done via `windows\sign_windows.py` script.  
 Alternatively, you can sign executables via:
 ```
 from windows_tools.signtool import SignTool

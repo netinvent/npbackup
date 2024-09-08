@@ -7,8 +7,8 @@ __intname__ = "npbackup.compile"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024090301"
-__version__ = "2.0.1"
+__build__ = "2024090801"
+__version__ = "2.1.0"
 
 
 """
@@ -18,6 +18,9 @@ Nuitka compilation script tested for
  - Linux i386
  - Linux i686
  - Linux armv71
+
+ Also optionally signs windows executables
+
 """
 
 
@@ -28,6 +31,8 @@ import argparse
 import atexit
 from command_runner import command_runner
 from ofunctions.platform import python_arch, get_os
+if os.name == "nt":
+    from npbackup.windows.sign_windows import sign
 
 AUDIENCES = ["public", "private"]
 BUILD_TYPES = ["cli", "gui", "viewer"]
@@ -177,7 +182,7 @@ def have_nuitka_commercial():
         return False
 
 
-def compile(arch: str, audience: str, build_type: str, onefile: bool, create_tar_only: bool):
+def compile(arch: str, audience: str, build_type: str, onefile: bool, create_tar_only: bool, ev_cert_data: str = None):
     if build_type not in BUILD_TYPES:
         print("CANNOT BUILD BOGUS BUILD TYPE")
         sys.exit(1)
@@ -327,6 +332,9 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool, create_tar
             fh.write(npbackup_version)
         print(f"COMPILED {'WITH SUCCESS' if not errors else 'WITH ERRORS'}")
 
+    if os.name == "nt" and ev_cert_data:
+        sign(ev_cert_data=ev_cert_data, dry_run=args.dry_run)
+
     if not onefile:
         if not create_archive(
             platform=platform,
@@ -418,6 +426,15 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--sign",
+        type=str,
+        dest="ev_cert_data",
+        default=False,
+        required=False,
+        help="Digitally sign windows executables",
+    )
+
+    parser.add_argument(
         "--create-tar-only",
         action="store_true",
         default=False,
@@ -472,7 +489,8 @@ if __name__ == "__main__":
                     audience=audience,
                     build_type=build_type,
                     onefile=args.onefile,
-                    create_tar_only=create_tar_only
+                    create_tar_only=create_tar_only,
+                    ev_cert_data=args.ev_cert_data
                 )
                 if not create_tar_only:
                     audience_build = "private" if private_build else "public"
