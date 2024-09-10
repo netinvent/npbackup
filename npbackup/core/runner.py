@@ -129,6 +129,15 @@ def metric_writer(
             )
         except (ValueError, TypeError):
             pass
+        # Add exec time
+        try:
+            exec_time = os.environ.get("NPBACKUP_EXEC_TIME", None)
+            exec_time = float(exec_time)
+            metrics.append(
+                f'npbackup_exec_time{{{labels},action="{operation}",repo_name="{repo_name}",timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {exec_time}'
+            )
+        except (ValueError, TypeError):
+            logger.warning("Cannot get exec time from environment")
 
         logger.debug("Metrics computed:\n{}".format("\n".join(metrics)))
         if destination and dry_run:
@@ -399,6 +408,10 @@ class NPBackupRunner:
             self.write_logs(
                 f"Runner took {self.exec_time} seconds for {fn.__name__}", level="info"
             )
+            try:
+                os.environ['NPBACKUP_EXEC_TIME'] = str(self.exec_time)
+            except OSError:
+                pass
             return result
 
         return wrapper
