@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024061101"
+__build__ = "2024091501"
 
 
 from typing import Optional, Callable, Union, List
@@ -220,6 +220,9 @@ class NPBackupRunner:
         self._verbose = False
         self._live_output = False
         self._json_output = False
+        # struct_output is msgspec.Struct instead of json, which is less memory consuming
+        # struct_output neeeds json_output to be True
+        self._struct_output = False
         self._binary = None
         self._no_cache = False
         self.restic_runner = None
@@ -299,6 +302,17 @@ class NPBackupRunner:
             msg = f"Bogus json_output parameter given: {value}"
             self.write_logs(msg, level="critical", raise_error="ValueError")
         self._json_output = value
+
+    @property
+    def struct_output(self):
+        return self._struct_output
+
+    @struct_output.setter
+    def struct_output(self, value):
+        if not isinstance(value, bool):
+            msg = f"Bogus struct_output parameter given: {value}"
+            self.write_logs(msg, level="critical", raise_error="ValueError")
+        self._struct_output = value
 
     @property
     def stdout(self):
@@ -409,7 +423,7 @@ class NPBackupRunner:
                 f"Runner took {self.exec_time} seconds for {fn.__name__}", level="info"
             )
             try:
-                os.environ['NPBACKUP_EXEC_TIME'] = str(self.exec_time)
+                os.environ["NPBACKUP_EXEC_TIME"] = str(self.exec_time)
             except OSError:
                 pass
             return result
@@ -826,6 +840,7 @@ class NPBackupRunner:
         self.restic_runner.no_cache = self.no_cache
         self.restic_runner.live_output = self.live_output
         self.restic_runner.json_output = self.json_output
+        self.restic_runner.struct_output = self.struct_output
         self.restic_runner.stdout = self.stdout
         self.restic_runner.stderr = self.stderr
         if self.binary:

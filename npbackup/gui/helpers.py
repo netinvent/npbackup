@@ -127,6 +127,10 @@ def gui_thread_runner(
 
     # We'll always use json output in GUI mode
     runner.json_output = True
+    # in GUI mode, we'll use struct output instead of json whenever it's possible
+    # as of v3, this only is needed for ls operations
+    runner.struct_output = True
+
     # So we don't always init repo_config, since runner.group_runner would do that itself
     if __repo_config:
         runner.repo_config = __repo_config

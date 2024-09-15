@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024090602"
-__version__ = "2.2.4"
+__build__ = "2024091501"
+__version__ = "2.3.0"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -16,7 +16,7 @@ import os
 import sys
 from logging import getLogger
 import re
-import json
+import msgspec
 from datetime import datetime, timezone
 import dateutil.parser
 import queue
@@ -26,7 +26,7 @@ from ofunctions.misc import BytesConverter, fn_name
 from npbackup.__debug__ import _DEBUG
 from npbackup.__env__ import FAST_COMMANDS_TIMEOUT, CHECK_INTERVAL
 from npbackup.path_helper import CURRENT_DIR
-
+from npbackup.restic_wrapper import schema
 
 logger = getLogger()
 
@@ -48,6 +48,7 @@ class ResticRunner:
         self._dry_run = False
         self._no_cache = False
         self._json_output = False
+        self._struct_output = False
 
         self.backup_result_content = None
 
@@ -221,6 +222,17 @@ class ResticRunner:
             self._json_output = value
         else:
             raise ValueError("Bogus json_output value given")
+
+    @property
+    def struct_output(self) -> bool:
+        return self._struct_output
+
+    @struct_output.setter
+    def struct_output(self, value: bool):
+        if isinstance(value, bool):
+            self._struct_output = value
+        else:
+            raise ValueError("Bogus struct_output value given")
 
     @property
     def ignore_cloud_files(self) -> bool:
@@ -636,6 +648,10 @@ class ResticRunner:
                         return self.convert_to_json_output(False, output=msg)
                 else:
                     # pylint: disable=E1101 (no-member)
+                    output = output.replace(
+                        self.repository,
+                        self.repository.split(":")[0] + ":_(o_O)_hidden_by_npbackup",
+                    )
                     msg = f"Backend is not ready to perform operation {fn.__name__}. Repo maybe inaccessible or not initialized. You can try to run a backup to initialize the repository:\n{output}."  # pylint: disable=E1101 (no-member)
                     return self.convert_to_json_output(False, msg=msg)
             # pylint: disable=E1102 (not-callable)
@@ -658,31 +674,40 @@ class ResticRunner:
             js = {
                 "result": result,
                 "operation": operation,
+                "extended_info": None,
                 "args": kwargs,
-                "output": None,
+                "output": [],
             }
             if result:
                 if output:
-                    if isinstance(output, str):
-                        output = list(filter(None, output.split("\n")))
-                    else:
-                        output = [str(output)]
-                    if len(output) > 1:
-                        output_is_list = True
-                        js["output"] = []
-                    else:
-                        output_is_list = False
-                    for line in output:
-                        if output_is_list:
-                            try:
-                                js["output"].append(json.loads(line))
-                            except json.decoder.JSONDecodeError:
-                                js["output"].append(line)
-                        else:
-                            try:
-                                js["output"] = json.loads(line)
-                            except json.decoder.JSONDecodeError:
-                                js["output"] = {"data": line}
+                    decoder = msgspec.json.Decoder()
+                    ls_decoder = msgspec.json.Decoder(schema.LsNode)
+                    is_first_line = True
+
+                    for line in output.split("\n"):
+                        if not line:
+                            continue
+                        try:
+                            if (
+                                not is_first_line
+                                and operation == "ls"
+                                and self.struct_output
+                            ):
+
+                                js["output"].append(ls_decoder.decode(line))
+                            else:
+                                js["output"].append(decoder.decode(line))
+                                is_first_line = False
+                        except msgspec.DecodeError as exc:
+                            msg = f"JSON decode error: {exc} on content '{line}'"
+                            self.write_logs(msg, level="error")
+                            js["extended_info"] = msg
+                            js["output"].append({"data": line})
+                            js["result"] = False
+                    # If we only have one output, we don't need a list
+                    if len(js["output"]) == 1:
+                        js["output"] = js["output"][0]
+
                 if msg:
                     self.write_logs(msg, level="info")
             else:
@@ -691,8 +716,11 @@ class ResticRunner:
                     self.write_logs(msg, level="error")
                 if output:
                     try:
-                        js["output"] = json.loads(output)
-                    except json.decoder.JSONDecodeError:
+                        js["output"] = msgspec.json.decode(output)
+                    except msgspec.DecodeError:
+                        msg = f"JSON decode error: {exc} on output '{output}'"
+                        self.write_logs(msg, level="error")
+                        js["extended_info"] = msg
                         js["output"] = {"data": output}
             return js
 

@@ -13,6 +13,7 @@ from typing import List, Optional, Tuple
 import sys
 import os
 import re
+import gc
 from argparse import ArgumentParser
 from pathlib import Path
 from logging import getLogger
@@ -41,6 +42,8 @@ from resources.customization import (
     LOADER_ANIMATION,
     FOLDER_ICON,
     FILE_ICON,
+    SYMLINK_ICON,
+    IRREGULAR_FILE_ICON,
     LICENSE_TEXT,
     SIMPLEGUI_THEME,
     OEM_ICON,
@@ -55,6 +58,7 @@ from npbackup.path_helper import CURRENT_DIR
 from npbackup.__version__ import version_string
 from npbackup.__debug__ import _DEBUG
 from npbackup.restic_wrapper import ResticRunner
+from npbackup.restic_wrapper import schema
 
 
 logger = getLogger()
@@ -183,39 +187,60 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
         {'name': 'unsupported.tcl', 'type': 'file', 'path': '/C/GIT/npbackup/npbackup.dist/tk/unsupported.tcl', 'uid': 0, 'gid': 0, 'size': 10521, 'mode': 438, 'permissions': '-rw-rw-rw-', 'mtime': '2022-09-05T14:18:52+02:00', 'atime': '2022-09-05T14:18:52+02:00', 'ctime': '2022-09-05T14:18:52+02:00', 'struct_type': 'node'}
         {'name': 'xmfbox.tcl', 'type': 'file', 'path': '/C/GIT/npbackup/npbackup.dist/tk/xmfbox.tcl', 'uid': 0, 'gid': 0, 'size': 27064, 'mode': 438, 'permissions': '-rw-rw-rw-', 'mtime': '2022-09-05T14:18:52+02:00', 'atime': '2022-09-05T14:18:52+02:00', 'ctime': '2022-09-05T14:18:52+02:00', 'struct_type': 'node'}
     ]
+
+    Since v3-rc6, we're actually using a msgspec.Struct represenation which uses dot notation
     """
     treedata = sg.TreeData()
     count = 0
     for entry in ls_result:
         # Make sure we drop the prefix '/' so sg.TreeData does not get an empty root
-        entry["path"] = entry["path"].lstrip("/")
+
+        entry.path = entry.path.lstrip("/")
         if os.name == "nt":
             # On windows, we need to make sure tree keys don't get duplicate because of lower/uppercase
             # Shown filenames aren't affected by this
-            entry["path"] = entry["path"].lower()
-        parent = os.path.dirname(entry["path"])
+            entry.path = entry.path.lower()
+        parent = os.path.dirname(entry.path)
 
         # Make sure we normalize mtime, and remove microseconds
         # dateutil.parser.parse is *really* cpu hungry, let's replace it with a dumb alternative
         # mtime = dateutil.parser.parse(entry["mtime"]).strftime("%Y-%m-%d %H:%M:%S")
-        mtime = str(entry["mtime"])[0:19]
-        if entry["type"] == "dir" and entry["path"] not in treedata.tree_dict:
+        mtime = entry.mtime.strftime("%Y-%m-%d %H:%M:%S")
+        name = os.path.basename(entry.path)
+        if entry.type == schema.LsNodeType.DIR and entry.path not in treedata.tree_dict:
             treedata.Insert(
                 parent=parent,
-                key=entry["path"],
-                text=entry["name"],
+                key=entry.path,
+                text=name,
                 values=["", mtime],
                 icon=FOLDER_ICON,
             )
-        elif entry["type"] == "file":
-            size = BytesConverter(entry["size"]).human
+        elif entry.type == schema.LsNodeType.FILE:
+            size = BytesConverter(entry.size).human
             treedata.Insert(
                 parent=parent,
-                key=entry["path"],
-                text=entry["name"],
+                key=entry.path,
+                text=name,
                 values=[size, mtime],
                 icon=FILE_ICON,
             )
+        elif entry.type == schema.LsNodeType.SYMLINK:
+            treedata.Insert(
+                parent=parent,
+                key=entry.path,
+                text=name,
+                values=["", mtime],
+                icon=SYMLINK_ICON,
+            )
+        elif entry.type == schema.LsNodeType.IRREGULAR:
+            treedata.Insert(
+                parent=parent,
+                key=entry.path,
+                text=name,
+                values=["", mtime],
+                icon=IRREGULAR_FILE_ICON,
+            )
+
         # Since the thread is heavily CPU bound, let's add a minimal
         # arbitrary sleep time to let GUI update
         # In a 130k entry scenario, using count % 1000 added less than a second on a 25 second run
@@ -237,12 +262,13 @@ def ls_window(repo_config: dict, snapshot_id: str) -> bool:
         __backend_binary=backend_binary,
     )
     if not result or not result["result"]:
-        sg.Popup("main_gui.snapshot_is_empty")
+        sg.Popup(_t("main_gui.snapshot_is_empty"))
         return None, None
+
     # result is {"result": True, "output": [{snapshot_description}, {entry}, {entry}]}
-    content = result["output"]
+    # content = result["output"]
     # First entry of snapshot list is the snapshot description
-    snapshot = content.pop(0)
+    snapshot = result["output"].pop(0)
     try:
         snap_date = dateutil.parser.parse(snapshot["time"])
     except (KeyError, IndexError, TypeError):
@@ -261,7 +287,6 @@ def ls_window(repo_config: dict, snapshot_id: str) -> bool:
         hostname = "[inconnu]"
 
     backup_id = f"{_t('main_gui.backup_content_from')} {snap_date} {_t('main_gui.run_as')} {username}@{hostname} {_t('main_gui.identified_by')} {short_id}"
-
     if not backup_id or not snapshot or not short_id:
         sg.PopupError(_t("main_gui.cannot_get_content"), keep_on_top=True)
         return False
@@ -272,7 +297,8 @@ def ls_window(repo_config: dict, snapshot_id: str) -> bool:
 
     # We get a thread result, hence pylint will complain the thread isn't a tuple
     # pylint: disable=E1101 (no-member)
-    thread = _make_treedata_from_json(content)
+
+    thread = _make_treedata_from_json(result["output"])
     while not thread.done() and not thread.cancelled():
         sg.PopupAnimated(
             LOADER_ANIMATION,
@@ -282,6 +308,8 @@ def ls_window(repo_config: dict, snapshot_id: str) -> bool:
             text_color=TXT_COLOR_LDR,
         )
     sg.PopupAnimated(None)
+
+    logger.info("Finished creating data tree")
 
     left_col = [
         [sg.Text(backup_id)],
@@ -316,8 +344,11 @@ def ls_window(repo_config: dict, snapshot_id: str) -> bool:
         enable_close_attempted_event=True,
     )
 
-    # Reclaim memory fro thread result
-    thread = None
+    # Reclaim memory from thread result
+    # Note from v3 dev: This doesn't actually improve memory usage
+    del thread
+    del result
+    gc.collect()
 
     while True:
         event, values = window.read()
@@ -334,6 +365,7 @@ def ls_window(repo_config: dict, snapshot_id: str) -> bool:
     # before closing the window
     window["-TREE-"].update(values=sg.TreeData())
     window.close()
+    del window
     return True
 
 
@@ -966,6 +998,7 @@ def _main_gui(viewer_mode: bool):
                 continue
             snapshot_to_see = snapshot_list[values["snapshot-list"][0]][0]
             ls_window(repo_config, snapshot_to_see)
+            gc.collect()
         if event == "--FORGET--":
             if not full_config:
                 sg.PopupError(_t("main_gui.no_config"), keep_on_top=True)
