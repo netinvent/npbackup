@@ -23,6 +23,10 @@ CHECK_INTERVAL = 0.005
 GUI_CHECK_INTERVAL = 0.005
 
 
+# Interval on which we log a status message stating we're still alive
+# This is useful for long running operations
+HEARTBEAT_INTERVAL = 3600
+
 # Arbitrary timeout for init / init checks.
 # If init takes more than a minute, we really have a problem in our backend
 FAST_COMMANDS_TIMEOUT = 60

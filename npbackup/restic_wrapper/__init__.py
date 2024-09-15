@@ -23,7 +23,7 @@ from functools import wraps
 from command_runner import command_runner
 from ofunctions.misc import BytesConverter, fn_name
 from npbackup.__debug__ import _DEBUG
-from npbackup.__env__ import FAST_COMMANDS_TIMEOUT, CHECK_INTERVAL
+from npbackup.__env__ import FAST_COMMANDS_TIMEOUT, CHECK_INTERVAL, HEARTBEAT_INTERVAL
 from npbackup.path_helper import CURRENT_DIR
 from npbackup.restic_wrapper import schema
 
@@ -344,6 +344,7 @@ class ResticRunner:
             priority=self._priority,
             io_priority=self._priority,
             windows_no_window=True,
+            heartbeat=HEARTBEAT_INTERVAL,
         )
         # Don't keep protected environment variables in memory when not necessary
         self._remove_env()
