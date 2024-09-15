@@ -278,9 +278,11 @@ def gui_thread_runner(
         if event == "--EXPAND--":
             _upgrade_from_compact_view()
         if event == "--CANCEL--":
-            logger.info("User cancelled operation")
-            runner.cancel()
-            progress_window["--CANCEL--"].Update(disabled=True)
+            result = sg.popup_yes_no(_t("main_gui.cancel_operation"), keep_on_top=True)
+            if result == "Yes":
+                logger.info("User cancelled operation")
+                runner.cancel()
+                progress_window["--CANCEL--"].Update(disabled=True)
         # Read stdout queue
         if read_stdout_queue:
             try:
