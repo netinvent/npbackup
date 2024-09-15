@@ -9,12 +9,12 @@ __site__ = "https://www.netperfect.fr/npbackup"
 __description__ = "NetPerfect Backup Client"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024052501"
+__build__ = "2024091501"
 
 
 import sys
 from logging import getLogger
-import json
+import msgspec.json
 import datetime
 from npbackup.core.runner import NPBackupRunner
 
@@ -70,5 +70,6 @@ def entrypoint(*args, **kwargs):
         else:
             logger.error(f"Operation finished")
     else:
-        print(json.dumps(result, default=serialize_datetime))
+        # print(json.dumps(result, default=serialize_datetime))
+        print(msgspec.json.encode(result))
         sys.exit(0)
