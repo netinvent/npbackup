@@ -16,13 +16,16 @@ from datetime import datetime
 try:
     from msgspec import Struct
     from enum import StrEnum
+
     MSGSPEC = True
 except ImportError:
 
     class Struct:
         def __init_subclass__(self, *args, **kwargs):
             pass
+
         pass
+
     class StrEnum:
         pass
 
