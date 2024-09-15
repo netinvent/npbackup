@@ -642,7 +642,7 @@ class NPBackupRunner:
                     js = {
                         "result": False,
                         "operation": operation,
-                        "reason": f"Exception: {exc}",
+                        "reason": f"Runner catched exception: {exc}",
                     }
                     return js
                 return False
