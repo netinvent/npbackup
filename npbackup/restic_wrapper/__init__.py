@@ -16,7 +16,6 @@ import os
 import sys
 from logging import getLogger
 import re
-import msgspec
 from datetime import datetime, timezone
 import dateutil.parser
 import queue
@@ -27,6 +26,16 @@ from npbackup.__debug__ import _DEBUG
 from npbackup.__env__ import FAST_COMMANDS_TIMEOUT, CHECK_INTERVAL
 from npbackup.path_helper import CURRENT_DIR
 from npbackup.restic_wrapper import schema
+
+try:
+    import msgspec
+
+    MSGSPEC = True
+except ImportError:
+    # We may not have msgspec on Python 3.7
+    import json
+
+    MSGSPEC = False
 
 logger = getLogger()
 
@@ -672,30 +681,41 @@ class ResticRunner:
             }
             if result:
                 if output:
-                    decoder = msgspec.json.Decoder()
-                    ls_decoder = msgspec.json.Decoder(schema.LsNode)
+                    if MSGSPEC:
+                        decoder = msgspec.json.Decoder()
+                        ls_decoder = msgspec.json.Decoder(schema.LsNode)
                     is_first_line = True
 
                     for line in output.split("\n"):
                         if not line:
                             continue
-                        try:
-                            if (
-                                not is_first_line
-                                and operation == "ls"
-                                and self.struct_output
-                            ):
+                        if MSGSPEC:
+                            try:
+                                if (
+                                    not is_first_line
+                                    and operation == "ls"
+                                    and self.struct_output
+                                ):
 
-                                js["output"].append(ls_decoder.decode(line))
-                            else:
-                                js["output"].append(decoder.decode(line))
-                                is_first_line = False
-                        except msgspec.DecodeError as exc:
-                            msg = f"JSON decode error: {exc} on content '{line}'"
-                            self.write_logs(msg, level="error")
-                            js["extended_info"] = msg
-                            js["output"].append({"data": line})
-                            js["result"] = False
+                                    js["output"].append(ls_decoder.decode(line))
+                                else:
+                                    js["output"].append(decoder.decode(line))
+                                    is_first_line = False
+                            except msgspec.DecodeError as exc:
+                                msg = f"JSON decode error: {exc} on content '{line}'"
+                                self.write_logs(msg, level="error")
+                                js["extended_info"] = msg
+                                js["output"].append({"data": line})
+                                js["result"] = False
+                        else:
+                            try:
+                                js["output"].append(json.loads(line))
+                            except json.JSONDecodeError as exc:
+                                msg = f"JSON decode error: {exc} on content '{line}'"
+                                self.write_logs(msg, level="error")
+                                js["extended_info"] = msg
+                                js["output"].append({"data": line})
+                                js["result"] = False
                     # If we only have one output, we don't need a list
                     if len(js["output"]) == 1:
                         js["output"] = js["output"][0]
@@ -707,13 +727,22 @@ class ResticRunner:
                     js["reason"] = msg
                     self.write_logs(msg, level="error")
                 if output:
-                    try:
-                        js["output"] = msgspec.json.decode(output)
-                    except msgspec.DecodeError as exc:
-                        msg = f"JSON decode error: {exc} on output '{output}'"
-                        self.write_logs(msg, level="error")
-                        js["extended_info"] = msg
-                        js["output"] = {"data": output}
+                    if MSGSPEC:
+                        try:
+                            js["output"] = msgspec.json.decode(output)
+                        except msgspec.DecodeError as exc:
+                            msg = f"JSON decode error: {exc} on output '{output}'"
+                            self.write_logs(msg, level="error")
+                            js["extended_info"] = msg
+                            js["output"] = {"data": output}
+                    else:
+                        try:
+                            js["output"] = json.loads(output)
+                        except json.JSONDecodeError as exc:
+                            msg = f"JSON decode error: {exc} on output '{output}'"
+                            self.write_logs(msg, level="error")
+                            js["extended_info"] = msg
+                            js["output"] = {"data": output}
             return js
 
         if result:

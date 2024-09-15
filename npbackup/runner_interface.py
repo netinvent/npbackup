@@ -14,7 +14,15 @@ __build__ = "2024091501"
 
 import sys
 from logging import getLogger
-import msgspec.json
+
+try:
+    import msgspec.json
+
+    MSGSPEC = True
+except ImportError:
+    import json
+
+    MSGSPEC = False
 import datetime
 from npbackup.core.runner import NPBackupRunner
 
@@ -70,6 +78,9 @@ def entrypoint(*args, **kwargs):
         else:
             logger.error(f"Operation finished")
     else:
-        # print(json.dumps(result, default=serialize_datetime))
-        print(msgspec.json.encode(result))
+        if MSGSPEC:
+            print(msgspec.json.encode(result))
+        else:
+            print(json.dumps(result, default=serialize_datetime))
+
         sys.exit(0)

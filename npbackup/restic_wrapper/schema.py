@@ -11,9 +11,22 @@ __description__ = "Restic json output schemas"
 
 
 from typing import Optional
-from enum import StrEnum
 from datetime import datetime
-from msgspec import Struct
+
+try:
+    from msgspec import Struct
+    from enum import StrEnum
+    MSGSPEC = True
+except ImportError:
+
+    class Struct:
+        def __init_subclass__(self, *args, **kwargs):
+            pass
+        pass
+    class StrEnum:
+        pass
+
+    MSGSPEC = False
 
 
 class LsNodeType(StrEnum):

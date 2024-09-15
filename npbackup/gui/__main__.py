@@ -58,7 +58,7 @@ from npbackup.path_helper import CURRENT_DIR
 from npbackup.__version__ import version_string
 from npbackup.__debug__ import _DEBUG
 from npbackup.restic_wrapper import ResticRunner
-from npbackup.restic_wrapper import schema
+from npbackup.restic_wrapper import schema, MSGSPEC
 
 
 logger = getLogger()
@@ -188,58 +188,110 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
         {'name': 'xmfbox.tcl', 'type': 'file', 'path': '/C/GIT/npbackup/npbackup.dist/tk/xmfbox.tcl', 'uid': 0, 'gid': 0, 'size': 27064, 'mode': 438, 'permissions': '-rw-rw-rw-', 'mtime': '2022-09-05T14:18:52+02:00', 'atime': '2022-09-05T14:18:52+02:00', 'ctime': '2022-09-05T14:18:52+02:00', 'struct_type': 'node'}
     ]
 
-    Since v3-rc6, we're actually using a msgspec.Struct represenation which uses dot notation
+    Since v3-rc6, we're actually using a msgspec.Struct represenation which uses dot notation, but only on Python 3.8+
+    We still rely on json for Python 3.7
     """
     treedata = sg.TreeData()
     count = 0
+    if not MSGSPEC:
+        logger.info("Using basic json representation for data which is slow and memory hungry. Consider using a newer OS that supports Python 3.8+")
     for entry in ls_result:
         # Make sure we drop the prefix '/' so sg.TreeData does not get an empty root
+        if MSGSPEC:
+            entry.path = entry.path.lstrip("/")
+            if os.name == "nt":
+                # On windows, we need to make sure tree keys don't get duplicate because of lower/uppercase
+                # Shown filenames aren't affected by this
+                entry.path = entry.path.lower()
+            parent = os.path.dirname(entry.path)
 
-        entry.path = entry.path.lstrip("/")
-        if os.name == "nt":
-            # On windows, we need to make sure tree keys don't get duplicate because of lower/uppercase
-            # Shown filenames aren't affected by this
-            entry.path = entry.path.lower()
-        parent = os.path.dirname(entry.path)
+            # Make sure we normalize mtime, and remove microseconds
+            # dateutil.parser.parse is *really* cpu hungry, let's replace it with a dumb alternative
+            # mtime = dateutil.parser.parse(entry["mtime"]).strftime("%Y-%m-%d %H:%M:%S")
+            mtime = entry.mtime.strftime("%Y-%m-%d %H:%M:%S")
+            name = os.path.basename(entry.path)
+            if (
+                entry.type == schema.LsNodeType.DIR
+                and entry.path not in treedata.tree_dict
+            ):
+                treedata.Insert(
+                    parent=parent,
+                    key=entry.path,
+                    text=name,
+                    values=["", mtime],
+                    icon=FOLDER_ICON,
+                )
+            elif entry.type == schema.LsNodeType.FILE:
+                size = BytesConverter(entry.size).human
+                treedata.Insert(
+                    parent=parent,
+                    key=entry.path,
+                    text=name,
+                    values=[size, mtime],
+                    icon=FILE_ICON,
+                )
+            elif entry.type == schema.LsNodeType.SYMLINK:
+                treedata.Insert(
+                    parent=parent,
+                    key=entry.path,
+                    text=name,
+                    values=["", mtime],
+                    icon=SYMLINK_ICON,
+                )
+            elif entry.type == schema.LsNodeType.IRREGULAR:
+                treedata.Insert(
+                    parent=parent,
+                    key=entry.path,
+                    text=name,
+                    values=["", mtime],
+                    icon=IRREGULAR_FILE_ICON,
+                )
+        else:
+            entry["path"] = entry["path"].lstrip("/")
+            if os.name == "nt":
+                # On windows, we need to make sure tree keys don't get duplicate because of lower/uppercase
+                # Shown filenames aren't affected by this
+                entry["path"] = entry["path"].lower()
+            parent = os.path.dirname(entry["path"])
 
-        # Make sure we normalize mtime, and remove microseconds
-        # dateutil.parser.parse is *really* cpu hungry, let's replace it with a dumb alternative
-        # mtime = dateutil.parser.parse(entry["mtime"]).strftime("%Y-%m-%d %H:%M:%S")
-        mtime = entry.mtime.strftime("%Y-%m-%d %H:%M:%S")
-        name = os.path.basename(entry.path)
-        if entry.type == schema.LsNodeType.DIR and entry.path not in treedata.tree_dict:
-            treedata.Insert(
-                parent=parent,
-                key=entry.path,
-                text=name,
-                values=["", mtime],
-                icon=FOLDER_ICON,
-            )
-        elif entry.type == schema.LsNodeType.FILE:
-            size = BytesConverter(entry.size).human
-            treedata.Insert(
-                parent=parent,
-                key=entry.path,
-                text=name,
-                values=[size, mtime],
-                icon=FILE_ICON,
-            )
-        elif entry.type == schema.LsNodeType.SYMLINK:
-            treedata.Insert(
-                parent=parent,
-                key=entry.path,
-                text=name,
-                values=["", mtime],
-                icon=SYMLINK_ICON,
-            )
-        elif entry.type == schema.LsNodeType.IRREGULAR:
-            treedata.Insert(
-                parent=parent,
-                key=entry.path,
-                text=name,
-                values=["", mtime],
-                icon=IRREGULAR_FILE_ICON,
-            )
+            # Make sure we normalize mtime, and remove microseconds
+            # dateutil.parser.parse is *really* cpu hungry, let's replace it with a dumb alternative
+            # mtime = dateutil.parser.parse(entry["mtime"]).strftime("%Y-%m-%d %H:%M:%S")
+            mtime = entry["mtime"][0:19]
+            name = os.path.basename(entry["name"])
+            if entry["type"] == "dir" and entry["path"] not in treedata.tree_dict:
+                treedata.Insert(
+                    parent=parent,
+                    key=entry["path"],
+                    text=name,
+                    values=["", mtime],
+                    icon=FOLDER_ICON,
+                )
+            elif entry["type"] == "file":
+                size = BytesConverter(entry["size"]).human
+                treedata.Insert(
+                    parent=parent,
+                    key=entry["path"],
+                    text=name,
+                    values=[size, mtime],
+                    icon=FILE_ICON,
+                )
+            elif entry["type"] == "symlink":
+                treedata.Insert(
+                    parent=parent,
+                    key=entry["path"],
+                    text=name,
+                    values=["", mtime],
+                    icon=SYMLINK_ICON,
+                )
+            elif entry["type"] == "irregular":
+                treedata.Insert(
+                    parent=parent,
+                    key=entry["path"],
+                    text=name,
+                    values=["", mtime],
+                    icon=IRREGULAR_FILE_ICON,
+                )
 
         # Since the thread is heavily CPU bound, let's add a minimal
         # arbitrary sleep time to let GUI update
