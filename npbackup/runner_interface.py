@@ -19,6 +19,7 @@ try:
     import msgspec.json
 
     HAVE_MSGSPEC = True
+    json = None  # linter E0601 fix
 except ImportError:
     import json
 
@@ -81,7 +82,5 @@ def entrypoint(*args, **kwargs):
         if HAVE_MSGSPEC:
             print(msgspec.json.encode(result))
         else:
-            # pylint: disable=E0601 (used-before-assignment)
             print(json.dumps(result, default=serialize_datetime))
-
         sys.exit(0)
