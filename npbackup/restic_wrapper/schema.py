@@ -17,7 +17,7 @@ try:
     from msgspec import Struct
     from enum import StrEnum
 
-    MSGSPEC = True
+    HAVE_MSGSPEC = True
 except ImportError:
 
     class Struct:
@@ -29,7 +29,7 @@ except ImportError:
     class StrEnum:
         pass
 
-    MSGSPEC = False
+    HAVE_MSGSPEC = False
 
 
 class LsNodeType(StrEnum):

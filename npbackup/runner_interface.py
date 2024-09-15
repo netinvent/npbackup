@@ -18,11 +18,11 @@ from logging import getLogger
 try:
     import msgspec.json
 
-    MSGSPEC = True
+    HAVE_MSGSPEC = True
 except ImportError:
     import json
 
-    MSGSPEC = False
+    HAVE_MSGSPEC = False
 import datetime
 from npbackup.core.runner import NPBackupRunner
 
@@ -78,9 +78,10 @@ def entrypoint(*args, **kwargs):
         else:
             logger.error(f"Operation finished")
     else:
-        if MSGSPEC:
+        if HAVE_MSGSPEC:
             print(msgspec.json.encode(result))
         else:
+            # pylint: disable=E0601 (used-before-assignment)
             print(json.dumps(result, default=serialize_datetime))
 
         sys.exit(0)

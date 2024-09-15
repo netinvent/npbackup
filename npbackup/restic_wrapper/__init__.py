@@ -30,12 +30,12 @@ from npbackup.restic_wrapper import schema
 try:
     import msgspec
 
-    MSGSPEC = True
+    HAVE_MSGSPEC = True
 except ImportError:
     # We may not have msgspec on Python 3.7
     import json
 
-    MSGSPEC = False
+    HAVE_MSGSPEC = False
 
 logger = getLogger()
 
@@ -682,7 +682,7 @@ class ResticRunner:
             }
             if result:
                 if output:
-                    if MSGSPEC:
+                    if HAVE_MSGSPEC:
                         decoder = msgspec.json.Decoder()
                         ls_decoder = msgspec.json.Decoder(schema.LsNode)
                     is_first_line = True
@@ -690,7 +690,7 @@ class ResticRunner:
                     for line in output.split("\n"):
                         if not line:
                             continue
-                        if MSGSPEC:
+                        if HAVE_MSGSPEC:
                             try:
                                 if (
                                     not is_first_line
@@ -710,6 +710,7 @@ class ResticRunner:
                                 js["result"] = False
                         else:
                             try:
+                                # pylint: disable=E0601 (used-before-assignment)
                                 js["output"].append(json.loads(line))
                             except json.JSONDecodeError as exc:
                                 msg = f"JSON decode error: {exc} on content '{line}'"
@@ -728,7 +729,7 @@ class ResticRunner:
                     js["reason"] = msg
                     self.write_logs(msg, level="error")
                 if output:
-                    if MSGSPEC:
+                    if HAVE_MSGSPEC:
                         try:
                             js["output"] = msgspec.json.decode(output)
                         except msgspec.DecodeError as exc:
@@ -738,6 +739,7 @@ class ResticRunner:
                             js["output"] = {"data": output}
                     else:
                         try:
+                            # pylint: disable=E0601 (used-before-assignment)
                             js["output"] = json.loads(output)
                         except json.JSONDecodeError as exc:
                             msg = f"JSON decode error: {exc} on output '{output}'"
