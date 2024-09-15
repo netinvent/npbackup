@@ -1605,3 +1605,9 @@ class NPBackupRunner:
             js["result"] = group_result
             return js
         return group_result
+
+    def cancel(self):
+        """
+        This is just a shorthand to make sure restic_wrapper receives a cancel signal
+        """
+        self.restic_runner.cancel()

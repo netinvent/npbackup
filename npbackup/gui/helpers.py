@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.helpers"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024061501"
+__build__ = "2024091501"
 
 
 from typing import Tuple
@@ -215,11 +215,17 @@ def gui_thread_runner(
         ],
         [
             sg.Button(
+                _t("generic.cancel"),
+                key="--CANCEL--",
+                button_color=(TXT_COLOR_LDR, BG_COLOR_LDR),
+                disabled=False,
+            ),
+            sg.Button(
                 _t("generic.close"),
                 key="--EXIT--",
                 button_color=(TXT_COLOR_LDR, BG_COLOR_LDR),
                 disabled=True,
-            )
+            ),
         ],
     ]
 
@@ -271,6 +277,10 @@ def gui_thread_runner(
         event, _ = progress_window.read(0.000000001)
         if event == "--EXPAND--":
             _upgrade_from_compact_view()
+        if event == "--CANCEL--":
+            logger.info("User cancelled operation")
+            runner.cancel()
+            progress_window["--CANCEL--"].Update(disabled=True)
         # Read stdout queue
         if read_stdout_queue:
             try:

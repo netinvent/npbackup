@@ -83,9 +83,9 @@ class ResticRunner:
         self._additional_parameters = None
         self._environment_variables = {}
 
-        self._stop_on = (
-            None  # Function which will make executor abort if result is True
-        )
+        # Function which will make executor abort if result is True
+        self._stop_on = None
+
         # Internal value to check whether executor is running, accessed via self.executor_running property
         self._executor_running = False
 
@@ -143,14 +143,6 @@ class ResticRunner:
 
         for env_variable in self.environment_variables.keys():
             os.environ[env_variable] = "__ooOO(° °)OOoo__"
-
-    @property
-    def stop_on(self) -> Callable:
-        return self._stop_on
-
-    @stop_on.setter
-    def stop_on(self, fn: Callable) -> None:
-        self._stop_on = fn
 
     @property
     def stdout(self) -> Optional[Union[int, str, Callable, queue.Queue]]:
@@ -333,7 +325,7 @@ class ResticRunner:
             stderr=self.stderr if not no_output_queues and method == "poller" else None,
             no_close_queues=True,
             valid_exit_codes=errors_allowed,
-            stop_on=self.stop_on,
+            stop_on=self.is_cancelled,
             on_exit=self.on_exit,
             method=method,
             # Live output is only useful in CLI non json mode
@@ -717,7 +709,7 @@ class ResticRunner:
                 if output:
                     try:
                         js["output"] = msgspec.json.decode(output)
-                    except msgspec.DecodeError:
+                    except msgspec.DecodeError as exc:
                         msg = f"JSON decode error: {exc} on output '{output}'"
                         self.write_logs(msg, level="error")
                         js["extended_info"] = msg
@@ -1294,3 +1286,12 @@ class ResticRunner:
             if self.json_output:
                 return self.convert_to_json_output(None, None, **kwargs)
             return None, None
+
+    def cancel(self):
+        """
+        Makes executor stop on next tick
+        """
+        self._stop_on = True
+
+    def is_cancelled(self):
+        return self._stop_on
