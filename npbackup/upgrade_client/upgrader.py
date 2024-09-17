@@ -148,9 +148,7 @@ def auto_upgrader(
     if IS_LEGACY:
         platform_and_arch += "-legacy"
     try:
-        host_id = "{}/{}/{}".format(
-            auto_upgrade_host_identity, npbackup_version, group
-        )
+        host_id = "{}/{}/{}".format(auto_upgrade_host_identity, npbackup_version, group)
         id_record = "{}/{}".format(platform_and_arch, host_id)
     except TypeError:
         id_record = platform_and_arch

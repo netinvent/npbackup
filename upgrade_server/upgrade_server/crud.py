@@ -86,7 +86,9 @@ def get_current_version() -> Optional[CurrentVersion]:
         logger.error("Trace:", exc_info=True)
 
 
-def get_file(file: FileGet, content: bool = False) -> Optional[Union[FileSend, bytes, dict]]:
+def get_file(
+    file: FileGet, content: bool = False
+) -> Optional[Union[FileSend, bytes, dict]]:
     possible_filename = "npbackup.zip"
     path = os.path.join(
         config_dict["upgrades"]["data_root"],
@@ -104,7 +106,7 @@ def get_file(file: FileGet, content: bool = False) -> Optional[Union[FileSend, b
             "filename": None,
             "file_length": 0,
         }
-    
+
     with open(path, "rb") as fh:
         bytes = fh.read()
         if content:
