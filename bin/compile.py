@@ -33,6 +33,7 @@ from command_runner import command_runner
 from ofunctions.platform import python_arch, get_os
 if os.name == "nt":
     from npbackup.windows.sign_windows import sign
+from npbackup.path_helper import IS_LEGACY
 
 AUDIENCES = ["public", "private"]
 BUILD_TYPES = ["cli", "gui", "viewer"]
@@ -365,6 +366,8 @@ def create_archive(
         archive_extension = "zip"
     else:
         archive_extension = "tar.gz"
+    if IS_LEGACY:
+        arch = f"{arch}-legacy"
     target_archive = f"{output_dir}/npbackup-{platform}-{arch}-{build_type}-{audience}.{archive_extension}"
     if os.path.isfile(target_archive):
         os.remove(target_archive)
