@@ -18,12 +18,13 @@ import psutil
 from ofunctions.platform import python_arch, get_os_identifier
 from npbackup.configuration import IS_PRIV_BUILD
 from npbackup.core.nuitka_helper import IS_COMPILED
+from npbackup.path_helper import IS_LEGACY
 
 try:
     CURRENT_USER = psutil.Process().username()
 except Exception:
     CURRENT_USER = "unknown"
-version_string = f"{__intname__} v{__version__}-{'priv' if IS_PRIV_BUILD else 'pub'}-{sys.version_info[0]}.{sys.version_info[1]}-{python_arch()} {__build__} - {__copyright__} running as {CURRENT_USER}"
+version_string = f"{__intname__} v{__version__}-{'priv' if IS_PRIV_BUILD else 'pub'}-{sys.version_info[0]}.{sys.version_info[1]}-{python_arch()}{'-legacy' if IS_LEGACY else ''} {__build__} - {__copyright__} running as {CURRENT_USER}"
 version_dict = {
     "name": __intname__,
     "version": __version__,
