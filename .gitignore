@@ -159,3 +159,4 @@ NOUSE_private*
 BUILDS
 BUILDS-PRIVATE
 *.conf
+*.log?
