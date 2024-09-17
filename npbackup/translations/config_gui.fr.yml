@@ -75,7 +75,7 @@ fr:
   auto_upgrade_server_password: Mot de passe serveur
   auto_upgrade_interval: Intervalle de mise à niveau
   auto_upgrade_launch: Lancer une mise à niveau
-  auto_ugprade_will_quit: Attnetion, la procédure de mise à niveau va quitter ce programme sans notification. Vous devrez attendre 5 minutes pour laisser la procédure se terminer avant de relancer le programme
+  auto_upgrade_will_quit: Attnetion, la procédure de mise à niveau va quitter ce programme sans notification. Vous devrez attendre 5 minutes pour laisser la procédure se terminer avant de relancer le programme
   auto_upgrade_failed: Procédure de mise à niveau échouée, veuillez consulter les journaux pour plus de détails
   auto_upgrade_disabled: Mise à niveau automatique désactivée ou serveur injoignable
 

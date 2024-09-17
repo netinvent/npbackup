@@ -111,7 +111,7 @@ def about_gui(
             break
         if event == "autoupgrade":
             result = sg.PopupOKCancel(
-                _t("config_gui.auto_ugprade_will_quit"), keep_on_top=True
+                _t("config_gui.auto_upgrade_will_quit"), keep_on_top=True
             )
             if result == "OK":
                 logger.info("Running GUI initiated upgrade")
