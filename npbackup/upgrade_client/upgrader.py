@@ -17,6 +17,7 @@ from logging import getLogger
 import hashlib
 import tempfile
 import atexit
+from datetime import datetime
 from packaging import version
 from ofunctions.platform import get_os, python_arch
 from ofunctions.process import kill_childs
@@ -154,7 +155,6 @@ def auto_upgrader(
         id_record = platform_and_arch
 
     file_info = requestor.data_model("upgrades", id_record=id_record)
-    print(file_info)
     try:
         sha256sum = file_info["sha256sum"]
     except (KeyError, TypeError):
@@ -178,9 +178,14 @@ def auto_upgrader(
         fh.write(file_data)
     logger.info("Upgrade file written to %s", downloaded_archive)
 
-    log_file = os.path.join(tempfile.gettempdir(), file_info["filename"] + ".log")
+    upgrade_date = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+    log_file = os.path.join(
+        tempfile.gettempdir(), f"npbackup_upgrader.{upgrade_date}.log"
+    )
     logger.info("Logging upgrade to %s", log_file)
 
+    # We'll extract the downloaded archive to a temporary directory which should contain the base directory
+    # eg /tmp/npbackup_upgrade_dist/npbackup-cli
     upgrade_dist = os.path.join(tempfile.gettempdir(), "npbackup_upgrade_dist")
     try:
         # File should contain a single directory 'npbackup-cli' or 'npbackup-gui' with all files in it
@@ -188,18 +193,29 @@ def auto_upgrader(
     except Exception as exc:
         logger.critical(f"Upgrade failed. Cannot uncompress downloaded dist: {exc}")
         return False
+    try:
+        first_directory = os.listdir(upgrade_dist)[0]
+        upgrade_dist = os.path.join(
+            tempfile.gettempdir(), "npbackup_upgrade_dist", first_directory
+        )
+        logger.debug(f"Upgrade dist dir: {upgrade_dist}")
+    except Exception as exc:
+        logger.critical(
+            f"Upgrade failed. Upgrade directory does not contain a subdir: {exc}"
+        )
+        return False
 
     backup_dist = os.path.join(tempfile.gettempdir(), "npbackup_backup_dist")
 
     # Inplace upgrade script, gets executed after main program has exited
-    if os.name == "not":
+    if os.name == "nt":
         cmd = (
             f'echo "Launching upgrade" >> {log_file} 2>&1 && '
             f'echo "Moving earlier dist from {CURRENT_DIR} to {backup_dist}" >> {log_file} 2>&1 && '
             f'move /Y "{CURRENT_DIR}" "{backup_dist}" >> {log_file} 2>&1 && '
             f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> {log_file} 2>&1 && '
             f'move /Y "{upgrade_dist}" "{CURRENT_DIR}" >> {log_file} 2>&1 && '
-            f'echo "Loading new executable" >> {log_file} 2>&1 && '
+            f'echo "Loading new executable {CURRENT_EXECUTABLE} --version" >> {log_file} 2>&1 && '
             f'"{CURRENT_EXECUTABLE}" --version >> {log_file} 2>&1 & '
             f"IF %ERRORLEVEL% NEQ 0 ( "
             f'echo "New executable failed. Rolling back" >> {log_file} 2>&1 && '
@@ -222,7 +238,7 @@ def auto_upgrader(
             f'mv -f "{upgrade_dist}" "{CURRENT_DIR}" >> {log_file} 2>&1 && '
             f'echo "Adding executable bit to new executable" >> {log_file} 2>&1 && '
             f'chmod +x {CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && '
-            f'echo "Loading new executable" >> {log_file} 2>&1 && '
+            f'echo "Loading new executable {CURRENT_EXECUTABLE} --version" >> {log_file} 2>&1 && '
             f'"{CURRENT_EXECUTABLE}" --version >> {log_file} 2>&1; '
             f'"if [ $? -ne 0 ]; then '
             f'echo "New executable failed. Rolling back" >> {log_file} 2>&1 && '
