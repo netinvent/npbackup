@@ -96,7 +96,15 @@ def get_file(file: FileGet, content: bool = False) -> Optional[Union[FileSend, b
     )
     logger.info("Searching for %s", path)
     if not os.path.isfile(path):
-        return None
+        logger.info(f"No upgrade file found in {path}")
+        return FileSend(
+            arch=file.arch.value,
+            platform=file.platform.value,
+            sha256sum=None,
+            filename=None,
+            file_length=0,
+        )
+    
     with open(path, "rb") as fh:
         bytes = fh.read()
         if content:

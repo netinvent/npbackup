@@ -159,6 +159,9 @@ def auto_upgrader(
     except (KeyError, TypeError):
         logger.error("Cannot get file description")
         return False
+    if sha256sum is None:
+        logger.info("No upgrade file found for me")
+        return False
 
     file_data = requestor.requestor("download/" + id_record, raw=True)
     if not file_data:
