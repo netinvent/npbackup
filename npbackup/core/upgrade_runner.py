@@ -15,6 +15,7 @@ from typing import Optional
 import tempfile
 from logging import getLogger
 from npbackup.upgrade_client.upgrader import auto_upgrader, _check_new_version
+import npbackup.configuration
 from npbackup.__version__ import __version__ as npbackup_version
 from npbackup.path_helper import CURRENT_DIR
 
@@ -107,10 +108,12 @@ def run_upgrade(full_config: dict, ignore_errors: bool = False) -> bool:
         logger.warning(f"Missing auto upgrade info, cannot launch auto upgrade")
         return False
 
-    auto_upgrade_host_identity = full_config.g(
+
+    evaluated_full_config = npbackup.configuration.evaluate_variables(full_config, full_config)
+    auto_upgrade_host_identity = evaluated_full_config.g(
         "global_options.auto_upgrade_host_identity"
     )
-    group = full_config.g("global_options.auto_upgrade_group")
+    group = evaluated_full_config.g("global_options.auto_upgrade_group")
 
     result = auto_upgrader(
         upgrade_url=upgrade_url,
