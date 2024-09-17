@@ -7,7 +7,7 @@ __intname__ = "npbackup.upgrade_client.upgrader"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2024090601"
+__build__ = "2024091701"
 
 
 import os
@@ -22,7 +22,7 @@ from ofunctions.platform import get_os, python_arch
 from ofunctions.process import kill_childs
 from ofunctions.requestor import Requestor
 from command_runner import deferred_command
-from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
+from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE, IS_LEGACY
 from npbackup.core.nuitka_helper import IS_COMPILED
 from npbackup.__version__ import __version__ as npbackup_version
 
@@ -124,7 +124,7 @@ def auto_upgrader(
     We must check that we run a compiled binary first
     We assume that we run a onefile nuitka binary
     """
-    if not IS_COMPILED and False:  # WIP
+    if not IS_COMPILED:
         logger.info(
             "Auto upgrade will only upgrade compiled verions. Please use 'pip install --upgrade npbackup' instead"
         )
@@ -143,7 +143,7 @@ def auto_upgrader(
     requestor.create_session(authenticated=True)
 
     # We'll check python_arch instead of os_arch since we build 32 bit python executables for compat reasons
-    platform_and_arch = "{}/{}".format(get_os(), python_arch()).lower()
+    platform_and_arch = "{}/{}".format(get_os(), python_arch()).lower() + "-legacy" if IS_LEGACY else ""
 
     try:
         host_id = "{}/{}/{}".format(
