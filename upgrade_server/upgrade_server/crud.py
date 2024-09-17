@@ -7,7 +7,7 @@ __intname__ = "npbackup.upgrade_server.crud"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023020601"
+__build__ = "2024091701"
 
 
 import os
@@ -66,8 +66,9 @@ def store_host_info(destination: str, host_id: dict) -> None:
         )
         with open(destination, "a", encoding="utf-8") as fpw:
             fpw.write(data)
-    except OSError:
+    except OSError as exc:
         logger.error("Cannot write statistics file")
+        logger.error("Trace:", exc_info=True)
 
 
 def get_current_version() -> Optional[CurrentVersion]:
@@ -77,16 +78,16 @@ def get_current_version() -> Optional[CurrentVersion]:
             with open(path, "r", encoding="utf-8") as fh:
                 ver = fh.readline().strip()
                 return CurrentVersion(version=ver)
-    except OSError:
+    except OSError as exc:
         logger.error("Cannot get current version")
-    except Exception:
+        logger.error("Trace:", exc_info=True)
+    except Exception as exc:
         logger.error("Version seems to be bogus in VERSION file")
+        logger.error("Trace:", exc_info=True)
 
 
 def get_file(file: FileGet, content: bool = False) -> Optional[Union[FileSend, bytes]]:
-    possible_filename = "npbackup{}".format(
-        ".exe" if file.platform.value == "windows" else ""
-    )
+    possible_filename = "npbackup.zip"
     path = os.path.join(
         config_dict["upgrades"]["data_root"],
         file.platform.value,
