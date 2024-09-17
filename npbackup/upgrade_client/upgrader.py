@@ -139,6 +139,8 @@ def auto_upgrader(
             os.environ["NPBACKUP_UPGRADE_STATE"] = "1"
         return False
     requestor = Requestor(upgrade_url, username, password)
+    requestor.app_name = "npbackup" + npbackup_version
+    requestor.user_agent = __intname__
     requestor.create_session(authenticated=True)
 
     # We'll check python_arch instead of os_arch since we build 32 bit python executables for compat reasons
@@ -154,14 +156,15 @@ def auto_upgrader(
         id_record = platform_and_arch
 
     file_info = requestor.data_model("upgrades", id_record=id_record)
+    print(file_info)
     try:
         sha256sum = file_info["sha256sum"]
     except (KeyError, TypeError):
         logger.error("Cannot get file description")
         return False
     if sha256sum is None:
-        logger.info("No upgrade file found for me")
-        return False
+        logger.info("No upgrade file found has been found for me :/")
+        return True
 
     file_data = requestor.requestor("download/" + id_record, raw=True)
     if not file_data:
