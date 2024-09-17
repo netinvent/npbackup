@@ -86,7 +86,7 @@ def get_current_version() -> Optional[CurrentVersion]:
         logger.error("Trace:", exc_info=True)
 
 
-def get_file(file: FileGet, content: bool = False) -> Optional[Union[FileSend, bytes]]:
+def get_file(file: FileGet, content: bool = False) -> Optional[Union[FileSend, bytes, dict]]:
     possible_filename = "npbackup.zip"
     path = os.path.join(
         config_dict["upgrades"]["data_root"],
@@ -97,13 +97,13 @@ def get_file(file: FileGet, content: bool = False) -> Optional[Union[FileSend, b
     logger.info("Searching for %s", path)
     if not os.path.isfile(path):
         logger.info(f"No upgrade file found in {path}")
-        return FileSend(
-            arch=file.arch.value,
-            platform=file.platform.value,
-            sha256sum=None,
-            filename=None,
-            file_length=0,
-        )
+        return {
+            "arch": file.arch.value,
+            "platform": file.platform.value,
+            "sha256sum": None,
+            "filename": None,
+            "file_length": 0,
+        }
     
     with open(path, "rb") as fh:
         bytes = fh.read()

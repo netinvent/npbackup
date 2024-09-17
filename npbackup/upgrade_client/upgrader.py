@@ -114,7 +114,6 @@ def auto_upgrader(
     username: str,
     password: str,
     auto_upgrade_host_identity: str = None,
-    installed_version: str = None,
     group: str = None,
     ignore_errors: bool = False,
 ) -> bool:
@@ -143,11 +142,12 @@ def auto_upgrader(
     requestor.create_session(authenticated=True)
 
     # We'll check python_arch instead of os_arch since we build 32 bit python executables for compat reasons
-    platform_and_arch = "{}/{}".format(get_os(), python_arch()).lower() + "-legacy" if IS_LEGACY else ""
-
+    platform_and_arch = "{}/{}".format(get_os(), python_arch()).lower()
+    if IS_LEGACY:
+        platform_and_arch += "-legacy"
     try:
         host_id = "{}/{}/{}".format(
-            auto_upgrade_host_identity, installed_version, group
+            auto_upgrade_host_identity, npbackup_version, group
         )
         id_record = "{}/{}".format(platform_and_arch, host_id)
     except TypeError:

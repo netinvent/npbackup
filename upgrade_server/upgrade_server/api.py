@@ -7,11 +7,11 @@ __intname__ = "npbackup.upgrade_server.api"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023030301"
+__build__ = "2024091701"
 __appname__ = "npbackup.upgrader"
 
 
-from typing import Literal, Optional
+from typing import Optional, Union
 import logging
 import secrets
 from argparse import ArgumentParser
@@ -124,20 +124,20 @@ async def current_version(
         )
 
 
-@app.get("/upgrades/{platform}/{arch}", response_model=FileSend, status_code=200)
+@app.get("/upgrades/{platform}/{arch}", response_model=Union[FileSend, dict], status_code=200)
 @app.get(
     "/upgrades/{platform}/{arch}/{auto_upgrade_host_identity}",
-    response_model=FileSend,
+    response_model=Union[FileSend, dict],
     status_code=200,
 )
 @app.get(
     "/upgrades/{platform}/{arch}/{auto_upgrade_host_identity}/{installed_version}",
-    response_model=FileSend,
+    response_model=Union[FileSend, dict],
     status_code=200,
 )
 @app.get(
     "/upgrades/{platform}/{arch}/{auto_upgrade_host_identity}/{installed_version}/{group}",
-    response_model=FileSend,
+    response_model=Union[FileSend, dict],
     status_code=200,
 )
 async def upgrades(

@@ -3,12 +3,12 @@
 #
 # This file is part of npbackup
 
-__intname__ = "npbackup.upgrade_server.upgrade_server"
+__appname__ = "npbackup_upgrade_server"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023020601"
-__version__ = "1.4.0"
+__build__ = "2024091701"
+__version__ = "3.0.0"
 
 
 import sys
@@ -18,13 +18,16 @@ from argparse import ArgumentParser
 from upgrade_server import configuration
 from ofunctions.logger_utils import logger_get_logger
 import upgrade_server.api
+from upgrade_server.__debug__ import _DEBUG
+
+logger = logger_get_logger(__appname__ + ".log", debug=_DEBUG)
 
 
 if __name__ == "__main__":
     _DEV = os.environ.get("_DEV", False)
 
     parser = ArgumentParser(
-        prog="{} {} - {}".format(__intname__, __copyright__, __license__),
+        prog="{} {} - {}".format(__appname__, __copyright__, __license__),
         description="""NPBackup Upgrade server""",
     )
 
@@ -50,6 +53,11 @@ if __name__ == "__main__":
         config_dict = configuration.load_config(args.config_file)
     else:
         config_dict = configuration.load_config()
+
+    try:
+        logger = logger_get_logger(config_dict["http_server"]["log_file"], debug=_DEBUG)
+    except (AttributeError, KeyError, IndexError, TypeError):
+        pass
 
     try:
         listen = config_dict["http_server"]["listen"]
