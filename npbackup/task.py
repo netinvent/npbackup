@@ -180,7 +180,7 @@ def create_scheduled_task_windows(
             <Enabled>true</Enabled>
             </TimeTrigger>"""
     elif hour is not None and minute is not None:
-        task_args = f'{task_args}-c "{config_file}" --backup --force --run-as-cli'
+        task_args = f'{task_args}-c "{config_file}" --{type} --force --run-as-cli'
         start_date = (
             datetime.datetime.now()
             .replace(microsecond=0, hour=hour, minute=minute, second=0)
