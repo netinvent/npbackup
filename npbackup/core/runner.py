@@ -1422,10 +1422,13 @@ class NPBackupRunner:
                     prune_result = self.prune(**kwargs)
                     result = prune_result
                 else:
+                    self.write_logs("Forget failed. Won't continue housekeeping on repo", level="error")
                     result = forget_result
             else:
+                self.write_logs("Check failed. Won't continue housekeeping on repo", level="error")
                 result = check_result
         else:
+            self.write_logs("Unlock failed. Won't continue housekeeping in repo", level="error")
             result = unlock_result
 
         return self.convert_to_json_output(result)
