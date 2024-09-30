@@ -24,19 +24,12 @@ from npbackup.__version__ import IS_COMPILED
 logger = getLogger()
 
 
-def scheduled_task_exists(
-    config_file: str,
-    type: str,
-    object: str
-):
+def scheduled_task_exists(config_file: str, type: str, object: str):
     if os.name == "nt":
-        return _scheduled_task_exists_windows(
-            config_file, type, object
-        )
+        return _scheduled_task_exists_windows(config_file, type, object)
     else:
-        return _scheduled_task_exists_unix(
-            config_file, type, object
-        )
+        return _scheduled_task_exists_unix(config_file, type, object)
+
 
 def get_scheduled_tasks(
     config_file: str,
@@ -47,9 +40,11 @@ def get_scheduled_tasks(
         return _get_scheduled_tasks_windows(config_file, type, repo_names)
     else:
         return _get_scheduled_tasks_unix(config_file, type, repo_names)
-    
 
-def _get_scheduled_tasks_windows(config_file: str, type: str, repo_names: List[str] = None):
+
+def _get_scheduled_tasks_windows(
+    config_file: str, type: str, repo_names: List[str] = None
+):
     task_name = _get_scheduled_task_name_windows(config_file, type, repo_names)
     exit_code, output = command_runner(
         'schtasks /QUERY /TN "{}" /FO LIST'.format(task_name),
@@ -62,12 +57,7 @@ def _get_scheduled_tasks_windows(config_file: str, type: str, repo_names: List[s
     return output
 
 
-
-def _scheduled_task_exists_unix(
-    config_file: str,
-    type: str,
-    object_args: str
-) -> bool:
+def _scheduled_task_exists_unix(config_file: str, type: str, object_args: str) -> bool:
     cron_file = "/etc/cron.d/npbackup"
     try:
         with open(cron_file, "r", encoding="utf-8") as file_handle:
@@ -151,11 +141,25 @@ def create_scheduled_task(
 
     if os.name == "nt":
         return create_scheduled_task_windows(
-            config_file, type, CURRENT_EXECUTABLE, subject, object_args, interval_minutes, hour, minute
+            config_file,
+            type,
+            CURRENT_EXECUTABLE,
+            subject,
+            object_args,
+            interval_minutes,
+            hour,
+            minute,
         )
     else:
         return create_scheduled_task_unix(
-            config_file, type, CURRENT_EXECUTABLE, subject, object_args, interval_minutes, hour, minute
+            config_file,
+            type,
+            CURRENT_EXECUTABLE,
+            subject,
+            object_args,
+            interval_minutes,
+            hour,
+            minute,
         )
 
 
@@ -225,17 +229,11 @@ def create_scheduled_task_unix(
     return True
 
 
-def _get_scheduled_task_name_windows(
-    config_file: str,
-    type: str,
-    subject: str
-) -> str:
-    return f"{PROGRAM_NAME} - {type.capitalize()} {config_file} {subject}"      
+def _get_scheduled_task_name_windows(config_file: str, type: str, subject: str) -> str:
+    return f"{PROGRAM_NAME} - {type.capitalize()} {config_file} {subject}"
 
 
-def _scheduled_task_exists_windows(
-    task_name
-) -> bool:
+def _scheduled_task_exists_windows(task_name) -> bool:
     exit_code, _ = command_runner(
         'schtasks /TN "{}"'.format(task_name),
         windows_no_window=True,
@@ -278,7 +276,9 @@ def create_scheduled_task_windows(
             <Enabled>true</Enabled>
             </TimeTrigger>"""
     elif hour is not None and minute is not None:
-        task_args = f'{task_args}-c "{config_file}" --{type} --force --run-as-cli{object_args}'
+        task_args = (
+            f'{task_args}-c "{config_file}" --{type} --force --run-as-cli{object_args}'
+        )
         start_date = (
             datetime.datetime.now()
             .replace(microsecond=0, hour=hour, minute=minute, second=0)

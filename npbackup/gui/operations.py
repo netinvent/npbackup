@@ -36,6 +36,7 @@ logger = getLogger(__intname__)
 
 gui_object = namedtuple("GuiOjbect", ["type", "name", "group", "backend", "uri"])
 
+
 def gui_update_state(window, full_config: dict, unencrypted: str = None) -> list:
     repo_and_group_list = []
     try:
@@ -49,7 +50,9 @@ def gui_update_state(window, full_config: dict, unencrypted: str = None) -> list
                 repo_group = repo_config.g("repo_group")
                 if not unencrypted and unencrypted != repo_name:
                     repo_uri = ENCRYPTED_DATA_PLACEHOLDER
-                repo_and_group_list.append(gui_object("repo", repo_name, repo_group, backend_type, repo_uri))
+                repo_and_group_list.append(
+                    gui_object("repo", repo_name, repo_group, backend_type, repo_uri)
+                )
             else:
                 logger.warning("Incomplete URI/password for repo {}".format(repo_name))
         for group_name in get_group_list(full_config):
@@ -66,7 +69,6 @@ def task_scheduler(repos: list):
     """
     task = namedtuple("Tasks", ["task", "hour", "minute", "day", "month", "weekday"])
 
-
     def _get_current_tasks():
         """
         mock tasks
@@ -75,14 +77,13 @@ def task_scheduler(repos: list):
             task("housekeeping", 0, 0, "*", "*", "*"),
             task("check", 0, 0, "*", "*", "*"),
         ]
-    
+
     def _update_task_list(window):
         tasks = _get_current_tasks()
         task_list = []
         for task in tasks:
             task_list.append(task)
         window["-TASKS-"].update(values=task_list)
-
 
     actions = [
         "housekeeping",
@@ -111,18 +112,24 @@ def task_scheduler(repos: list):
             sg.Text(_t("operations_gui.select_action")),
         ],
         [
-            sg.Combo(values=actions, default_value="housekeeping", key="-ACTION-", size=(20, 1)),
-        ]
+            sg.Combo(
+                values=actions,
+                default_value="housekeeping",
+                key="-ACTION-",
+                size=(20, 1),
+            ),
+        ],
     ]
 
-    window = sg.Window(layout=layout, title=_t("operations_gui.task_scheduler"), finalize=True)
+    window = sg.Window(
+        layout=layout, title=_t("operations_gui.task_scheduler"), finalize=True
+    )
     _update_task_list(window)
     while True:
         event, values = window.read()
 
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--EXIT--"):
             break
-
 
 
 def operations_gui(full_config: dict) -> dict:
@@ -132,7 +139,10 @@ def operations_gui(full_config: dict) -> dict:
 
     def _get_repo_list(selected_rows):
         if not values["repo-and-group-list"]:
-            if sg.popup_yes_no(_t("operations_gui.no_repo_selected"), keep_on_top=True) == "No":
+            if (
+                sg.popup_yes_no(_t("operations_gui.no_repo_selected"), keep_on_top=True)
+                == "No"
+            ):
                 return False
             repos = get_repo_list(full_config)
         else:
@@ -197,7 +207,7 @@ def operations_gui(full_config: dict) -> dict:
                             _t("operations_gui.task_scheduler"),
                             key="--TASK-SCHEDULER--",
                             size=(45, 1),
-                        )
+                        ),
                     ],
                     [
                         sg.Button(
@@ -257,7 +267,10 @@ def operations_gui(full_config: dict) -> dict:
                     ],
                     [
                         sg.Button(
-                            _t("operations_gui.unlock"), key="--UNLOCK--", size=(45, 1), visible=False
+                            _t("operations_gui.unlock"),
+                            key="--UNLOCK--",
+                            size=(45, 1),
+                            visible=False,
                         ),
                         sg.Button(
                             _t("operations_gui.recover"),
