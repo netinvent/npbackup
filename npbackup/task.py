@@ -10,6 +10,7 @@ __license__ = "GPL-3.0-only"
 __build__ = "2024090101"
 
 
+from typing import List
 import sys
 import os
 from logging import getLogger
@@ -21,6 +22,63 @@ from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
 from npbackup.__version__ import IS_COMPILED
 
 logger = getLogger()
+
+
+def scheduled_task_exists(
+    config_file: str,
+    type: str,
+    object: str
+):
+    if os.name == "nt":
+        return _scheduled_task_exists_windows(
+            config_file, type, object
+        )
+    else:
+        return _scheduled_task_exists_unix(
+            config_file, type, object
+        )
+
+def get_scheduled_tasks(
+    config_file: str,
+    type: str,
+    repo_names: List[str] = None,
+):
+    if os.name == "nt":
+        return _get_scheduled_tasks_windows(config_file, type, repo_names)
+    else:
+        return _get_scheduled_tasks_unix(config_file, type, repo_names)
+    
+
+def _get_scheduled_tasks_windows(config_file: str, type: str, repo_names: List[str] = None):
+    task_name = _get_scheduled_task_name_windows(config_file, type, repo_names)
+    exit_code, output = command_runner(
+        'schtasks /QUERY /TN "{}" /FO LIST'.format(task_name),
+        windows_no_window=True,
+        encoding="cp437",
+    )
+    if exit_code != 0:
+        logger.error("Could not get task info: {}".format(output))
+        return False
+    return output
+
+
+
+def _scheduled_task_exists_unix(
+    config_file: str,
+    type: str,
+    object_args: str
+) -> bool:
+    cron_file = "/etc/cron.d/npbackup"
+    try:
+        with open(cron_file, "r", encoding="utf-8") as file_handle:
+            current_crontab = file_handle.readlines()
+            for line in current_crontab:
+                if f"--{type}" in line and config_file in line and object_args in line:
+                    logger.info(f"Found existing {type} task")
+                    return True
+    except OSError as exc:
+        logger.error("Could not read file {}: {}".format(cron_file, exc))
+    return False
 
 
 def create_scheduled_task(
@@ -101,9 +159,6 @@ def create_scheduled_task(
         )
 
 
-def 
-
-
 def create_scheduled_task_unix(
     config_file: str,
     type: str,
@@ -145,7 +200,7 @@ def create_scheduled_task_unix(
         with open(cron_file, "r", encoding="utf-8") as file_handle:
             current_crontab = file_handle.readlines()
             for line in current_crontab:
-                if f"--{type}" in line and {config_file} in line:
+                if f"--{type}" in line and config_file in line and object_args in line:
                     logger.info(f"Replacing existing {type} task")
                     if replaced:
                         logger.info(f"Skipping duplicate {type} task")
@@ -170,15 +225,15 @@ def create_scheduled_task_unix(
     return True
 
 
-def get_scheduled_task_name_windows(
-     config_file: str,
+def _get_scheduled_task_name_windows(
+    config_file: str,
     type: str,
     subject: str
 ) -> str:
     return f"{PROGRAM_NAME} - {type.capitalize()} {config_file} {subject}"      
 
 
-def scheduled_task_exists_windows(
+def _scheduled_task_exists_windows(
     task_name
 ) -> bool:
     exit_code, _ = command_runner(
@@ -208,7 +263,7 @@ def create_scheduled_task_windows(
         task_args = ""
     temp_task_file = os.path.join(tempfile.gettempdir(), "npbackup_task.xml")
 
-    task_name = get_scheduled_task_name_windows(config_file, type, subject)
+    task_name = _get_scheduled_task_name_windows(config_file, type, subject)
 
     if interval_minutes is not None:
         task_args = f'{task_args}-c "{config_file}" --{type} --run-as-cli{object_args}'
