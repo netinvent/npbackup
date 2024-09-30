@@ -50,6 +50,9 @@
   - Added --no-cache option to disable cache for restic operations (neeeded on RO systems)
   - Added CRC32 logging for config files in order to know when a file was modified
   - Missing exclude files will now search in current binary directory for a excludes directory
+  - Splitted releases between legacy and non legacy
+    - Updated legacy tcl8.6.13 to tc8.6.15
+    - Updated legacy Python 3.7 to Python 3.11 (with openssl 3.1.3)
 
   
 
