@@ -7,18 +7,21 @@ __intname__ = "npbackup.gui.operations"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024061601"
+__build__ = "2024093001"
 
 
 import os
 from logging import getLogger
+from collections import namedtuple
 import FreeSimpleGUI as sg
 from npbackup.configuration import (
     get_repo_config,
+    get_repo_list,
     get_group_list,
     get_repos_by_group,
     get_manager_password,
 )
+from npbackup.task import get_scheduled_tasks
 from npbackup.core.i18n_helper import _t
 from npbackup.gui.helpers import get_anon_repo_uri, gui_thread_runner
 from resources.customization import (
@@ -31,8 +34,10 @@ from npbackup.gui.config import ENCRYPTED_DATA_PLACEHOLDER, ask_manager_password
 logger = getLogger(__intname__)
 
 
+gui_object = namedtuple("GuiOjbect", ["type", "name", "group", "backend", "uri"])
+
 def gui_update_state(window, full_config: dict, unencrypted: str = None) -> list:
-    repo_list = []
+    repo_and_group_list = []
     try:
         for repo_name in full_config.g("repos"):
             repo_config, _ = get_repo_config(full_config, repo_name)
@@ -44,75 +49,111 @@ def gui_update_state(window, full_config: dict, unencrypted: str = None) -> list
                 repo_group = repo_config.g("repo_group")
                 if not unencrypted and unencrypted != repo_name:
                     repo_uri = ENCRYPTED_DATA_PLACEHOLDER
-                repo_list.append([repo_name, repo_group, backend_type, repo_uri])
+                repo_and_group_list.append(gui_object("repo", repo_name, repo_group, backend_type, repo_uri))
             else:
                 logger.warning("Incomplete URI/password for repo {}".format(repo_name))
+        for group_name in get_group_list(full_config):
+            repo_and_group_list.append(gui_object("group", group_name, "", "", ""))
     except KeyError:
         logger.info("No operations repos configured")
-    window["repo-list"].update(repo_list)
-    return repo_list
+    window["repo-and-group-list"].update(repo_and_group_list)
+    return repo_and_group_list
+
+
+def task_scheduler(repos: list):
+    """
+    Create tasks for given repo list
+    """
+    task = namedtuple("Tasks", ["task", "hour", "minute", "day", "month", "weekday"])
+
+
+    def _get_current_tasks():
+        """
+        mock tasks
+        """
+        return [
+            task("housekeeping", 0, 0, "*", "*", "*"),
+            task("check", 0, 0, "*", "*", "*"),
+        ]
+    
+    def _update_task_list(window):
+        tasks = _get_current_tasks()
+        task_list = []
+        for task in tasks:
+            task_list.append(task)
+        window["-TASKS-"].update(values=task_list)
+
+
+    actions = [
+        "housekeeping",
+        "check",
+        "repair",
+        "recover",
+        "unlock",
+        "forget",
+        "prune",
+    ]
+
+    layout = [
+        [
+            sg.Text(_t("operations_gui.currently_configured_tasks")),
+        ],
+        [
+            sg.Table(
+                values=[[]],
+                headings=["Task type", "Minute", "Hour", "Day", "Month", "Weekday"],
+                key="-TASKS-",
+                auto_size_columns=True,
+                justification="left",
+            ),
+        ],
+        [
+            sg.Text(_t("operations_gui.select_action")),
+        ],
+        [
+            sg.Combo(values=actions, default_value="housekeeping", key="-ACTION-", size=(20, 1)),
+        ]
+    ]
+
+    window = sg.Window(layout=layout, title=_t("operations_gui.task_scheduler"), finalize=True)
+    _update_task_list(window)
+    while True:
+        event, values = window.read()
+
+        if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--EXIT--"):
+            break
+
 
 
 def operations_gui(full_config: dict) -> dict:
     """
-    Operate on one or multiple repositories
+    Operate on one or multiple repositories, or groups
     """
 
-    def _select_groups():
-        group_list = get_group_list(full_config)
-        selector_layout = [
-            [
-                sg.Table(
-                    values=group_list,
-                    headings=["Group Name"],
-                    key="-GROUP_LIST-",
-                    auto_size_columns=True,
-                    justification="left",
-                    expand_x=True,
-                    expand_y=True,
-                )
-            ],
-            [
-                sg.Push(),
-                sg.Button(_t("generic.cancel"), key="--CANCEL--"),
-                sg.Button(
-                    _t("operations_gui.apply_to_selected_groups"),
-                    key="--SELECTED_GROUPS--",
-                ),
-                sg.Button(_t("operations_gui.apply_to_all"), key="--APPLY_TO_ALL--"),
-            ],
-        ]
-
-        select_group_window = sg.Window("Group", selector_layout)
-        while True:
-            event, values = select_group_window.read()
-            if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--CANCEL--"):
-                result = []
-                break
-            if event == "--SELECTED_GROUPS--":
-                if not values["-GROUP_LIST-"]:
-                    sg.Popup(_t("operations_gui.no_groups_selected"))
-                    continue
-                repo_list = []
-                for group_index in values["-GROUP_LIST-"]:
-                    group_name = group_list[group_index]
-                    repo_list += get_repos_by_group(full_config, group_name)
-                result = repo_list
-                break
-            if event == "--APPLY_TO_ALL--":
-                result = []
-                for value in complete_repo_list:
-                    result.append(value[0])
-                break
-        select_group_window.close()
-        return result
+    def _get_repo_list(selected_rows):
+        if not values["repo-and-group-list"]:
+            if sg.popup_yes_no(_t("operations_gui.no_repo_selected"), keep_on_top=True) == "No":
+                return False
+            repos = get_repo_list(full_config)
+        else:
+            repos = []
+            for index in values["repo-and-group-list"]:
+                gui_object = complete_repo_list[index]
+                if gui_object.type == "group":
+                    repos += get_repos_by_group(full_config, gui_object.name)
+                else:
+                    repos.append(gui_object.name)
+        # Cheap duplicate filter
+        repos = list(set(repos))
+        return repos
 
     # This is a stupid hack to make sure uri column is large enough
     headings = [
+        "Type      ",
         "Name      ",
         "Group      ",
         "Backend",
-        "URI                                                  ",
+        "URI                                 ",
     ]
 
     layout = [
@@ -138,21 +179,38 @@ def operations_gui(full_config: dict) -> dict:
                         sg.Table(
                             values=[[]],
                             headings=headings,
-                            key="repo-list",
+                            key="repo-and-group-list",
                             auto_size_columns=True,
                             justification="left",
                         ),
+                    ],
+                    [
+                        sg.Text(_t("operations_gui.select_repositories")),
+                    ],
+                    [
+                        sg.Button(
+                            _t("operations_gui.housekeeping"),
+                            key="--HOUSEKEEPING--",
+                            size=(45, 1),
+                        ),
+                        sg.Button(
+                            _t("operations_gui.task_scheduler"),
+                            key="--TASK-SCHEDULER--",
+                            size=(45, 1),
+                        )
                     ],
                     [
                         sg.Button(
                             _t("operations_gui.quick_check"),
                             key="--QUICK-CHECK--",
                             size=(45, 1),
+                            visible=False,
                         ),
                         sg.Button(
                             _t("operations_gui.full_check"),
                             key="--FULL-CHECK--",
                             size=(45, 1),
+                            visible=False,
                         ),
                     ],
                     [
@@ -160,11 +218,13 @@ def operations_gui(full_config: dict) -> dict:
                             _t("operations_gui.repair_index"),
                             key="--REPAIR-INDEX--",
                             size=(45, 1),
+                            visible=False,
                         ),
                         sg.Button(
                             _t("operations_gui.repair_snapshots"),
                             key="--REPAIR-SNAPSHOTS--",
                             size=(45, 1),
+                            visible=False,
                         ),
                     ],
                     [
@@ -172,11 +232,13 @@ def operations_gui(full_config: dict) -> dict:
                             _t("operations_gui.repair_packs"),
                             key="--REPAIR-PACKS--",
                             size=(45, 1),
+                            visible=False,
                         ),
                         sg.Button(
                             _t("operations_gui.forget_using_retention_policy"),
                             key="--FORGET--",
                             size=(45, 1),
+                            visible=False,
                         ),
                     ],
                     [
@@ -184,27 +246,35 @@ def operations_gui(full_config: dict) -> dict:
                             _t("operations_gui.standard_prune"),
                             key="--STANDARD-PRUNE--",
                             size=(45, 1),
+                            visible=False,
                         ),
                         sg.Button(
                             _t("operations_gui.max_prune"),
                             key="--MAX-PRUNE--",
                             size=(45, 1),
+                            visible=False,
                         ),
                     ],
                     [
                         sg.Button(
-                            _t("operations_gui.unlock"), key="--UNLOCK--", size=(45, 1)
+                            _t("operations_gui.unlock"), key="--UNLOCK--", size=(45, 1), visible=False
                         ),
                         sg.Button(
                             _t("operations_gui.recover"),
                             key="--RECOVER--",
                             size=(45, 1),
+                            visible=False,
                         ),
                     ],
                     [
                         sg.Button(
                             _t("operations_gui.stats"),
                             key="--STATS--",
+                            size=(45, 1),
+                        ),
+                        sg.Button(
+                            _t("operations_gui.show_advanced"),
+                            key="--ADVANCED--",
                             size=(45, 1),
                         ),
                     ],
@@ -236,7 +306,7 @@ def operations_gui(full_config: dict) -> dict:
     complete_repo_list = gui_update_state(window, full_config)
 
     # Auto reisze table to window size
-    window["repo-list"].expand(True, True)
+    window["repo-and-group-list"].expand(True, True)
 
     while True:
         event, values = window.read()
@@ -245,7 +315,7 @@ def operations_gui(full_config: dict) -> dict:
             break
         if event == _t("config_gui.show_decrypted"):
             try:
-                object_name = complete_repo_list[values["repo-list"][0]][0]
+                object_name = complete_repo_list[values["repo--group-list"][0]][0]
             except Exception as exc:
                 logger.debug("Trace:", exc_info=True)
                 object_name = None
@@ -267,7 +337,24 @@ def operations_gui(full_config: dict) -> dict:
                     window, full_config, unencrypted=object_name
                 )
             continue
+        if event == "--ADVANCED--":
+            for button in (
+                "--QUICK-CHECK--",
+                "--FULL-CHECK--",
+                "--REPAIR-INDEX--",
+                "--REPAIR-PACKS--",
+                "--REPAIR-SNAPSHOTS--",
+                "--RECOVER--",
+                "--UNLOCK--",
+                "--FORGET--",
+                "--STANDARD-PRUNE--",
+                "--MAX-PRUNE--",
+            ):
+                window[button].update(visible=True)
+                window["--ADVANCED--"].update(disabled=True)
+            continue
         if event in (
+            "--HOUSEKEEPING--",
             "--QUICK-CHECK--",
             "--FULL-CHECK--",
             "--REPAIR-INDEX--",
@@ -280,22 +367,21 @@ def operations_gui(full_config: dict) -> dict:
             "--MAX-PRUNE--",
             "--STATS--",
         ):
-            if not values["repo-list"]:
-                repos = _select_groups()
-            else:
-                repos = []
-                for value in values["repo-list"]:
-                    repos.append(complete_repo_list[value][0])
+            repos = _get_repo_list(values["repo-and-group-list"])
 
             repo_config_list = []
             if not repos:
                 continue
             for repo_name in repos:
-                repo_config, __annotations__ = get_repo_config(full_config, repo_name)
+                repo_config, _ = get_repo_config(full_config, repo_name)
                 repo_config_list.append(repo_config)
             operation = None
             op_args = None
             gui_msg = None
+            if event == "--HOUSEKEEPING--":
+                operation = "housekeeping"
+                op_args = {}
+                gui_msg = _t("operations_gui.housekeeping")
             if event == "--FORGET--":
                 operation = "forget"
                 op_args = {"use_policy": True}
@@ -362,6 +448,12 @@ def operations_gui(full_config: dict) -> dict:
                 sg.popup_error(f"Bogus operation: {operation}", keep_on_top=True)
 
             event = "---STATE-UPDATE---"
+        if event == "--TASK-SCHEDULER--":
+            repos = _get_repo_list(values["repo-and-group-list"])
+            if not repos:
+                continue
+            task_scheduler(repos)
+            continue
         if event == "---STATE-UPDATE---":
             complete_repo_list = gui_update_state(window, full_config)
     window.close()
