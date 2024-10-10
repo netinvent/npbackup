@@ -649,8 +649,10 @@ class NPBackupRunner:
                     f"Runner: Function {operation} failed with: {exc}", level="error"
                 )
                 logger.error("Trace:", exc_info=True)
-                self.stdout.put(None)
-                self.stderr.put(None)
+                if self.stdout:
+                    self.stdout.put(None)
+                if self.stderr:
+                    self.stderr.put(None)
                 # In case of error, we really need to write metrics
                 # pylint: disable=E1101 (no-member)
                 metric_writer(self.repo_config, False, None, fn.__name__, self.dry_run)
