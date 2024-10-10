@@ -109,7 +109,11 @@ def task_scheduler(repos: list):
             ),
         ],
         [
-            sg.Text(_t("operations_gui.select_action")),
+            sg.Button("Add", key="--ADD-TASK--", size=(10, 1)),
+            sg.Button("Remove", key="--REMOVE-TASK--", size=(10, 1)),
+        ],
+        [
+            sg.Text(_t("operations_gui.select_task_type")),
         ],
         [
             sg.Combo(
@@ -118,6 +122,7 @@ def task_scheduler(repos: list):
                 key="-ACTION-",
                 size=(20, 1),
             ),
+            sg.Button(_t("operations_gui.add_task"), key="-ADD-TASK-", size=(20, 1)),
         ],
     ]
 

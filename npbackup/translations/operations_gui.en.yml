@@ -23,3 +23,7 @@ en:
   remove_repo: Remove repo
   no_repo_selected: No repo selected, apply to all ?
   show_advanced: Show advanced options
+
+  currently_configured_tasks: Currently configured tasks
+  select_task_type: Select task type
+  add_task: Add task

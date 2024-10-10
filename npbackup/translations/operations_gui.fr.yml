@@ -23,3 +23,7 @@ fr:
   remove_repo: Supprimer dépot
   no_repo_selected: Aucun dépot sélectionné, appliquer à tous ?
   show_advanced: Afficher les options avancées
+
+  currently_configured_tasks: Tâches actuellement configurées
+  select_task_type: Sélectionner le type de tâche
+  add_task: Ajouter tâche
