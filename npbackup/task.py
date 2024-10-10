@@ -57,6 +57,12 @@ def _get_scheduled_tasks_windows(
     return output
 
 
+def _get_scheduled_tasks_unix(
+    config_file: str, type: str, repo_names: List[str] = None
+):
+    pass  # WIP
+
+
 def _scheduled_task_exists_unix(config_file: str, type: str, object_args: str) -> bool:
     cron_file = "/etc/cron.d/npbackup"
     try:
