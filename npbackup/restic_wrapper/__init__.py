@@ -7,7 +7,7 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024091501"
+__build__ = "2024101201"
 __version__ = "2.3.0"
 
 
@@ -97,6 +97,10 @@ class ResticRunner:
 
         # Internal value to check whether executor is running, accessed via self.executor_running property
         self._executor_running = False
+
+        # Error /warning messages to add for json output
+        self.errors_for_json = []
+        self.warnings_for_json = []
 
     def on_exit(self) -> bool:
         self._executor_running = False
@@ -258,7 +262,13 @@ class ResticRunner:
     def executor_running(self) -> bool:
         return self._executor_running
 
-    def write_logs(self, msg: str, level: str, raise_error: str = None):
+    def write_logs(
+        self,
+        msg: str,
+        level: str,
+        raise_error: str = None,
+        ignore_additional_json: bool = False,
+    ):
         """
         Write logs to log file and stdout / stderr queues if exist for GUI usage
         """
@@ -283,6 +293,12 @@ class ResticRunner:
         if self.stderr and level in ("critical", "error", "warning"):
             # pylint: disable=E1101 (no-member)
             self.stderr.put(msg)
+
+        if not ignore_additional_json:
+            if level in ("critical", "error"):
+                self.errors_for_json.append(msg)
+            if level == "warning":
+                self.warnings_for_json.append(msg)
 
         if raise_error == "ValueError":
             raise ValueError(msg)
@@ -666,6 +682,7 @@ class ResticRunner:
         result, output = command_runner results
         msg will be logged and used as reason on failure
 
+
         Converts restic --json output to parseable json
 
         as of restic 0.16.2:
@@ -676,9 +693,10 @@ class ResticRunner:
             js = {
                 "result": result,
                 "operation": operation,
-                "extended_info": None,
                 "args": kwargs,
                 "output": [],
+                "additional_error_info": [],
+                "additional_warning_info": [],
             }
             if result:
                 if output:
@@ -703,9 +721,13 @@ class ResticRunner:
                                     js["output"].append(decoder.decode(line))
                                     is_first_line = False
                             except msgspec.DecodeError as exc:
-                                msg = f"JSON decode error: {exc} on content '{line}'"
-                                self.write_logs(msg, level="error")
-                                js["extended_info"] = msg
+                                # We may have a json decode error, but actually, we just want to get the output
+                                # in any case, since restic might output non json data, but we need to
+                                # convert it to json
+
+                                # msg = f"JSON decode error: {exc} on content '{line}'"
+                                # self.write_logs(msg, level="error")
+                                # js["extended_info"] = msg
                                 js["output"].append({"data": line})
                                 js["result"] = False
                         else:
@@ -713,9 +735,11 @@ class ResticRunner:
                                 # pylint: disable=E0601 (used-before-assignment)
                                 js["output"].append(json.loads(line))
                             except json.JSONDecodeError as exc:
-                                msg = f"JSON decode error: {exc} on content '{line}'"
-                                self.write_logs(msg, level="error")
-                                js["extended_info"] = msg
+                                # Same as above
+
+                                # msg = f"JSON decode error: {exc} on content '{line}'"
+                                # self.write_logs(msg, level="error")
+                                # js["extended_info"] = msg
                                 js["output"].append({"data": line})
                                 js["result"] = False
                     # If we only have one output, we don't need a list
@@ -733,19 +757,26 @@ class ResticRunner:
                         try:
                             js["output"] = msgspec.json.decode(output)
                         except msgspec.DecodeError as exc:
-                            msg = f"JSON decode error: {exc} on output '{output}'"
-                            self.write_logs(msg, level="error")
-                            js["extended_info"] = msg
+                            # Save as above
+
+                            # msg = f"JSON decode error: {exc} on output '{output}'"
+                            # self.write_logs(msg, level="error")
+                            # js["extended_info"] = msg
                             js["output"] = {"data": output}
                     else:
                         try:
                             # pylint: disable=E0601 (used-before-assignment)
                             js["output"] = json.loads(output)
                         except json.JSONDecodeError as exc:
-                            msg = f"JSON decode error: {exc} on output '{output}'"
-                            self.write_logs(msg, level="error")
-                            js["extended_info"] = msg
+                            # same as above
+                            # msg = f"JSON decode error: {exc} on output '{output}'"
+                            # self.write_logs(msg, level="error")
+                            # js["extended_info"] = msg
                             js["output"] = {"data": output}
+            if self.errors_for_json:
+                js["additional_error_info"] += self.errors_for_json
+            if self.warnings_for_json:
+                js["additional_warning_info"] += self.warnings_for_json
             return js
 
         if result:
