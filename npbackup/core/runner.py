@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024091501"
+__build__ = "2024101201"
 
 
 from typing import Optional, Callable, Union, List
@@ -34,7 +34,7 @@ from npbackup.restic_wrapper import ResticRunner
 from npbackup.core.restic_source_binary import get_restic_internal_binary
 from npbackup.path_helper import CURRENT_DIR, BASEDIR
 from npbackup.__version__ import __intname__ as NAME, __version__ as VERSION
-from npbackup.__debug__ import _DEBUG
+from npbackup.__debug__ import _DEBUG, exception_to_string
 
 
 logger = logging.getLogger()
@@ -229,6 +229,10 @@ class NPBackupRunner:
         self.minimum_backup_age = None
         self._exec_time = None
 
+        # Error /warning messages to add for json output
+        self.errors_for_json = []
+        self.warnings_for_json = []
+
     @property
     def repo_config(self) -> dict:
         return self._repo_config
@@ -368,9 +372,10 @@ class NPBackupRunner:
     def exec_time(self, value: int):
         self._exec_time = value
 
-    def write_logs(self, msg: str, level: str, raise_error: str = None):
+    def write_logs(self, msg: str, level: str, raise_error: str = None, ignore_additional_json: bool = False):
         """
         Write logs to log file and stdout / stderr queues if exist for GUI usage
+        Also collect errors and warnings for json output
         """
         if level == "warning":
             logger.warning(msg)
@@ -391,6 +396,12 @@ class NPBackupRunner:
             self.stdout.put(f"\n{msg}")
         if self.stderr and level in ("critical", "error", "warning"):
             self.stderr.put(f"\n{msg}")
+
+        if not ignore_additional_json:
+            if level in ("critical", "error"):
+                self.errors_for_json.append(msg)
+            if level == "warning":
+                self.warnings_for_json.append(msg)
 
         if raise_error == "ValueError":
             raise ValueError(msg)
@@ -660,7 +671,7 @@ class NPBackupRunner:
                     js = {
                         "result": False,
                         "operation": operation,
-                        "reason": f"Runner catched exception: {exc}",
+                        "reason": f"Runner catched exception: {exception_to_string(exc)}",
                     }
                     return js
                 return False
@@ -866,26 +877,30 @@ class NPBackupRunner:
 
     def convert_to_json_output(
         self,
-        result: bool,
+        result: Union[bool, dict],
         output: str = None,
-        backend_js: dict = None,
-        warnings: str = None,
     ):
         if self.json_output:
-            if backend_js:
-                js = backend_js
             if isinstance(result, dict):
                 js = result
             else:
                 js = {
                     "result": result,
+                    "additional_error_info": [],
+                    "additional_warning_info": [],
                 }
-            if warnings:
-                js["warnings"] = warnings
-            if result:
-                js["output"] = output
-            else:
-                js["reason"] = output
+                if result:
+                    js["output"] = output
+                else:
+                    js["reason"] = output
+            if self.errors_for_json:
+                js["additional_error_info"] += self.errors_for_json
+            if self.warnings_for_json:
+                js["additional_warning_info"] += self.warnings_for_json
+            if not js["additional_error_info"]:
+                js.pop("additional_error_info")
+            if not js["additional_warning_info"]:
+                js.pop("additional_warning_info")
             return js
         return result
 
@@ -1054,9 +1069,6 @@ class NPBackupRunner:
         """
         Run backup after checking if no recent backup exists, unless force == True
         """
-        # Possible warnings to add to json output
-        warnings = []
-
         stdin_from_command = self.repo_config.g("backup_opts.stdin_from_command")
         if not stdin_filename:
             stdin_filename = self.repo_config.g("backup_opts.stdin_filename")
@@ -1207,7 +1219,7 @@ class NPBackupRunner:
                     if pre_exec_failure_is_fatal:
                         return self.convert_to_json_output(False, msg)
                     else:
-                        warnings.append(msg)
+                        self.write_logs(msg, level="warning")
                     pre_exec_commands_success = False
                 else:
                     self.write_logs(
@@ -1284,7 +1296,7 @@ class NPBackupRunner:
                     if post_exec_failure_is_fatal:
                         return self.convert_to_json_output(False, msg)
                     else:
-                        warnings.append(msg)
+                        self.write_logs(msg, level="warning")
                 else:
                     self.write_logs(
                         f"Post-execution of command {post_exec_command} succeeded with:\n{output}",
@@ -1301,6 +1313,7 @@ class NPBackupRunner:
         self.write_logs(
             msg,
             level="info" if operation_result else "error",
+            ignore_additional_json=True,
         )
         if not operation_result:
             # patch result if json

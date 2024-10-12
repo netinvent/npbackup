@@ -8,11 +8,12 @@ __author__ = "Orsiris de Jong"
 __site__ = "https://www.netperfect.fr/npbackup"
 __description__ = "NetPerfect Backup Client"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
-__build__ = "2024081901"
+__build__ = "2024101201"
 
 
 import sys
 import os
+import traceback
 from typing import Callable
 from functools import wraps
 from logging import getLogger
@@ -41,6 +42,13 @@ if not "_DEBUG" in globals():
             _DEBUG = True
     elif __debug_os_env.capitalize() == "True":
         _DEBUG = True
+
+
+def exception_to_string(exc):
+    stack = traceback.extract_stack()[:-3] + traceback.extract_tb(exc.__traceback__)  # add limit=?? 
+    pretty = traceback.format_list(stack)
+    return ''.join(pretty) + '\n  {} {}'.format(exc.__class__, exc)
+
 
 
 def catch_exceptions(fn: Callable):
