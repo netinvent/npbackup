@@ -45,6 +45,10 @@ if not "_DEBUG" in globals():
 
 
 def exception_to_string(exc):
+    """
+    Transform a catched exception to a string
+    https://stackoverflow.com/a/37135014/2635443
+    """
     stack = traceback.extract_stack()[:-3] + traceback.extract_tb(
         exc.__traceback__
     )  # add limit=??
