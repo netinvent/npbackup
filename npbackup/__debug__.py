@@ -45,10 +45,11 @@ if not "_DEBUG" in globals():
 
 
 def exception_to_string(exc):
-    stack = traceback.extract_stack()[:-3] + traceback.extract_tb(exc.__traceback__)  # add limit=?? 
+    stack = traceback.extract_stack()[:-3] + traceback.extract_tb(
+        exc.__traceback__
+    )  # add limit=??
     pretty = traceback.format_list(stack)
-    return ''.join(pretty) + '\n  {} {}'.format(exc.__class__, exc)
-
+    return "".join(pretty) + "\n  {} {}".format(exc.__class__, exc)
 
 
 def catch_exceptions(fn: Callable):

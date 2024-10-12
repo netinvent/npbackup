@@ -372,7 +372,13 @@ class NPBackupRunner:
     def exec_time(self, value: int):
         self._exec_time = value
 
-    def write_logs(self, msg: str, level: str, raise_error: str = None, ignore_additional_json: bool = False):
+    def write_logs(
+        self,
+        msg: str,
+        level: str,
+        raise_error: str = None,
+        ignore_additional_json: bool = False,
+    ):
         """
         Write logs to log file and stdout / stderr queues if exist for GUI usage
         Also collect errors and warnings for json output

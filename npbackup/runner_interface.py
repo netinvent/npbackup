@@ -80,7 +80,7 @@ def entrypoint(*args, **kwargs):
             logger.error(f"Operation finished")
     else:
         if HAVE_MSGSPEC:
-            print(msgspec.json.encode(result).decode('utf-8', errors='ignore'))
+            print(msgspec.json.encode(result).decode("utf-8", errors="ignore"))
         else:
             print(json.dumps(result, default=serialize_datetime))
         sys.exit(0)
