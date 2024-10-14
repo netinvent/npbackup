@@ -666,10 +666,7 @@ class NPBackupRunner:
                     f"Runner: Function {operation} failed with: {exc}", level="error"
                 )
                 logger.error("Trace:", exc_info=True)
-                if self.stdout:
-                    self.stdout.put(None)
-                if self.stderr:
-                    self.stderr.put(None)
+
                 # In case of error, we really need to write metrics
                 # pylint: disable=E1101 (no-member)
                 metric_writer(self.repo_config, False, None, fn.__name__, self.dry_run)
@@ -923,9 +920,9 @@ class NPBackupRunner:
     # but @catch_exceptions should come last, since we aren't supposed to have errors in decorators
 
     @threaded
+    @close_queues
     @catch_exceptions
     @metrics
-    @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
@@ -938,9 +935,9 @@ class NPBackupRunner:
         return self.restic_runner.init()
 
     @threaded
+    @close_queues
     @catch_exceptions
     @metrics
-    @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
@@ -954,9 +951,9 @@ class NPBackupRunner:
         return snapshots
 
     @threaded
+    @close_queues
     @catch_exceptions
     @metrics
-    @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
@@ -970,9 +967,9 @@ class NPBackupRunner:
         return self.restic_runner.list(subject)
 
     @threaded
+    @close_queues
     @catch_exceptions
     @metrics
-    @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
@@ -987,9 +984,9 @@ class NPBackupRunner:
         return self.convert_to_json_output(result, None)
 
     @threaded
+    @close_queues
     @catch_exceptions
     @metrics
-    @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
@@ -1004,8 +1001,8 @@ class NPBackupRunner:
         return result
 
     @threaded
-    @catch_exceptions
     @close_queues
+    @catch_exceptions
     @exec_timer
     @check_concurrency
     @has_permission
@@ -1059,8 +1056,8 @@ class NPBackupRunner:
         return result, backup_tz
 
     @threaded
-    @catch_exceptions
     @close_queues
+    @catch_exceptions
     @exec_timer
     @check_concurrency
     @has_permission
@@ -1330,9 +1327,9 @@ class NPBackupRunner:
         return self.convert_to_json_output(result, msg)
 
     @threaded
+    @close_queues
     @catch_exceptions
     @metrics
-    @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
@@ -1347,9 +1344,9 @@ class NPBackupRunner:
         )
 
     @threaded
+    @close_queues
     @catch_exceptions
     @metrics
-    @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
@@ -1415,9 +1412,9 @@ class NPBackupRunner:
         return self.convert_to_json_output(result)
 
     @threaded
+    @close_queues
     @catch_exceptions
     @metrics
-    @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
@@ -1452,9 +1449,9 @@ class NPBackupRunner:
         return self.convert_to_json_output(result)
 
     @threaded
+    @close_queues
     @catch_exceptions
     @metrics
-    @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
@@ -1474,9 +1471,9 @@ class NPBackupRunner:
         return self.restic_runner.check(read_data)
 
     @threaded
+    @close_queues
     @catch_exceptions
     @metrics
-    @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
@@ -1497,9 +1494,9 @@ class NPBackupRunner:
         return result
 
     @threaded
+    @close_queues
     @catch_exceptions
     @metrics
-    @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
@@ -1512,9 +1509,9 @@ class NPBackupRunner:
         return self.restic_runner.repair(subject, pack_ids)
 
     @threaded
+    @close_queues
     @catch_exceptions
     @metrics
-    @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
@@ -1527,9 +1524,9 @@ class NPBackupRunner:
         return self.restic_runner.recover()
 
     @threaded
+    @close_queues
     @catch_exceptions
     @metrics
-    @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
@@ -1540,9 +1537,9 @@ class NPBackupRunner:
         return self.restic_runner.unlock()
 
     @threaded
+    @close_queues
     @catch_exceptions
     @metrics
-    @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
@@ -1556,9 +1553,9 @@ class NPBackupRunner:
         return result
 
     @threaded
+    @close_queues
     @catch_exceptions
     @metrics
-    @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
@@ -1572,9 +1569,9 @@ class NPBackupRunner:
         return result
 
     @threaded
+    @close_queues
     @catch_exceptions
     @metrics
-    @close_queues
     @exec_timer
     @check_concurrency
     @has_permission
@@ -1585,8 +1582,8 @@ class NPBackupRunner:
         return self.restic_runner.raw(command=command)
 
     @threaded
-    @catch_exceptions
     @close_queues
+    @catch_exceptions
     @exec_timer
     def group_runner(self, repo_config_list: List, operation: str, **kwargs) -> bool:
         group_result = True
