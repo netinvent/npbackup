@@ -1427,32 +1427,33 @@ class NPBackupRunner:
         self.write_logs("Running housekeeping", level="info")
         # Add special keywors __no_threads since we're already threaded in housekeeping function
         # Also, pass it as kwargs to make linter happy
-        kwargs = {"__no_threads": True}
+        kwargs = {"__no_threads": True, "__close_queues": False}
         # pylint: disable=E1123 (unexpected-keyword-arg)
         unlock_result = self.unlock(**kwargs)
-        if unlock_result:
+
+        if (isinstance(unlock_result, bool) and unlock_result) or (isinstance(unlock_result, dict) and unlock_result["result"]):
             check_result = self.check(**kwargs, read_data=False)
-            if check_result:
+            if (isinstance(check_result, bool) and check_result) or (isinstance(check_result, dict) and check_result["result"]):
                 # pylint: disable=E1123 (unexpected-keyword-arg)
                 forget_result = self.forget(use_policy=True, **kwargs)
-                if forget_result:
+                if (isinstance(forget_result, bool) and forget_result) or (isinstance(forget_result, dict) and forget_result["result"]):
                     # pylint: disable=E1123 (unexpected-keyword-arg)
                     prune_result = self.prune(**kwargs)
                     result = prune_result
                 else:
                     self.write_logs(
-                        "Forget failed. Won't continue housekeeping on repo",
+                        f"Forget failed. Won't continue housekeeping on repo {self.repo_config.g('name')}",
                         level="error",
                     )
                     result = forget_result
             else:
                 self.write_logs(
-                    "Check failed. Won't continue housekeeping on repo", level="error"
+                    f"Check failed. Won't continue housekeeping on repo {self.repo_config.g('name')}", level="error"
                 )
                 result = check_result
         else:
             self.write_logs(
-                "Unlock failed. Won't continue housekeeping in repo", level="error"
+                f"Unlock failed. Won't continue housekeeping in repo {self.repo_config.g('name')}", level="error"
             )
             result = unlock_result
 
