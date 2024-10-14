@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024101201"
-__version__ = "2.3.0"
+__build__ = "2024101501"
+__version__ = "2.3.1"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -670,8 +670,12 @@ class ResticRunner:
                         self.repository,
                         self.repository.split(":")[0] + ":_(o_O)_hidden_by_npbackup",
                     )
-                    msg = f"Backend is not ready to perform operation {fn.__name__}. Repo maybe inaccessible or not initialized. You can try to run a backup to initialize the repository:\n{output}."  # pylint: disable=E1101 (no-member)
-                    return self.convert_to_json_output(False, msg=msg)
+                    if "repository is already locked" in output and fn.__name__ == "unlock":
+                        # our is ready check should not fail if repo is locked
+                        pass
+                    else:
+                        msg = f"Backend is not ready to perform operation {fn.__name__}. Repo maybe inaccessible or not initialized. You can try to run a backup to initialize the repository:\n{output}."  # pylint: disable=E1101 (no-member)
+                        return self.convert_to_json_output(False, msg=msg)
             # pylint: disable=E1102 (not-callable)
             return fn(self, *args, **kwargs)
 
