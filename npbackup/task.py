@@ -24,45 +24,6 @@ from npbackup.__version__ import IS_COMPILED
 logger = getLogger()
 
 
-def scheduled_task_exists(config_file: str, type: str, object: str):
-    if os.name == "nt":
-        return _scheduled_task_exists_windows(config_file, type, object)
-    else:
-        return _scheduled_task_exists_unix(config_file, type, object)
-
-
-def get_scheduled_tasks(
-    config_file: str,
-    type: str,
-    repo_names: List[str] = None,
-):
-    if os.name == "nt":
-        return _get_scheduled_tasks_windows(config_file, type, repo_names)
-    else:
-        return _get_scheduled_tasks_unix(config_file, type, repo_names)
-
-
-def _get_scheduled_tasks_windows(
-    config_file: str, type: str, repo_names: List[str] = None
-):
-    task_name = _get_scheduled_task_name_windows(config_file, type, repo_names)
-    exit_code, output = command_runner(
-        'schtasks /QUERY /TN "{}" /FO LIST'.format(task_name),
-        windows_no_window=True,
-        encoding="cp437",
-    )
-    if exit_code != 0:
-        logger.error("Could not get task info: {}".format(output))
-        return False
-    return output
-
-
-def _get_scheduled_tasks_unix(
-    config_file: str, type: str, repo_names: List[str] = None
-):
-    pass  # WIP
-
-
 def _scheduled_task_exists_unix(config_file: str, type: str, object_args: str) -> bool:
     cron_file = "/etc/cron.d/npbackup"
     try:
@@ -237,15 +198,6 @@ def create_scheduled_task_unix(
 
 def _get_scheduled_task_name_windows(config_file: str, type: str, subject: str) -> str:
     return f"{PROGRAM_NAME} - {type.capitalize()} {config_file} {subject}"
-
-
-def _scheduled_task_exists_windows(task_name) -> bool:
-    exit_code, _ = command_runner(
-        'schtasks /TN "{}"'.format(task_name),
-        windows_no_window=True,
-        encoding="cp437",
-    )
-    return True if exit_code == 0 else False
 
 
 def create_scheduled_task_windows(
