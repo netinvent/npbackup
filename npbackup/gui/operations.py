@@ -86,13 +86,14 @@ def task_scheduler(repos: list):
         window["-TASKS-"].update(values=task_list)
 
     actions = [
+        "backup",
         "housekeeping",
-        "check",
-        "repair",
-        "recover",
+        "quick_check",
+        "full_check"
         "unlock",
         "forget",
         "prune",
+        "prune_max"
     ]
 
     layout = [
@@ -470,7 +471,8 @@ def operations_gui(full_config: dict) -> dict:
             repos = _get_repo_list(values["repo-and-group-list"])
             if not repos:
                 continue
-            task_scheduler(repos)
+            sg.Popup("Currently not implemented. Please use cron or windows task scheduler")
+            #task_scheduler(repos)
             continue
         if event == "---STATE-UPDATE---":
             complete_repo_list = gui_update_state(window, full_config)
