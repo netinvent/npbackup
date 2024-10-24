@@ -1431,12 +1431,18 @@ class NPBackupRunner:
         # pylint: disable=E1123 (unexpected-keyword-arg)
         unlock_result = self.unlock(**kwargs)
 
-        if (isinstance(unlock_result, bool) and unlock_result) or (isinstance(unlock_result, dict) and unlock_result["result"]):
+        if (isinstance(unlock_result, bool) and unlock_result) or (
+            isinstance(unlock_result, dict) and unlock_result["result"]
+        ):
             check_result = self.check(**kwargs, read_data=False)
-            if (isinstance(check_result, bool) and check_result) or (isinstance(check_result, dict) and check_result["result"]):
+            if (isinstance(check_result, bool) and check_result) or (
+                isinstance(check_result, dict) and check_result["result"]
+            ):
                 # pylint: disable=E1123 (unexpected-keyword-arg)
                 forget_result = self.forget(use_policy=True, **kwargs)
-                if (isinstance(forget_result, bool) and forget_result) or (isinstance(forget_result, dict) and forget_result["result"]):
+                if (isinstance(forget_result, bool) and forget_result) or (
+                    isinstance(forget_result, dict) and forget_result["result"]
+                ):
                     # pylint: disable=E1123 (unexpected-keyword-arg)
                     prune_result = self.prune(**kwargs)
                     result = prune_result
@@ -1448,12 +1454,14 @@ class NPBackupRunner:
                     result = forget_result
             else:
                 self.write_logs(
-                    f"Check failed. Won't continue housekeeping on repo {self.repo_config.g('name')}", level="error"
+                    f"Check failed. Won't continue housekeeping on repo {self.repo_config.g('name')}",
+                    level="error",
                 )
                 result = check_result
         else:
             self.write_logs(
-                f"Unlock failed. Won't continue housekeeping in repo {self.repo_config.g('name')}", level="error"
+                f"Unlock failed. Won't continue housekeeping in repo {self.repo_config.g('name')}",
+                level="error",
             )
             result = unlock_result
 

@@ -670,7 +670,10 @@ class ResticRunner:
                         self.repository,
                         self.repository.split(":")[0] + ":_(o_O)_hidden_by_npbackup",
                     )
-                    if "repository is already locked" in output and fn.__name__ == "unlock":
+                    if (
+                        "repository is already locked" in output
+                        and fn.__name__ == "unlock"
+                    ):
                         # our is ready check should not fail if repo is locked
                         pass
                     else:
