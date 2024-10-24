@@ -5,10 +5,15 @@
 machine="$(uname -m)"
 
 cd /opt/npbackup
+git pull || exit 1
 
 OLD_PYTHONPATH="$PYTHONPATH"
 export PYTHONPATH=/opt/npbackup
 
+# For RHEL 7 based builds, we need to define path to locally built tcl8.6
+[ -d /usr/local/lib/tcl8.6 ] && export LD_LIBRARY_PATH=/usr/local/lib
+
+/opt/npbackup/venv/bin/python -m pip install --upgrade -r npbackup/requirements.txt || exit 1
 /opt/npbackup/venv/bin/python bin/compile.py --audience all $opts
 
 export PYTHONPATH="$OLD_PYTHONPATH"
