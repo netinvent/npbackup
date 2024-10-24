@@ -1,5 +1,8 @@
 fr:
+  select_repositories: Sélectionner un ou plusieurs dépots, ou groupes de dépots
   configured_repositories: Dépots configurés
+  housekeeping: Opération de maintenance et rétention
+  task_scheduler: Planificateur de tâches
   quick_check: Vérification rapide dépot
   full_check: Vérification complète dépot
   repair_index: Réparer les index du dépot
@@ -18,4 +21,9 @@ fr:
   add_repo: Ajouter dépot
   edit_repo: Modifier dépot
   remove_repo: Supprimer dépot
-  no_repo_selected: Aucun dépot sélectionné
+  no_repo_selected: Aucun dépot sélectionné, appliquer à tous ?
+  show_advanced: Afficher les options avancées
+
+  currently_configured_tasks: Tâches actuellement configurées
+  select_task_type: Sélectionner le type de tâche
+  add_task: Ajouter tâche

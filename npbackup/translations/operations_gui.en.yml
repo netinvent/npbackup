@@ -1,5 +1,8 @@
 en:
+  select_repositories: Select one or more repositories, or groups of repositories
   configured_repositories: Configured repositories
+  housekeeping: Housekeeping and retention operation
+  task_scheduler: Task scheduler
   quick_check: Quick repo check
   full_check: Full repo check
   repair_index: Repair repo index
@@ -18,4 +21,9 @@ en:
   add_repo: Add repo
   edit_repo: Edit repo
   remove_repo: Remove repo
-  no_repo_selected: No repo selected
+  no_repo_selected: No repo selected, apply to all ?
+  show_advanced: Show advanced options
+
+  currently_configured_tasks: Currently configured tasks
+  select_task_type: Select task type
+  add_task: Add task

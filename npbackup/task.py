@@ -10,6 +10,7 @@ __license__ = "GPL-3.0-only"
 __build__ = "2024090101"
 
 
+from typing import List
 import sys
 import os
 from logging import getLogger
@@ -23,9 +24,25 @@ from npbackup.__version__ import IS_COMPILED
 logger = getLogger()
 
 
+def _scheduled_task_exists_unix(config_file: str, type: str, object_args: str) -> bool:
+    cron_file = "/etc/cron.d/npbackup"
+    try:
+        with open(cron_file, "r", encoding="utf-8") as file_handle:
+            current_crontab = file_handle.readlines()
+            for line in current_crontab:
+                if f"--{type}" in line and config_file in line and object_args in line:
+                    logger.info(f"Found existing {type} task")
+                    return True
+    except OSError as exc:
+        logger.error("Could not read file {}: {}".format(cron_file, exc))
+    return False
+
+
 def create_scheduled_task(
     config_file: str,
     type: str,
+    repo: str = None,
+    group: str = None,
     interval_minutes: int = None,
     hour: int = None,
     minute: int = None,
@@ -65,29 +82,60 @@ def create_scheduled_task(
     if not os.path.isabs(config_file):
         config_file = os.path.join(CURRENT_DIR, config_file)
 
+    if repo:
+        if repo == "__all__":
+            subject = "all repositories"
+        else:
+            subject = f"repo {repo}"
+        object_args = f" --repo-name {repo}"
+    elif group:
+        if group == "__all__":
+            subject = "all groups"
+        else:
+            subject = f"group {group}"
+        object_args = f" --repo-group {group}"
+    else:
+        subject = f"default repo"
+        object_args = ""
     if interval_minutes:
         logger.info(
-            f"Creating scheduled task {type} to run every {interval_minutes} minutes"
+            f"Creating scheduled task {type} for {subject} to run every {interval_minutes} minutes"
         )
     elif hour and minute:
         logger.info(
-            f"Creating scheduled task {type} to run at everyday at {hour}h{minute}"
+            f"Creating scheduled task {type} for {subject} to run at everyday at {hour}h{minute}"
         )
 
     if os.name == "nt":
         return create_scheduled_task_windows(
-            config_file, type, CURRENT_EXECUTABLE, interval_minutes, hour, minute
+            config_file,
+            type,
+            CURRENT_EXECUTABLE,
+            subject,
+            object_args,
+            interval_minutes,
+            hour,
+            minute,
         )
     else:
         return create_scheduled_task_unix(
-            config_file, type, CURRENT_EXECUTABLE, interval_minutes, hour, minute
+            config_file,
+            type,
+            CURRENT_EXECUTABLE,
+            subject,
+            object_args,
+            interval_minutes,
+            hour,
+            minute,
         )
 
 
 def create_scheduled_task_unix(
-    config_file,
-    type,
-    cli_executable_path,
+    config_file: str,
+    type: str,
+    cli_executable_path: str,
+    subject: str,
+    object_args: str,
     interval_minutes: int = None,
     hour: int = None,
     minute: int = None,
@@ -100,14 +148,14 @@ def create_scheduled_task_unix(
     cron_file = "/etc/cron.d/npbackup"
 
     if interval_minutes is not None:
-        TASK_ARGS = f'-c "{config_file}" --{type} --run-as-cli'
+        TASK_ARGS = f'-c "{config_file}" --{type} --run-as-cli{object_args}'
         trigger = f"*/{interval_minutes} * * * *"
     elif hour is not None and minute is not None:
         if type == "backup":
             force_opt = " --force"
         else:
             force_opt = ""
-        TASK_ARGS = f'-c "{config_file}" --{type}{force_opt} --run-as-cli'
+        TASK_ARGS = f'-c "{config_file}" --{type}{force_opt} --run-as-cli{object_args}'
         trigger = f"{minute} {hour} * * * root"
     else:
         raise ValueError("Bogus trigger given")
@@ -123,7 +171,7 @@ def create_scheduled_task_unix(
         with open(cron_file, "r", encoding="utf-8") as file_handle:
             current_crontab = file_handle.readlines()
             for line in current_crontab:
-                if f"--{type}" in line:
+                if f"--{type}" in line and config_file in line and object_args in line:
                     logger.info(f"Replacing existing {type} task")
                     if replaced:
                         logger.info(f"Skipping duplicate {type} task")
@@ -148,10 +196,16 @@ def create_scheduled_task_unix(
     return True
 
 
+def _get_scheduled_task_name_windows(config_file: str, type: str, subject: str) -> str:
+    return f"{PROGRAM_NAME} - {type.capitalize()} {config_file} {subject}"
+
+
 def create_scheduled_task_windows(
-    config_file,
-    type,
-    cli_executable_path,
+    config_file: str,
+    type: str,
+    cli_executable_path: str,
+    subject: str,
+    object_args: str,
     interval_minutes: int = None,
     hour: int = None,
     minute: int = None,
@@ -163,12 +217,12 @@ def create_scheduled_task_windows(
     else:
         runner = cli_executable_path
         task_args = ""
-    temp_task_file = os.path.join(tempfile.gettempdir(), "backup_task.xml")
+    temp_task_file = os.path.join(tempfile.gettempdir(), "npbackup_task.xml")
 
-    task_name = f"{PROGRAM_NAME} - {type.capitalize()}"
+    task_name = _get_scheduled_task_name_windows(config_file, type, subject)
 
     if interval_minutes is not None:
-        task_args = f'{task_args}-c "{config_file}" --{type} --run-as-cli'
+        task_args = f'{task_args}-c "{config_file}" --{type} --run-as-cli{object_args}'
         start_date = datetime.datetime.now().replace(microsecond=0).isoformat()
         trigger = f"""<TimeTrigger>
             <Repetition>
@@ -180,7 +234,9 @@ def create_scheduled_task_windows(
             <Enabled>true</Enabled>
             </TimeTrigger>"""
     elif hour is not None and minute is not None:
-        task_args = f'{task_args}-c "{config_file}" --{type} --force --run-as-cli'
+        task_args = (
+            f'{task_args}-c "{config_file}" --{type} --force --run-as-cli{object_args}'
+        )
         start_date = (
             datetime.datetime.now()
             .replace(microsecond=0, hour=hour, minute=minute, second=0)
@@ -236,7 +292,7 @@ def create_scheduled_task_windows(
     <Actions Context="Author">
         <Exec>
         <Command>"{runner}"</Command>
-        <Arguments>{task_args}</Arguments>
+        <Arguments>{task_args}{object_args}</Arguments>
         <WorkingDirectory>{executable_dir}</WorkingDirectory>
         </Exec>
     </Actions>

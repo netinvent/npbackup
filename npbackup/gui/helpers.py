@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.helpers"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024091501"
+__build__ = "2024101401"
 
 
 from typing import Tuple
@@ -105,9 +105,7 @@ def gui_thread_runner(
 
     def _update_gui_from_cache(_stdout_cache: str = None, _stderr_cache: str = None):
         if _stdout_cache:
-            progress_window["-OPERATIONS-PROGRESS-STDOUT-"].Update(
-                _stdout_cache[-1000:]
-            )
+            progress_window["-OPERATIONS-PROGRESS-STDOUT-"].Update(_stdout_cache)
         if _stderr_cache:
             progress_window["-OPERATIONS-PROGRESS-STDERR-"].Update(
                 f"\n{_stderr_cache}", append=True
@@ -326,10 +324,10 @@ def gui_thread_runner(
             # Make sure we will keep the window visible since we have errors
             __autoclose = False
 
-        if start_time - time.monotonic() > 1:
+        if time.monotonic() - start_time > 1:
+            if len(stdout_cache) > 1000:
+                stdout_cache = stdout_cache[-1000:]
             _update_gui_from_cache(stdout_cache, stderr_cache)
-            stdout_cache = ""
-            stderr_cache = ""
             start_time = time.monotonic()
 
     _update_gui_from_cache(stdout_cache, stderr_cache)
