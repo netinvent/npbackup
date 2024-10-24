@@ -21,7 +21,6 @@ from npbackup.configuration import (
     get_repos_by_group,
     get_manager_password,
 )
-from npbackup.task import get_scheduled_tasks
 from npbackup.core.i18n_helper import _t
 from npbackup.gui.helpers import get_anon_repo_uri, gui_thread_runner
 from resources.customization import (
@@ -66,6 +65,9 @@ def gui_update_state(window, full_config: dict, unencrypted: str = None) -> list
 def task_scheduler(repos: list):
     """
     Create tasks for given repo list
+
+    WIP: This is a mock GUI, nothing works yet
+
     """
     task = namedtuple("Tasks", ["task", "hour", "minute", "day", "month", "weekday"])
 
