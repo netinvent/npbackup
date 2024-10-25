@@ -272,7 +272,7 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool, create_tar
     NUITKA_OPTIONS += " --enable-plugin=data-hiding" if have_nuitka_commercial() else ""
 
     if build_type in ("gui", "viewer"):
-        NUITKA_OPTIONS += " --plugin-enable=tk-inter --disable-console"
+        NUITKA_OPTIONS += " --plugin-enable=tk-inter --windows-console-mode=disable"
     else:
         NUITKA_OPTIONS += " --plugin-disable=tk-inter --nofollow-import-to=FreeSimpleGUI --nofollow-import-to=_tkinter --nofollow-import-to=npbackup.gui"
     if onefile:
