@@ -17,7 +17,8 @@ import sys
 import os
 
 
-# This is the path to a onefile executable binary
+# This is the path to a python script, a standalone or a onefile nuitka generated binary
+# When running python interpreter without any script, sys.argv is empty hence CURRENT_EXECUTABLE would become current directory
 CURRENT_EXECUTABLE = os.path.abspath(sys.argv[0])
 CURRENT_DIR = os.path.dirname(CURRENT_EXECUTABLE)
 # When run with nuitka onefile, this will be the temp directory, else, this will be the path to current file
