@@ -14,10 +14,11 @@ SET OLD_PYTHONPATH=%PYTHONPATH%
 SET PYTHONPATH=c:\GIT\npbackup
 
 "%PYTHON64%" -m pip install --upgrade -r npbackup/requirements.txt || exit 1
-"%PYTHON64%" bin\compile.py --audience all
+"%PYTHON64%" bin\compile.py --audience all --sign "C:\ODJ\KEYS\NetInventEV.dat"
+
 
 "%PYTHON32%" -m pip install --upgrade -r npbackup/requirements.txt || exit 1
-"%PYTHON32%" bin\compile.py --audience all
+"%PYTHON32%" bin\compile.py --audience all --sign "C:\ODJ\KEYS\NetInventEV.dat"
 
 SET PYTHONPATH=%OLD_PYTHONPATH%
 

@@ -55,6 +55,7 @@ import glob
 
 
 LICENSE_FILE = os.path.join(BASEDIR, os.pardir, "LICENSE")
+NUITKA_STANDALONE_SUFFIX = ".dist"
 
 del sys.path[0]
 
@@ -183,7 +184,7 @@ def have_nuitka_commercial():
         return False
 
 
-def compile(arch: str, audience: str, build_type: str, onefile: bool, create_tar_only: bool, ev_cert_data: str = None):
+def compile(arch: str, audience: str, build_type: str, onefile: bool, create_tar_only: bool, ev_cert_data: str = None, sign_only: bool = False):
     if build_type not in BUILD_TYPES:
         print("CANNOT BUILD BOGUS BUILD TYPE")
         sys.exit(1)
@@ -320,7 +321,7 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool, create_tar
     )
 
     errors = False
-    if not create_tar_only:
+    if not create_tar_only and not sign_only:
         print(CMD)
         exit_code, output = command_runner(CMD, timeout=0, live_output=True)
         if exit_code != 0:
@@ -334,7 +335,11 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool, create_tar
         print(f"COMPILED {'WITH SUCCESS' if not errors else 'WITH ERRORS'}")
 
     if os.name == "nt" and ev_cert_data:
-        sign(ev_cert_data=ev_cert_data, dry_run=args.dry_run)
+        compiled_output_dir = os.path.join(
+            OUTPUT_DIR, "npbackup-{}{}".format(build_type, NUITKA_STANDALONE_SUFFIX)
+        )
+        npbackup_executable = os.path.join(compiled_output_dir, "npbackup-{}.exe".format(build_type))
+        sign(executable=npbackup_executable, arch=arch, ev_cert_data=ev_cert_data, dry_run=args.dry_run)
 
     if not onefile:
         if not create_archive(
@@ -354,11 +359,11 @@ def create_archive(
     """
     Create tar releases for each compiled version
     """
-    nuitka_standalone_suffix = ".dist"
+    
     compiled_output = os.path.join(
-        output_dir, "npbackup-{}{}".format(build_type, nuitka_standalone_suffix)
+        output_dir, "npbackup-{}{}".format(build_type, NUITKA_STANDALONE_SUFFIX)
     )
-    new_compiled_output = compiled_output[: -len(nuitka_standalone_suffix)]
+    new_compiled_output = compiled_output[: -len(NUITKA_STANDALONE_SUFFIX)]
     if os.path.isdir(new_compiled_output):
         shutil.rmtree(new_compiled_output)
     shutil.move(compiled_output, new_compiled_output)
@@ -437,6 +442,23 @@ if __name__ == "__main__":
         help="Digitally sign windows executables",
     )
 
+
+    parser.add_argument(
+        "--sign-only",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Only digitally sign built executables",
+    )
+
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Dry run current action",
+    )
+
     parser.add_argument(
         "--create-tar-only",
         action="store_true",
@@ -469,6 +491,7 @@ if __name__ == "__main__":
             build_types = BUILD_TYPES
 
         create_tar_only = args.create_tar_only
+        sign_only = args.sign_only
 
         for audience in audiences:
             npbackup_version = get_metadata(os.path.join(BASEDIR, "__version__.py"))[
@@ -493,9 +516,10 @@ if __name__ == "__main__":
                     build_type=build_type,
                     onefile=args.onefile,
                     create_tar_only=create_tar_only,
-                    ev_cert_data=args.ev_cert_data
+                    ev_cert_data=args.ev_cert_data,
+                    sign_only=sign_only
                 )
-                if not create_tar_only:
+                if not create_tar_only and not sign_only:
                     audience_build = "private" if private_build else "public"
                     if result:
                         print(

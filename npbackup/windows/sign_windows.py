@@ -33,14 +33,14 @@ def check_private_ev():
     Test if we have private ev data
     """
     try:
-        from PRIVATE._private_ev_data import AES_EV_KEY
-        from PRIVATE._private_obfuscation import obfuscation
+        from PRIVATE._ev_data import AES_EV_KEY
+        from PRIVATE._obfuscation import obfuscation
 
         print("We have private EV certifcate DATA")
         return obfuscation(AES_EV_KEY)
     except ImportError as exc:
         print("ERROR: Cannot load private EV certificate DATA: {}".format(exc))
-        sys.exit()
+        sys.exit(1)
 
 
 def get_ev_data(cert_data_path):
@@ -64,7 +64,7 @@ def get_ev_data(cert_data_path):
     return pkcs12_certificate, pkcs12_password, container_name, cryptographic_provider
 
 
-def sign(ev_cert_data: str = None, dry_run: bool = False):
+def sign(executable: str = None, arch: str = None, ev_cert_data: str = None, dry_run: bool = False):
     if ev_cert_data:
         (
             pkcs12_certificate,
@@ -80,6 +80,16 @@ def sign(ev_cert_data: str = None, dry_run: bool = False):
         )
     else:
         signer = SignTool()
+
+    if executable:
+        print(f"Signing {executable}")
+        result = signer.sign(executable, bitness=arch, dry_run=dry_run)
+        if not result:
+            # IMPORTANT: If using an automated crypto USB EV token, we need to stop on error so we don't lock ourselves out of the token with bad password attempts
+            raise EnvironmentError(
+                "Could not sign executable ! Is the PKI key connected ?"
+            )
+        return result
 
     for audience in audiences:
         for arch in arches:

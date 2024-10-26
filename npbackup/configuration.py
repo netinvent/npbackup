@@ -37,7 +37,7 @@ sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), ".."
 # Try to import a private key, if not available, fallback to the default key
 try:
     from PRIVATE._private_secret_keys import AES_KEY
-    from PRIVATE._private_obfuscation import obfuscation
+    from PRIVATE._obfuscation import obfuscation
 
     AES_KEY = obfuscation(AES_KEY)
     IS_PRIV_BUILD = True
