@@ -153,6 +153,8 @@ cython_debug/
 
 RESTIC_SOURCE_FILES/restic*
 RESTIC_SOURCE_FILES/ARCHIVES
+PRIVATE/_ev_data.py
+PRIVATE/_obfuscation.py
 _private*
 _NOUSE_private*
 NOUSE_private*
