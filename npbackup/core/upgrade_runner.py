@@ -62,10 +62,14 @@ def need_upgrade(upgrade_interval: int) -> bool:
         logger.error("Bogus upgrade interval given. Will not upgrade")
         return False
 
-    for file in [
-        os.path.join(CURRENT_DIR, counter_file),
+    path_list = [
         os.path.join(tempfile.gettempdir(), counter_file),
-    ]:
+        os.path.join(CURRENT_DIR, counter_file),
+    ]
+    if os.name != "nt":
+        path_list = [os.path.join('/var/log', counter_file)] + path_list
+        
+    for file in path_list:
         if not os.path.isfile(file):
             if _write_count(file, 1):
                 logger.debug("Initial upgrade counter written to %s", file)
