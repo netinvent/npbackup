@@ -67,8 +67,8 @@ def need_upgrade(upgrade_interval: int) -> bool:
         os.path.join(CURRENT_DIR, counter_file),
     ]
     if os.name != "nt":
-        path_list = [os.path.join('/var/log', counter_file)] + path_list
-        
+        path_list = [os.path.join("/var/log", counter_file)] + path_list
+
     for file in path_list:
         if not os.path.isfile(file):
             if _write_count(file, 1):

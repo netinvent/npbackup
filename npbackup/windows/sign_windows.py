@@ -64,7 +64,12 @@ def get_ev_data(cert_data_path):
     return pkcs12_certificate, pkcs12_password, container_name, cryptographic_provider
 
 
-def sign(executable: str = None, arch: str = None, ev_cert_data: str = None, dry_run: bool = False):
+def sign(
+    executable: str = None,
+    arch: str = None,
+    ev_cert_data: str = None,
+    dry_run: bool = False,
+):
     if ev_cert_data:
         (
             pkcs12_certificate,

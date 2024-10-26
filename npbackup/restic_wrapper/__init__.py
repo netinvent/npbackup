@@ -722,7 +722,6 @@ class ResticRunner:
                                     and operation == "ls"
                                     and self.struct_output
                                 ):
-
                                     js["output"].append(ls_decoder.decode(line))
                                 else:
                                     js["output"].append(decoder.decode(line))
