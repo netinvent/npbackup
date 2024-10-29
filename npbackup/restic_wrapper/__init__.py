@@ -150,9 +150,7 @@ class ResticRunner:
         Unsets repository & password environment, we don't need to keep that data when not requested
         """
         os.environ["RESTIC_PASSWORD"] = "o_O"
-        os.environ["RESTIC_REPOSITORY"] = (
-            self.repository_anonymous
-        )
+        os.environ["RESTIC_REPOSITORY"] = self.repository_anonymous
 
         for env_variable in self.environment_variables.keys():
             os.environ[env_variable] = "__ooOO(° °)OOoo__"
@@ -261,7 +259,7 @@ class ResticRunner:
     @property
     def executor_running(self) -> bool:
         return self._executor_running
-    
+
     @property
     def repository_anonymous(self):
         if self.repository:
