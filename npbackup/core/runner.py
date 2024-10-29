@@ -1090,6 +1090,9 @@ class NPBackupRunner:
         """
         Run backup after checking if no recent backup exists, unless force == True
         """
+
+        start_time = datetime.now(timezone.utc)
+
         stdin_from_command = self.repo_config.g("backup_opts.stdin_from_command")
         if not stdin_filename:
             stdin_filename = self.repo_config.g("backup_opts.stdin_filename")
@@ -1228,66 +1231,104 @@ class NPBackupRunner:
         else:
             raise ValueError("Unknown source type given")
 
-        pre_exec_commands_success = True
-        if pre_exec_commands:
-            for pre_exec_command in pre_exec_commands:
-                exit_code, output = command_runner(
-                    pre_exec_command, shell=True, timeout=pre_exec_per_command_timeout
-                )
-                if exit_code != 0:
-                    msg = f"Pre-execution of command {pre_exec_command} failed with:\n{output}"
-                    self.write_logs(msg, level="error")
-                    if pre_exec_failure_is_fatal:
-                        return self.convert_to_json_output(False, msg)
-                    else:
-                        self.write_logs(msg, level="warning")
-                    pre_exec_commands_success = False
-                else:
-                    self.write_logs(
-                        f"Pre-execution of command {pre_exec_command} succeeded with:\n{output}",
-                        level="info",
-                    )
-
-        # Run actual backup here
-        if source_type in (
-            None,
-            "folder_list",
-            "files_from_verbatim",
-            "files_from_raw",
+        def _exec_commands(
+            exec_type: str,
+            command_list: List[str],
+            per_command_timeout: int,
+            failure_is_fatal: bool,
         ):
-            result = self.restic_runner.backup(
-                paths=paths,
-                source_type=source_type,
-                exclude_patterns=exclude_patterns,
-                exclude_files=exclude_files,
-                excludes_case_ignore=excludes_case_ignore,
-                exclude_caches=exclude_caches,
-                exclude_files_larger_than=exclude_files_larger_than,
-                one_file_system=one_file_system,
-                use_fs_snapshot=use_fs_snapshot,
-                tags=tags,
-                additional_backup_only_parameters=additional_backup_only_parameters,
-            )
-        elif source_type == "stdin_from_command" and stdin_from_command:
-            result = self.restic_runner.backup(
-                stdin_from_command=stdin_from_command,
-                stdin_filename=stdin_filename,
-                tags=tags,
-                additional_backup_only_parameters=additional_backup_only_parameters,
-            )
-        elif read_from_stdin:
-            result = self.restic_runner.backup(
-                read_from_stdin=read_from_stdin,
-                stdin_filename=stdin_filename,
-                tags=tags,
-                additional_backup_only_parameters=additional_backup_only_parameters,
-            )
-        else:
-            raise ValueError("Bogus backup source type given")
+            commands_success = True
+            if command_list:
+                for command in command_list:
+                    exit_code, output = command_runner(
+                        command, shell=True, timeout=per_command_timeout
+                    )
+                    if exit_code != 0:
+                        msg = f"{exec_type}-execution of command {command} failed with:\n{output}"
+                        commands_success = False
+                        if not failure_is_fatal:
+                            self.write_logs(msg, level="warning")
+                        else:
+                            self.write_logs(msg, level="error")
+                            self.write_logs(
+                                "Stopping further execution due to fatal error",
+                                level="error",
+                            )
+                            break
+                    else:
+                        self.write_logs(
+                            f"{exec_type}-execution of command {command} succeeded with:\n{output}",
+                            level="info",
+                        )
+            return commands_success
 
-        self.write_logs(
-            f"Restic output:\n{self.restic_runner.backup_result_content}", level="debug"
+        pre_exec_commands_success = _exec_commands(
+            "Pre",
+            pre_exec_commands,
+            pre_exec_per_command_timeout,
+            pre_exec_failure_is_fatal,
         )
+
+        if pre_exec_failure_is_fatal and not pre_exec_commands_success:
+            # This logic is more readable than it's negation, let's just keep it
+            result = False
+        else:
+            # Run actual backup here
+            if source_type in (
+                None,
+                "folder_list",
+                "files_from_verbatim",
+                "files_from_raw",
+            ):
+                result = self.restic_runner.backup(
+                    paths=paths,
+                    source_type=source_type,
+                    exclude_patterns=exclude_patterns,
+                    exclude_files=exclude_files,
+                    excludes_case_ignore=excludes_case_ignore,
+                    exclude_caches=exclude_caches,
+                    exclude_files_larger_than=exclude_files_larger_than,
+                    one_file_system=one_file_system,
+                    use_fs_snapshot=use_fs_snapshot,
+                    tags=tags,
+                    additional_backup_only_parameters=additional_backup_only_parameters,
+                )
+            elif source_type == "stdin_from_command" and stdin_from_command:
+                result = self.restic_runner.backup(
+                    stdin_from_command=stdin_from_command,
+                    stdin_filename=stdin_filename,
+                    tags=tags,
+                    additional_backup_only_parameters=additional_backup_only_parameters,
+                )
+            elif read_from_stdin:
+                result = self.restic_runner.backup(
+                    read_from_stdin=read_from_stdin,
+                    stdin_filename=stdin_filename,
+                    tags=tags,
+                    additional_backup_only_parameters=additional_backup_only_parameters,
+                )
+            else:
+                raise ValueError("Bogus backup source type given")
+
+            self.write_logs(
+                f"Restic output:\n{self.restic_runner.backup_result_content}",
+                level="debug",
+            )
+
+            post_exec_commands_success = _exec_commands(
+                "Post",
+                post_exec_commands,
+                post_exec_per_command_timeout,
+                post_exec_failure_is_fatal,
+            )
+
+        # So we must duplicate @exec_time code here since we must call @metrics manually
+        # because it will need restic output from backup function
+        self.exec_time = (datetime.now(timezone.utc) - start_time).total_seconds()
+        try:
+            os.environ["NPBACKUP_EXEC_TIME"] = str(self.exec_time)
+        except OSError:
+            pass
 
         # Extract backup size from result_string
         # Metrics will not be in json format, since we need to diag cloud issues until
@@ -1304,26 +1345,6 @@ class NPBackupRunner:
                 "Backup is smaller than configured minmium backup size", level="error"
             )
 
-        post_exec_commands_success = True
-        if post_exec_commands:
-            for post_exec_command in post_exec_commands:
-                exit_code, output = command_runner(
-                    post_exec_command, shell=True, timeout=post_exec_per_command_timeout
-                )
-                if exit_code != 0:
-                    msg = f"Post-execution of command {post_exec_command} failed with:\n{output}"
-                    self.write_logs(msg, level="error")
-                    post_exec_commands_success = False
-                    if post_exec_failure_is_fatal:
-                        return self.convert_to_json_output(False, msg)
-                    else:
-                        self.write_logs(msg, level="warning")
-                else:
-                    self.write_logs(
-                        f"Post-execution of command {post_exec_command} succeeded with:\n{output}",
-                        level="info",
-                    )
-
         operation_result = (
             result
             and pre_exec_commands_success
@@ -1336,6 +1357,7 @@ class NPBackupRunner:
             level="info" if operation_result else "error",
             ignore_additional_json=True,
         )
+
         if not operation_result:
             # patch result if json
             if isinstance(result, dict):
