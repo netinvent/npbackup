@@ -706,7 +706,9 @@ class NPBackupRunner:
             if self._produce_metrics:
                 metric_writer(self.repo_config, result, None, fn.__name__, self.dry_run)
             else:
-                self.write_logs(f"Metrics disabled for call {fn.__name__}", level="debug")
+                self.write_logs(
+                    f"Metrics disabled for call {fn.__name__}", level="debug"
+                )
             return result
 
         return wrapper

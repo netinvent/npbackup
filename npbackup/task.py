@@ -82,8 +82,6 @@ def create_scheduled_task(
     if not os.path.isabs(config_file):
         config_file = os.path.join(CURRENT_DIR, config_file)
 
-
-
     if repo:
         subject = f"repo_name {repo}"
         object_args = f" --repo-name {repo}"

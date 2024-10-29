@@ -224,7 +224,6 @@ def config_gui(full_config: dict, config_file: str):
         # Also update task object selector
         window["-OBJECT-SELECT-TASKS-"].Update(values=object_list)
         window["-OBJECT-SELECT-TASKS-"].Update(value=object)
-        
 
     def get_object_from_combo(combo_value: str) -> Tuple[str, str]:
         """
@@ -1970,7 +1969,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     default_value=object_list[0] if object_list else None,
                     key="-OBJECT-SELECT-TASKS-",
                     enable_events=True,
-                )
+                ),
             ],
             [
                 sg.Text(
@@ -2354,14 +2353,16 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             "create_backup_daily_task",
             "create_housekeeping_daily_task",
         ):
-            object_type, object_name = get_object_from_combo(values["-OBJECT-SELECT-TASKS-"])
+            object_type, object_name = get_object_from_combo(
+                values["-OBJECT-SELECT-TASKS-"]
+            )
             if object_type == "groups":
                 task_repo_group = object_name
                 task_repo_name = None
             else:
                 task_repo_name = object_name
                 task_repo_group = None
-            
+
             try:
                 interval = None
                 hour = None
@@ -2377,7 +2378,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     else:
                         hour = values["scheduled_backup_task_hour"]
                         minute = values["scheduled_backup_task_minute"]
-                
+
                 result = create_scheduled_task(
                     config_file=config_file,
                     type=type,
