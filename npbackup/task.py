@@ -7,7 +7,7 @@ __intname__ = "npbackup.task"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024090101"
+__build__ = "2024102901"
 
 
 from typing import List
@@ -82,20 +82,16 @@ def create_scheduled_task(
     if not os.path.isabs(config_file):
         config_file = os.path.join(CURRENT_DIR, config_file)
 
+
+
     if repo:
-        if repo == "__all__":
-            subject = "all repositories"
-        else:
-            subject = f"repo {repo}"
+        subject = f"repo_name {repo}"
         object_args = f" --repo-name {repo}"
     elif group:
-        if group == "__all__":
-            subject = "all groups"
-        else:
-            subject = f"group {group}"
+        subject = f"group_name {group}"
         object_args = f" --repo-group {group}"
     else:
-        subject = f"default repo"
+        subject = f"repo_name default"
         object_args = ""
     if interval_minutes:
         logger.info(
@@ -196,8 +192,8 @@ def create_scheduled_task_unix(
     return True
 
 
-def _get_scheduled_task_name_windows(config_file: str, type: str, subject: str) -> str:
-    return f"{PROGRAM_NAME} - {type.capitalize()} {config_file} {subject}"
+def _get_scheduled_task_name_windows(type: str, subject: str) -> str:
+    return f"{PROGRAM_NAME} - {type.capitalize()} {subject}"
 
 
 def create_scheduled_task_windows(
@@ -219,7 +215,7 @@ def create_scheduled_task_windows(
         task_args = ""
     temp_task_file = os.path.join(tempfile.gettempdir(), "npbackup_task.xml")
 
-    task_name = _get_scheduled_task_name_windows(config_file, type, subject)
+    task_name = _get_scheduled_task_name_windows(type, subject)
 
     if interval_minutes is not None:
         task_args = f'{task_args}-c "{config_file}" --{type} --run-as-cli{object_args}'
@@ -292,7 +288,7 @@ def create_scheduled_task_windows(
     <Actions Context="Author">
         <Exec>
         <Command>"{runner}"</Command>
-        <Arguments>{task_args}{object_args}</Arguments>
+        <Arguments>{task_args}</Arguments>
         <WorkingDirectory>{executable_dir}</WorkingDirectory>
         </Exec>
     </Actions>

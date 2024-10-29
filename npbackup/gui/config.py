@@ -221,6 +221,11 @@ def config_gui(full_config: dict, config_file: str):
         window["-OBJECT-SELECT-"].Update(values=object_list)
         window["-OBJECT-SELECT-"].Update(value=object)
 
+        # Also update task object selector
+        window["-OBJECT-SELECT-TASKS-"].Update(values=object_list)
+        window["-OBJECT-SELECT-TASKS-"].Update(value=object)
+        
+
     def get_object_from_combo(combo_value: str) -> Tuple[str, str]:
         """
         Extracts selected object from combobox
@@ -1948,6 +1953,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             ]
         ]
 
+        object_list = get_objects()
         scheduled_task_col = [
             [
                 sg.Text(
@@ -1955,6 +1961,15 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                         f"{_t('config_gui.scheduled_task_explanation')}", width=120
                     ),
                     size=(100, 4),
+                )
+            ],
+            [
+                sg.Text(_t("config_gui.select_object")),
+                sg.Combo(
+                    object_list,
+                    default_value=object_list[0] if object_list else None,
+                    key="-OBJECT-SELECT-TASKS-",
+                    enable_events=True,
                 )
             ],
             [
@@ -2339,6 +2354,14 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             "create_backup_daily_task",
             "create_housekeeping_daily_task",
         ):
+            object_type, object_name = get_object_from_combo(values["-OBJECT-SELECT-TASKS-"])
+            if object_type == "groups":
+                task_repo_group = object_name
+                task_repo_name = None
+            else:
+                task_repo_name = object_name
+                task_repo_group = None
+            
             try:
                 interval = None
                 hour = None
@@ -2354,9 +2377,12 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     else:
                         hour = values["scheduled_backup_task_hour"]
                         minute = values["scheduled_backup_task_minute"]
+                
                 result = create_scheduled_task(
                     config_file=config_file,
                     type=type,
+                    repo=task_repo_name,
+                    group=task_repo_group,
                     interval_minutes=interval,
                     hour=hour,
                     minute=minute,
