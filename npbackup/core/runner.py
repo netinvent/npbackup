@@ -932,6 +932,7 @@ class NPBackupRunner:
     # Since we want a concurrent.futures.Future result, we need to put the @threaded decorator
     # before any other decorator that would change the results
     # @close_queues should come second, since we want to close queues only once the lower functions are finished
+    # @metrics must be called before @exec_timer, since the metrics will contain exec_time
     # @exec_timer is next, since we want to calc max exec time (except the close_queues and threaded overhead)
     # All others are in no particular order
     # but @catch_exceptions should come last, since we aren't supposed to have errors in decorators
