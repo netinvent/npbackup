@@ -123,6 +123,9 @@ def gui_thread_runner(
     stderr_queue = queue.Queue()
     runner.stderr = stderr_queue
 
+    if __ignore_errors:
+        runner.produce_metrics = False
+
     # We'll always use json output in GUI mode
     runner.json_output = True
     # in GUI mode, we'll use struct output instead of json whenever it's possible

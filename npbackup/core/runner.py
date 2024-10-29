@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024101201"
+__build__ = "2024102901"
 
 
 from typing import Optional, Callable, Union, List
@@ -233,6 +233,8 @@ class NPBackupRunner:
         self.errors_for_json = []
         self.warnings_for_json = []
 
+        self._produce_metrics = True
+
     @property
     def repo_config(self) -> dict:
         return self._repo_config
@@ -363,6 +365,16 @@ class NPBackupRunner:
         if self._is_ready:
             return True if self.restic_runner.binary else False
         return False
+
+    @property
+    def produce_metrics(self):
+        return self._produce_metrics
+
+    @produce_metrics.setter
+    def produce_metrics(self, value):
+        if not isinstance(value, bool):
+            raise ValueError("metrics value {value} is not a boolean")
+        self._produce_metrics = value
 
     @property
     def exec_time(self):
@@ -691,7 +703,10 @@ class NPBackupRunner:
             # pylint: disable=E1102 (not-callable)
             result = fn(self, *args, **kwargs)
             # pylint: disable=E1101 (no-member)
-            metric_writer(self.repo_config, result, None, fn.__name__, self.dry_run)
+            if self._produce_metrics:
+                metric_writer(self.repo_config, result, None, fn.__name__, self.dry_run)
+            else:
+                self.write_logs(f"Metrics disabled for call {fn.__name__}", level="debug")
             return result
 
         return wrapper
