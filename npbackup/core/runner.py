@@ -1272,6 +1272,7 @@ class NPBackupRunner:
         if pre_exec_failure_is_fatal and not pre_exec_commands_success:
             # This logic is more readable than it's negation, let's just keep it
             result = False
+            post_exec_commands_success = None
         else:
             # Run actual backup here
             if source_type in (
