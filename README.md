@@ -101,7 +101,7 @@ The x64 binary is compatible with Windows 10+. The x86 binary is compatible with
 
 ### PyPI installation
 
-If you don't want to use the pre-built executables, you can install via pip with `pip install npbackup` or `pip install npbackup==3.0.0rc8` currently.
+If you don't want to use the pre-built executables, you can install via pip with `pip install npbackup` or `pip install npbackup==3.0.0rc9` currently.
 
 Python requirement: 3.7+
 
