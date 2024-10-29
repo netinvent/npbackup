@@ -338,9 +338,9 @@ class ResticRunner:
             # Only some restic commands support --dry-run, and it must be added after the main command
             # eg restic --dry-run backup / doesn't work
             # but restic backup / --dry-run does
-            operation = fn_name(2)
+            operation = fn_name(1)
             if operation in ["backup", "forget", "prune", "restore", "rewrite"]:
-                cmd += " --dry-run"
+                _cmd += " --dry-run"
 
         self._executor_running = True
         self.write_logs(f"Running command: [{_cmd}]", level="debug")
