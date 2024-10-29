@@ -151,7 +151,7 @@ class ResticRunner:
         """
         os.environ["RESTIC_PASSWORD"] = "o_O"
         os.environ["RESTIC_REPOSITORY"] = (
-            self.repository.split(":")[0] + ":_(o_O)_hidden_by_npbackup"
+            self.repository_anonymous
         )
 
         for env_variable in self.environment_variables.keys():
@@ -261,6 +261,12 @@ class ResticRunner:
     @property
     def executor_running(self) -> bool:
         return self._executor_running
+    
+    @property
+    def repository_anonymous(self):
+        if self.repository:
+            return self.repository.split(":")[0] + ":_(o_O)_hidden_by_npbackup"
+        return None
 
     def write_logs(
         self,
@@ -627,7 +633,7 @@ class ResticRunner:
             self.write_logs("Repository is not initialized or accessible", level="info")
             output = output.replace(
                 self.repository,
-                self.repository.split(":")[0] + ":_(o_O)_hidden_by_npbackup",
+                self.repository_anonymous,
             )
         return self._is_init, output
 
@@ -668,7 +674,7 @@ class ResticRunner:
                     # pylint: disable=E1101 (no-member)
                     output = output.replace(
                         self.repository,
-                        self.repository.split(":")[0] + ":_(o_O)_hidden_by_npbackup",
+                        self.repository_anonymous,
                     )
                     if (
                         "repository is already locked" in output
