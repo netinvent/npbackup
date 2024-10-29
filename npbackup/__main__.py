@@ -302,6 +302,13 @@ This is free software, and you are welcome to redistribute it under certain cond
         required=False,
         help="Create a scheduled housekeeping task, specify hour=hour,minute=minute for a daily task",
     )
+    parser.add_argument(
+        "--check-config-file",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Check if config file is valid",
+    )
     args = parser.parse_args()
 
     if args.log_file:
@@ -369,6 +376,10 @@ This is free software, and you are welcome to redistribute it under certain cond
         msg = "Cannot obtain repo config"
         json_error_logging(False, msg, "critical")
         sys.exit(71)
+
+    if args.check_config_file:
+        json_error_logging(True, "Config file seems valid", "info")
+        sys.exit(0)
 
     if args.create_backup_scheduled_task or args.create_housekeeping_scheduled_task:
         try:
