@@ -2055,8 +2055,8 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
 
     right_click_menu = ["", [_t("config_gui.show_decrypted")]]
     window = sg.Window(
-        "Configuration",
-        config_layout(),
+        title="Configuration",
+        layout=config_layout(),
         # size=(800, 650),
         auto_size_text=True,
         auto_size_buttons=False,
@@ -2088,6 +2088,9 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
     # These contain object name/type so on object change we can update the current object before loading new one
     current_object_type = None
     current_object_name = None
+
+    if config_file:
+        window.set_title(f"Configuration - {config_file}")
 
     while True:
         event, values = window.read()
