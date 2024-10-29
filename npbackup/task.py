@@ -143,7 +143,7 @@ def create_scheduled_task_unix(
 
     if interval_minutes is not None:
         TASK_ARGS = f'-c "{config_file}" --{type} --run-as-cli{object_args}'
-        trigger = f"*/{interval_minutes} * * * *"
+        trigger = f"*/{interval_minutes} * * * * root"
     elif hour is not None and minute is not None:
         if type == "backup":
             force_opt = " --force"
