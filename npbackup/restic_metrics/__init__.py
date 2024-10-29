@@ -196,8 +196,9 @@ def restic_json_to_prometheus(
     if not isinstance(restic_json, dict):
         try:
             restic_json = json.loads(restic_json)
-        except (json.JSONDecodeError, TypeError) as exc:
-            logger.error(f"Cannot decode JSON from restic data: {exc}")
+        except (json.JSONDecodeError, TypeError):
+            logger.error(f"Cannot decode JSON from restic data")
+            logger.debug(f"Data is: {restic_json}, Trace:", exc_info=True)
             restic_json = {}
 
     prom_metrics = []
