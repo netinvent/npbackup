@@ -143,7 +143,7 @@ This is free software, and you are welcome to redistribute it under certain cond
     parser.add_argument(
         "--quick-check",
         action="store_true",
-        help="Deprecated in favor of --'check quick'. Quick check repository"
+        help="Deprecated in favor of --'check quick'. Quick check repository",
     )
     parser.add_argument(
         "--full-check",
@@ -155,7 +155,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Checks the repository. Valid arguments are 'quick' (metadata check) and 'full' (metadata + data check)"
+        help="Checks the repository. Valid arguments are 'quick' (metadata check) and 'full' (metadata + data check)",
     )
     parser.add_argument("--prune", action="store_true", help="Prune data in repository")
     parser.add_argument(
@@ -164,7 +164,11 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Prune data in repository reclaiming maximum space",
     )
     parser.add_argument("--unlock", action="store_true", help="Unlock repository")
-    parser.add_argument("--repair-index", action="store_true", help="Deprecated in favor of '--repair index'.Repair repo index")
+    parser.add_argument(
+        "--repair-index",
+        action="store_true",
+        help="Deprecated in favor of '--repair index'.Repair repo index",
+    )
     parser.add_argument(
         "--repair-packs",
         default=None,
@@ -172,14 +176,18 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Deprecated in favor of '--repair packs'. Repair repo packs ids given by --repair-packs",
     )
     parser.add_argument(
-        "--repair-snapshots", action="store_true", help="Deprecated in favor of '--repair snapshots'.Repair repo snapshots"
+        "--repair-snapshots",
+        action="store_true",
+        help="Deprecated in favor of '--repair snapshots'.Repair repo snapshots",
     )
     parser.add_argument(
         "--repair",
         type=str,
         default=None,
         required=None,
-        help=("Repair the repository. Valid arguments are 'index', 'snapshots', or 'packs'")
+        help=(
+            "Repair the repository. Valid arguments are 'index', 'snapshots', or 'packs'"
+        ),
     )
     parser.add_argument(
         "--recover", action="store_true", help="Recover lost repo snapshots"
@@ -564,7 +572,7 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     # Single repo run
     if len(repos_and_group_repos) == 1:
-        cli_args["repo_config"] = (repo_config)
+        cli_args["repo_config"] = repo_config
 
     # On group operations, we also need to set op_args
 
@@ -619,10 +627,10 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["op_args"] = {"read_data": args.check}
     elif args.check or args.group_operation == "check":
         cli_args["operation"] = "check"
-        if args.check not in ('quick', 'full'):
+        if args.check not in ("quick", "full"):
             json_error_logging(False, "Bogus check operation given", level="critical")
             sys.exit(76)
-        cli_args["op_args"] = {"read_data": False if args.check == 'quick' else True}
+        cli_args["op_args"] = {"read_data": False if args.check == "quick" else True}
     elif args.prune or args.group_operation == "prune":
         cli_args["operation"] = "prune"
     elif args.prune_max or args.group_operation == "prune_max":
@@ -644,7 +652,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["op_args"] = {"subject": "snapshots"}
     elif args.repair or args.group_operation == "repair":
         cli_args["operation"] = "repair"
-        if args.repair not in ('index', 'snapshots', 'packs'):
+        if args.repair not in ("index", "snapshots", "packs"):
             json_error_logging(False, "Bogus repair operation given", level="critical")
             sys.exit(76)
         cli_args["op_args"] = {"subject": args.repair}
