@@ -9,6 +9,10 @@ SET PYTHON32=c:\python37-32\python.exe
 cd C:\GIT\npbackup
 git pull || exit 1
 
+:: cd RESTIC_SOURCE_FILES
+:: cat update_restic.sh | dos2unix | sh
+:: cd ..
+
 :: Make sure we add npbackup in python path so bin and npbackup subfolders become packages
 SET OLD_PYTHONPATH=%PYTHONPATH%
 SET PYTHONPATH=c:\GIT\npbackup
