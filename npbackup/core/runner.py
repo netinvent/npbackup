@@ -1664,7 +1664,12 @@ class NPBackupRunner:
             repo_name = repo_config.g("name")
             self.write_logs(f"Running {operation} for repo {repo_name}", level="info")
             self.repo_config = repo_config
-            result = self.__getattribute__(operation)(**kwargs)
+            try:
+                result = self.__getattribute__(operation)(**kwargs)
+            except Exception as exc:
+                logger.error(f"Operation {operation} for repo {repo_name} failed with: {exc}")
+                logger.debug("Trace", exc_info=True)
+                result = False
             if self.json_output:
                 js["details"].append({repo_name: result})
             else:
