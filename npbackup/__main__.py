@@ -682,14 +682,16 @@ This is free software, and you are welcome to redistribute it under certain cond
         "find",
         "policy",
         "housekeeping",
-        "quick_check",
-        "full_check",
+        "check",
+        "quick_check",      # TODO: deprecated
+        "full_check",       # TODO: deprecated
         "prune",
         "prune_max",
         "unlock",
-        "repair_index",
-        "repair_packs",
-        "repair_snapshots",
+        "repair",
+        "repair_index",     # TODO: deprecated
+        "repair_packs",     # TODO: deprecated
+        "repair_snapshots", # TODO: deprecated
         "recover",
         "dump",
         "stats",
@@ -698,8 +700,9 @@ This is free software, and you are welcome to redistribute it under certain cond
     )
     if len(repos_and_group_repos) > 1:
         if cli_args["operation"] not in possible_group_ops:
-            logger.critical(
-                f"Invalid group operation {cli_args['operation']}. Valid operations are {','.join(possible_group_ops)}"
+            json_error_logging(False,
+                f"Invalid group operation {cli_args['operation']}. Valid operations are {','.join(possible_group_ops)}",
+                "critical"
             )
             sys.exit(74)
         repo_config_list = []
