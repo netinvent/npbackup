@@ -1667,7 +1667,9 @@ class NPBackupRunner:
             try:
                 result = self.__getattribute__(operation)(**kwargs)
             except Exception as exc:
-                logger.error(f"Operation {operation} for repo {repo_name} failed with: {exc}")
+                logger.error(
+                    f"Operation {operation} for repo {repo_name} failed with: {exc}"
+                )
                 logger.debug("Trace", exc_info=True)
                 result = False
             if self.json_output:
