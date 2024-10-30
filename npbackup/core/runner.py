@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024102901"
+__build__ = "2024103001"
 
 
 from typing import Optional, Callable, Union, List
@@ -906,6 +906,7 @@ class NPBackupRunner:
             else:
                 js = {
                     "result": result,
+                    "operation": fn_name,
                     "additional_error_info": [],
                     "additional_warning_info": [],
                 }
@@ -1658,7 +1659,7 @@ class NPBackupRunner:
             },
         }
 
-        js = {"result": None, "details": []}
+        js = {"result": None, "group": True, "output": []}
 
         for repo_config in repo_config_list:
             repo_name = repo_config.g("name")
@@ -1673,7 +1674,7 @@ class NPBackupRunner:
                 logger.debug("Trace", exc_info=True)
                 result = False
             if self.json_output:
-                js["details"].append({repo_name: result})
+                js["output"].append({repo_name: result})
             else:
                 if result:
                     self.write_logs(
