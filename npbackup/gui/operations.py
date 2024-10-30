@@ -11,8 +11,10 @@ __build__ = "2024093001"
 
 
 import os
+from typing import List
 from logging import getLogger
 from collections import namedtuple
+import json
 import FreeSimpleGUI as sg
 from npbackup.configuration import (
     get_repo_config,
@@ -140,12 +142,47 @@ def task_scheduler(repos: list):
             break
 '''
 
+def show_stats(statistics: List[dict]) -> None:
+    """
+    Shows a "nice" representation of repo statistics
+    """
+
+    data = []
+    for entry in statistics:
+        repo_name = list(entry.keys())[0]
+        state = "Success" if entry[repo_name]["result"] else "Failure"
+        try:
+            total_size = entry[repo_name]["output"]["total_size"]
+            total_file_count= entry[repo_name]["output"]["total_file_count"]
+            snapshots_count = entry[repo_name]["output"]["snapshots_count"]
+            data.append([repo_name, state, total_size, total_file_count, snapshots_count])
+        except:
+            data.append([repo_name, state])
+
+    headings = ["Repo", "Stat state", "Total size", "Total File Count", "Snapshot Count"]
+    layout = [
+        [
+            sg.Table(values=data, headings=headings, justification="right")
+        ],
+        [
+            sg.Button(_t("generic.close"), key="--EXIT--")
+        ]
+    ]
+
+    window = sg.Window("Statistics", layout, keep_on_top=True, element_justification="R")
+    while True:
+        event, _ = window.read()
+        if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--EXIT--"):
+            break
+    window.close()
+
+
 def operations_gui(full_config: dict) -> dict:
     """
     Operate on one or multiple repositories, or groups
     """
 
-    def _get_repo_list(selected_rows):
+    def _get_repo_list(selected_rows): # WIP remove dependency
         if not values["repo-and-group-list"]:
             if (
                 sg.popup_yes_no(_t("operations_gui.no_repo_selected"), keep_on_top=True)
@@ -454,16 +491,29 @@ def operations_gui(full_config: dict) -> dict:
                 op_args = {}
                 gui_msg = _t("operations_gui.stats")
             if operation:
-                gui_thread_runner(
+                data = gui_thread_runner(
                     None,
                     "group_runner",
                     operation=operation,
                     repo_config_list=repo_config_list,
-                    __autoclose=False,
+                    __autoclose=False if operation != "stats" else True,
                     __compact=False,
                     __gui_msg=gui_msg,
                     **op_args,
                 )
+                if operation == "stats":
+                    try:
+                        if data["result"]:
+                            show_stats(data["output"])
+                        else:
+                            try:
+                                error = data["reason"]
+                            except KeyError:
+                                error = ""
+                            error += f"\n{data['additional_error_info']}\n{data['additional_warning_info']}"
+                            sg.PopupError(data["reason"])
+                    except Exception as exc:
+                        sg.PopupError(_t("generic.failure") + f": {exc}")
             else:
                 logger.error(f"Bogus operation: {operation}")
                 sg.popup_error(f"Bogus operation: {operation}", keep_on_top=True)

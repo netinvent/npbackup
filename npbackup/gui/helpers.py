@@ -7,10 +7,10 @@ __intname__ = "npbackup.gui.helpers"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024101401"
+__build__ = "2024103001"
 
 
-from typing import Tuple
+from typing import Tuple, Union
 from logging import getLogger
 from time import sleep
 import re
@@ -85,7 +85,7 @@ def gui_thread_runner(
     __ignore_errors: bool = False,
     *args,
     **kwargs,
-):
+) -> Union[dict, str]:
     """
     Runs any NPBackupRunner functions in threads for GUI
     also gets stdout and stderr queues output into gui window
