@@ -6,8 +6,8 @@ __intname__ = "restic_metrics"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "BSD-3-Clause"
-__version__ = "2.0.0"
-__build__ = "2024010101"
+__version__ = "2.0.1"
+__build__ = "2024103001"
 __description__ = (
     "Converts restic command line output to a text file node_exporter can scrape"
 )
@@ -191,7 +191,8 @@ def restic_json_to_prometheus(
                 found = True
                 break
         if not found:
-            raise ValueError("Bogus data given. No message_type: summmary found")
+            logger.critical("Bogus data given. No message_type: summmary found")
+            return False, [], True
 
     if not isinstance(restic_json, dict):
         try:
