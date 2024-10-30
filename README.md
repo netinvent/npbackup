@@ -202,11 +202,16 @@ While admin user experience is important, NPBackup also offers a GUI for end use
 `npbackup-cli` has all the functions the GUI has, and can run on any headless server.  
 It also has a `--json` parameter which guarantees parseable output.
 
-`--group-operation [operation]` allows to run an operation on multiple repos. This paramater also requires `--repo-group` or `--repo-name` parameter. For operations requiring arguments, provide the argument to the original operation parameter.
-`--repo-name` allows to specify one or multiple comma separated repo names
-`--repo-group` allows to specify one or multiple comme separated repo group names
+You may run operations on multiple repositories, or repositories groups by specifying paramater `--repo-group` or `--repo-name`.  
+`--repo-name` allows to specify one or multiple comma separated repo names, also allows special `__all__` argument which selects all repositories.
+`--repo-group` allows to specify one or multiple comme separated repo group names, also allows special `__all__` argument which selects all groups.
 
-`npbackup-gui` can also act as cli if run with `--run-as-cli` parameter, allowing to use a single executable for GUI and tasks.
+Multi-repo example:
+```
+npbackup-cli --housekeeping --repo-group default_group
+```
+
+`npbackup-gui` can also act as cli if run with `--run-as-cli` parameter, allowing to use a single executable as GUI and scheduled tasks.
 
 ## Security
 

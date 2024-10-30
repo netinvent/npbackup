@@ -14,7 +14,7 @@
   - Group settings for repositories
   - Operation center
     - GUI operation center allowing to mass execute actions on repos / groups
-    - CLI operation center via `--group-operation --repo-group=somegroup`
+    - CLI operation center via `--repo-group=somegroup` or `--repo-name repo1,repo2`
     - Implemented retention policies
       - Optional time server update to make sure we don't drift before doing retention operations
     - Operation planifier allows to create scheduled tasks for operations
