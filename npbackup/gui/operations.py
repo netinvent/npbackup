@@ -62,6 +62,7 @@ def gui_update_state(window, full_config: dict, unencrypted: str = None) -> list
     return repo_and_group_list
 
 
+'''
 def task_scheduler(repos: list):
     """
     Create tasks for given repo list
@@ -137,7 +138,7 @@ def task_scheduler(repos: list):
 
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--EXIT--"):
             break
-
+'''
 
 def operations_gui(full_config: dict) -> dict:
     """
@@ -473,7 +474,7 @@ def operations_gui(full_config: dict) -> dict:
             if not repos:
                 continue
             sg.Popup(
-                "Currently not implemented. Please use cron or windows task scheduler"
+                "Currently not implemented. Please use the task creation GUI in config section, or use cron / windows task scheduler"
             )
             # task_scheduler(repos)
             continue
