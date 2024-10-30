@@ -9,7 +9,7 @@ __site__ = "https://www.netperfect.fr/npbackup"
 __description__ = "NetPerfect Backup Client"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024091501"
+__build__ = "2024103001"
 
 
 import sys
@@ -42,7 +42,7 @@ def serialize_datetime(obj):
 
 
 def entrypoint(*args, **kwargs):
-    repo_config = kwargs.pop("repo_config")
+    repo_config = kwargs.pop("repo_config", None)
     json_output = kwargs.pop("json_output")
     operation = kwargs.pop("operation")
     backend_binary = kwargs.pop("backend_binary", None)
