@@ -14,7 +14,7 @@ import os
 from typing import List
 from logging import getLogger
 from collections import namedtuple
-import json
+from ofunctions.misc import BytesConverter
 import FreeSimpleGUI as sg
 from npbackup.configuration import (
     get_repo_config,
@@ -142,6 +142,7 @@ def task_scheduler(repos: list):
             break
 '''
 
+
 def show_stats(statistics: List[dict]) -> None:
     """
     Shows a "nice" representation of repo statistics
@@ -152,24 +153,31 @@ def show_stats(statistics: List[dict]) -> None:
         repo_name = list(entry.keys())[0]
         state = "Success" if entry[repo_name]["result"] else "Failure"
         try:
-            total_size = entry[repo_name]["output"]["total_size"]
-            total_file_count= entry[repo_name]["output"]["total_file_count"]
+            total_size = BytesConverter(entry[repo_name]["output"]["total_size"]).human
+            total_file_count = entry[repo_name]["output"]["total_file_count"]
             snapshots_count = entry[repo_name]["output"]["snapshots_count"]
-            data.append([repo_name, state, total_size, total_file_count, snapshots_count])
+            data.append(
+                [repo_name, state, total_size, total_file_count, snapshots_count]
+            )
         except:
             data.append([repo_name, state])
+            logger.debug(f"Failed statistics for entry: {entry}")
 
-    headings = ["Repo", "Stat state", "Total size", "Total File Count", "Snapshot Count"]
+    headings = [
+        "Repo",
+        "Stat state",
+        "Total size",
+        "Total File Count",
+        "Snapshot Count",
+    ]
     layout = [
-        [
-            sg.Table(values=data, headings=headings, justification="right")
-        ],
-        [
-            sg.Button(_t("generic.close"), key="--EXIT--")
-        ]
+        [sg.Table(values=data, headings=headings, justification="right")],
+        [sg.Button(_t("generic.close"), key="--EXIT--")],
     ]
 
-    window = sg.Window("Statistics", layout, keep_on_top=True, element_justification="R")
+    window = sg.Window(
+        "Statistics", layout, keep_on_top=True, element_justification="R"
+    )
     while True:
         event, _ = window.read()
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--EXIT--"):
@@ -182,8 +190,8 @@ def operations_gui(full_config: dict) -> dict:
     Operate on one or multiple repositories, or groups
     """
 
-    def _get_repo_list(selected_rows): # WIP remove dependency
-        if not values["repo-and-group-list"]:
+    def _get_repo_list(selected_rows):
+        if not selected_rows:
             if (
                 sg.popup_yes_no(_t("operations_gui.no_repo_selected"), keep_on_top=True)
                 == "No"
@@ -192,7 +200,7 @@ def operations_gui(full_config: dict) -> dict:
             repos = get_repo_list(full_config)
         else:
             repos = []
-            for index in values["repo-and-group-list"]:
+            for index in selected_rows:
                 gui_object = complete_repo_list[index]
                 if gui_object.type == "group":
                     repos += get_repos_by_group(full_config, gui_object.name)
