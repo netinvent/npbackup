@@ -141,12 +141,21 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Run --check, --policy and --prune in one go",
     )
     parser.add_argument(
-        "--quick-check", action="store_true", help="Quick check repository"
+        "--quick-check",
+        action="store_true",
+        help="Deprecated in favor of --'check quick'. Quick check repository"
     )
     parser.add_argument(
         "--full-check",
         action="store_true",
-        help="Full check repository (read all data)",
+        help="Deprecated in favor or '--check full'. Full check repository (read all data)",
+    )
+    parser.add_argument(
+        "--check",
+        type=str,
+        default=None,
+        required=False,
+        help="Checks the repository. Valid arguments are 'quick' (metadata check) and 'full' (metadata + data check)"
     )
     parser.add_argument("--prune", action="store_true", help="Prune data in repository")
     parser.add_argument(
@@ -155,15 +164,22 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Prune data in repository reclaiming maximum space",
     )
     parser.add_argument("--unlock", action="store_true", help="Unlock repository")
-    parser.add_argument("--repair-index", action="store_true", help="Repair repo index")
+    parser.add_argument("--repair-index", action="store_true", help="Deprecated in favor of '--repair index'.Repair repo index")
     parser.add_argument(
         "--repair-packs",
         default=None,
         required=False,
-        help="Repair repo packs ids given by --repair-packs",
+        help="Deprecated in favor of '--repair packs'. Repair repo packs ids given by --repair-packs",
     )
     parser.add_argument(
-        "--repair-snapshots", action="store_true", help="Repair repo snapshots"
+        "--repair-snapshots", action="store_true", help="Deprecated in favor of '--repair snapshots'.Repair repo snapshots"
+    )
+    parser.add_argument(
+        "--repair",
+        type=str,
+        default=None,
+        required=None,
+        help=("Repair the repository. Valid arguments are 'index', 'snapshots', or 'packs'")
     )
     parser.add_argument(
         "--recover", action="store_true", help="Recover lost repo snapshots"
@@ -279,7 +295,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Deprecated command to launch operations on multiple repositories. Not needed anymore",
+        help="Deprecated command to launch operations on multiple repositories. Not needed anymore. Replaced by --repo-name x,y or --repo-group x,y",
     )
     parser.add_argument(
         "--create-key",
@@ -390,7 +406,6 @@ This is free software, and you are welcome to redistribute it under certain cond
             repos += npbackup.configuration.get_repo_list(full_config)
         else:
             repos += [repo.strip() for repo in args.repo_name.split(",")]
-        # Let's keep _repos list for later "repo only" usage
         repos_and_group_repos += repos
     if args.repo_group:
         groups = [group.strip() for group in args.repo_group.split(",")]
@@ -549,7 +564,7 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     # Single repo run
     if len(repos_and_group_repos) == 1:
-        cli_args["repo_config"] = (repo_config,)
+        cli_args["repo_config"] = (repo_config)
 
     # On group operations, we also need to set op_args
 
@@ -598,10 +613,16 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["op_args"] = {}
     elif args.quick_check or args.group_operation == "quick_check":
         cli_args["operation"] = "check"
-        cli_args["op_args"] = {"read_data": False}
+        cli_args["op_args"] = {"read_data": args.check}
     elif args.full_check or args.group_operation == "full_check":
         cli_args["operation"] = "check"
-        cli_args["op_args"] = {"read_data": True}
+        cli_args["op_args"] = {"read_data": args.check}
+    elif args.check or args.group_operation == "check":
+        cli_args["operation"] = "check"
+        if args.check not in ('quick', 'full'):
+            json_error_logging(False, "Bogus check operation given", level="critical")
+            sys.exit(76)
+        cli_args["op_args"] = {"read_data": False if args.check == 'quick' else True}
     elif args.prune or args.group_operation == "prune":
         cli_args["operation"] = "prune"
     elif args.prune_max or args.group_operation == "prune_max":
@@ -621,6 +642,12 @@ This is free software, and you are welcome to redistribute it under certain cond
     elif args.repair_snapshots or args.group_operation == "repair_snapshots":
         cli_args["operation"] = "repair"
         cli_args["op_args"] = {"subject": "snapshots"}
+    elif args.repair or args.group_operation == "repair":
+        cli_args["operation"] = "repair"
+        if args.repair not in ('index', 'snapshots', 'packs'):
+            json_error_logging(False, "Bogus repair operation given", level="critical")
+            sys.exit(76)
+        cli_args["op_args"] = {"subject": args.repair}
     elif args.recover or args.group_operation == "recover":
         cli_args["operation"] = "recover"
     elif args.dump or args.group_operation == "dump":
