@@ -75,7 +75,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Name of the repository to work with. Defaults to 'default'. In group operation mode, this can be a comma separated list of repo names. Can accept special name '__all__' to work with all repositories.",
+        help="Name of the repository to work with. Defaults to 'default'. This can also be a comma separated list of repo names. Can accept special name '__all__' to work with all repositories.",
     )
     parser.add_argument(
         "--repo-group",
@@ -279,7 +279,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Launch an operation on a group of repositories given by --repo-group or --repo-name. Valid group operations are [backup|restore|snapshots|list|ls|find|policy|quick_check|full_check|prune|prune_max|unlock|repair_index|repair_packs|repair_snapshots|recover|dump|stats|raw|has_recent_snapshot]",
+        help="Deprecated command to launch operations on multiple repositories. Not needed anymore",
     )
     parser.add_argument(
         "--create-key",
@@ -381,49 +381,36 @@ This is free software, and you are welcome to redistribute it under certain cond
         json_error_logging(True, "Config file seems valid", "info")
         sys.exit(0)
 
-    if args.create_backup_scheduled_task or args.create_housekeeping_scheduled_task:
-        try:
-            if "interval" in args.create_scheduled_task:
-                interval = args.create_scheduled_task.split("=")[1].strip()
-                result = create_scheduled_task(
-                    config_file, type="backup", interval_minutes=int(interval)
-                )
-            elif (
-                "hour" in args.create_scheduled_task
-                and "minute" in args.create_scheduled_task
-            ):
-                if args.create_backup_scheduled_task:
-                    type = "backup"
-                if args.create_housekeeping_scheduled_task:
-                    type = "housekeeping"
-                hours, minutes = args.create_scheduled_task.split(",")
-                hour = hours.split("=")[1].strip()
-                minute = minutes.split("=")[1].strip()
-                result = create_scheduled_task(
-                    config_file, type=type, hour=int(hour), minute=int(minute)
-                )
-                if not result:
-                    msg = "Scheduled task creation failed"
-                    json_error_logging(False, msg, "critical")
-                    sys.exit(72)
-                else:
-                    msg = "Scheduled task created successfully"
-                    json_error_logging(True, msg, "info")
-                    sys.exit(0)
-            else:
-                msg = "Invalid interval or hour and minute given for scheduled task"
-                json_error_logging(False, msg, "critical")
-        except (TypeError, ValueError, IndexError) as exc:
-            logger.debug("Trace:", exc_info=True)
-            msg = f"Bogus data given for scheduled task: {exc}"
-            json_error_logging(False, msg, "critical")
-        sys.exit(72)
+    repos = []
+    repos_and_group_repos = []
+    if not args.repo_name and not args.repo_group:
+        repos_and_group_repos.append("default")
+    if args.repo_name:
+        if args.repo_name == "__all__":
+            repos += npbackup.configuration.get_repo_list(full_config)
+        else:
+            repos += [repo.strip() for repo in args.repo_name.split(",")]
+        # Let's keep _repos list for later "repo only" usage
+        repos_and_group_repos += repos
+    if args.repo_group:
+        groups = [group.strip() for group in args.repo_group.split(",")]
+        for group in groups:
+            repos_and_group_repos += npbackup.configuration.get_repos_by_group(
+                full_config, group
+            )
+        if repos_and_group_repos == []:
+            json_error_logging(
+                False,
+                f"No corresponding repo found for --repo-group setting {args.repo_group}",
+                level="error",
+            )
+            sys.exit(74)
 
-    if not args.group_operation:
-        repo_name = args.repo_name
-        if repo_name is None:
-            repo_name = "default"
-        repo_config, _ = npbackup.configuration.get_repo_config(full_config, repo_name)
+    # Single repo usage
+    if len(repos_and_group_repos) == 1:
+        repo_config, _ = npbackup.configuration.get_repo_config(
+            full_config, repos_and_group_repos[0]
+        )
         if not repo_config:
             msg = "Cannot find repo config"
             json_error_logging(False, msg, "critical")
@@ -440,25 +427,81 @@ This is free software, and you are welcome to redistribute it under certain cond
             sys.exit(73)
 
     if args.show_config:
-        # NPF-SEC-00009
-        # Load an anonymous version of the repo config
-        show_encrypted = False
-        session_manager_password = os.environ.get("NPBACKUP_MANAGER_PASSWORD", None)
-        if session_manager_password:
-            manager_password = repo_config.g("manager_password")
-            if manager_password:
-                if manager_password == session_manager_password:
-                    show_encrypted = True
-                else:
-                    # NPF-SEC
-                    sleep(2)  # Sleep to avoid brute force attacks
-                    logger.error("Wrong manager password")
-                    sys.exit(74)
-        repo_config = npbackup.configuration.get_anonymous_repo_config(
-            repo_config, show_encrypted=show_encrypted
-        )
-        print(json.dumps(repo_config, indent=4))
+        repos_config = []
+        for repo in repos_and_group_repos:
+            repo_config, _ = npbackup.configuration.get_repo_config(full_config, repo)
+            if not repo_config:
+                logger.error(f"Missing config for repository {repo}")
+            else:
+                # NPF-SEC-00009
+                # Load an anonymous version of the repo config
+                show_encrypted = False
+                session_manager_password = os.environ.get(
+                    "NPBACKUP_MANAGER_PASSWORD", None
+                )
+                if session_manager_password:
+                    manager_password = repo_config.g("manager_password")
+                    if manager_password:
+                        if manager_password == session_manager_password:
+                            show_encrypted = True
+                        else:
+                            # NPF-SEC
+                            sleep(2)  # Sleep to avoid brute force attacks
+                            logger.error("Wrong manager password")
+                            sys.exit(74)
+                repo_config = npbackup.configuration.get_anonymous_repo_config(
+                    repo_config, show_encrypted=show_encrypted
+                )
+                repos_config.append(repo_config)
+        print(json.dumps(repos_config, indent=4))
         sys.exit(0)
+
+    if args.create_backup_scheduled_task or args.create_housekeeping_scheduled_task:
+
+        def _create_task(repo=None, group=None):
+            try:
+                if "interval" in args.create_scheduled_task:
+                    interval = args.create_scheduled_task.split("=")[1].strip()
+                    result = create_scheduled_task(
+                        config_file, type="backup", interval_minutes=int(interval)
+                    )
+                elif (
+                    "hour" in args.create_scheduled_task
+                    and "minute" in args.create_scheduled_task
+                ):
+                    if args.create_backup_scheduled_task:
+                        type = "backup"
+                    if args.create_housekeeping_scheduled_task:
+                        type = "housekeeping"
+                    hours, minutes = args.create_scheduled_task.split(",")
+                    hour = hours.split("=")[1].strip()
+                    minute = minutes.split("=")[1].strip()
+                    result = create_scheduled_task(
+                        config_file, type=type, hour=int(hour), minute=int(minute)
+                    )
+                    if not result:
+                        msg = "Scheduled task creation failed"
+                        json_error_logging(False, msg, "critical")
+                        sys.exit(72)
+                    else:
+                        msg = "Scheduled task created successfully"
+                        json_error_logging(True, msg, "info")
+                        sys.exit(0)
+                else:
+                    msg = "Invalid interval or hour and minute given for scheduled task"
+                    json_error_logging(False, msg, "critical")
+            except (TypeError, ValueError, IndexError) as exc:
+                logger.debug("Trace:", exc_info=True)
+                msg = f"Bogus data given for scheduled task: {exc}"
+                json_error_logging(False, msg, "critical")
+            sys.exit(72)
+
+        if groups:
+            for group in groups:
+                _create_task(repo=None, group=group)
+        if repos:
+            for repo in repos:
+                _create_task(repo=repo, group=None)
 
     # Try to perform an auto upgrade if needed
     try:
@@ -495,7 +538,6 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     # Prepare program run
     cli_args = {
-        "repo_config": repo_config,
         "verbose": args.verbose,
         "dry_run": args.dry_run,
         "json_output": args.json,
@@ -504,6 +546,10 @@ This is free software, and you are welcome to redistribute it under certain cond
         "operation": None,
         "op_args": {},
     }
+
+    # Single repo run
+    if len(repos_and_group_repos) == 1:
+        cli_args["repo_config"] = (repo_config,)
 
     # On group operations, we also need to set op_args
 
@@ -591,8 +637,8 @@ This is free software, and you are welcome to redistribute it under certain cond
     elif args.init:
         cli_args["operation"] = "init"
 
-    # Group operation mode
-    if args.group_operation and args.group_operation not in (
+    #### Group operation mode
+    possible_group_ops = (
         "backup",
         "restore",
         "snapshots",
@@ -614,37 +660,16 @@ This is free software, and you are welcome to redistribute it under certain cond
         "stats",
         "raw",
         "has_recent_snapshot",
-    ):
-        logger.critical(
-            f"Invalid group operation {args.group_operation}. Valid operations are [backup|restore|snapshots|list|ls|find|policy|housekeeping|quick_check|full_check|prune|prune_max|unlock|repair_index|repair_packs|repair_snapshots|recover|dump|stats|raw|has_recent_snapshot]"
-        )
-        sys.exit(74)
-    repo_config_list = []
-    repos = []
-    if args.group_operation:
-        if args.repo_group:
-            groups = [group.strip() for group in args.repo_group.split(",")]
-            for group in groups:
-                repos = npbackup.configuration.get_repos_by_group(full_config, group)
-                if repos is None or repos == []:
-                    json_error_logging(
-                        False, "No corresponding repo found", level="error"
-                    )
-                    sys.exit(74)
-        elif args.repo_name:
-            if args.repo_name == "__all__":
-                repos = npbackup.configuration.get_repo_list(full_config)
-            else:
-                repos = [repo.strip() for repo in args.repo_name.split(",")]
-        else:
-            json_error_logging(
-                False,
-                "No repository names or groups have been provided for group operation. Please use --repo-group or --repo-name",
-                level="critical",
+    )
+    if len(repos_and_group_repos) > 1:
+        if cli_args["operation"] not in possible_group_ops:
+            logger.critical(
+                f"Invalid group operation {cli_args['operation']}. Valid operations are {','.join(possible_group_ops)}"
             )
             sys.exit(74)
+        repo_config_list = []
 
-        for repo in repos:
+        for repo in repos_and_group_repos:
             repo_config, _ = npbackup.configuration.get_repo_config(full_config, repo)
             if repo_config is None:
                 json_error_logging(
@@ -652,14 +677,16 @@ This is free software, and you are welcome to redistribute it under certain cond
                     f"Repo {repo} does not exist in this configuration",
                     level="error",
                 )
-                repos.remove(repo)
+                repos_and_group_repos.remove(repo)
             else:
                 repo_config_list.append(repo_config)
 
-        if repos is None or repos == []:
+        if repos_and_group_repos is None or repos_and_group_repos == []:
             json_error_logging(False, "No valid repos selected", level="error")
             sys.exit(74)
-        logger.info(f"Running group operations for repos: {', '.join(repos)}")
+        logger.info(
+            f"Found repositories {', '.join(repos_and_group_repos)} corresponding to groups {', '.join(groups)}"
+        )
 
         op = cli_args["operation"]
         cli_args["operation"] = "group_runner"
