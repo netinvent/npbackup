@@ -420,8 +420,8 @@ This is free software, and you are welcome to redistribute it under certain cond
         sys.exit(72)
 
     if not args.group_operation:
-        repo_name = None
-        if not args.repo_name:
+        repo_name = args.repo_name
+        if repo_name is None:
             repo_name = "default"
         repo_config, _ = npbackup.configuration.get_repo_config(full_config, repo_name)
         if not repo_config:
