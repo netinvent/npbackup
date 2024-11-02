@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024101501"
-__version__ = "2.3.1"
+__build__ = "2024110201"
+__version__ = "2.3.2"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -739,7 +739,8 @@ class ResticRunner:
                                 # self.write_logs(msg, level="error")
                                 # js["extended_info"] = msg
                                 js["output"].append({"data": line})
-                                js["result"] = False
+                                # Don't alter result since restic might give non json result
+                                # js["result"] = False
                         else:
                             try:
                                 # pylint: disable=E0601 (used-before-assignment)
@@ -751,7 +752,7 @@ class ResticRunner:
                                 # self.write_logs(msg, level="error")
                                 # js["extended_info"] = msg
                                 js["output"].append({"data": line})
-                                js["result"] = False
+                                # js["result"] = False
                     # If we only have one output, we don't need a list
                     if len(js["output"]) == 1:
                         js["output"] = js["output"][0]
