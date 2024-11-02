@@ -14,7 +14,8 @@ en:
   forget_using_retention_policy: Forget using retention polic
   standard_prune: Normal prune data
   max_prune: Prune with maximum efficiency
-  stats: Repo statistics
+  stats: Last snapshot repo statistics
+  stats_raw: Full repo statistics
   apply_to_all: Apply to all repos
   apply_to_selected_groups: Apply to selected groups
   no_groups_selected: No groups selected

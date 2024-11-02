@@ -14,7 +14,8 @@ fr:
   forget_using_retention_policy: Oublier les instantanés en utilisant la stratégie de rétention
   standard_prune: Opération de purge normale
   max_prune: Opération de purge la plus efficace
-  stats: Statistiques de dépot
+  stats: Statistiques de dépot dernier instantané
+  stats_raw: Statistiques globales du dépot
   apply_to_all: Appliquer à tous les dépots
   apply_to_selected_groups: Appliquer aux groupes sélectionnés
   no_groups_selected: Aucun groupe sélectionné
