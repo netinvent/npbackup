@@ -1688,7 +1688,7 @@ class NPBackupRunner:
             if not result:
                 group_result = False
             metric_writer(repo_config, result, None, operation, self.dry_run)
-        self.write_logs("Finished execution group operations", level="info")
+        self.write_logs("Finished execution of group operations", level="info")
         if self.json_output:
             js["result"] = group_result
             return js
