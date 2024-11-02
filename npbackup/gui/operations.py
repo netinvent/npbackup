@@ -152,24 +152,87 @@ def show_stats(statistics: List[dict]) -> None:
     for entry in statistics:
         repo_name = list(entry.keys())[0]
         state = "Success" if entry[repo_name]["result"] else "Failure"
+
+        entry_good = False
+
+        # --stats output
         try:
             total_size = BytesConverter(entry[repo_name]["output"]["total_size"]).human
             total_file_count = entry[repo_name]["output"]["total_file_count"]
             snapshots_count = entry[repo_name]["output"]["snapshots_count"]
+            stats_type = "std"
             data.append(
                 [repo_name, state, total_size, total_file_count, snapshots_count]
             )
-        except:
-            data.append([repo_name, state])
-            logger.debug(f"Failed statistics for entry: {entry}")
+            entry_good = True
+        except Exception:
+            pass
+        # --stats --mode raw-data output
+        try:
+            total_size = BytesConverter(entry[repo_name]["output"]["total_size"]).human
+            total_uncompressed_size = BytesConverter(
+                entry[repo_name]["output"]["total_uncompressed_size"]
+            ).human
+            compression_progress = (
+                str(round(float(entry[repo_name]["output"]["compression_progress"]), 2))
+                + " %"
+            )
+            compression_space_saving = (
+                str(
+                    round(
+                        float(entry[repo_name]["output"]["compression_space_saving"]), 2
+                    )
+                )
+                + " %"
+            )
+            compression_ratio = (
+                str(round(float(entry[repo_name]["output"]["compression_ratio"]), 2))
+                + " %"
+            )
+            total_blob_count = entry[repo_name]["output"]["total_blob_count"]
+            snapshots_count = entry[repo_name]["output"]["snapshots_count"]
 
-    headings = [
-        "Repo",
-        "Stat state",
-        "Total size",
-        "Total File Count",
-        "Snapshot Count",
-    ]
+            stats_type = "raw"
+            data.append(
+                [
+                    repo_name,
+                    state,
+                    total_size,
+                    total_uncompressed_size,
+                    compression_progress,
+                    compression_space_saving,
+                    compression_ratio,
+                    total_blob_count,
+                    snapshots_count,
+                ]
+            )
+            entry_good = True
+        except Exception:
+            raise
+    if not entry_good:
+        data.append([repo_name, state])
+        logger.debug(f"Failed statistics for entry: {entry}")
+
+    if stats_type == "raw":
+        headings = [
+            "Repo",
+            "State state",
+            "Total size",
+            "Total uncompressed size",
+            "Compression progress",
+            "Compression space savings",
+            "Compression Ratio",
+            "Total Blob Count",
+            "Snapshot Count",
+        ]
+    else:
+        headings = [
+            "Repo",
+            "Stat state",
+            "Total size",
+            "Total File Count",
+            "Snapshot Count",
+        ]
     layout = [
         [sg.Table(values=data, headings=headings, justification="right")],
         [sg.Button(_t("generic.close"), key="--EXIT--")],
@@ -339,9 +402,16 @@ def operations_gui(full_config: dict) -> dict:
                             size=(45, 1),
                         ),
                         sg.Button(
+                            _t("operations_gui.stats_raw"),
+                            key="--STATS-RAW--",
+                            size=(45, 1),
+                            visible=False,
+                        ),
+                        sg.Button(
                             _t("operations_gui.show_advanced"),
                             key="--ADVANCED--",
                             size=(45, 1),
+                            visible=True,
                         ),
                     ],
                     [sg.Button(_t("generic.quit"), key="--EXIT--")],
@@ -415,9 +485,10 @@ def operations_gui(full_config: dict) -> dict:
                 "--FORGET--",
                 "--STANDARD-PRUNE--",
                 "--MAX-PRUNE--",
+                "--STATS-RAW--",
             ):
                 window[button].update(visible=True)
-                window["--ADVANCED--"].update(disabled=True)
+                window["--ADVANCED--"].update(visible=False)
             continue
         if event in (
             "--HOUSEKEEPING--",
@@ -432,6 +503,7 @@ def operations_gui(full_config: dict) -> dict:
             "--STANDARD-PRUNE--",
             "--MAX-PRUNE--",
             "--STATS--",
+            "--STATS-RAW--",
         ):
             repos = _get_repo_list(values["repo-and-group-list"])
 
@@ -498,6 +570,10 @@ def operations_gui(full_config: dict) -> dict:
                 operation = "stats"
                 op_args = {}
                 gui_msg = _t("operations_gui.stats")
+            if event == "--STATS-RAW--":
+                operation = "stats"
+                op_args = {"subject": "--mode raw-data"}
+                gui_msg = _t("operations_gui.stats_raw")
             if operation:
                 data = gui_thread_runner(
                     None,
