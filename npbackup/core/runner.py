@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024103001"
+__build__ = "2024110301"
 
 
 from typing import Optional, Callable, Union, List
@@ -903,6 +903,10 @@ class NPBackupRunner:
         if self.json_output:
             if isinstance(result, dict):
                 js = result
+                if not "additional_error_info" in js.keys():
+                    js["additional_error_info"] = []
+                if not "additional_warning_info" in js.keys():
+                    js["additional_warning_info"] = []
             else:
                 js = {
                     "result": result,
@@ -1471,6 +1475,15 @@ class NPBackupRunner:
         # Also, pass it as kwargs to make linter happy
         kwargs = {"__no_threads": True, "__close_queues": False}
         # pylint: disable=E1123 (unexpected-keyword-arg)
+        
+
+        # We need to construct our own result here since this is a wrapper for 3 different subcommandzsz
+        js = {
+            "result": True,
+            "operation": fn_name(0),
+            "args": None,
+        }
+
         unlock_result = self.unlock(**kwargs)
 
         if (isinstance(unlock_result, bool) and unlock_result) or (
@@ -1506,8 +1519,16 @@ class NPBackupRunner:
                 level="error",
             )
             result = unlock_result
-
-        return self.convert_to_json_output(result)
+        if isinstance(result, bool):
+            js["result"] = result
+        else:
+            js["detail"] = {
+                "unlock": unlock_result,
+                "check": check_result,
+                "forget": forget_result,
+                "prune": prune_result
+            }
+        return self.convert_to_json_output(js)
 
     @threaded
     @close_queues
