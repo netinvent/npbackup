@@ -84,3 +84,17 @@ Fatal: create repository at c:\testy failed: config file already exists
 
 - on bogus path
 Fatal: create repository at x:\testy failed: mkdir \\?: La syntaxe du nom de fichier, de répertoire ou de volume est incorrecte.
+
+### forget results insconsistenct (v0.17.2)
+# NPF-RESTIC-00001
+
+forget command returns exit code 0 when 
+
+Example with `restic forget myunknwonsnapshot`:
+```
+repository 73d4b440 opened (version 2, compression level auto)
+Ignoring "myunknwonsnapshot": no matching ID found for prefix "myunknwonsnapshot"
+
+echo $?
+0
+```
