@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024110201"
-__version__ = "2.3.2"
+__build__ = "2024110301"
+__version__ = "2.3.3"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -793,8 +793,9 @@ class ResticRunner:
         if result:
             if msg:
                 self.write_logs(msg, level="info")
-            if output:
-                return output
+            # Don't return output as result, only bool result
+            # if output:
+            #    self.write_logs(output, level="info")
             return result
         if msg:
             self.write_logs(msg, level="error")
