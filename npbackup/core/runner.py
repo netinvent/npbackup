@@ -1130,7 +1130,7 @@ class NPBackupRunner:
                         msg = f"You cannot backup source into it's own path in repo {self.repo_config.g('name')}. No inception allowed !"
                         self.write_logs(msg, level="critical")
                         return self.convert_to_json_output(False, msg)
-            except KeyError:
+            except (AttributeError, KeyError):
                 msg = f"No backup source given for repo {self.repo_config.g('name')}"
                 self.write_logs(msg, level="critical")
                 return self.convert_to_json_output(False, msg)
