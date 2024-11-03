@@ -4,32 +4,48 @@
 # Have npbackup backup the qcow2 file + the xml file of the VM
 # then have the script erase the snapshot
 
-# Script ver 2024060401 for NPBackup V3
+# Script ver 2024102902 for NPBackup V3
 
+
+#TODO: remove xml modding after we tested latest snapshot remover
 #TODO: support modding XML file from offline domains to remove snapshot and replace by backing file after qemu-img commit
-
-# Expects repository version 2 to already exist
+#TODO: npbackup doesn't know if snapshot creation failed
+#      - see if including $vm.SNAPSHOT_FAILED file helps
+#TODO: blockcommit removes current snapshots, even if not done by cube
+#      - it's interesting to make housekeeping, let's make this an option
 
 # List of machines
-
 # All active machines by default, adding --all includes inactive machines
 VMS=$(virsh list --name --all)
-# Optional machine selection
+
+# Optional manual machine selection
 #VMS=(some.vm.local some.other.vm.local)
 
-LOG_FILE="/var/log/cube_npv1.log"
+LOG_FILE="/var/log/cube_npv2.log"
 ROOT_DIR="/opt/cube"
 BACKUP_IDENTIFIER="CUBE-BACKUP-NP.$(date +"%Y%m%dT%H%M%S" --utc)"
 BACKUP_FILE_LIST="${ROOT_DIR}/npbackup_cube_file.lst"
-NPBACKUP_CONF_FILE_TEMPLATE="${ROOT_DIR}/npbackup.cube.template"
-NPBACKUP_CONF_FILE="${ROOT_DIR}/npbackup-cube.conf"
 NPBACKUP_EXECUTABLE="/usr/local/bin/npbackup-cli/npbackup-cli"
+NPBACKUP_CONF_FILE_TEMPLATE="${ROOT_DIR}/npbackup-cube.conf.template"
+NPBACKUP_CONF_FILE="${ROOT_DIR}/npbackup-cube.conf"
+
+# Superseed tenants if this is set, else it is extracted from machine name, eg machine.tenant.something
+TENANT_OVERRIDE=netperfect
+# default tenant if extraction of tenant name failed
+DEFAULT_TENANT=netperfect
+
+SCRIPT_ERROR=false
 
 function log {
         local line="${1}"
+        local level="${2}"
 
         echo "${line}" >> "${LOG_FILE}"
         echo "${line}"
+
+        if [ "${level}" == "ERROR" ]; then
+                SCRIPT_ERROR=true
+        fi
 }
 
 function ArrayContains () {
@@ -56,8 +72,11 @@ function create_snapshot {
         # Ignore SC2068 here
         # Add VM xml description from virsh
         ## At least use a umask
-        virsh dumpxml --security-info $vm > "${ROOT_DIR}/$vm.xml"
-        echo "${ROOT_DIR}/$vm.xml" >> "$BACKUP_FILE_LIST"
+
+        # Don't redirect direct virsh output or SELinux may complain that we cannot write with virsh context
+        xml=$(virsh dumpxml --security-info $vm || log "Failed to create XML file" "ERROR")
+        echo "${xml}" > "${ROOT_DIR}/${vm}.xml"
+        echo "${ROOT_DIR}/${vm}.xml" >> "$BACKUP_FILE_LIST"
 
         # Get current disk paths
         for disk_path in $(virsh domblklist $vm --details | grep file | grep disk | awk '{print $4}'); do
@@ -78,7 +97,7 @@ function create_snapshot {
                 log "Failed to create snapshot for $vm with quiesce option. Trying without quiesce."
                 virsh snapshot-create-as $vm --name "${backup_identifier}" --description "${backup_identifier}.noquiesce" --atomic --disk-only >> "$LOG_FILE" 2>&1
                 if [ $? -ne 0 ]; then
-                        log "Failed to create snapshot for $vm without quiesce option. Cannot backup that file."
+                        log "Failed to create snapshot for $vm without quiesce option. Cannot backup that file." "ERROR"
                         echo "$vm.SNAPSHOT_FAILED" >> "$BACKUP_FILE_LIST"
                 else
                         CURRENT_VM_SNAPSHOT="${vm}"
@@ -94,21 +113,25 @@ function create_snapshot {
 }
 
 function get_tenant {
-        # Optional extract a tenant name from a VM name. example. myvm.tenant.local returns tenant
         local vm="${1}"
 
+        if [ ! -z "${TENANT_OVERRIDE}" ]; then
+                echo "${TENANT_OVERRIDE}"
+                return
+        fi
+
         # $(NF-1) means last column -1
-        tenant=$(echo "${vm}" |awk -F'.' '{print $(NF-1)}')
-        # Special case for me
-        if [ "${tenant}" == "npf" ]; then
-                tenant="netperfect"
+        npf_tenant=$(echo ${vm} |awk -F'.' '{print $(NF-1)}')
+        if [ "${npf_tenant}" == "npf" ]; then
+                npf_tenant="netperfect"
         fi
+
+        if [ -z "${npf_tenant}" ]; then
+                npf_tenant="${DEFAULT_TENANT}"
+        fi
+
         # return this
-        if [ "${tenant}" != "" ]; then
-            echo "${tenant}"
-        else
-            echo "unknown_tenant"
-        fi
+        echo "${npf_tenant}"
 }
 
 function run_backup {
@@ -128,10 +151,9 @@ function run_backup {
         sed -i "s%### SOURCE ###%${BACKUP_FILE_LIST}%g" "${NPBACKUP_CONF_FILE}"
         sed -i "s%### VM ###%${vm}%g" "${NPBACKUP_CONF_FILE}"
 
-        cd "$(dirname "$NPBACKUP_EXECUTABLE")"
-        "$NPBACKUP_EXECUTABLE" --config-file "${NPBACKUP_CONF_FILE}" --backup --force >> "$LOG_FILE" 2>&1
+        "${NPBACKUP_EXECUTABLE}" --config-file "${NPBACKUP_CONF_FILE}" --backup --force >> "$LOG_FILE" 2>&1
         if [ $? -ne 0 ]; then
-                log "Backup failure"
+                log "Backup failure" "ERROR"
         else
                 log "Backup success"
         fi
@@ -154,14 +176,17 @@ function remove_snapshot {
                         virsh blockcommit $vm "$disk_name" --active --pivot --verbose --delete >> "$LOG_FILE" 2>&1
                 else
                         log "Trying to offline blockcommit for $disk_name: $disk_path"
+                        # -p = progress, we actually don't need that here
                         qemu-img commit -dp "$disk_path" >> "$LOG_FILE" 2>&1
                         log "Note that you will need to modify the XML manually"
 
+                        # virsh snapshot delete will erase commited file if exist so we don't need to manually tamper with xml file
+                        virsh snapshot-delete --current $vm
                         # TODO: test2
-                        virsh dumpxml --inactive --security-info "$vm" > "${ROOT_DIR}/$vm.xml.temp"
-                        sed -i "s%${backup_identifier}//g" "${ROOT_DIR}/$vm.xml.temp"
-                        virsh define "${ROOT_DIR}/$vm.xml.temp"
-                        rm -f "${ROOT_DIR}/$vm.xml.temp"
+                        #virsh dumpxml --inactive --security-info "$vm" > "${ROOT_DIR}/$vm.xml.temp"
+                        #sed -i "s%${backup_identifier}//g" "${ROOT_DIR}/$vm.xml.temp"
+                        #virsh define "${ROOT_DIR}/$vm.xml.temp"
+                        #rm -f "${ROOT_DIR}/$vm.xml.temp"
 
                         ##TODO WE NEED TO UPDATE DISK PATH IN XML OF OFFLINE FILE
                 fi
@@ -188,11 +213,13 @@ function remove_snapshot {
                 log "Deleting metadata from snapshot ${backup_identifier} for $vm"
                 virsh snapshot-delete $vm --snapshotname "${backup_identifier}" --metadata >> "$LOG_FILE" 2>&1
                 if [ $? -ne 0 ]; then
-                        log "Cannot delete snapshot metadata for $vm: ${backup_identifier}"
+                        log "Cannot delete snapshot metadata for $vm: ${backup_identifier}" "ERROR"
                 fi
         else
                 log "Will not delete metadata from snapshot ${backup_identifier} for $vm"
         fi
+        log "Delete former XML file"
+        rm -f "${ROOT_DIR}/${vm}.xml"
 }
 
 
@@ -206,8 +233,8 @@ function run {
                 log "Running backup for ${vm}"
                 SNAPSHOTS_PATHS=()
                 create_snapshot "${vm}" "${BACKUP_IDENTIFIER}"
-                tenant=$(get_tenant "${vm}")
-                run_backup "${tenant}" "${vm}"
+                npf_tenant=$(get_tenant "${vm}")
+                run_backup "${npf_tenant}" "${vm}"
                 if [ "${CURRENT_VM_SNAPSHOT}" != "" ]; then
                         remove_snapshot "${CURRENT_VM_SNAPSHOT}" "${BACKUP_IDENTIFIER}"
                 fi
@@ -227,9 +254,21 @@ function main {
         # Make sure we remove snapshots no matter what
         trap 'cleanup' INT HUP TERM QUIT ERR EXIT
 
-        log "#### Running backup `date`" >> "$LOG_FILE" 2>&1
+        log "#### Make sure all template variables are encypted"
+        "${NPBACKUP_EXECUTABLE}" -c "${NPBACKUP_CONF_FILE_TEMPLATE}" --check-config-file
+
+        log "#### Running backup `date`"
+
         [ ! -d "${ROOT_DIR}" ] && mkdir "${ROOT_DIR}"
         run
+
+        if [ "${SCRIPT_ERROR}" == true ]; then
+                log "Backup operation failed."
+        else
+                log "Backup finished."
+        fi
+        # Prune old backups ?
+        # No, done remotely since we use --append-only
 }
 
 # SCRIPT ENTRY POINT
