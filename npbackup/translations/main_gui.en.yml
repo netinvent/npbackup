@@ -38,7 +38,7 @@ en:
   repo_and_password_cannot_be_empty: Repo and password cannot be empty
   viewer_mode: Repository view-only mode
   open_repo: Open repo
-  new_config: New config
+  new_config: Create new config
   load_config: Load configuration
   config_error: Configuration error
   no_config: Please load / create a configuration before proceeding

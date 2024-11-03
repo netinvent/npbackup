@@ -540,7 +540,7 @@ def _main_gui(viewer_mode: bool):
                 sg.Push(),
                 sg.Button(_t("generic.cancel"), key="--CANCEL--"),
                 sg.Button(_t("main_gui.new_config"), key="--NEW-CONFIG--"),
-                sg.Button(_t("generic.accept"), key="--ACCEPT--"),
+                sg.Button(_t("generic.load"), key="--LOAD--"),
             ],
         ]
         window = sg.Window("Configuration File", layout=layout, keep_on_top=True)
@@ -554,7 +554,7 @@ def _main_gui(viewer_mode: bool):
                 action = event
                 config_file = Path(values["-config_file-"])
                 break
-            if event == "--ACCEPT--":
+            if event == "--LOAD--":
                 config_file = Path(values["-config_file-"])
                 if not values["-config_file-"] or not config_file.exists():
                     sg.PopupError(_t("generic.file_does_not_exist"), keep_on_top=True)
