@@ -126,7 +126,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Forget given snapshot",
+        help="Forget given snapshot (accepts comma separated list of snapshots)",
     )
     parser.add_argument(
         "--policy",
@@ -614,7 +614,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["op_args"] = {"path": args.find}
     elif args.forget:
         cli_args["operation"] = "forget"
-        cli_args["op_args"] = {"snapshots": args.forget}
+        cli_args["op_args"] = {"snapshots": [snapshot.split() for snapshot in args.forget.split(',')]}
     elif args.policy or args.group_operation == "policy":
         cli_args["operation"] = "forget"
         cli_args["op_args"] = {"use_policy": True}
