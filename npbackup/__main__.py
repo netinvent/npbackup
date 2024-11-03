@@ -614,7 +614,9 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["op_args"] = {"path": args.find}
     elif args.forget:
         cli_args["operation"] = "forget"
-        cli_args["op_args"] = {"snapshots": [snapshot.strip() for snapshot in args.forget.split(',')]}
+        cli_args["op_args"] = {
+            "snapshots": [snapshot.strip() for snapshot in args.forget.split(",")]
+        }
     elif args.policy or args.group_operation == "policy":
         cli_args["operation"] = "forget"
         cli_args["op_args"] = {"use_policy": True}
