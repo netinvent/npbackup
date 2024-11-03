@@ -1129,7 +1129,9 @@ class ResticRunner:
         if cmds:
             for cmd in cmds:
                 result, output = self.executor(cmd)
-                if result:
+                # NPF-RESTIC-00001
+                # restic output inconsistency: non existing snapshot IDs still produce exit code 0
+                if result and not "no matching ID found for prefix" in output:
                     msg = f"successfully {'applied retention policy' if policy else 'forgot snapshot'}"
                     self.write_logs(
                         msg,
