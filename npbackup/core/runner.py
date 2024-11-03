@@ -1475,7 +1475,6 @@ class NPBackupRunner:
         # Also, pass it as kwargs to make linter happy
         kwargs = {"__no_threads": True, "__close_queues": False}
         # pylint: disable=E1123 (unexpected-keyword-arg)
-        
 
         # We need to construct our own result here since this is a wrapper for 3 different subcommandzsz
         js = {
@@ -1526,7 +1525,7 @@ class NPBackupRunner:
                 "unlock": unlock_result,
                 "check": check_result,
                 "forget": forget_result,
-                "prune": prune_result
+                "prune": prune_result,
             }
         return self.convert_to_json_output(js)
 
