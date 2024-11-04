@@ -209,9 +209,10 @@ This is free software, and you are welcome to redistribute it under certain cond
     parser.add_argument(
         "--stats",
         type=str,
-        default=None,
+        nargs="?",
+        const="",
         required=False,
-        help='Get repository statistics. If snapshot id is given, only snapshots statistics will be shown. You may also pass "--mode raw-data" to get full repo statistics',
+        help='Get repository statistics. If snapshot id is given, only snapshot statistics will be shown. You may also pass "--mode raw-data" (with double quotes) to get full repo statistics',
     )
     parser.add_argument(
         "--raw",
@@ -625,10 +626,10 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["op_args"] = {}
     elif args.quick_check or args.group_operation == "quick_check":
         cli_args["operation"] = "check"
-        cli_args["op_args"] = {"read_data": args.check}
+        cli_args["op_args"] = {"read_data": False}
     elif args.full_check or args.group_operation == "full_check":
         cli_args["operation"] = "check"
-        cli_args["op_args"] = {"read_data": args.check}
+        cli_args["op_args"] = {"read_data": True}
     elif args.check or args.group_operation == "check":
         cli_args["operation"] = "check"
         if args.check not in ("quick", "full"):
@@ -665,7 +666,7 @@ This is free software, and you are welcome to redistribute it under certain cond
     elif args.dump or args.group_operation == "dump":
         cli_args["operation"] = "dump"
         cli_args["op_args"] = {"path": args.dump}
-    elif args.stats or args.group_operation == "stats":
+    elif args.stats is not None or args.group_operation == "stats":
         cli_args["operation"] = "stats"
         cli_args["op_args"] = {"subject": args.stats}
     elif args.raw or args.group_operation == "raw":
