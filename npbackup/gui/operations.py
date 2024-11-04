@@ -208,7 +208,7 @@ def show_stats(statistics: List[dict]) -> None:
             )
             entry_good = True
         except Exception:
-            raise
+            pass
     if not entry_good:
         data.append([repo_name, state])
         logger.debug(f"Failed statistics for entry: {entry}")
