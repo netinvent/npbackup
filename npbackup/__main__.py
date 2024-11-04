@@ -148,7 +148,7 @@ This is free software, and you are welcome to redistribute it under certain cond
     parser.add_argument(
         "--full-check",
         action="store_true",
-        help="Deprecated in favor or '--check full'. Full check repository (read all data)",
+        help="Deprecated in favor of '--check full'. Full check repository (read all data)",
     )
     parser.add_argument(
         "--check",
