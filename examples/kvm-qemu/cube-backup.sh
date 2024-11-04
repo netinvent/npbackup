@@ -1,16 +1,7 @@
 #!/usr/bin/env bash
 
-# Script to create KVM snapshots using libvirt
-# Have npbackup backup the qcow2 file + the xml file of the VM
-# then have the script erase the snapshot
+# Script ver 2024110401
 
-# Script ver 2024102902 for NPBackup V3
-
-
-#TODO: remove xml modding after we tested latest snapshot remover
-#TODO: support modding XML file from offline domains to remove snapshot and replace by backing file after qemu-img commit
-#TODO: npbackup doesn't know if snapshot creation failed
-#      - see if including $vm.SNAPSHOT_FAILED file helps
 #TODO: blockcommit removes current snapshots, even if not done by cube
 #      - it's interesting to make housekeeping, let's make this an option
 
@@ -28,6 +19,7 @@ BACKUP_FILE_LIST="${ROOT_DIR}/npbackup_cube_file.lst"
 NPBACKUP_EXECUTABLE="/usr/local/bin/npbackup-cli/npbackup-cli"
 NPBACKUP_CONF_FILE_TEMPLATE="${ROOT_DIR}/npbackup-cube.conf.template"
 NPBACKUP_CONF_FILE="${ROOT_DIR}/npbackup-cube.conf"
+SNAPSHOT_FAILED_FILE="${ROOT_DIR}/SNAPSHOT_FAILED"
 
 # Superseed tenants if this is set, else it is extracted from machine name, eg machine.tenant.something
 TENANT_OVERRIDE=netperfect
@@ -78,7 +70,7 @@ function create_snapshot {
         echo "${xml}" > "${ROOT_DIR}/${vm}.xml"
         echo "${ROOT_DIR}/${vm}.xml" >> "$BACKUP_FILE_LIST"
 
-        # Get current disk paths
+        # Get current disk paths to include into snapshot
         for disk_path in $(virsh domblklist $vm --details | grep file | grep disk | awk '{print $4}'); do
         if [ -f "${disk_path}" ]; then
                         # Add current disk path and all necessary backing files for current disk to backup file list
@@ -92,13 +84,14 @@ function create_snapshot {
                 fi
         done
         log "Creating snapshot for $vm"
+        rm -f "${SNAPSHOT_FAILED_FILE}" > /dev/null 2>&1
         virsh snapshot-create-as $vm --name "${backup_identifier}" --description "${backup_identifier}" --atomic --quiesce --disk-only >> "$LOG_FILE" 2>&1
         if [ $? -ne 0 ]; then
-                log "Failed to create snapshot for $vm with quiesce option. Trying without quiesce."
+                log "Failed to create snapshot for $vm with quiesce option. Trying without quiesce. Data will be nonconsistent"
                 virsh snapshot-create-as $vm --name "${backup_identifier}" --description "${backup_identifier}.noquiesce" --atomic --disk-only >> "$LOG_FILE" 2>&1
                 if [ $? -ne 0 ]; then
-                        log "Failed to create snapshot for $vm without quiesce option. Cannot backup that file." "ERROR"
-                        echo "$vm.SNAPSHOT_FAILED" >> "$BACKUP_FILE_LIST"
+                        log "Failed to create snapshot for $vm without quiesce option. Backup will be done, but data will be nonconsistent and perhaps unusable." "ERROR"
+                        echo "$vm" > "${SNAPSHOT_FAILED_FILE}"
                 else
                         CURRENT_VM_SNAPSHOT="${vm}"
                 fi
@@ -176,7 +169,7 @@ function remove_snapshot {
                         virsh blockcommit $vm "$disk_name" --active --pivot --verbose --delete >> "$LOG_FILE" 2>&1
                 else
                         log "Trying to offline blockcommit for $disk_name: $disk_path"
-                        # -p = progress, we actually don't need that here
+                        # -p = progress, we actually don't need that hee
                         qemu-img commit -dp "$disk_path" >> "$LOG_FILE" 2>&1
                         log "Note that you will need to modify the XML manually"
 
@@ -218,8 +211,6 @@ function remove_snapshot {
         else
                 log "Will not delete metadata from snapshot ${backup_identifier} for $vm"
         fi
-        log "Delete former XML file"
-        rm -f "${ROOT_DIR}/${vm}.xml"
 }
 
 
@@ -238,6 +229,9 @@ function run {
                 if [ "${CURRENT_VM_SNAPSHOT}" != "" ]; then
                         remove_snapshot "${CURRENT_VM_SNAPSHOT}" "${BACKUP_IDENTIFIER}"
                 fi
+                log "Delete former XML file"
+                rm -f "${ROOT_DIR}/${vm}.xml" > /dev/null 2>&1
+                rm -f "${SNAPSHOT_FAILED_FILE}" > /dev/null 2>&1
         done
 }
 

@@ -39,8 +39,9 @@ groups:
       exclude_files_larger_than:
       additional_parameters:
       additional_backup_only_parameters:
-      minimum_backup_size_error: 10 MiB
-      pre_exec_commands: []
+      minimum_backup_size_error: 10 GiB
+      pre_exec_commands:
+      - '[ -f /opt/cube/SNAPSHOT_FAILED ] && echo "Snapshot failed for $(cat /opt/cube/SNAPSHOT_FAILED)" && exit 1'
       pre_exec_per_command_timeout: 3600
       pre_exec_failure_is_fatal: false
       post_exec_commands: []
