@@ -81,7 +81,9 @@ def g(self, path, sep=".", default=None, list_ok=False):
     try:
         return self.mlget(path.split(sep), default=default, list_ok=list_ok)
     except AssertionError as exc:
-        logger.debug(f"ERROR {exc} for path={path},sep={sep},default={default},list_ok={list_ok}")
+        logger.debug(
+            f"ERROR {exc} for path={path},sep={sep},default={default},list_ok={list_ok}"
+        )
         raise AssertionError
 
 

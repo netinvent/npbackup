@@ -1089,7 +1089,7 @@ class ResticRunner:
         self,
         snapshots: Optional[Union[List[str], Optional[str]]] = None,
         policy: Optional[dict] = None,
-        group_by: Optional[List[str]] = None
+        group_by: Optional[List[str]] = None,
     ) -> Union[bool, str, dict]:
         """
         Execute forget command for given snapshot

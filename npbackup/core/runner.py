@@ -1444,7 +1444,7 @@ class NPBackupRunner:
                 msg = f"Empty retention policy. Won't run"
                 self.write_logs(msg, level="error")
                 return self.convert_to_json_output(False, msg)
-            
+
             # Convert group by to list
             group_by = []
             for entry in ["host", "paths", "tags"]:

@@ -1519,9 +1519,7 @@ def config_gui(full_config: dict, config_file: str):
                     size=(100, 1),
                 ),
             ],
-            [
-                sg.Text(_t("config_gui.policiy_group_by"))
-            ],
+            [sg.Text(_t("config_gui.policiy_group_by"))],
             [
                 sg.Image(
                     NON_INHERITED_ICON,
@@ -1531,7 +1529,7 @@ def config_gui(full_config: dict, config_file: str):
                 ),
                 sg.Checkbox(
                     _t("config_gui.group_by_host"),
-                    key="repo_opts.retention_policy.group_by_host"
+                    key="repo_opts.retention_policy.group_by_host",
                 ),
                 sg.Image(
                     NON_INHERITED_ICON,
@@ -1541,7 +1539,7 @@ def config_gui(full_config: dict, config_file: str):
                 ),
                 sg.Checkbox(
                     _t("config_gui.group_by_paths"),
-                    key="repo_opts.retention_policy.group_by_paths"
+                    key="repo_opts.retention_policy.group_by_paths",
                 ),
                 sg.Image(
                     NON_INHERITED_ICON,
@@ -1551,12 +1549,10 @@ def config_gui(full_config: dict, config_file: str):
                 ),
                 sg.Checkbox(
                     _t("config_gui.group_by_tags"),
-                    key="repo_opts.retention_policy.group_by_tags"
+                    key="repo_opts.retention_policy.group_by_tags",
                 ),
             ],
-            [
-                sg.Text(_t("config_gui.policiy_group_by_explanation"))
-            ],
+            [sg.Text(_t("config_gui.policiy_group_by_explanation"))],
             [sg.HorizontalSeparator()],
             [
                 sg.Column(
