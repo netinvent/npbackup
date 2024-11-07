@@ -1448,7 +1448,7 @@ class NPBackupRunner:
             # Convert group by to list
             group_by = []
             for entry in ["host", "paths", "tags"]:
-                if self.repo_config.g(f"repo_opts.retention_policy.group_by.{entry}"):
+                if self.repo_config.g(f"repo_opts.retention_policy.group_by_{entry}"):
                     group_by.append(entry)
 
             self.write_logs(

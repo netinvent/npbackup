@@ -78,7 +78,11 @@ def g(self, path, sep=".", default=None, list_ok=False):
     Getter for dot notation in an a dict/OrderedDict
     print(d.g('my.array.keys'))
     """
-    return self.mlget(path.split(sep), default=default, list_ok=list_ok)
+    try:
+        return self.mlget(path.split(sep), default=default, list_ok=list_ok)
+    except AssertionError as exc:
+        logger.debug(f"ERROR {exc} for path={path},sep={sep},default={default},list_ok={list_ok}")
+        raise AssertionError
 
 
 def s(self, path, value, sep="."):
@@ -203,11 +207,9 @@ empty_config_dict = {
                     "yearly": 3,
                     "tags": [],
                     "keep_within": True,
-                    "group_by": {
-                        "host": True,
-                        "tags": True,
-                        "paths": False
-                    },
+                    "group_by_host": True,
+                    "group_by_tags": True,
+                    "group_by_paths": False,
                     "ntp_server": None,
                 },
                 # "prune_max_unused": None,  # TODO
