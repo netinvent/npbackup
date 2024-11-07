@@ -245,6 +245,44 @@ def config_gui(full_config: dict, config_file: str):
 
         return object_type, object_name
 
+    def update_source_layout(source_type: str):
+        if source_type == "stdin_from_command":
+            window["backup_opts.paths"].update(visible=False)
+            window["--ADD-PATHS-FILE-BUTTON--"].update(visible=False)
+            window["--ADD-PATHS-FOLDER-BUTTON--"].update(visible=False)
+            window["--ADD-PATHS-MANUALLY--"].update(visible=False)
+            window["--REMOVE-PATHS--"].update(visible=False)
+            window["backup_opts.stdin_from_command"].update(visible=True)
+            window["inherited.backup_opts.stdin_from_command"].update(visible=True)
+            window["text_stdin_from_command"].update(visible=True)
+            window["backup_opts.stdin_filename"].update(visible=True)
+            window["inherited.backup_opts.stdin_filename"].update(visible=True)
+            window["text_stdin_filename"].update(visible=True)
+        elif source_type == "folder_list":
+            window["backup_opts.paths"].update(visible=True)
+            window["--ADD-PATHS-FILE-BUTTON--"].update(visible=True)
+            window["--ADD-PATHS-FOLDER-BUTTON--"].update(visible=True)
+            window["--ADD-PATHS-MANUALLY--"].update(visible=True)
+            window["--REMOVE-PATHS--"].update(visible=True)
+            window["backup_opts.stdin_from_command"].update(visible=False)
+            window["inherited.backup_opts.stdin_from_command"].update(visible=False)
+            window["text_stdin_from_command"].update(visible=False)
+            window["backup_opts.stdin_filename"].update(visible=False)
+            window["inherited.backup_opts.stdin_filename"].update(visible=False)
+            window["text_stdin_filename"].update(visible=False)
+        elif source_type in ("files_from", "files_from_verbatim", "files_from_raw"):
+            window["backup_opts.paths"].update(visible=True)
+            window["--ADD-PATHS-FILE-BUTTON--"].update(visible=True)
+            window["--ADD-PATHS-FOLDER-BUTTON--"].update(visible=False)
+            window["--ADD-PATHS-MANUALLY--"].update(visible=True)
+            window["--REMOVE-PATHS--"].update(visible=True)
+            window["backup_opts.stdin_from_command"].update(visible=False)
+            window["inherited.backup_opts.stdin_from_command"].update(visible=False)
+            window["text_stdin_from_command"].update(visible=False)
+            window["backup_opts.stdin_filename"].update(visible=False)
+            window["inherited.backup_opts.stdin_filename"].update(visible=False)
+            window["text_stdin_filename"].update(visible=False)
+
     def update_gui_values(key, value, inherited, object_type, unencrypted):
         """
         Update gui values depending on their type
@@ -566,6 +604,17 @@ def config_gui(full_config: dict, config_file: str):
             object_config, config_inheritance, object_type, unencrypted, None
         )
 
+        # Special case when no source type is set
+        if window["backup_opts.source_type"].Get() == "":
+            window["backup_opts.source_type"].Update(
+                value=combo_boxes["backup_opts.source_type"]["folder_list"]
+            )
+        source_type = get_key_from_value(
+            combo_boxes["backup_opts.source_type"],
+            window["backup_opts.source_type"].Get(),
+        )
+        update_source_layout(source_type)
+
     def update_global_gui(full_config, unencrypted: bool = False):
         nonlocal global_prometheus_labels_tree
 
@@ -865,36 +914,6 @@ def config_gui(full_config: dict, config_file: str):
                 ),
             ],
             [
-                sg.Tree(
-                    sg.TreeData(),
-                    key="backup_opts.paths",
-                    headings=[],
-                    col0_heading=_t("generic.paths"),
-                    expand_x=True,
-                    expand_y=True,
-                )
-            ],
-            [sg.Text(_t("config_gui.stdin_from_command"))],
-            [
-                sg.Image(
-                    NON_INHERITED_ICON,
-                    key="inherited.backup_opts.stdin_from_command",
-                    tooltip=_t("config_gui.group_inherited"),
-                    pad=1,
-                ),
-                sg.Input(key="backup_opts.stdin_from_command", size=(100, 1)),
-            ],
-            [sg.Text(_t("config_gui.stdin_filename"))],
-            [
-                sg.Image(
-                    NON_INHERITED_ICON,
-                    key="inherited.backup_opts.stdin_filename",
-                    tooltip=_t("config_gui.group_inherited"),
-                    pad=1,
-                ),
-                sg.Input(key="backup_opts.stdin_filename", size=(100, 1)),
-            ],
-            [
                 sg.Input(visible=False, key="--ADD-PATHS-FILE--", enable_events=True),
                 sg.FilesBrowse(
                     _t("generic.add_files"),
@@ -909,6 +928,40 @@ def config_gui(full_config: dict, config_file: str):
                 ),
                 sg.Button(_t("generic.add_manually"), key="--ADD-PATHS-MANUALLY--"),
                 sg.Button(_t("generic.remove_selected"), key="--REMOVE-PATHS--"),
+            ],
+            [
+                sg.Tree(
+                    sg.TreeData(),
+                    key="backup_opts.paths",
+                    headings=[],
+                    col0_heading=_t("generic.paths"),
+                    expand_x=True,
+                    expand_y=True,
+                )
+            ],
+            [
+                sg.Text(
+                    _t("config_gui.stdin_from_command"), key="text_stdin_from_command"
+                )
+            ],
+            [
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.backup_opts.stdin_from_command",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
+                sg.Input(key="backup_opts.stdin_from_command", size=(100, 1)),
+            ],
+            [sg.Text(_t("config_gui.stdin_filename"), key="text_stdin_filename")],
+            [
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.backup_opts.stdin_filename",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
+                sg.Input(key="backup_opts.stdin_filename", size=(100, 1)),
             ],
             [
                 sg.Column(
@@ -1942,7 +1995,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             [
                 sg.Push(),
                 sg.Button(
-                    _t("config_gui.create_object"), key="-OBJECT-CREATE-", size=(28, 1)
+                    _t("config_gui.add_object"), key="-OBJECT-CREATE-", size=(28, 1)
                 ),
                 sg.Button(
                     _t("config_gui.delete_object"), key="-OBJECT-DELETE-", size=(28, 1)
@@ -2153,31 +2206,11 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 update_global_gui(full_config, unencrypted=False)
             continue
         if event == "backup_opts.source_type":
-            value = get_key_from_value(
+            source_type = get_key_from_value(
                 combo_boxes["backup_opts.source_type"],
                 values["backup_opts.source_type"],
             )
-            if value == "stdin_from_command":
-                window["backup_opts.paths"].update(visible=False)
-                window["--ADD-PATHS-FILE-BUTTON--"].update(disabled=True)
-                window["--ADD-PATHS-FOLDER-BUTTON--"].update(disabled=True)
-                window["--ADD-PATHS-MANUALLY--"].update(disabled=True)
-                window["--REMOVE-PATHS--"].update(disabled=True)
-                window["backup_opts.stdin_from_command"].update(disabled=False)
-            elif value == "folder_list":
-                window["backup_opts.paths"].update(visible=True)
-                window["--ADD-PATHS-FILE-BUTTON--"].update(disabled=False)
-                window["--ADD-PATHS-FOLDER-BUTTON--"].update(disabled=False)
-                window["--ADD-PATHS-MANUALLY--"].update(disabled=False)
-                window["--REMOVE-PATHS--"].update(disabled=False)
-                window["backup_opts.stdin_from_command"].update(disabled=True)
-            elif value in ("files_from", "files_from_verbatim", "files_from_raw"):
-                window["backup_opts.paths"].update(visible=True)
-                window["--ADD-PATHS-FILE-BUTTON--"].update(disabled=False)
-                window["--ADD-PATHS-FOLDER-BUTTON--"].update(disabled=True)
-                window["--ADD-PATHS-MANUALLY--"].update(disabled=False)
-                window["--REMOVE-PATHS--"].update(disabled=False)
-                window["backup_opts.stdin_from_command"].update(disabled=True)
+            update_source_layout(source_type)
             continue
         if event in (
             "--ADD-PATHS-FILE--",

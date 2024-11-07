@@ -45,7 +45,8 @@ en:
   cannot_load_config_keep_current: Cannot load configuration. Keep current configuration
   snapshot_is_empty: Snapshot is empty
   cancel_operation: Are you sure you want to cancel the operation? Try to avoid interrupting write operations
-
+  load_existing_file: Load existing config file
+  
   # logs
   last_messages: Last messages
   error_messages: Error messages
