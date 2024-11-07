@@ -163,3 +163,9 @@ en:
   enter_labvel: Enter label
 
   suggested_encrypted_env_variables: Suggested encrypted environment variables
+
+  policiy_group_by: Apply retention policy by grouping snapshots
+  group_by_host: Group by host
+  group_by_paths: Group by paths
+  group_by_tags: Group by tags
+  policiy_group_by_explanation: If none are chosen, snapshots will be grouped by host and paths
