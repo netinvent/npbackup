@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.config"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024072301"
+__build__ = "2024110701"
 
 
 from typing import List, Tuple
@@ -1519,6 +1519,40 @@ def config_gui(full_config: dict, config_file: str):
                     size=(100, 1),
                 ),
             ],
+            [sg.Text(_t("config_gui.policiy_group_by"))],
+            [
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.repo_opts.retention_policy.group_by_host",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
+                sg.Checkbox(
+                    _t("config_gui.group_by_host"),
+                    key="repo_opts.retention_policy.group_by_host",
+                ),
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.repo_opts.retention_policy.group_by_paths",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
+                sg.Checkbox(
+                    _t("config_gui.group_by_paths"),
+                    key="repo_opts.retention_policy.group_by_paths",
+                ),
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.repo_opts.retention_policy.group_by_tags",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
+                sg.Checkbox(
+                    _t("config_gui.group_by_tags"),
+                    key="repo_opts.retention_policy.group_by_tags",
+                ),
+            ],
+            [sg.Text(_t("config_gui.policiy_group_by_explanation"))],
             [sg.HorizontalSeparator()],
             [
                 sg.Column(
