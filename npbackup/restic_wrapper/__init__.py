@@ -1089,6 +1089,7 @@ class ResticRunner:
         self,
         snapshots: Optional[Union[List[str], Optional[str]]] = None,
         policy: Optional[dict] = None,
+        group_by: Optional[List[str]] = None
     ) -> Union[bool, str, dict]:
         """
         Execute forget command for given snapshot
@@ -1119,6 +1120,8 @@ class ResticRunner:
                                 cmd += f" --keep-tag {tag}"
                 else:
                     cmd += f" --{key.replace('_', '-')} {value}"
+            if group_by:
+                cmd += f' --group-by {",".join(group_by)}'
             cmds = [cmd]
 
         # We need to be verbose here since server errors will not stop client from deletion attempts

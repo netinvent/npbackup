@@ -1519,6 +1519,44 @@ def config_gui(full_config: dict, config_file: str):
                     size=(100, 1),
                 ),
             ],
+            [
+                sg.Text(_t("config_gui.policiy_group_by"))
+            ],
+            [
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.repo_opts.retention_policy.group_by.host",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
+                sg.Checkbox(
+                    _t("config_gui.group_by_host"),
+                    key="repo_opts.retention_policy.group_by.host"
+                ),
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.repo_opts.retention_policy.group_by.paths",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
+                sg.Checkbox(
+                    _t("config_gui.group_by_paths"),
+                    key="repo_opts.retention_policy.group_by.paths"
+                ),
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.repo_opts.retention_policy.group_by.tags",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
+                sg.Checkbox(
+                    _t("config_gui.group_by_tags"),
+                    key="repo_opts.retention_policy.group_by.tags"
+                ),
+            ],
+            [
+                sg.Text(_t("config_gui.policiy_group_by_explanation"))
+            ],
             [sg.HorizontalSeparator()],
             [
                 sg.Column(

@@ -1,0 +1,95 @@
+conf_version: 3.0
+repos:
+  default:
+    repo_uri:
+    repo_group: default_group
+    backup_opts:
+      paths:
+        - ### SOURCE ###
+      source_type: files_from_verbatim
+      exclude_files_larger_than: 0.0 KiB
+      tags:
+        - ### VM ###
+    repo_opts:
+      repo_password:
+      retention_policy: {}
+    prometheus: {}
+    env: {}
+groups:
+  default_group:
+    backup_opts:
+      paths: []
+      source_type:
+      stdin_from_command:
+      stdin_filename:
+      tags: []
+      compression: auto
+      use_fs_snapshot: false
+      ignore_cloud_files: true
+      exclude_caches: true
+      one_file_system: true
+      priority: low
+      excludes_case_ignore: false
+      exclude_files:
+      - excludes/generic_excluded_extensions
+      - excludes/generic_excludes
+      - excludes/windows_excludes
+      - excludes/linux_excludes
+      exclude_patterns: []
+      exclude_files_larger_than:
+      additional_parameters:
+      additional_backup_only_parameters:
+      minimum_backup_size_error: 2 GiB
+      pre_exec_commands:
+      - '[ -f /opt/cube/SNAPSHOT_FAILED ] && echo "Snapshot failed for $(cat /opt/cube/SNAPSHOT_FAILED)" && exit 1 || exit 0'
+      pre_exec_per_command_timeout: 3600
+      pre_exec_failure_is_fatal: false
+      post_exec_commands: []
+      post_exec_per_command_timeout: 3600
+      post_exec_failure_is_fatal: false
+      post_exec_execute_even_on_backup_error: true
+    repo_opts:
+      repo_password:
+      repo_password_command:
+      minimum_backup_age: 1440
+      upload_speed: 800 Mib
+      download_speed: 0 Mib
+      backend_connections: 0
+      retention_policy:
+        last: 3
+        hourly: 72
+        daily: 30
+        weekly: 4
+        monthly: 12
+        yearly: 3
+        tags: []
+        keep_within: true
+        ntp_server:
+    prometheus:
+      backup_job: ### VM ###
+      group: ${MACHINE_GROUP}
+    env:
+      env_variables: {}
+      encrypted_env_variables: {}
+    is_protected: false
+identity:
+  machine_id: ${HOSTNAME}_${RANDOM}[4]
+  machine_group: SOME_ARBITRARY_GROUP_NAME
+global_prometheus:
+  metrics: false
+  instance: ### VM ###
+  destination:
+  http_username:
+  http_password:
+  additional_labels:
+    npf_tenant: ### TENANT ###
+    backup_type: vm
+  no_cert_verify: true
+global_options:
+  auto_upgrade: false
+  auto_upgrade_interval: 10
+  auto_upgrade_server_url:
+  auto_upgrade_server_username:
+  auto_upgrade_server_password:
+  auto_upgrade_host_identity: ${MACHINE_ID}
+  auto_upgrade_group: ${MACHINE_GROUP}

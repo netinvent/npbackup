@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024090601"
+__build__ = "2024110701"
 __version__ = "npbackup 3.0.0+"
 
 MIN_CONF_VERSION = 3.0
@@ -203,6 +203,11 @@ empty_config_dict = {
                     "yearly": 3,
                     "tags": [],
                     "keep_within": True,
+                    "group_by": {
+                        "host": True,
+                        "tags": True,
+                        "paths": False
+                    },
                     "ntp_server": None,
                 },
                 # "prune_max_unused": None,  # TODO

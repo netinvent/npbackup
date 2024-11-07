@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024110301"
+__build__ = "2024110701"
 
 
 from typing import Optional, Callable, Union, List
@@ -1444,10 +1444,17 @@ class NPBackupRunner:
                 msg = f"Empty retention policy. Won't run"
                 self.write_logs(msg, level="error")
                 return self.convert_to_json_output(False, msg)
+            
+            # Convert group by to list
+            group_by = []
+            for entry in ["host", "paths", "tags"]:
+                if self.repo_config.g(f"repo_opts.retention_policy.group_by.{entry}"):
+                    group_by.append(entry)
+
             self.write_logs(
                 f"Forgetting snapshots using retention policy: {policy}", level="info"
             )
-            result = self.restic_runner.forget(policy=policy)
+            result = self.restic_runner.forget(policy=policy, group_by=group_by)
         else:
             self.write_logs(
                 "Bogus options given to forget: snapshots={snapshots}, policy={policy}",
