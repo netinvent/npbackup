@@ -46,7 +46,8 @@ fr:
   snapshot_is_empty: L'instantané est vide
   cancel_operation: Etes-vous sûr de vouloir annuler l'opération? Essayez d'éviter d'interrompre les opérations d'écriture
   load_existing_file: Charger fichier de configuration existant
-
+  failed_operation: Operation échouée. Vérifier les journaux
+  
   # logs
   last_messages: Last messages
   error_messages: Error messages

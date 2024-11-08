@@ -941,7 +941,9 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Text(
-                    _t("config_gui.stdin_from_command"), key="text_stdin_from_command"
+                    _t("config_gui.stdin_from_command"),
+                    key="text_stdin_from_command",
+                    visible=False,
                 )
             ],
             [
@@ -950,18 +952,30 @@ def config_gui(full_config: dict, config_file: str):
                     key="inherited.backup_opts.stdin_from_command",
                     tooltip=_t("config_gui.group_inherited"),
                     pad=1,
+                    visible=False,
                 ),
-                sg.Input(key="backup_opts.stdin_from_command", size=(100, 1)),
+                sg.Input(
+                    key="backup_opts.stdin_from_command", size=(100, 1), visible=False
+                ),
             ],
-            [sg.Text(_t("config_gui.stdin_filename"), key="text_stdin_filename")],
+            [
+                sg.Text(
+                    _t("config_gui.stdin_filename"),
+                    key="text_stdin_filename",
+                    visible=False,
+                )
+            ],
             [
                 sg.Image(
                     NON_INHERITED_ICON,
                     key="inherited.backup_opts.stdin_filename",
                     tooltip=_t("config_gui.group_inherited"),
                     pad=1,
+                    visible=False,
                 ),
-                sg.Input(key="backup_opts.stdin_filename", size=(100, 1)),
+                sg.Input(
+                    key="backup_opts.stdin_filename", size=(100, 1), visible=False
+                ),
             ],
             [
                 sg.Column(

@@ -619,10 +619,14 @@ def _main_gui(viewer_mode: bool):
             __ignore_errors=GUI_STATUS_IGNORE_ERRORS,
         )
         GUI_STATUS_IGNORE_ERRORS = False
-        if not result or not result["result"]:
+        try:
+            if not result or not result["result"]:
+                snapshots = None
+            else:
+                snapshots = result["output"]
+        except TypeError:
             snapshots = None
-        else:
-            snapshots = result["output"]
+            sg.popup_error(_t("mail_gui.failed_operation"))
         try:
             min_backup_age = repo_config.g("repo_opts.minimum_backup_age")
         except AttributeError:
