@@ -13,7 +13,6 @@ import atexit
 from time import sleep
 from argparse import ArgumentParser
 from datetime import datetime, timezone
-from tempfile import gettempdir
 import logging
 import json
 import ofunctions.logger_utils

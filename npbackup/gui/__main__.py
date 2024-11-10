@@ -21,7 +21,6 @@ import ofunctions.logger_utils
 from datetime import datetime, timezone
 import dateutil
 from time import sleep
-from tempfile import gettempdir
 from ruamel.yaml.comments import CommentedMap
 import atexit
 from ofunctions.process import kill_childs
