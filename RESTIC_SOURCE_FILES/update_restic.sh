@@ -22,7 +22,9 @@ for platform in "${platforms[@]}"; do
 		echo "Moving earlier version to archive"
 		[ -d ARCHIVES ] || mkdir ARCHIVES
 		mv -f restic_*_${platform} ARCHIVES/ > /dev/null 2>&1
-		mv -f restic_*_${platform}.exe ARCHIVES/ > /dev/null 2>&1
+		# Move all except restic legacy binary
+		mv -f !(restic_0.16.2_${platform}.exe) ARCHIVES/ > /dev/null 2>&1
+		# Avoid moving restic
 		echo "Downloading ${restic_filename}"
 	if [ "${platform:0:7}" == "windows" ]; then
 		ext=zip

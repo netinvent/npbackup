@@ -13,7 +13,7 @@ __build__ = "2023061102"
 import os
 import sys
 import glob
-from npbackup.path_helper import BASEDIR
+from npbackup.path_helper import BASEDIR, IS_LEGACY
 
 
 RESTIC_SOURCE_FILES_DIR = os.path.join(BASEDIR, os.pardir, "RESTIC_SOURCE_FILES")
@@ -23,6 +23,9 @@ def get_restic_internal_binary(arch: str) -> str:
     binary = None
     if os.path.isdir(RESTIC_SOURCE_FILES_DIR):
         if os.name == "nt":
+            if IS_LEGACY and arch == "x86":
+                # Last compatible restic binary for Windows 7, see https://github.com/restic/restic/issues/5065
+                binary = "restic_0.16.2_windows_386.exe"
             if arch == "x64":
                 binary = "restic_*_windows_amd64.exe"
             else:
