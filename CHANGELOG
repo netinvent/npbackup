@@ -52,7 +52,7 @@
   - Missing exclude files will now search in current binary directory for a excludes directory
   - Splitted releases between legacy and non legacy
     - Updated legacy tcl8.6.13 to tc8.6.15
-    - Updated legacy Python 3.7 to Python 3.11 (with openssl 3.1.3)
+    - Updated legacy Python 3.7 to Python 3.9 (with openssl 1.1.1)
 
   
 
@@ -75,7 +75,7 @@
   - Exclude lists have been updated
   - Removed Windows installer from the project. We need to come up with a better solution
   - Added manual --init command (already executed by first backup)
-  - Updated internal restic binary to restic 0.17.1 compiled with go1.23.1
+  - Updated internal restic binary to restic 0.17.3 compiled with go1.23.1 (except for Windows legacy version which stays on 0.16.2 for compat)
   - Added heartbeat log for long commands
 
 ## 2.2.2 - 14/12/2023 (internal build only)
