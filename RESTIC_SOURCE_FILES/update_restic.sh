@@ -22,8 +22,8 @@ for platform in "${platforms[@]}"; do
 		echo "Moving earlier version to archive"
 		[ -d ARCHIVES ] || mkdir ARCHIVES
 		mv -f restic_*_${platform} ARCHIVES/ > /dev/null 2>&1
-		# Move all except restic legacy binary
-		mv -f !(restic_0.16.2_${platform}.exe) ARCHIVES/ > /dev/null 2>&1
+		# Move all restic executables except restic legacy binary
+		find ./ -type f -mindepth 1 -maxdepth 1 -name "restic_*${platform}.exe" -and ! -name "restic_0.16.2_windows_386.exe" -exec mv '{}' ARCHIVES \;
 		# Avoid moving restic
 		echo "Downloading ${restic_filename}"
 	if [ "${platform:0:7}" == "windows" ]; then
