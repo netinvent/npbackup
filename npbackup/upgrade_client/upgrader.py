@@ -195,7 +195,7 @@ def auto_upgrader(
     # eg /tmp/npbackup_upgrade_dist/npbackup-cli
     upgrade_dist = os.path.join(tempfile.gettempdir(), "npbackup_upgrade_dist")
     try:
-        # File is a zip and should contain a single directory 'npbackup-cli' or 'npbackup-gui' with all files in it
+        # File is a zip or tar.gz and should contain a single directory 'npbackup-cli' or 'npbackup-gui' with all files in it
         shutil.unpack_archive(downloaded_archive, upgrade_dist)
     except Exception as exc:
         logger.critical(f"Upgrade failed. Cannot uncompress downloaded dist: {exc}")
