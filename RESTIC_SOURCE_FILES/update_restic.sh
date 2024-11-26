@@ -23,7 +23,7 @@ for platform in "${platforms[@]}"; do
 		[ -d ARCHIVES ] || mkdir ARCHIVES
 		mv -f restic_*_${platform} ARCHIVES/ > /dev/null 2>&1
 		# Move all restic executables except restic legacy binary
-		find ./ -type f -mindepth 1 -maxdepth 1 -name "restic_*${platform}.exe" -and ! -name "restic_0.16.2_windows_386.exe" -exec mv '{}' ARCHIVES \;
+		find ./ -mindepth 1 -maxdepth 1 -type f -name "restic_*${platform}.exe" -and ! -name "restic_0.16.2_windows_386.exe" -exec mv '{}' ARCHIVES \;
 		# Avoid moving restic
 		echo "Downloading ${restic_filename}"
 	if [ "${platform:0:7}" == "windows" ]; then
