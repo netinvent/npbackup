@@ -658,8 +658,11 @@ class ResticRunner:
         def wrapper(self, *args, **kwargs):
             is_init, output = self.is_init
             if not is_init:
+                # For backup operations, we'll auto-initialize the repo
                 # pylint: disable=E1101 (no-member)
-                if fn.__name__ == "backup":
+                if fn.__name__ == "backup" or fn_name(1) == "has_recent_snapshot":
+                    msg = f"Repo is not initialized. Initializing repo for backup operation"
+                    self.write_logs(msg, level="info")
                     init = self.init()
                     if not init:
                         msg = f"Could not initialize repo for backup operation"
