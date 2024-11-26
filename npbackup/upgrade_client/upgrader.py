@@ -242,7 +242,7 @@ def auto_upgrader(
             f'chmod +x "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && '
             f'echo "Loading new executable {CURRENT_EXECUTABLE} --version" >> {log_file} 2>&1 && '
             f'"{CURRENT_EXECUTABLE}" --version >> {log_file} 2>&1; '
-            f'if [ $? -ne 0 ]; then '
+            f"if [ $? -ne 0 ]; then "
             f'echo "New executable failed. Rolling back" >> {log_file} 2>&1 && '
             f'rm -f "{CURRENT_DIR}" >> {log_file} 2>&1 && '
             f'mv -f "{backup_dist}" "{CURRENT_DIR}" >> {log_file} 2>&1; '
