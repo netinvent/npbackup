@@ -89,7 +89,11 @@ def get_current_version() -> Optional[CurrentVersion]:
 def get_file(
     file: FileGet, content: bool = False
 ) -> Optional[Union[FileSend, bytes, dict]]:
-    possible_filename = f"npbackup-{file.build_type.value}.zip"
+    if file.platform.value == "windows":
+        extension = "zip"
+    else:
+        extension = "tar.gz"
+    possible_filename = f"npbackup-{file.build_type.value}.{extension}"
     path = os.path.join(
         config_dict["upgrades"]["data_root"],
         file.platform.value,
