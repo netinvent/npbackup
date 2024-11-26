@@ -223,7 +223,9 @@ def auto_upgrader(
             f'move /Y "{backup_dist}" "{CURRENT_DIR}" >> {log_file} 2>&1 '
             f") ELSE ( "
             f'echo "Upgrade successful" >> {log_file} 2>&1 && '
-            f"rd /S /Q {backup_dist} >> {log_file} 2>&1 && "
+            f'rd /S /Q "{backup_dist}" >> {log_file} 2>&1 & '
+            f'rd /S /Q "{upgrade_dist}" >> {log_file} 2>&1 & '
+            f'rd /S /Q "{downloaded_archive}" >> {log_file} 2>&1 & '
             f'echo "Running new version as planned:" >> {log_file} 2>&1 && '
             f'echo "{CURRENT_EXECUTABLE} {" ".join(sys.argv[1:])}" 2>&1 && '
             f'"{CURRENT_EXECUTABLE}" {" ".join(sys.argv[1:])}'
@@ -246,7 +248,9 @@ def auto_upgrader(
             f'mv -f "{backup_dist}" "{CURRENT_DIR}" >> {log_file} 2>&1; '
             f" else "
             f'echo "Upgrade successful" >> {log_file} 2>&1 && '
-            f'rm -f "{backup_dist}" >> {log_file} 2>&1 && '
+            f'rm -rf "{backup_dist}" >> {log_file} 2>&1 ; '
+            f'rm -rf "{upgrade_dist}" >> {log_file} 2>&1 ; '
+            f'rm -rf "{downloaded_archive}" >> {log_file} 2>&1 ; '
             f'echo "Running new version as planned:" >> {log_file} 2>&1 && '
             f'echo "{CURRENT_EXECUTABLE} {" ".join(sys.argv[1:])}" 2>&1 && '
             f'"{CURRENT_EXECUTABLE}" {" ".join(sys.argv[1:])}; '
