@@ -743,7 +743,9 @@ This is free software, and you are welcome to redistribute it under certain cond
     if cli_args["operation"]:
         entrypoint(**cli_args)
     else:
-        json_error_logging(False, "No operation has been requested. Try --help", level="warning")
+        json_error_logging(
+            False, "No operation has been requested. Try --help", level="warning"
+        )
         # parser.print_help(sys.stderr)
         sys.exit(1)
 

@@ -338,7 +338,9 @@ class ResticRunner:
             # but restic backup / --dry-run does
             operation = fn_name(1)
             if operation in ["backup", "forget", "prune", "restore", "rewrite"]:
-                self.write_logs("Running in dry mode. No modifications will be done", level="info")
+                self.write_logs(
+                    "Running in dry mode. No modifications will be done", level="info"
+                )
                 _cmd += " --dry-run"
 
         self._executor_running = True
