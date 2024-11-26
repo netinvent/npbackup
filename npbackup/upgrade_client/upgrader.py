@@ -188,7 +188,7 @@ def auto_upgrader(
     # eg /tmp/npbackup_upgrade_dist/npbackup-cli
     upgrade_dist = os.path.join(tempfile.gettempdir(), "npbackup_upgrade_dist")
     try:
-        # File should contain a single directory 'npbackup-cli' or 'npbackup-gui' with all files in it
+        # File is a zip and should contain a single directory 'npbackup-cli' or 'npbackup-gui' with all files in it
         shutil.unpack_archive(downloaded_archive, upgrade_dist)
     except Exception as exc:
         logger.critical(f"Upgrade failed. Cannot uncompress downloaded dist: {exc}")
@@ -219,7 +219,7 @@ def auto_upgrader(
             f'"{CURRENT_EXECUTABLE}" --version >> {log_file} 2>&1 & '
             f"IF %ERRORLEVEL% NEQ 0 ( "
             f'echo "New executable failed. Rolling back" >> {log_file} 2>&1 && '
-            f"rd /S /Q {CURRENT_DIR} >> {log_file} 2>&1 && "
+            f"rd /S /Q "{CURRENT_DIR}" >> {log_file} 2>&1 && "
             f'move /Y "{backup_dist}" "{CURRENT_DIR}" >> {log_file} 2>&1 '
             f") ELSE ( "
             f'echo "Upgrade successful" >> {log_file} 2>&1 && '
@@ -237,10 +237,10 @@ def auto_upgrader(
             f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> {log_file} 2>&1 && '
             f'mv -f "{upgrade_dist}" "{CURRENT_DIR}" >> {log_file} 2>&1 && '
             f'echo "Adding executable bit to new executable" >> {log_file} 2>&1 && '
-            f'chmod +x {CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && '
+            f'chmod +x "{CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && '
             f'echo "Loading new executable {CURRENT_EXECUTABLE} --version" >> {log_file} 2>&1 && '
             f'"{CURRENT_EXECUTABLE}" --version >> {log_file} 2>&1; '
-            f'"if [ $? -ne 0 ]; then '
+            f'if [ $? -ne 0 ]; then '
             f'echo "New executable failed. Rolling back" >> {log_file} 2>&1 && '
             f'rm -f "{CURRENT_DIR}" >> {log_file} 2>&1 && '
             f'mv -f "{backup_dist}" "{CURRENT_DIR}" >> {log_file} 2>&1; '

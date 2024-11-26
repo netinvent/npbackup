@@ -38,7 +38,13 @@ mkdir /opt/upgrade_server_root
 
 ## Provisioning files
 
-Basically, upgrade_server servers zipped versions of NPBackup, than can directly be downloaded from git releases
+Basically, upgrade_server serves zipped versions of NPBackup, than can directly be downloaded from git releases. Those zipped files will contain a single directory, like `npbackup-gui` or `npbackup-cli` which contain all the files.
+
+Additionally, fiels can be created converted from .tar.gz to zip with the following
+```
+tar xvf npbackup-linux-x64-cli-public.tar.gz
+zip -9 -r npbackup-cli.zip npbackup-cli
+```
 
 When uploading new versions, you need to create a file in the data root called `VERSION` which should contain current NPBackup version, example `3.0.1`  
 This way, every NPBackup client will download this file and compare with it's current version in order to verify if an upgrade is needed.

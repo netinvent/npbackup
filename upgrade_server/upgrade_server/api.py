@@ -174,6 +174,8 @@ async def upgrades(
     except KeyError:
         logger.error("No statistics file set.")
 
+    # TODO:
+    # This can be amended by adding specific rules for host identity or groups or installed
     file = FileGet(platform=platform, arch=arch)
     try:
         result = crud.get_file(file)
