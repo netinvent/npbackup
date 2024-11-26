@@ -2076,15 +2076,15 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 sg.Text(
                     _t("config_gui.create_backup_scheduled_task_every"), size=(40, 1)
                 ),
-                sg.Input(key="scheduled_backup_task_interval", size=(4, 1)),
+                sg.Input("15", key="scheduled_backup_task_interval", size=(4, 1)),
                 sg.Text(_t("generic.minutes"), size=(10, 1)),
                 sg.Button(_t("generic.create"), key="create_backup_interval_task"),
             ],
             [
                 sg.Text(_t("config_gui.create_backup_scheduled_task_at"), size=(40, 1)),
-                sg.Input(key="scheduled_backup_task_hour", size=(4, 1)),
+                sg.Input("22", key="scheduled_backup_task_hour", size=(4, 1)),
                 sg.Text(_t("generic.hours"), size=(10, 1)),
-                sg.Input(key="scheduled_backup_task_minute", size=(4, 1)),
+                sg.Input("00", key="scheduled_backup_task_minute", size=(4, 1)),
                 sg.Text(_t("generic.minutes"), size=(10, 1)),
                 sg.Button(_t("generic.create"), key="create_backup_daily_task"),
             ],
@@ -2095,9 +2095,9 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 sg.Text(
                     _t("config_gui.create_housekeeping_scheduled_task_at"), size=(40, 1)
                 ),
-                sg.Input(key="scheduled_housekeeping_task_hour", size=(4, 1)),
+                sg.Input("22", key="scheduled_housekeeping_task_hour", size=(4, 1)),
                 sg.Text(_t("generic.hours"), size=(10, 1)),
-                sg.Input(key="scheduled_housekeeping_task_minute", size=(4, 1)),
+                sg.Input("00", key="scheduled_housekeeping_task_minute", size=(4, 1)),
                 sg.Text(_t("generic.minutes"), size=(10, 1)),
                 sg.Button(_t("generic.create"), key="create_housekeeping_daily_task"),
             ],
