@@ -1,12 +1,13 @@
 conf_version: 3.0
 repos:
   default:
-    repo_uri: ./test
+    repo_uri: ./npbackup-cli-test-repo
     repo_group: default_group
     backup_opts:
-      paths: []
+      paths:
+      - /tmp
       tags: []
-      minimum_backup_size_error: 80.0 Mib
+      minimum_backup_size_error: 10 KiB
       exclude_files_larger_than: 0.0 Kib
     repo_opts:
       repo_password: test
@@ -36,7 +37,6 @@ groups:
       - excludes/windows_excludes
       - excludes/linux_excludes
       exclude_patterns:
-      - 
       exclude_files_larger_than:
       additional_parameters:
       additional_backup_only_parameters:

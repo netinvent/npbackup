@@ -1,12 +1,13 @@
 conf_version: 3.0
 repos:
   default:
-    repo_uri: ./test
+    repo_uri: ./npbackup-cli-test-repo
     repo_group: default_group
     backup_opts:
-      paths: []
+      paths:
+      - C:\WINDOWS\TMP
       tags: []
-      minimum_backup_size_error: 80.0 Mib
+      minimum_backup_size_error: 10 B
       exclude_files_larger_than: 0.0 Kib
     repo_opts:
       repo_password: test
@@ -17,6 +18,7 @@ repos:
     env:
       env_variables: {}
       encrypted_env_variables: {}
+    is_protected: false
 groups:
   default_group:
     backup_opts:
@@ -36,7 +38,6 @@ groups:
       - excludes/windows_excludes
       - excludes/linux_excludes
       exclude_patterns:
-      - 
       exclude_files_larger_than:
       additional_parameters:
       additional_backup_only_parameters:
@@ -71,6 +72,7 @@ groups:
     env:
       env_variables: {}
       encrypted_env_variables: {}
+    is_protected: false
 identity:
   machine_id: ${HOSTNAME}__Zo6u
   machine_group:
@@ -90,3 +92,4 @@ global_options:
   auto_upgrade_server_password:
   auto_upgrade_host_identity: ${MACHINE_ID}
   auto_upgrade_group: ${MACHINE_GROUP}
+audience: public
