@@ -225,7 +225,7 @@ def auto_upgrader(
             f'echo "Upgrade successful" >> "{log_file}" 2>&1 && '
             f'rd /S /Q "{backup_dist}" >> "{log_file}" 2>&1 & '
             # f'rd /S /Q "{upgrade_dist}" >> "{log_file}" 2>&1 & ' Since we move this, we don't need to delete it
-            f'rd /S /Q "{downloaded_archive}" >> "{log_file}" 2>&1 & '
+            f'del /F /S /Q "{downloaded_archive}" >> "{log_file}" 2>&1 & '
             f'echo "Running new version as planned:" >> "{log_file}" 2>&1 && '
             f'echo "{CURRENT_EXECUTABLE} {" ".join(sys.argv[1:])}" >> "{log_file}" 2>&1 && '
             f'"{CURRENT_EXECUTABLE}" {" ".join(sys.argv[1:])}'
