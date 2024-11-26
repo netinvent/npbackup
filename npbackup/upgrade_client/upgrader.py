@@ -158,6 +158,9 @@ def auto_upgrader(
         id_record = target
 
     file_info = requestor.data_model("upgrades", id_record=id_record)
+    if not file_info:
+        logger.error("Server didn't provide a file description")
+        return False
     try:
         sha256sum = file_info["sha256sum"]
     except (KeyError, TypeError):
