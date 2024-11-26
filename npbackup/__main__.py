@@ -551,7 +551,8 @@ This is free software, and you are welcome to redistribute it under certain cond
             full_config, ignore_errors=False if args.auto_upgrade else True
         )
         if result:
-            sys.exit(0)
+            # This only happens when no upgrade is available
+            logger.info("Upgrade check finished. Resuming operations.")
         elif args.auto_upgrade:
             logger.error("Auto upgrade failed")
             sys.exit(23)
@@ -742,7 +743,9 @@ This is free software, and you are welcome to redistribute it under certain cond
     if cli_args["operation"]:
         entrypoint(**cli_args)
     else:
-        json_error_logging(False, "No operation has been requested", level="warning")
+        json_error_logging(False, "No operation has been requested. Try --help", level="warning")
+        # parser.print_help(sys.stderr)
+        sys.exit(1)
 
 
 def main():

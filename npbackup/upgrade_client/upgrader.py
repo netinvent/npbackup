@@ -7,7 +7,7 @@ __intname__ = "npbackup.upgrade_client.upgrader"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2024112601"
+__build__ = "2024112602"
 
 
 import os
@@ -274,4 +274,4 @@ def auto_upgrader(
     )
     logger.debug(cmd)
     deferred_command(cmd, defer_time=UPGRADE_DEFER_TIME)
-    return True
+    sys.exit(0)
