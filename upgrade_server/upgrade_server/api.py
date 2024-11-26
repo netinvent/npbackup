@@ -215,7 +215,7 @@ async def download(
     request: Request,
     platform: Platform,
     arch: Arch,
-    built_type: BuildType,
+    build_type: BuildType,
     auto_upgrade_host_identity: str = None,
     installed_version: str = None,
     group: str = None,
