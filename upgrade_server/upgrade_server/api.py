@@ -168,6 +168,7 @@ async def upgrades(
         "group": group,
         "platform": platform.value,
         "arch": arch.value,
+        "build_type": build_type.value,
     }
 
     try:
@@ -237,6 +238,7 @@ async def download(
         "group": group,
         "platform": platform.value,
         "arch": arch.value,
+        "build_type": build_type.value,
     }
 
     try:
