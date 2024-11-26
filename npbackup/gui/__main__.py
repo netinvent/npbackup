@@ -637,7 +637,7 @@ def _main_gui(viewer_mode: bool):
                 snapshots = result["output"]
         except TypeError:
             snapshots = None
-            sg.popup_error(_t("mail_gui.failed_operation"))
+            sg.popup_error(_t("main_gui.failed_operation"))
         try:
             min_backup_age = repo_config.g("repo_opts.minimum_backup_age")
         except AttributeError:
