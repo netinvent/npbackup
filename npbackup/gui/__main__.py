@@ -72,6 +72,16 @@ sg.theme(SIMPLEGUI_THEME)
 sg.SetOptions(icon=OEM_ICON)
 
 
+def popup_wait_for_upgrade(text: str):
+
+    layout = [[sg.Text(text)]]
+    window = sg.Window(
+        f"Upgrade", layout=layout, no_titlebar=False, keep_on_top=True, finalize=True
+    )
+    window.read(timeout=0)
+    return window
+
+
 def about_gui(
     version_string: str, full_config: dict = None, auto_upgrade_result: bool = False
 ) -> None:
@@ -514,7 +524,9 @@ def _main_gui(viewer_mode: bool):
 
     def check_for_auto_upgrade(full_config: dict) -> None:
         if full_config and full_config.g("global_options.auto_upgrade_server_url"):
+            upgrade_popup = popup_wait_for_upgrade(_t("main_gui.auto_upgrade_checking"))
             auto_upgrade_result = upgrade_runner.check_new_version(full_config)
+            upgrade_popup.close()
             if auto_upgrade_result:
                 r = sg.Popup(
                     _t("config_gui.auto_upgrade_launch"),
