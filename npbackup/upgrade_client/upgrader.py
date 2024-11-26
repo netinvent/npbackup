@@ -7,7 +7,7 @@ __intname__ = "npbackup.upgrade_client.upgrader"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2024091701"
+__build__ = "2024112601"
 
 
 import os
@@ -145,20 +145,24 @@ def auto_upgrader(
     requestor.create_session(authenticated=True)
 
     # We'll check python_arch instead of os_arch since we build 32 bit python executables for compat reasons
-    platform_and_arch = "{}/{}".format(get_os(), python_arch()).lower()
-    if IS_LEGACY:
-        platform_and_arch += "-legacy"
+    arch = python_arch() if not IS_LEGACY else f"{python_arch()}-legacy"
+    build_type = os.environ.get("NPBACKUP_BUILD_TYPE", None)
+    if not build_type:
+        logger.critical("Cannot determine build type for upgrade processs")
+        return False
+    target = "{}/{}/{}".format(get_os(), arch, build_type).lower()
     try:
         host_id = "{}/{}/{}".format(auto_upgrade_host_identity, npbackup_version, group)
-        id_record = "{}/{}".format(platform_and_arch, host_id)
+        id_record = "{}/{}".format(target, host_id)
     except TypeError:
-        id_record = platform_and_arch
+        id_record = target
 
     file_info = requestor.data_model("upgrades", id_record=id_record)
     try:
         sha256sum = file_info["sha256sum"]
     except (KeyError, TypeError):
         logger.error("Cannot get file description")
+        logger.debug("Trace", exc_info=True)
         return False
     if sha256sum is None:
         logger.info("No upgrade file found has been found for me :/")

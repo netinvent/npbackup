@@ -18,7 +18,7 @@ from argparse import ArgumentParser
 from fastapi import FastAPI, HTTPException, Response, Depends, status, Request, Header
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi_offline import FastAPIOffline
-from upgrade_server.models.files import FileGet, FileSend, Platform, Arch
+from upgrade_server.models.files import FileGet, FileSend, Platform, Arch, BuildType
 from upgrade_server.models.oper import CurrentVersion
 import upgrade_server.crud as crud
 import upgrade_server.configuration as configuration
@@ -125,20 +125,20 @@ async def current_version(
 
 
 @app.get(
-    "/upgrades/{platform}/{arch}", response_model=Union[FileSend, dict], status_code=200
+    "/upgrades/{platform}/{arch}/{build_type}", response_model=Union[FileSend, dict], status_code=200
 )
 @app.get(
-    "/upgrades/{platform}/{arch}/{auto_upgrade_host_identity}",
+    "/upgrades/{platform}/{arch}/{build_type}/{auto_upgrade_host_identity}",
     response_model=Union[FileSend, dict],
     status_code=200,
 )
 @app.get(
-    "/upgrades/{platform}/{arch}/{auto_upgrade_host_identity}/{installed_version}",
+    "/upgrades/{platform}/{arch}/{build_type}/{auto_upgrade_host_identity}/{installed_version}",
     response_model=Union[FileSend, dict],
     status_code=200,
 )
 @app.get(
-    "/upgrades/{platform}/{arch}/{auto_upgrade_host_identity}/{installed_version}/{group}",
+    "/upgrades/{platform}/{arch}/{build_type}/{auto_upgrade_host_identity}/{installed_version}/{group}",
     response_model=Union[FileSend, dict],
     status_code=200,
 )
@@ -146,6 +146,7 @@ async def upgrades(
     request: Request,
     platform: Platform,
     arch: Arch,
+    build_type: BuildType,
     auto_upgrade_host_identity: str = None,
     installed_version: str = None,
     group: str = None,
@@ -176,7 +177,7 @@ async def upgrades(
 
     # TODO:
     # This can be amended by adding specific rules for host identity or groups or installed
-    file = FileGet(platform=platform, arch=arch)
+    file = FileGet(platform=platform, arch=arch, build_type=build_type)
     try:
         result = crud.get_file(file)
         if not result:
@@ -193,7 +194,20 @@ async def upgrades(
 
 
 @app.get(
-    "/download/{platform}/{arch}/{auto_upgrade_host_identity}/{installed_version}/{group}",
+    "/download/{platform}/{arch}/{build_type}", response_model=FileSend, status_code=200
+)
+@app.get(
+    "/download/{platform}/{arch}/{build_type}/{auto_upgrade_host_identity}",
+    response_model=FileSend,
+    status_code=200,
+)
+@app.get(
+    "/download/{platform}/{arch}/{build_type}/{auto_upgrade_host_identity}/{installed_version}",
+    response_model=FileSend,
+    status_code=200,
+)
+@app.get(
+    "/download/{platform}/{arch}/{build_type}/{auto_upgrade_host_identity}/{installed_version}/{group}",
     response_model=FileSend,
     status_code=200,
 )
@@ -201,6 +215,7 @@ async def download(
     request: Request,
     platform: Platform,
     arch: Arch,
+    built_type: BuildType,
     auto_upgrade_host_identity: str = None,
     installed_version: str = None,
     group: str = None,
@@ -228,7 +243,7 @@ async def download(
         crud.store_host_info(config_dict["upgrades"]["statistics_file"], host_id=data)
     except KeyError:
         logger.error("No statistics file set.")
-    file = FileGet(platform=platform, arch=arch)
+    file = FileGet(platform=platform, arch=arch, build_type=build_type)
     try:
         result = crud.get_file(file, content=True)
         if not result:

@@ -23,10 +23,15 @@ class Arch(Enum):
     x86 = "x86"
     x64 = "x64"
 
+class BuildType(Enum):
+    gui = "gui"
+    cli = "cli"
+
 
 class FileBase(BaseModel):
     arch: Arch
     platform: Platform
+    build_type: BuildType
 
 
 class FileGet(FileBase):
