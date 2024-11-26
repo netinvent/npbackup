@@ -23,6 +23,7 @@ class Arch(Enum):
     x86 = "x86"
     x64 = "x64"
 
+
 class BuildType(Enum):
     gui = "gui"
     cli = "cli"

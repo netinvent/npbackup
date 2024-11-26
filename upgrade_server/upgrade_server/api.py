@@ -125,7 +125,9 @@ async def current_version(
 
 
 @app.get(
-    "/upgrades/{platform}/{arch}/{build_type}", response_model=Union[FileSend, dict], status_code=200
+    "/upgrades/{platform}/{arch}/{build_type}",
+    response_model=Union[FileSend, dict],
+    status_code=200,
 )
 @app.get(
     "/upgrades/{platform}/{arch}/{build_type}/{auto_upgrade_host_identity}",
