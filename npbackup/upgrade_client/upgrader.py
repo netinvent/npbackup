@@ -219,7 +219,7 @@ def auto_upgrader(
             f'"{CURRENT_EXECUTABLE}" --version >> {log_file} 2>&1 & '
             f"IF %ERRORLEVEL% NEQ 0 ( "
             f'echo "New executable failed. Rolling back" >> {log_file} 2>&1 && '
-            f"rd /S /Q "{CURRENT_DIR}" >> {log_file} 2>&1 && "
+            f'rd /S /Q "{CURRENT_DIR}" >> {log_file} 2>&1 && '
             f'move /Y "{backup_dist}" "{CURRENT_DIR}" >> {log_file} 2>&1 '
             f") ELSE ( "
             f'echo "Upgrade successful" >> {log_file} 2>&1 && '
