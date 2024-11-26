@@ -330,18 +330,21 @@ class ResticRunner:
             if self.additional_parameters
             else ""
         )
-        _cmd = f'"{self._binary}"{additional_parameters}{self.generic_arguments} {cmd}'
 
         if self.dry_run:
             # Only some restic commands support --dry-run, and it must be added after the main command
             # eg restic --dry-run backup / doesn't work
             # but restic backup / --dry-run does
+            # We need to make sure we put dry-run just after the main command, so we don't add it to the end of a stdin command
             operation = fn_name(1)
             if operation in ["backup", "forget", "prune", "restore", "rewrite"]:
                 self.write_logs(
                     "Running in dry mode. No modifications will be done", level="info"
                 )
-                _cmd += " --dry-run"
+                # Replace first occurence of possible operation
+                cmd = cmd.replace(operation, f"{operation} --dry-run", 1)
+
+        _cmd = f'"{self._binary}"{additional_parameters}{self.generic_arguments} {cmd}'
 
         self._executor_running = True
         self.write_logs(f"Running command: [{_cmd}]", level="debug")
