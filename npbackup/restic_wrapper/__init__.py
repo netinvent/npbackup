@@ -1079,7 +1079,7 @@ class ResticRunner:
                     cmd += ' --{}include "{}"'.format(case_ignore_param, include)
         result, output = self.executor(cmd)
         if result:
-            msg = "successfully restored data"
+            msg = "Successfully restored data"
         else:
             msg = f"Data not restored:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
@@ -1135,7 +1135,7 @@ class ResticRunner:
                 # NPF-RESTIC-00001
                 # restic output inconsistency: non existing snapshot IDs still produce exit code 0
                 if result and not "no matching ID found for prefix" in output:
-                    msg = f"successfully {'applied retention policy' if policy else 'forgot snapshot'}"
+                    msg = f"Successfully {'applied retention policy' if policy else 'forgot snapshot'}"
                     self.write_logs(
                         msg,
                         level="info",
