@@ -29,7 +29,7 @@ import json
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
 
 from npbackup import __main__
-from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
+from npbackup.path_helper import BASEDIR
 from npbackup.configuration import load_config, get_repo_config
 
 if os.name == "nt":
@@ -37,7 +37,7 @@ if os.name == "nt":
 else:
     CONF_FILE = "npbackup-cli-test-linux.yaml"
 
-CONF_FILE = Path(CURRENT_DIR).absolute().joinpath(CONF_FILE)
+CONF_FILE = Path(BASEDIR).absolute().parent.joinpath("tests").joinpath(CONF_FILE)
 full_config = load_config(CONF_FILE)
 repo_config, _ = get_repo_config(full_config)
 
