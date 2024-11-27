@@ -1,13 +1,11 @@
 
 ## Planned ahead
  ! Operation center must be able to create scheduled tasks for every operation
- ! Optional repo check before doing retention operations
 
 ## 3.0.0
  - This is a major rewrite that allows using multiple repositories, adds repository groups and implements repository settings inheritance from group settings
 
-
-## Features
+#### Features
   - New viewer mode allowing to browse/restore restic repositories without any NPBackup configuation
     - Allows setting repository via environment variables, config file or directly in GUI
   - Multi repository support
@@ -41,7 +39,7 @@
     - Restore window now uses 40% less memory
     - Restore window showing up 60% faster
     - Symlinks and irregular files are now shown properly
-  - Prometheus metrics:
+  - Prometheus metrics / monitoring:
     - Metrics are now created for all types of operation
     - Metrics have npbackup execution state
     - Metrics now include auto upgrade state
@@ -54,9 +52,7 @@
     - Updated legacy tcl8.6.13 to tc8.6.15
     - Updated legacy Python 3.7 to Python 3.9 (with openssl 1.1.1)
 
-  
-
-## Fixes
+#### Fixes
   - Default exit code is now worst log level called unless specific errors are triggered
   - Fix deletion failed message for en lang
   - Fix Google cloud storage backend detection in repository uri
@@ -65,7 +61,7 @@
   - GUI: Show anonymized repo uri in GUI
   - GUI: Exec error should always stay on top
 
-## Misc
+#### Misc
   - Current backup state now shows more precise backup state, including last backup date when relevant
   - Concurrency checks (pidfile checks) are now directly part of the runner
   - Allow a 30 seconds grace period for child processes to close before asking them nicely, and than not nicely to quit

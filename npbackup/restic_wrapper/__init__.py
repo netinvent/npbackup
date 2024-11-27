@@ -330,15 +330,21 @@ class ResticRunner:
             if self.additional_parameters
             else ""
         )
-        _cmd = f'"{self._binary}"{additional_parameters}{self.generic_arguments} {cmd}'
 
         if self.dry_run:
             # Only some restic commands support --dry-run, and it must be added after the main command
             # eg restic --dry-run backup / doesn't work
             # but restic backup / --dry-run does
+            # We need to make sure we put dry-run just after the main command, so we don't add it to the end of a stdin command
             operation = fn_name(1)
             if operation in ["backup", "forget", "prune", "restore", "rewrite"]:
-                _cmd += " --dry-run"
+                self.write_logs(
+                    "Running in dry mode. No modifications will be done", level="info"
+                )
+                # Replace first occurence of possible operation
+                cmd = cmd.replace(operation, f"{operation} --dry-run", 1)
+
+        _cmd = f'"{self._binary}"{additional_parameters}{self.generic_arguments} {cmd}'
 
         self._executor_running = True
         self.write_logs(f"Running command: [{_cmd}]", level="debug")
@@ -658,8 +664,11 @@ class ResticRunner:
         def wrapper(self, *args, **kwargs):
             is_init, output = self.is_init
             if not is_init:
+                # For backup operations, we'll auto-initialize the repo
                 # pylint: disable=E1101 (no-member)
-                if fn.__name__ == "backup":
+                if fn.__name__ == "backup" or fn_name(1) == "has_recent_snapshot":
+                    msg = f"Repo is not initialized. Initializing repo for backup operation"
+                    self.write_logs(msg, level="info")
                     init = self.init()
                     if not init:
                         msg = f"Could not initialize repo for backup operation"

@@ -1,7 +1,7 @@
 conf_version: 3.0
 repos:
   default:
-    repo_uri: ./test
+    repo_uri: ./npbackup-cli-test-repo
     repo_group: default_group
     backup_opts:
       paths: ../npbackup/npbackup
@@ -36,7 +36,6 @@ groups:
       - excludes/windows_excludes
       - excludes/linux_excludes
       exclude_patterns:
-      - 
       exclude_files_larger_than:
       additional_parameters:
       additional_backup_only_parameters:

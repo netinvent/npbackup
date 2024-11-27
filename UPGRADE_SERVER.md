@@ -38,18 +38,22 @@ mkdir /opt/upgrade_server_root
 
 ## Provisioning files
 
-Basically, upgrade_server servers zipped versions of NPBackup, than can directly be downloaded from git releases
+Basically, upgrade_server serves compressed versions of NPBackup, than can directly be downloaded from git releases. Those compressed files will contain a single directory, like `npbackup-gui` or `npbackup-cli` which contain all the files (.zip and .tar.gz files are supported)
+
 
 When uploading new versions, you need to create a file in the data root called `VERSION` which should contain current NPBackup version, example `3.0.1`  
 This way, every NPBackup client will download this file and compare with it's current version in order to verify if an upgrade is needed.
 
-If an upgrade is needed, NPBackup will try to download it from `/{platform}/{arch}/npbackup.zip`  
+If an upgrade is needed, NPBackup will try to download it from `/download/{platform}/{arch}/{build_type}`  
 
 Current platforms are: `windows`, `linux`
 Current arches are `x64`, `x64-legacy`, `x86-legacy`, `arm-legacy` and `arm64-legacy`.
 
-Basically, if you want to update the current windows NPBackup client, you should have copy your new npbackup zip file to 
-`/opt/upgrade_server_root/windows/x64/npbackup.zip`
+Basically, if you want to update the current NPBackup client, you should have copy your new npbackup archives to the according locations 
+```
+/opt/upgrade_server_root/linux/x64/npbackup-cli.tar.gz
+/opt/upgrade_server_root/windows/x64/npbackup-gui.zip
+```
 
 
 ## Run server

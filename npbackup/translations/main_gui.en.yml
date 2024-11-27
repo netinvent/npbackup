@@ -47,6 +47,7 @@ en:
   cancel_operation: Are you sure you want to cancel the operation? Try to avoid interrupting write operations
   load_existing_file: Load existing config file
   failed_operation: Failed operation, Please check the logs
+  auto_upgrade_checking: Checking for upgrade
   
   # logs
   last_messages: Last messages

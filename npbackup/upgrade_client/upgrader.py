@@ -7,7 +7,7 @@ __intname__ = "npbackup.upgrade_client.upgrader"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2024091701"
+__build__ = "2024112602"
 
 
 import os
@@ -145,20 +145,27 @@ def auto_upgrader(
     requestor.create_session(authenticated=True)
 
     # We'll check python_arch instead of os_arch since we build 32 bit python executables for compat reasons
-    platform_and_arch = "{}/{}".format(get_os(), python_arch()).lower()
-    if IS_LEGACY:
-        platform_and_arch += "-legacy"
+    arch = python_arch() if not IS_LEGACY else f"{python_arch()}-legacy"
+    build_type = os.environ.get("NPBACKUP_BUILD_TYPE", None)
+    if not build_type:
+        logger.critical("Cannot determine build type for upgrade processs")
+        return False
+    target = "{}/{}/{}".format(get_os(), arch, build_type).lower()
     try:
         host_id = "{}/{}/{}".format(auto_upgrade_host_identity, npbackup_version, group)
-        id_record = "{}/{}".format(platform_and_arch, host_id)
+        id_record = "{}/{}".format(target, host_id)
     except TypeError:
-        id_record = platform_and_arch
+        id_record = target
 
     file_info = requestor.data_model("upgrades", id_record=id_record)
+    if not file_info:
+        logger.error("Server didn't provide a file description")
+        return False
     try:
         sha256sum = file_info["sha256sum"]
     except (KeyError, TypeError):
         logger.error("Cannot get file description")
+        logger.debug("Trace", exc_info=True)
         return False
     if sha256sum is None:
         logger.info("No upgrade file found has been found for me :/")
@@ -188,7 +195,7 @@ def auto_upgrader(
     # eg /tmp/npbackup_upgrade_dist/npbackup-cli
     upgrade_dist = os.path.join(tempfile.gettempdir(), "npbackup_upgrade_dist")
     try:
-        # File should contain a single directory 'npbackup-cli' or 'npbackup-gui' with all files in it
+        # File is a zip or tar.gz and should contain a single directory 'npbackup-cli' or 'npbackup-gui' with all files in it
         shutil.unpack_archive(downloaded_archive, upgrade_dist)
     except Exception as exc:
         logger.critical(f"Upgrade failed. Cannot uncompress downloaded dist: {exc}")
@@ -210,45 +217,49 @@ def auto_upgrader(
     # Inplace upgrade script, gets executed after main program has exited
     if os.name == "nt":
         cmd = (
-            f'echo "Launching upgrade" >> {log_file} 2>&1 && '
-            f'echo "Moving earlier dist from {CURRENT_DIR} to {backup_dist}" >> {log_file} 2>&1 && '
-            f'move /Y "{CURRENT_DIR}" "{backup_dist}" >> {log_file} 2>&1 && '
-            f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> {log_file} 2>&1 && '
-            f'move /Y "{upgrade_dist}" "{CURRENT_DIR}" >> {log_file} 2>&1 && '
-            f'echo "Loading new executable {CURRENT_EXECUTABLE} --version" >> {log_file} 2>&1 && '
-            f'"{CURRENT_EXECUTABLE}" --version >> {log_file} 2>&1 & '
+            f'echo "Launching upgrade" >> "{log_file}" 2>&1 && '
+            f'echo "Moving earlier dist from {CURRENT_DIR} to {backup_dist}" >> "{log_file}" 2>&1 && '
+            f'move /Y "{CURRENT_DIR}" "{backup_dist}" >> "{log_file}" 2>&1 && '
+            f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
+            f'move /Y "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
+            f'echo "Loading new executable {CURRENT_EXECUTABLE} --version" >> "{log_file}" 2>&1 && '
+            f'"{CURRENT_EXECUTABLE}" --version >> "{log_file}" 2>&1 & '
             f"IF %ERRORLEVEL% NEQ 0 ( "
-            f'echo "New executable failed. Rolling back" >> {log_file} 2>&1 && '
-            f"rd /S /Q {CURRENT_DIR} >> {log_file} 2>&1 && "
-            f'move /Y "{backup_dist}" "{CURRENT_DIR}" >> {log_file} 2>&1 '
+            f'echo "New executable failed. Rolling back" >> "{log_file}" 2>&1 && '
+            f'rd /S /Q "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
+            f'move /Y "{backup_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 '
             f") ELSE ( "
-            f'echo "Upgrade successful" >> {log_file} 2>&1 && '
-            f"rd /S /Q {backup_dist} >> {log_file} 2>&1 && "
-            f'echo "Running new version as planned:" >> {log_file} 2>&1 && '
-            f'echo "{CURRENT_EXECUTABLE} {" ".join(sys.argv[1:])}" 2>&1 && '
+            f'echo "Upgrade successful" >> "{log_file}" 2>&1 && '
+            f'rd /S /Q "{backup_dist}" >> "{log_file}" 2>&1 & '
+            # f'rd /S /Q "{upgrade_dist}" >> "{log_file}" 2>&1 & ' Since we move this, we don't need to delete it
+            f'del /F /S /Q "{downloaded_archive}" >> "{log_file}" 2>&1 & '
+            f'echo "Running new version as planned:" >> "{log_file}" 2>&1 && '
+            f'echo "{CURRENT_EXECUTABLE} {" ".join(sys.argv[1:])}" >> "{log_file}" 2>&1 && '
             f'"{CURRENT_EXECUTABLE}" {" ".join(sys.argv[1:])}'
             f")"
         )
     else:
         cmd = (
-            f'echo "Launching upgrade" >> {log_file} 2>&1 && '
-            f'echo "Moving earlier dist from {CURRENT_DIR} to {backup_dist}" >> {log_file} 2>&1 && '
-            f'mv -f "{CURRENT_DIR}" "{backup_dist}" >> {log_file} 2>&1 && '
-            f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> {log_file} 2>&1 && '
-            f'mv -f "{upgrade_dist}" "{CURRENT_DIR}" >> {log_file} 2>&1 && '
-            f'echo "Adding executable bit to new executable" >> {log_file} 2>&1 && '
-            f'chmod +x {CURRENT_EXECUTABLE}" >> {log_file} 2>&1 && '
-            f'echo "Loading new executable {CURRENT_EXECUTABLE} --version" >> {log_file} 2>&1 && '
-            f'"{CURRENT_EXECUTABLE}" --version >> {log_file} 2>&1; '
-            f'"if [ $? -ne 0 ]; then '
-            f'echo "New executable failed. Rolling back" >> {log_file} 2>&1 && '
-            f'rm -f "{CURRENT_DIR}" >> {log_file} 2>&1 && '
-            f'mv -f "{backup_dist}" "{CURRENT_DIR}" >> {log_file} 2>&1; '
+            f'echo "Launching upgrade" >> "{log_file}" 2>&1 && '
+            f'echo "Moving earlier dist from {CURRENT_DIR} to {backup_dist}" >> "{log_file}" 2>&1 && '
+            f'mv -f "{CURRENT_DIR}" "{backup_dist}" >> "{log_file}" 2>&1 && '
+            f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
+            f'mv -f "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
+            f'echo "Adding executable bit to new executable" >> "{log_file}" 2>&1 && '
+            f'chmod +x "{CURRENT_EXECUTABLE}" >> "{log_file}" 2>&1 && '
+            f'echo "Loading new executable {CURRENT_EXECUTABLE} --version" >> "{log_file}" 2>&1 && '
+            f'"{CURRENT_EXECUTABLE}" --version >> "{log_file}" 2>&1; '
+            f"if [ $? -ne 0 ]; then "
+            f'echo "New executable failed. Rolling back" >> "{log_file}" 2>&1 && '
+            f'rm -f "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
+            f'mv -f "{backup_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1; '
             f" else "
-            f'echo "Upgrade successful" >> {log_file} 2>&1 && '
-            f'rm -f "{backup_dist}" >> {log_file} 2>&1 && '
-            f'echo "Running new version as planned:" >> {log_file} 2>&1 && '
-            f'echo "{CURRENT_EXECUTABLE} {" ".join(sys.argv[1:])}" 2>&1 && '
+            f'echo "Upgrade successful" >> "{log_file}" 2>&1 && '
+            f'rm -rf "{backup_dist}" >> "{log_file}" 2>&1 ; '
+            f'rm -rf "{upgrade_dist}" >> "{log_file}" 2>&1 ; '
+            f'rm -rf "{downloaded_archive}" >> "{log_file}" 2>&1 ; '
+            f'echo "Running new version as planned:" >> "{log_file}" 2>&1 && '
+            f'echo "{CURRENT_EXECUTABLE} {" ".join(sys.argv[1:])}" >> "{log_file}" 2>&1 && '
             f'"{CURRENT_EXECUTABLE}" {" ".join(sys.argv[1:])}; '
             f"fi"
         )
@@ -263,4 +274,4 @@ def auto_upgrader(
     )
     logger.debug(cmd)
     deferred_command(cmd, defer_time=UPGRADE_DEFER_TIME)
-    return True
+    sys.exit(0)

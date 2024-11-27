@@ -7,7 +7,7 @@ __intname__ = "npbackup.upgrade_server.crud"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024091701"
+__build__ = "2024112601"
 
 
 import os
@@ -89,7 +89,11 @@ def get_current_version() -> Optional[CurrentVersion]:
 def get_file(
     file: FileGet, content: bool = False
 ) -> Optional[Union[FileSend, bytes, dict]]:
-    possible_filename = "npbackup.zip"
+    if file.platform.value == "windows":
+        extension = "zip"
+    else:
+        extension = "tar.gz"
+    possible_filename = f"npbackup-{file.build_type.value}.{extension}"
     path = os.path.join(
         config_dict["upgrades"]["data_root"],
         file.platform.value,
@@ -102,6 +106,7 @@ def get_file(
         return {
             "arch": file.arch.value,
             "platform": file.platform.value,
+            "build_type": file.build_type.value,
             "sha256sum": None,
             "filename": None,
             "file_length": 0,
@@ -116,6 +121,7 @@ def get_file(
         file_send = FileSend(
             arch=file.arch.value,
             platform=file.platform.value,
+            build_type=file.build_type.value,
             sha256sum=sha256,
             filename=possible_filename,
             file_length=length,
