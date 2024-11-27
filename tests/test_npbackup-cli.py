@@ -110,6 +110,7 @@ def test_npbackup_cli_create_backup():
             print(e)
     except SystemExit:
         print(str(logs))
+        assert "Backend finished with success" in str(logs), "Backup failed"
 
 
 def test_npbackup_cli_unlock():
