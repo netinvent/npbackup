@@ -1,15 +1,18 @@
 conf_version: 3.0
 repos:
   default:
-    repo_uri: ./test
+    repo_uri: 
+      __NPBACKUP__cjA2cMpU/NXWeXGSQZrtgXVP1ZrKqQn4Hq41xxbaRTQxNzMyNzI0ODUzLjI0OTg5Nw8PDw8PDw8PDw8PDw8PDzxRwZTs6gTqdrEI6oFSnSWLureQSQ==__NPBACKUP__
     repo_group: default_group
     backup_opts:
-      paths: []
+      paths:
+      - ../npbackup/npbackup
       tags: []
-      minimum_backup_size_error: 80.0 Mib
+      minimum_backup_size_error: 400 Kib
       exclude_files_larger_than: 0.0 Kib
     repo_opts:
-      repo_password: test
+      repo_password: 
+        __NPBACKUP__TfMLTaHdOBA7cUkggFqr8jQCX9BiPb+I00F7S5zQ088xNzMyNzI0ODUzLjI0OTg5Nw8PDw8PDw8PDw8PDw8PD7bNnnCJ3yvSLVsIxaxVMdWKbk0=__NPBACKUP__
       upload_speed: 100.0 Mib
       download_speed: 0.0 Kib
       retention_policy: {}
@@ -17,6 +20,7 @@ repos:
     env:
       env_variables: {}
       encrypted_env_variables: {}
+    is_protected: false
 groups:
   default_group:
     backup_opts:
@@ -24,7 +28,7 @@ groups:
       source_type:
       tags: []
       compression: auto
-      use_fs_snapshot: true
+      use_fs_snapshot: false
       ignore_cloud_files: true
       exclude_caches: true
       one_file_system: true
@@ -71,6 +75,7 @@ groups:
     env:
       env_variables: {}
       encrypted_env_variables: {}
+    is_protected: false
 identity:
   machine_id: ${HOSTNAME}__Zo6u
   machine_group:
@@ -90,3 +95,4 @@ global_options:
   auto_upgrade_server_password:
   auto_upgrade_host_identity: ${MACHINE_ID}
   auto_upgrade_group: ${MACHINE_GROUP}
+audience: private

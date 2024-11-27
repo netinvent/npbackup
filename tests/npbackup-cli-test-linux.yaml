@@ -4,9 +4,9 @@ repos:
     repo_uri: ./test
     repo_group: default_group
     backup_opts:
-      paths: []
+      paths: ../npbackup/npbackup
       tags: []
-      minimum_backup_size_error: 80.0 Mib
+      minimum_backup_size_error: 400 Kib
       exclude_files_larger_than: 0.0 Kib
     repo_opts:
       repo_password: test
