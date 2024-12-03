@@ -27,6 +27,7 @@ from io import StringIO
 import json
 import requests
 import tempfile
+import bz2
 from pprint import pprint
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
@@ -93,11 +94,19 @@ def test_download_restic_binaries():
             file_request = requests.get(
                 entry["browser_download_url"], allow_redirects=True
             )
+            print("FILE REQUEST RESPONSE", file_request)
             filename = entry["browser_download_url"].rsplit("/", 1)[1]
             full_path = dest_dir.joinpath(filename)
-            with open(full_path, "wb") as fp:
-                fp.write(file_request.content)
-            shutil.unpack_archive(full_path, dest_dir)
+            print("PATH TO DOWNLOADED ARCHIVE: ", full_path)
+            if fname.endswith("bz2"):
+                with open(full_path.with_suffix(""), "wb") as fp:
+                    fp.write(bz2.decompress(full_path)
+                )
+            else:
+                with open(full_path, "wb") as fp:
+                    fp.write(file_request.content)
+                # Assume we have a zip or tar.gz
+                shutil.unpack_archive(full_path, dest_dir)
             try:
                 shutil.move(full_path, dest_dir.joinpath("ARCHIVES"))
             except OSError:
