@@ -25,6 +25,9 @@ from pathlib import Path
 import shutil
 from io import StringIO
 import json
+import requests
+import tempfile
+from pprint import pprint
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -38,6 +41,7 @@ else:
     CONF_FILE = "npbackup-cli-test-linux.yaml"
 
 CONF_FILE = Path(BASEDIR).absolute().parent.joinpath("tests").joinpath(CONF_FILE)
+
 full_config = load_config(CONF_FILE)
 repo_config, _ = get_repo_config(full_config)
 
@@ -61,6 +65,43 @@ class RedirectedStdout:
 
     def __str__(self):
         return self._string_io.getvalue()
+
+
+def test_download_restic_binaries():
+    """
+    We must first download latest restic binaries to make sure we can run all tests
+    """
+    org = "restic"
+    repo = "restic"
+
+    dest_dir = Path(BASEDIR).absolute().parent.joinpath("RESTIC_SOURCE_FILES")
+    response = requests.get(
+        f"https://api.github.com/repos/{org}/{repo}/releases/latest"
+    )
+    print("RESPONSE: ", response)
+    json_response = json.loads(response.text)
+
+    if os.name == "nt":
+        fname = "_windows_amd64.zip"
+    else:
+        fname = "_linux_amd64.bz2"
+    print("JSON RESPONSE")
+    pprint(json_response, indent=5)
+
+    for entry in json_response["assets"]:
+        if fname in entry["browser_download_url"]:
+            file_request = requests.get(
+                entry["browser_download_url"], allow_redirects=True
+            )
+            filename = entry["browser_download_url"].rsplit("/", 1)[1]
+            full_path = dest_dir.joinpath(filename)
+            with open(full_path, "wb") as fp:
+                fp.write(file_request.content)
+            shutil.unpack_archive(full_path, dest_dir)
+            try:
+                shutil.move(full_path, dest_dir.joinpath("ARCHIVES"))
+            except OSError:
+                pass
 
 
 def test_npbackup_cli_no_config():
@@ -186,6 +227,7 @@ def test_npbackup_cli_retention():
 
 
 if __name__ == "__main__":
+    test_download_restic_binaries()
     test_npbackup_cli_no_config()
     test_npbackup_cli_wrong_config_path()
     test_npbackup_cli_show_config()
