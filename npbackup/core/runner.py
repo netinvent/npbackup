@@ -90,7 +90,7 @@ def metric_writer(
                 minimum_backup_size_error=minimum_backup_size_error,
             )
         if not operation_success or not restic_result:
-            logger.error("Restic finished with errors.")
+            logger.error("Backend finished with errors.")
 
         """
         Add a metric for informing if any warning raised while executing npbackup_tasks
