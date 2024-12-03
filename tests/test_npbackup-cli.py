@@ -102,6 +102,8 @@ def test_download_restic_binaries():
                 with open(full_path.with_suffix(""), "wb") as fp:
                     fp.write(bz2.decompress(file_request.content)
                 )
+                # We also need to make that file executable
+                os.chmod(full_path.with_suffix(""), 0o775)
             else:
                 with open(full_path, "wb") as fp:
                     fp.write(file_request.content)
