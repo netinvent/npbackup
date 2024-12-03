@@ -6,7 +6,7 @@ __intname__ = "restic_metrics_tests"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2024010101"
+__build__ = "2024120301"
 __description__ = (
     "Converts restic command line output to a text file node_exporter can scrape"
 )
@@ -170,11 +170,7 @@ def test_restic_json_output():
 
 
 def test_real_restic_output():
-    # Don't do the real tests on github actions, since we don't have
-    # the binaries there.
-    # TODO: Add download/unzip restic binaries so we can run these tests
-    if running_on_github_actions():
-        return
+    # We rely on the binaries downloaded in npbackup_tests here
     labels = {"instance": "test", "backup_job": "some_nas"}
     restic_binary = get_restic_internal_binary(os_arch())
     print(f"Testing real restic output, Running with restic {restic_binary}")
@@ -182,10 +178,7 @@ def test_real_restic_output():
 
     for api_arg in ["", " --json"]:
         # Setup repo and run a quick backup
-        repo_path = Path(tempfile.gettempdir()) / "repo"
-        if repo_path.is_dir():
-            shutil.rmtree(repo_path)
-            repo_path.mkdir()
+        repo_path = Path(tempfile.mkdtemp(prefix="npbackup_restic_tests_"))
 
         os.environ["RESTIC_REPOSITORY"] = str(repo_path)
         os.environ["RESTIC_PASSWORD"] = "TEST"
