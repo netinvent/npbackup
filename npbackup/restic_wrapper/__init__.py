@@ -545,7 +545,7 @@ class ResticRunner:
             )
             if exit_code == 0:
                 return output.strip()
-            self.write_logs("Cannot get backend version: {output}", level="warning")
+            self.write_logs(f"Cannot get backend version: {output}", level="warning")
         else:
             self.write_logs(
                 "Cannot get backend version: No binary defined.", level="error"
