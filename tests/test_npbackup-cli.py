@@ -6,7 +6,7 @@ __intname__ = "npbackup_cli_tests"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2024112701"
+__build__ = "2024120301"
 __compat__ = "python3.6+"
 
 
@@ -28,6 +28,7 @@ import json
 import requests
 import tempfile
 import bz2
+import fileinput
 from pprint import pprint
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
@@ -36,15 +37,29 @@ from npbackup import __main__
 from npbackup.path_helper import BASEDIR
 from npbackup.configuration import load_config, get_repo_config
 
+
 if os.name == "nt":
-    CONF_FILE = "npbackup-cli-test-windows.yaml"
+    ORIGINAL_CONF_FILE = "npbackup-cli-test-windows.yaml"
 else:
-    CONF_FILE = "npbackup-cli-test-linux.yaml"
+    ORIGINAL_CONF_FILE = "npbackup-cli-test-linux.yaml"
 
-CONF_FILE = Path(BASEDIR).absolute().parent.joinpath("tests").joinpath(CONF_FILE)
+ORIGINAL_CONF_FILE_PATH = (
+    Path(BASEDIR).absolute().parent.joinpath("tests").joinpath(ORIGINAL_CONF_FILE)
+)
+CONF_FILE = Path(tempfile.gettempdir()).absolute().joinpath(ORIGINAL_CONF_FILE)
+# Now that we got the path to the config file, we need to replace repo_uri with a temporary directory
+# Danger: THIS WILL NEED SOME ADJUSTMENT FOR multi repo tests
 
-full_config = load_config(CONF_FILE)
-repo_config, _ = get_repo_config(full_config)
+temp_repo_dir = Path(tempfile.mkdtemp(prefix="npbackup_test_repo_"))
+restore_dir = Path(tempfile.mkdtemp(prefix="npbackup_test_restore_"))
+
+raw_config = ORIGINAL_CONF_FILE_PATH.read_text().replace(
+    "repo_uri: ./test", f"repo_uri: {temp_repo_dir}"
+)
+CONF_FILE.write_text(raw_config)
+
+# full_config = load_config(CONF_FILE)
+# repo_config, _ = get_repo_config(full_config)
 
 
 class RedirectedStdout:
@@ -100,8 +115,7 @@ def test_download_restic_binaries():
             print("PATH TO DOWNLOADED ARCHIVE: ", full_path)
             if fname.endswith("bz2"):
                 with open(full_path.with_suffix(""), "wb") as fp:
-                    fp.write(bz2.decompress(file_request.content)
-                )
+                    fp.write(bz2.decompress(file_request.content))
                 # We also need to make that file executable
                 os.chmod(full_path.with_suffix(""), 0o775)
             else:
@@ -151,11 +165,7 @@ def test_npbackup_cli_show_config():
 
 def test_npbackup_cli_create_backup():
     sys.argv = ["", "-c", str(CONF_FILE), "-b"]
-    # Make sure there is no existing repository
 
-    repo_uri = Path(repo_config.g("repo_uri"))
-    if repo_uri.is_dir():
-        shutil.rmtree(repo_uri)
     try:
         with RedirectedStdout() as logs:
             e = __main__.main()
@@ -167,7 +177,7 @@ def test_npbackup_cli_create_backup():
 
 def test_npbackup_cli_unlock():
     sys.argv = ["", "-c", str(CONF_FILE), "--unlock"]
-    # Make sure there is no existing repository
+
     try:
         with RedirectedStdout() as logs:
             e = __main__.main()
@@ -193,7 +203,7 @@ def test_npbackup_cli_snapshots():
 
 
 def test_npbackup_cli_restore():
-    sys.argv = ["", "-c", str(CONF_FILE), "-r", "./restored"]
+    sys.argv = ["", "-c", str(CONF_FILE), "-r", str(restore_dir)]
     try:
         with RedirectedStdout() as logs:
             e = __main__.main()
@@ -204,7 +214,7 @@ def test_npbackup_cli_restore():
             logs
         ), "Logs don't show successful restore"
         assert Path(
-            "./restored/npbackup/npbackup/__version__.py"
+            f"{restore_dir}/npbackup/npbackup/__version__.py"
         ).is_file(), "Restored snapshot does not contain our data"
 
 
