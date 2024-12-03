@@ -100,7 +100,7 @@ def test_download_restic_binaries():
             print("PATH TO DOWNLOADED ARCHIVE: ", full_path)
             if fname.endswith("bz2"):
                 with open(full_path.with_suffix(""), "wb") as fp:
-                    fp.write(bz2.decompress(full_path)
+                    fp.write(bz2.decompress(file_request.content)
                 )
             else:
                 with open(full_path, "wb") as fp:
