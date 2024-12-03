@@ -3,7 +3,8 @@
 [![GitHub Release](https://img.shields.io/github/release/netinvent/npbackup.svg?label=Latest)](https://github.com/netinvent/npbackup/releases/latest)
 [![Windows linter](https://github.com/netinvent/npbackup/actions/workflows/pylint-windows.yaml/badge.svg)](https://github.com/netinvent/npbackup/actions/workflows/pylint-windows.yaml)
 [![Linux linter](https://github.com/netinvent/npbackup/actions/workflows/pylint-linux.yaml/badge.svg)](https://github.com/netinvent/npbackup/actions/workflows/pylint-linux.yaml)
-
+[![Windows tests](https://github.com/netinvent/npbackup/actions/workflows/windows.yaml/badge.svg)](https://github.com/netinvent/npbackup/actions/workflows/windows.yaml)
+[![Linux tests](https://github.com/netinvent/npbackup/actions/workflows/linux.yaml/badge.svg)](https://github.com/netinvent/npbackup/actions/workflows/linux.yaml)
 # NPBackup
 
 A secure and efficient file backup solution that fits both system administrators (CLI) and end users (GUI)  
