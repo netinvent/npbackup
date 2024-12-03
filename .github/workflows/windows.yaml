@@ -16,7 +16,7 @@ jobs:
         os: [windows-latest]
         # As of 2023/08/30, we have removed python 2.7 since github actions won't provide it anymore
         # Don't test on pypy since we don't have pywin32
-        python-version: [3.6, 3.7, 3.8, 3.9, "3.10", "3.11", "3.12"]
+        python-version: [3.7, 3.8, 3.9, "3.10", "3.11", "3.12"]
 
     steps:
     - uses: actions/checkout@v3
