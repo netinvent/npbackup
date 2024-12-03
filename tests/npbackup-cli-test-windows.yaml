@@ -1,8 +1,7 @@
 conf_version: 3.0
 repos:
   default:
-    repo_uri: 
-      __NPBACKUP__cjA2cMpU/NXWeXGSQZrtgXVP1ZrKqQn4Hq41xxbaRTQxNzMyNzI0ODUzLjI0OTg5Nw8PDw8PDw8PDw8PDw8PDzxRwZTs6gTqdrEI6oFSnSWLureQSQ==__NPBACKUP__
+    repo_uri: ./test
     repo_group: default_group
     backup_opts:
       paths:
@@ -11,8 +10,7 @@ repos:
       minimum_backup_size_error: 400 Kib
       exclude_files_larger_than: 0.0 Kib
     repo_opts:
-      repo_password: 
-        __NPBACKUP__TfMLTaHdOBA7cUkggFqr8jQCX9BiPb+I00F7S5zQ088xNzMyNzI0ODUzLjI0OTg5Nw8PDw8PDw8PDw8PDw8PD7bNnnCJ3yvSLVsIxaxVMdWKbk0=__NPBACKUP__
+      repo_password: test
       upload_speed: 100.0 Mib
       download_speed: 0.0 Kib
       retention_policy: {}
@@ -39,7 +37,7 @@ groups:
       - excludes/generic_excludes
       - excludes/windows_excludes
       - excludes/linux_excludes
-      exclude_patterns:
+      exclude_patterns: []
       exclude_files_larger_than:
       additional_parameters:
       additional_backup_only_parameters:
@@ -94,4 +92,4 @@ global_options:
   auto_upgrade_server_password:
   auto_upgrade_host_identity: ${MACHINE_ID}
   auto_upgrade_group: ${MACHINE_GROUP}
-audience: public
+audience: private
