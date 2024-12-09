@@ -951,7 +951,7 @@ class NPBackupRunner:
     @apply_config_to_restic_runner
     def init(self) -> bool:
         self.write_logs(
-            f"Initializing repo  {self.repo_config.g('name')}", level="info"
+            f"Initializing repo {self.repo_config.g('name')}", level="info"
         )
         return self.restic_runner.init()
 

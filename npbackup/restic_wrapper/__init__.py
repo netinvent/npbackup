@@ -1193,7 +1193,7 @@ class ResticRunner:
         cmd = "check{}".format(" --read-data" if read_data else "")
         result, output = self.executor(cmd)
         if result:
-            msg = "Repo checked successfully."
+            msg = "Repo checked successfully"
         else:
             msg = "Repo check failed"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
