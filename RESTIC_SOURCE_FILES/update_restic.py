@@ -92,7 +92,7 @@ def download_restic_binaries(arch: str = "amd64") -> bool:
             full_path = dest_dir.joinpath(filename)
             print("PATH TO DOWNLOADED ARCHIVE: ", full_path)
             if arch_suffix == ".bz2":
-                with open(str(full_path).rstrip("arch_suffix"), "wb") as fp:
+                with open(str(full_path).rstrip(arch_suffix), "wb") as fp:
                     fp.write(bz2.decompress(file_request.content))
                 # We also need to make that file executable
                 os.chmod(str(full_path).rstrip(arch_suffix), 0o775)
