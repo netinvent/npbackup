@@ -346,7 +346,7 @@ This is free software, and you are welcome to redistribute it under certain cond
     if args.json:
         _JSON = True
         logger = ofunctions.logger_utils.logger_get_logger(
-            log_file, console=False, debug=_DEBUG
+            log_file, console=_DEBUG, debug=_DEBUG
         )
     else:
         logger = ofunctions.logger_utils.logger_get_logger(log_file, debug=_DEBUG)
