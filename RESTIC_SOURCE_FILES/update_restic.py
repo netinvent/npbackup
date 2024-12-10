@@ -53,7 +53,7 @@ def download_restic_binaries(arch: str = "amd64") -> bool:
     if not dest_dir.joinpath("ARCHIVES").is_dir():
         os.makedirs(dest_dir.joinpath("ARCHIVES"))
 
-    dest_file = dest_dir.joinpath("restic_" + current_version + fname + arch_suffix)
+    dest_file = dest_dir.joinpath("restic_" + current_version + fname + suffix)
 
     if dest_file.is_file():
         print(f"RESTIC SOURCE ALREADY PRESENT. NOT DOWNLOADING {dest_file}")
