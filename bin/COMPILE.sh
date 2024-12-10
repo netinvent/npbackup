@@ -13,6 +13,8 @@ export PYTHONPATH=/opt/npbackup
 
 /opt/npbackup/venv/bin/python RESTIC_SOURCE_FILES/update_restic.py || exit 1
 
+/opt/npbackup/venv/bin/python -m pip install pytest
+/opt/npbackup/venv/bin/python -m pytest /opt/npbackup/tests || exit 1
 
 /opt/npbackup/venv/bin/python -m pip install --upgrade -r npbackup/requirements.txt || exit 1
 /opt/npbackup/venv/bin/python bin/compile.py --audience all $@
