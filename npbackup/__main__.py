@@ -218,7 +218,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Run raw command against backend.",
+        help="Run raw command against backend. Use with --raw \"my raw backend command\"",
     )
     parser.add_argument(
         "--init",
