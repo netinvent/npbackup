@@ -77,8 +77,10 @@ def download_restic_binaries(arch: str = "amd64"):
                 # Assume we have a zip or tar.gz
                 shutil.unpack_archive(full_path, dest_dir)
             try:
+                print("ARCHIVE DIR EXISTS: ", dest_dir.joinpath("ARCHIVES").is_dir())
                 if not dest_dir.joinpath("ARCHIVES").is_dir():
                     os.makedirs(dest_dir.joinpath("ARCHIVES"))
+                print("ARCHIVE DIR EXISTS: ", dest_dir.joinpath("ARCHIVES").is_dir())
                 shutil.move(full_path, dest_dir.joinpath("ARCHIVES").joinpath(filename))
             except OSError:
                 print(
