@@ -112,7 +112,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         required=False,
         nargs="?",
         const="latest",
-        help='Show content given snapshot. When no snapshot id is given, latest is used',
+        help="Show content given snapshot. When no snapshot id is given, latest is used",
     )
     parser.add_argument(
         "--find",
@@ -219,7 +219,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Run raw command against backend. Use with --raw \"my raw backend command\"",
+        help='Run raw command against backend. Use with --raw "my raw backend command"',
     )
     parser.add_argument(
         "--init",

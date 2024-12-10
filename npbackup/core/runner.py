@@ -950,9 +950,7 @@ class NPBackupRunner:
     @is_ready
     @apply_config_to_restic_runner
     def init(self) -> bool:
-        self.write_logs(
-            f"Initializing repo {self.repo_config.g('name')}", level="info"
-        )
+        self.write_logs(f"Initializing repo {self.repo_config.g('name')}", level="info")
         return self.restic_runner.init()
 
     @threaded
@@ -1633,7 +1631,8 @@ class NPBackupRunner:
     @apply_config_to_restic_runner
     def dump(self, snapshot: str, path: str) -> bool:
         self.write_logs(
-            f"Dumping {path} from {self.repo_config.g('name')} snapshot {snapshot}", level="info"
+            f"Dumping {path} from {self.repo_config.g('name')} snapshot {snapshot}",
+            level="info",
         )
         result = self.restic_runner.dump(snapshot, path)
         return result

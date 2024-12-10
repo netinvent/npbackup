@@ -64,6 +64,7 @@ repo_config, _ = get_repo_config(full_config)
 # File we will request in dump mode
 DUMP_FILE = "__version__.py"
 
+
 class RedirectedStdout:
     """
     Balantly copied from https://stackoverflow.com/a/45899925/2635443
@@ -183,7 +184,7 @@ def test_npbackup_cli_init():
         print(str(logs))
         assert "created restic repository" in str(logs), "Did not create repo"
         assert "Repo initialized successfully" in str(logs), "Repo init failed"
-    
+
 
 def test_npbackup_cli_has_no_recent_snapshots():
     """
@@ -198,11 +199,11 @@ def test_npbackup_cli_has_no_recent_snapshots():
         print(str(logs))
         json_logs = json.loads(str(logs))
         assert json_logs["result"] == False, "Should not have recent snapshots"
- 
+
 
 def test_npbackup_cli_create_backup():
     # Let's remove the repo before creating a backup since backup should auto init the repo
-    shutil.rmtree(repo_config.g("repo_uri"), ignore_errors=True)  
+    shutil.rmtree(repo_config.g("repo_uri"), ignore_errors=True)
     sys.argv = ["", "-c", str(CONF_FILE), "-b"]
 
     try:
@@ -299,8 +300,7 @@ def test_npbackup_cli_list_snapshots():
         json_logs = json.loads(str(logs))
         assert json_logs["result"], "Bad list result"
         assert json_logs["operation"] == "list", "Bogus operation name for list"
-        assert len(json_logs["output"]["data"])  == 64, "No snapshot data found"
-
+        assert len(json_logs["output"]["data"]) == 64, "No snapshot data found"
 
 
 def test_npbackup_cli_find():
@@ -311,7 +311,9 @@ def test_npbackup_cli_find():
             print(e)
     except SystemExit:
         print(logs)
-        assert "Found matching entries in snapshot" in str(logs), "Did not find match for find"
+        assert "Found matching entries in snapshot" in str(
+            logs
+        ), "Did not find match for find"
         assert "__version__.py", "Did not find __version__.py in find"
 
 
@@ -327,9 +329,7 @@ def test_npbackup_cli_check_quick():
             logs
         ), "Failed quick checking repo"
         print(logs)
-        assert "Repo checked successfully" in str(
-            logs
-        ), "Quick check failed"
+        assert "Repo checked successfully" in str(logs), "Quick check failed"
 
 
 def test_npbackup_cli_check_full():
@@ -344,9 +344,7 @@ def test_npbackup_cli_check_full():
             logs
         ), "Failed full checking repo"
         print(logs)
-        assert "Repo checked successfully" in str(
-            logs
-        ), "Full check failed"
+        assert "Repo checked successfully" in str(logs), "Full check failed"
 
 
 def test_npbackup_cli_repair_index():
@@ -357,13 +355,9 @@ def test_npbackup_cli_repair_index():
             print(e)
     except SystemExit:
         print(logs)
-        assert "Repairing index in repo" in str(
-            logs
-        ), "Index repair failed"
+        assert "Repairing index in repo" in str(logs), "Index repair failed"
         print(logs)
-        assert "Repo successfully repaired:" in str(
-            logs
-        ), "Missing repair info"
+        assert "Repo successfully repaired:" in str(logs), "Missing repair info"
 
 
 def test_npbackup_cli_repair_snapshots():
@@ -374,13 +368,9 @@ def test_npbackup_cli_repair_snapshots():
             print(e)
     except SystemExit:
         print(logs)
-        assert "Repairing snapshots in repo" in str(
-            logs
-        ), "Snapshot repair failed"
+        assert "Repairing snapshots in repo" in str(logs), "Snapshot repair failed"
         print(logs)
-        assert "Repo successfully repaired:" in str(
-            logs
-        ), "Missing repair info"
+        assert "Repo successfully repaired:" in str(logs), "Missing repair info"
 
 
 def test_npbackup_cli_retention():
@@ -434,9 +424,7 @@ def test_npbackup_cli_prune():
             print(e)
     except SystemExit:
         print(logs)
-        assert "Pruning snapshots for repo" in str(
-            logs
-        ), "Could not prune repo"
+        assert "Pruning snapshots for repo" in str(logs), "Could not prune repo"
         assert "unused size after prune" in str(logs), "Did not prune"
         assert "Successfully pruned repository" in str(logs), "Prune failed"
 
@@ -451,11 +439,15 @@ def test_npbackup_cli_housekeeping():
         print(logs)
         json_logs = json.loads(str(logs))
         assert json_logs["result"], "Bad housekeeping result"
-        assert json_logs["operation"] == "housekeeping", "Bogus operation name for housekeeping"
+        assert (
+            json_logs["operation"] == "housekeeping"
+        ), "Bogus operation name for housekeeping"
         assert json_logs["detail"]["unlock"]["result"], "Unlock failed in housekeeping"
         assert json_logs["detail"]["check"]["result"], "check failed in housekeeping"
         assert json_logs["detail"]["forget"]["result"], "forget failed in housekeeping"
-        assert len(json_logs["detail"]["forget"]["args"]["policy"]) > 4, "policy missing in housekeeping"
+        assert (
+            len(json_logs["detail"]["forget"]["args"]["policy"]) > 4
+        ), "policy missing in housekeeping"
         assert json_logs["detail"]["prune"]["result"], "prune failed in housekeeping"
 
 
@@ -469,9 +461,7 @@ def test_npbackup_cli_raw():
             print(e)
     except SystemExit:
         print(logs)
-        assert "Running raw command" in str(
-            logs
-        ), "Did not run raw command"
+        assert "Running raw command" in str(logs), "Did not run raw command"
         assert "Successfully run raw command" in str(logs), "Did not run raw command"
         assert DUMP_FILE in str(logs), "raw ls output should contain DUMP_FILE name"
         for line in str(logs).split("\n"):
@@ -490,11 +480,10 @@ def test_npbackup_cli_dump():
     except SystemExit:
         print("DUMPED FILE", DUMP_FILE)
         print(logs)
-        assert '__intname__ = "npbackup"' in str(
+        assert '__intname__ = "npbackup"' in str(logs), "version file seems bogus"
+        assert 'version_string = f"{__intname__}' in str(
             logs
-        ), "version file seems bogus"
-        assert 'version_string = f"{__intname__}' in str(logs), "Version file still seems bogus"
-
+        ), "Version file still seems bogus"
 
 
 if __name__ == "__main__":
@@ -529,13 +518,11 @@ if __name__ == "__main__":
     test_npbackup_cli_check_full()
     test_npbackup_cli_repair_index()
     test_npbackup_cli_repair_snapshots()
-    
+
     # Repairing packs needs pack ids
-    #test_npbackup_cli_repair_packs()
+    # test_npbackup_cli_repair_packs()
 
     test_npbackup_cli_housekeeping()
 
     test_npbackup_cli_raw()
     test_npbackup_cli_dump()
-    
-    

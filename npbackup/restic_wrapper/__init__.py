@@ -1260,7 +1260,7 @@ class ResticRunner:
         kwargs = locals()
         kwargs.pop("self")
 
-        cmd = f'dump {snapshot} {path}'
+        cmd = f"dump {snapshot} {path}"
         result, output = self.executor(cmd)
         if result:
             msg = f"File {path} successfully dumped"
