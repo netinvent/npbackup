@@ -347,7 +347,6 @@ class ResticRunner:
         _cmd = f'"{self._binary}"{additional_parameters}{self.generic_arguments} {cmd}'
 
         self._executor_running = True
-        self.write_logs(f"Running command: [{_cmd}]", level="debug")
         self._make_env()
 
         exit_code, output = command_runner(
