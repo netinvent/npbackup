@@ -23,7 +23,7 @@ sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), ".."
 from npbackup.path_helper import BASEDIR
 
 
-def download_restic_binaries(arch: str = "amd64", move_is_fatal: bool = True) -> bool:
+def download_restic_binaries(arch: str = "amd64") -> bool:
     """
     We must first download latest restic binaries to make sure we can run all tests and/or compile
     """
@@ -36,29 +36,54 @@ def download_restic_binaries(arch: str = "amd64", move_is_fatal: bool = True) ->
     # print("RESPONSE: ", response)
     json_response = json.loads(response.text)
     current_version = json_response["tag_name"].lstrip("v")
+
     # print("JSON RESPONSE")
     # pprint(json_response, indent=5)
 
     dest_dir = Path(BASEDIR).absolute().parent.joinpath("RESTIC_SOURCE_FILES")
     if os.name == "nt":
-        fname = f"_windows_{arch}.zip"
+        fname = f"_windows_{arch}"
         suffix = ".exe"
+        arch_suffix = ".zip"
     else:
-        fname = f"_linux_{arch}.bz2"
+        fname = f"_linux_{arch}"
         suffix = ""
+        arch_suffix = ".bz2"
 
-    dest_file = dest_dir.joinpath("restic_" + current_version + fname).with_suffix(
-        suffix
-    )
+    if not dest_dir.joinpath("ARCHIVES").is_dir():
+        os.makedirs(dest_dir.joinpath("ARCHIVES"))
+
+    dest_file = dest_dir.joinpath("restic_" + current_version + fname + arch_suffix)
+
     if dest_file.is_file():
         print(f"RESTIC SOURCE ALREADY PRESENT. NOT DOWNLOADING {dest_file}")
         return True
     else:
         print(f"DOWNALOADING RESTIC {dest_file}")
+        # Also we need to move any earlier file that may not be current version to archives
+        for file in dest_dir.glob(f"restic_*{fname}{suffix}"):
+            # We need to keep legacy binary for Windows 7 32 bits
+            if (
+                not file == "restic_0.16.2_windows_386.exe"
+                and not file == "restic_0.16.2_windows_amd64.exe"
+            ):
+                try:
+                    archive_file = dest_dir.joinpath("ARCHIVES").joinpath(file.name)
+                    if archive_file.is_file():
+                        archive_file.unlink()
+                    shutil.move(
+                        file,
+                        archive_file,
+                    )
+                except OSError as exc:
+                    print(
+                        f"CANNOT MOVE OLD FILES ARCHIVE: {file} to {archive_file}: {exc}"
+                    )
+                    return False
 
     downloaded = False
     for entry in json_response["assets"]:
-        if fname in entry["browser_download_url"]:
+        if f"{fname}{arch_suffix}" in entry["browser_download_url"]:
             file_request = requests.get(
                 entry["browser_download_url"], allow_redirects=True
             )
@@ -66,26 +91,25 @@ def download_restic_binaries(arch: str = "amd64", move_is_fatal: bool = True) ->
             filename = entry["browser_download_url"].rsplit("/", 1)[1]
             full_path = dest_dir.joinpath(filename)
             print("PATH TO DOWNLOADED ARCHIVE: ", full_path)
-            if fname.endswith("bz2"):
-                with open(full_path.with_suffix(""), "wb") as fp:
+            if arch_suffix == ".bz2":
+                with open(str(full_path).rstrip("arch_suffix"), "wb") as fp:
                     fp.write(bz2.decompress(file_request.content))
                 # We also need to make that file executable
-                os.chmod(full_path.with_suffix(""), 0o775)
+                os.chmod(str(full_path).rstrip(arch_suffix), 0o775)
             else:
                 with open(full_path, "wb") as fp:
                     fp.write(file_request.content)
                 # Assume we have a zip or tar.gz
                 shutil.unpack_archive(full_path, dest_dir)
             try:
-                if not dest_dir.joinpath("ARCHIVES").is_dir():
-                    os.makedirs(dest_dir.joinpath("ARCHIVES"))
+                if dest_dir.joinpath("ARCHIVES").joinpath(filename).is_file():
+                    dest_dir.joinpath("ARCHIVES").joinpath(filename).unlink()
                 shutil.move(full_path, dest_dir.joinpath("ARCHIVES").joinpath(filename))
-            except OSError:
-                if move_is_fatal:
-                    print(
-                        f'CANNOT MOVE TO ARCHIVE: {full_path} to {dest_dir.joinpath("ARCHIVES").joinpath(filename)}'
-                    )
-                    return False
+            except OSError as exc:
+                print(
+                    f'CANNOT MOVE TO ARCHIVE: {full_path} to {dest_dir.joinpath("ARCHIVES").joinpath(filename)}: {[exc]}'
+                )
+                return False
             print(f"DOWNLOADED {dest_dir}")
             downloaded = True
             break

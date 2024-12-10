@@ -65,15 +65,6 @@ repo_config, _ = get_repo_config(full_config)
 DUMP_FILE = "__version__.py"
 
 
-def running_on_github_actions():
-    """
-    This is set in github actions workflow with
-          env:
-        RUNNING_ON_GITHUB_ACTIONS: true
-    """
-    return os.environ.get("RUNNING_ON_GITHUB_ACTIONS", "False").lower() == "true"
-
-
 class RedirectedStdout:
     """
     Balantly copied from https://stackoverflow.com/a/45899925/2635443
@@ -100,9 +91,7 @@ def test_download_restic_binaries():
     We must first download latest restic binaries to make sure we can run all tests
     Currently we only run these on amd64
     """
-    assert download_restic_binaries(
-        "amd64", move_is_fatal=not running_on_github_actions()
-    ), "Could not download restic binaries"
+    assert download_restic_binaries("amd64"), "Could not download restic binaries"
 
 
 def test_npbackup_cli_no_config():
