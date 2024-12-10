@@ -775,7 +775,7 @@ class ResticRunner:
                 if output:
                     if HAVE_MSGSPEC:
                         try:
-                            js["output"] = msgspec.json.decode(output)
+                            js["output"] = msgspec.json.decode(str(output))
                         except msgspec.DecodeError as exc:
                             # Save as above
 
@@ -858,7 +858,7 @@ class ResticRunner:
         cmd = "ls {}".format(snapshot)
         result, output = self.executor(cmd, method="monitor")
         if result:
-            msg = f"Successfuly listed snapshot {snapshot} content"
+            msg = f"Successfully listed snapshot {snapshot} content:\n{output}"
         else:
             msg = f"Could not list snapshot {snapshot} content:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
@@ -1230,7 +1230,7 @@ class ResticRunner:
         cmd = f"recover"
         result, output = self.executor(cmd)
         if result:
-            msg = f"Recovery succees"
+            msg = f"Recovery finished"
         else:
             msg = f"Recovery failed:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
@@ -1295,9 +1295,9 @@ class ResticRunner:
 
         result, output = self.executor(command)
         if result:
-            msg = f"successfully run raw command:\n{output}"
+            msg = f"Successfully run raw command:\n{output}"
         else:
-            msg = "Raw command failed:\n{output}"
+            msg = f"Raw command failed:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
     @staticmethod

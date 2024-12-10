@@ -203,7 +203,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Dump a specific file to stdout",
+        help="Dump a specific file to stdout, use with --dump [snasphot-id] file, where snapshot-id can be 'latest'",
     )
     parser.add_argument(
         "--stats",

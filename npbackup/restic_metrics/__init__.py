@@ -480,7 +480,7 @@ def upload_metrics(destination: str, authentication, no_cert_verify: bool, metri
             verify=not no_cert_verify,
         )
         if result.status_code == 200:
-            logger.info("Metrics pushed succesfully.")
+            logger.info("Metrics pushed successfully.")
         else:
             logger.warning(
                 f"Could not push metrics: {result.status_code}: {result.text}"
@@ -577,7 +577,7 @@ if __name__ == "__main__":
             logger.error("Script finished with errors.")
         try:
             write_metrics_file(metrics, destination_file)
-            logger.info("File {} written succesfully.".format(destination_file))
+            logger.info("File {} written successfully.".format(destination_file))
             sys.exit(0)
         except OSError as exc:
             logger.error(
