@@ -344,7 +344,8 @@ This is free software, and you are welcome to redistribute it under certain cond
         else:
             log_file = "/var/log/{}.log".format(__intname__)
 
-    if args.json:
+    # We also don't log to console in dump mode as we want to keep the output clean
+    if args.json or args.dump:
         _JSON = True
         logger = ofunctions.logger_utils.logger_get_logger(
             log_file, console=_DEBUG, debug=_DEBUG
