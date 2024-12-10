@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024110301"
-__version__ = "2.3.3"
+__build__ = "2024121001"
+__version__ = "2.3.4"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -724,7 +724,9 @@ class ResticRunner:
                         decoder = msgspec.json.Decoder()
                         ls_decoder = msgspec.json.Decoder(schema.LsNode)
                     is_first_line = True
-
+                    # Make sure we always deal with str output (--has-recent-snapshot returns a datetime object)
+                    if not isinstance(output, str):
+                        output = str(output)
                     for line in output.split("\n"):
                         if not line:
                             continue
