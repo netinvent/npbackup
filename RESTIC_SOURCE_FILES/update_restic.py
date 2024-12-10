@@ -96,7 +96,8 @@ def download_restic_binaries(arch: str = "amd64") -> bool:
             full_path = dest_dir.joinpath(filename)
             print("PATH TO DOWNLOADED ARCHIVE: ", full_path)
             if arch_suffix == ".bz2":
-                with open(str(full_path).rstrip(arch_suffix), "wb") as fp:
+                final_executable = str(full_path).rstrip(arch_suffix)
+                with open(final_executable, "wb") as fp:
                     fp.write(bz2.decompress(file_request.content))
                 # We also need to make that file executable
                 os.chmod(str(full_path).rstrip(arch_suffix), 0o775)
@@ -105,6 +106,7 @@ def download_restic_binaries(arch: str = "amd64") -> bool:
                     fp.write(file_request.content)
                 # Assume we have a zip or tar.gz
                 shutil.unpack_archive(full_path, dest_dir)
+                final_executable = dest_dir.joinpath(filename)
             try:
                 # We don't drop the bz2 files on disk, so no need to move them to ARCHIVES
                 if arch_suffix != ".bz2":
@@ -116,7 +118,7 @@ def download_restic_binaries(arch: str = "amd64") -> bool:
                     f'CANNOT MOVE TO ARCHIVE: {full_path} to {dest_dir.joinpath("ARCHIVES").joinpath(filename)}: {[exc]}'
                 )
                 return False
-            print(f"DOWNLOADED {dest_dir}")
+            print(f"DOWNLOADED {final_executable}")
             downloaded = True
             break
     if not downloaded:
@@ -139,6 +141,7 @@ def download_restic_binaries_for_arch():
             or not download_restic_binaries("arm")
         ):
             sys.exit(1)
+    return True
 
 
 if __name__ == "__main__":
