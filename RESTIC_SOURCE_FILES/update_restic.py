@@ -103,7 +103,7 @@ def download_restic_binaries(arch: str = "amd64") -> bool:
                 shutil.unpack_archive(full_path, dest_dir)
             try:
                 # We don't drop the bz2 files on disk, so no need to move them to ARCHIVES
-                if arch_suffix != "bz2":
+                if arch_suffix != ".bz2":
                     if dest_dir.joinpath("ARCHIVES").joinpath(filename).is_file():
                         dest_dir.joinpath("ARCHIVES").joinpath(filename).unlink()
                     shutil.move(full_path, dest_dir.joinpath("ARCHIVES").joinpath(filename))
