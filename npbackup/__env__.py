@@ -29,4 +29,4 @@ HEARTBEAT_INTERVAL = 3600
 
 # Arbitrary timeout for init / init checks.
 # If init takes more than a minute, we really have a problem in our backend
-FAST_COMMANDS_TIMEOUT = 60
+FAST_COMMANDS_TIMEOUT = 180

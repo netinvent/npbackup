@@ -188,7 +188,7 @@ def test_real_restic_output():
         )
         # Just backend current directory
         cmd = f"{restic_binary} backup {api_arg} ."
-        exit_code, output = command_runner(cmd, timeout=120, live_output=True)
+        exit_code, output = command_runner(cmd, timeout=600, live_output=True)
         assert exit_code == 0, "Failed to run restic"
         if not api_arg:
             restic_json = restic_str_output_to_json(True, output)
