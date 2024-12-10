@@ -204,7 +204,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Dump a specific file to stdout, use with --dump [file], add --snapshot-id to specify a snapshot other than latest",
+        help="Dump a specific file to stdout (full path given by --ls), use with --dump [file], add --snapshot-id to specify a snapshot other than latest",
     )
     parser.add_argument(
         "--stats",
