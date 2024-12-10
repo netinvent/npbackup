@@ -17,6 +17,8 @@ git pull || exit 1
 SET OLD_PYTHONPATH=%PYTHONPATH%
 SET PYTHONPATH=c:\GIT\npbackup
 
+%PYTHON64% RESTIC_SOURCE_FILES/update_restic.py || exit 1
+
 "%PYTHON64%" -m pip install --upgrade -r npbackup/requirements.txt || exit 1
 "%PYTHON64%" bin\compile.py --audience all --sign "C:\ODJ\KEYS\NetInventEV.dat"
 

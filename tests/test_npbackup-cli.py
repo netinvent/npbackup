@@ -27,7 +27,6 @@ import json
 import requests
 import tempfile
 import bz2
-import fileinput
 from pprint import pprint
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
@@ -35,6 +34,7 @@ sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), ".."
 from npbackup import __main__
 from npbackup.path_helper import BASEDIR
 from npbackup.configuration import load_config, get_repo_config
+from RESTIC_SOURCE_FILES.update_restic import download_restic_binaries
 
 
 if os.name == "nt":
@@ -89,54 +89,9 @@ class RedirectedStdout:
 def test_download_restic_binaries():
     """
     We must first download latest restic binaries to make sure we can run all tests
+    Currently we only run these on amd64
     """
-    org = "restic"
-    repo = "restic"
-
-    dest_dir = Path(BASEDIR).absolute().parent.joinpath("RESTIC_SOURCE_FILES")
-    response = requests.get(
-        f"https://api.github.com/repos/{org}/{repo}/releases/latest"
-    )
-    print("RESPONSE: ", response)
-    json_response = json.loads(response.text)
-
-    if os.name == "nt":
-        fname = "_windows_amd64.zip"
-        suffix = ".exe"
-    else:
-        fname = "_linux_amd64.bz2"
-        suffix = ""
-
-    if dest_dir.joinpath(fname).with_suffix(suffix).is_file():
-        print("RESTIC SOURCE ALREADY PRESENT. NOT DOWNLOADING")
-        return
-
-    print("JSON RESPONSE")
-    pprint(json_response, indent=5)
-
-    for entry in json_response["assets"]:
-        if fname in entry["browser_download_url"]:
-            file_request = requests.get(
-                entry["browser_download_url"], allow_redirects=True
-            )
-            print("FILE REQUEST RESPONSE", file_request)
-            filename = entry["browser_download_url"].rsplit("/", 1)[1]
-            full_path = dest_dir.joinpath(filename)
-            print("PATH TO DOWNLOADED ARCHIVE: ", full_path)
-            if fname.endswith("bz2"):
-                with open(full_path.with_suffix(""), "wb") as fp:
-                    fp.write(bz2.decompress(file_request.content))
-                # We also need to make that file executable
-                os.chmod(full_path.with_suffix(""), 0o775)
-            else:
-                with open(full_path, "wb") as fp:
-                    fp.write(file_request.content)
-                # Assume we have a zip or tar.gz
-                shutil.unpack_archive(full_path, dest_dir)
-            try:
-                shutil.move(full_path, dest_dir.joinpath("ARCHIVES"))
-            except OSError:
-                pass
+    assert download_restic_binaries("amd64"), "Could not download restic binaries"
 
 
 def test_npbackup_cli_no_config():

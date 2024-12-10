@@ -2,8 +2,6 @@
 
 # This is an example compiler script
 
-machine="$(uname -m)"
-
 cd /opt/npbackup
 git pull || exit 1
 
@@ -13,7 +11,10 @@ export PYTHONPATH=/opt/npbackup
 # For RHEL 7 based builds, we need to define path to locally built tcl8.6
 [ -d /usr/local/lib/tcl8.6 ] && export LD_LIBRARY_PATH=/usr/local/lib
 
+/opt/npbackup/venv/bin/python RESTIC_SOURCE_FILES/update_restic.py || exit 1
+
+
 /opt/npbackup/venv/bin/python -m pip install --upgrade -r npbackup/requirements.txt || exit 1
-/opt/npbackup/venv/bin/python bin/compile.py --audience all $opts
+/opt/npbackup/venv/bin/python bin/compile.py --audience all $@
 
 export PYTHONPATH="$OLD_PYTHONPATH"
