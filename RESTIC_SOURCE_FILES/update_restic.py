@@ -102,9 +102,11 @@ def download_restic_binaries(arch: str = "amd64") -> bool:
                 # Assume we have a zip or tar.gz
                 shutil.unpack_archive(full_path, dest_dir)
             try:
-                if dest_dir.joinpath("ARCHIVES").joinpath(filename).is_file():
-                    dest_dir.joinpath("ARCHIVES").joinpath(filename).unlink()
-                shutil.move(full_path, dest_dir.joinpath("ARCHIVES").joinpath(filename))
+                # We don't drop the bz2 files on disk, so no need to move them to ARCHIVES
+                if arch_suffix != "bz2":
+                    if dest_dir.joinpath("ARCHIVES").joinpath(filename).is_file():
+                        dest_dir.joinpath("ARCHIVES").joinpath(filename).unlink()
+                    shutil.move(full_path, dest_dir.joinpath("ARCHIVES").joinpath(filename))
             except OSError as exc:
                 print(
                     f'CANNOT MOVE TO ARCHIVE: {full_path} to {dest_dir.joinpath("ARCHIVES").joinpath(filename)}: {[exc]}'
