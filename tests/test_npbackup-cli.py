@@ -61,6 +61,9 @@ full_config = load_config(CONF_FILE)
 repo_config, _ = get_repo_config(full_config)
 
 
+# File we will request in dump mode
+DUMP_FILE = "__version__.py"
+
 class RedirectedStdout:
     """
     Balantly copied from https://stackoverflow.com/a/45899925/2635443
@@ -456,22 +459,10 @@ def test_npbackup_cli_housekeeping():
         assert json_logs["detail"]["prune"]["result"], "prune failed in housekeeping"
 
 
-def test_npbackup_cli_dump():
-    sys.argv = ["", "-c", str(CONF_FILE), "--dump", "-- ls latest"]
-    try:
-        with RedirectedStdout() as logs:
-            e = __main__.main()
-            print(e)
-    except SystemExit:
-        print(logs)
-        assert "Running raw command" in str(
-            logs
-        ), "Did not run raw command"
-        assert "Successfully run raw command" in str(logs), "Did not run raw command"
-
-
 def test_npbackup_cli_raw():
-    sys.argv = ["", "-c", str(CONF_FILE), "--raw", "-- ls latest"]
+    global DUMP_FILE
+
+    sys.argv = ["", "-c", str(CONF_FILE), "--raw", "ls latest"]
     try:
         with RedirectedStdout() as logs:
             e = __main__.main()
@@ -482,6 +473,28 @@ def test_npbackup_cli_raw():
             logs
         ), "Did not run raw command"
         assert "Successfully run raw command" in str(logs), "Did not run raw command"
+        assert DUMP_FILE in str(logs), "raw ls output should contain DUMP_FILE name"
+        for line in str(logs).split("\n"):
+            if DUMP_FILE in line:
+                DUMP_FILE = line
+                print("FOUND DUMP FILE", DUMP_FILE)
+                break
+
+
+def test_npbackup_cli_dump():
+    sys.argv = ["", "-c", str(CONF_FILE), "--dump", DUMP_FILE]
+    try:
+        with RedirectedStdout() as logs:
+            e = __main__.main()
+            print(e)
+    except SystemExit:
+        print("DUMPED FILE", DUMP_FILE)
+        print(logs)
+        assert '__intname__ = "npbackup"' in str(
+            logs
+        ), "version file seems bogus"
+        assert 'version_string = f"{__intname__}' in str(logs), "Version file still seems bogus"
+
 
 
 if __name__ == "__main__":
@@ -516,13 +529,13 @@ if __name__ == "__main__":
     test_npbackup_cli_check_full()
     test_npbackup_cli_repair_index()
     test_npbackup_cli_repair_snapshots()
+    
     # Repairing packs needs pack ids
     #test_npbackup_cli_repair_packs()
 
     test_npbackup_cli_housekeeping()
 
-    # fails, need to be investigated
-    #test_npbackup_cli_dump()
     test_npbackup_cli_raw()
+    test_npbackup_cli_dump()
     
     
