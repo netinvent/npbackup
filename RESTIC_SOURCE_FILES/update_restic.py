@@ -34,6 +34,10 @@ def download_restic_binaries(arch: str = "amd64") -> bool:
         f"https://api.github.com/repos/{org}/{repo}/releases/latest"
     )
     # print("RESPONSE: ", response)
+    if response.status_code != 200:
+        print(f"ERROR: Cannot get latest restic release: {response.status_code}")
+        print("RESPONSE TEXT: ", response.text)
+        return False
     json_response = json.loads(response.text)
     current_version = json_response["tag_name"].lstrip("v")
 
