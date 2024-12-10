@@ -1254,14 +1254,14 @@ class ResticRunner:
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
     @check_if_init
-    def dump(self, path: str) -> Union[bool, str, dict]:
+    def dump(self, snapshot: str, path: str) -> Union[bool, str, dict]:
         """
         Dump given file directly to stdout
         """
         kwargs = locals()
         kwargs.pop("self")
 
-        cmd = f'dump "{path}"'
+        cmd = f'dump {snapshot} {path}'
         result, output = self.executor(cmd)
         if result:
             msg = f"File {path} successfully dumped"

@@ -1631,11 +1631,11 @@ class NPBackupRunner:
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    def dump(self, path: str) -> bool:
+    def dump(self, snapshot: str, path: str) -> bool:
         self.write_logs(
-            f"Dumping {path} from {self.repo_config.g('name')}", level="info"
+            f"Dumping {path} from {self.repo_config.g('name')} snapshot {snapshot}", level="info"
         )
-        result = self.restic_runner.dump(path)
+        result = self.restic_runner.dump(snapshot, path)
         return result
 
     @threaded

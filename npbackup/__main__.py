@@ -97,7 +97,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Restore to path given by --restore",
+        help="Restore to path given by --restore, add --snapshot-id to specify a snapshot other than latest",
     )
     parser.add_argument(
         "-s",
@@ -109,9 +109,10 @@ This is free software, and you are welcome to redistribute it under certain cond
     parser.add_argument(
         "--ls",
         type=str,
-        default=None,
         required=False,
-        help='Show content given snapshot. Use "latest" for most recent snapshot.',
+        nargs="?",
+        const="latest",
+        help='Show content given snapshot. When no snapshot id is given, latest is used',
     )
     parser.add_argument(
         "--find",
@@ -203,7 +204,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Dump a specific file to stdout, use with --dump [snasphot-id] file, where snapshot-id can be 'latest'",
+        help="Dump a specific file to stdout, use with --dump [file], add --snapshot-id to specify a snapshot other than latest",
     )
     parser.add_argument(
         "--stats",
@@ -665,7 +666,10 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["operation"] = "recover"
     elif args.dump or args.group_operation == "dump":
         cli_args["operation"] = "dump"
-        cli_args["op_args"] = {"path": args.dump}
+        cli_args["op_args"] = {
+            "snapshot": args.snapshot_id,
+            "path": args.dump,
+        }
     elif args.stats is not None or args.group_operation == "stats":
         cli_args["operation"] = "stats"
         cli_args["op_args"] = {"subject": args.stats}
