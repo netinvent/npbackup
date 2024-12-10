@@ -539,8 +539,6 @@ class ResticRunner:
                 timeout=FAST_COMMANDS_TIMEOUT,
                 split_streams=False,
                 encoding="utf-8",
-                priority=self._priority,
-                io_priority=self._priority,
             )
             if exit_code == 0:
                 return output.strip()
