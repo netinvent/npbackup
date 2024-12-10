@@ -34,7 +34,7 @@ sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), ".."
 from npbackup import __main__
 from npbackup.path_helper import BASEDIR
 from npbackup.configuration import load_config, get_repo_config
-from RESTIC_SOURCE_FILES.update_restic import download_restic_binaries
+from RESTIC_SOURCE_FILES.update_restic import download_restic_binaries_for_arch
 
 
 if os.name == "nt":
@@ -91,7 +91,7 @@ def test_download_restic_binaries():
     We must first download latest restic binaries to make sure we can run all tests
     Currently we only run these on amd64
     """
-    assert download_restic_binaries("amd64"), "Could not download restic binaries"
+    assert download_restic_binaries_for_arch(), "Could not download restic binaries"
 
 
 def test_npbackup_cli_no_config():
