@@ -15,7 +15,6 @@ __compat__ = "python3.6+"
 import sys
 import os
 from pathlib import Path
-import shutil
 import re
 import json
 import tempfile
@@ -29,6 +28,7 @@ except ImportError:  # would be ModuleNotFoundError in Python 3+
     sys.path.insert(0, os.path.abspath(os.path.join(__file__, os.pardir, os.pardir)))
     from npbackup.restic_metrics import *
 from npbackup.core.restic_source_binary import get_restic_internal_binary
+from npbackup.path_helper import BASEDIR
 
 restic_json_outputs = {}
 restic_json_outputs[
@@ -187,7 +187,7 @@ def test_real_restic_output():
             f"{restic_binary} init --repository-version 2", live_output=True
         )
         # Just backend current directory
-        cmd = f"{restic_binary} backup {api_arg} ."
+        cmd = f"{restic_binary} backup {api_arg} {Path(BASEDIR).joinpath('npbackup')}"
         exit_code, output = command_runner(cmd, timeout=600, live_output=True)
         assert exit_code == 0, "Failed to run restic"
         if not api_arg:
