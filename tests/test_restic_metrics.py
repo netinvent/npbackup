@@ -186,9 +186,17 @@ def test_real_restic_output():
         exit_code, output = command_runner(
             f"{restic_binary} init --repository-version 2", live_output=True
         )
-        # Just backend current directory
-        cmd = f"{restic_binary} backup {api_arg} {Path(BASEDIR).joinpath('npbackup')}"
+        assert exit_code == 0, "Cannot init repo"
+        # Just backup current npbackup project
+
+        cmd = f"{restic_binary} backup {BASEDIR} {api_arg}"
         exit_code, output = command_runner(cmd, timeout=600, live_output=True)
+        print("cmd", cmd)
+        print("OUTPUT", output)
+        try:
+            repo_path.unlink()
+        except OSError as exc:
+            print(f"CANNOT REMOVE test repo: {exc}")
         assert exit_code == 0, "Failed to run restic"
         if not api_arg:
             restic_json = restic_str_output_to_json(True, output)
