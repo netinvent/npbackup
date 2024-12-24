@@ -22,7 +22,7 @@ NPBACKUP_CONF_FILE="${ROOT_DIR}/npbackup-cube.conf"
 SNAPSHOT_FAILED_FILE="${ROOT_DIR}/SNAPSHOT_FAILED"
 
 # Superseed tenants if this is set, else it is extracted from machine name, eg machine.tenant.something
-TENANT_OVERRIDE=netperfect
+# TENANT_OVERRIDE=netperfect
 # default tenant if extraction of tenant name failed
 DEFAULT_TENANT=netperfect
 
@@ -108,7 +108,7 @@ function create_snapshot {
 function get_tenant {
         local vm="${1}"
 
-        if [ ! -z "${TENANT_OVERRIDE}" ]; then
+        if [ -z "${TENANT_OVERRIDE}" ]; then
                 echo "${TENANT_OVERRIDE}"
                 return
         fi
