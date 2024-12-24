@@ -52,7 +52,9 @@ def metric_writer(
     metrics = []
 
     try:
-        labels = {"npversion": f"{NAME}{version_dict['version']}-{version_dict['buildtype']}"}
+        labels = {
+            "npversion": f"{NAME}{version_dict['version']}-{version_dict['buildtype']}"
+        }
         if repo_config.g("prometheus.metrics"):
             labels["instance"] = repo_config.g("prometheus.instance")
             labels["backup_job"] = repo_config.g("prometheus.backup_job")
