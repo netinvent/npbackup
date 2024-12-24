@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024110701"
+__build__ = "2024122401"
 
 
 from typing import Optional, Callable, Union, List
@@ -33,7 +33,7 @@ from npbackup.restic_metrics import (
 from npbackup.restic_wrapper import ResticRunner
 from npbackup.core.restic_source_binary import get_restic_internal_binary
 from npbackup.path_helper import CURRENT_DIR, BASEDIR
-from npbackup.__version__ import __intname__ as NAME, __version__ as VERSION
+from npbackup.__version__ import __intname__ as NAME, version_dict as version_dict
 from npbackup.__debug__ import _DEBUG, exception_to_string
 
 
@@ -52,7 +52,7 @@ def metric_writer(
     metrics = []
 
     try:
-        labels = {"npversion": f"{NAME}{VERSION}"}
+        labels = {"npversion": f"{NAME}{version_dict['version']}-{version_dict['buildtype']}"}
         if repo_config.g("prometheus.metrics"):
             labels["instance"] = repo_config.g("prometheus.instance")
             labels["backup_job"] = repo_config.g("prometheus.backup_job")
