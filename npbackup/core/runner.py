@@ -144,10 +144,6 @@ def metric_writer(
         logger.debug("Metrics computed:\n{}".format("\n".join(metrics)))
         if destination and dry_run:
             logger.info("Dry run mode. Not sending metrics.")
-            metric_data = ""
-            for metric in metrics:
-                metric_data += f"{metric}\n"
-            logger.debug(f"Metrics:\n{metric_data}")
         elif destination:
             logger.debug("Sending metrics to {}".format(destination))
             dest = destination.lower()
