@@ -108,7 +108,7 @@ function create_snapshot {
 function get_tenant {
         local vm="${1}"
 
-        if [ -z "${TENANT_OVERRIDE}" ]; then
+        if [ -n "${TENANT_OVERRIDE}" ]; then
                 echo "${TENANT_OVERRIDE}"
                 return
         fi
