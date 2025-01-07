@@ -290,7 +290,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         "--show-config",
         action="store_true",
         required=False,
-        help="Show full inherited configuration for current repo",
+        help="Show full inherited configuration for current repo. Optionally you can set NPBACKUP_MANAGER_PASSWORD env variable for more details.",
     )
     parser.add_argument(
         "--external-backend-binary",
