@@ -851,9 +851,16 @@ class NPBackupRunner:
             for env_variable in env_variables:
                 if isinstance(env_variable, dict):
                     for k, v in env_variable.items():
-                        v = os.path.expanduser(v)
-                        v = os.path.expandvars(v)
-                        expanded_env_vars[k.strip()] = v.strip()
+                        try:
+                            v = os.path.expanduser(v)
+                            v = os.path.expandvars(v)
+                            expanded_env_vars[k.strip()] = v.strip()
+                        except Exception as exc:
+                            self.write_logs(
+                                f"Cannot expand environment variable {k}: {exc}",
+                                level="error",
+                            )
+                            logger.debug("Trace:", exc_info=True)
 
         try:
             self.restic_runner.environment_variables = expanded_env_vars
