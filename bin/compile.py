@@ -410,7 +410,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--audience",
         type=str,
-        dest="audience",
+        dest="all",
         default="public",
         required=False,
         help="Target audience, private or public",

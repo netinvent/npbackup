@@ -17,17 +17,18 @@ git pull || GOTO ERROR
 SET OLD_PYTHONPATH=%PYTHONPATH%
 SET PYTHONPATH=c:\GIT\npbackup
 
-%PYTHON64% RESTIC_SOURCE_FILES/update_restic.py || GOTO ERROR
+"%PYTHON64%" RESTIC_SOURCE_FILES/update_restic.py || GOTO ERROR
 
-%PYTHON64% -m pip install pytest
-%PYTHON64% -m pytest C:\GIT\npbackup\tests || GOTO ERROR
+"%PYTHON64%" -m pip install --upgrade pip || GOTO ERROR
+"%PYTHON64%" -m pip install pytest
+"%PYTHON64%" -m pytest C:\GIT\npbackup\tests || GOTO ERROR
 
 "%PYTHON64%" -m pip install --upgrade -r npbackup/requirements.txt || GOTO ERROR
-"%PYTHON64%" bin\compile.py --audience all --sign "C:\ODJ\KEYS\NetInventEV.dat"
+"%PYTHON64%" bin\compile.py --sign "C:\ODJ\KEYS\NetInventEV.dat" %*
 
 
 "%PYTHON32%" -m pip install --upgrade -r npbackup/requirements.txt || GOTO ERROR
-"%PYTHON32%" bin\compile.py --audience all --sign "C:\ODJ\KEYS\NetInventEV.dat"
+"%PYTHON32%" bin\compile.py --sign "C:\ODJ\KEYS\NetInventEV.dat" %*
 
 :ERROR
 echo "Failed to run build script"
