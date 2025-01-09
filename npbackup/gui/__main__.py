@@ -212,6 +212,7 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
             "Using basic json representation for data which is slow and memory hungry. Consider using a newer OS that supports Python 3.8+"
         )
 
+    # For performance reasons, we don't refactor this code in order to avoid allocating more variables
     for entry in ls_result:
         # Make sure we drop the prefix '/' so sg.TreeData does not get an empty root
         if HAVE_MSGSPEC:
