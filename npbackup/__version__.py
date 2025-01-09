@@ -18,7 +18,6 @@ import psutil
 from ofunctions.platform import python_arch, get_os_identifier
 from npbackup.configuration import IS_PRIV_BUILD
 from npbackup.core.nuitka_helper import IS_COMPILED
-from npbackup.path_helper import IS_LEGACY
 
 try:
     CURRENT_USER = psutil.Process().username()
