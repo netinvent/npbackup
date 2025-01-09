@@ -21,6 +21,7 @@ try:
     HAVE_MSGSPEC = True
     json = None  # linter E0601 fix
 except ImportError:
+    raise
     import json
 
     HAVE_MSGSPEC = False

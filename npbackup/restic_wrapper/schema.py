@@ -19,7 +19,7 @@ try:
 
     HAVE_MSGSPEC = True
 except ImportError:
-
+    raise
     class Struct:
         def __init_subclass__(self, *args, **kwargs):
             pass
