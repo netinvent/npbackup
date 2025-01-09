@@ -30,6 +30,8 @@ SET PYTHONPATH=c:\GIT\npbackup
 "%PYTHON32%" -m pip install --upgrade -r npbackup/requirements.txt || GOTO ERROR
 "%PYTHON32%" bin\compile.py --sign "C:\ODJ\KEYS\NetInventEV.dat" %*
 
+GOTO END
+
 :ERROR
 echo "Failed to run build script"
 :END
