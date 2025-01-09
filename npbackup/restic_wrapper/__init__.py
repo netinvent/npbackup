@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024121001"
-__version__ = "2.3.4"
+__build__ = "2025010901"
+__version__ = "2.3.5"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -734,6 +734,9 @@ class ResticRunner:
                                     not is_first_line
                                     and operation == "ls"
                                     and self.struct_output
+                                    # Don't try to use ls_decoder with Python 3.9 as it will fail with
+                                    # msgspec.ValidationError: Expected `LsNode`, got `dict`
+                                    and not IS_LEGACY
                                 ):
                                     js["output"].append(ls_decoder.decode(line))
                                 else:
