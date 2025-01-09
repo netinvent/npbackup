@@ -5,10 +5,10 @@
 
 __intname__ = "npbackup.compile"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2023-2025 NetInvent"
+__copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024090801"
-__version__ = "2.1.0"
+__build__ = "2025010901"
+__version__ = "2.1.1"
 
 
 """
@@ -410,8 +410,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--audience",
         type=str,
-        dest="all",
-        default="public",
+        dest="audience",
+        default="all",
         required=False,
         help="Target audience, private or public",
     )
