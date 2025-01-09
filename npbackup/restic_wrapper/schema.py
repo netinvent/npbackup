@@ -12,10 +12,10 @@ __description__ = "Restic json output schemas"
 
 from typing import Optional
 from datetime import datetime
+from enum import Enum
 
 try:
     from msgspec import Struct
-    from enum import StrEnum
 
     HAVE_MSGSPEC = True
 except ImportError:
@@ -32,7 +32,7 @@ except ImportError:
     HAVE_MSGSPEC = False
 
 
-class LsNodeType(StrEnum):
+class LsNodeType(str, Enum):
     FILE = "file"
     DIR = "dir"
     SYMLINK = "symlink"
