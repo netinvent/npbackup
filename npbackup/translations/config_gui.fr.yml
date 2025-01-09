@@ -170,3 +170,7 @@ fr:
   group_by_paths: Grouper par chemins sauvegardés
   group_by_tags: Grouper par tags
   policiy_group_by_explanation: Si aucun groupement n'est choisi, le groupement par nom d'hôte et chemin de sauvegarde sera utilisé
+
+  add_identity: Ajouter identités Cloud
+  value_cannot_be_empty: La valeur ne peut être vide
+  repo_uri_cloud_hint: L'URI du dépot Cloud nécessite de définir des variables d'environnement chiffrées (voir l'onglet environnement)

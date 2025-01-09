@@ -169,3 +169,7 @@ en:
   group_by_paths: Group by paths
   group_by_tags: Group by tags
   policiy_group_by_explanation: If none are chosen, snapshots will be grouped by host and paths
+
+  add_identity: Add Cloud identities
+  value_cannot_be_empty: Value cannot be empty
+  repo_uri_cloud_hint: Cloud repo URI requires to set encrypted environment variables (see environment tab)

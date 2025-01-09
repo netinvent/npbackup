@@ -29,6 +29,7 @@ from ofunctions.misc import BytesConverter
 import FreeSimpleGUI as sg
 import _tkinter
 import npbackup.configuration
+from npbackup.__version__ import version_string
 import npbackup.common
 from resources.customization import (
     OEM_STRING,
@@ -828,6 +829,7 @@ def _main_gui(viewer_mode: bool):
         else:
             log_file = "/var/log/{}.log".format(__intname__)
     logger = ofunctions.logger_utils.logger_get_logger(log_file, debug=_DEBUG)
+    logger.info("GUI: " + version_string)
 
     if args.config_file:
         config_file = Path(args.config_file).absolute()

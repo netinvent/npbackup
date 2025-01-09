@@ -1383,7 +1383,14 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Image(NON_INHERITED_ICON, pad=1),
-                sg.Input(key="repo_uri", size=(95, 1)),
+                sg.Input(key="repo_uri", size=(95, 1), enable_events=True),
+            ],
+            [
+                sg.Text(
+                    _t("config_gui.repo_uri_cloud_hint"),
+                    key="repo_uri_cloud_hint",
+                    visible=False,
+                )
             ],
             [
                 sg.Text(_t("config_gui.backup_repo_password"), size=(40, 1)),
@@ -1754,6 +1761,13 @@ def config_gui(full_config: dict, config_file: str):
                 ),
             ],
             [
+                sg.Text(_t("config_gui.add_identity")),
+                sg.Button("S3", key="--ADD-S3-IDENTITY--"),
+                sg.Button("Azure", key="--ADD-AZURE-IDENTITY--"),
+                sg.Button("B2", key="--ADD-B2-IDENTITY--"),
+                sg.Button("Google Cloud Storage", key="--ADD-GCS-IDENTITY--"),
+            ],
+            [
                 sg.Text(
                     _t("config_gui.suggested_encrypted_env_variables"), size=(40, 1)
                 ),
@@ -1761,7 +1775,7 @@ def config_gui(full_config: dict, config_file: str):
             [
                 sg.Multiline(
                     "\
-AWS:                  AWS_ACCESS_KEY_ID  AWS_SECRET_ACCESS_KEY\n\
+AWS / S3:             AWS_ACCESS_KEY_ID  AWS_SECRET_ACCESS_KEY\n\
 AZURE:                AZURE_ACCOUNT_KEY  AZURE_ACCOUNT_SAS  AZURE_ACCOUNT_NAME\n\
 B2:                   B2_ACCOUNT_ID      B2_ACCOUNT_KEY\n\
 Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
@@ -1950,6 +1964,13 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             [
                 sg.Text(_t("config_gui.metrics_destination"), size=(40, 1)),
                 sg.Input(key="global_prometheus.destination", size=(50, 1)),
+            ],
+            [
+                sg.Text("", size=(40, 1)),
+                sg.Text(
+                    "Ex: https://push.domain.tld/metrics/job/${BACKUP_JOB}",
+                    size=(50, 1),
+                ),
             ],
             [
                 sg.Text(_t("config_gui.no_cert_verify"), size=(40, 1)),
@@ -2311,6 +2332,10 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             "--ADD-PROMETHEUS-LABEL--",
             "--ADD-ENV-VARIABLE--",
             "--ADD-ENCRYPTED-ENV-VARIABLE--",
+            "--ADD-S3-IDENTITY--",
+            "--ADD-AZURE-IDENTITY--",
+            "--ADD-B2-IDENTITY--",
+            "--ADD-GCS-IDENTITY--",
             "--REMOVE-PATHS--",
             "--REMOVE-BACKUP-TAG--",
             "--REMOVE-EXCLUDE-PATTERN--",
@@ -2355,7 +2380,13 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 popup_text = _t("config_gui.enter_label")
                 tree = global_prometheus_labels_tree
                 option_key = "global_prometheus.additional_labels"
-            elif "ENCRYPTED-ENV-VARIABLE" in event:
+            elif (
+                "ENCRYPTED-ENV-VARIABLE" in event
+                or "S3-IDENTITY--" in event
+                or "AZURE-IDENTITY--" in event
+                or "B2-IDENTITY--" in event
+                or "GCS-IDENTITY--" in event
+            ):
                 tree = encrypted_env_variables_tree
                 option_key = "env.encrypted_env_variables"
             elif "ENV-VARIABLE" in event:
@@ -2368,15 +2399,54 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     var_name = sg.PopupGetText(_t("config_gui.enter_var_name"))
                     var_value = sg.PopupGetText(_t("config_gui.enter_var_value"))
                     if var_name and var_value:
+                        if tree.tree_dict.get(var_name):
+                            tree.delete(var_name)
                         tree.insert("", var_name, var_name, [var_value], icon=icon)
                 elif "PROMETHEUS-LABEL" in event:
                     var_name = sg.PopupGetText(_t("config_gui.enter_label_name"))
                     var_value = sg.PopupGetText(_t("config_gui.enter_label_value"))
                     if var_name and var_value:
+                        if tree.tree_dict.get(var_name):
+                            tree.delete(var_name)
                         tree.insert("", var_name, var_name, [var_value], icon=icon)
+                elif (
+                    "S3-IDENTITY--" in event
+                    or "AZURE-IDENTITY--" in event
+                    or "B2-IDENTITY--" in event
+                    or "GCS-IDENTITY--" in event
+                ):
+                    if "S3-IDENTITY--" in event:
+                        var_names = ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"]
+                    elif "AZURE-IDENTITY--" in event:
+                        var_names = [
+                            "AZURE_ACCOUNT_KEY",
+                            "AZURE_ACCOUNT_SAS",
+                            "AZURE_ACCOUNT_NAME",
+                        ]
+                    elif "B2-IDENTITY--" in event:
+                        var_names = ["B2_ACCOUNT_ID", "B2_ACCOUNT_KEY"]
+                    elif "GCS-IDENTITY--" in event:
+                        var_names = [
+                            "GOOGLE_PROJECT_ID",
+                            "GOOGLE_APPLICATION_CREDENTIALS",
+                        ]
+                    else:
+                        sg.popup_error("Bad identity given")
+                        break
+                    for var_name in var_names:
+                        var_value = sg.PopupGetText(var_name)
+                        if var_value:
+                            if tree.tree_dict.get(var_name):
+                                tree.delete(var_name)
+                            tree.insert("", var_name, var_name, [var_value], icon=icon)
+                        else:
+                            sg.Popup_error(_t("config_gui.value_cannot_be_empty"))
+                            break
                 else:
                     node = sg.PopupGetText(popup_text)
                     if node:
+                        if tree.tree_dict.get(node):
+                            tree.delete(node)
                         tree.insert("", node, node, node, icon=icon)
             if event.startswith("--REMOVE-"):
                 for key in values[option_key]:
@@ -2488,5 +2558,12 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     keep_on_top=True,
                 )
             continue
+        if event == "repo_uri":
+            for cloud_provider in ["s3", "azure", "b2", "gs"]:
+                if values["repo_uri"].startswith(cloud_provider + ":"):
+                    window["repo_uri_cloud_hint"].Update(visible=True)
+                    break
+                else:
+                    window["repo_uri_cloud_hint"].Update(visible=False)
     window.close()
     return full_config
