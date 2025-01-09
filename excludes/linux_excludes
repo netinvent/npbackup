@@ -1,13 +1,12 @@
 # Unixes Fs exclude patterns for backup
 # patterns are FileMatch compatible (restic)
 
-# rev 2023010701
+# rev 2025010901
 
 # Generic unix sys path excludes
 /dev
 lost+found
 /media
-/mnt
 /proc
 /sys
 /run
@@ -17,6 +16,8 @@ lost+found
 /var/run
 /var/tmp
 /tmp
+# Let's keep /mnt since it's a common point for servers with external disks
+#/mnt
 
 # More MacOS specific sys path excludes
 /afs
