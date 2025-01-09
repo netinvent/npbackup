@@ -24,5 +24,3 @@ CURRENT_DIR = os.path.dirname(CURRENT_EXECUTABLE)
 # When run with nuitka onefile, this will be the temp directory, else, this will be the path to current file
 BASEDIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 
-# Python 3.7 versions are considered legacy since they don't support msgspec
-IS_LEGACY = True if sys.version_info[1] < 8 else False

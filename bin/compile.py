@@ -33,7 +33,7 @@ from command_runner import command_runner
 from ofunctions.platform import python_arch, get_os
 if os.name == "nt":
     from npbackup.windows.sign_windows import sign
-from npbackup.path_helper import IS_LEGACY
+from npbackup.__version__ import IS_LEGACY
 
 AUDIENCES = ["public", "private"]
 BUILD_TYPES = ["cli", "gui", "viewer"]

@@ -24,6 +24,7 @@ from command_runner import command_runner
 from ofunctions.misc import BytesConverter, fn_name
 from npbackup.__debug__ import _DEBUG
 from npbackup.__env__ import FAST_COMMANDS_TIMEOUT, CHECK_INTERVAL, HEARTBEAT_INTERVAL
+from npbackup.__version__ import IS_LEGACY
 from npbackup.path_helper import CURRENT_DIR
 from npbackup.restic_wrapper import schema
 

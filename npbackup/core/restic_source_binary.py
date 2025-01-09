@@ -13,7 +13,8 @@ __build__ = "2023061102"
 import os
 import sys
 import glob
-from npbackup.path_helper import BASEDIR, IS_LEGACY
+from npbackup.__version__ import IS_LEGACY
+from npbackup.path_helper import BASEDIR
 
 
 RESTIC_SOURCE_FILES_DIR = os.path.join(BASEDIR, os.pardir, "RESTIC_SOURCE_FILES")

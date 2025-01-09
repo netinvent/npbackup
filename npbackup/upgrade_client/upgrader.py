@@ -23,9 +23,9 @@ from ofunctions.platform import get_os, python_arch
 from ofunctions.process import kill_childs
 from ofunctions.requestor import Requestor
 from command_runner import deferred_command
-from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE, IS_LEGACY
+from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
 from npbackup.core.nuitka_helper import IS_COMPILED
-from npbackup.__version__ import __version__ as npbackup_version
+from npbackup.__version__ import __version__ as npbackup_version, IS_LEGACY
 
 logger = getLogger()
 
