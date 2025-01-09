@@ -4,7 +4,7 @@
 
 __intname__ = "restic_metrics"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2022-2024 NetInvent"
+__copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "BSD-3-Clause"
 __version__ = "2.0.1"
 __build__ = "2024103001"

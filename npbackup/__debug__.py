@@ -7,7 +7,7 @@ __intname__ = "npbackup.__debug__"
 __author__ = "Orsiris de Jong"
 __site__ = "https://www.netperfect.fr/npbackup"
 __description__ = "NetPerfect Backup Client"
-__copyright__ = "Copyright (C) 2023-2024 NetInvent"
+__copyright__ = "Copyright (C) 2023-2025 NetInvent"
 __build__ = "2024101201"
 
 

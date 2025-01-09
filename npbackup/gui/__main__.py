@@ -5,7 +5,7 @@
 
 __intname__ = "npbackup-gui"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2022-2024 NetInvent"
+__copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
 
 

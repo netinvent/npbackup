@@ -5,7 +5,7 @@
 
 __intname__ = "npbackup.customization_creator"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2024 NetInvent"
+__copyright__ = "Copyright (C) 2024-2025 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2024060401"
 __version__ = "1.0.0"

@@ -5,7 +5,7 @@
 
 __appname__ = "npbackup_upgrade_server"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2023-2024 NetInvent"
+__copyright__ = "Copyright (C) 2023-2025 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2024091701"
 __version__ = "3.0.0"

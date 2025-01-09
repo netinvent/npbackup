@@ -5,7 +5,7 @@
 
 __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2022-2024 NetInvent"
+__copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2024121001"
 __version__ = "2.3.4"

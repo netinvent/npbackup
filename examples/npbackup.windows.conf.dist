@@ -1,5 +1,5 @@
 # NPBackup config file for npbackup v2.2+
-# (C) 2022-2023 NetInvent
+# (C) 2022-2025 NetInvent
 
 backup:
   compression: auto

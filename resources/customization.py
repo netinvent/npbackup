@@ -5,7 +5,7 @@
 
 __intname__ = "npbackup.customization"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2022-2024 NetInvent"
+__copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2024010301"
 __version__ = "1.3.1"
@@ -21,7 +21,7 @@ PROGRAM_DIRECTORY = "NetPerfect Backup Client"
 
 # Windows executable file info
 COMPANY_NAME = "NetInvent"
-COPYRIGHT = "NetInvent 2022-2024"
+COPYRIGHT = "NetInvent 2022-2025"
 FILE_DESCRIPTION = "Network Backup Client"
 TRADEMARKS = "NetInvent (C)"
 PRODUCT_NAME = "NPBackup Network Backup Client"
