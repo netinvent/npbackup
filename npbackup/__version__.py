@@ -19,6 +19,11 @@ from ofunctions.platform import python_arch, get_os_identifier
 from npbackup.configuration import IS_PRIV_BUILD
 from npbackup.core.nuitka_helper import IS_COMPILED
 
+
+# Python 3.7 versions are considered legacy since they don't support msgspec
+# Pytohn 3.9 has some issues with msgspec.struct (using a struct decoder will fail with "msgspec.ValidationError: Expected `LsNode`, got `dict`")
+IS_LEGACY = True if sys.version_info[1] < 10 else False
+
 try:
     CURRENT_USER = psutil.Process().username()
 except Exception:
@@ -35,8 +40,3 @@ version_dict = {
     "build": __build__,
     "copyright": __copyright__,
 }
-
-
-# Python 3.7 versions are considered legacy since they don't support msgspec
-# Pytohn 3.9 has some issues with msgspec.struct (using a struct decoder will fail with "msgspec.ValidationError: Expected `LsNode`, got `dict`")
-IS_LEGACY = True if sys.version_info[1] < 10 else False
