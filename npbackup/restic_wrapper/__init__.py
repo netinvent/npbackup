@@ -32,6 +32,8 @@ try:
 
     HAVE_MSGSPEC = True
 except ImportError:
+    if _DEBUG:
+        raise
     # We may not have msgspec on Python 3.7
     import json
 

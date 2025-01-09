@@ -14,6 +14,7 @@ __build__ = "2024103001"
 
 import sys
 from logging import getLogger
+from npbackup.__debug__ import _DEBUG
 
 try:
     import msgspec.json
@@ -21,6 +22,8 @@ try:
     HAVE_MSGSPEC = True
     json = None  # linter E0601 fix
 except ImportError:
+    if _DEBUG:
+        raise
     import json
 
     HAVE_MSGSPEC = False

@@ -12,6 +12,7 @@ __description__ = "Restic json output schemas"
 
 from typing import Optional
 from datetime import datetime
+from npbackup.__debug__ import _DEBUG
 
 try:
     from msgspec import Struct
@@ -19,7 +20,8 @@ try:
 
     HAVE_MSGSPEC = True
 except ImportError:
-
+    if _DEBUG:
+        raise
     class Struct:
         def __init_subclass__(self, *args, **kwargs):
             pass

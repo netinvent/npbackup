@@ -61,6 +61,7 @@ from npbackup.restic_wrapper import ResticRunner
 from npbackup.restic_wrapper import schema
 
 
+
 logger = getLogger()
 backend_binary = None
 
@@ -203,15 +204,16 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
     """
     treedata = sg.TreeData()
     count = 0
-    if isinstance(ls_result[0], dict):
-        HAVE_MSGSPEC = False
-    else:
+    if isinstance(ls_result[0], schema.LsNode):
         HAVE_MSGSPEC = True
-    if not HAVE_MSGSPEC:
+    else:
+        HAVE_MSGSPEC = False
         logger.info(
             "Using basic json representation for data which is slow and memory hungry. Consider using a newer OS that supports Python 3.8+"
         )
 
+    print(type(ls_result[0]))
+    print(ls_result[0])
     # For performance reasons, we don't refactor this code in order to avoid allocating more variables
     for entry in ls_result:
         # Make sure we drop the prefix '/' so sg.TreeData does not get an empty root
