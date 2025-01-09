@@ -168,7 +168,7 @@ empty_config_dict = {
                 "use_fs_snapshot": True,
                 "ignore_cloud_files": True,
                 "exclude_caches": True,
-                "one_file_system": True,
+                "one_file_system": False,
                 "priority": "low",
                 "exclude_caches": True,
                 "excludes_case_ignore": False,
