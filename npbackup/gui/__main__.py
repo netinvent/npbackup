@@ -58,6 +58,7 @@ from npbackup.path_helper import CURRENT_DIR
 from npbackup.__version__ import version_string
 from npbackup.__debug__ import _DEBUG
 from npbackup.restic_wrapper import ResticRunner
+from npbackup.restic_wrapper import schema
 
 
 logger = getLogger()
