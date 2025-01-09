@@ -39,5 +39,5 @@ version_dict = {
 
 
 # Python 3.7 versions are considered legacy since they don't support msgspec
-# Pytohn 3.9 has some issues with msgspec.struct (using a struct decoder will fail with "msgspec.ValidationError: Expected `LsNode`, got `dict`")                                 
+# Pytohn 3.9 has some issues with msgspec.struct (using a struct decoder will fail with "msgspec.ValidationError: Expected `LsNode`, got `dict`")
 IS_LEGACY = True if sys.version_info[1] < 10 else False
