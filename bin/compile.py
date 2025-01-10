@@ -8,7 +8,7 @@ __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2025010901"
-__version__ = "2.1.1"
+__version__ = "2.2.0"
 
 
 """
@@ -96,17 +96,17 @@ def get_metadata(package_file):
     return _metadata
 
 
-def check_private_build(audience):
+def check_private_build():
     private = None
     try:
         import PRIVATE._private_secret_keys
-
+        import PRIVATE._obfuscation
         print("INFO: Building with private secret key")
         private = True
     except ImportError:
         try:
             import npbackup.secret_keys
-
+            import npbackup.obfuscation
             print("INFO: Building with default secret key")
             private = False
         except ImportError:
@@ -117,15 +117,22 @@ def check_private_build(audience):
     try:
         del PRIVATE._private_secret_keys
     except Exception:
-        pass
+        if private:
+            print("CANNOT REMOVE PRIVATE SECRET KEYS FROM MEMORY")
+    try:
+        del PRIVATE._obfuscation
+    except Exception:
+        if private:
+            print("CANNOT REMOVE PRIVATE OBFUSCATION FROM MEMORY")
 
+    """
     dist_conf_file_path = get_conf_dist_file(audience)
     if dist_conf_file_path and "_private" in dist_conf_file_path:
         print("INFO: Building with a private conf.dist file")
         if audience != "private":
             print("ERROR: public build uses private conf.dist file")
             sys.exit(6)
-
+    """
     return private
 
 
@@ -153,7 +160,7 @@ def move_audience_files(audience):
         else:
             raise "Bogus audience"
 
-
+"""
 def get_conf_dist_file(audience):
     platform = get_os().lower()
     if audience == "private":
@@ -165,13 +172,13 @@ def get_conf_dist_file(audience):
         )
     else:
         dist_conf_file_path = os.path.join(
-            BASEDIR, os.pardir, "examples", "npbackup.{}.conf.dist".format(platform)
+            BASEDIR, os.pardir, "examples", "npbackup.{}.conf.dist".format(platform)$
         )
     if not os.path.isfile(dist_conf_file_path):
         print("DIST CONF FILE NOT FOUND: {}".format(dist_conf_file_path))
         return None
     return dist_conf_file_path
-
+"""
 
 def have_nuitka_commercial():
     try:
@@ -339,7 +346,11 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool, create_tar
             OUTPUT_DIR, "npbackup-{}{}".format(build_type, NUITKA_STANDALONE_SUFFIX)
         )
         npbackup_executable = os.path.join(compiled_output_dir, "npbackup-{}.exe".format(build_type))
-        sign(executable=npbackup_executable, arch=arch, ev_cert_data=ev_cert_data, dry_run=args.dry_run)
+        if os.isfile(ev_cert_data):
+            sign(executable=npbackup_executable, arch=arch, ev_cert_data=ev_cert_data, dry_run=args.dry_run)
+        else:
+            print("ERROR: Cannot sign windows executable without EV certificate data")
+            errors = True
 
     if not onefile:
         if not create_archive(
@@ -500,7 +511,7 @@ if __name__ == "__main__":
             if not create_tar_only:
                 move_audience_files(audience)
 
-                private_build = check_private_build(audience)
+                private_build = check_private_build()
                 if private_build and audience != "private":
                     print("ERROR: Requested public build but private data available")
                     errors = True
