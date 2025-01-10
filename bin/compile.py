@@ -97,6 +97,10 @@ def get_metadata(package_file):
 
 
 def check_private_build():
+    if "PRIVATE._private_secret_keys" in sys.modules.keys():
+        sys.modules.pop("PRIVATE._private_secret_keys")
+    if "PRIVATE._obfuscation" in sys.modules.keys():
+        sys.modules.pop("PRIVATE._obfuscation")
     private = None
     try:
         import PRIVATE._private_secret_keys
@@ -516,12 +520,10 @@ if __name__ == "__main__":
                 private_build = check_private_build()
                 if private_build and audience != "private":
                     print("ERROR: Requested public build but private data available")
-                    errors = True
-                    continue
+                    sys.exit(1)
                 elif not private_build and audience != "public":
                     print("ERROR: Requested private build but no private data available")
-                    errors = True
-                    continue
+                    sys.exit(1)
             for build_type in build_types:
                 result = compile(
                     arch=python_arch(),
