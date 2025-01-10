@@ -145,6 +145,7 @@ def move_audience_files(audience):
             )
             for file in guessed_files:
                 new_file = file.replace(possible_non_used_path, "_private_")
+                print("Moving {} to {}".format(file, new_file))
                 os.rename(file, new_file)
         elif audience == "public":
             possible_non_used_path = "_private_"
@@ -156,6 +157,7 @@ def move_audience_files(audience):
                     possible_non_used_path,
                     "_NOUSE{}".format(possible_non_used_path),
                 )
+                print("Moving {} to {}".format(file, new_file))
                 os.rename(file, new_file)
         else:
             raise "Bogus audience"
