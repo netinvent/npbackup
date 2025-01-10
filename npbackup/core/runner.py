@@ -1495,8 +1495,11 @@ class NPBackupRunner:
             "args": None,
         }
 
-        unlock_result = self.unlock(**kwargs)
+        check_result = None
+        forget_result = None
+        prune_result = None
 
+        unlock_result = self.unlock(**kwargs)
         if (isinstance(unlock_result, bool) and unlock_result) or (
             isinstance(unlock_result, dict) and unlock_result["result"]
         ):
