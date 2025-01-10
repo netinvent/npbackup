@@ -352,7 +352,7 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool, create_tar
             OUTPUT_DIR, "npbackup-{}{}".format(build_type, NUITKA_STANDALONE_SUFFIX)
         )
         npbackup_executable = os.path.join(compiled_output_dir, "npbackup-{}.exe".format(build_type))
-        if os.isfile(ev_cert_data):
+        if os.path.isfile(ev_cert_data):
             sign(executable=npbackup_executable, arch=arch, ev_cert_data=ev_cert_data, dry_run=args.dry_run)
         else:
             print("ERROR: Cannot sign windows executable without EV certificate data")
