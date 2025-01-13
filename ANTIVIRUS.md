@@ -108,3 +108,13 @@ Signed: Yes (EV Code signing certificate)
 Build target: npbackup-cli.exe
 Result: No security vendors flagged this file as malicious
 Link: https://www.virustotal.com/gui/file/f008db7e323c832f47a778b1526b326b915042c0de5b2916b3052fc2a311040e?nocache=1
+
+## 2025/01/10
+#### CLI compilation for 3.0.0-rc13
+Build type: Standalone
+Compiler: Nuitka 2.5.9 Commercial
+Backend gcc 13.2.0
+Signed: Yes (EV Code signing certificate)
+Build target: npbackup-cli.exe
+Result: 2/72 security vendors flagged this file as malicious
+Link: https://www.virustotal.com/gui/file/48c7d828f878638ccf8736f1b87bccd0f8e544aa90d1659b318dbca7b5166b65
