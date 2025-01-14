@@ -7,7 +7,7 @@ __intname__ = "npbackup.upgrade_client.upgrader"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2025 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2024112602"
+__build__ = "2025011401"
 
 
 import os
@@ -222,6 +222,8 @@ def auto_upgrader(
             f'move /Y "{CURRENT_DIR}" "{backup_dist}" >> "{log_file}" 2>&1 && '
             f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
             f'move /Y "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
+            f'echo "Copying optional configuration files from {backup_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
+            f'copy /Y "{backup_dist}\*.conf" {CURRENT_DIR} >> "{log_file}" 2>&1 & '
             f'echo "Loading new executable {CURRENT_EXECUTABLE} --version" >> "{log_file}" 2>&1 && '
             f'"{CURRENT_EXECUTABLE}" --version >> "{log_file}" 2>&1 & '
             f"IF %ERRORLEVEL% NEQ 0 ( "
@@ -245,6 +247,8 @@ def auto_upgrader(
             f'mv -f "{CURRENT_DIR}" "{backup_dist}" >> "{log_file}" 2>&1 && '
             f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
             f'mv -f "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
+            f'echo "Copying optional configuration files from {backup_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
+            f'cp -f "{backup_dist}"/*.conf "{CURRENT_DIR}" >> "{log_file}" 2>&1; '
             f'echo "Adding executable bit to new executable" >> "{log_file}" 2>&1 && '
             f'chmod +x "{CURRENT_EXECUTABLE}" >> "{log_file}" 2>&1 && '
             f'echo "Loading new executable {CURRENT_EXECUTABLE} --version" >> "{log_file}" 2>&1 && '
