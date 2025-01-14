@@ -7,7 +7,7 @@ __intname__ = "npbackup.upgrade_server.api"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024091701"
+__build__ = "2025011401"
 __appname__ = "npbackup.upgrader"
 
 
@@ -190,7 +190,7 @@ async def upgrades(
 
     # TODO:
     # This can be amended by adding specific rules for host identity or groups or installed
-    file = FileGet(platform=platform, arch=arch, build_type=build_type)
+    file = FileGet(platform=platform, arch=arch, build_type=build_type, auto_upgrade_host_identity=auto_upgrade_host_identity, installed_version=installed_version, group=group)
     try:
         result = crud.get_file(file)
         if not result:
@@ -257,7 +257,7 @@ async def download(
         crud.store_host_info(config_dict["upgrades"]["statistics_file"], host_id=data)
     except KeyError:
         logger.error("No statistics file set.")
-    file = FileGet(platform=platform, arch=arch, build_type=build_type)
+    file = FileGet(platform=platform, arch=arch, build_type=build_type, auto_upgrade_host_identity=auto_upgrade_host_identity, installed_version=installed_version, group=group)
     try:
         result = crud.get_file(file, content=True)
         if not result:

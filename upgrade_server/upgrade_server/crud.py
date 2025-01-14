@@ -7,7 +7,7 @@ __intname__ = "npbackup.upgrade_server.crud"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024112601"
+__build__ = "2025011401"
 
 
 import os
@@ -94,13 +94,27 @@ def get_file(
     else:
         extension = "tar.gz"
     possible_filename = f"npbackup-{file.build_type.value}.{extension}"
-    path = os.path.join(
+    base_path = os.path.join(
         config_dict["upgrades"]["data_root"],
         file.platform.value,
         file.arch.value,
-        possible_filename,
     )
-    logger.info("Searching for %s", path)
+
+    for posssible_sub_path in [
+        file.auto_upgrade_host_identity.value,
+        file.installed_version.value,
+        file.group.value,
+    ]:
+        if posssible_sub_path:
+            possibile_sub_path = os.path.join(base_path, posssible_sub_path)
+            if os.path.isdir(possibile_sub_path):
+                logger.info(f"Found specific upgrade path in {possibile_sub_path}")
+                base_path = possibile_sub_path
+                break
+
+    path = os.path.join(base_path, possible_filename)
+
+    logger.info(f"Searching for {path}")
     if not os.path.isfile(path):
         logger.info(f"No upgrade file found in {path}")
         return {

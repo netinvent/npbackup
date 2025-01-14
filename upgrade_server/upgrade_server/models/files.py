@@ -7,9 +7,10 @@ __intname__ = "npbackup.upgrade_server.models.files"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024112601"
+__build__ = "2025011401"
 
 
+from typing import Optional
 from enum import Enum
 from pydantic import BaseModel, constr
 
@@ -33,6 +34,9 @@ class FileBase(BaseModel):
     arch: Arch
     platform: Platform
     build_type: BuildType
+    auto_upgrade_host_identity: Optional[str] = None
+    installed_version: Optional[str] = None
+    group: Optional[str] = None
 
 
 class FileGet(FileBase):
