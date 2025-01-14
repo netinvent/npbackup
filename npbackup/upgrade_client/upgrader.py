@@ -230,7 +230,7 @@ def auto_upgrader(
             f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
             f'move /Y "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
             f'echo "Copying optional configuration files from {backup_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
-            fr'copy /Y "{backup_dist}\*.conf" {CURRENT_DIR} >> "{log_file}" 2>&1 & '
+            rf'copy /Y "{backup_dist}\*.conf" {CURRENT_DIR} >> "{log_file}" 2>&1 & '
             f'echo "Loading new executable {CURRENT_EXECUTABLE} --version" >> "{log_file}" 2>&1 && '
             f'"{CURRENT_EXECUTABLE}" --version >> "{log_file}" 2>&1 & '
             f"IF %ERRORLEVEL% NEQ 0 ( "
