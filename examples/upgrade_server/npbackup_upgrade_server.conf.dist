@@ -1,4 +1,4 @@
-# NPBackup upgrade server
+# NPBackup upgrade server configuration file
 
 http_server:
   listen: 0.0.0.0
@@ -14,7 +14,7 @@ upgrades:
   # Current platforms are 'windows', 'linux'
   # Current arches are 'x64', 'x86', 'arm' and 'arm64'
   # In each folder there should be a npbackup or npbackup.exe binary depending on the platform
-  data_root: /path/to/build_dir
+  data_root: /var/www/upgrade_server/dist
   # We'll store a CSV containing backup clients that upgrade here
-  statistics_file: /path/to/file
+  statistics_file: /var/www/upgrade_server/stats.csv
 

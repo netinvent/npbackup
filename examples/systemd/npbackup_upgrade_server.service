@@ -3,11 +3,11 @@ Description=NPBackup upgrade server gunicorn service
 After=network.target
 
 [Service]
-#User=npbackup
-#Group=npbackup
+User=npbackup
+Group=npbackup
 
 # Set this to whatever directory you installed the upgrade_server to
-ExecStart=/usr/bin/python3 /var/www/upgrade_server/upgrade_server.py --config-file=/etc/npbackup/upgrade_server.conf
+ExecStart=/opt/upgrade_server/venv/bin/python /var/www/upgrade_server/upgrade_server.py --config-file=/etc/npbackup_upgrade_server.conf
 WorkingDirectory=/var/www/upgrade_server
 Environment="PYTHONPATH=/var/www/upgrade_server"
 Restart=always
