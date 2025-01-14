@@ -78,7 +78,7 @@ async def api_root(auth=Depends(get_current_username)):
             "app": __appname__,
         }
     else:
-        return {"app": "Currently under maintenance"}
+        return {"app": __appname__, "maintenance": "enabled"}
 
 
 @app.get("/status")
@@ -88,7 +88,7 @@ async def api_status():
             "app": "running",
         }
     else:
-        return {"app": "Currently under maintenance"}
+        return {"app": __appname__, "maintenance": "enabled"}
 
 
 @app.get("/current_version", response_model=CurrentVersion, status_code=200)
