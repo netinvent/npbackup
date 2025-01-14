@@ -83,6 +83,13 @@ def _check_new_version(
         return None
 
     result = requestor.data_model("current_version")
+    if result is False:
+        msg = "Upgrade server didn't respond properly. Is it well configured ?"
+        if ignore_errors:
+            logger.info(msg)
+        else:
+            logger.error(msg)
+        return None
     try:
         online_version = result["version"]
     except KeyError:
@@ -124,7 +131,7 @@ def auto_upgrader(
     We must check that we run a compiled binary first
     We assume that we run a onefile nuitka binary
     """
-    if not IS_COMPILED:
+    if not IS_COMPILED and False:
         logger.info(
             "Auto upgrade will only upgrade compiled verions. Please use 'pip install --upgrade npbackup' instead"
         )
@@ -223,7 +230,7 @@ def auto_upgrader(
             f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
             f'move /Y "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
             f'echo "Copying optional configuration files from {backup_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
-            f'copy /Y "{backup_dist}\*.conf" {CURRENT_DIR} >> "{log_file}" 2>&1 & '
+            fr'copy /Y "{backup_dist}\*.conf" {CURRENT_DIR} >> "{log_file}" 2>&1 & '
             f'echo "Loading new executable {CURRENT_EXECUTABLE} --version" >> "{log_file}" 2>&1 && '
             f'"{CURRENT_EXECUTABLE}" --version >> "{log_file}" 2>&1 & '
             f"IF %ERRORLEVEL% NEQ 0 ( "
