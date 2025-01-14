@@ -82,7 +82,7 @@ async def api_root(auth=Depends(get_current_username)):
 
 
 @app.get("/status")
-async def api_root():
+async def api_status():
     if crud.is_enabled():
         return {
             "app": "running",
