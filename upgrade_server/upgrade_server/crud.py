@@ -53,7 +53,8 @@ def sha256sum_data(data):
 
 
 def is_enabled() -> bool:
-    return not os.path.isfile("DISABLED")
+    path = os.path.join(config_dict["upgrades"]["data_root"], "DISABLED")
+    return not os.path.isfile(path)
 
 
 def store_host_info(destination: str, host_id: dict) -> None:

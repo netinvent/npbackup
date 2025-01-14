@@ -119,6 +119,10 @@ async def current_version(
         crud.store_host_info(config_dict["upgrades"]["statistics_file"], host_id=data)
     except KeyError:
         logger.error("No statistics file set.")
+
+    if not crud.is_enabled():
+        return CurrentVersion(version="0.00-disabled")
+
     try:
         result = crud.get_current_version()
         if not result:
@@ -188,8 +192,12 @@ async def upgrades(
     except KeyError:
         logger.error("No statistics file set.")
 
-    # TODO:
-    # This can be amended by adding specific rules for host identity or groups or installed
+    if not crud.is_enabled():
+        raise HTTPException(
+            status_code=503,
+            detail="Service is currently disabled for maintenance"
+        )
+    
     file = FileGet(platform=platform, arch=arch, build_type=build_type, auto_upgrade_host_identity=auto_upgrade_host_identity, installed_version=installed_version, group=group)
     try:
         result = crud.get_file(file)
@@ -252,11 +260,18 @@ async def download(
         "arch": arch.value,
         "build_type": build_type.value,
     }
-
+    
     try:
         crud.store_host_info(config_dict["upgrades"]["statistics_file"], host_id=data)
     except KeyError:
         logger.error("No statistics file set.")
+
+    if not crud.is_enabled():
+        raise HTTPException(
+            status_code=503,
+            detail="Service is currently disabled for maintenance"
+        )
+    
     file = FileGet(platform=platform, arch=arch, build_type=build_type, auto_upgrade_host_identity=auto_upgrade_host_identity, installed_version=installed_version, group=group)
     try:
         result = crud.get_file(file, content=True)
