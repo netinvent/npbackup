@@ -121,7 +121,7 @@ async def current_version(
         logger.error("No statistics file set.")
 
     if not crud.is_enabled():
-        return CurrentVersion(version="0.00-disabled")
+        return CurrentVersion(version="0.00")
 
     try:
         result = crud.get_current_version()
