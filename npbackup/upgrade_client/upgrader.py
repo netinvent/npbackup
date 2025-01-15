@@ -220,12 +220,14 @@ def auto_upgrader(
         )
         return False
 
-    backup_dist = os.path.join(tempfile.gettempdir(), "npbackup_backup_dist_" + random_string(6))
+    backup_dist = os.path.join(
+        tempfile.gettempdir(), "npbackup_backup_dist_" + random_string(6)
+    )
 
     # Inplace upgrade script, gets executed after main program has exited
     if os.name == "nt":
         cmd = (
-            f'setlocal EnableDelayedExpansion &'
+            f"setlocal EnableDelayedExpansion & "
             f'echo "Launching upgrade" >> "{log_file}" 2>&1 && '
             f'echo "Moving earlier dist from {CURRENT_DIR} to {backup_dist}" >> "{log_file}" 2>&1 && '
             f'move /Y "{CURRENT_DIR}" "{backup_dist}" >> "{log_file}" 2>&1 && '
