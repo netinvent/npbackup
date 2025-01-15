@@ -115,7 +115,7 @@ def get_file(
 
     path = os.path.join(base_path, possible_filename)
 
-    logger.info(f"Searching for {path}")
+    logger.info(f"Searching for file {'info' if not content else 'content'} in {path}")
     if not os.path.isfile(path):
         logger.info(f"No upgrade file found in {path}")
         return {
