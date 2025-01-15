@@ -131,10 +131,10 @@ async def current_version(
     except HTTPException:
         raise
     except Exception as exc:
-        logger.debug("Cannot get file: {}".format(exc), exc_info=True)
+        logger.error("Cannot get version file: {}".format(exc), exc_info=True)
         raise HTTPException(
             status_code=400,
-            detail="Cannot get file: {}".format(exc),
+            detail="Cannot get version file: {}".format(exc),
         )
 
 
@@ -213,10 +213,10 @@ async def upgrades(
     except HTTPException:
         raise
     except Exception as exc:
-        logger.debug("Cannot get file: {}".format(exc), exc_info=True)
+        logger.debug("Cannot get file info: {}".format(exc), exc_info=True)
         raise HTTPException(
             status_code=400,
-            detail="Cannot get file: {}".format(exc),
+            detail="Cannot get file info: {}".format(exc),
         )
 
 
@@ -294,8 +294,8 @@ async def download(
     except HTTPException:
         raise
     except Exception as exc:
-        logger.debug("Cannot get file: {}".format(exc), exc_info=True)
+        logger.debug("Cannot get file for download: {}".format(exc), exc_info=True)
         raise HTTPException(
             status_code=400,
-            detail="Cannot get file: {}".format(exc),
+            detail="Cannot get file for download: {}".format(exc),
         )
