@@ -102,9 +102,9 @@ def get_file(
     )
 
     for posssible_sub_path in [
-        file.auto_upgrade_host_identity.value,
-        file.installed_version.value,
-        file.group.value,
+        file.auto_upgrade_host_identity,
+        file.installed_version,
+        file.group,
     ]:
         if posssible_sub_path:
             possibile_sub_path = os.path.join(base_path, posssible_sub_path)
