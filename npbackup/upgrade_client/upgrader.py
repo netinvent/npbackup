@@ -7,7 +7,7 @@ __intname__ = "npbackup.upgrade_client.upgrader"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2025 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2025011401"
+__build__ = "2025011501"
 
 
 import os
@@ -22,6 +22,7 @@ from packaging import version
 from ofunctions.platform import get_os, python_arch
 from ofunctions.process import kill_childs
 from ofunctions.requestor import Requestor
+from ofunctions.random import random_string
 from command_runner import deferred_command
 from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
 from npbackup.core.nuitka_helper import IS_COMPILED
@@ -219,11 +220,12 @@ def auto_upgrader(
         )
         return False
 
-    backup_dist = os.path.join(tempfile.gettempdir(), "npbackup_backup_dist")
+    backup_dist = os.path.join(tempfile.gettempdir(), "npbackup_backup_dist_" + random_string(6))
 
     # Inplace upgrade script, gets executed after main program has exited
     if os.name == "nt":
         cmd = (
+            f'setlocal EnableDelayedExpansion &'
             f'echo "Launching upgrade" >> "{log_file}" 2>&1 && '
             f'echo "Moving earlier dist from {CURRENT_DIR} to {backup_dist}" >> "{log_file}" 2>&1 && '
             f'move /Y "{CURRENT_DIR}" "{backup_dist}" >> "{log_file}" 2>&1 && '
@@ -234,7 +236,7 @@ def auto_upgrader(
             rf'xcopy /S /Y "{backup_dist}\*conf" {CURRENT_DIR} > NUL 2>&1 & '
             f'echo "Loading new executable {CURRENT_EXECUTABLE} --version" >> "{log_file}" 2>&1 && '
             f'"{CURRENT_EXECUTABLE}" --version >> "{log_file}" 2>&1 & '
-            f"IF %ERRORLEVEL% NEQ 0 ( "
+            f"IF !ERRORLEVEL! NEQ 0 ( "
             f'echo "New executable failed. Rolling back" >> "{log_file}" 2>&1 && '
             f'rd /S /Q "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
             f'move /Y "{backup_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 '
