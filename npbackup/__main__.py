@@ -554,7 +554,11 @@ This is free software, and you are welcome to redistribute it under certain cond
         )
         if result:
             # This only happens when no upgrade is available
-            logger.info("Upgrade check finished. Resuming operations.")
+            if args.auto_upgrade:
+                logger.info("Manual upgrade check finished.")
+                sys.exit(0)
+            else:
+                logger.info("Upgrade check finished. Resuming operations.")
         elif args.auto_upgrade:
             logger.error("Auto upgrade failed")
             sys.exit(23)
