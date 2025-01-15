@@ -230,7 +230,8 @@ def auto_upgrader(
             f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
             f'move /Y "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
             f'echo "Copying optional configuration files from {backup_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
-            rf'copy /Y "{backup_dist}\*.conf" {CURRENT_DIR} >> "{log_file}" 2>&1 & '
+            # Just copy any possible *.conf file from any subdirectory
+            rf'xcopy /S /Y "{backup_dist}\*conf" {CURRENT_DIR} > NUL 2>&1 & '
             f'echo "Loading new executable {CURRENT_EXECUTABLE} --version" >> "{log_file}" 2>&1 && '
             f'"{CURRENT_EXECUTABLE}" --version >> "{log_file}" 2>&1 & '
             f"IF %ERRORLEVEL% NEQ 0 ( "
@@ -255,7 +256,7 @@ def auto_upgrader(
             f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
             f'mv -f "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
             f'echo "Copying optional configuration files from {backup_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
-            f'cp -f "{backup_dist}"/*.conf "{CURRENT_DIR}" >> "{log_file}" 2>&1; '
+            f'find "{backup_dist}" -name "*.conf" -exec cp --parents {{}} "{CURRENT_DIR}" \; '
             f'echo "Adding executable bit to new executable" >> "{log_file}" 2>&1 && '
             f'chmod +x "{CURRENT_EXECUTABLE}" >> "{log_file}" 2>&1 && '
             f'echo "Loading new executable {CURRENT_EXECUTABLE} --version" >> "{log_file}" 2>&1 && '
