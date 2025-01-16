@@ -61,18 +61,23 @@ security = HTTPBasic()
 
 def get_current_username(credentials: HTTPBasicCredentials = Depends(security)):
     authenticated_user = None
-    
 
     for user in config_dict["http_server"]["users"]:
         try:
-            if secrets.compare_digsest(credentials.username.encode("utf-8"), user.encode("utf-8")):
-                if secrets.compare_digest(credentials.password.encode("utf-8"), config_dict["http_server"]["users"]["user"]["password"].encode("utf-8")):
+            if secrets.compare_digsest(
+                credentials.username.encode("utf-8"), user.encode("utf-8")
+            ):
+                if secrets.compare_digest(
+                    credentials.password.encode("utf-8"),
+                    config_dict["http_server"]["users"]["user"]["password"].encode(
+                        "utf-8"
+                    ),
+                ):
                     authenticated_user = user
                     break
         except Exception as exc:
             logger.info(f"Failed to check user: {exc}")
 
-  
     if authenticated_user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -155,7 +160,9 @@ async def current_version(
         client_ip = request.client.host
 
     try:
-        has_permission = True if audience.value in get_user_permissions(auth)["audience"] else False
+        has_permission = (
+            True if audience.value in get_user_permissions(auth)["audience"] else False
+        )
     except Exception as exc:
         logger.error(f"Failed to get user permissions: {exc}")
         has_permission = False
@@ -253,7 +260,9 @@ async def upgrades(
         client_ip = request.client.host
 
     try:
-        has_permission = True if audience.value in get_user_permissions(auth)["audience"] else False
+        has_permission = (
+            True if audience.value in get_user_permissions(auth)["audience"] else False
+        )
     except Exception as exc:
         logger.error(f"Failed to get user permissions: {exc}")
         has_permission = False
@@ -353,7 +362,9 @@ async def download(
         client_ip = request.client.host
 
     try:
-        has_permission = True if audience.value in get_user_permissions(auth)["audience"] else False
+        has_permission = (
+            True if audience.value in get_user_permissions(auth)["audience"] else False
+        )
     except Exception as exc:
         logger.error(f"Failed to get user permissions: {exc}")
         has_permission = False
