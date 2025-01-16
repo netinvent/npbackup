@@ -15,7 +15,7 @@ __version__ = "3.0.0-rc14"
 
 import sys
 import psutil
-from ofunctions.platform import python_arch, get_os_identifier
+from ofunctions.platform import python_arch, get_os
 from npbackup.configuration import IS_PRIV_BUILD
 from npbackup.core.nuitka_helper import IS_COMPILED
 
@@ -32,11 +32,11 @@ version_dict = {
     "name": __intname__,
     "version": __version__,
     "build_type": "priv" if IS_PRIV_BUILD else "pub",
-    "os": get_os_identifier(),
+    "os": get_os(),
     "arch": python_arch() + ("-legacy" if IS_LEGACY else ""),
     "pv": sys.version_info,
     "comp": IS_COMPILED,
     "build": __build__,
     "copyright": __copyright__,
 }
-version_string = f"{version_dict['name']} {version_dict['version']}-{version_dict['buildtype']}-{version_dict['pv'][0]}.{version_dict['pv'][1]}-{version_dict['arch']}{'-c' if IS_COMPILED else '-i'} {version_dict['build']} - {version_dict['copyright']} running as {CURRENT_USER}"
+version_string = f"{version_dict['name']} {version_dict['version']}-{version_dict['os']}-{version_dict['arch']}-{version_dict['build_type']}-{version_dict['pv'][0]}.{version_dict['pv'][1]}-{'c' if IS_COMPILED else 'i'} {version_dict['build']} - {version_dict['copyright']} running as {CURRENT_USER}"

@@ -19,7 +19,6 @@ import tempfile
 import atexit
 from datetime import datetime
 from packaging import version
-from ofunctions.platform import get_os, python_arch
 from ofunctions.process import kill_childs
 from ofunctions.requestor import Requestor
 from ofunctions.random import random_string
@@ -54,8 +53,8 @@ def _get_target_id(auto_upgrade_host_identity: str, group: str) -> str:
     if not build_type:
         logger.critical("Cannot determine build type for upgrade processs")
         return False
-    target = "{}/{}/{}".format(
-        get_os(),
+    target = "{}/{}/{}/{}".format(
+        version_dict["os"],
         version_dict["arch"],
         version_dict["build_type"],
         version_dict["audience"],
@@ -299,7 +298,7 @@ def auto_upgrader(
             f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
             f'mv -f "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
             f'echo "Copying optional configuration files from {backup_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
-            f'find "{backup_dist}" -name "*.conf" -exec cp --parents {{}} "{CURRENT_DIR}" \; '
+            rf'find "{backup_dist}" -name "*.conf" -exec cp --parents {{}} "{CURRENT_DIR}" \; '
             f'echo "Adding executable bit to new executable" >> "{log_file}" 2>&1 && '
             f'chmod +x "{CURRENT_EXECUTABLE}" >> "{log_file}" 2>&1 && '
             f'echo "Loading new executable {CURRENT_EXECUTABLE} --version" >> "{log_file}" 2>&1 && '
