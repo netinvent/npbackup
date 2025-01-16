@@ -160,7 +160,7 @@ def get_file(
             build_type=file.build_type.value,
             audience=file.audience.value,
             sha256sum=sha256,
-            filename=archive_path,
+            filename=os.path.basename(archive_path),
             file_length=length,
         )
         return file_send
