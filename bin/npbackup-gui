@@ -17,8 +17,6 @@ if __name__ == "__main__":
     if "--run-as-cli" in sys.argv:
         # Drop --run-as-cli argument since cli doesn't know about it
         sys.argv.pop(sys.argv.index("--run-as-cli"))
-        os.environ["NPBACKUP_BUILD_TYPE"] = "cli"
         main()
     else:
-        os.environ["NPBACKUP_BUILD_TYPE"] = "gui"
         main_gui()

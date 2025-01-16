@@ -40,8 +40,19 @@ if not "_DEBUG" in globals():
     if __SPECIAL_DEBUG_STRING:
         if __debug_os_env == __SPECIAL_DEBUG_STRING:
             _DEBUG = True
-    elif __debug_os_env.capitalize() == "True":
+    elif __debug_os_env.lower().capitalize() == "True":
         _DEBUG = True
+
+
+_NPBACKUP_ALLOW_AUTOUPGRADE_DEBUG = (
+    True
+    if os.environ.get("_NPBACKUP_ALLOW_AUTOUPGRADE_DEBUG", "False")
+    .strip("'\"")
+    .lower()
+    .capitalize()
+    == "True"
+    else False
+)
 
 
 def exception_to_string(exc):

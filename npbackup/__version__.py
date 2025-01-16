@@ -13,6 +13,7 @@ __build__ = "2025011601"
 __version__ = "3.0.0-rc14"
 
 
+import os
 import sys
 import psutil
 from ofunctions.platform import python_arch, get_os
@@ -24,6 +25,16 @@ from npbackup.core.nuitka_helper import IS_COMPILED
 # Since developpment currently follows Python 3.12, let's consider anything below 3.12 as legacy
 IS_LEGACY = True if sys.version_info[1] < 12 else False
 
+executable = sys.argv[0].split(os.sep)[-1]
+if executable == "npbackup-gui":
+    build_type = "gui"
+elif executable == "npbackup-cli":
+    build_type = "cli"
+elif executable == "npbackup-viewer":
+    build_type = "viewer"
+else:
+    build_type = "UnknownBuildType"
+
 try:
     CURRENT_USER = psutil.Process().username()
 except Exception:
@@ -31,7 +42,8 @@ except Exception:
 version_dict = {
     "name": __intname__,
     "version": __version__,
-    "build_type": "priv" if IS_PRIV_BUILD else "pub",
+    "build_type": build_type,
+    "audience": "private" if IS_PRIV_BUILD else "public",
     "os": get_os().lower(),
     "arch": python_arch() + ("-legacy" if IS_LEGACY else ""),
     "pv": sys.version_info,
@@ -39,4 +51,4 @@ version_dict = {
     "build": __build__,
     "copyright": __copyright__,
 }
-version_string = f"{version_dict['name']} {version_dict['version']}-{version_dict['os']}-{version_dict['arch']}-{version_dict['build_type']}-{version_dict['pv'][0]}.{version_dict['pv'][1]}-{'c' if IS_COMPILED else 'i'} {version_dict['build']} - {version_dict['copyright']} running as {CURRENT_USER}"
+version_string = f"{version_dict['name']} {version_dict['version']}-{version_dict['os']}-{version_dict['build_type']}-{version_dict['arch']}-{version_dict['audience']}-{version_dict['pv'][0]}.{version_dict['pv'][1]}-{'c' if IS_COMPILED else 'i'} {version_dict['build']} - {version_dict['copyright']} running as {CURRENT_USER}"

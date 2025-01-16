@@ -24,8 +24,8 @@ from ofunctions.requestor import Requestor
 from ofunctions.random import random_string
 from command_runner import deferred_command
 from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
-from npbackup.core.nuitka_helper import IS_COMPILED
-from npbackup.__version__ import version_dict
+from npbackup.__version__ import version_dict, IS_COMPILED
+from npbackup.__debug__ import _NPBACKUP_ALLOW_AUTOUPGRADE_DEBUG
 from npbackup.__env__ import UPGRADE_DEFER_TIME
 
 logger = getLogger()
@@ -48,11 +48,6 @@ def _get_target_id(auto_upgrade_host_identity: str, group: str) -> str:
 
     {platform}/{arch}/{build_type}/{host_id}/{current_version}/{group}
     """
-    # We'll check python_arch instead of os_arch since we build 32 bit python executables for compat reasons
-    build_type = os.environ.get("NPBACKUP_BUILD_TYPE", None)
-    if not build_type:
-        logger.critical("Cannot determine build type for upgrade processs")
-        return False
     target = "{}/{}/{}/{}".format(
         version_dict["os"],
         version_dict["arch"],
@@ -177,7 +172,11 @@ def auto_upgrader(
         logger.info(
             "Auto upgrade will only upgrade compiled verions. Please use 'pip install --upgrade npbackup' instead"
         )
-        return False
+        if _NPBACKUP_ALLOW_AUTOUPGRADE_DEBUG is not True:
+            return False
+        logger.info(
+            "Debug mode allows auto upgrade on non-compiled versions. Be aware that this will probably mess up your installation"
+        )
 
     res = _check_new_version(
         upgrade_url,
