@@ -7,16 +7,16 @@ __intname__ = "npbackup.upgrade_server.crud"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025011401"
+__build__ = "2025011601"
 
 
 import os
-from typing import Optional, Union
+from typing import Optional, Union, Tuple
 from logging import getLogger
 import hashlib
 from argparse import ArgumentParser
 from datetime import datetime, timezone
-from upgrade_server.models.files import FileGet, FileSend
+from upgrade_server.models.files import ClientTargetIdentification, FileGet, FileSend
 from upgrade_server.models.oper import CurrentVersion
 import upgrade_server.configuration as configuration
 
@@ -57,6 +57,43 @@ def is_enabled() -> bool:
     return not os.path.isfile(path)
 
 
+def _get_path_from_target_id(target_id: ClientTargetIdentification) -> Tuple[str, str]:
+    """
+    Determine specific or generic upgrade path depending on target_id sent by client
+
+    NPBackup filenames are
+    npbackup-{platform}-{arch}-{build_type}-{audience}.{archive_extension}"
+
+    """
+    if target_id.platform.value == "windows":
+        extension = "zip"
+    else:
+        extension = "tar.gz"
+
+    expected_filename = f"npbackup-{target_id.platform.value}-{target_id.build_type.value}-{target_id.audience.value}.{extension}"
+
+    base_path = os.path.join(
+        config_dict["upgrades"]["data_root"],
+    )
+
+    for posssible_sub_path in [
+        target_id.auto_upgrade_host_identity,
+        target_id.installed_version,
+        target_id.group,
+    ]:
+        if posssible_sub_path:
+            possibile_sub_path = os.path.join(base_path, posssible_sub_path)
+            if os.path.isdir(possibile_sub_path):
+                logger.info(f"Found specific upgrade path in {possibile_sub_path}")
+                base_path = possibile_sub_path
+                break
+
+    archive_path = os.path.join(base_path, expected_filename)
+    version_file_path = os.path.join(base_path, "VERSION")
+
+    return version_file_path, archive_path
+
+
 def store_host_info(destination: str, host_id: dict) -> None:
     try:
         data = (
@@ -72,52 +109,34 @@ def store_host_info(destination: str, host_id: dict) -> None:
         logger.error("Trace:", exc_info=True)
 
 
-def get_current_version() -> Optional[CurrentVersion]:
+def get_current_version(
+    target_id: ClientTargetIdentification,
+) -> Optional[CurrentVersion]:
     try:
-        path = os.path.join(config_dict["upgrades"]["data_root"], "VERSION")
-        if os.path.isfile(path):
-            with open(path, "r", encoding="utf-8") as fh:
+        version_filename, _ = _get_path_from_target_id(target_id)
+        if os.path.isfile(version_filename):
+            with open(version_filename, "r", encoding="utf-8") as fh:
                 ver = fh.readline().strip()
                 return CurrentVersion(version=ver)
     except OSError as exc:
-        logger.error("Cannot get current version")
+        logger.error(f"Cannot get current version: {exc}")
         logger.error("Trace:", exc_info=True)
     except Exception as exc:
-        logger.error("Version seems to be bogus in VERSION file")
+        logger.error(f"Version seems to be bogus in VERSION file: {exc}")
         logger.error("Trace:", exc_info=True)
 
 
 def get_file(
     file: FileGet, content: bool = False
 ) -> Optional[Union[FileSend, bytes, dict]]:
-    if file.platform.value == "windows":
-        extension = "zip"
-    else:
-        extension = "tar.gz"
-    possible_filename = f"npbackup-{file.build_type.value}.{extension}"
-    base_path = os.path.join(
-        config_dict["upgrades"]["data_root"],
-        file.platform.value,
-        file.arch.value,
+
+    _, archive_path = _get_path_from_target_id(file)
+
+    logger.info(
+        f"Searching for file {'info' if not content else 'content'} in {archive_path}"
     )
-
-    for posssible_sub_path in [
-        file.auto_upgrade_host_identity,
-        file.installed_version,
-        file.group,
-    ]:
-        if posssible_sub_path:
-            possibile_sub_path = os.path.join(base_path, posssible_sub_path)
-            if os.path.isdir(possibile_sub_path):
-                logger.info(f"Found specific upgrade path in {possibile_sub_path}")
-                base_path = possibile_sub_path
-                break
-
-    path = os.path.join(base_path, possible_filename)
-
-    logger.info(f"Searching for file {'info' if not content else 'content'} in {path}")
-    if not os.path.isfile(path):
-        logger.info(f"No upgrade file found in {path}")
+    if not os.path.isfile(archive_path):
+        logger.info(f"No upgrade file found in {archive_path}")
         return {
             "arch": file.arch.value,
             "platform": file.platform.value,
@@ -127,7 +146,7 @@ def get_file(
             "file_length": 0,
         }
 
-    with open(path, "rb") as fh:
+    with open(archive_path, "rb") as fh:
         bytes = fh.read()
         if content:
             return bytes
@@ -138,7 +157,7 @@ def get_file(
             platform=file.platform.value,
             build_type=file.build_type.value,
             sha256sum=sha256,
-            filename=possible_filename,
+            filename=archive_path,
             file_length=length,
         )
         return file_send

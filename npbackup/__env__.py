@@ -30,3 +30,6 @@ HEARTBEAT_INTERVAL = 3600
 # Arbitrary timeout for init / init checks.
 # If init takes more than a minute, we really have a problem in our backend
 FAST_COMMANDS_TIMEOUT = 180
+
+# # Wait x seconds before we actually do the upgrade so current program could quit before being erased
+UPGRADE_DEFER_TIME = 60

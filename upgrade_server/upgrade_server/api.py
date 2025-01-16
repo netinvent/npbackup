@@ -18,7 +18,15 @@ from argparse import ArgumentParser
 from fastapi import FastAPI, HTTPException, Response, Depends, status, Request, Header
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi_offline import FastAPIOffline
-from upgrade_server.models.files import FileGet, FileSend, Platform, Arch, BuildType
+from upgrade_server.models.files import (
+    ClientTargetIdentification,
+    FileGet,
+    FileSend,
+    Platform,
+    Arch,
+    BuildType,
+    Audience,
+)
 from upgrade_server.models.oper import CurrentVersion
 import upgrade_server.crud as crud
 import upgrade_server.configuration as configuration
@@ -91,9 +99,35 @@ async def api_status():
         return {"app": __appname__, "maintenance": "enabled"}
 
 
-@app.get("/current_version", response_model=CurrentVersion, status_code=200)
+@app.get(
+    "/current_version/{platform}/{arch}/{build_type}/{audience}",
+    response_model=CurrentVersion,
+    status_code=200,
+)
+@app.get(
+    "/current_version/{platform}/{arch}/{build_type}/{audience}/{auto_upgrade_host_identity}",
+    response_model=CurrentVersion,
+    status_code=200,
+)
+@app.get(
+    "/current_version/{platform}/{arch}/{build_type}/{audience}/{auto_upgrade_host_identity}/{installed_version}",
+    response_model=CurrentVersion,
+    status_code=200,
+)
+@app.get(
+    "/current_version/{platform}/{arch}/{build_type}/{audience}/{auto_upgrade_host_identity}/{installed_version}/{group}",
+    response_model=CurrentVersion,
+    status_code=200,
+)
 async def current_version(
     request: Request,
+    platform: Platform,
+    arch: Arch,
+    build_type: BuildType,
+    audience: Audience,
+    auto_upgrade_host_identity: str = None,
+    installed_version: str = None,
+    group: str = None,
     x_real_ip: Optional[str] = Header(default=None),
     x_forwarded_for: Optional[str] = Header(default=None),
     referer: Optional[str] = Header(default=None),
@@ -108,11 +142,13 @@ async def current_version(
     data = {
         "action": "check_version",
         "ip": client_ip,
-        "auto_upgrade_host_identity": "",
-        "installed_version": referer,
-        "group": "",
-        "platform": "",
-        "arch": "",
+        "auto_upgrade_host_identity": auto_upgrade_host_identity,
+        "installed_version": installed_version,
+        "group": group,
+        "platform": platform.value,
+        "arch": arch.value,
+        "build": build_type.value,
+        "audience": audience.value,
     }
 
     try:
@@ -124,7 +160,16 @@ async def current_version(
         return CurrentVersion(version="0.00")
 
     try:
-        result = crud.get_current_version()
+        target_id = ClientTargetIdentification(
+            platform=platform,
+            arch=arch,
+            build_type=build_type,
+            audience=audience,
+            auto_upgrade_host_identity=auto_upgrade_host_identity,
+            installed_version=installed_version,
+            group=group,
+        )
+        result = crud.get_current_version(target_id)
         if not result:
             raise HTTPException(status_code=404, detail="Not found")
         return result
@@ -139,22 +184,22 @@ async def current_version(
 
 
 @app.get(
-    "/upgrades/{platform}/{arch}/{build_type}",
+    "/upgrades/{platform}/{arch}/{build_type}/{audience}",
     response_model=Union[FileSend, dict],
     status_code=200,
 )
 @app.get(
-    "/upgrades/{platform}/{arch}/{build_type}/{auto_upgrade_host_identity}",
+    "/upgrades/{platform}/{arch}/{build_type}/{audience}/{auto_upgrade_host_identity}",
     response_model=Union[FileSend, dict],
     status_code=200,
 )
 @app.get(
-    "/upgrades/{platform}/{arch}/{build_type}/{auto_upgrade_host_identity}/{installed_version}",
+    "/upgrades/{platform}/{arch}/{build_type}/{audience}/{auto_upgrade_host_identity}/{installed_version}",
     response_model=Union[FileSend, dict],
     status_code=200,
 )
 @app.get(
-    "/upgrades/{platform}/{arch}/{build_type}/{auto_upgrade_host_identity}/{installed_version}/{group}",
+    "/upgrades/{platform}/{arch}/{build_type}/{audience}/{auto_upgrade_host_identity}/{installed_version}/{group}",
     response_model=Union[FileSend, dict],
     status_code=200,
 )
@@ -163,6 +208,7 @@ async def upgrades(
     platform: Platform,
     arch: Arch,
     build_type: BuildType,
+    audience: Audience,
     auto_upgrade_host_identity: str = None,
     installed_version: str = None,
     group: str = None,
@@ -184,7 +230,8 @@ async def upgrades(
         "group": group,
         "platform": platform.value,
         "arch": arch.value,
-        "build_type": build_type.value,
+        "build": build_type.value,
+        "audience": audience.value,
     }
 
     try:
@@ -201,6 +248,7 @@ async def upgrades(
         platform=platform,
         arch=arch,
         build_type=build_type,
+        audience=audience,
         auto_upgrade_host_identity=auto_upgrade_host_identity,
         installed_version=installed_version,
         group=group,
@@ -221,20 +269,22 @@ async def upgrades(
 
 
 @app.get(
-    "/download/{platform}/{arch}/{build_type}", response_model=FileSend, status_code=200
-)
-@app.get(
-    "/download/{platform}/{arch}/{build_type}/{auto_upgrade_host_identity}",
+    "/download/{platform}/{arch}/{build_type}/{audience}",
     response_model=FileSend,
     status_code=200,
 )
 @app.get(
-    "/download/{platform}/{arch}/{build_type}/{auto_upgrade_host_identity}/{installed_version}",
+    "/download/{platform}/{arch}/{build_type}/{audience}/{auto_upgrade_host_identity}",
     response_model=FileSend,
     status_code=200,
 )
 @app.get(
-    "/download/{platform}/{arch}/{build_type}/{auto_upgrade_host_identity}/{installed_version}/{group}",
+    "/download/{platform}/{arch}/{build_type}/{audience}/{auto_upgrade_host_identity}/{installed_version}",
+    response_model=FileSend,
+    status_code=200,
+)
+@app.get(
+    "/download/{platform}/{arch}/{build_type}/{audience}/{auto_upgrade_host_identity}/{installed_version}/{group}",
     response_model=FileSend,
     status_code=200,
 )
@@ -243,6 +293,7 @@ async def download(
     platform: Platform,
     arch: Arch,
     build_type: BuildType,
+    audience: Audience,
     auto_upgrade_host_identity: str = None,
     installed_version: str = None,
     group: str = None,
@@ -264,7 +315,8 @@ async def download(
         "group": group,
         "platform": platform.value,
         "arch": arch.value,
-        "build_type": build_type.value,
+        "build": build_type.value,
+        "audience": audience.value,
     }
 
     try:

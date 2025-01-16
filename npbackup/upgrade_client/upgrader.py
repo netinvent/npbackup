@@ -26,11 +26,10 @@ from ofunctions.random import random_string
 from command_runner import deferred_command
 from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
 from npbackup.core.nuitka_helper import IS_COMPILED
-from npbackup.__version__ import __version__ as npbackup_version, IS_LEGACY
+from npbackup.__version__ import version_dict
+from npbackup.__env__ import UPGRADE_DEFER_TIME
 
 logger = getLogger()
-
-UPGRADE_DEFER_TIME = 60  # Wait x seconds before we actually do the upgrade so current program could quit before being erased
 
 
 # RAW ofunctions.checksum import
@@ -44,8 +43,40 @@ def sha256sum_data(data):
     return sha256.hexdigest()
 
 
+def _get_target_id(auto_upgrade_host_identity: str, group: str) -> str:
+    """
+    Get current target information string as
+
+    {platform}/{arch}/{build_type}/{host_id}/{current_version}/{group}
+    """
+    # We'll check python_arch instead of os_arch since we build 32 bit python executables for compat reasons
+    build_type = os.environ.get("NPBACKUP_BUILD_TYPE", None)
+    if not build_type:
+        logger.critical("Cannot determine build type for upgrade processs")
+        return False
+    target = "{}/{}/{}".format(
+        get_os(),
+        version_dict["arch"],
+        version_dict["build_type"],
+        version_dict["audience"],
+    ).lower()
+    try:
+        host_id = "{}/{}/{}".format(
+            auto_upgrade_host_identity, version_dict["version"], group
+        )
+        target = "{}/{}".format(target, host_id)
+    except TypeError as exc:
+        logger.debug(f"No other information to add to target: {exc}")
+    return target
+
+
 def _check_new_version(
-    upgrade_url: str, username: str, password: str, ignore_errors: bool = False
+    upgrade_url: str,
+    username: str,
+    password: str,
+    ignore_errors: bool = False,
+    auto_upgrade_host_identity: str = None,
+    group: str = None,
 ) -> bool:
     """
     Check if we have a newer version of npbackup
@@ -56,7 +87,7 @@ def _check_new_version(
         logger.debug("Upgrade server not set")
         return None
     requestor = Requestor(upgrade_url, username, password)
-    requestor.app_name = "npbackup" + npbackup_version
+    requestor.app_name = "npbackup" + version_dict["version"]
     requestor.user_agent = __intname__
     requestor.ignore_errors = ignore_errors
     requestor.create_session(authenticated=True)
@@ -83,7 +114,10 @@ def _check_new_version(
             logger.error(msg)
         return None
 
-    result = requestor.data_model("current_version")
+    target_id = _get_target_id(
+        auto_upgrade_host_identity=auto_upgrade_host_identity, group=group
+    )
+    result = requestor.data_model("current_version", id_record=target_id)
     if result is False:
         msg = "Upgrade server didn't respond properly. Is it well configured ?"
         if ignore_errors:
@@ -101,21 +135,29 @@ def _check_new_version(
             logger.error(msg)
         return None
     else:
-        if online_version:
-            if version.parse(online_version) > version.parse(npbackup_version):
-                logger.info(
-                    "Current version %s is older than online version %s",
-                    npbackup_version,
-                    online_version,
-                )
-                return True
-            else:
-                logger.info(
-                    "Current version %s is up-to-date (online version %s)",
-                    npbackup_version,
-                    online_version,
-                )
-                return False
+        try:
+            if online_version:
+                if version.parse(online_version) > version.parse(
+                    version_dict["version"]
+                ):
+                    logger.info(
+                        "Current version %s is older than online version %s",
+                        version_dict["version"],
+                        online_version,
+                    )
+                    return True
+                else:
+                    logger.info(
+                        "Current version %s is up-to-date (online version %s)",
+                        version_dict["version"],
+                        online_version,
+                    )
+                    return False
+        except Exception as exc:
+            logger.error(
+                f"Cannot determine if online version '{online_version}' is newer than current version {version_dict['verison']}: {exc}"
+            )
+            return False
 
 
 def auto_upgrader(
@@ -139,7 +181,12 @@ def auto_upgrader(
         return False
 
     res = _check_new_version(
-        upgrade_url, username, password, ignore_errors=ignore_errors
+        upgrade_url,
+        username,
+        password,
+        ignore_errors=ignore_errors,
+        auto_upgrade_host_identity=auto_upgrade_host_identity,
+        group=group,
     )
     # Let's set a global environment variable which we can check later in metrics
     os.environ["NPBACKUP_UPGRADE_STATE"] = "0"
@@ -148,24 +195,16 @@ def auto_upgrader(
             os.environ["NPBACKUP_UPGRADE_STATE"] = "1"
         return False
     requestor = Requestor(upgrade_url, username, password)
-    requestor.app_name = "npbackup" + npbackup_version
+    requestor.app_name = "npbackup" + version_dict["version"]
     requestor.user_agent = __intname__
     requestor.create_session(authenticated=True)
 
-    # We'll check python_arch instead of os_arch since we build 32 bit python executables for compat reasons
-    arch = python_arch() if not IS_LEGACY else f"{python_arch()}-legacy"
-    build_type = os.environ.get("NPBACKUP_BUILD_TYPE", None)
-    if not build_type:
-        logger.critical("Cannot determine build type for upgrade processs")
-        return False
-    target = "{}/{}/{}".format(get_os(), arch, build_type).lower()
-    try:
-        host_id = "{}/{}/{}".format(auto_upgrade_host_identity, npbackup_version, group)
-        id_record = "{}/{}".format(target, host_id)
-    except TypeError:
-        id_record = target
+    # This allows to get the current running target identification for upgrade server to return the right file
+    target_id = _get_target_id(
+        auto_upgrade_host_identity=auto_upgrade_host_identity, group=group
+    )
 
-    file_info = requestor.data_model("upgrades", id_record=id_record)
+    file_info = requestor.data_model("upgrades", id_record=target_id)
     if not file_info:
         logger.error("Server didn't provide a file description")
         return False
@@ -179,7 +218,7 @@ def auto_upgrader(
         logger.info("No upgrade file found has been found for me :/")
         return True
 
-    file_data = requestor.requestor("download/" + id_record, raw=True)
+    file_data = requestor.requestor(f"download/{target_id}", raw=True)
     if not file_data:
         logger.error("Cannot get update file")
         return False

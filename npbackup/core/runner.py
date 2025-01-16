@@ -33,7 +33,7 @@ from npbackup.restic_metrics import (
 from npbackup.restic_wrapper import ResticRunner
 from npbackup.core.restic_source_binary import get_restic_internal_binary
 from npbackup.path_helper import CURRENT_DIR, BASEDIR
-from npbackup.__version__ import __intname__ as NAME, version_dict as version_dict
+from npbackup.__version__ import __intname__ as NAME, version_dict
 from npbackup.__debug__ import _DEBUG, exception_to_string
 
 
@@ -53,7 +53,7 @@ def metric_writer(
 
     try:
         labels = {
-            "npversion": f"{NAME}{version_dict['version']}-{version_dict['buildtype']}"
+            "npversion": f"{NAME}{version_dict['version']}-{version_dict['build_type']}"
         }
         if repo_config.g("prometheus.metrics"):
             labels["instance"] = repo_config.g("prometheus.instance")

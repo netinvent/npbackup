@@ -28,15 +28,15 @@ try:
     CURRENT_USER = psutil.Process().username()
 except Exception:
     CURRENT_USER = "unknown"
-version_string = f"{__intname__} v{__version__}-{'priv' if IS_PRIV_BUILD else 'pub'}-{sys.version_info[0]}.{sys.version_info[1]}-{python_arch()}{'-legacy' if IS_LEGACY else ''}{'-c' if IS_COMPILED else '-i'} {__build__} - {__copyright__} running as {CURRENT_USER}"
 version_dict = {
     "name": __intname__,
     "version": __version__,
-    "buildtype": "priv" if IS_PRIV_BUILD else "pub",
+    "build_type": "priv" if IS_PRIV_BUILD else "pub",
     "os": get_os_identifier(),
-    "arch": python_arch(),
+    "arch": python_arch() + ("-legacy" if IS_LEGACY else ""),
     "pv": sys.version_info,
     "comp": IS_COMPILED,
     "build": __build__,
     "copyright": __copyright__,
 }
+version_string = f"{version_dict['name']} {version_dict['version']}-{version_dict['buildtype']}-{version_dict['pv'][0]}.{version_dict['pv'][1]}-{version_dict['arch']}{'-c' if IS_COMPILED else '-i'} {version_dict['build']} - {version_dict['copyright']} running as {CURRENT_USER}"
