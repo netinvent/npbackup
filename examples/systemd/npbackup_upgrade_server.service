@@ -7,7 +7,7 @@ User=npbackup
 Group=npbackup
 
 # Set this to whatever directory you installed the upgrade_server to
-ExecStart=/opt/upgrade_server/venv/bin/python /var/npbackup_upgrade_server/upgrade_server/upgrade_server.py --config-file=/etc/npbackup_upgrade_server.conf
+ExecStart=/opt/upgrade_server/venv/bin/python /var/npbackup_upgrade_server/upgrade_server.py --config-file=/etc/npbackup_upgrade_server.conf
 WorkingDirectory=/var/npbackup_upgrade_server
 Environment="PYTHONPATH=/var/npbackup_upgrade_server"
 Restart=always
