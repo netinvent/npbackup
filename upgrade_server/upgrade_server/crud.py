@@ -114,6 +114,7 @@ def get_current_version(
 ) -> Optional[CurrentVersion]:
     try:
         version_filename, _ = _get_path_from_target_id(target_id)
+        logger.info(f"Searching for version in {version_filename}")
         if os.path.isfile(version_filename):
             with open(version_filename, "r", encoding="utf-8") as fh:
                 ver = fh.readline().strip()
