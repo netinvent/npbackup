@@ -333,6 +333,7 @@ async def download(
         platform=platform,
         arch=arch,
         build_type=build_type,
+        audience=audience,
         auto_upgrade_host_identity=auto_upgrade_host_identity,
         installed_version=installed_version,
         group=group,
