@@ -64,7 +64,7 @@ def get_current_username(credentials: HTTPBasicCredentials = Depends(security)):
 
     for user in config_dict["http_server"]["users"]:
         try:
-            if secrets.compare_digsest(
+            if secrets.compare_digest(
                 credentials.username.encode("utf-8"), user.encode("utf-8")
             ):
                 if secrets.compare_digest(
