@@ -9,7 +9,7 @@ __site__ = "https://www.netperfect.fr/npbackup"
 __description__ = "NetPerfect Backup Client"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025011501"
+__build__ = "2025011601"
 __version__ = "3.0.0-rc14"
 
 
@@ -32,7 +32,7 @@ version_dict = {
     "name": __intname__,
     "version": __version__,
     "build_type": "priv" if IS_PRIV_BUILD else "pub",
-    "os": get_os(),
+    "os": get_os().lower(),
     "arch": python_arch() + ("-legacy" if IS_LEGACY else ""),
     "pv": sys.version_info,
     "comp": IS_COMPILED,
