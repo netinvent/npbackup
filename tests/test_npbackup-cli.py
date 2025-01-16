@@ -436,7 +436,7 @@ def test_npbackup_cli_dump():
         print("DUMPED FILE", DUMP_FILE)
         print(logs)
         assert '__intname__ = "npbackup"' in str(logs), "version file seems bogus"
-        assert 'version_string = f"{__intname__}' in str(
+        assert '"pv": sys.version_info,' in str(
             logs
         ), "Version file still seems bogus"
 
