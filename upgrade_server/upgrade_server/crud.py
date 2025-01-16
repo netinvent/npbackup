@@ -70,7 +70,7 @@ def _get_path_from_target_id(target_id: ClientTargetIdentification) -> Tuple[str
     else:
         extension = "tar.gz"
 
-    expected_filename = f"npbackup-{target_id.platform.value}-{target_id.build_type.value}-{target_id.audience.value}.{extension}"
+    expected_filename = f"npbackup-{target_id.platform.value}-{target_id.arch.value}-{target_id.build_type.value}-{target_id.audience.value}.{extension}"
 
     base_path = os.path.join(
         config_dict["upgrades"]["data_root"],
