@@ -60,23 +60,37 @@ security = HTTPBasic()
 
 
 def get_current_username(credentials: HTTPBasicCredentials = Depends(security)):
-    current_username_bytes = credentials.username.encode("utf8")
-    correct_username_bytes = config_dict["http_server"]["username"].encode("utf-8")
-    is_correct_username = secrets.compare_digest(
-        current_username_bytes, correct_username_bytes
-    )
-    current_password_bytes = credentials.password.encode("utf8")
-    correct_password_bytes = config_dict["http_server"]["password"].encode("utf-8")
-    is_correct_password = secrets.compare_digest(
-        current_password_bytes, correct_password_bytes
-    )
-    if not (is_correct_username and is_correct_password):
+    authenticated_user = None
+    
+
+    for user in config_dict["http_server"]["users"]:
+        try:
+            if secrets.compare_digsest(credentials.username.encode("utf-8"), user.encode("utf-8")):
+                if secrets.compare_digest(credentials.password.encode("utf-8"), config_dict["http_server"]["users"]["user"]["password"].encode("utf-8")):
+                    authenticated_user = user
+                    break
+        except Exception as exc:
+            logger.info(f"Failed to check user: {exc}")
+
+  
+    if authenticated_user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Basic"},
         )
     return credentials.username
+
+
+def get_user_permissions(username: str):
+    """
+    Returns a list of permissions
+    """
+    try:
+        return config_dict["http_server"]["users"][username]["permissions"]
+    except Exception as exc:
+        logger.error(f"Failed to get user permissions: {exc}")
+        return []
 
 
 @app.get("/")
@@ -139,9 +153,18 @@ async def current_version(
         client_ip = x_forwarded_for
     else:
         client_ip = request.client.host
+
+    try:
+        has_permission = True if audience.value in get_user_permissions(auth)["audience"] else False
+    except Exception as exc:
+        logger.error(f"Failed to get user permissions: {exc}")
+        has_permission = False
+
     data = {
         "action": "check_version",
         "ip": client_ip,
+        "user": auth,
+        "has_permission": has_permission,
         "auto_upgrade_host_identity": auto_upgrade_host_identity,
         "installed_version": installed_version,
         "group": group,
@@ -155,6 +178,12 @@ async def current_version(
         crud.store_host_info(config_dict["upgrades"]["statistics_file"], host_id=data)
     except KeyError:
         logger.error("No statistics file set.")
+
+    if not has_permission:
+        raise HTTPException(
+            status_code=403,
+            detail="User does not have permission to access this resource",
+        )
 
     if not crud.is_enabled():
         return CurrentVersion(version="0.00")
@@ -222,9 +251,18 @@ async def upgrades(
         client_ip = x_forwarded_for
     else:
         client_ip = request.client.host
+
+    try:
+        has_permission = True if audience.value in get_user_permissions(auth)["audience"] else False
+    except Exception as exc:
+        logger.error(f"Failed to get user permissions: {exc}")
+        has_permission = False
+
     data = {
         "action": "get_file_info",
         "ip": client_ip,
+        "user": auth,
+        "has_permission": has_permission,
         "auto_upgrade_host_identity": auto_upgrade_host_identity,
         "installed_version": installed_version,
         "group": group,
@@ -238,6 +276,12 @@ async def upgrades(
         crud.store_host_info(config_dict["upgrades"]["statistics_file"], host_id=data)
     except KeyError:
         logger.error("No statistics file set.")
+
+    if not has_permission:
+        raise HTTPException(
+            status_code=403,
+            detail="User does not have permission to access this resource",
+        )
 
     if not crud.is_enabled():
         raise HTTPException(
@@ -307,9 +351,18 @@ async def download(
         client_ip = x_forwarded_for
     else:
         client_ip = request.client.host
+
+    try:
+        has_permission = True if audience.value in get_user_permissions(auth)["audience"] else False
+    except Exception as exc:
+        logger.error(f"Failed to get user permissions: {exc}")
+        has_permission = False
+
     data = {
         "action": "download_upgrade",
         "ip": client_ip,
+        "user": auth,
+        "has_permission": has_permission,
         "auto_upgrade_host_identity": auto_upgrade_host_identity,
         "installed_version": installed_version,
         "group": group,
@@ -323,6 +376,12 @@ async def download(
         crud.store_host_info(config_dict["upgrades"]["statistics_file"], host_id=data)
     except KeyError:
         logger.error("No statistics file set.")
+
+    if not has_permission:
+        raise HTTPException(
+            status_code=403,
+            detail="User does not have permission to access this resource",
+        )
 
     if not crud.is_enabled():
         raise HTTPException(
