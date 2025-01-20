@@ -297,14 +297,14 @@ def auto_upgrader(
             f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
             f'mv -f "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
             f'echo "Copying optional configuration files from {backup_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
-            rf'find "{backup_dist}" -name "*.conf" -exec cp --parents {{}} "{CURRENT_DIR}" \; '
+            rf'find "{backup_dist}" -name "*.conf" -exec cp --parents {{}} "{CURRENT_DIR}" \; ;'
             f'echo "Adding executable bit to new executable" >> "{log_file}" 2>&1 && '
             f'chmod +x "{CURRENT_EXECUTABLE}" >> "{log_file}" 2>&1 && '
             f'echo "Loading new executable {CURRENT_EXECUTABLE} --version" >> "{log_file}" 2>&1 && '
             f'"{CURRENT_EXECUTABLE}" --version >> "{log_file}" 2>&1; '
             f"if [ $? -ne 0 ]; then "
             f'echo "New executable failed. Rolling back" >> "{log_file}" 2>&1 && '
-            f'rm -f "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
+            f'rm -rf "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
             f'mv -f "{backup_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1; '
             f" else "
             f'echo "Upgrade successful" >> "{log_file}" 2>&1 && '
