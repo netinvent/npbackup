@@ -4,22 +4,18 @@ http_server:
   listen: 0.0.0.0
   port: 8080
   users:
-    - upgrade_client:
+    - username: upgrade_client_user
       password: super_secret_password
       permissions:
-      - audience:
+        audience:
         - private
         - public
 
+
 upgrades:
-  # Build dir should contain the following structure
-  # /VERSION
-  # VERSION is a file containing a single line with the currently built NPBackup version, example: 2.2.0
-  # /{platform}/{arch}/{binary}/{audience}
-  # Current platforms are 'windows', 'linux'
-  # Current arches are 'x64', 'x86', 'arm' and 'arm64'
-  # In each folder there should be a npbackup or npbackup.exe binary depending on the platform
   data_root: /var/npbackup_upgrade_server/dist
   # We'll store a CSV containing backup clients that upgrade here
   statistics_file: /var/npbackup_upgrade_server/stats.csv
+
+  # See github wiki for more explanation of the contents of data_root dir
 

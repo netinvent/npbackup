@@ -65,11 +65,11 @@ def get_current_username(credentials: HTTPBasicCredentials = Depends(security)):
     for user in config_dict["http_server"]["users"]:
         try:
             if secrets.compare_digest(
-                credentials.username.encode("utf-8"), user.encode("utf-8")
+                credentials.username.encode("utf-8"), user.get("username").encode("utf-8")
             ):
                 if secrets.compare_digest(
                     credentials.password.encode("utf-8"),
-                    config_dict["http_server"]["users"]["user"]["password"].encode(
+                    user.get("password").encode(
                         "utf-8"
                     ),
                 ):
@@ -92,10 +92,14 @@ def get_user_permissions(username: str):
     Returns a list of permissions
     """
     try:
-        return config_dict["http_server"]["users"][username]["permissions"]
+        for user in config_dict["http_server"]["users"]:
+            if user.get("username") == username:
+                return user.get("permissions")
     except Exception as exc:
-        logger.error(f"Failed to get user permissions: {exc}")
-        return []
+        logger.error(f"Failed to get user permissions from configuration file: {exc}")
+        logger.debug("Trace", exc_info=True)
+    return []
+
 
 
 @app.get("/")
@@ -161,10 +165,10 @@ async def current_version(
 
     try:
         has_permission = (
-            True if audience.value in get_user_permissions(auth)["audience"] else False
+            True if audience.value in get_user_permissions(auth).get("audience") else False
         )
     except Exception as exc:
-        logger.error(f"Failed to get user permissions: {exc}")
+        logger.error(f"Failed to get user permissions (1): {exc}")
         has_permission = False
 
     data = {
@@ -261,10 +265,10 @@ async def upgrades(
 
     try:
         has_permission = (
-            True if audience.value in get_user_permissions(auth)["audience"] else False
+            True if audience.value in get_user_permissions(auth).get("audience") else False
         )
     except Exception as exc:
-        logger.error(f"Failed to get user permissions: {exc}")
+        logger.error(f"Failed to get user permissions (2): {exc}")
         has_permission = False
 
     data = {
@@ -363,10 +367,10 @@ async def download(
 
     try:
         has_permission = (
-            True if audience.value in get_user_permissions(auth)["audience"] else False
+            True if audience.value in get_user_permissions(auth).get("audience") else False
         )
     except Exception as exc:
-        logger.error(f"Failed to get user permissions: {exc}")
+        logger.error(f"Failed to get user permissions (3): {exc}")
         has_permission = False
 
     data = {

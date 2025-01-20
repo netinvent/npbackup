@@ -99,7 +99,7 @@ def store_host_info(destination: str, host_id: dict) -> None:
         data = (
             datetime.now(timezone.utc).isoformat()
             + ","
-            + ",".join([value if value else "" for value in host_id.values()])
+            + ",".join([str(value) if value else "" for value in host_id.values()])
             + "\n"
         )
         with open(destination, "a", encoding="utf-8") as fpw:
