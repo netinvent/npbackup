@@ -868,7 +868,7 @@ def load_config(config_file: Path) -> Optional[dict]:
                 full_config, EARLIER_AES_KEY, ENCRYPTED_OPTIONS, operation="decrypt"
             )
             if full_config == False:
-                msg = "Cannot decrypt config file with earlier key"
+                msg = "Cannot decrypt config file. Looks like our keys don't match."
                 logger.critical(msg)
                 raise EnvironmentError(msg)
             else:
