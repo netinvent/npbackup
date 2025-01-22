@@ -21,7 +21,7 @@
   - Added per repo permission management
     - Repos now have backup, restore and full privileges, optionally allowing to restrict access for end users
   - Added snapshot tag to snapshot list on main window
-  - Split npbackup into separate CLI and GUI programs (GUI can also act as CLI)
+  - Split npbackup into separate CLI and GUI programs (GUI can also act as CLI via --run-as-cli)
     - Status window has been refactored so GUI now has full stdout / stderr returns from runner and backend
   - Implemented file size based exclusion
   - CLI can now fully operate in API compatible mode via --json parameter
@@ -34,9 +34,10 @@
   - New option --show-config to show inheritance in CLI mode (GUI has visual indicators)
   - Allow using external restic binary via --external-backend-binary parameter in CLI mode
   - Implemented stdin_from_command backup process which can now get exit codes of programs which output is backed up (ex: mysqldump)
+  - GUI has been improved to have a nicer UX (still we're using a native tk app)
   - GUI: Restore window
     - Restore window now also shows symlinks and irregular files
-    - Restore window now uses 40% less memory
+    - Restore window now uses 40% less memory with Python >= 3.8
     - Restore window showing up 60% faster
     - Symlinks and irregular files are now shown properly
   - Prometheus metrics / monitoring:
@@ -50,7 +51,10 @@
   - Missing exclude files will now search in current binary directory for a excludes directory
   - Splitted releases between legacy and non legacy
     - Updated legacy tcl8.6.13 to tc8.6.15
-    - Updated legacy Python 3.7 to Python 3.9 (with openssl 1.1.1)
+    - Updated legacy Python 3.7 to Python 3.9 (with openssl 1.1.1) for x64 linux builds
+  - Upgrade server
+    - Upgrade server now has multi-user and permission support
+    - Upgrade server can now override updates for targeted clients
 
 #### Fixes
   - Default exit code is now worst log level called unless specific errors are triggered
@@ -60,6 +64,7 @@
   - GUI: Restore window now closes correctly when using the window control button
   - GUI: Show anonymized repo uri in GUI
   - GUI: Exec error should always stay on top
+  - Upgrade server will now keep configuration files that are in the same directory as the binary
 
 #### Misc
   - Current backup state now shows more precise backup state, including last backup date when relevant
