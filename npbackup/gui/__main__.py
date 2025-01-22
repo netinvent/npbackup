@@ -551,7 +551,7 @@ def _main_gui(viewer_mode: bool):
         layout = [
             [
                 sg.Text(_t("main_gui.select_config_file")),
-                sg.Input(config_file, key="-config_file-"),
+                sg.Input(config_file, key="-config_file-", enable_events=True),
                 sg.FileBrowse(_t("generic.select_file")),
             ],
             [
@@ -572,7 +572,7 @@ def _main_gui(viewer_mode: bool):
                 action = event
                 config_file = Path(values["-config_file-"])
                 break
-            if event == "--LOAD--":
+            if event == "--LOAD--" or event == "-config_file-":
                 config_file = Path(values["-config_file-"])
                 if not values["-config_file-"] or not config_file.exists():
                     sg.PopupError(_t("generic.file_does_not_exist"), keep_on_top=True)
