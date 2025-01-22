@@ -408,7 +408,7 @@ class NPBackupRunner:
         elif level == "debug":
             logger.debug(msg)
         else:
-            raise ValueError("Bogus log level given {level}")
+            raise ValueError(f"Bogus log level given {level}")
 
         if msg is None:
             raise ValueError("None log message received")
