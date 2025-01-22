@@ -859,7 +859,9 @@ class ResticRunner:
         result, output = self.executor(cmd, method="monitor")
         if result:
             if build_type in ["gui", "viewer"]:
-                msg = f"Successfully listed snapshot {snapshot} content (not showed here)"
+                msg = (
+                    f"Successfully listed snapshot {snapshot} content (not showed here)"
+                )
             else:
                 msg = f"Successfully listed snapshot {snapshot} content:\n{output}"
         else:

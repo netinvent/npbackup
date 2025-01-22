@@ -65,13 +65,12 @@ def get_current_username(credentials: HTTPBasicCredentials = Depends(security)):
     for user in config_dict["http_server"]["users"]:
         try:
             if secrets.compare_digest(
-                credentials.username.encode("utf-8"), user.get("username").encode("utf-8")
+                credentials.username.encode("utf-8"),
+                user.get("username").encode("utf-8"),
             ):
                 if secrets.compare_digest(
                     credentials.password.encode("utf-8"),
-                    user.get("password").encode(
-                        "utf-8"
-                    ),
+                    user.get("password").encode("utf-8"),
                 ):
                     authenticated_user = user
                     break
@@ -99,7 +98,6 @@ def get_user_permissions(username: str):
         logger.error(f"Failed to get user permissions from configuration file: {exc}")
         logger.debug("Trace", exc_info=True)
     return []
-
 
 
 @app.get("/")
@@ -165,7 +163,9 @@ async def current_version(
 
     try:
         has_permission = (
-            True if audience.value in get_user_permissions(auth).get("audience") else False
+            True
+            if audience.value in get_user_permissions(auth).get("audience")
+            else False
         )
     except Exception as exc:
         logger.error(f"Failed to get user permissions (1): {exc}")
@@ -265,7 +265,9 @@ async def upgrades(
 
     try:
         has_permission = (
-            True if audience.value in get_user_permissions(auth).get("audience") else False
+            True
+            if audience.value in get_user_permissions(auth).get("audience")
+            else False
         )
     except Exception as exc:
         logger.error(f"Failed to get user permissions (2): {exc}")
@@ -367,7 +369,9 @@ async def download(
 
     try:
         has_permission = (
-            True if audience.value in get_user_permissions(auth).get("audience") else False
+            True
+            if audience.value in get_user_permissions(auth).get("audience")
+            else False
         )
     except Exception as exc:
         logger.error(f"Failed to get user permissions (3): {exc}")
