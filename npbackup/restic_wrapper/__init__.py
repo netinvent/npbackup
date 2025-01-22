@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025010901"
-__version__ = "2.3.5"
+__build__ = "2025012201"
+__version__ = "2.3.6"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -23,6 +23,7 @@ from functools import wraps
 from command_runner import command_runner
 from ofunctions.misc import BytesConverter, fn_name
 from npbackup.__debug__ import _DEBUG
+from npbackup.__version__ import build_type
 from npbackup.__env__ import FAST_COMMANDS_TIMEOUT, CHECK_INTERVAL, HEARTBEAT_INTERVAL
 from npbackup.path_helper import CURRENT_DIR
 from npbackup.restic_wrapper import schema
@@ -857,7 +858,10 @@ class ResticRunner:
         cmd = "ls {}".format(snapshot)
         result, output = self.executor(cmd, method="monitor")
         if result:
-            msg = f"Successfully listed snapshot {snapshot} content:\n{output}"
+            if build_type in ["gui", "viewer"]:
+                msg = f"Successfully listed snapshot {snapshot} content (not showed here)"
+            else:
+                msg = f"Successfully listed snapshot {snapshot} content:\n{output}"
         else:
             msg = f"Could not list snapshot {snapshot} content:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
