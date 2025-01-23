@@ -1968,6 +1968,13 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             [
                 sg.Text("", size=(40, 1)),
                 sg.Text(
+                    "Ex: /var/lib/node_exporter/textfile_collector/npbackup.prom",
+                    size=(50, 1),
+                ),
+            ],
+            [
+                sg.Text("", size=(40, 1)),
+                sg.Text(
                     "Ex: https://push.domain.tld/metrics/job/${BACKUP_JOB}",
                     size=(50, 1),
                 ),
