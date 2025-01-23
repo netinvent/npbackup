@@ -15,7 +15,7 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "11.2.2"
+      "version": "11.4.0"
     },
     {
       "type": "panel",
@@ -67,18 +67,25 @@
   "description": "Show status of restic backups done with NPBackup",
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "gnetId": 11064,
   "graphTooltip": 0,
   "id": null,
-  "links": [],
-  "liveNow": false,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": false,
+      "tags": [],
+      "targetBlank": true,
+      "title": "NPBackup",
+      "tooltip": "Give us a star",
+      "type": "link",
+      "url": "https://github.com/netinvent/npbackup"
+    }
+  ],
   "panels": [
     {
       "collapsed": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "t3jzheN4z"
-      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -87,15 +94,6 @@
       },
       "id": 10,
       "panels": [],
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "t3jzheN4z"
-          },
-          "refId": "A"
-        }
-      ],
       "title": "NPBackup Success & Failures",
       "type": "row"
     },
@@ -168,7 +166,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -256,7 +254,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -338,7 +336,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -428,7 +426,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -512,7 +510,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -592,7 +590,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -674,7 +672,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -756,7 +754,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -838,7 +836,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -920,7 +918,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -1002,7 +1000,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -1084,7 +1082,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -1166,7 +1164,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -1242,7 +1240,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -1251,7 +1249,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum by (action) (count_over_time(npbackup_exec_state{backup_job=~\"$backup_job\",__tenant_id__=~\"$tenant\"}[$__range:]))",
+          "expr": "count by (action) (count_over_time(npbackup_exec_state{backup_job=~\"$backup_job\",__tenant_id__=~\"$tenant\"}[$__range:]))",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -1293,6 +1291,10 @@
               {
                 "color": "blue",
                 "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 1
               }
             ]
           },
@@ -1326,7 +1328,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -1335,7 +1337,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "count(deriv(count_over_time(group by (backup_job) (npbackup_exec_state{})[4d:])[1h:]) < 0)",
+          "expr": "count(deriv(count_over_time(group by (backup_job) (npbackup_exec_state{__tenant_id__=~\"$tenant\"})[4d:])[1h:]) < 0)",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -1376,6 +1378,10 @@
               {
                 "color": "blue",
                 "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 1
               }
             ]
           },
@@ -1409,7 +1415,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -1418,7 +1424,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "count(deriv(count_over_time(group by (backup_job) (npbackup_exec_state{})[30d:])[1h:]) < 0)",
+          "expr": "count(deriv(count_over_time(group by (backup_job) (restic_backup_failure{__tenant_id__=~\"$tenant\"})[30d:])[1h:]) < 0)",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -1491,12 +1497,12 @@
         "showHeader": true,
         "sortBy": [
           {
-            "desc": true,
-            "displayName": "npversion"
+            "desc": false,
+            "displayName": "action"
           }
         ]
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -1514,7 +1520,7 @@
           "refId": "A"
         }
       ],
-      "title": "Successful runs",
+      "title": "Successful Operations",
       "transformations": [
         {
           "id": "calculateField",
@@ -1609,8 +1615,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "dark-red",
-                "value": null
+                "color": "dark-red"
               }
             ]
           },
@@ -1644,7 +1649,7 @@
           }
         ]
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -1653,7 +1658,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "count_over_time((npbackup_exec_state{backup_job=~\"$backup_job\",__tenant_id__=~\"$tenant\",action=~\"$action\"} > 0)[$__range:])",
+          "expr": "count_over_time((npbackup_exec_state{backup_job=~\"$backup_job\",__tenant_id__=~\"$tenant\"} > 0)[$__range:])",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1662,7 +1667,7 @@
           "refId": "A"
         }
       ],
-      "title": "Failures",
+      "title": "Failed Operations",
       "transformations": [
         {
           "id": "calculateField",
@@ -1731,10 +1736,6 @@
     },
     {
       "collapsed": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "t3jzheN4z"
-      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1744,16 +1745,6 @@
       "id": 19,
       "panels": [],
       "repeat": "config",
-      "repeatDirection": "h",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "t3jzheN4z"
-          },
-          "refId": "A"
-        }
-      ],
       "title": "Backup operations",
       "type": "row"
     },
@@ -1784,8 +1775,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "dark-red",
-                "value": null
+                "color": "dark-red"
               }
             ]
           },
@@ -1819,7 +1809,7 @@
           }
         ]
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -1828,7 +1818,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "count_over_time(group by (backup_job) (npbackup_exec_state{action=\"backup\"})[4d:]) < 1",
+          "expr": "deriv(count_over_time(group by (backup_job) (npbackup_exec_state{__tenant_id__=~\"$tenant\"})[4d:])[1h:]) < 0",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1844,10 +1834,16 @@
           "options": {
             "alias": "Backup Date",
             "binary": {
-              "left": "timestamp",
+              "left": {
+                "matcher": {
+                  "id": "byName",
+                  "options": "timestamp"
+                }
+              },
               "operator": "*",
-              "reducer": "sum",
-              "right": "1000"
+              "right": {
+                "fixed": "1000"
+              }
             },
             "mode": "binary",
             "reduce": {
@@ -1876,12 +1872,14 @@
               "Time": true,
               "Value": true,
               "__tenant_id__": false,
+              "backup_job": false,
               "exported_instance": true,
               "exported_job": true,
               "instance": true,
               "job": true,
               "timestamp": true
             },
+            "includeByName": {},
             "indexByName": {
               "Backup Date": 0,
               "Time": 1,
@@ -1927,8 +1925,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "dark-red",
-                "value": null
+                "color": "dark-red"
               }
             ]
           },
@@ -1962,7 +1959,7 @@
           }
         ]
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -1971,7 +1968,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "deriv(count_over_time(group by (backup_job) (npbackup_exec_state{})[30d:])[1h:]) < 0",
+          "expr": "deriv(count_over_time(group by (backup_job) (restic_backup_failure{__tenant_id__=~\"$tenant\"})[30d:])[1h:]) < 0",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -2061,7 +2058,7 @@
             "axisPlacement": "auto",
             "barAlignment": 0,
             "barWidthFactor": 0.6,
-            "drawStyle": "bars",
+            "drawStyle": "line",
             "fillOpacity": 100,
             "gradientMode": "none",
             "hideFrom": {
@@ -2092,8 +2089,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2114,17 +2110,21 @@
       "id": 24,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+          "calcs": [
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "sortBy": "Last",
+          "sortDesc": true
         },
         "tooltip": {
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "10.4.2",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -2142,7 +2142,7 @@
           "refId": "A"
         }
       ],
-      "title": "Durations",
+      "title": "Action Duration",
       "type": "timeseries"
     },
     {
@@ -2164,7 +2164,7 @@
             "axisPlacement": "auto",
             "barAlignment": 0,
             "barWidthFactor": 0.6,
-            "drawStyle": "bars",
+            "drawStyle": "line",
             "fillOpacity": 100,
             "gradientMode": "none",
             "hideFrom": {
@@ -2195,8 +2195,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2217,17 +2216,21 @@
       "id": 22,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+          "calcs": [
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "sortBy": "Last",
+          "sortDesc": true
         },
         "tooltip": {
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "10.4.2",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -2298,8 +2301,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2320,17 +2322,21 @@
       "id": 26,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+          "calcs": [
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "sortBy": "Last",
+          "sortDesc": true
         },
         "tooltip": {
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "10.4.2",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -2400,8 +2406,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2422,17 +2427,21 @@
       "id": 45,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+          "calcs": [
+            "last"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "sortBy": "Last",
+          "sortDesc": true
         },
         "tooltip": {
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "10.4.2",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -2502,8 +2511,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2534,7 +2542,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "10.4.2",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -2646,8 +2654,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2678,7 +2685,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "10.4.2",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -2728,10 +2735,6 @@
     },
     {
       "collapsed": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "t3jzheN4z"
-      },
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -2740,15 +2743,6 @@
       },
       "id": 11,
       "panels": [],
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "t3jzheN4z"
-          },
-          "refId": "A"
-        }
-      ],
       "title": "Global Tenant stats",
       "type": "row"
     },
@@ -2801,8 +2795,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2830,16 +2823,14 @@
           ],
           "displayMode": "table",
           "placement": "right",
-          "showLegend": true,
-          "sortBy": "Mean",
-          "sortDesc": true
+          "showLegend": true
         },
         "tooltip": {
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "9.2.3",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -2908,8 +2899,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2938,7 +2928,7 @@
           "displayMode": "table",
           "placement": "right",
           "showLegend": true,
-          "sortBy": "Mean",
+          "sortBy": "Max",
           "sortDesc": true
         },
         "tooltip": {
@@ -2946,7 +2936,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "10.4.2",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": {
@@ -2968,7 +2958,7 @@
     }
   ],
   "refresh": "",
-  "schemaVersion": 39,
+  "schemaVersion": 40,
   "tags": [
     "backups",
     "restic"
@@ -2982,7 +2972,6 @@
           "uid": "${DS_MIMIR}"
         },
         "definition": "label_values(restic_backup_failure,__tenant_id__)",
-        "hide": 0,
         "includeAll": true,
         "multi": true,
         "name": "tenant",
@@ -2994,8 +2983,6 @@
         },
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
         "type": "query"
       },
       {
@@ -3005,7 +2992,6 @@
           "uid": "${DS_MIMIR}"
         },
         "definition": "label_values(restic_backup_failure{__tenant_id__=~\"$tenant\"},backup_job)",
-        "hide": 0,
         "includeAll": true,
         "multi": true,
         "name": "backup_job",
@@ -3017,8 +3003,6 @@
         },
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
         "type": "query"
       },
       {
@@ -3028,7 +3012,6 @@
           "uid": "${DS_MIMIR}"
         },
         "definition": "label_values(npbackup_exec_state,action)",
-        "hide": 0,
         "includeAll": true,
         "label": "action",
         "multi": true,
@@ -3041,8 +3024,6 @@
         },
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
         "type": "query"
       },
       {
@@ -3052,7 +3033,6 @@
           "uid": "${DS_MIMIR}"
         },
         "definition": "label_values(npbackup_exec_state,action)",
-        "hide": 0,
         "includeAll": true,
         "multi": true,
         "name": "Filters",
@@ -3064,8 +3044,6 @@
         },
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
         "type": "query"
       }
     ]
@@ -3074,34 +3052,10 @@
     "from": "now-15h",
     "to": "now"
   },
-  "timepicker": {
-    "refresh_intervals": [
-      "5s",
-      "10s",
-      "30s",
-      "1m",
-      "5m",
-      "15m",
-      "30m",
-      "1h",
-      "2h",
-      "1d"
-    ],
-    "time_options": [
-      "5m",
-      "15m",
-      "1h",
-      "6h",
-      "12h",
-      "24h",
-      "2d",
-      "7d",
-      "30d"
-    ]
-  },
+  "timepicker": {},
   "timezone": "",
-  "title": "Sauvegardes NPBackup v3 20241104",
+  "title": "NPBackup v3",
   "uid": "XNGJDIgRx",
-  "version": 5,
+  "version": 25,
   "weekStart": ""
 }
