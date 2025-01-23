@@ -80,18 +80,24 @@ def _check_new_version(
     else:
         logger.debug("Upgrade server not set")
         return None
-    requestor = Requestor(upgrade_url, username, password)
-    requestor.app_name = "npbackup" + version_dict["version"]
-    requestor.user_agent = __intname__
-    requestor.ignore_errors = ignore_errors
-    requestor.create_session(authenticated=True)
-    server_ident = requestor.data_model()
-    if server_ident is False:
-        if ignore_errors:
-            logger.info("Cannt reach upgrade server")
-        else:
-            logger.error("Cannot reach upgrade server")
+    try:
+        requestor = Requestor(upgrade_url, username, password)
+        requestor.app_name = "npbackup" + version_dict["version"]
+        requestor.user_agent = __intname__
+        requestor.ignore_errors = ignore_errors
+        requestor.create_session(authenticated=True)
+        server_ident = requestor.data_model()
+        if server_ident is False:
+            if ignore_errors:
+                logger.info("Cannt reach upgrade server")
+            else:
+                logger.error("Cannot reach upgrade server")
         return None
+    except Exception as exc:
+        logger.error(f"Upgrade server response '{server_ident}' is bogus: {exc}")
+        logger.debug("Trace", exc_info=True)
+        return None
+    
     try:
         if not server_ident["app"] == "npbackup.upgrader":
             msg = "Current server is not a recognized NPBackup update server"
