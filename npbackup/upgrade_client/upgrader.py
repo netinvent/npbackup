@@ -97,7 +97,7 @@ def _check_new_version(
         logger.error(f"Upgrade server response '{server_ident}' is bogus: {exc}")
         logger.debug("Trace", exc_info=True)
         return None
-    
+
     try:
         if not server_ident["app"] == "npbackup.upgrader":
             msg = "Current server is not a recognized NPBackup update server"
