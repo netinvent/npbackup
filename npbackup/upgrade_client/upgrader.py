@@ -241,8 +241,8 @@ def auto_upgrader(
             if file_type != "script":
                 return True
 
-    logger.info(f"Downloading upgrade file for target {target_id}")
     for file_type in ("script", "archive"):
+        logger.info(f"Downloading {file_type} file for target {target_id}")
         file_info[file_type]["local_fs_path"] = None
         file_data[file_type] = requestor.requestor(
             f"download/{file_type}/{target_id}", raw=True
