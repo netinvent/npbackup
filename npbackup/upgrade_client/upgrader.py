@@ -236,7 +236,7 @@ def auto_upgrader(
             else:
                 logger.error(f"Cannot get file description for {file_type}")
                 return False
-        if file_info[file_type]["sha256sum"] is None:
+        if file_info[file_type] and file_info[file_type]["sha256sum"] is None:
             logger.info(f"No {file_type} file found has been found for me :/")
             if file_type != "script":
                 return True
