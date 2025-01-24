@@ -275,14 +275,13 @@ def auto_upgrader(
     log_file = os.path.join(
         tempfile.gettempdir(), f"npbackup_upgrader.{upgrade_date}.log"
     )
-    logger.info("Logging upgrade to %s", log_file)
 
     # We'll extract the downloaded archive to a temporary directory which should contain the base directory
     # eg /tmp/npbackup_upgrade_dist/npbackup-cli
     upgrade_dist = os.path.join(tempfile.gettempdir(), "npbackup_upgrade_dist")
     try:
         # File is a zip or tar.gz and should contain a single directory 'npbackup-cli' or 'npbackup-gui' with all files in it
-        downloaded_archive = file_data["archive"]["local_fs_path"]
+        downloaded_archive = file_info["archive"]["local_fs_path"]
         shutil.unpack_archive(downloaded_archive, upgrade_dist)
     except Exception as exc:
         logger.critical(f"Upgrade failed. Cannot uncompress downloaded dist: {exc}")
@@ -302,6 +301,8 @@ def auto_upgrader(
     backup_dist = os.path.join(
         tempfile.gettempdir(), "npbackup_backup_dist_" + random_string(6)
     )
+
+    logger.info(f"Logging upgrade to {log_file}")
 
     """
     Inplace upgrade script, gets executed after main program has exited if no upgrade script is provided
