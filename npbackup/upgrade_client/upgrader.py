@@ -217,7 +217,9 @@ def auto_upgrader(
         )
         if not file_info[file_type]:
             if file_type == "script":
-                logger.error("No upgrade script found. We'll try to use the internal script")
+                logger.error(
+                    "No upgrade script found. We'll try to use the internal script"
+                )
             else:
                 logger.error(f"Cannot get file description for {file_type}")
                 return False
@@ -228,7 +230,9 @@ def auto_upgrader(
         except (KeyError, TypeError):
             logger.debug("Trace", exc_info=True)
             if file_type == "script":
-                logger.info("No upgrade script found. We'll try to use the internal script")
+                logger.info(
+                    "No upgrade script found. We'll try to use the internal script"
+                )
             else:
                 logger.error(f"Cannot get file description for {file_type}")
                 return False
@@ -244,7 +248,9 @@ def auto_upgrader(
         )
         if not file_data[file_type]:
             if file_type == "script":
-                logger.info("No upgrade script found. We'll try to use the internal script")
+                logger.info(
+                    "No upgrade script found. We'll try to use the internal script"
+                )
             else:
                 logger.error("Cannot get update file")
                 return False
@@ -275,7 +281,8 @@ def auto_upgrader(
     upgrade_dist = os.path.join(tempfile.gettempdir(), "npbackup_upgrade_dist")
     try:
         # File is a zip or tar.gz and should contain a single directory 'npbackup-cli' or 'npbackup-gui' with all files in it
-        shutil.unpack_archive(file_data["archive"]["local_fs_path"], upgrade_dist)
+        downloaded_archive = file_data["archive"]["local_fs_path"]
+        shutil.unpack_archive(downloaded_archive, upgrade_dist)
     except Exception as exc:
         logger.critical(f"Upgrade failed. Cannot uncompress downloaded dist: {exc}")
         return False
