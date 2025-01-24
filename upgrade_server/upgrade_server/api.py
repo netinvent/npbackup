@@ -26,6 +26,7 @@ from upgrade_server.models.files import (
     Arch,
     BuildType,
     Audience,
+    Artefact,
 )
 from upgrade_server.models.oper import CurrentVersion
 import upgrade_server.crud as crud
@@ -179,6 +180,7 @@ async def current_version(
         "auto_upgrade_host_identity": auto_upgrade_host_identity,
         "installed_version": installed_version,
         "group": group,
+        "artefact": None,
         "platform": platform.value,
         "arch": arch.value,
         "build": build_type.value,
@@ -224,27 +226,28 @@ async def current_version(
 
 
 @app.get(
-    "/upgrades/{platform}/{arch}/{build_type}/{audience}",
+    "/info/{artefact}/{platform}/{arch}/{build_type}/{audience}",
     response_model=Union[FileSend, dict],
     status_code=200,
 )
 @app.get(
-    "/upgrades/{platform}/{arch}/{build_type}/{audience}/{auto_upgrade_host_identity}",
+    "/info/{artefact}/{platform}/{arch}/{build_type}/{audience}/{auto_upgrade_host_identity}",
     response_model=Union[FileSend, dict],
     status_code=200,
 )
 @app.get(
-    "/upgrades/{platform}/{arch}/{build_type}/{audience}/{auto_upgrade_host_identity}/{installed_version}",
+    "/info/{artefact}/{platform}/{arch}/{build_type}/{audience}/{auto_upgrade_host_identity}/{installed_version}",
     response_model=Union[FileSend, dict],
     status_code=200,
 )
 @app.get(
-    "/upgrades/{platform}/{arch}/{build_type}/{audience}/{auto_upgrade_host_identity}/{installed_version}/{group}",
+    "/info/{artefact}/{platform}/{arch}/{build_type}/{audience}/{auto_upgrade_host_identity}/{installed_version}/{group}",
     response_model=Union[FileSend, dict],
     status_code=200,
 )
 async def upgrades(
     request: Request,
+    artefact: Artefact,
     platform: Platform,
     arch: Arch,
     build_type: BuildType,
@@ -281,6 +284,7 @@ async def upgrades(
         "auto_upgrade_host_identity": auto_upgrade_host_identity,
         "installed_version": installed_version,
         "group": group,
+        "artefact": artefact.value,
         "platform": platform.value,
         "arch": arch.value,
         "build": build_type.value,
@@ -304,6 +308,7 @@ async def upgrades(
         )
 
     file = FileGet(
+        artefact=artefact,
         platform=platform,
         arch=arch,
         build_type=build_type,
@@ -328,27 +333,28 @@ async def upgrades(
 
 
 @app.get(
-    "/download/{platform}/{arch}/{build_type}/{audience}",
+    "/download/{artefact}/{platform}/{arch}/{build_type}/{audience}",
     response_model=FileSend,
     status_code=200,
 )
 @app.get(
-    "/download/{platform}/{arch}/{build_type}/{audience}/{auto_upgrade_host_identity}",
+    "/download/{artefact}/{platform}/{arch}/{build_type}/{audience}/{auto_upgrade_host_identity}",
     response_model=FileSend,
     status_code=200,
 )
 @app.get(
-    "/download/{platform}/{arch}/{build_type}/{audience}/{auto_upgrade_host_identity}/{installed_version}",
+    "/download/{artefact}/{platform}/{arch}/{build_type}/{audience}/{auto_upgrade_host_identity}/{installed_version}",
     response_model=FileSend,
     status_code=200,
 )
 @app.get(
-    "/download/{platform}/{arch}/{build_type}/{audience}/{auto_upgrade_host_identity}/{installed_version}/{group}",
+    "/download/{artefact}/{platform}/{arch}/{build_type}/{audience}/{auto_upgrade_host_identity}/{installed_version}/{group}",
     response_model=FileSend,
     status_code=200,
 )
 async def download(
     request: Request,
+    artefact: Artefact,
     platform: Platform,
     arch: Arch,
     build_type: BuildType,
@@ -385,6 +391,7 @@ async def download(
         "auto_upgrade_host_identity": auto_upgrade_host_identity,
         "installed_version": installed_version,
         "group": group,
+        "artefact": artefact.value,
         "platform": platform.value,
         "arch": arch.value,
         "build": build_type.value,
@@ -408,6 +415,7 @@ async def download(
         )
 
     file = FileGet(
+        artefact=artefact,
         platform=platform,
         arch=arch,
         build_type=build_type,

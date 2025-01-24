@@ -7,12 +7,17 @@ __intname__ = "npbackup.upgrade_server.models.files"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025011601"
+__build__ = "2025012401"
 
 
 from typing import Optional
 from enum import Enum
 from pydantic import BaseModel, constr
+
+
+class Artefact(Enum):
+    script = "script"
+    archive = "archive"
 
 
 class Platform(Enum):
@@ -46,10 +51,11 @@ class ClientTargetIdentification(BaseModel):
 
 
 class FileGet(ClientTargetIdentification):
-    pass
+    artefact: Artefact
 
 
 class FileSend(ClientTargetIdentification):
+    artefact: Artefact
     sha256sum: constr(min_length=64, max_length=64)
     filename: str
     file_length: int

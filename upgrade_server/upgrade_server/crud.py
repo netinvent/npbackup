@@ -7,7 +7,7 @@ __intname__ = "npbackup.upgrade_server.crud"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025011601"
+__build__ = "2025012401"
 
 
 import os
@@ -61,16 +61,27 @@ def _get_path_from_target_id(target_id: ClientTargetIdentification) -> Tuple[str
     """
     Determine specific or generic upgrade path depending on target_id sent by client
 
-    NPBackup filenames are
-    npbackup-{platform}-{arch}-{build_type}-{audience}.{archive_extension}"
+    If a specific sub path is found, we'll return that one, otherwise we'll return the default path
+
+    Possible archive names are:
+    npbackup-{platform}-{arch}-{build_type}-{audience}.{archive_extension}
+
+    Possible upgrade script names are:
+    npbackup-{platform}-{arch}-{build_type}-{audience}.sh
+    npbackup-{platform}-{arch}-{build_type}-{audience}.cmd
+    npbackup-{platform}.sh
+    npbackup-{platform}.cmd
 
     """
     if target_id.platform.value == "windows":
-        extension = "zip"
+        archive_extension = "zip"
+        script_extension = "cmd"
     else:
-        extension = "tar.gz"
+        archive_extension = "tar.gz"
+        script_extension = "sh"
 
-    expected_filename = f"npbackup-{target_id.platform.value}-{target_id.arch.value}-{target_id.build_type.value}-{target_id.audience.value}.{extension}"
+    expected_archive_filename = f"npbackup-{target_id.platform.value}-{target_id.arch.value}-{target_id.build_type.value}-{target_id.audience.value}.{archive_extension}"
+    expected_script_filename = f"npbackup-{target_id.platform.value}-{target_id.arch.value}-{target_id.build_type.value}-{target_id.audience.value}.{script_extension}"
 
     base_path = os.path.join(
         config_dict["upgrades"]["data_root"],
@@ -88,10 +99,12 @@ def _get_path_from_target_id(target_id: ClientTargetIdentification) -> Tuple[str
                 base_path = possibile_sub_path
                 break
 
-    archive_path = os.path.join(base_path, expected_filename)
+    archive_path = os.path.join(base_path, expected_archive_filename)
+    script_path = os.path.join(base_path, expected_script_filename)
+
     version_file_path = os.path.join(base_path, "VERSION")
 
-    return version_file_path, archive_path
+    return version_file_path, archive_path, script_path
 
 
 def store_host_info(destination: str, host_id: dict) -> None:
@@ -113,7 +126,7 @@ def get_current_version(
     target_id: ClientTargetIdentification,
 ) -> Optional[CurrentVersion]:
     try:
-        version_filename, _ = _get_path_from_target_id(target_id)
+        version_filename, _, _ = _get_path_from_target_id(target_id)
         logger.info(f"Searching for version in {version_filename}")
         if os.path.isfile(version_filename):
             with open(version_filename, "r", encoding="utf-8") as fh:
@@ -131,14 +144,10 @@ def get_file(
     file: FileGet, content: bool = False
 ) -> Optional[Union[FileSend, bytes, dict]]:
 
-    _, archive_path = _get_path_from_target_id(file)
+    _, archive_path, script_path = _get_path_from_target_id(file)
 
-    logger.info(
-        f"Searching for file {'info' if not content else 'content'} in {archive_path}"
-    )
-    if not os.path.isfile(archive_path):
-        logger.info(f"No upgrade file found in {archive_path}")
-        return {
+    unknown_artefact = {
+            "artefact": file.artefact.value,
             "arch": file.arch.value,
             "platform": file.platform.value,
             "build_type": file.build_type.value,
@@ -148,19 +157,33 @@ def get_file(
             "file_length": 0,
         }
 
-    with open(archive_path, "rb") as fh:
-        bytes = fh.read()
+    if file.artefact.value == "archive":
+        artefact_path = archive_path
+    elif file.artefact.value == "script":
+        artefact_path = script_path
+    else:
+        logger.error(f"Unknown artefact type {file.artefact.value}")
+        return unknown_artefact
+    logger.info(
+        f"Searching for file {'info' if not content else 'content'} in {artefact_path}"
+    )
+    if not os.path.isfile(artefact_path):
+        logger.info(f"No upgrade file found in {artefact_path}")
+        return unknown_artefact
+
+    with open(artefact_path, "rb") as fh:
+        file_conten_bytes = fh.read()
         if content:
-            return bytes
-        length = len(bytes)
-        sha256 = sha256sum_data(bytes)
+            return file_conten_bytes
+        length = len(file_conten_bytes)
+        sha256 = sha256sum_data(file_conten_bytes)
         file_send = FileSend(
             arch=file.arch.value,
             platform=file.platform.value,
             build_type=file.build_type.value,
             audience=file.audience.value,
             sha256sum=sha256,
-            filename=os.path.basename(archive_path),
+            filename=os.path.basename(artefact_path),
             file_length=length,
         )
         return file_send
