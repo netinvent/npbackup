@@ -56,6 +56,6 @@ class FileGet(ClientTargetIdentification):
 
 class FileSend(ClientTargetIdentification):
     artefact: Artefact
-    sha256sum: constr(min_length=64, max_length=64)
-    filename: str
+    sha256sum: Optional[constr(min_length=64, max_length=64)] = None
+    filename: Optional[str] = None
     file_length: int
