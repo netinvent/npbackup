@@ -322,6 +322,21 @@ def auto_upgrader(
         logger.info(
             f"Using remote upgrade script in {file_info['script']['local_fs_path']}"
         )
+        try:
+            # We must replace the script variables with actual values
+            with open(file_info["script"]["local_fs_path"], "r") as fh:
+                script_content = fh.read()
+                script_content.replace("{CURRENT_DIR}", CURRENT_DIR)
+                script_content.replace("{CURRENT_EXECUTABLE}", CURRENT_EXECUTABLE)
+                script_content.replace("{upgrade_dist}", upgrade_dist)
+                script_content.replace("{backup_dist}", backup_dist)
+                script_content.replace("{log_file}", log_file)
+                script_content.replace("{original_args}", " ".join(sys.argv[1:]))
+            with open(file_info["script"]["local_fs_path"], "w") as fh:
+                fh.write(script_content)
+        except OSError as exc:
+            logger.error(f"Failed to replace variables in upgrade script: {exc}")
+
         if os.name == "nt":
             cmd = f'cmd /c "{file_info["script"]["local_fs_path"]}"'
         else:
@@ -349,7 +364,7 @@ def auto_upgrader(
                 f"set REPLACE_METHOD=move"
                 f") &"
                 f'echo "Loading new executable {CURRENT_EXECUTABLE} --check-config {" ".join(sys.argv[1:])}" >> "{log_file}" 2>&1 & '
-                f'"{CURRENT_EXECUTABLE}" --check-config >{" ".join(sys.argv[1:])}> "{log_file}" 2>&1 & '
+                f'"{CURRENT_EXECUTABLE}" --check-config {" ".join(sys.argv[1:])}> "{log_file}" 2>&1 & '
                 f"IF !ERRORLEVEL! NEQ 0 ( "
                 f'echo "New executable failed. Rolling back" >> "{log_file}" 2>&1 & '
                 f'IF "%REPLACE_METHOD%"=="overwrite" ( '
