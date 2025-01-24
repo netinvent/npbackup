@@ -20,8 +20,6 @@ from ofunctions.logger_utils import logger_get_logger
 import upgrade_server.api
 from upgrade_server.__debug__ import _DEBUG
 
-logger = logger_get_logger(__appname__ + ".log", debug=_DEBUG)
-
 
 if __name__ == "__main__":
     _DEV = os.environ.get("_DEV", False)
@@ -45,9 +43,26 @@ if __name__ == "__main__":
         help="Path to upgrade_server.conf file",
     )
 
+    parser.add_argument(
+        "--log-file",
+        type=str,
+        default=None,
+        required=False,
+        help="Optional path for logfile, overrides config file values",
+    )
+
     args = parser.parse_args()
     if args.dev:
         _DEV = True
+
+    if args.log_file:
+        log_file = args.log_file
+    else:
+        if os.name == "nt":
+            log_file = os.path.join(f"{__appname__}.log")
+        else:
+            log_file = f"/var/log/{__appname__}.log"
+    logger = logger_get_logger(log_file, debug=_DEBUG)
 
     if args.config_file:
         config_dict = configuration.load_config(args.config_file)
@@ -55,7 +70,10 @@ if __name__ == "__main__":
         config_dict = configuration.load_config()
 
     try:
-        logger = logger_get_logger(config_dict["http_server"]["log_file"], debug=_DEBUG)
+        if not args.log_file:
+            logger = logger_get_logger(
+                config_dict["http_server"]["log_file"], debug=_DEBUG
+            )
     except (AttributeError, KeyError, IndexError, TypeError):
         pass
 
