@@ -37,7 +37,9 @@ def is_enabled(config_dict) -> bool:
     return not os.path.isfile(path)
 
 
-def _get_path_from_target_id(config_dict, target_id: ClientTargetIdentification) -> Tuple[str, str]:
+def _get_path_from_target_id(
+    config_dict, target_id: ClientTargetIdentification
+) -> Tuple[str, str]:
     """
     Determine specific or generic upgrade path depending on target_id sent by client
 
@@ -122,8 +124,7 @@ def get_current_version(
 
 
 def get_file(
-    config_dict: dict,
-    file: FileGet, content: bool = False
+    config_dict: dict, file: FileGet, content: bool = False
 ) -> Optional[Union[FileSend, bytes, bool]]:
 
     _, archive_path, script_path = _get_path_from_target_id(config_dict, file)

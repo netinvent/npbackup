@@ -325,13 +325,15 @@ def auto_upgrader(
         try:
             # We must replace the script variables with actual values
             with open(file_info["script"]["local_fs_path"], "r") as fh:
-                script_content = fh.read()
-                script_content.replace("{CURRENT_DIR}", CURRENT_DIR)
-                script_content.replace("{CURRENT_EXECUTABLE}", CURRENT_EXECUTABLE)
-                script_content.replace("{upgrade_dist}", upgrade_dist)
-                script_content.replace("{backup_dist}", backup_dist)
-                script_content.replace("{log_file}", log_file)
-                script_content.replace("{original_args}", " ".join(sys.argv[1:]))
+                script_content = (
+                    fh.read()
+                    .replace("{CURRENT_DIR}", CURRENT_DIR)
+                    .replace("{CURRENT_EXECUTABLE}", CURRENT_EXECUTABLE)
+                    .replace("{upgrade_dist}", upgrade_dist)
+                    .replace("{backup_dist}", backup_dist)
+                    .replace("{log_file}", log_file)
+                    .replace("{original_args}", " ".join(sys.argv[1:]))
+                )
             with open(file_info["script"]["local_fs_path"], "w") as fh:
                 fh.write(script_content)
         except OSError as exc:
@@ -422,5 +424,5 @@ def auto_upgrader(
         log_file,
     )
     logger.debug(cmd)
-    deferred_command(cmd, defer_time=UPGRADE_DEFER_TIME)
+    # deferred_command(cmd, defer_time=UPGRADE_DEFER_TIME)
     sys.exit(0)

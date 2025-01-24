@@ -76,9 +76,7 @@ else:
 
 try:
     if not args.log_file:
-        logger = logger_get_logger(
-            config_dict["http_server"]["log_file"], debug=_DEBUG
-        )
+        logger = logger_get_logger(config_dict["http_server"]["log_file"], debug=_DEBUG)
 except (AttributeError, KeyError, IndexError, TypeError):
     pass
 
