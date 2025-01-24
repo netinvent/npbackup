@@ -150,7 +150,7 @@ def get_file(
         f"Searching for file {'info' if not content else 'content'} in {artefact_path}"
     )
     if not os.path.isfile(artefact_path):
-        logger.info(f"No upgrade file found in {artefact_path}")
+        logger.info(f"No {file.artefact.value} file found in {artefact_path}")
         if content:
             return False
         return unknown_artefact
