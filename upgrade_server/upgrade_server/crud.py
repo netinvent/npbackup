@@ -142,7 +142,7 @@ def get_current_version(
 
 def get_file(
     file: FileGet, content: bool = False
-) -> Optional[Union[FileSend, bytes, dict]]:
+) -> Optional[Union[FileSend, bytes, bool]]:
 
     _, archive_path, script_path = _get_path_from_target_id(file)
 
@@ -156,7 +156,7 @@ def get_file(
         filename=None,
         file_length=0,
     )
-    
+
     if file.artefact.value == "archive":
         artefact_path = archive_path
     elif file.artefact.value == "script":
@@ -169,14 +169,16 @@ def get_file(
     )
     if not os.path.isfile(artefact_path):
         logger.info(f"No upgrade file found in {artefact_path}")
+        if content:
+            return False
         return unknown_artefact
 
     with open(artefact_path, "rb") as fh:
-        file_conten_bytes = fh.read()
+        file_content_bytes = fh.read()
         if content:
-            return file_conten_bytes
-        length = len(file_conten_bytes)
-        sha256 = sha256sum_data(file_conten_bytes)
+            return file_content_bytes
+        length = len(file_content_bytes)
+        sha256 = sha256sum_data(file_content_bytes)
         file_send = FileSend(
             artefact=file.artefact.value,
             arch=file.arch.value,
