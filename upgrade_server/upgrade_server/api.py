@@ -134,7 +134,7 @@ def get_user_permissions(username: str):
 
 @app.get("/")
 async def api_root(auth=Depends(get_current_username)):
-    if crud.is_enabled():
+    if crud.is_enabled(config_dict):
         return {
             "app": __appname__,
         }
@@ -144,7 +144,7 @@ async def api_root(auth=Depends(get_current_username)):
 
 @app.get("/status")
 async def api_status():
-    if crud.is_enabled():
+    if crud.is_enabled(config_dict):
         return {
             "app": "running",
         }
@@ -229,7 +229,7 @@ async def current_version(
             detail="User does not have permission to access this resource",
         )
 
-    if not crud.is_enabled():
+    if not crud.is_enabled(config_dict):
         return CurrentVersion(version="0.00")
 
     try:
@@ -242,7 +242,7 @@ async def current_version(
             installed_version=installed_version,
             group=group,
         )
-        result = crud.get_current_version(target_id)
+        result = crud.get_current_version(config_dict, target_id)
         if not result:
             raise HTTPException(status_code=404, detail="Not found")
         return result
@@ -333,7 +333,7 @@ async def upgrades(
             detail="User does not have permission to access this resource",
         )
 
-    if not crud.is_enabled():
+    if not crud.is_enabled(config_dict):
         raise HTTPException(
             status_code=503, detail="Service is currently disabled for maintenance"
         )
@@ -349,7 +349,7 @@ async def upgrades(
         group=group,
     )
     try:
-        result = crud.get_file(file)
+        result = crud.get_file(config_dict, file)
         if not result:
             raise HTTPException(status_code=404, detail="Not found")
         return result
@@ -440,7 +440,7 @@ async def download(
             detail="User does not have permission to access this resource",
         )
 
-    if not crud.is_enabled():
+    if not crud.is_enabled(config_dict):
         raise HTTPException(
             status_code=503, detail="Service is currently disabled for maintenance"
         )
@@ -456,7 +456,7 @@ async def download(
         group=group,
     )
     try:
-        result = crud.get_file(file, content=True)
+        result = crud.get_file(config_dict, file, content=True)
         if not result:
             raise HTTPException(status_code=404, detail="Not found")
         headers = {"Content-Disposition": 'attachment; filename="npbackup"'}
