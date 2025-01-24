@@ -30,14 +30,12 @@ echo "Loading new executable {CURRENT_EXECUTABLE} --check-config {original_args}
 "{CURRENT_EXECUTABLE}" --check-config {original_args} >> "{log_file}" 2>&1
 IF !ERRORLEVEL! NEQ 0 (
     echo "New executable failed. Rolling back" >> "{log_file}" 2>&1
-    IF "%REPLACE_METHOD%"=="overwrite" (
-        echo "Overwrite method used. Overwrite back" >> "{log_file}" 2>&1
-        xcopy /S /Y /I "{backup_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1
-    ) ELSE (
-        echo "Move method used. Move back" >> "{log_file}" 2>&1
-        rd /S /Q "{CURRENT_DIR}" >> "{log_file}" 2>&1 &
-        move /Y "{backup_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1
-    )
+    IF "%REPLACE_METHOD%"=="overwrite" echo "Overwrite method used. Overwrite back" >> "{log_file}" 2>&1
+    IF "%REPLACE_METHOD%"=="overwrite" xcopy /S /Y /I "{backup_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1
+
+    IF "%REPLACE_METHOD%"!="overwrite" echo "Move method used. Move back" >> "{log_file}" 2>&1
+    IF "%REPLACE_METHOD%"!="overwrite" rd /S /Q "{CURRENT_DIR}" >> "{log_file}" 2>&1 &
+    IF "%REPLACE_METHOD%"!="overwrite" move /Y "{backup_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1
 ) ELSE (
     echo "Upgrade successful" >> "{log_file}" 2>&1
     rd /S /Q "{backup_dist}" >> "{log_file}" 2>&1
