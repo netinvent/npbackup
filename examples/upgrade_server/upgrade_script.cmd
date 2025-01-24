@@ -27,7 +27,7 @@ IF !ERRORLEVEL! NEQ 0 (
 )
 
 echo "Loading new executable {CURRENT_EXECUTABLE} --check-config {original_args}" >> "{log_file}" 2>&1
-"{CURRENT_EXECUTABLE}" --check-config {original_args}> "{log_file}" 2>&1
+"{CURRENT_EXECUTABLE}" --check-config {original_args} >> "{log_file}" 2>&1
 IF !ERRORLEVEL! NEQ 0 (
     echo "New executable failed. Rolling back" >> "{log_file}" 2>&1
     IF "%REPLACE_METHOD%"=="overwrite" (
