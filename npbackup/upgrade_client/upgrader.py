@@ -89,10 +89,10 @@ def _check_new_version(
         server_ident = requestor.data_model()
         if server_ident is False:
             if ignore_errors:
-                logger.info("Cannt reach upgrade server")
+                logger.info("Cannot reach upgrade server")
             else:
                 logger.error("Cannot reach upgrade server")
-        return None
+            return None
     except Exception as exc:
         logger.error(f"Upgrade server response '{server_ident}' is bogus: {exc}")
         logger.debug("Trace", exc_info=True)
@@ -118,6 +118,7 @@ def _check_new_version(
         auto_upgrade_host_identity=auto_upgrade_host_identity, group=group
     )
     result = requestor.data_model("current_version", id_record=target_id)
+    logger.info(f"Upgrade server response to current version: {result}")
     if result is False:
         msg = "Upgrade server didn't respond properly. Is it well configured ?"
         if ignore_errors:
@@ -267,38 +268,66 @@ def auto_upgrader(
         tempfile.gettempdir(), "npbackup_backup_dist_" + random_string(6)
     )
 
-    # Inplace upgrade script, gets executed after main program has exited
+    """
+    Inplace upgrade script, gets executed after main program has exited
+
+    So in this script we basically need to:
+    - Move current dist to backup directory
+    - Move downloaded dist to current directory
+    - Copy any configuration files from backup to current
+    
+    If the avoe statement fails (current dist dir is locked by a process), we'll copy it and then overwrite it
+
+    Check if new executable can load current config file
+    Rollback if above statement fails
+    """
+
     if os.name == "nt":
         cmd = (
             f"setlocal EnableDelayedExpansion & "
-            f'echo "Launching upgrade" >> "{log_file}" 2>&1 && '
-            f'echo "Moving earlier dist from {CURRENT_DIR} to {backup_dist}" >> "{log_file}" 2>&1 && '
-            f'move /Y "{CURRENT_DIR}" "{backup_dist}" >> "{log_file}" 2>&1 && '
-            f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
-            f'move /Y "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
-            f'echo "Copying optional configuration files from {backup_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
-            # Just copy any possible *.conf file from any subdirectory
-            rf'xcopy /S /Y "{backup_dist}\*conf" {CURRENT_DIR} > NUL 2>&1 & '
-            f'echo "Loading new executable {CURRENT_EXECUTABLE} --version" >> "{log_file}" 2>&1 && '
-            f'"{CURRENT_EXECUTABLE}" --version >> "{log_file}" 2>&1 & '
-            f"IF !ERRORLEVEL! NEQ 0 ( "
-            f'echo "New executable failed. Rolling back" >> "{log_file}" 2>&1 && '
-            f'rd /S /Q "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
-            f'move /Y "{backup_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 '
+            f'echo "Launching upgrade" >> "{log_file}" 2>&1 & '
+            f'echo "Moving current dist from {CURRENT_DIR} to {backup_dist}" >> "{log_file}" 2>&1 & '
+            f'move /Y "{CURRENT_DIR}" "{backup_dist}" >> "{log_file}" 2>&1 & '
+            f'IF !ERRORLEVEL! NEQ 0 ( '
+            f'echo "Moving current dist failed. Trying to copy it." >> "{log_file}" 2>&1 & '
+            f'xcopy /S /Y /I "{CURRENT_DIR}\*" "{backup_dist}" >> "{log_file}" 2>&1 & '
+            f'echo "Now trying to overwrite current dist with upgrade dist" >> "{log_file}" 2>&1 & '
+            f'xcopy /S /Y "{upgrade_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
+            f'set REPLACE_METHOD=overwrite'
             f") ELSE ( "
-            f'echo "Upgrade successful" >> "{log_file}" 2>&1 && '
+            f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 & '
+            f'move /Y "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
+            f'echo "Copying optional configuration files from {backup_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 & '
+            # Just copy any possible *.conf file from any subdirectory
+            rf'xcopy /S /Y "{backup_dist}\*conf" {CURRENT_DIR} > NUL 2>&1 && '
+            f'set REPLACE_METHOD=move'
+            f") &"
+            f'echo "Loading new executable {CURRENT_EXECUTABLE} --check-config {" ".join(sys.argv[1:])}" >> "{log_file}" 2>&1 & '
+            f'"{CURRENT_EXECUTABLE}" --check-config >{" ".join(sys.argv[1:])}> "{log_file}" 2>&1 & '
+            f"IF !ERRORLEVEL! NEQ 0 ( "
+            f'echo "New executable failed. Rolling back" >> "{log_file}" 2>&1 & '
+            f'IF "%REPLACE_METHOD%"=="overwrite" ( '
+            f'echo "Overwrite method used. Overwrite back" >> "{log_file}" 2>&1 & '
+            f'xcopy /S /Y /I "{backup_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 '
+            f") ELSE ( "
+            f'echo "Move method used. Move back" >> "{log_file}" 2>&1 & '
+            f'rd /S /Q "{CURRENT_DIR}" >> "{log_file}" 2>&1 & '
+            f'move /Y "{backup_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 '
+            f') '
+            f") ELSE ( "
+            f'echo "Upgrade successful" >> "{log_file}" 2>&1 & '
             f'rd /S /Q "{backup_dist}" >> "{log_file}" 2>&1 & '
             # f'rd /S /Q "{upgrade_dist}" >> "{log_file}" 2>&1 & ' Since we move this, we don't need to delete it
             f'del /F /S /Q "{downloaded_archive}" >> "{log_file}" 2>&1 & '
-            f'echo "Running new version as planned:" >> "{log_file}" 2>&1 && '
-            f'echo "{CURRENT_EXECUTABLE} {" ".join(sys.argv[1:])}" >> "{log_file}" 2>&1 && '
+            f'echo "Running new version as planned:" >> "{log_file}" 2>&1 & '
+            f'echo "{CURRENT_EXECUTABLE} {" ".join(sys.argv[1:])}" >> "{log_file}" 2>&1 & '
             f'"{CURRENT_EXECUTABLE}" {" ".join(sys.argv[1:])}'
             f")"
         )
     else:
         cmd = (
             f'echo "Launching upgrade" >> "{log_file}" 2>&1 && '
-            f'echo "Moving earlier dist from {CURRENT_DIR} to {backup_dist}" >> "{log_file}" 2>&1 && '
+            f'echo "Moving current dist from {CURRENT_DIR} to {backup_dist}" >> "{log_file}" 2>&1 && '
             f'mv -f "{CURRENT_DIR}" "{backup_dist}" >> "{log_file}" 2>&1 && '
             f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
             f'mv -f "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
@@ -306,8 +335,8 @@ def auto_upgrader(
             rf'find "{backup_dist}" -name "*.conf" -exec cp --parents {{}} "{CURRENT_DIR}" \; ;'
             f'echo "Adding executable bit to new executable" >> "{log_file}" 2>&1 && '
             f'chmod +x "{CURRENT_EXECUTABLE}" >> "{log_file}" 2>&1 && '
-            f'echo "Loading new executable {CURRENT_EXECUTABLE} --version" >> "{log_file}" 2>&1 && '
-            f'"{CURRENT_EXECUTABLE}" --version >> "{log_file}" 2>&1; '
+            f'echo "Loading new executable {CURRENT_EXECUTABLE} --check-config {" ".join(sys.argv[1:])}" >> "{log_file}" 2>&1 && '
+            f'"{CURRENT_EXECUTABLE}" --check-config {" ".join(sys.argv[1:])} >> "{log_file}" 2>&1; '
             f"if [ $? -ne 0 ]; then "
             f'echo "New executable failed. Rolling back" >> "{log_file}" 2>&1 && '
             f'rm -rf "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
