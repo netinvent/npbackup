@@ -49,7 +49,7 @@ args = parser.parse_args()
 if args.config_file:
     config_dict = configuration.load_config(args.config_file)
 else:
-    config_dict = configuration.load_config(g)
+    config_dict = configuration.load_config()
 
 logger = logging.getLogger()
 if _DEBUG:
