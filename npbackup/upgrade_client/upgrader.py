@@ -7,7 +7,7 @@ __intname__ = "npbackup.upgrade_client.upgrader"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2025 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2025011501"
+__build__ = "2025012401"
 
 
 import os
@@ -209,34 +209,51 @@ def auto_upgrader(
     )
 
     logger.info(f"Searching for file description for target {target_id}")
-    file_info = requestor.data_model("upgrades", id_record=target_id)
-    if not file_info:
-        logger.error("Server didn't provide a file description")
-        return False
-    try:
-        sha256sum = file_info["sha256sum"]
-    except (KeyError, TypeError):
-        logger.error("Cannot get file description")
-        logger.debug("Trace", exc_info=True)
-        return False
-    if sha256sum is None:
-        logger.info("No upgrade file found has been found for me :/")
-        return True
+    file_info = {}
+    file_data = {}
+    for file_type in ("script", "archive"):
+        file_info[file_type] = requestor.data_model(
+            "info", id_record=f"{file_type}/{target_id}"
+        )
+        if not file_info[file_type]:
+            logger.error(f"Cannot get file description for {file_type}")
+            return False
+        try:
+            logger.info(
+                f"Found file description for {file_type} with hash {file_info[file_type]['sha256sum']}"
+            )
+        except (KeyError, TypeError):
+            logger.error(f"Cannot get file description for {file_type}")
+            logger.debut("Trace", exc_info=True)
+            return False
+        if file_info[file_type]["sha256sum"] is None:
+            logger.info("No upgrade file found has been found for me :/")
+            return True
 
     logger.info(f"Downloading upgrade file for target {target_id}")
-    file_data = requestor.requestor(f"download/{target_id}", raw=True)
-    if not file_data:
-        logger.error("Cannot get update file")
-        return False
+    for file_type in ("script", "archive"):
+        file_info[file_type]["local_fs_path"] = None
+        file_data[file_type] = requestor.requestor(
+            f"download/{file_type}/{target_id}", raw=True
+        )
+        if not file_data[file_type]:
+            logger.error("Cannot get update file")
+            return False
 
-    if sha256sum_data(file_data) != sha256sum:
-        logger.error("Invalid checksum, won't upgrade")
-        return False
+        current_file_cksum = sha256sum_data(file_data[file_type])
+        if current_file_cksum != file_info[file_type]["sha256sum"]:
+            logger.error(
+                f"Expected checksum {file_info[file_type]['sha256sum']} does not match downloaded file checksum {current_file_cksum}. Won't run this"
+            )
+            return False
 
-    downloaded_archive = os.path.join(tempfile.gettempdir(), file_info["filename"])
-    with open(downloaded_archive, "wb") as fh:
-        fh.write(file_data)
-    logger.info("Upgrade file written to %s", downloaded_archive)
+        local_fs_path = os.path.join(
+            tempfile.gettempdir(), file_info[file_type]["filename"]
+        )
+        with open(local_fs_path, "wb") as fh:
+            fh.write(file_data[file_type])
+        logger.info(f"{file_type} file written to {local_fs_path}")
+        file_info[file_type]["local_fs_path"] = local_fs_path
 
     upgrade_date = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
     log_file = os.path.join(
@@ -249,7 +266,7 @@ def auto_upgrader(
     upgrade_dist = os.path.join(tempfile.gettempdir(), "npbackup_upgrade_dist")
     try:
         # File is a zip or tar.gz and should contain a single directory 'npbackup-cli' or 'npbackup-gui' with all files in it
-        shutil.unpack_archive(downloaded_archive, upgrade_dist)
+        shutil.unpack_archive(file_data["archive"]["local_fs_path"], upgrade_dist)
     except Exception as exc:
         logger.critical(f"Upgrade failed. Cannot uncompress downloaded dist: {exc}")
         return False
@@ -270,88 +287,98 @@ def auto_upgrader(
     )
 
     """
-    Inplace upgrade script, gets executed after main program has exited
+    Inplace upgrade script, gets executed after main program has exited if no upgrade script is provided
 
     So in this script we basically need to:
     - Move current dist to backup directory
     - Move downloaded dist to current directory
     - Copy any configuration files from backup to current
     
-    If the avoe statement fails (current dist dir is locked by a process), we'll copy it and then overwrite it
+    If the above statement fails (current dist dir is locked by a process), we'll copy it and then overwrite it
 
     Check if new executable can load current config file
     Rollback if above statement fails
     """
 
-    if os.name == "nt":
-        cmd = (
-            f"setlocal EnableDelayedExpansion & "
-            f'echo "Launching upgrade" >> "{log_file}" 2>&1 & '
-            f'echo "Moving current dist from {CURRENT_DIR} to {backup_dist}" >> "{log_file}" 2>&1 & '
-            f'move /Y "{CURRENT_DIR}" "{backup_dist}" >> "{log_file}" 2>&1 & '
-            f"IF !ERRORLEVEL! NEQ 0 ( "
-            f'echo "Moving current dist failed. Trying to copy it." >> "{log_file}" 2>&1 & '
-            rf'xcopy /S /Y /I "{CURRENT_DIR}\*" "{backup_dist}" >> "{log_file}" 2>&1 & '
-            f'echo "Now trying to overwrite current dist with upgrade dist" >> "{log_file}" 2>&1 & '
-            rf'xcopy /S /Y /I "{upgrade_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
-            f"set REPLACE_METHOD=overwrite"
-            f") ELSE ( "
-            f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 & '
-            f'move /Y "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
-            f'echo "Copying optional configuration files from {backup_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 & '
-            # Just copy any possible *.conf file from any subdirectory
-            rf'xcopy /S /Y /I "{backup_dist}\*conf" {CURRENT_DIR} > NUL 2>&1 && '
-            f"set REPLACE_METHOD=move"
-            f") &"
-            f'echo "Loading new executable {CURRENT_EXECUTABLE} --check-config {" ".join(sys.argv[1:])}" >> "{log_file}" 2>&1 & '
-            f'"{CURRENT_EXECUTABLE}" --check-config >{" ".join(sys.argv[1:])}> "{log_file}" 2>&1 & '
-            f"IF !ERRORLEVEL! NEQ 0 ( "
-            f'echo "New executable failed. Rolling back" >> "{log_file}" 2>&1 & '
-            f'IF "%REPLACE_METHOD%"=="overwrite" ( '
-            f'echo "Overwrite method used. Overwrite back" >> "{log_file}" 2>&1 & '
-            rf'xcopy /S /Y /I "{backup_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 '
-            f") ELSE ( "
-            f'echo "Move method used. Move back" >> "{log_file}" 2>&1 & '
-            f'rd /S /Q "{CURRENT_DIR}" >> "{log_file}" 2>&1 & '
-            f'move /Y "{backup_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 '
-            f") "
-            f") ELSE ( "
-            f'echo "Upgrade successful" >> "{log_file}" 2>&1 & '
-            f'rd /S /Q "{backup_dist}" >> "{log_file}" 2>&1 & '
-            # f'rd /S /Q "{upgrade_dist}" >> "{log_file}" 2>&1 & ' Since we move this, we don't need to delete it
-            f'del /F /S /Q "{downloaded_archive}" >> "{log_file}" 2>&1 & '
-            f'echo "Running new version as planned:" >> "{log_file}" 2>&1 & '
-            f'echo "{CURRENT_EXECUTABLE} {" ".join(sys.argv[1:])}" >> "{log_file}" 2>&1 & '
-            f'"{CURRENT_EXECUTABLE}" {" ".join(sys.argv[1:])}'
-            f")"
+    if file_info["script"]["local_fs_path"]:
+        logger.info(
+            f"Using remote upgrade script in {file_info['script']['local_fs_path']}"
         )
+        if os.name == "nt":
+            cmd = f'cmd /c "{file_info["script"]["local_fs_path"]}"'
+        else:
+            cmd = f'bash "{file_info["script"]["local_fs_path"]}"'
     else:
-        cmd = (
-            f'echo "Launching upgrade" >> "{log_file}" 2>&1 && '
-            f'echo "Moving current dist from {CURRENT_DIR} to {backup_dist}" >> "{log_file}" 2>&1 && '
-            f'mv -f "{CURRENT_DIR}" "{backup_dist}" >> "{log_file}" 2>&1 && '
-            f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
-            f'mv -f "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
-            f'echo "Copying optional configuration files from {backup_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
-            rf'find "{backup_dist}" -name "*.conf" -exec cp --parents {{}} "{CURRENT_DIR}" \; ;'
-            f'echo "Adding executable bit to new executable" >> "{log_file}" 2>&1 && '
-            f'chmod +x "{CURRENT_EXECUTABLE}" >> "{log_file}" 2>&1 && '
-            f'echo "Loading new executable {CURRENT_EXECUTABLE} --check-config {" ".join(sys.argv[1:])}" >> "{log_file}" 2>&1 && '
-            f'"{CURRENT_EXECUTABLE}" --check-config {" ".join(sys.argv[1:])} >> "{log_file}" 2>&1; '
-            f"if [ $? -ne 0 ]; then "
-            f'echo "New executable failed. Rolling back" >> "{log_file}" 2>&1 && '
-            f'rm -rf "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
-            f'mv -f "{backup_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1; '
-            f" else "
-            f'echo "Upgrade successful" >> "{log_file}" 2>&1 && '
-            f'rm -rf "{backup_dist}" >> "{log_file}" 2>&1 ; '
-            f'rm -rf "{upgrade_dist}" >> "{log_file}" 2>&1 ; '
-            f'rm -rf "{downloaded_archive}" >> "{log_file}" 2>&1 ; '
-            f'echo "Running new version as planned:" >> "{log_file}" 2>&1 && '
-            f'echo "{CURRENT_EXECUTABLE} {" ".join(sys.argv[1:])}" >> "{log_file}" 2>&1 && '
-            f'"{CURRENT_EXECUTABLE}" {" ".join(sys.argv[1:])}; '
-            f"fi"
-        )
+        logger.info("Using internal upgrade script")
+        if os.name == "nt":
+            cmd = (
+                f"setlocal EnableDelayedExpansion & "
+                f'echo "Launching upgrade" >> "{log_file}" 2>&1 & '
+                f'echo "Moving current dist from {CURRENT_DIR} to {backup_dist}" >> "{log_file}" 2>&1 & '
+                f'move /Y "{CURRENT_DIR}" "{backup_dist}" >> "{log_file}" 2>&1 & '
+                f"IF !ERRORLEVEL! NEQ 0 ( "
+                f'echo "Moving current dist failed. Trying to copy it." >> "{log_file}" 2>&1 & '
+                rf'xcopy /S /Y /I "{CURRENT_DIR}\*" "{backup_dist}" >> "{log_file}" 2>&1 & '
+                f'echo "Now trying to overwrite current dist with upgrade dist" >> "{log_file}" 2>&1 & '
+                rf'xcopy /S /Y /I "{upgrade_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
+                f"set REPLACE_METHOD=overwrite"
+                f") ELSE ( "
+                f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 & '
+                f'move /Y "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
+                f'echo "Copying optional configuration files from {backup_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 & '
+                # Just copy any possible *.conf file from any subdirectory
+                rf'xcopy /S /Y /I "{backup_dist}\*conf" {CURRENT_DIR} > NUL 2>&1 && '
+                f"set REPLACE_METHOD=move"
+                f") &"
+                f'echo "Loading new executable {CURRENT_EXECUTABLE} --check-config {" ".join(sys.argv[1:])}" >> "{log_file}" 2>&1 & '
+                f'"{CURRENT_EXECUTABLE}" --check-config >{" ".join(sys.argv[1:])}> "{log_file}" 2>&1 & '
+                f"IF !ERRORLEVEL! NEQ 0 ( "
+                f'echo "New executable failed. Rolling back" >> "{log_file}" 2>&1 & '
+                f'IF "%REPLACE_METHOD%"=="overwrite" ( '
+                f'echo "Overwrite method used. Overwrite back" >> "{log_file}" 2>&1 & '
+                rf'xcopy /S /Y /I "{backup_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 '
+                f") ELSE ( "
+                f'echo "Move method used. Move back" >> "{log_file}" 2>&1 & '
+                f'rd /S /Q "{CURRENT_DIR}" >> "{log_file}" 2>&1 & '
+                f'move /Y "{backup_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 '
+                f") "
+                f") ELSE ( "
+                f'echo "Upgrade successful" >> "{log_file}" 2>&1 & '
+                f'rd /S /Q "{backup_dist}" >> "{log_file}" 2>&1 & '
+                # f'rd /S /Q "{upgrade_dist}" >> "{log_file}" 2>&1 & ' Since we move this, we don't need to delete it
+                f'del /F /S /Q "{downloaded_archive}" >> "{log_file}" 2>&1 & '
+                f'echo "Running new version as planned:" >> "{log_file}" 2>&1 & '
+                f'echo "{CURRENT_EXECUTABLE} {" ".join(sys.argv[1:])}" >> "{log_file}" 2>&1 & '
+                f'"{CURRENT_EXECUTABLE}" {" ".join(sys.argv[1:])}'
+                f")"
+            )
+        else:
+            cmd = (
+                f'echo "Launching upgrade" >> "{log_file}" 2>&1 && '
+                f'echo "Moving current dist from {CURRENT_DIR} to {backup_dist}" >> "{log_file}" 2>&1 && '
+                f'mv -f "{CURRENT_DIR}" "{backup_dist}" >> "{log_file}" 2>&1 && '
+                f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
+                f'mv -f "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
+                f'echo "Copying optional configuration files from {backup_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 && '
+                rf'find "{backup_dist}" -name "*.conf" -exec cp --parents {{}} "{CURRENT_DIR}" \; ;'
+                f'echo "Adding executable bit to new executable" >> "{log_file}" 2>&1 && '
+                f'chmod +x "{CURRENT_EXECUTABLE}" >> "{log_file}" 2>&1 && '
+                f'echo "Loading new executable {CURRENT_EXECUTABLE} --check-config {" ".join(sys.argv[1:])}" >> "{log_file}" 2>&1 && '
+                f'"{CURRENT_EXECUTABLE}" --check-config {" ".join(sys.argv[1:])} >> "{log_file}" 2>&1; '
+                f"if [ $? -ne 0 ]; then "
+                f'echo "New executable failed. Rolling back" >> "{log_file}" 2>&1 && '
+                f'rm -rf "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
+                f'mv -f "{backup_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1; '
+                f" else "
+                f'echo "Upgrade successful" >> "{log_file}" 2>&1 && '
+                f'rm -rf "{backup_dist}" >> "{log_file}" 2>&1 ; '
+                f'rm -rf "{upgrade_dist}" >> "{log_file}" 2>&1 ; '
+                f'rm -rf "{downloaded_archive}" >> "{log_file}" 2>&1 ; '
+                f'echo "Running new version as planned:" >> "{log_file}" 2>&1 && '
+                f'echo "{CURRENT_EXECUTABLE} {" ".join(sys.argv[1:])}" >> "{log_file}" 2>&1 && '
+                f'"{CURRENT_EXECUTABLE}" {" ".join(sys.argv[1:])}; '
+                f"fi"
+            )
 
     # We still need to unregister previous kill_childs function se we can actually make the upgrade happen
     atexit.unregister(kill_childs)
