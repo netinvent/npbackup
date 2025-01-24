@@ -135,30 +135,29 @@ def _check_new_version(
         else:
             logger.error(msg)
         return None
-    else:
-        try:
-            if online_version:
-                if version.parse(online_version) > version.parse(
-                    version_dict["version"]
-                ):
-                    logger.info(
-                        "Current version %s is older than online version %s",
-                        version_dict["version"],
-                        online_version,
-                    )
-                    return True
-                else:
-                    logger.info(
-                        "Current version %s is up-to-date (online version %s)",
-                        version_dict["version"],
-                        online_version,
-                    )
-                    return False
-        except Exception as exc:
-            logger.error(
-                f"Cannot determine if online version '{online_version}' is newer than current version {version_dict['verison']}: {exc}"
+
+    try:
+        if online_version:
+            if version.parse(online_version) > version.parse(version_dict["version"]):
+                logger.info(
+                    "Current version %s is older than online version %s",
+                    version_dict["version"],
+                    online_version,
+                )
+                return True
+            logger.info(
+                "Current version %s is up-to-date (online version %s)",
+                version_dict["version"],
+                online_version,
             )
             return False
+        logger.error("Cannot determine online version")
+        return None
+    except Exception as exc:
+        logger.error(
+            f"Cannot determine if online version '{online_version}' is newer than current version {version_dict['verison']}: {exc}"
+        )
+        return False
 
 
 def auto_upgrader(
@@ -288,19 +287,19 @@ def auto_upgrader(
             f'echo "Launching upgrade" >> "{log_file}" 2>&1 & '
             f'echo "Moving current dist from {CURRENT_DIR} to {backup_dist}" >> "{log_file}" 2>&1 & '
             f'move /Y "{CURRENT_DIR}" "{backup_dist}" >> "{log_file}" 2>&1 & '
-            f'IF !ERRORLEVEL! NEQ 0 ( '
+            f"IF !ERRORLEVEL! NEQ 0 ( "
             f'echo "Moving current dist failed. Trying to copy it." >> "{log_file}" 2>&1 & '
             f'xcopy /S /Y /I "{CURRENT_DIR}\*" "{backup_dist}" >> "{log_file}" 2>&1 & '
             f'echo "Now trying to overwrite current dist with upgrade dist" >> "{log_file}" 2>&1 & '
             f'xcopy /S /Y "{upgrade_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
-            f'set REPLACE_METHOD=overwrite'
+            f"set REPLACE_METHOD=overwrite"
             f") ELSE ( "
             f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 & '
             f'move /Y "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
             f'echo "Copying optional configuration files from {backup_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 & '
             # Just copy any possible *.conf file from any subdirectory
             rf'xcopy /S /Y "{backup_dist}\*conf" {CURRENT_DIR} > NUL 2>&1 && '
-            f'set REPLACE_METHOD=move'
+            f"set REPLACE_METHOD=move"
             f") &"
             f'echo "Loading new executable {CURRENT_EXECUTABLE} --check-config {" ".join(sys.argv[1:])}" >> "{log_file}" 2>&1 & '
             f'"{CURRENT_EXECUTABLE}" --check-config >{" ".join(sys.argv[1:])}> "{log_file}" 2>&1 & '
@@ -313,7 +312,7 @@ def auto_upgrader(
             f'echo "Move method used. Move back" >> "{log_file}" 2>&1 & '
             f'rd /S /Q "{CURRENT_DIR}" >> "{log_file}" 2>&1 & '
             f'move /Y "{backup_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 '
-            f') '
+            f") "
             f") ELSE ( "
             f'echo "Upgrade successful" >> "{log_file}" 2>&1 & '
             f'rd /S /Q "{backup_dist}" >> "{log_file}" 2>&1 & '

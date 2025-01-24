@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.config"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024110701"
+__build__ = "2025012401"
 
 
 from typing import List, Tuple
@@ -18,12 +18,9 @@ from logging import getLogger
 import FreeSimpleGUI as sg
 import textwrap
 from ruamel.yaml.comments import CommentedMap
-import npbackup.configuration as configuration
+from npbackup import configuration
 from ofunctions.misc import get_key_from_value, BytesConverter
 from npbackup.core.i18n_helper import _t
-from npbackup.__version__ import IS_COMPILED
-from npbackup.path_helper import CURRENT_DIR
-from npbackup.__debug__ import _DEBUG, fmt_json
 from resources.customization import (
     INHERITED_ICON,
     NON_INHERITED_ICON,
@@ -59,7 +56,7 @@ def delete(self, key):
             key_list = temp
         return True
     except KeyError:
-        pass
+        return False
 
 
 sg.TreeData.delete = delete
@@ -213,17 +210,17 @@ def config_gui(full_config: dict, config_file: str):
     ) -> None:
         object_list = get_objects()
         if not object_name or not object_type:
-            object = object_list[0]
+            obj = object_list[0]
         else:
             # We need to remove the "s" and the end if we want our comobox name to be usable later
-            object = f"{object_type.rstrip('s').capitalize()}: {object_name}"
+            obj = f"{object_type.rstrip('s').capitalize()}: {object_name}"
 
         window["-OBJECT-SELECT-"].Update(values=object_list)
-        window["-OBJECT-SELECT-"].Update(value=object)
+        window["-OBJECT-SELECT-"].Update(value=obj)
 
         # Also update task object selector
         window["-OBJECT-SELECT-TASKS-"].Update(values=object_list)
-        window["-OBJECT-SELECT-TASKS-"].Update(value=object)
+        window["-OBJECT-SELECT-TASKS-"].Update(value=obj)
 
     def get_object_from_combo(combo_value: str) -> Tuple[str, str]:
         """
@@ -2529,11 +2526,11 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 hour = None
                 minute = None
                 if event == "create_housekeeping_daily_task":
-                    type = "housekeeping"
+                    task_type = "housekeeping"
                     hour = values["scheduled_housekeeping_task_hour"]
                     minute = values["scheduled_housekeeping_task_minute"]
                 else:
-                    type = "backup"
+                    task_type = "backup"
                     if event == "create_backup_interval_task":
                         interval = values["scheduled_backup_task_interval"]
                     else:
@@ -2542,7 +2539,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
 
                 result = create_scheduled_task(
                     config_file=config_file,
-                    type=type,
+                    task_type=task_type,
                     repo=task_repo_name,
                     group=task_repo_group,
                     interval_minutes=interval,

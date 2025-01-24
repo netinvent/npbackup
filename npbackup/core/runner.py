@@ -18,12 +18,11 @@ import pidfile
 import queue
 from datetime import datetime, timedelta, timezone
 from functools import wraps
-import queue
 from copy import deepcopy
 from command_runner import command_runner
 from ofunctions.threading import threaded
 from ofunctions.platform import os_arch
-from ofunctions.misc import BytesConverter, fn_name
+from ofunctions.misc import fn_name
 import ntplib
 from npbackup.restic_metrics import (
     restic_str_output_to_json,
@@ -244,7 +243,7 @@ class NPBackupRunner:
     @repo_config.setter
     def repo_config(self, value: dict):
         if not isinstance(value, dict):
-            msg = f"Bogus repo config object given"
+            msg = "Bogus repo config object given"
             self.write_logs(msg, level="critical", raise_error="ValueError")
         self._repo_config = deepcopy(value)
         # Create an instance of restic wrapper
@@ -494,7 +493,7 @@ class NPBackupRunner:
                 else:
                     # pylint: disable=E1101 (no-member)
                     operation = fn.__name__
-                msg = f"Runner cannot execute, backend not ready"
+                msg = "Runner cannot execute, backend not ready"
                 if self.stderr:
                     self.stderr.put(msg)
                 if self.json_output:
@@ -1446,7 +1445,7 @@ class NPBackupRunner:
                 policy["keep-tags"] = keep_tags
             # Fool proof, don't run without policy, or else we'll get
             if not policy:
-                msg = f"Empty retention policy. Won't run"
+                msg = "Empty retention policy. Won't run"
                 self.write_logs(msg, level="error")
                 return self.convert_to_json_output(False, msg)
 
@@ -1575,11 +1574,11 @@ class NPBackupRunner:
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    def prune(self, max: bool = False) -> bool:
+    def prune(self, prune_max: bool = False) -> bool:
         self.write_logs(
             f"Pruning snapshots for repo {self.repo_config.g('name')}", level="info"
         )
-        if max:
+        if prune_max:
             max_unused = self.repo_config.g("prune_max_unused")
             max_repack_size = self.repo_config.g("prune_max_repack_size")
             result = self.restic_runner.prune(

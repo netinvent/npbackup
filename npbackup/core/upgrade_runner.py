@@ -49,12 +49,12 @@ def need_upgrade(upgrade_interval: int) -> bool:
             with open(file, "r", encoding="utf-8") as fpr:
                 count = int(fpr.read())
                 return count
-        except OSError:
+        except OSError as exc:
             # We may not have read privileges
-            None
-        except ValueError:
-            logger.error("Bogus upgrade counter in %s", file)
-            return None
+            logger.eror(f"Cannot read upgrade counter file {file}: {exc}")
+        except ValueError as exc:
+            logger.error(f"Bogus upgrade counter in {file}: {exc}")
+        return None
 
     try:
         upgrade_interval = int(upgrade_interval)
@@ -97,7 +97,9 @@ def check_new_version(full_config: dict) -> bool:
     username = full_config.g("global_options.auto_upgrade_server_username")
     password = full_config.g("global_options.auto_upgrade_server_password")
     if not upgrade_url or not username or not password:
-        logger.warning(f"Missing auto upgrade info, cannot launch auto upgrade")
+        logger.warning(
+            "Missing auto upgrade info, cannot check new version for auto upgrade"
+        )
         return None
     else:
         return _check_new_version(upgrade_url, username, password)
@@ -108,7 +110,7 @@ def run_upgrade(full_config: dict, ignore_errors: bool = False) -> bool:
     username = full_config.g("global_options.auto_upgrade_server_username")
     password = full_config.g("global_options.auto_upgrade_server_password")
     if not upgrade_url or not username or not password:
-        logger.warning(f"Missing auto upgrade info, cannot launch auto upgrade")
+        logger.warning("Missing auto upgrade info, cannot launch auto upgrade")
         return False
 
     evaluated_full_config = npbackup.configuration.evaluate_variables(

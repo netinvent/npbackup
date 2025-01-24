@@ -1,5 +1,9 @@
 name: pylint-linux-tests
 
+# Quick and dirty pylint
+
+# pylint --disable=C,W1201,W1202,W1203,W0718,W0621,W0603,R0801,R0912,R0913,R0915,R0911,R0914,R0911,R1702,R0902,R0903,R0904 npbackup
+
 on: [push, pull_request]
 
 jobs:

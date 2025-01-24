@@ -43,11 +43,11 @@ def gui_update_state(window, full_config: dict, unencrypted: str = None) -> list
     try:
         for repo_name in full_config.g("repos"):
             repo_config, _ = get_repo_config(full_config, repo_name)
-            if repo_config.g(f"repo_uri") and (
-                repo_config.g(f"repo_opts.repo_password")
-                or repo_config.g(f"repo_opts.repo_password_command")
+            if repo_config.g("repo_uri") and (
+                repo_config.g("repo_opts.repo_password")
+                or repo_config.g("repo_opts.repo_password_command")
             ):
-                backend_type, repo_uri = get_anon_repo_uri(repo_config.g(f"repo_uri"))
+                backend_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
                 repo_group = repo_config.g("repo_group")
                 if not unencrypted and unencrypted != repo_name:
                     repo_uri = ENCRYPTED_DATA_PLACEHOLDER
@@ -149,6 +149,7 @@ def show_stats(statistics: List[dict]) -> None:
     """
 
     data = []
+    entry = None
     for entry in statistics:
         repo_name = list(entry.keys())[0]
         state = "Success" if entry[repo_name]["result"] else "Failure"
@@ -453,6 +454,7 @@ def operations_gui(full_config: dict) -> dict:
             try:
                 object_name = complete_repo_list[values["repo--group-list"][0]][0]
             except Exception as exc:
+                logger.error(f"Could not get object name: {exc}")
                 logger.debug("Trace:", exc_info=True)
                 object_name = None
             if not object_name:

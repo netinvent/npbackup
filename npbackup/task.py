@@ -7,10 +7,9 @@ __intname__ = "npbackup.task"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024102901"
+__build__ = "2025012401"
 
 
-from typing import List
 import sys
 import os
 from logging import getLogger
@@ -24,14 +23,20 @@ from npbackup.__version__ import IS_COMPILED
 logger = getLogger()
 
 
-def _scheduled_task_exists_unix(config_file: str, type: str, object_args: str) -> bool:
+def _scheduled_task_exists_unix(
+    config_file: str, task_type: str, object_args: str
+) -> bool:
     cron_file = "/etc/cron.d/npbackup"
     try:
         with open(cron_file, "r", encoding="utf-8") as file_handle:
             current_crontab = file_handle.readlines()
             for line in current_crontab:
-                if f"--{type}" in line and config_file in line and object_args in line:
-                    logger.info(f"Found existing {type} task")
+                if (
+                    f"--{task_type}" in line
+                    and config_file in line
+                    and object_args in line
+                ):
+                    logger.info(f"Found existing {task_type} task")
                     return True
     except OSError as exc:
         logger.error("Could not read file {}: {}".format(cron_file, exc))
@@ -40,7 +45,7 @@ def _scheduled_task_exists_unix(config_file: str, type: str, object_args: str) -
 
 def create_scheduled_task(
     config_file: str,
-    type: str,
+    task_type: str,
     repo: str = None,
     group: str = None,
     interval_minutes: int = None,
@@ -63,8 +68,8 @@ def create_scheduled_task(
         logger.error("Bogus interval given")
         return False
 
-    if type not in ("backup", "housekeeping"):
-        logger.error("Undefined task type")
+    if task_type not in ("backup", "housekeeping"):
+        logger.error(f"Undefined task type: {task_type}")
         return False
 
     if isinstance(interval_minutes, int) and interval_minutes < 1:
@@ -89,21 +94,21 @@ def create_scheduled_task(
         subject = f"group_name {group}"
         object_args = f" --repo-group {group}"
     else:
-        subject = f"repo_name default"
+        subject = "repo_name default"
         object_args = ""
     if interval_minutes:
         logger.info(
-            f"Creating scheduled task {type} for {subject} to run every {interval_minutes} minutes"
+            f"Creating scheduled task {task_type} for {subject} to run every {interval_minutes} minutes"
         )
     elif hour and minute:
         logger.info(
-            f"Creating scheduled task {type} for {subject} to run at everyday at {hour}h{minute}"
+            f"Creating scheduled task {task_type} for {subject} to run at everyday at {hour}h{minute}"
         )
 
     if os.name == "nt":
         return create_scheduled_task_windows(
             config_file,
-            type,
+            task_type,
             CURRENT_EXECUTABLE,
             subject,
             object_args,
@@ -114,7 +119,7 @@ def create_scheduled_task(
     else:
         return create_scheduled_task_unix(
             config_file,
-            type,
+            task_type,
             CURRENT_EXECUTABLE,
             subject,
             object_args,
@@ -126,7 +131,7 @@ def create_scheduled_task(
 
 def create_scheduled_task_unix(
     config_file: str,
-    type: str,
+    task_type: str,
     cli_executable_path: str,
     subject: str,
     object_args: str,
@@ -134,6 +139,7 @@ def create_scheduled_task_unix(
     hour: int = None,
     minute: int = None,
 ):
+    logger.debug(f"Creating task {subject}")
     executable_dir = os.path.dirname(cli_executable_path)
     if "python" in sys.executable and not IS_COMPILED:
         cli_executable_path = f'"{sys.executable}" "{cli_executable_path}"'
@@ -142,14 +148,16 @@ def create_scheduled_task_unix(
     cron_file = "/etc/cron.d/npbackup"
 
     if interval_minutes is not None:
-        TASK_ARGS = f'-c "{config_file}" --{type} --run-as-cli{object_args}'
+        TASK_ARGS = f'-c "{config_file}" --{task_type} --run-as-cli{object_args}'
         trigger = f"*/{interval_minutes} * * * * root"
     elif hour is not None and minute is not None:
-        if type == "backup":
+        if task_type == "backup":
             force_opt = " --force"
         else:
             force_opt = ""
-        TASK_ARGS = f'-c "{config_file}" --{type}{force_opt} --run-as-cli{object_args}'
+        TASK_ARGS = (
+            f'-c "{config_file}" --{task_type}{force_opt} --run-as-cli{object_args}'
+        )
         trigger = f"{minute} {hour} * * * root"
     else:
         raise ValueError("Bogus trigger given")
@@ -165,19 +173,24 @@ def create_scheduled_task_unix(
         with open(cron_file, "r", encoding="utf-8") as file_handle:
             current_crontab = file_handle.readlines()
             for line in current_crontab:
-                if f"--{type}" in line and config_file in line and object_args in line:
-                    logger.info(f"Replacing existing {type} task")
+                if (
+                    f"--{task_type}" in line
+                    and config_file in line
+                    and object_args in line
+                ):
+                    logger.info(f"Replacing existing {task_type} task")
                     if replaced:
-                        logger.info(f"Skipping duplicate {type} task")
+                        logger.info(f"Skipping duplicate {task_type} task")
                         continue
                     crontab_file.append(crontab_entry)
                     replaced = True
                 else:
                     crontab_file.append(line)
             if not replaced:
-                logger.info(f"Adding new {type} task")
+                logger.info(f"Adding new {task_type} task")
                 crontab_file.append(crontab_entry)
     except OSError as exc:
+        logger.debug(f"Error reading file {cron_file}: {exc}")
         crontab_file.append(crontab_entry)
 
     try:
@@ -190,13 +203,13 @@ def create_scheduled_task_unix(
     return True
 
 
-def _get_scheduled_task_name_windows(type: str, subject: str) -> str:
-    return f"{PROGRAM_NAME} - {type.capitalize()} {subject}"
+def _get_scheduled_task_name_windows(task_type: str, subject: str) -> str:
+    return f"{PROGRAM_NAME} - {task_type.capitalize()} {subject}"
 
 
 def create_scheduled_task_windows(
     config_file: str,
-    type: str,
+    task_type: str,
     cli_executable_path: str,
     subject: str,
     object_args: str,
@@ -204,6 +217,7 @@ def create_scheduled_task_windows(
     hour: int = None,
     minute: int = None,
 ):
+    logger.debug(f"Creating task {subject}")
     executable_dir = os.path.dirname(cli_executable_path)
     if "python" in sys.executable and not IS_COMPILED:
         runner = sys.executable
@@ -213,10 +227,12 @@ def create_scheduled_task_windows(
         task_args = ""
     temp_task_file = os.path.join(tempfile.gettempdir(), "npbackup_task.xml")
 
-    task_name = _get_scheduled_task_name_windows(type, subject)
+    task_name = _get_scheduled_task_name_windows(task_type, subject)
 
     if interval_minutes is not None:
-        task_args = f'{task_args}-c "{config_file}" --{type} --run-as-cli{object_args}'
+        task_args = (
+            f'{task_args}-c "{config_file}" --{task_type} --run-as-cli{object_args}'
+        )
         start_date = datetime.datetime.now().replace(microsecond=0).isoformat()
         trigger = f"""<TimeTrigger>
             <Repetition>
@@ -228,9 +244,7 @@ def create_scheduled_task_windows(
             <Enabled>true</Enabled>
             </TimeTrigger>"""
     elif hour is not None and minute is not None:
-        task_args = (
-            f'{task_args}-c "{config_file}" --{type} --force --run-as-cli{object_args}'
-        )
+        task_args = f'{task_args}-c "{config_file}" --{task_type} --force --run-as-cli{object_args}'
         start_date = (
             datetime.datetime.now()
             .replace(microsecond=0, hour=hour, minute=minute, second=0)
@@ -291,15 +305,15 @@ def create_scheduled_task_windows(
         </Exec>
     </Actions>
     </Task>"""
-    # Create task file
+    # Create task file, without specific encoding in order to use platform prefered encoding
+    # platform prefered encoding is locale.getpreferredencoding() (cp1252 on windows, utf-8 on linux)
     try:
+        # pylint: disable=W1514 (unspecified-encoding)
         with open(temp_task_file, "w") as file_handle:
             file_handle.write(SCHEDULED_TASK_FILE_CONTENT)
     except OSError as exc:
         logger.error(
-            "Could not create temporary scheduled task file {}: {}".format(
-                temp_task_file, exc
-            )
+            f"Could not create temporary scheduled task file {temp_task_file}: {exc}"
         )
         return False
 

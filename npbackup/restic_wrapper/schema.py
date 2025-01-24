@@ -24,8 +24,6 @@ except ImportError:
         def __init_subclass__(self, *args, **kwargs):
             pass
 
-        pass
-
     class StrEnum:
         pass
 

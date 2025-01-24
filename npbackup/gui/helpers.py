@@ -251,7 +251,7 @@ def gui_thread_runner(
         titlebar_icon=OEM_ICON,
     )
     # Finalize the window
-    event, values = progress_window.read(timeout=0.01)
+    event, _ = progress_window.read(timeout=0.01)
     progress_window.bring_to_front()
 
     read_stdout_queue = __stdout

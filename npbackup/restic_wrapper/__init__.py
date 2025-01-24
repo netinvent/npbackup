@@ -400,8 +400,7 @@ class ResticRunner:
             if is_cloud_error is True:
                 self.last_command_status = True
                 return True, output
-            else:
-                self.write_logs("Some files could not be backed up", level="error")
+            self.write_logs("Some files could not be backed up", level="error")
             # TEMP-FIX-4155-END
         self.last_command_status = False
 
@@ -455,8 +454,8 @@ class ResticRunner:
             value = int(BytesConverter(value).kbytes)
             if value > 0:
                 self._limit_upload = value
-        except TypeError:
-            raise ValueError("Cannot set upload limit")
+        except TypeError as exc:
+            raise ValueError("Cannot set upload limit") from exc
 
     @property
     def limit_download(self):
@@ -469,8 +468,8 @@ class ResticRunner:
             value = int(BytesConverter(value).kbytes)
             if value > 0:
                 self._limit_download = value
-        except TypeError:
-            raise ValueError("Cannot set download limit")
+        except TypeError as exc:
+            raise ValueError("Cannot set download limit") from exc
 
     @property
     def backend_connections(self):
@@ -665,11 +664,11 @@ class ResticRunner:
                 # For backup operations, we'll auto-initialize the repo
                 # pylint: disable=E1101 (no-member)
                 if fn.__name__ == "backup" or fn_name(1) == "has_recent_snapshot":
-                    msg = f"Repo is not initialized. Initializing repo for backup operation"
+                    msg = "Repo is not initialized. Initializing repo for backup operation"
                     self.write_logs(msg, level="info")
                     init = self.init()
                     if not init:
-                        msg = f"Could not initialize repo for backup operation"
+                        msg = "Could not initialize repo for backup operation"
                         self.write_logs(
                             msg,
                             level="critical",
@@ -739,7 +738,7 @@ class ResticRunner:
                                 else:
                                     js["output"].append(decoder.decode(line))
                                     is_first_line = False
-                            except msgspec.DecodeError as exc:
+                            except msgspec.DecodeError:
                                 # We may have a json decode error, but actually, we just want to get the output
                                 # in any case, since restic might output non json data, but we need to
                                 # convert it to json
@@ -754,7 +753,7 @@ class ResticRunner:
                             try:
                                 # pylint: disable=E0601 (used-before-assignment)
                                 js["output"].append(json.loads(line))
-                            except json.JSONDecodeError as exc:
+                            except json.JSONDecodeError:
                                 # Same as above
 
                                 # msg = f"JSON decode error: {exc} on content '{line}'"
@@ -776,7 +775,7 @@ class ResticRunner:
                     if HAVE_MSGSPEC:
                         try:
                             js["output"] = msgspec.json.decode(str(output))
-                        except msgspec.DecodeError as exc:
+                        except msgspec.DecodeError:
                             # Save as above
 
                             # msg = f"JSON decode error: {exc} on output '{output}'"
@@ -787,7 +786,7 @@ class ResticRunner:
                         try:
                             # pylint: disable=E0601 (used-before-assignment)
                             js["output"] = json.loads(output)
-                        except json.JSONDecodeError as exc:
+                        except json.JSONDecodeError:
                             # same as above
                             # msg = f"JSON decode error: {exc} on output '{output}'"
                             # self.write_logs(msg, level="error")
@@ -1232,10 +1231,10 @@ class ResticRunner:
         kwargs = locals()
         kwargs.pop("self")
 
-        cmd = f"recover"
+        cmd = "recover"
         result, output = self.executor(cmd)
         if result:
-            msg = f"Recovery finished"
+            msg = "Recovery finished"
         else:
             msg = f"Recovery failed:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
@@ -1248,10 +1247,10 @@ class ResticRunner:
         kwargs = locals()
         kwargs.pop("self")
 
-        cmd = f"unlock"
+        cmd = "unlock"
         result, output = self.executor(cmd)
         if result:
-            msg = f"Repo successfully unlocked"
+            msg = "Repo successfully unlocked"
         else:
             msg = f"Repo unlock failed:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
@@ -1280,12 +1279,12 @@ class ResticRunner:
         kwargs = locals()
         kwargs.pop("self")
 
-        cmd = f"stats"
+        cmd = "stats"
         if subject:
             cmd += f" {subject}"
         result, output = self.executor(cmd)
         if result:
-            msg = f"Repo statistics command success"
+            msg = "Repo statistics command success"
         else:
             msg = f"Cannot get repo statistics:\n {output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
@@ -1334,7 +1333,7 @@ class ResticRunner:
                     f"Recent snapshot {last_snapshot['short_id']} of {last_snapshot['time']} exists !"
                 )
                 return True, backup_ts
-            return False, backup_ts
+        return False, backup_ts
 
     #  @check_if_init  # We don't need to run if init before checking snapshots since if init searches for snapshots
     def has_recent_snapshot(self, delta: int = None) -> Tuple[bool, Optional[datetime]]:

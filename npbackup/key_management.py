@@ -48,5 +48,5 @@ def create_key_file(key_location: str):
             logger.info(f"Encryption key file created at {key_location}")
             return True
     except OSError as exc:
-        logger.critical("Cannot create encryption key file: {exc}")
+        logger.critical(f"Cannot create encryption key file: {exc}")
         return False

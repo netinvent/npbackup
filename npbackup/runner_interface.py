@@ -67,17 +67,18 @@ def entrypoint(*args, **kwargs):
             # Unless operation is "ls", because it's too slow for command_runner poller method that allows live_output
             # But we still need to log the result to our logfile
             if not operation == "ls":
+                handler = None
                 for handler in logger.handlers:
                     if handler.stream == sys.stdout:
                         logger.removeHandler(handler)
                         break
             logger.info(f"\n{result}")
-            if not operation == "ls":
+            if not operation == "ls" and handler:
                 logger.addHandler(handler)
         if result:
-            logger.info(f"Operation finished")
+            logger.info("Operation finished")
         else:
-            logger.error(f"Operation finished")
+            logger.error("Operation finished")
     else:
         if HAVE_MSGSPEC:
             print(msgspec.json.encode(result).decode("utf-8", errors="ignore"))

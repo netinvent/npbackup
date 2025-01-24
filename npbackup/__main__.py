@@ -25,7 +25,6 @@ from npbackup.__version__ import version_string, version_dict
 from npbackup.__debug__ import _DEBUG
 from npbackup.common import execution_logs
 from npbackup.core import upgrade_runner
-from npbackup.core.i18n_helper import _t
 from npbackup import key_management
 from npbackup.task import create_scheduled_task
 
@@ -492,21 +491,30 @@ This is free software, and you are welcome to redistribute it under certain cond
                 if "interval" in args.create_scheduled_task:
                     interval = args.create_scheduled_task.split("=")[1].strip()
                     result = create_scheduled_task(
-                        config_file, type="backup", interval_minutes=int(interval)
+                        config_file,
+                        task_type="backup",
+                        repo=repo,
+                        group=group,
+                        interval_minutes=int(interval),
                     )
                 elif (
                     "hour" in args.create_scheduled_task
                     and "minute" in args.create_scheduled_task
                 ):
                     if args.create_backup_scheduled_task:
-                        type = "backup"
+                        task_type = "backup"
                     if args.create_housekeeping_scheduled_task:
-                        type = "housekeeping"
+                        task_type = "housekeeping"
                     hours, minutes = args.create_scheduled_task.split(",")
                     hour = hours.split("=")[1].strip()
                     minute = minutes.split("=")[1].strip()
                     result = create_scheduled_task(
-                        config_file, type=type, hour=int(hour), minute=int(minute)
+                        config_file,
+                        task_type=task_type,
+                        repo=repo,
+                        group=group,
+                        hour=int(hour),
+                        minute=int(minute),
                     )
                     if not result:
                         msg = "Scheduled task creation failed"
@@ -648,7 +656,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["operation"] = "prune"
     elif args.prune_max or args.group_operation == "prune_max":
         cli_args["operation"] = "prune"
-        cli_args["op_args"] = {"max": True}
+        cli_args["op_args"] = {"prune_max": True}
     elif args.unlock or args.group_operation == "unlock":
         cli_args["operation"] = "unlock"
     elif args.repair_index or args.group_operation == "repair_index":

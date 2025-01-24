@@ -51,11 +51,9 @@ def execution_logs(start_time: datetime) -> None:
         elif logger_worst_level >= 30:
             log_level_reached = "warnings"
     except AttributeError as exc:
-        logger.error("Cannot get worst log level reached: {}".format(exc))
+        logger.error(f"Cannot get worst log level reached: {exc}")
     logger.info(
-        "ExecTime = {}, finished, state is: {}.".format(
-            end_time - start_time, log_level_reached
-        )
+        f"ExecTime = {end_time - start_time}, finished, state is: {log_level_reached}."
     )
     # using sys.exit(code) in a atexit function will swallow the exitcode and render 0
     # Using sys.exit(logger.get_worst_logger_level()) is the way to go, when using ofunctions.logger_utils >= 2.4.1

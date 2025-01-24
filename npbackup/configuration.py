@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024110701"
+__build__ = "2025012401"
 __version__ = "npbackup 3.0.0+"
 
 MIN_CONF_VERSION = 3.0
@@ -84,7 +84,7 @@ def g(self, path, sep=".", default=None, list_ok=False):
         logger.debug(
             f"CONFIG ERROR {exc} for path={path},sep={sep},default={default},list_ok={list_ok}"
         )
-        raise AssertionError
+        raise AssertionError from exc
 
 
 def s(self, path, value, sep="."):
@@ -167,7 +167,6 @@ empty_config_dict = {
                 "compression": "auto",
                 "use_fs_snapshot": True,
                 "ignore_cloud_files": True,
-                "exclude_caches": True,
                 "one_file_system": False,
                 "priority": "low",
                 "exclude_caches": True,
@@ -775,13 +774,13 @@ def _get_config_file_checksum(config_file: Path) -> str:
     It's nice to log checksums of config file to see whenever it was changed
     """
     with open(config_file, "rb") as fh:
-        hash = 0
+        cur_hash = 0
         while True:
             s = fh.read(65536)
             if not s:
                 break
-            hash = zlib.crc32(s, hash)
-        return "%08X" % (hash & 0xFFFFFFFF)
+            cur_hash = zlib.crc32(s, cur_hash)
+        return "%08X" % (cur_hash & 0xFFFFFFFF)
 
 
 def _load_config_file(config_file: Path) -> Union[bool, dict]:

@@ -29,7 +29,6 @@ from ofunctions.misc import BytesConverter
 import FreeSimpleGUI as sg
 import _tkinter
 import npbackup.configuration
-from npbackup.__version__ import version_string
 import npbackup.common
 from resources.customization import (
     OEM_STRING,
@@ -77,7 +76,7 @@ def popup_wait_for_upgrade(text: str):
 
     layout = [[sg.Text(text)]]
     window = sg.Window(
-        f"Upgrade", layout=layout, no_titlebar=False, keep_on_top=True, finalize=True
+        "Upgrade", layout=layout, no_titlebar=False, keep_on_top=True, finalize=True
     )
     window.read(timeout=0)
     return window
@@ -565,14 +564,14 @@ def _main_gui(viewer_mode: bool):
         while True:
             action = None
             event, values = window.read()
-            if event in [sg.WIN_X_EVENT, sg.WIN_CLOSED, "--CANCEL--"]:
+            if event in (sg.WIN_X_EVENT, sg.WIN_CLOSED, "--CANCEL--"):
                 action = "--CANCEL--"
                 break
             if event == "--NEW-CONFIG--":
                 action = event
                 config_file = Path(values["-config_file-"])
                 break
-            if event == "--LOAD--" or event == "-config_file-":
+            if event in ("--LOAD--", "-config_file-"):
                 config_file = Path(values["-config_file-"])
                 if not values["-config_file-"] or not config_file.exists():
                     sg.PopupError(_t("generic.file_does_not_exist"), keep_on_top=True)
@@ -842,7 +841,7 @@ def _main_gui(viewer_mode: bool):
     else:
         config_file = Path(f"{CURRENT_DIR}/npbackup.conf").absolute()
         if not config_file.is_file():
-            config_file = Path(f"./npbackup.conf").absolute()
+            config_file = Path("./npbackup.conf").absolute()
             if not config_file.is_file():
                 config_file = None
 
@@ -872,9 +871,9 @@ def _main_gui(viewer_mode: bool):
             full_config,
             config_file,
             repo_config,
-            backup_destination,
+            _,
             backend_type,
-            repo_uri,
+            _,
             repo_list,
         ) = get_config(config_file=config_file, repo_name=args.repo_name)
 
@@ -1050,7 +1049,7 @@ def _main_gui(viewer_mode: bool):
             if full_config.g(f"repos.{active_repo}"):
                 (
                     repo_config,
-                    config_inheriteance,
+                    _,
                 ) = npbackup.configuration.get_repo_config(full_config, active_repo)
                 current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
                 gui_update_state()
@@ -1115,7 +1114,7 @@ def _main_gui(viewer_mode: bool):
                 continue
             repo_config = viewer_create_repo(viewer_repo_uri, viewer_repo_password)
             event = "--STATE-BUTTON--"
-        if event == "--LOAD-CONF--" or event == "--LOAD-EXISTING-CONF--":
+        if event in ("--LOAD-CONF--", "--LOAD-EXISTING-CONF--"):
             if event == "--LOAD-EXISTING-CONF--":
                 cfg_file = config_file
             else:
@@ -1133,9 +1132,9 @@ def _main_gui(viewer_mode: bool):
                 full_config = _full_config
                 config_file = _config_file
                 repo_config = _repo_config
-                backup_destination = _backup_destination
+                _ = _backup_destination
                 backend_type = _backend_type
-                repo_uri = _repo_uri
+                _ = _repo_uri
                 repo_list = _repo_list
             else:
                 sg.PopupError(
