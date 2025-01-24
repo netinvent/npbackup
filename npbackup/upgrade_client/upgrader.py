@@ -291,14 +291,14 @@ def auto_upgrader(
             f'echo "Moving current dist failed. Trying to copy it." >> "{log_file}" 2>&1 & '
             rf'xcopy /S /Y /I "{CURRENT_DIR}\*" "{backup_dist}" >> "{log_file}" 2>&1 & '
             f'echo "Now trying to overwrite current dist with upgrade dist" >> "{log_file}" 2>&1 & '
-            rf'xcopy /S /Y "{upgrade_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
+            rf'xcopy /S /Y /I "{upgrade_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
             f"set REPLACE_METHOD=overwrite"
             f") ELSE ( "
             f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 & '
             f'move /Y "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
             f'echo "Copying optional configuration files from {backup_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 & '
             # Just copy any possible *.conf file from any subdirectory
-            rf'xcopy /S /Y "{backup_dist}\*conf" {CURRENT_DIR} > NUL 2>&1 && '
+            rf'xcopy /S /Y /I "{backup_dist}\*conf" {CURRENT_DIR} > NUL 2>&1 && '
             f"set REPLACE_METHOD=move"
             f") &"
             f'echo "Loading new executable {CURRENT_EXECUTABLE} --check-config {" ".join(sys.argv[1:])}" >> "{log_file}" 2>&1 & '
