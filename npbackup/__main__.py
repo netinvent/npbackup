@@ -503,8 +503,10 @@ This is free software, and you are welcome to redistribute it under certain cond
                 ):
                     if args.create_backup_scheduled_task:
                         task_type = "backup"
-                    if args.create_housekeeping_scheduled_task:
+                    elif args.create_housekeeping_scheduled_task:
                         task_type = "housekeeping"
+                    else:
+                        task_type = None
                     hours, minutes = args.create_scheduled_task.split(",")
                     hour = hours.split("=")[1].strip()
                     minute = minutes.split("=")[1].strip()
