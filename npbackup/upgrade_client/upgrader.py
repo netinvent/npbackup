@@ -216,16 +216,22 @@ def auto_upgrader(
             "info", id_record=f"{file_type}/{target_id}"
         )
         if not file_info[file_type]:
-            logger.error(f"Cannot get file description for {file_type}")
-            return False
+            if file_type == "script":
+                logger.error("No upgrade script found. We'll try to use the internal script")
+            else:
+                logger.error(f"Cannot get file description for {file_type}")
+                return False
         try:
             logger.info(
                 f"Found file description for {file_type} with hash {file_info[file_type]['sha256sum']}"
             )
         except (KeyError, TypeError):
-            logger.error(f"Cannot get file description for {file_type}")
-            logger.debut("Trace", exc_info=True)
-            return False
+            logger.debug("Trace", exc_info=True)
+            if file_type == "script":
+                logger.info("No upgrade script found. We'll try to use the internal script")
+            else:
+                logger.error(f"Cannot get file description for {file_type}")
+                return False
         if file_info[file_type]["sha256sum"] is None:
             logger.info("No upgrade file found has been found for me :/")
             return True
@@ -237,23 +243,26 @@ def auto_upgrader(
             f"download/{file_type}/{target_id}", raw=True
         )
         if not file_data[file_type]:
-            logger.error("Cannot get update file")
-            return False
+            if file_type == "script":
+                logger.info("No upgrade script found. We'll try to use the internal script")
+            else:
+                logger.error("Cannot get update file")
+                return False
+        else:
+            current_file_cksum = sha256sum_data(file_data[file_type])
+            if current_file_cksum != file_info[file_type]["sha256sum"]:
+                logger.error(
+                    f"Expected checksum {file_info[file_type]['sha256sum']} does not match downloaded file checksum {current_file_cksum}. Won't run this"
+                )
+                return False
 
-        current_file_cksum = sha256sum_data(file_data[file_type])
-        if current_file_cksum != file_info[file_type]["sha256sum"]:
-            logger.error(
-                f"Expected checksum {file_info[file_type]['sha256sum']} does not match downloaded file checksum {current_file_cksum}. Won't run this"
+            local_fs_path = os.path.join(
+                tempfile.gettempdir(), file_info[file_type]["filename"]
             )
-            return False
-
-        local_fs_path = os.path.join(
-            tempfile.gettempdir(), file_info[file_type]["filename"]
-        )
-        with open(local_fs_path, "wb") as fh:
-            fh.write(file_data[file_type])
-        logger.info(f"{file_type} file written to {local_fs_path}")
-        file_info[file_type]["local_fs_path"] = local_fs_path
+            with open(local_fs_path, "wb") as fh:
+                fh.write(file_data[file_type])
+            logger.info(f"{file_type} file written to {local_fs_path}")
+            file_info[file_type]["local_fs_path"] = local_fs_path
 
     upgrade_date = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
     log_file = os.path.join(
