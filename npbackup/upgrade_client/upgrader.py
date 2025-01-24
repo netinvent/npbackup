@@ -289,9 +289,9 @@ def auto_upgrader(
             f'move /Y "{CURRENT_DIR}" "{backup_dist}" >> "{log_file}" 2>&1 & '
             f"IF !ERRORLEVEL! NEQ 0 ( "
             f'echo "Moving current dist failed. Trying to copy it." >> "{log_file}" 2>&1 & '
-            f'xcopy /S /Y /I "{CURRENT_DIR}\*" "{backup_dist}" >> "{log_file}" 2>&1 & '
+            rf'xcopy /S /Y /I "{CURRENT_DIR}\*" "{backup_dist}" >> "{log_file}" 2>&1 & '
             f'echo "Now trying to overwrite current dist with upgrade dist" >> "{log_file}" 2>&1 & '
-            f'xcopy /S /Y "{upgrade_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
+            rf'xcopy /S /Y "{upgrade_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 && '
             f"set REPLACE_METHOD=overwrite"
             f") ELSE ( "
             f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 & '
@@ -307,7 +307,7 @@ def auto_upgrader(
             f'echo "New executable failed. Rolling back" >> "{log_file}" 2>&1 & '
             f'IF "%REPLACE_METHOD%"=="overwrite" ( '
             f'echo "Overwrite method used. Overwrite back" >> "{log_file}" 2>&1 & '
-            f'xcopy /S /Y /I "{backup_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 '
+            rf'xcopy /S /Y /I "{backup_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 '
             f") ELSE ( "
             f'echo "Move method used. Move back" >> "{log_file}" 2>&1 & '
             f'rd /S /Q "{CURRENT_DIR}" >> "{log_file}" 2>&1 & '
