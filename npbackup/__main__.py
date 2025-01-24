@@ -403,6 +403,8 @@ This is free software, and you are welcome to redistribute it under certain cond
         json_error_logging(False, msg, "critical")
         sys.exit(71)
 
+    # This must be run before any other command since it's the way we're checking succesful upgrade processes
+    # So any pre-upgrade process command shall be bypassed when this is executed
     if args.check_config_file:
         json_error_logging(True, "Config file seems valid", "info")
         sys.exit(0)
