@@ -146,17 +146,17 @@ def get_file(
 
     _, archive_path, script_path = _get_path_from_target_id(file)
 
-    unknown_artefact = {
-        "artefact": file.artefact.value,
-        "arch": file.arch.value,
-        "platform": file.platform.value,
-        "build_type": file.build_type.value,
-        "audience": file.audience.value,
-        "sha256sum": None,
-        "filename": None,
-        "file_length": 0,
-    }
-
+    unknown_artefact = FileSend(
+        artefact=file.artefact.value,
+        arch=file.arch.value,
+        platform=file.platform.value,
+        build_type=file.build_type.value,
+        audience=file.audience.value,
+        sha256sum=None,
+        filename=None,
+        file_length=0,
+    )
+    
     if file.artefact.value == "archive":
         artefact_path = archive_path
     elif file.artefact.value == "script":
@@ -178,6 +178,7 @@ def get_file(
         length = len(file_conten_bytes)
         sha256 = sha256sum_data(file_conten_bytes)
         file_send = FileSend(
+            artefact=file.artefact.value,
             arch=file.arch.value,
             platform=file.platform.value,
             build_type=file.build_type.value,

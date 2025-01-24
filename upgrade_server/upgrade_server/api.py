@@ -31,6 +31,7 @@ from upgrade_server.models.files import (
 from upgrade_server.models.oper import CurrentVersion
 import upgrade_server.crud as crud
 import upgrade_server.configuration as configuration
+from upgrade_server.__debug__ import _DEBUG
 
 
 # Make sure we load given config files again
@@ -48,9 +49,12 @@ args = parser.parse_args()
 if args.config_file:
     config_dict = configuration.load_config(args.config_file)
 else:
-    config_dict = configuration.load_config()
+    config_dict = configuration.load_config(g)
 
 logger = logging.getLogger()
+if _DEBUG:
+    logger.setLevel(logging.DEBUG)
+
 
 #### Create app
 # app = FastAPI()        # standard FastAPI initialization

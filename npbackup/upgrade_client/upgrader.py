@@ -208,10 +208,10 @@ def auto_upgrader(
         auto_upgrade_host_identity=auto_upgrade_host_identity, group=group
     )
 
-    logger.info(f"Searching for file description for target {target_id}")
     file_info = {}
     file_data = {}
     for file_type in ("script", "archive"):
+        logger.info(f"Searching for {file_type} description for target {target_id}")
         file_info[file_type] = requestor.data_model(
             "info", id_record=f"{file_type}/{target_id}"
         )
@@ -237,8 +237,9 @@ def auto_upgrader(
                 logger.error(f"Cannot get file description for {file_type}")
                 return False
         if file_info[file_type]["sha256sum"] is None:
-            logger.info("No upgrade file found has been found for me :/")
-            return True
+            logger.info(f"No {file_type} file found has been found for me :/")
+            if file_type != "script":
+                return True
 
     logger.info(f"Downloading upgrade file for target {target_id}")
     for file_type in ("script", "archive"):
