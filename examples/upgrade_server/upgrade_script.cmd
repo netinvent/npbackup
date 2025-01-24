@@ -17,7 +17,7 @@ IF !ERRORLEVEL! NEQ 0 (
     xcopy /S /Y /I "{CURRENT_DIR}\*" "{backup_dist}" >> "{log_file}" 2>&1
     echo "Now trying to overwrite current dist with upgrade dist" >> "{log_file}" 2>&1
     xcopy /S /Y /I "{upgrade_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1
-    set REPLACE_METHD=overwrite
+    set REPLACE_METHOD=overwrite
 ) ELSE (
     echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1
     move /Y "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1
@@ -33,9 +33,9 @@ IF !ERRORLEVEL! NEQ 0 (
     IF "%REPLACE_METHOD%"=="overwrite" echo "Overwrite method used. Overwrite back" >> "{log_file}" 2>&1
     IF "%REPLACE_METHOD%"=="overwrite" xcopy /S /Y /I "{backup_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1
 
-    IF "%REPLACE_METHOD%"!="overwrite" echo "Move method used. Move back" >> "{log_file}" 2>&1
-    IF "%REPLACE_METHOD%"!="overwrite" rd /S /Q "{CURRENT_DIR}" >> "{log_file}" 2>&1 &
-    IF "%REPLACE_METHOD%"!="overwrite" move /Y "{backup_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1
+    IF NOT "%REPLACE_METHOD%"=="overwrite" echo "Move method used. Move back" >> "{log_file}" 2>&1
+    IF NOT "%REPLACE_METHOD%"=="overwrite" rd /S /Q "{CURRENT_DIR}" >> "{log_file}" 2>&1 &
+    IF NOT "%REPLACE_METHOD%"=="overwrite" move /Y "{backup_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1
 ) ELSE (
     echo "Upgrade successful" >> "{log_file}" 2>&1
     rd /S /Q "{backup_dist}" >> "{log_file}" 2>&1
