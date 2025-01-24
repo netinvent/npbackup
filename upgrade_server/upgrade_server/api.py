@@ -11,6 +11,7 @@ __build__ = "2025011401"
 __appname__ = "npbackup.upgrader"
 
 
+import os
 from typing import Optional, Union
 import logging
 import secrets
@@ -18,6 +19,7 @@ from argparse import ArgumentParser
 from fastapi import FastAPI, HTTPException, Response, Depends, status, Request, Header
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi_offline import FastAPIOffline
+from ofunctions.logger_utils import logger_get_logger
 from upgrade_server.models.files import (
     ClientTargetIdentification,
     FileGet,
@@ -45,15 +47,40 @@ parser.add_argument(
     required=False,
     help="Path to upgrade_server.conf file",
 )
+
+parser.add_argument(
+    "--log-file",
+    type=str,
+    default=None,
+    required=False,
+    help="Optional path for logfile, overrides config file values",
+)
+
 args = parser.parse_args()
+
+
+if args.log_file:
+    log_file = args.log_file
+else:
+    if os.name == "nt":
+        log_file = os.path.join(f"{__appname__}.log")
+    else:
+        log_file = f"/var/log/{__appname__}.log"
+logger = logger_get_logger(log_file, debug=_DEBUG)
+
+
 if args.config_file:
     config_dict = configuration.load_config(args.config_file)
 else:
     config_dict = configuration.load_config()
 
-logger = logging.getLogger()
-if _DEBUG:
-    logger.setLevel(logging.DEBUG)
+try:
+    if not args.log_file:
+        logger = logger_get_logger(
+            config_dict["http_server"]["log_file"], debug=_DEBUG
+        )
+except (AttributeError, KeyError, IndexError, TypeError):
+    pass
 
 
 #### Create app
