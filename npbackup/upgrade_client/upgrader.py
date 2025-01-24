@@ -208,6 +208,7 @@ def auto_upgrader(
         auto_upgrade_host_identity=auto_upgrade_host_identity, group=group
     )
 
+    logger.info(f"Searching for file description for target {target_id}")
     file_info = requestor.data_model("upgrades", id_record=target_id)
     if not file_info:
         logger.error("Server didn't provide a file description")
@@ -222,6 +223,7 @@ def auto_upgrader(
         logger.info("No upgrade file found has been found for me :/")
         return True
 
+    logger.info(f"Downloading upgrade file for target {target_id}")
     file_data = requestor.requestor(f"download/{target_id}", raw=True)
     if not file_data:
         logger.error("Cannot get update file")
