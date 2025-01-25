@@ -25,12 +25,12 @@ from npbackup.core.nuitka_helper import IS_COMPILED
 # Since developpment currently follows Python 3.12, let's consider anything below 3.12 as legacy
 IS_LEGACY = True if sys.version_info[1] < 12 else False
 
-executable = sys.argv[0].split(os.sep)[-1]
-if executable == "npbackup-gui":
+executable = sys.argv[0]
+if executable.startswith("npbackup-gui"):
     build_type = "gui"
-elif executable == "npbackup-cli":
+elif executable.startswith("npbackup-cli"):
     build_type = "cli"
-elif executable == "npbackup-viewer":
+elif executable.startswith("npbackup-viewer"):
     build_type = "viewer"
 else:
     build_type = "UnknownBuildType"
