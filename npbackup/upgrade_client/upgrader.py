@@ -218,7 +218,7 @@ def auto_upgrader(
         if not file_info[file_type]:
             if file_type == "script":
                 logger.error(
-                    "No upgrade script found. We'll try to use the internal script"
+                    "No upgrade script found. We'll try to use the inline script"
                 )
             else:
                 logger.error(f"Cannot get file description for {file_type}")
@@ -231,7 +231,7 @@ def auto_upgrader(
             logger.debug("Trace", exc_info=True)
             if file_type == "script":
                 logger.info(
-                    "No upgrade script found. We'll try to use the internal script"
+                    "Could not check for upgrade script. We'll try to use the inline script"
                 )
             else:
                 logger.error(f"Cannot get file description for {file_type}")
@@ -248,11 +248,7 @@ def auto_upgrader(
             f"download/{file_type}/{target_id}", raw=True
         )
         if not file_data[file_type]:
-            if file_type == "script":
-                logger.info(
-                    "No upgrade script found. We'll try to use the internal script"
-                )
-            else:
+            if file_type != "script":
                 logger.error("Cannot get update file")
                 return False
         else:
@@ -348,8 +344,12 @@ def auto_upgrader(
         else:
             cmd = f'bash "{file_info["script"]["local_fs_path"]}"'
     else:
-        logger.info("Using internal upgrade script")
+        logger.info("Using inline upgrade script")
 
+        # By the way, why do we have an inline script ?
+        # it's harder to maintain, and isn't as flexible as a remote script
+        # but, some AV engines hate remote scripts, so we have to provide an inline script
+        # or we'll get flagged as malware
         if os.name == "nt":
             cmd = (
                 f'echo "Launching upgrade" >> "{log_file}" 2>&1 & '
