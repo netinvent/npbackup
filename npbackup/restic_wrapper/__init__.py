@@ -84,11 +84,11 @@ class ResticRunner:
                 "GZ",
                 "RCLONE",
             ]:
-                self._backend_type = backend.lower()
+                self._repo_type = backend.lower()
             else:
-                self._backend_type = "local"
+                self._repo_type = "local"
         except AttributeError:
-            self._backend_type = None
+            self._repo_type = None
         self._ignore_cloud_files = True
         self._additional_parameters = None
         self._environment_variables = {}
@@ -119,7 +119,7 @@ class ResticRunner:
                 self.password = None
         if self.repository:
             try:
-                if self._backend_type == "local":
+                if self._repo_type == "local":
                     self.repository = os.path.expanduser(self.repository)
                     self.repository = os.path.expandvars(self.repository)
                 os.environ["RESTIC_REPOSITORY"] = str(self.repository)
@@ -482,7 +482,7 @@ class ResticRunner:
             if value > 0:
                 self._backend_connections = value
             elif value == 0:
-                if self._backend_type == "local":
+                if self._repo_type == "local":
                     self._backend_connections = 2
                 else:
                     self._backend_connections = 8
@@ -559,9 +559,9 @@ class ResticRunner:
             args += " --limit-upload {}".format(self.limit_upload)
         if self.limit_download:
             args += " --limit-download {}".format(self.limit_download)
-        if self.backend_connections and self._backend_type != "local":
+        if self.backend_connections and self._repo_type != "local":
             args += " -o {}.connections={}".format(
-                self._backend_type, self.backend_connections
+                self._repo_type, self.backend_connections
             )
         if self.verbose:
             args += " -vv"

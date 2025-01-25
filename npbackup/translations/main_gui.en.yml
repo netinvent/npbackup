@@ -15,6 +15,7 @@ en:
   only_include: Only include
   destination_folder: Destination folder
   backup_state: Backup state
+  repo_type: Repo type
   backup_list_to: List of backups to repo
   local_folder: Local folder
   external_server: external server

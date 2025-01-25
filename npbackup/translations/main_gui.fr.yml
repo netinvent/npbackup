@@ -15,6 +15,7 @@ fr:
   only_include: Inclure seulement
   destination_folder: Dossier de destination
   backup_state: Etat de sauvegarde
+  repo_type: Type de dépot
   backup_list_to: Liste des sauvegardes vers le dépot
   local_folder: Dossier local
   external_server: serveur externalisé

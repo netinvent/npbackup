@@ -593,7 +593,7 @@ def _main_gui(viewer_mode: bool):
     def gui_update_state() -> None:
         nonlocal current_state
         nonlocal backup_tz
-        nonlocal backend_type
+        nonlocal repo_type
         nonlocal snapshot_list
 
         if current_state:
@@ -618,7 +618,7 @@ def _main_gui(viewer_mode: bool):
             window["--STATE-BUTTON--"].Update(
                 _t("generic.not_connected_yet"), button_color=GUI_STATE_UNKNOWN_BUTTON
             )
-        window["-backend_type-"].Update(backend_type)
+        window["-repo_type-"].Update(repo_type)
         window["snapshot-list"].Update(snapshot_list)
 
     def get_gui_data(repo_config: dict) -> Tuple[bool, List[str]]:
@@ -751,11 +751,11 @@ def _main_gui(viewer_mode: bool):
                 full_config, repo_name=repo_name
             )
             backup_destination = _t("main_gui.local_folder")
-            backend_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
+            repo_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
         else:
             repo_config = None
             backup_destination = "None"
-            backend_type = "None"
+            repo_type = "None"
             repo_uri = "None"
         repo_list = npbackup.configuration.get_repo_list(full_config)
 
@@ -775,7 +775,7 @@ def _main_gui(viewer_mode: bool):
             config_file,
             repo_config,
             backup_destination,
-            backend_type,
+            repo_type,
             repo_uri,
             repo_list,
         )
@@ -866,7 +866,7 @@ def _main_gui(viewer_mode: bool):
             repo_config = None
         config_file = None
         full_config = None
-        backend_type = None
+        repo_type = None
         repo_list = []
     else:
         (
@@ -874,7 +874,7 @@ def _main_gui(viewer_mode: bool):
             config_file,
             repo_config,
             _,
-            backend_type,
+            repo_type,
             _,
             repo_list,
         ) = get_config(config_file=config_file, repo_name=args.repo_name)
@@ -894,60 +894,62 @@ def _main_gui(viewer_mode: bool):
                 [
                     [
                         sg.Column(
-                            [[sg.Image(data=OEM_LOGO)]], vertical_alignment="top"
+                            [[sg.Image(data=OEM_LOGO)]], vertical_alignment="middle"
                         ),
                         sg.Column(
                             [
-                                [sg.Text(OEM_STRING, font="Arial 14")],
-                                (
-                                    [sg.Text(_t("main_gui.viewer_mode"))]
-                                    if viewer_mode
-                                    else []
-                                ),
                                 [
-                                    sg.Text("{} ".format(_t("main_gui.backup_state"))),
-                                    sg.Text("", key="-backend_type-"),
+                                    sg.Text(OEM_STRING, font="Arial 14")
                                 ],
                                 [
+                                    sg.Text(_t("main_gui.viewer_mode"))
+                                ] if viewer_mode
+                                else [],
+                                [
+                                    sg.Text(
+                                        _t("main_gui.no_config"),
+                                        font=("Arial", 14),
+                                        text_color="red",
+                                        key="-NO-CONFIG-",
+                                        visible=False,
+                                    )
+                                ]
+                                if not viewer_mode
+                                else []
+                            ],
+                            justification="C",
+                            element_justification="C",
+                            vertical_alignment="top",
+                        ),
+                        sg.Column(
+                            [
+                                [
+                                    sg.Text(_t("main_gui.backup_state"), size=(20, 1)),
                                     sg.Button(
                                         _t("generic.refresh"),
                                         key="--STATE-BUTTON--",
                                         button_color=("white", "grey"),
                                     )
                                 ],
-                            ],
-                            justification="C",
-                            element_justification="C",
-                            vertical_alignment="top",
-                        ),
+                                [
+                                    sg.Text(_t("main_gui.backup_list_to"), size=(20, 1)),
+                                    sg.Combo(
+                                        repo_list,
+                                        key="-active_repo-",
+                                        default_value=repo_list[0] if repo_list else None,
+                                        enable_events=True,
+                                        size=(20, 1),
+                                    ),
+                                ]
+                                if not viewer_mode
+                                else [],
+                                [
+                                    sg.Text(_t("main_gui.repo_type"), size=(20, 1)),
+                                    sg.Text("", key="-repo_type-"),
+                                ],
+                            ]
+                        )
                     ],
-                    (
-                        [
-                            sg.Text(
-                                _t("main_gui.no_config"),
-                                font=("Arial", 14),
-                                text_color="red",
-                                key="-NO-CONFIG-",
-                                visible=False,
-                            )
-                        ]
-                        if not viewer_mode
-                        else []
-                    ),
-                    (
-                        [
-                            sg.Text(_t("main_gui.backup_list_to")),
-                            sg.Combo(
-                                repo_list,
-                                key="-active_repo-",
-                                default_value=repo_list[0] if repo_list else None,
-                                enable_events=True,
-                                size=(20, 1),
-                            ),
-                        ]
-                        if not viewer_mode
-                        else []
-                    ),
                     [
                         sg.Table(
                             values=[[]],
@@ -1129,7 +1131,7 @@ def _main_gui(viewer_mode: bool):
                 _config_file,
                 _repo_config,
                 _backup_destination,
-                _backend_type,
+                _repo_type,
                 _repo_uri,
                 _repo_list,
             ) = get_config(window=window, config_file=cfg_file)
@@ -1138,7 +1140,7 @@ def _main_gui(viewer_mode: bool):
                 config_file = _config_file
                 repo_config = _repo_config
                 _ = _backup_destination
-                backend_type = _backend_type
+                repo_type = _repo_type
                 _ = _repo_uri
                 repo_list = _repo_list
             else:
@@ -1152,8 +1154,8 @@ def _main_gui(viewer_mode: bool):
             event = "--STATE-BUTTON--"
         if event == _t("generic.destination"):
             try:
-                if backend_type:
-                    if backend_type in ["REST", "SFTP"]:
+                if repo_type:
+                    if repo_type in ["REST", "SFTP"]:
                         destination_string = repo_config.g("repo_uri").split("@")[-1]
                     else:
                         destination_string = repo_config.g("repo_uri")

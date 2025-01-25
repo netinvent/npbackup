@@ -47,12 +47,12 @@ def gui_update_state(window, full_config: dict, unencrypted: str = None) -> list
                 repo_config.g("repo_opts.repo_password")
                 or repo_config.g("repo_opts.repo_password_command")
             ):
-                backend_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
+                repo_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
                 repo_group = repo_config.g("repo_group")
                 if not unencrypted and unencrypted != repo_name:
                     repo_uri = ENCRYPTED_DATA_PLACEHOLDER
                 repo_and_group_list.append(
-                    gui_object("repo", repo_name, repo_group, backend_type, repo_uri)
+                    gui_object("repo", repo_name, repo_group, repo_type, repo_uri)
                 )
             else:
                 logger.warning("Incomplete URI/password for repo {}".format(repo_name))
