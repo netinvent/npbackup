@@ -64,7 +64,9 @@ def _get_path_from_target_id(
 
     expected_archive_filename = f"npbackup-{target_id.platform.value}-{target_id.arch.value}-{target_id.build_type.value}-{target_id.audience.value}.{archive_extension}"
     expected_script_filename = f"npbackup-{target_id.platform.value}-{target_id.arch.value}-{target_id.build_type.value}-{target_id.audience.value}.{script_extension}"
-    expected_short_script_filename = f"npbackup-{target_id.platform.value}.{script_extension}"
+    expected_short_script_filename = (
+        f"npbackup-{target_id.platform.value}.{script_extension}"
+    )
 
     base_path = os.path.join(
         config_dict["upgrades"]["data_root"],
@@ -129,7 +131,9 @@ def get_file(
     config_dict: dict, file: FileGet, content: bool = False
 ) -> Optional[Union[FileSend, bytes, bool]]:
 
-    _, archive_path, script_path, short_script_path = _get_path_from_target_id(config_dict, file)
+    _, archive_path, script_path, short_script_path = _get_path_from_target_id(
+        config_dict, file
+    )
 
     unknown_artefact = FileSend(
         artefact=file.artefact.value,
@@ -143,23 +147,24 @@ def get_file(
     )
 
     if file.artefact.value == "archive":
-        artefact_path = archive_path
+        artefact_paths = archive_path
     elif file.artefact.value == "script":
-        artefact_path = script_path
+        artefact_paths = (script_path, short_script_path)
     else:
         logger.error(f"Unknown artefact type {file.artefact.value}")
         return unknown_artefact
-    logger.info(
-        f"Searching for file {'info' if not content else 'content'} in {artefact_path}"
-    )
-    if not os.path.isfile(artefact_path):
-        logger.info(f"No {file.artefact.value} file found in {artefact_path}")
-        if file.artefact.value == "script":
-            artefact_path = short_script_path
-            if not os.path.isfile(artefact_path):
-                logger.info(f"No {file.artefact.value} file found in {artefact_path}")
-                if content:
-                    return False
+
+    artefact_found = False
+    for artefact_path in artefact_paths:
+        logger.info(
+            f"Searching for file {'info' if not content else 'content'} in {artefact_path}"
+        )
+        if not os.path.isfile(artefact_path):
+            logger.info(f"No {file.artefact.value} file found in {artefact_path}")
+        else:
+            artefact_found = True
+            break
+    if not artefact_found:
         if content:
             return False
         return unknown_artefact
