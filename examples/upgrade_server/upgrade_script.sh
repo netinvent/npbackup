@@ -18,7 +18,7 @@ find "{backup_dist}" -name "*.conf" -exec cp --parents "{}" "{CURRENT_DIR}" \;
 echo "Adding executable bit to new executable" >> "{log_file}" 2>&1
 chmod +x "{CURRENT_EXECUTABLE}" >> "{log_file}" 2>&1
 echo "Loading new executable {CURRENT_EXECUTABLE} --run-as-cli --check-config {original_args}" >> "{log_file}" 2>&1
-"{CURRENT_EXECUTABLE}" --run-as-cli --check-config {orignal_orgs} >> "{log_file}" 2>&1
+"{CURRENT_EXECUTABLE}" --run-as-cli --check-config {original_orgs} >> "{log_file}" 2>&1
 if [ $? -ne 0 ]; then
     echo "New executable failed. Rolling back" >> "{log_file}" 2>&1
     mv -f "{CURRENT_DIR}" "{backup_dist}.original">> "{log_file}" 2>&1

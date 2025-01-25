@@ -400,7 +400,7 @@ def auto_upgrader(
                 f'echo "Adding executable bit to new executable" >> "{log_file}" 2>&1 ;'
                 f'chmod +x "{CURRENT_EXECUTABLE}" >> "{log_file}" 2>&1 ;'
                 f'echo "Loading new executable {CURRENT_EXECUTABLE} --run-as-cli --check-config {original_args}" >> "{log_file}" 2>&1 ;'
-                f'"{CURRENT_EXECUTABLE}" --run-as-cli --check-config {orignal_orgs} >> "{log_file}" 2>&1 ;'
+                f'"{CURRENT_EXECUTABLE}" --run-as-cli --check-config {original_orgs} >> "{log_file}" 2>&1 ;'
                 f"if [ $? -ne 0 ]; then "
                 f'    echo "New executable failed. Rolling back" >> "{log_file}" 2>&1 ;'
                 f'    mv -f "{CURRENT_DIR}" "{backup_dist}.original">> "{log_file}" 2>&1 ;'
