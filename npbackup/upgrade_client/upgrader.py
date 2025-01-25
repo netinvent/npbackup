@@ -363,7 +363,7 @@ def auto_upgrader(
                 f'echo "Moving current dist failed. Trying to copy it." >> "{log_file}" 2>&1 & '
                 fr'xcopy /S /Y /I "{CURRENT_DIR}\*" "{backup_dist}" >> "{log_file}" 2>&1 & '
                 f'echo "Now trying to overwrite current dist with upgrade dist" >> "{log_file}" 2>&1 & '
-                f'xcopy /S /Y /I "{upgrade_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 & '
+                f'xcopy /S /Y /I "{upgrade_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 '
                 f') & '
                 f'echo "Loading new executable {CURRENT_EXECUTABLE} --check-config {original_args}" >> "{log_file}" 2>&1 & '
                 f'"{CURRENT_EXECUTABLE}" --check-config {original_args} >> "{log_file}" 2>&1 && ( '
