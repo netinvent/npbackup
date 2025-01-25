@@ -23,8 +23,12 @@ from functools import wraps
 from command_runner import command_runner
 from ofunctions.misc import BytesConverter, fn_name
 from npbackup.__debug__ import _DEBUG
-from npbackup.__version__ import build_type
-from npbackup.__env__ import FAST_COMMANDS_TIMEOUT, CHECK_INTERVAL, HEARTBEAT_INTERVAL
+from npbackup.__env__ import (
+    FAST_COMMANDS_TIMEOUT,
+    CHECK_INTERVAL,
+    HEARTBEAT_INTERVAL,
+    BUILD_TYPE,
+)
 from npbackup.path_helper import CURRENT_DIR
 from npbackup.restic_wrapper import schema
 
@@ -857,7 +861,8 @@ class ResticRunner:
         cmd = "ls {}".format(snapshot)
         result, output = self.executor(cmd, method="monitor")
         if result:
-            if build_type in ["gui", "viewer"]:
+            # Don't show content when running in gui mode
+            if BUILD_TYPE in ["gui", "viewer"]:
                 msg = (
                     f"Successfully listed snapshot {snapshot} content (not showed here)"
                 )

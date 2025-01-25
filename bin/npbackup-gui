@@ -8,13 +8,15 @@ import sys
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
 
+import npbackup.__env__
+npbackup.__env__.BUILD_TYPE = "gui"
 from npbackup.gui.__main__ import main_gui
 from npbackup.__main__ import main
 
 del sys.path[0]
 
 if __name__ == "__main__":
-    while "--run-as-cli" in sys.argv:
+    if "--run-as-cli" in sys.argv:
         # Drop --run-as-cli argument since cli doesn't know about it
         sys.argv.pop(sys.argv.index("--run-as-cli"))
         main()

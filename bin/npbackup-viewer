@@ -8,6 +8,8 @@ import sys
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
 
+import npbackup.__env__
+npbackup.__env__.BUILD_TYPE = "viewer"
 from npbackup.gui.__main__ import main_gui
 
 del sys.path[0]

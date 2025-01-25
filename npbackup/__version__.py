@@ -17,6 +17,7 @@ import os
 import sys
 import psutil
 from ofunctions.platform import python_arch, get_os
+import npbackup.__env__
 from npbackup.configuration import IS_PRIV_BUILD
 from npbackup.core.nuitka_helper import IS_COMPILED
 
@@ -25,16 +26,6 @@ from npbackup.core.nuitka_helper import IS_COMPILED
 # Since developpment currently follows Python 3.12, let's consider anything below 3.12 as legacy
 IS_LEGACY = True if sys.version_info[1] < 12 else False
 
-executable = sys.argv[0]
-if executable.startswith("npbackup-gui"):
-    build_type = "gui"
-elif executable.startswith("npbackup-cli"):
-    build_type = "cli"
-elif executable.startswith("npbackup-viewer"):
-    build_type = "viewer"
-else:
-    build_type = "UnknownBuildType"
-
 try:
     CURRENT_USER = psutil.Process().username()
 except Exception:
@@ -42,7 +33,7 @@ except Exception:
 version_dict = {
     "name": __intname__,
     "version": __version__,
-    "build_type": build_type,
+    "build_type": npbackup.__env__.BUILD_TYPE,
     "audience": "private" if IS_PRIV_BUILD else "public",
     "os": get_os().lower(),
     "arch": python_arch() + ("-legacy" if IS_LEGACY else ""),

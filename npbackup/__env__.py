@@ -33,3 +33,8 @@ FAST_COMMANDS_TIMEOUT = 180
 
 # # Wait x seconds before we actually do the upgrade so current program could quit before being erased
 UPGRADE_DEFER_TIME = 60
+
+
+def set_build_type(build_type: str) -> None:
+    global BUILD_TYPE
+    BUILD_TYPE = build_type
