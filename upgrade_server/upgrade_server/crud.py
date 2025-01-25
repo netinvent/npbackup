@@ -164,6 +164,7 @@ def get_file(
             return False
         return unknown_artefact
 
+    logger.info(f"Serving {file.artefact.value} file in {artefact_path}")
     with open(artefact_path, "rb") as fh:
         file_content_bytes = fh.read()
         if content:
