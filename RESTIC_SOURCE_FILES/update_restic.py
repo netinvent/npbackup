@@ -112,7 +112,9 @@ def download_restic_binaries(arch: str = "amd64") -> bool:
                 if arch_suffix != ".bz2":
                     if dest_dir.joinpath("ARCHIVES").joinpath(filename).is_file():
                         dest_dir.joinpath("ARCHIVES").joinpath(filename).unlink()
-                    shutil.move(full_path, dest_dir.joinpath("ARCHIVES").joinpath(filename))
+                    shutil.move(
+                        full_path, dest_dir.joinpath("ARCHIVES").joinpath(filename)
+                    )
             except OSError as exc:
                 print(
                     f'CANNOT MOVE TO ARCHIVE: {full_path} to {dest_dir.joinpath("ARCHIVES").joinpath(filename)}: {[exc]}'

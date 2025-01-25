@@ -1163,7 +1163,11 @@ def _main_gui(viewer_mode: bool):
             except (TypeError, KeyError):
                 sg.PopupNoFrame(_t("main_gui.unknown_repo"))
         if event == "--ABOUT--":
-            about_gui(version_string, full_config if not viewer_mode else None, auto_upgrade_result)
+            about_gui(
+                version_string,
+                full_config if not viewer_mode else None,
+                auto_upgrade_result,
+            )
         if event == "--STATE-BUTTON--":
             if full_config or viewer_mode:
                 current_state, backup_tz, snapshot_list = get_gui_data(repo_config)

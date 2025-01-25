@@ -105,7 +105,8 @@ scripts = ["misc/npbackup-cli.cmd"]
 console_scripts = [
     "npbackup-cli = npbackup.__main__:main",
     "npbackup-gui = npbackup.gui.__main__:main_gui",
-    "npbackup-viewer = npbackup.gui.viewer:viewer_gui",]
+    "npbackup-viewer = npbackup.gui.viewer:viewer_gui",
+]
 
 setuptools.setup(
     name=PACKAGE_NAME,

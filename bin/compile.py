@@ -31,6 +31,7 @@ import argparse
 import atexit
 from command_runner import command_runner
 from ofunctions.platform import python_arch, get_os
+
 if os.name == "nt":
     from npbackup.windows.sign_windows import sign
 from npbackup.__version__ import IS_LEGACY
@@ -105,12 +106,14 @@ def check_private_build():
     try:
         import PRIVATE._private_secret_keys
         import PRIVATE._obfuscation
+
         print("INFO: Building with private secret key")
         private = True
     except ImportError:
         try:
             import npbackup.secret_keys
             import npbackup.obfuscation
+
             print("INFO: Building with default secret key")
             private = False
         except ImportError:
@@ -166,6 +169,7 @@ def move_audience_files(audience):
         else:
             raise "Bogus audience"
 
+
 """
 def get_conf_dist_file(audience):
     platform = get_os().lower()
@@ -186,6 +190,7 @@ def get_conf_dist_file(audience):
     return dist_conf_file_path
 """
 
+
 def have_nuitka_commercial():
     try:
         import nuitka.plugins.commercial
@@ -197,12 +202,19 @@ def have_nuitka_commercial():
         return False
 
 
-def compile(arch: str, audience: str, build_type: str, onefile: bool, create_tar_only: bool, ev_cert_data: str = None, sign_only: bool = False):
+def compile(
+    arch: str,
+    audience: str,
+    build_type: str,
+    onefile: bool,
+    create_tar_only: bool,
+    ev_cert_data: str = None,
+    sign_only: bool = False,
+):
     if build_type not in BUILD_TYPES:
         print("CANNOT BUILD BOGUS BUILD TYPE")
         sys.exit(1)
     source_program = "bin/npbackup-{}".format(build_type)
-
 
     if onefile:
         suffix = "-{}-{}".format(build_type, arch)
@@ -351,9 +363,16 @@ def compile(arch: str, audience: str, build_type: str, onefile: bool, create_tar
         compiled_output_dir = os.path.join(
             OUTPUT_DIR, "npbackup-{}{}".format(build_type, NUITKA_STANDALONE_SUFFIX)
         )
-        npbackup_executable = os.path.join(compiled_output_dir, "npbackup-{}.exe".format(build_type))
+        npbackup_executable = os.path.join(
+            compiled_output_dir, "npbackup-{}.exe".format(build_type)
+        )
         if os.path.isfile(ev_cert_data):
-            sign(executable=npbackup_executable, arch=arch, ev_cert_data=ev_cert_data, dry_run=args.dry_run)
+            sign(
+                executable=npbackup_executable,
+                arch=arch,
+                ev_cert_data=ev_cert_data,
+                dry_run=args.dry_run,
+            )
         else:
             print("ERROR: Cannot sign windows executable without EV certificate data")
             errors = True
@@ -376,7 +395,7 @@ def create_archive(
     """
     Create tar releases for each compiled version
     """
-    
+
     compiled_output = os.path.join(
         output_dir, "npbackup-{}{}".format(build_type, NUITKA_STANDALONE_SUFFIX)
     )
@@ -459,7 +478,6 @@ if __name__ == "__main__":
         help="Digitally sign windows executables",
     )
 
-
     parser.add_argument(
         "--sign-only",
         action="store_true",
@@ -481,7 +499,7 @@ if __name__ == "__main__":
         action="store_true",
         default=False,
         required=False,
-        help="Only create tar files, shortcut when we need to package signed binaries"
+        help="Only create tar files, shortcut when we need to package signed binaries",
     )
 
     args = parser.parse_args()
@@ -512,8 +530,8 @@ if __name__ == "__main__":
 
         for audience in audiences:
             npbackup_version = get_metadata(os.path.join(BASEDIR, "__version__.py"))[
-                    "version"
-                ]
+                "version"
+            ]
             if not create_tar_only:
                 move_audience_files(audience)
 
@@ -522,7 +540,9 @@ if __name__ == "__main__":
                     print("ERROR: Requested public build but private data available")
                     sys.exit(1)
                 elif not private_build and audience != "public":
-                    print("ERROR: Requested private build but no private data available")
+                    print(
+                        "ERROR: Requested private build but no private data available"
+                    )
                     sys.exit(1)
             for build_type in build_types:
                 result = compile(
@@ -532,7 +552,7 @@ if __name__ == "__main__":
                     onefile=args.onefile,
                     create_tar_only=create_tar_only,
                     ev_cert_data=args.ev_cert_data,
-                    sign_only=sign_only
+                    sign_only=sign_only,
                 )
                 if not create_tar_only and not sign_only:
                     audience_build = "private" if private_build else "public"
