@@ -381,7 +381,7 @@ def auto_upgrader(
                 f") & "
                 f'echo "Running as initially planned:" >> "{log_file}" 2>&1 & '
                 f'echo "{CURRENT_EXECUTABLE} {original_args}" >> "{log_file}" 2>&1 & '
-                f'{CURRENT_EXECUTABLE}" {original_args} & '
+                f'"{CURRENT_EXECUTABLE}" {original_args} & '
                 f'echo "Upgrade script run finished" >> "{log_file}" 2>&1 '
             )
         else:
