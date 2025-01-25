@@ -560,7 +560,7 @@ def _main_gui(viewer_mode: bool):
                 sg.Push(),
                 sg.Button(_t("generic.cancel"), key="--CANCEL--"),
                 sg.Button(_t("main_gui.new_config"), key="--NEW-CONFIG--"),
-                sg.Button(_t("main_gui.load_existing_file"), key="--LOAD--"),
+                sg.Button(_t("main_gui.open_existing_file"), key="--LOAD--"),
             ],
         ]
         window = sg.Window("Configuration File", layout=layout, keep_on_top=True)
@@ -610,9 +610,7 @@ def _main_gui(viewer_mode: bool):
             )
         elif current_state is False:
             window["--STATE-BUTTON--"].Update(
-                "{}: {}".format(
-                    _t("generic.too_old"), backup_tz.replace(microsecond=0)
-                ),
+                "{}: {}".format(_t("generic.old"), backup_tz.replace(microsecond=0)),
                 button_color=GUI_STATE_OLD_BUTTON,
             )
         elif current_state is None:
@@ -882,11 +880,11 @@ def _main_gui(viewer_mode: bool):
 
     right_click_menu = ["", [_t("generic.destination")]]
     headings = [
-        "ID     ",
-        "Date               ",
-        "Hostname  ",
+        "ID    ",
+        "Date      ",
+        "Hostname    ",
         "User              ",
-        "Tags        ",
+        "Tags           ",
     ]
 
     layout = [
@@ -899,57 +897,67 @@ def _main_gui(viewer_mode: bool):
                         ),
                         sg.Column(
                             [
-                                [
-                                    sg.Text(OEM_STRING, font="Arial 14")
-                                ],
-                                [
-                                    sg.Text(_t("main_gui.viewer_mode"))
-                                ] if viewer_mode
-                                else [],
-                                [
-                                    sg.Text(
-                                        _t("main_gui.no_config"),
-                                        text_color="red",
-                                        key="-NO-CONFIG-",
-                                        visible=False,
-                                        size=(25, 2)
-                                    )
-                                ]
-                                if not viewer_mode
-                                else []
+                                [sg.Text(OEM_STRING, font="Arial 14")],
+                                (
+                                    [sg.Text(_t("main_gui.viewer_mode"))]
+                                    if viewer_mode
+                                    else []
+                                ),
+                                (
+                                    [
+                                        sg.Text(
+                                            _t("main_gui.no_config"),
+                                            text_color="red",
+                                            key="-NO-CONFIG-",
+                                            visible=False,
+                                            size=(25, 2),
+                                        )
+                                    ]
+                                    if not viewer_mode
+                                    else []
+                                ),
                             ],
-                            justification="C",
-                            element_justification="C",
+                            justification="L",
+                            element_justification="L",
                             vertical_alignment="top",
                         ),
                         sg.Column(
                             [
                                 [
-                                    sg.Text(_t("main_gui.backup_state"), size=(20, 1)),
+                                    sg.Text(_t("main_gui.backup_state"), size=(28, 1)),
                                     sg.Button(
                                         _t("generic.refresh"),
                                         key="--STATE-BUTTON--",
                                         button_color=("white", "grey"),
-                                    )
-                                ],
-                                [
-                                    sg.Text(_t("main_gui.backup_list_to"), size=(20, 1)),
-                                    sg.Combo(
-                                        repo_list,
-                                        key="-active_repo-",
-                                        default_value=repo_list[0] if repo_list else None,
-                                        enable_events=True,
-                                        size=(20, 1),
                                     ),
-                                ]
-                                if not viewer_mode
-                                else [],
+                                ],
+                                (
+                                    [
+                                        sg.Text(
+                                            _t("main_gui.backup_list_to"), size=(28, 1)
+                                        ),
+                                        sg.Combo(
+                                            repo_list,
+                                            key="-active_repo-",
+                                            default_value=(
+                                                repo_list[0] if repo_list else None
+                                            ),
+                                            enable_events=True,
+                                            size=(20, 1),
+                                        ),
+                                    ]
+                                    if not viewer_mode
+                                    else []
+                                ),
                                 [
-                                    sg.Text(_t("main_gui.repo_type"), size=(20, 1)),
+                                    sg.Text(_t("main_gui.repo_type"), size=(28, 1)),
                                     sg.Text("", key="-repo_type-"),
                                 ],
-                            ]
-                        )
+                            ],
+                            justification="L",
+                            element_justification="L",
+                            vertical_alignment="top",
+                        ),
                     ],
                     [
                         sg.Table(
@@ -1172,7 +1180,9 @@ def _main_gui(viewer_mode: bool):
                 auto_upgrade_result,
             )
         if event == "--STATE-BUTTON--":
-            if full_config or (viewer_mode and viewer_repo_uri and viewer_repo_password):
+            if full_config or (
+                viewer_mode and viewer_repo_uri and viewer_repo_password
+            ):
                 current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
                 gui_update_state()
                 if current_state is None:

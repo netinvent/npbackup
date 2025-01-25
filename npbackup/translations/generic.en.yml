@@ -21,7 +21,7 @@ en:
   group: Group
   identity: Identity
 
-  too_old: Too old
+  old: Old
   up_to_date: Up to date
   unknown: Unknown
   not_connected_yet: Not conntected to repo

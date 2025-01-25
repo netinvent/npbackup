@@ -21,7 +21,7 @@ fr:
   group: Groupe
   identity: Identité
 
-  too_old: Trop ancien
+  old: Ancien
   up_to_date: A jour
   unknown: Inconnu
   not_connected_yet: Non connecté au dépot

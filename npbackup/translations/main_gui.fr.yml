@@ -46,7 +46,7 @@ fr:
   cannot_load_config_keep_current: Impossible de charger la configuration. Configuration actuelle conservée
   snapshot_is_empty: L'instantané est vide
   cancel_operation: Etes-vous sûr de vouloir annuler l'opération? Essayez d'éviter d'interrompre les opérations d'écriture
-  load_existing_file: Charger fichier de configuration existant
+  open_existing_file: Ouvrir fichier de configuration existant
   failed_operation: Operation échouée. Vérifier les journaux
   auto_upgrade_checking: Vérification de mise à jour
   
