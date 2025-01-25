@@ -1,11 +1,13 @@
-:: Example upgrade script for NPBackup that will be pushed server side
+#/usr/bin/env bash
+# Example upgrade script for NPBackup that will be pushed server side
 
-:: The following variables will be overwritten by the upgrade process
-:: {CURRENT_DIR}    - The current directory of the distribution
-:: {backup_dist}    - A directory where we try to move / copy the current distribution
-:: {upgrade_dist}   - The directory where the new distribution is extracted to after download
-:: {log_file}       - The log file where the output of this script will be written
-:: {original_args}  - The arguments that were passed to the upgrade script
+# The following variables will be overwritten by the upgrade process
+# {CURRENT_DIR}         - The current directory of the distribution
+# {backup_dist}         - A directory where we try to move / copy the current distribution
+# {upgrade_dist}        - The directory where the new distribution is extracted to after download
+# {downloaded_archive}  - The path to the downloaded archive
+# {log_file}            - The log file where the output of this script will be written
+# {original_args}       - The arguments that were passed to the upgrade script
 
 
 echo "Launching upgrade" >> "{log_file}" 2>&1

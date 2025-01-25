@@ -333,6 +333,7 @@ def auto_upgrader(
                     .replace("{CURRENT_DIR}", CURRENT_DIR)
                     .replace("{CURRENT_EXECUTABLE}", CURRENT_EXECUTABLE)
                     .replace("{upgrade_dist}", upgrade_dist)
+                    .replace("{downloaded_archive}", downloaded_archive)
                     .replace("{backup_dist}", backup_dist)
                     .replace("{log_file}", log_file)
                     .replace("{original_args}", original_args)
