@@ -147,9 +147,9 @@ def get_file(
     )
 
     if file.artefact.value == "archive":
-        artefact_paths = archive_path
+        artefact_paths = [archive_path]
     elif file.artefact.value == "script":
-        artefact_paths = (script_path, short_script_path)
+        artefact_paths = [script_path, short_script_path]
     else:
         logger.error(f"Unknown artefact type {file.artefact.value}")
         return unknown_artefact
