@@ -543,7 +543,8 @@ def _main_gui(viewer_mode: bool):
                     result = upgrade_runner.run_upgrade(full_config)
                     if not result:
                         sg.Popup(_t("config_gui.auto_upgrade_failed"))
-        return auto_upgrade_result
+            return auto_upgrade_result
+        return None
 
     def select_config_file(config_file: str = None) -> None:
         """
@@ -552,7 +553,7 @@ def _main_gui(viewer_mode: bool):
         layout = [
             [
                 sg.Text(_t("main_gui.select_config_file")),
-                sg.Input(config_file, key="-config_file-", enable_events=True),
+                sg.Input(config_file, key="-config_file-"),
                 sg.FileBrowse(_t("generic.select_file")),
             ],
             [
@@ -573,7 +574,7 @@ def _main_gui(viewer_mode: bool):
                 action = event
                 config_file = Path(values["-config_file-"])
                 break
-            if event in ("--LOAD--", "-config_file-"):
+            if event == "--LOAD--":
                 config_file = Path(values["-config_file-"])
                 if not values["-config_file-"] or not config_file.exists():
                     sg.PopupError(_t("generic.file_does_not_exist"), keep_on_top=True)
@@ -908,10 +909,10 @@ def _main_gui(viewer_mode: bool):
                                 [
                                     sg.Text(
                                         _t("main_gui.no_config"),
-                                        font=("Arial", 14),
                                         text_color="red",
                                         key="-NO-CONFIG-",
                                         visible=False,
+                                        size=(25, 2)
                                     )
                                 ]
                                 if not viewer_mode
@@ -1171,7 +1172,7 @@ def _main_gui(viewer_mode: bool):
                 auto_upgrade_result,
             )
         if event == "--STATE-BUTTON--":
-            if full_config or viewer_mode:
+            if full_config or (viewer_mode and viewer_repo_uri and viewer_repo_password):
                 current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
                 gui_update_state()
                 if current_state is None:
