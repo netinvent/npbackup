@@ -13,7 +13,7 @@ from npbackup.__main__ import main
 del sys.path[0]
 
 if __name__ == "__main__":
-    if "--run-as-cli" in sys.argv:
+    while "--run-as-cli" in sys.argv:
         # Drop --run-as-cli argument since cli doesn't know about it
         sys.argv.pop(sys.argv.index("--run-as-cli"))
     main()
