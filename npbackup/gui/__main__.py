@@ -85,6 +85,7 @@ def popup_wait_for_upgrade(text: str):
 def about_gui(
     version_string: str, full_config: dict = None, auto_upgrade_result: bool = False
 ) -> None:
+
     if auto_upgrade_result:
         new_version = [
             sg.Button(
@@ -528,7 +529,7 @@ def _main_gui(viewer_mode: bool):
     global backend_binary
     global GUI_STATUS_IGNORE_ERRORS
 
-    def check_for_auto_upgrade(full_config: dict) -> None:
+    def check_for_auto_upgrade(full_config: dict) -> bool:
         if full_config and full_config.g("global_options.auto_upgrade_server_url"):
             upgrade_popup = popup_wait_for_upgrade(_t("main_gui.auto_upgrade_checking"))
             auto_upgrade_result = upgrade_runner.check_new_version(full_config)
@@ -542,6 +543,7 @@ def _main_gui(viewer_mode: bool):
                     result = upgrade_runner.run_upgrade(full_config)
                     if not result:
                         sg.Popup(_t("config_gui.auto_upgrade_failed"))
+        return auto_upgrade_result
 
     def select_config_file(config_file: str = None) -> None:
         """
@@ -1006,7 +1008,10 @@ def _main_gui(viewer_mode: bool):
         ]
     ]
 
-    check_for_auto_upgrade(full_config)
+    if not viewer_mode:
+        auto_upgrade_result = check_for_auto_upgrade(full_config)
+    else:
+        auto_upgrade_result = None
     window = sg.Window(
         f"{SHORT_PRODUCT_NAME} - {config_file}",
         layout,
@@ -1158,7 +1163,7 @@ def _main_gui(viewer_mode: bool):
             except (TypeError, KeyError):
                 sg.PopupNoFrame(_t("main_gui.unknown_repo"))
         if event == "--ABOUT--":
-            about_gui(version_string, full_config if not viewer_mode else None)
+            about_gui(version_string, full_config if not viewer_mode else None, auto_upgrade_result)
         if event == "--STATE-BUTTON--":
             if full_config or viewer_mode:
                 current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
