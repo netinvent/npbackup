@@ -55,6 +55,7 @@
   - Upgrade server
     - Upgrade server now has multi-user and permission support
     - Upgrade server can now override updates for targeted clients
+    - Upgrade server can now push an update script to override inline script
 
 #### Fixes
   - Default exit code is now worst log level called unless specific errors are triggered
