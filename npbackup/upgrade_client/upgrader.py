@@ -315,7 +315,12 @@ def auto_upgrader(
     """
 
     # Original arguments which were passed to this executable / script
-    original_args = " ".join(sys.argv[1:])
+    # Except --auto-upgrade of course
+    filtered_args = []
+    for arg in sys.argv[1:]:
+        if arg != "--auto-upgrade":
+            filtered_args.append(arg)
+    original_args = " ".join(filtered_args)
 
     if file_info["script"]["local_fs_path"]:
         logger.info(
