@@ -274,7 +274,9 @@ def auto_upgrader(
 
     # We'll extract the downloaded archive to a temporary directory which should contain the base directory
     # eg /tmp/npbackup_upgrade_dist/npbackup-cli
-    upgrade_dist = os.path.join(tempfile.gettempdir(), "npbackup_upgrade_dist" + random_string(6))
+    upgrade_dist = os.path.join(
+        tempfile.gettempdir(), "npbackup_upgrade_dist" + random_string(6)
+    )
     try:
         # File is a zip or tar.gz and should contain a single directory 'npbackup-cli' or 'npbackup-gui' with all files in it
         downloaded_archive = file_info["archive"]["local_fs_path"]
@@ -400,7 +402,7 @@ def auto_upgrader(
                 # In order to get find to give relative paths to cp, we need to cd into
                 f'pushd "{backup_dist}" && '
                 rf'find ./ -name "*.conf" -exec cp --parents "{{}}" "{CURRENT_DIR}" \; && '
-                f'popd ;'
+                f"popd ;"
                 f'echo "Adding executable bit to new executable" >> "{log_file}" 2>&1 ;'
                 'pushd "{backup_dist}" && popd ;'
                 f'chmod +x "{CURRENT_EXECUTABLE}" >> "{log_file}" 2>&1 ;'
@@ -420,7 +422,7 @@ def auto_upgrader(
                 f'echo "{CURRENT_EXECUTABLE} {original_args}" >> "{log_file}" 2>&1 ;'
                 f'"{CURRENT_EXECUTABLE}" {original_args} ;'
                 # Since directory has changed, we need to chdir so current dir is updated in case it's CURRENT_DIR
-                f'pushd /tmp && popd ;'
+                f"pushd /tmp && popd ;"
                 f'echo "Upgrade script run finished" >> "{log_file}" 2>&1 '
             )
 
