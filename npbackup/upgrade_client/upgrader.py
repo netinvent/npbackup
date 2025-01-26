@@ -274,7 +274,7 @@ def auto_upgrader(
 
     # We'll extract the downloaded archive to a temporary directory which should contain the base directory
     # eg /tmp/npbackup_upgrade_dist/npbackup-cli
-    upgrade_dist = os.path.join(tempfile.gettempdir(), "npbackup_upgrade_dist")
+    upgrade_dist = os.path.join(tempfile.gettempdir(), "npbackup_upgrade_dist" + random_string(6))
     try:
         # File is a zip or tar.gz and should contain a single directory 'npbackup-cli' or 'npbackup-gui' with all files in it
         downloaded_archive = file_info["archive"]["local_fs_path"]
@@ -396,8 +396,12 @@ def auto_upgrader(
                 f'mv -f "{CURRENT_DIR}" "{backup_dist}" >> "{log_file}" 2>&1 ;'
                 f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 ;'
                 f'mv -f "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 ;'
+                'pushd "{backup_dist}" && popd ;'
                 f'echo "Copying optional configuration files from {backup_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 ;'
-                rf'find "{backup_dist}" -name "*.conf" -exec cp --parents "{{}}" "{CURRENT_DIR}" \; ;'
+                # In order to get find to give relative paths to cp, we need to cd into
+                f'pushd "{backup_dist}" && '
+                rf'find ./ -name "*.conf" -exec cp --parents "{{}}" "{CURRENT_DIR}" \; && '
+                f'popd ;'
                 f'echo "Adding executable bit to new executable" >> "{log_file}" 2>&1 ;'
                 f'chmod +x "{CURRENT_EXECUTABLE}" >> "{log_file}" 2>&1 ;'
                 f'echo "Loading new executable {CURRENT_EXECUTABLE} --run-as-cli --check-config {original_args}" >> "{log_file}" 2>&1 ;'
@@ -415,6 +419,8 @@ def auto_upgrader(
                 f'echo "Running as initially planned:" >> "{log_file}" 2>&1 ;'
                 f'echo "{CURRENT_EXECUTABLE} {original_args}" >> "{log_file}" 2>&1 ;'
                 f'"{CURRENT_EXECUTABLE}" {original_args} ;'
+                # Since directory has changed, we need to chdir so current dir is updated in case it's CURRENT_DIR
+                f'pushd /tmp && popd ;'
                 f'echo "Upgrade script run finished" >> "{log_file}" 2>&1 '
             )
 
