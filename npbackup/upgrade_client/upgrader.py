@@ -396,13 +396,13 @@ def auto_upgrader(
                 f'mv -f "{CURRENT_DIR}" "{backup_dist}" >> "{log_file}" 2>&1 ;'
                 f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 ;'
                 f'mv -f "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 ;'
-                'pushd "{backup_dist}" && popd ;'
                 f'echo "Copying optional configuration files from {backup_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 ;'
                 # In order to get find to give relative paths to cp, we need to cd into
                 f'pushd "{backup_dist}" && '
                 rf'find ./ -name "*.conf" -exec cp --parents "{{}}" "{CURRENT_DIR}" \; && '
                 f'popd ;'
                 f'echo "Adding executable bit to new executable" >> "{log_file}" 2>&1 ;'
+                'pushd "{backup_dist}" && popd ;'
                 f'chmod +x "{CURRENT_EXECUTABLE}" >> "{log_file}" 2>&1 ;'
                 f'echo "Loading new executable {CURRENT_EXECUTABLE} --run-as-cli --check-config {original_args}" >> "{log_file}" 2>&1 ;'
                 f'"{CURRENT_EXECUTABLE}" --run-as-cli --check-config {original_args} >> "{log_file}" 2>&1 ;'
@@ -433,6 +433,5 @@ def auto_upgrader(
         log_file,
     )
     logger.debug(cmd)
-    # WIP
-    # deferred_command(cmd, defer_time=UPGRADE_DEFER_TIME)
+    deferred_command(cmd, defer_time=UPGRADE_DEFER_TIME)
     sys.exit(0)
