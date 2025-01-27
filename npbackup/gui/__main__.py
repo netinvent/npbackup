@@ -540,6 +540,9 @@ def _main_gui(viewer_mode: bool):
                     custom_text=(_t("generic.yes"), _t("generic.no")),
                 )
                 if r == _t("generic.yes"):
+                    sg.Popup(
+                        _t("main_gui.upgrade_in_progress"),
+                    )
                     result = upgrade_runner.run_upgrade(full_config)
                     if not result:
                         sg.Popup(_t("config_gui.auto_upgrade_failed"))

@@ -49,7 +49,7 @@ en:
   open_existing_file: Open existing config file
   failed_operation: Failed operation, Please check the logs
   auto_upgrade_checking: Checking for upgrade
-  
+  upgrade_in_process: Upgrade process will close this program. Please wait for the upgrade to finish. The program will reload itself.
   # logs
   last_messages: Last messages
   error_messages: Error messages
