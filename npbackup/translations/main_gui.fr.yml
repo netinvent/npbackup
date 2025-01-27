@@ -49,7 +49,7 @@ fr:
   open_existing_file: Ouvrir fichier de configuration existant
   failed_operation: Operation échouée. Vérifier les journaux
   auto_upgrade_checking: Vérification de mise à jour
-  upgrade_process: upgrade_in_process: Le processus de mise à jour va fermer ce programme. Veuillez attendre que le processus de mise à jour soit terminé. Le programme se relancera tout seul.
+  upgrade_in_progress: Le processus de mise à jour va fermer ce programme. Veuillez attendre que le processus de mise à jour soit terminé. Le programme se relancera tout seul.
 
   
   # logs
