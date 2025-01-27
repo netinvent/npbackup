@@ -309,12 +309,13 @@ python.exe -c "from windows_tools.signtool import SignTool; s=SignTool(); s.sign
 NPBackup supports internationalization and automatically detects system's locale.
 Still, locale can be overrided via an environment variable, eg on Linux:
 ```
-export NPBACKUP_LOCALE=en
+export NPBACKUP_LOCALE=en-US
 ```
 On Windows:
 ```
-set NPBACKUP_LOCALE=en
+set NPBACKUP_LOCALE=en-US
 ```
+Currently supported: `en-US`, `fr-FR`  
 
 ## Special thanks
 
