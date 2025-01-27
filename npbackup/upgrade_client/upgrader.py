@@ -368,7 +368,7 @@ def auto_upgrader(
                 rf'xcopy /S /Y /I "{backup_dist}\*conf" {CURRENT_DIR} > NUL 2>&1 '
                 f") || ( "
                 f'echo "Moving current dist failed. Trying to copy it." >> "{log_file}" 2>&1 & '
-                rf'xcopy /S /Y /I "{CURRENT_DIR}\*" "{backup_dist}" >> "{log_file}" 2>&1 & '
+                rf'xcopy /S /Y /I "{CURRENT_DIR}\*" "{backup_dist}\" >> "{log_file}" 2>&1 & '
                 f'echo "Now trying to overwrite current dist with upgrade dist" >> "{log_file}" 2>&1 & '
                 rf'xcopy /S /Y /I "{upgrade_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 '
                 f") & "
@@ -379,8 +379,9 @@ def auto_upgrader(
                 f'del /F /S /Q "{downloaded_archive}" >> "{log_file}" 2>&1 '
                 f") || ( "
                 f'echo "New executable failed. Rolling back" >> "{log_file}" 2>&1 & '
-                f'echo "Moving back files to original place" >> "{log_file}" 2>&1 & '
+                f'echo "Deleting current dist {CURRENT_DIR}" >> "{log_file}" 2>&1 & '
                 f'rd /S /Q "{CURRENT_DIR}" >> "{log_file}" 2>&1 & '
+                f'echo "Moving back files from {backup_dist} to original place in {CURRENT_DIR}" >> "{log_file}" 2>&1 & '
                 f'move /Y "{backup_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 || ( '
                 f'echo "Moving back method failed. Overwriting back" >> "{log_file}" 2>&1 & '
                 rf'copy /S /Y /I "{backup_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 '
@@ -400,11 +401,11 @@ def auto_upgrader(
                 f'mv -f "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 ;'
                 f'echo "Copying optional configuration files from {backup_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 ;'
                 # In order to get find to give relative paths to cp, we need to cd into
-                f'pushd "{backup_dist}" && '
+                f'pushd "{backup_dist}" >> "{log_file}" 2>&1 && '
                 rf'find ./ -name "*.conf" -exec cp --parents "{{}}" "{CURRENT_DIR}" \; && '
-                f"popd ;"
+                f'popd >> "{log_file}" 2>&1 ;'
                 f'echo "Adding executable bit to new executable" >> "{log_file}" 2>&1 ;'
-                f'pushd "{backup_dist}" && popd ;'
+                f'pushd "{backup_dist}" >> "{log_file}" 2>&1 && popd >> "{log_file}" 2>&1 ;'
                 f'chmod +x "{CURRENT_EXECUTABLE}" >> "{log_file}" 2>&1 ;'
                 f'echo "Loading new executable {CURRENT_EXECUTABLE} --run-as-cli --check-config {original_args}" >> "{log_file}" 2>&1 ;'
                 f'"{CURRENT_EXECUTABLE}" --run-as-cli --check-config {original_args} >> "{log_file}" 2>&1 ;'
@@ -419,7 +420,7 @@ def auto_upgrader(
                 f'    rm -rf "{downloaded_archive}" >> "{log_file}" 2>&1 ;'
                 f"fi ;"
                 # Since directory has changed, we need to chdir so current dir is updated in case it's CURRENT_DIR
-                f"pushd /tmp && popd ;"
+                f'pushd /tmp >> "{log_file}" 2>&1 && popd >> "{log_file}" 2>&1 ;'
                 f'echo "Running as initially planned:" >> "{log_file}" 2>&1 ;'
                 f'echo "{CURRENT_EXECUTABLE} {original_args}" >> "{log_file}" 2>&1 ;'
                 f'"{CURRENT_EXECUTABLE}" {original_args} ;'
