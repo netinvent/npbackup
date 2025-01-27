@@ -404,13 +404,13 @@ def auto_upgrader(
                 rf'find ./ -name "*.conf" -exec cp --parents "{{}}" "{CURRENT_DIR}" \; && '
                 f"popd ;"
                 f'echo "Adding executable bit to new executable" >> "{log_file}" 2>&1 ;'
-                'pushd "{backup_dist}" && popd ;'
+                f'pushd "{backup_dist}" && popd ;'
                 f'chmod +x "{CURRENT_EXECUTABLE}" >> "{log_file}" 2>&1 ;'
                 f'echo "Loading new executable {CURRENT_EXECUTABLE} --run-as-cli --check-config {original_args}" >> "{log_file}" 2>&1 ;'
                 f'"{CURRENT_EXECUTABLE}" --run-as-cli --check-config {original_args} >> "{log_file}" 2>&1 ;'
                 f"if [ $? -ne 0 ]; then "
                 f'    echo "New executable failed. Rolling back" >> "{log_file}" 2>&1 ;'
-                f'    mv -f "{CURRENT_DIR}" "{backup_dist}.original">> "{log_file}" 2>&1 ;'
+                f'    mv -f "{CURRENT_DIR}" "{backup_dist}.failed_upgrade">> "{log_file}" 2>&1 ;'
                 f'    mv -f "{backup_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 ;'
                 f"else "
                 f'    echo "Upgrade successful" >> "{log_file}" 2>&1 ;'
@@ -418,11 +418,11 @@ def auto_upgrader(
                 f'    rm -rf "{upgrade_dist}" >> "{log_file}" 2>&1 ;'
                 f'    rm -rf "{downloaded_archive}" >> "{log_file}" 2>&1 ;'
                 f"fi ;"
+                # Since directory has changed, we need to chdir so current dir is updated in case it's CURRENT_DIR
+                f"pushd /tmp && popd ;"
                 f'echo "Running as initially planned:" >> "{log_file}" 2>&1 ;'
                 f'echo "{CURRENT_EXECUTABLE} {original_args}" >> "{log_file}" 2>&1 ;'
                 f'"{CURRENT_EXECUTABLE}" {original_args} ;'
-                # Since directory has changed, we need to chdir so current dir is updated in case it's CURRENT_DIR
-                f"pushd /tmp && popd ;"
                 f'echo "Upgrade script run finished" >> "{log_file}" 2>&1 '
             )
 
