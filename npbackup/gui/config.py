@@ -107,6 +107,7 @@ def config_gui(full_config: dict, config_file: str):
         "permissions": {
             "backup": _t("config_gui.backup_perms"),
             "restore": _t("config_gui.restore_perms"),
+            "restore_only": _t("config_gui.restore_only_perms"),
             "full": _t("config_gui.full_perms"),
         },
     }

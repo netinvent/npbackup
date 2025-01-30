@@ -146,6 +146,7 @@ fr:
   permissions: Permissions
   backup_perms: Sauvegardes uniquement
   restore_perms: Sauvegarde, vérification, récupération et restauration
+  restore_only_perms: Restauration uniquement
   full_perms: Accès total
   setting_permissions_requires_manager_password: Un mot de passe gestionnaire est requis pour définir des permissions
   manager_password_too_simple: Le mot de passe gestionnaire nécessite au moins 8 caractères majuscules, minuscules et chiffres

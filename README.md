@@ -63,6 +63,7 @@ Please check https://github.com/netinvent/npbackup/releases
   - Repository permissions allowing to limit clients
     - Backup only permission
     - Backup, list and restore permissions
+    - Restore only permissions
     - Full permissions including destructive operations
   - Encrypted data viewing requires additional password
   - AES-256 keys can't be guessed in executables thanks to Nuitka Commercial compiler
@@ -245,6 +246,7 @@ In that case, you can set permissions via the GUI or directly in the configurati
 Permissions are:
 - full: Set by default, allows all including destructive operations
 - restore: Allows everything backup does plus restore, check and dump operations
+- restore_noly: Allows only restoring backups, but not creating ones
 - backup: Allows, backup, snapshot/object listing operations and repo unlocking
 
 ## Logs

@@ -520,6 +520,7 @@ class NPBackupRunner:
         Possible permissions are:
         - backup:   Init, Backup, list backups and unlock
         - restore:  Init, Backup, restore, recover and list snapshots
+        - restore_only: Restore only
         - full:     Full permissions
 
         Only one permission can be set per repo
@@ -531,13 +532,13 @@ class NPBackupRunner:
             required_permissions = {
                 "init": ["backup", "restore", "full"],
                 "backup": ["backup", "restore", "full"],
-                "has_recent_snapshot": ["backup", "restore", "full"],
-                "snapshots": ["backup", "restore", "full"],
+                "has_recent_snapshot": ["backup", "restore", "restore_only", "full"],
+                "snapshots": ["backup", "restore", "restore_only", "full"],
                 "stats": ["backup", "restore", "full"],
-                "ls": ["backup", "restore", "full"],
-                "find": ["backup", "restore", "full"],
-                "restore": ["restore", "full"],
-                "dump": ["restore", "full"],
+                "ls": ["backup", "restore", "restore_only", "full"],
+                "find": ["backup", "restore", "restore_only", "full"],
+                "restore": ["restore", "restore_only", "full"],
+                "dump": ["restore", "retore_only", "full"],
                 "check": ["restore", "full"],
                 "recover": ["restore", "full"],
                 "list": ["full"],

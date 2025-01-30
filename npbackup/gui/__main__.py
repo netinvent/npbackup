@@ -145,7 +145,7 @@ def viewer_create_repo(viewer_repo_uri: str, viewer_repo_password: str) -> dict:
     # Let's set default backup age to 24h
     repo_config.s("repo_opts.minimum_backup_age", 1440)
     # NPF-SEC-00005 Add restore permission
-    repo_config.s("permissions", "restore")
+    repo_config.s("permissions", "restore_only")
 
     return repo_config
 
