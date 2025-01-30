@@ -245,7 +245,7 @@ In that case, you can set permissions via the GUI or directly in the configurati
 Permissions are:
 - full: Set by default, allows all including destructive operations
 - restore: Allows everything backup does plus restore, check and dump operations
-- backup: Allows, backup and snapshot/object listing operations
+- backup: Allows, backup, snapshot/object listing operations and repo unlocking
 
 ## Logs
 

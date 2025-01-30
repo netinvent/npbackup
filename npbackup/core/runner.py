@@ -518,7 +518,7 @@ class NPBackupRunner:
         Decorator that checks permissions before running functions
 
         Possible permissions are:
-        - backup:   Init, Backup and list backups
+        - backup:   Init, Backup, list backups and unlock
         - restore:  Init, Backup, restore, recover and list snapshots
         - full:     Full permissions
 
@@ -541,7 +541,7 @@ class NPBackupRunner:
                 "check": ["restore", "full"],
                 "recover": ["restore", "full"],
                 "list": ["full"],
-                "unlock": ["full"],
+                "unlock": ["full", "restore", "backup"],
                 "repair": ["full"],
                 "forget": ["full"],
                 "housekeeping": ["full"],
