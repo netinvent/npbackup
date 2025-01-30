@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.helpers"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024103001"
+__build__ = "2025013001"
 
 
 from typing import Tuple, Union
@@ -335,7 +335,12 @@ def gui_thread_runner(
 
     _update_gui_from_cache(stdout_cache, stderr_cache)
 
+    progress_window["--CANCEL--"].Update(disabled=True)
     progress_window["--EXIT--"].Update(disabled=False)
+    if stderr_has_messages:
+        progress_window["--EXIT--"].update(button_color=(TXT_COLOR_LDR, "red"))
+    else:
+        progress_window["--EXIT--"].update(button_color=(TXT_COLOR_LDR, "green"))
     # Keep the window open until user has done something
     progress_window["-LOADER-ANIMATION-"].Update(visible=False)
     if (not __autoclose or stderr_has_messages) and not __ignore_errors:
