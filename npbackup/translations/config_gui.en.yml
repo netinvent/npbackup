@@ -79,7 +79,7 @@ en:
   auto_upgrade_disabled: Auto upgrade is disabled or server is not reachable
 
   create_backup_scheduled_task_every: Create scheduled backup task every
-  create_bakcup_scheduled_task_at: Create scheduled backup task every day at
+  create_backup_scheduled_task_at: Create scheduled backup task every day at
   create_housekeeping_scheduled_task_at: Create housekeeping scheduled every day at
   scheduled_task_explanation: Task can run at a given time to run a backup which is great to make server backups, or run every x minutes, but only run actual backup when more than maximum_backup_age minutes was reached, which is the best way to backup laptops which have flexible power on hours.
   scheduled_task_creation_success: Scheduled task created successfuly
