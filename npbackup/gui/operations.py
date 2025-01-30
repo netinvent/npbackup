@@ -149,7 +149,7 @@ def show_stats(statistics: List[dict]) -> None:
     """
 
     data = []
-    stats_type == None
+    stats_type = None
     entry = None
     for entry in statistics:
         repo_name = list(entry.keys())[0]
