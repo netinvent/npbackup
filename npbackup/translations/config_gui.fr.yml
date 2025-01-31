@@ -128,7 +128,7 @@ fr:
   # repo management
   repo_group: Groupe de dépots
   group_inherited: Hérité du groupe
-  repo_group_config: Configuration de groupe de dépots
+  repo_group_config: Configuration des dépots et groupes
   global_config: Configuration globale
   select_object: Selectionner l'objet à configurer
   add_object: Ajouter un auutre dépot ou groupe

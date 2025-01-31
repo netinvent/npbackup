@@ -127,7 +127,7 @@ en:
   # repo / group managmeent
   repo_group: Repo group
   group_inherited: Group inherited
-  repo_group_config: Repo group configuration
+  repo_group_config: Repos and groups configuration
   global_config: Global config
   select_object: Select configuration object
   add_object: Add another repo or group
