@@ -2329,7 +2329,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 if key == "backup_opts.paths" and ";" in node:
                     for path in node.split(";"):
                         tree.insert("", path, path, path, icon=icon)
-                else:    
+                else:
                     tree.insert("", node, node, node, icon=icon)
                 window[key].update(values=tree)
             continue
