@@ -74,6 +74,9 @@ def _check_new_version(
 ) -> bool:
     """
     Check if we have a newer version of npbackup
+
+    Returns True if upgrade is needed, False if no upgrade is needed
+    Returns None if we cannot determine if an upgrade is needed
     """
     if upgrade_url:
         logger.info("Upgrade server is %s", upgrade_url)
@@ -157,7 +160,7 @@ def _check_new_version(
         logger.error(
             f"Cannot determine if online version '{online_version}' is newer than current version {version_dict['verison']}: {exc}"
         )
-        return False
+        return None
 
 
 def auto_upgrader(
@@ -345,6 +348,7 @@ def auto_upgrader(
                 fh.write(script_content)
         except OSError as exc:
             logger.error(f"Failed to replace variables in upgrade script: {exc}")
+            return False
 
         if os.name == "nt":
             cmd = f'cmd /c "{file_info["script"]["local_fs_path"]}"'
@@ -435,6 +439,10 @@ def auto_upgrader(
         UPGRADE_DEFER_TIME,
         log_file,
     )
-    logger.debug(cmd)
-    deferred_command(cmd, defer_time=UPGRADE_DEFER_TIME)
+    if _NPBACKUP_ALLOW_AUTOUPGRADE_DEBUG:
+        logger.info("So we only show the command, but we won't actually run it in debug mode. Please run it manually")
+        logger.info(cmd)
+    else:
+        logger.debug(cmd)
+        deferred_command(cmd, defer_time=UPGRADE_DEFER_TIME)
     sys.exit(0)
