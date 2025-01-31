@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.config"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025012401"
+__build__ = "2025013101"
 
 
 from typing import List, Tuple
@@ -2325,7 +2325,12 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 node = sg.PopupGetText(_t("generic.add_manually"))
                 icon = FILE_ICON
             if tree and node:
-                tree.insert("", node, node, node, icon=icon)
+                # Check if node is ADD-PATH-FILES which can contain multiple elements separated by semicolon
+                if key == "backup_opts.paths" and ";" in node:
+                    for path in node.split(";"):
+                        tree.insert("", path, path, path, icon=icon)
+                else:    
+                    tree.insert("", node, node, node, icon=icon)
                 window[key].update(values=tree)
             continue
         if event in (
