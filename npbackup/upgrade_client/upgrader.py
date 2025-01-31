@@ -289,9 +289,7 @@ def auto_upgrader(
         return False
     try:
         first_directory = os.listdir(upgrade_dist)[0]
-        upgrade_dist = os.path.join(
-            upgrade_dist, first_directory
-        )
+        upgrade_dist = os.path.join(upgrade_dist, first_directory)
         logger.debug(f"Upgrade dist dir: {upgrade_dist}")
     except Exception as exc:
         logger.critical(
@@ -440,7 +438,9 @@ def auto_upgrader(
         log_file,
     )
     if _NPBACKUP_ALLOW_AUTOUPGRADE_DEBUG:
-        logger.info("Running in autoupgrade debug mode: We won't actually run it in debug mode. Please run it manually")
+        logger.info(
+            "Running in autoupgrade debug mode: We won't actually run it in debug mode. Please run it manually"
+        )
         logger.info(cmd)
     else:
         logger.debug(cmd)
