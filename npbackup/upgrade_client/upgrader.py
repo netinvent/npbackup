@@ -381,7 +381,7 @@ def auto_upgrader(
                 f'del /F /S /Q "{downloaded_archive}" >> "{log_file}" 2>&1 '
                 f") || ( "
                 f'echo "New executable failed. Rolling back after 4 seconds" >> "{log_file}" 2>&1 & '
-                f'ping 127.0.0.1 -n 4> NUL 2>&1 & '
+                f"ping 127.0.0.1 -n 4> NUL 2>&1 & "
                 f'echo "Deleting current dist {CURRENT_DIR}" >> "{log_file}" 2>&1 & '
                 f'rd /S /Q "{CURRENT_DIR}" >> "{log_file}" 2>&1 & '
                 f'echo "Moving back files from {backup_dist} to original place in {CURRENT_DIR}" >> "{log_file}" 2>&1 & '
