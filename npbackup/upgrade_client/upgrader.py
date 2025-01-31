@@ -242,7 +242,7 @@ def auto_upgrader(
         if file_info[file_type] and file_info[file_type]["sha256sum"] is None:
             logger.info(f"No {file_type} file found has been found for me :/")
             if file_type != "script":
-                return True
+                return False
 
     for file_type in ("script", "archive"):
         logger.info(f"Downloading {file_type} file for target {target_id}")
