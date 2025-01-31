@@ -387,7 +387,7 @@ def auto_upgrader(
                 f'echo "Moving back files from {backup_dist} to original place in {CURRENT_DIR}" >> "{log_file}" 2>&1 & '
                 f'move /Y "{backup_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 || ( '
                 f'echo "Moving back method failed. Overwriting back" >> "{log_file}" 2>&1 & '
-                rf'copy /S /Y /I "{backup_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 '
+                rf'xcopy /S /Y /I "{backup_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 '
                 f") "
                 f") & "
                 f'echo "Running as initially planned:" >> "{log_file}" 2>&1 & '
