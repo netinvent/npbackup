@@ -1202,6 +1202,7 @@ def main_gui(viewer_mode=False):
         datetime.now(timezone.utc),
     )
     # kill_childs normally would not be necessary, but let's just be foolproof here (kills restic subprocess in all cases)
+    # We need to only kill the backend process on windows since we compile with Nuitka option --windows-disable-console=hide
     if os.name == "nt":
         backend_process = "restic.exe"
     else:
