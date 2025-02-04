@@ -3,7 +3,7 @@ cryptidy>=1.2.4
 python-dateutil
 ofunctions.logger_utils>=2.4.2
 ofunctions.misc>=1.8.0
-ofunctions.process>=2.0.0
+ofunctions.process>=2.1.0
 ofunctions.threading>=2.2.0
 ofunctions.platform>=1.5.1
 ofunctions.random
