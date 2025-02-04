@@ -321,10 +321,13 @@ def auto_upgrader(
     # Original arguments which were passed to this executable / script
     # Except --auto-upgrade of course
     filtered_args = []
+    upgrade_was_invoked_manually = "NO"
     has_config_arg = False
     for arg in sys.argv[1:]:
         if arg != "--auto-upgrade":
             filtered_args.append(arg)
+        elif arg == "--auto-upgrade":
+            upgrade_was_invoked_manually = "YES"
         # We also need to inject config file as arg for GUI upgrades where config was loaded from GUI
         if arg == "-c" or "--config-file" in arg:
             has_config_arg = True
@@ -349,6 +352,9 @@ def auto_upgrader(
                     .replace("{downloaded_archive}", downloaded_archive)
                     .replace("{backup_dist}", backup_dist)
                     .replace("{log_file}", log_file)
+                    .replace(
+                        "{upgrade_was_invoked_manually}", upgrade_was_invoked_manually
+                    )
                     .replace("{original_args}", original_args)
                 )
             with open(file_info["script"]["local_fs_path"], "w") as fh:
@@ -399,10 +405,11 @@ def auto_upgrader(
                 rf'xcopy /S /Y /I "{backup_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 '
                 f") "
                 f") & "
-                f'echo "Running as initially planned:" >> "{log_file}" 2>&1 & '
-                f'echo "{CURRENT_EXECUTABLE} {original_args}" >> "{log_file}" 2>&1 & '
-                f'"{CURRENT_EXECUTABLE}" {original_args} & '
-                f'echo "Upgrade script run finished" >> "{log_file}" 2>&1 '
+                f'IF NOT "{upgrade_was_invoked_manually}"=="YES" echo "Running as initially planned:" >> "{log_file}" 2>&1 & '
+                f'IF NOT "{upgrade_was_invoked_manually}"=="YES" echo "{CURRENT_EXECUTABLE} {original_args}" >> "{log_file}" 2>&1 & '
+                f'IF NOT "{upgrade_was_invoked_manually}"=="YES" "{CURRENT_EXECUTABLE}" {original_args} & '
+                f'echo "NPBackup upgrade script run finished" >> "{log_file}" 2>&1 '
+                f"echo NPBackup upgrade script run finished"
             )
         else:
             cmd = (
@@ -433,10 +440,13 @@ def auto_upgrader(
                 f"fi ;"
                 # Since directory has changed, we need to chdir so current dir is updated in case it's CURRENT_DIR
                 f'pushd /tmp >> "{log_file}" 2>&1 && popd >> "{log_file}" 2>&1 ;'
+                f'if [ "{upgrade_was_invoked_manually}" != "YES" ]; then '
                 f'echo "Running as initially planned:" >> "{log_file}" 2>&1 ;'
                 f'echo "{CURRENT_EXECUTABLE} {original_args}" >> "{log_file}" 2>&1 ;'
                 f'"{CURRENT_EXECUTABLE}" {original_args} ;'
-                f'echo "Upgrade script run finished" >> "{log_file}" 2>&1 '
+                f"fi ;"
+                f'echo "NPBackup upgrade script run finished" >> "{log_file}" 2>&1 ;'
+                f"echo NPBackup upgrade script run finished"
             )
 
     # We still need to unregister previous kill_childs function se we can actually make the upgrade happen
