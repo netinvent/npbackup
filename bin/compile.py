@@ -7,8 +7,8 @@ __intname__ = "npbackup.compile"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2024 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025010901"
-__version__ = "2.2.0"
+__build__ = "2025020401"
+__version__ = "2.2.1"
 
 
 """
@@ -298,7 +298,7 @@ def compile(
     NUITKA_OPTIONS += " --enable-plugin=data-hiding" if have_nuitka_commercial() else ""
 
     if build_type in ("gui", "viewer"):
-        NUITKA_OPTIONS += " --plugin-enable=tk-inter --windows-console-mode=disable"
+        NUITKA_OPTIONS += " --plugin-enable=tk-inter --windows-console-mode=hide"
     else:
         NUITKA_OPTIONS += " --plugin-disable=tk-inter --nofollow-import-to=FreeSimpleGUI --nofollow-import-to=_tkinter --nofollow-import-to=npbackup.gui"
     if onefile:
