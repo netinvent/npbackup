@@ -54,8 +54,8 @@ from npbackup.gui.helpers import get_anon_repo_uri, gui_thread_runner
 from npbackup.core.i18n_helper import _t
 from npbackup.core import upgrade_runner
 from npbackup.path_helper import CURRENT_DIR
-from npbackup.__version__ import version_string
-from npbackup.__debug__ import _DEBUG
+from npbackup.__version__ import version_dict, version_string
+from npbackup.__debug__ import _DEBUG, _NPBACKUP_ALLOW_AUTOUPGRADE_DEBUG
 from npbackup.restic_wrapper import ResticRunner
 from npbackup.restic_wrapper import schema
 
@@ -83,7 +83,10 @@ def popup_wait_for_upgrade(text: str):
 
 
 def about_gui(
-    version_string: str, full_config: dict = None, auto_upgrade_result: bool = False
+    version_string: str,
+    config_file: str,
+    full_config: dict = None,
+    auto_upgrade_result: bool = False,
 ) -> None:
 
     if auto_upgrade_result:
@@ -125,7 +128,7 @@ def about_gui(
             )
             if result == "OK":
                 logger.info("Running GUI initiated upgrade")
-                sub_result = upgrade_runner.run_upgrade(full_config)
+                sub_result = upgrade_runner.run_upgrade(config_file, full_config)
                 if sub_result:
                     sys.exit(0)
                 else:
@@ -529,7 +532,7 @@ def _main_gui(viewer_mode: bool):
     global backend_binary
     global GUI_STATUS_IGNORE_ERRORS
 
-    def check_for_auto_upgrade(full_config: dict) -> bool:
+    def check_for_auto_upgrade(config_file: str, full_config: dict) -> bool:
         if full_config and full_config.g("global_options.auto_upgrade_server_url"):
             upgrade_popup = popup_wait_for_upgrade(_t("main_gui.auto_upgrade_checking"))
             auto_upgrade_result = upgrade_runner.check_new_version(full_config)
@@ -543,7 +546,7 @@ def _main_gui(viewer_mode: bool):
                     sg.Popup(
                         _t("main_gui.upgrade_in_progress"),
                     )
-                    result = upgrade_runner.run_upgrade(full_config)
+                    result = upgrade_runner.run_upgrade(config_file, full_config)
                     if not result:
                         sg.Popup(_t("config_gui.auto_upgrade_failed"))
             return auto_upgrade_result
@@ -1022,8 +1025,8 @@ def _main_gui(viewer_mode: bool):
         ]
     ]
 
-    if not viewer_mode:
-        auto_upgrade_result = check_for_auto_upgrade(full_config)
+    if not viewer_mode and (version_dict["comp"] or _NPBACKUP_ALLOW_AUTOUPGRADE_DEBUG):
+        auto_upgrade_result = check_for_auto_upgrade(config_file, full_config)
     else:
         auto_upgrade_result = None
     window = sg.Window(
@@ -1179,6 +1182,7 @@ def _main_gui(viewer_mode: bool):
         if event == "--ABOUT--":
             about_gui(
                 version_string,
+                config_file,
                 full_config if not viewer_mode else None,
                 auto_upgrade_result,
             )

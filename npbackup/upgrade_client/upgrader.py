@@ -164,6 +164,7 @@ def _check_new_version(
 
 
 def auto_upgrader(
+    config_file: str,
     upgrade_url: str,
     username: str,
     password: str,
@@ -320,9 +321,17 @@ def auto_upgrader(
     # Original arguments which were passed to this executable / script
     # Except --auto-upgrade of course
     filtered_args = []
+    has_config_arg = False
     for arg in sys.argv[1:]:
         if arg != "--auto-upgrade":
             filtered_args.append(arg)
+        # We also need to inject config file as arg for GUI upgrades where config was loaded from GUI
+        if arg == "-c" or "--config-file" in arg:
+            has_config_arg = True
+    if not has_config_arg:
+        filtered_args.append("--config-file")
+        filtered_args.append(config_file)
+
     original_args = " ".join(filtered_args)
 
     if file_info["script"]["local_fs_path"]:

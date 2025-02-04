@@ -562,7 +562,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         # Don't log upgrade check errors if we're in auto upgrade mode
         # since it will change the whole exit code of the program
         result = upgrade_runner.run_upgrade(
-            full_config, ignore_errors=False if args.auto_upgrade else True
+            config_file, full_config, ignore_errors=False if args.auto_upgrade else True
         )
         if result:
             # This only happens when no upgrade is available

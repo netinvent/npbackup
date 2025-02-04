@@ -105,7 +105,9 @@ def check_new_version(full_config: dict) -> bool:
         return _check_new_version(upgrade_url, username, password)
 
 
-def run_upgrade(full_config: dict, ignore_errors: bool = False) -> bool:
+def run_upgrade(
+    config_file: str, full_config: dict, ignore_errors: bool = False
+) -> bool:
     upgrade_url = full_config.g("global_options.auto_upgrade_server_url")
     username = full_config.g("global_options.auto_upgrade_server_username")
     password = full_config.g("global_options.auto_upgrade_server_password")
@@ -122,6 +124,7 @@ def run_upgrade(full_config: dict, ignore_errors: bool = False) -> bool:
     group = evaluated_full_config.g("global_options.auto_upgrade_group")
 
     result = auto_upgrader(
+        config_file=config_file,
         upgrade_url=upgrade_url,
         username=username,
         password=password,
