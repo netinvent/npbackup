@@ -382,9 +382,9 @@ This is free software, and you are welcome to redistribute it under certain cond
             msg = f"Config file {args.config_file} cannot be read."
             json_error_logging(False, msg, "critical")
             sys.exit(70)
-        config_file = Path(args.config_file)
+        config_file = Path(args.config_file).absolute()
     else:
-        config_file = Path(f"{CURRENT_DIR}/npbackup.conf")
+        config_file = Path(f"{CURRENT_DIR}/npbackup.conf").absolute()
         if config_file.exists():
             logger.info(f"Loading default configuration file {config_file}")
         else:
