@@ -208,12 +208,12 @@ def config_gui(full_config: dict, config_file: str):
 
     def update_object_selector(
         object_name: str = None, object_type: str = None
-    ) -> None:
+    ) -> Tuple[str, str]:
         object_list = get_objects()
         if not object_name or not object_type:
             obj = object_list[0]
         else:
-            # We need to remove the "s" and the end if we want our comobox name to be usable later
+            # We need to remove the "s" and the end if we want our combobox name to be usable later
             obj = f"{object_type.rstrip('s').capitalize()}: {object_name}"
 
         window["-OBJECT-SELECT-"].Update(values=object_list)
@@ -222,6 +222,9 @@ def config_gui(full_config: dict, config_file: str):
         # Also update task object selector
         window["-OBJECT-SELECT-TASKS-"].Update(values=object_list)
         window["-OBJECT-SELECT-TASKS-"].Update(value=obj)
+
+        return get_object_from_combo(obj)
+
 
     def get_object_from_combo(combo_value: str) -> Tuple[str, str]:
         """
@@ -2246,7 +2249,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             continue
         if event == "-OBJECT-DELETE-":
             full_config = delete_object(full_config, values["-OBJECT-SELECT-"])
-            update_object_selector()
+            current_object_type, current_object_name = update_object_selector()
             continue
         if event == "-OBJECT-CREATE-":
             full_config, _object_type, _object_name = create_object(full_config)
