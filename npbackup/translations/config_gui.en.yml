@@ -138,6 +138,8 @@ en:
   cannot_remove_group_inherited_settings: Cannot remove group inherited settings. Please remove directly in group configuration
   object_name_cannot_be_empty: Object name cannot be empty
   object_name_cannot_be_all: Object name cannot be '__all__' which is a reserved name
+  cannot_delete_default_repo: Cannot delete default repo
+  cannot_delete_default_group: Cannot delete default group
   
   # permissions
   set_permissions: Set permissions

@@ -2247,6 +2247,13 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             update_global_gui(full_config, unencrypted=False)
             continue
         if event == "-OBJECT-DELETE-":
+            object_type, object_name = get_object_from_combo(values["-OBJECT-SELECT-"])
+            if object_type == "repos" and object_name == "default":
+                sg.popup_error(_t("config_gui.cannot_delete_default_repo"))
+                continue
+            if object_type == "groups" and object_name == "default_group":
+                sg.popup_error(_t("config_gui.cannot_delete_default_group"))
+                continue
             full_config = delete_object(full_config, values["-OBJECT-SELECT-"])
             current_object_type, current_object_name = update_object_selector()
             continue

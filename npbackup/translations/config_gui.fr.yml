@@ -139,6 +139,8 @@ fr:
   cannot_remove_group_inherited_settings: Impossible de supprimer une option héritée de groupe. Veuillez supprimer l'option directement dans la configuration de groupe
   object_name_cannot_be_empty: Le nom de l'objet ne peut être vide
   object_name_cannot_be_all: Le nom de l'objet ne peut être '__all__' qui est un nom réservé
+  cannot_delete_default_repo: Impossible de supprimer le dépot par défaut
+  cannot_delete_default_group: Impossible de supprimer le groupe par défaut
   
   # permissions
   set_permissions: Régler les permissions
