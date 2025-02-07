@@ -225,7 +225,6 @@ def config_gui(full_config: dict, config_file: str):
 
         return get_object_from_combo(obj)
 
-
     def get_object_from_combo(combo_value: str) -> Tuple[str, str]:
         """
         Extracts selected object from combobox

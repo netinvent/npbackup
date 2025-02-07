@@ -1207,7 +1207,9 @@ def main_gui(viewer_mode=False):
         backend_process = "restic.exe"
     else:
         backend_process = "restic"
-    atexit.register(kill_childs, os.getpid(), grace_period=30, process_name=backend_process)
+    atexit.register(
+        kill_childs, os.getpid(), grace_period=30, process_name=backend_process
+    )
     try:
         _main_gui(viewer_mode=viewer_mode)
         sys.exit(logger.get_worst_logger_level())
