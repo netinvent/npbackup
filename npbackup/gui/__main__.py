@@ -888,9 +888,9 @@ def _main_gui(viewer_mode: bool):
     headings = [
         "ID    ",
         "Date      ",
-        "Hostname    ",
-        "User              ",
-        "Tags           ",
+        "Hostname     ",
+        "User               ",
+        "Tags            ",
     ]
 
     layout = [
@@ -903,7 +903,14 @@ def _main_gui(viewer_mode: bool):
                         ),
                         sg.Column(
                             [
-                                [sg.Text(OEM_STRING, font="Arial 14")],
+                                [
+                                    sg.Text(
+                                        OEM_STRING,
+                                        font="Arial 14",
+                                        size=(10, None),
+                                        justification="center",
+                                    )
+                                ],
                                 (
                                     [sg.Text(_t("main_gui.viewer_mode"))]
                                     if viewer_mode
@@ -923,8 +930,8 @@ def _main_gui(viewer_mode: bool):
                                     else []
                                 ),
                             ],
-                            justification="L",
-                            element_justification="L",
+                            justification="C",
+                            element_justification="C",
                             vertical_alignment="top",
                         ),
                         sg.Column(
