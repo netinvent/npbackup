@@ -277,7 +277,7 @@ def auto_upgrader(
     )
 
     # We'll extract the downloaded archive to a temporary directory which should contain the base directory
-    # eg /tmp/npbackup_upgrade_dist/npbackup-cli
+    # eg /tmp/npbackup_upgrade_dist[random]/npbackup-cli
     upgrade_dist = os.path.join(
         tempfile.gettempdir(), "npbackup_upgrade_dist" + random_string(6)
     )
@@ -289,9 +289,10 @@ def auto_upgrader(
         logger.critical(f"Upgrade failed. Cannot uncompress downloaded dist: {exc}")
         return False
     try:
+        # Now we need to concat upgrade_dist with the first directory in it, eg npbackup-cli or npbackup-gui
         first_directory = os.listdir(upgrade_dist)[0]
-        upgrade_dist = os.path.join(upgrade_dist, first_directory)
-        logger.debug(f"Upgrade dist dir: {upgrade_dist}")
+        upgrade_dist_full_path = os.path.join(upgrade_dist, first_directory)
+        logger.debug(f"Upgrade dist dir: {upgrade_dist_full_path}")
     except Exception as exc:
         logger.critical(
             f"Upgrade failed. Upgrade directory does not contain a subdir: {exc}"
@@ -349,6 +350,7 @@ def auto_upgrader(
                     .replace("{CURRENT_DIR}", CURRENT_DIR)
                     .replace("{CURRENT_EXECUTABLE}", CURRENT_EXECUTABLE)
                     .replace("{upgrade_dist}", upgrade_dist)
+                    .replace("{upgrade_dist_full_path}", upgrade_dist_full_path)
                     .replace("{downloaded_archive}", downloaded_archive)
                     .replace("{backup_dist}", backup_dist)
                     .replace("{log_file}", log_file)
@@ -380,19 +382,20 @@ def auto_upgrader(
                 f'echo "Moving current dist from {CURRENT_DIR} to {backup_dist}" >> "{log_file}" 2>&1 & '
                 f'move /Y "{CURRENT_DIR}" "{backup_dist}" >> "{log_file}" 2>&1 && ( '
                 f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 & '
-                f'move /Y "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 & '
+                f'move /Y "{upgrade_dist_full_path}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 & '
                 f'echo "Copying optional configuration files from {backup_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 & '
                 rf'xcopy /S /Y /I "{backup_dist}\*conf" {CURRENT_DIR} > NUL 2>&1 '
                 f") || ( "
                 f'echo "Moving current dist failed. Trying to copy it." >> "{log_file}" 2>&1 & '
                 rf'xcopy /S /Y /I "{CURRENT_DIR}\*" "{backup_dist}\" >> "{log_file}" 2>&1 & '
                 f'echo "Now trying to overwrite current dist with upgrade dist" >> "{log_file}" 2>&1 & '
-                rf'xcopy /S /Y /I "{upgrade_dist}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 '
+                rf'xcopy /S /Y /I "{upgrade_dist_full_path}\*" "{CURRENT_DIR}" >> "{log_file}" 2>&1 '
                 f") & "
                 f'echo "Loading new executable {CURRENT_EXECUTABLE} --check-config {original_args}" >> "{log_file}" 2>&1 & '
                 f'"{CURRENT_EXECUTABLE}" --check-config {original_args} >> "{log_file}" 2>&1 && ( '
                 f'echo "Upgrade successful" >> "{log_file}" 2>&1 & '
                 f'rd /S /Q "{backup_dist}" >> "{log_file}" 2>&1 & '
+                f'rd /S /Q "{upgrade_dist}" >> "{log_file}" 2>&1 & '
                 f'del /F /S /Q "{downloaded_archive}" >> "{log_file}" 2>&1 '
                 f") || ( "
                 f'echo "New executable failed. Rolling back after 4 seconds" >> "{log_file}" 2>&1 & '
@@ -416,8 +419,8 @@ def auto_upgrader(
                 f'echo "Launching upgrade" >> "{log_file}" 2>&1 ;'
                 f'echo "Moving current dist from {CURRENT_DIR} to {backup_dist}" >> "{log_file}" 2>&1 ;'
                 f'mv -f "{CURRENT_DIR}" "{backup_dist}" >> "{log_file}" 2>&1 ;'
-                f'echo "Moving upgraded dist from {upgrade_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 ;'
-                f'mv -f "{upgrade_dist}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 ;'
+                f'echo "Moving upgraded dist from {upgrade_dist_full_path} to {CURRENT_DIR}" >> "{log_file}" 2>&1 ;'
+                f'mv -f "{upgrade_dist_full_path}" "{CURRENT_DIR}" >> "{log_file}" 2>&1 ;'
                 f'echo "Copying optional configuration files from {backup_dist} to {CURRENT_DIR}" >> "{log_file}" 2>&1 ;'
                 # In order to get find to give relative paths to cp, we need to cd into
                 f'pushd "{backup_dist}" >> "{log_file}" 2>&1 && '
