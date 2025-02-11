@@ -102,7 +102,7 @@
         "type": "prometheus",
         "uid": "${DS_MIMIR}"
       },
-      "description": "Number of succesful npbackup executions",
+      "description": "Number of failed npbackup executions",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -123,16 +123,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#d44a3a",
-                "value": null
-              },
-              {
-                "color": "rgba(237, 129, 40, 0.89)",
-                "value": 0
-              },
-              {
                 "color": "#299c46",
-                "value": 0
+                "value": null
               }
             ]
           },
@@ -146,10 +138,10 @@
         "x": 0,
         "y": 1
       },
-      "id": 5,
+      "id": 32,
       "maxDataPoints": 100,
       "options": {
-        "colorMode": "background",
+        "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "horizontal",
@@ -174,15 +166,17 @@
             "uid": "${DS_MIMIR}"
           },
           "editorMode": "code",
-          "expr": "count(count_over_time((npbackup_exec_state{backup_job=~\"$backup_job\",__tenant_id__=~\"$tenant\"} == 0)[$__range:]))",
+          "exemplar": true,
+          "expr": "count(count_over_time((npbackup_exec_state{backup_job=~\"$backup_job\",__tenant_id__=~\"$tenant\"})[$__range:]))",
           "format": "time_series",
+          "interval": "",
           "intervalFactor": 2,
-          "legendFormat": "__auto",
+          "legendFormat": "",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Successful Ops",
+      "title": "NPBackup ops",
       "type": "stat"
     },
     {
@@ -280,7 +274,7 @@
         "type": "prometheus",
         "uid": "${DS_MIMIR}"
       },
-      "description": "Number of failed npbackup executions",
+      "description": "Number of succesful npbackup executions",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -301,8 +295,16 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "#d44a3a",
                 "value": null
+              },
+              {
+                "color": "rgba(237, 129, 40, 0.89)",
+                "value": 0
+              },
+              {
+                "color": "#299c46",
+                "value": 0
               }
             ]
           },
@@ -316,10 +318,10 @@
         "x": 8,
         "y": 1
       },
-      "id": 32,
+      "id": 5,
       "maxDataPoints": 100,
       "options": {
-        "colorMode": "value",
+        "colorMode": "background",
         "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "horizontal",
@@ -344,17 +346,15 @@
             "uid": "${DS_MIMIR}"
           },
           "editorMode": "code",
-          "exemplar": true,
-          "expr": "count(count_over_time((npbackup_exec_state{backup_job=~\"$backup_job\",__tenant_id__=~\"$tenant\",action=\"backup\"})[$__range:]))",
+          "expr": "count(count_over_time((npbackup_exec_state{backup_job=~\"$backup_job\",__tenant_id__=~\"$tenant\"} == 0)[$__range:]))",
           "format": "time_series",
-          "interval": "",
           "intervalFactor": 2,
-          "legendFormat": "",
+          "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Backup ops",
+      "title": "Successful Ops",
       "type": "stat"
     },
     {
@@ -442,7 +442,7 @@
           "refId": "A"
         }
       ],
-      "title": "Successful backup",
+      "title": "Backend successful backup",
       "type": "stat"
     },
     {
@@ -526,7 +526,7 @@
           "refId": "A"
         }
       ],
-      "title": "Failed backups",
+      "title": "Backend failed backups",
       "type": "stat"
     },
     {
@@ -1615,7 +1615,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "dark-red"
+                "color": "dark-red",
+                "value": null
               }
             ]
           },
@@ -1649,7 +1650,7 @@
           }
         ]
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -1775,7 +1776,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "dark-red"
+                "color": "dark-red",
+                "value": null
               }
             ]
           },
@@ -1809,7 +1811,7 @@
           }
         ]
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -1925,7 +1927,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "dark-red"
+                "color": "dark-red",
+                "value": null
               }
             ]
           },
@@ -1959,7 +1962,7 @@
           }
         ]
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -2089,7 +2092,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -2124,7 +2128,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -2195,7 +2199,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -2230,7 +2235,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -2301,7 +2306,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -2336,7 +2342,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -2406,7 +2412,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -2441,7 +2448,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -2511,7 +2518,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -2542,7 +2550,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -2654,7 +2662,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -2685,7 +2694,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -2795,7 +2804,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -2830,7 +2840,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -2899,7 +2909,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -2936,7 +2947,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.4.0",
       "targets": [
         {
           "datasource": {
@@ -3054,8 +3065,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "NPBackup v3",
+  "title": "NPBackup v3 20250211",
   "uid": "XNGJDIgRx",
-  "version": 25,
+  "version": 27,
   "weekStart": ""
 }
