@@ -333,7 +333,7 @@ def auto_upgrader(
             has_config_arg = True
     if not has_config_arg:
         filtered_args.append("--config-file")
-        filtered_args.append(config_file)
+        filtered_args.append(str(config_file))
 
     original_args = " ".join(filtered_args)
 
