@@ -41,3 +41,6 @@ if not "BUILD_TYPE" in globals():
 def set_build_type(build_type: str) -> None:
     global BUILD_TYPE
     BUILD_TYPE = build_type
+
+
+ALLOWED_UPGRADE_SERVER_IDS = ("npbackup.upgrader", "npbackup.deployment_server")

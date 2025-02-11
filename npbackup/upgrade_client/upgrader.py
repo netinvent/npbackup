@@ -26,7 +26,7 @@ from command_runner import deferred_command
 from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
 from npbackup.__version__ import version_dict, IS_COMPILED
 from npbackup.__debug__ import _NPBACKUP_ALLOW_AUTOUPGRADE_DEBUG
-from npbackup.__env__ import UPGRADE_DEFER_TIME
+from npbackup.__env__ import UPGRADE_DEFER_TIME, ALLOWED_UPGRADE_SERVER_IDS
 
 logger = getLogger()
 
@@ -102,7 +102,7 @@ def _check_new_version(
         return None
 
     try:
-        if not server_ident["app"] == "npbackup.upgrader":
+        if not server_ident["app"] in ALLOWED_UPGRADE_SERVER_IDS:
             msg = "Current server is not a recognized NPBackup update server"
             if ignore_errors:
                 logger.info(msg)
