@@ -1221,8 +1221,12 @@ class NPBackupRunner:
             "files_from_raw",
         ):
             if source_type not in ["folder_list", None]:
+                if not source_type or source_type == "folder_list":
+                    pretty_source_type = "files and folders"
+                else:
+                    pretty_source_type = " ".join(source_type.split("_"))
                 self.write_logs(
-                    f"Running backup of files in {paths} list to repo {self.repo_config.g('name')}",
+                    f"Running backup of {pretty_source_type}: {paths} to repo {self.repo_config.g('name')}",
                     level="info",
                 )
             else:
