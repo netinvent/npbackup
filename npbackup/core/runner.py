@@ -823,9 +823,9 @@ class NPBackupRunner:
             self.write_logs("Bogus ignore_cloud_files value given", level="warning")
 
         try:
-            if self.repo_config.g("repo_opts.additional_parameters"):
+            if self.repo_config.g("backup_opts.additional_parameters"):
                 self.restic_runner.additional_parameters = self.repo_config.g(
-                    "repo_opts.additional_parameters"
+                    "backup_opts.additional_parameters"
                 )
                 try:
                     self.restic_runner.additional_parameters = os.path.expanduser(

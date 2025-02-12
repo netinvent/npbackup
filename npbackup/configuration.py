@@ -179,6 +179,7 @@ empty_config_dict = {
                 ],
                 "exclude_patterns": None,
                 "exclude_files_larger_than": None,
+                "additional_parameters": None,
                 "additional_backup_only_parameters": None,
                 "minimum_backup_size_error": "10 MiB",  # allows BytesConverter units
                 "pre_exec_commands": [],
@@ -214,7 +215,6 @@ empty_config_dict = {
                 },
                 # "prune_max_unused": None,  # TODO
                 # "prune_max_repack_size": None,  # TODO
-                "additional_parameters": None,
             },
             "prometheus": {
                 "backup_job": "${MACHINE_ID}",
