@@ -23,7 +23,7 @@ This will prevent local backups, so we need to think of a better zero knowledge 
 # NPF-SEC-00005: Viewer mode can bypass permissions
 
 Since viewer mode requires actual knowledge of repo URI and repo password, there's no need to manage local permissions.
-Viewer mode permissions are set to "restore".
+Viewer mode permissions are set to "restore-only".
 
 # NPF-SEC-00006: Never inject permissions if some are already present
 
@@ -61,3 +61,7 @@ Using obfuscation() symmetric function in order to not store the bare AES key.
 # NPF-SEC-00012: Don't add PRIVATE directory to wheel / bdist builds
 
 The PRIVATE directory might contain alternative AES keys and obfuscation functions which should never be bundled for a PyPI release.
+
+# NPF-SEC-00013: Don't leave encrypted envrionment variables for script usage
+
+Sensible environment variables aren't available for scripts / additional parameters and will be replaced by a given string from __env__.py

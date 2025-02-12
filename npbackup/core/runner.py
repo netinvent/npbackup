@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025021201"
+__build__ = "2025021202"
 
 
 from typing import Optional, Callable, Union, List
@@ -857,7 +857,6 @@ class NPBackupRunner:
         except KeyError:
             encrypted_env_variables = []
 
-        env_variables += encrypted_env_variables
         expanded_env_vars = {}
         if isinstance(env_variables, list):
             for env_variable in env_variables:
@@ -874,8 +873,26 @@ class NPBackupRunner:
                             )
                             logger.debug("Trace:", exc_info=True)
 
+        expanded_encrypted_env_vars = {}
+        if isinstance(encrypted_env_variables, list):
+            for encrypted_env_variable in encrypted_env_variables:
+                if isinstance(encrypted_env_variable, dict):
+                    for k, v in encrypted_env_variable.items():
+                        try:
+                            v = os.path.expanduser(v)
+                            v = os.path.expandvars(v)
+                            expanded_encrypted_env_vars[k.strip()] = v.strip()
+                        except Exception as exc:
+                            self.write_logs(
+                                f"Cannot expand encrypted environment variable {k}: {exc}",
+                                level="error",
+                            )
+                            logger.debug("Trace:", exc_info=True)
         try:
             self.restic_runner.environment_variables = expanded_env_vars
+            self.restic_runner.encrypted_environment_variables = (
+                expanded_encrypted_env_vars
+            )
         except ValueError:
             self.write_logs(
                 "Cannot initialize additional environment variables", level="error"

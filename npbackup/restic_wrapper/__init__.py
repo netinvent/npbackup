@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025012201"
-__version__ = "2.3.6"
+__build__ = "2025021201"
+__version__ = "2.4.0"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -28,6 +28,7 @@ from npbackup.__env__ import (
     CHECK_INTERVAL,
     HEARTBEAT_INTERVAL,
     BUILD_TYPE,
+    HIDDEN_BY_NPBACKUP
 )
 from npbackup.path_helper import CURRENT_DIR
 from npbackup.restic_wrapper import schema
@@ -96,6 +97,7 @@ class ResticRunner:
         self._ignore_cloud_files = True
         self._additional_parameters = None
         self._environment_variables = {}
+        self._encrypted_environment_variables = {}
 
         # Function which will make executor abort if result is True
         self._stop_on = None
@@ -137,6 +139,16 @@ class ResticRunner:
             )
             os.environ[env_variable] = value
 
+        for (
+            encrypted_env_variable,
+            value,
+        ) in self.encrypted_environment_variables.items():
+            self.write_logs(
+                f'Setting encrypted envrionment variable "{encrypted_env_variable}"',
+                level="debug",
+            )
+            os.environ[encrypted_env_variable] = value
+
         # Configure default cpu usage when not specifically set
         if not "GOMAXPROCS" in self.environment_variables:
             nb_cores = os.cpu_count()
@@ -154,11 +166,12 @@ class ResticRunner:
         """
         Unsets repository & password environment, we don't need to keep that data when not requested
         """
-        os.environ["RESTIC_PASSWORD"] = "o_O"
+        os.environ["RESTIC_PASSWORD"] = HIDDEN_BY_NPBACKUP
         os.environ["RESTIC_REPOSITORY"] = self.repository_anonymous
 
-        for env_variable in self.environment_variables.keys():
-            os.environ[env_variable] = "__ooOO(° °)OOoo__"
+        # NPF-SEC-00013 Don't leave encrypted environment variables for script usage
+        for encrypted_env_variable in self.encrypted_environment_variables.keys():
+            os.environ[encrypted_env_variable] = HIDDEN_BY_NPBACKUP
 
     @property
     def stdout(self) -> Optional[Union[int, str, Callable, queue.Queue]]:
@@ -268,7 +281,7 @@ class ResticRunner:
     @property
     def repository_anonymous(self):
         if self.repository:
-            return self.repository.split(":")[0] + ":_(o_O)_hidden_by_npbackup"
+            return self.repository.split(":")[0] + ":" + HIDDEN_BY_NPBACKUP
         return None
 
     def write_logs(
@@ -519,8 +532,18 @@ class ResticRunner:
     @environment_variables.setter
     def environment_variables(self, value):
         if not isinstance(value, dict):
-            raise ValueError("Bogus environment variables set")
+            raise ValueError(f"Bogus environment variables set: {value}")
         self._environment_variables = value
+
+    @property
+    def encrypted_environment_variables(self):
+        return self._encrypted_environment_variables
+
+    @encrypted_environment_variables.setter
+    def encrypted_environment_variables(self, value):
+        if not isinstance(value, dict):
+            raise ValueError(f"Bogus encrypted environment variables set: {value}")
+        self._encrypted_environment_variables = value
 
     @property
     def binary(self):

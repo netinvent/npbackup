@@ -43,4 +43,8 @@ def set_build_type(build_type: str) -> None:
     BUILD_TYPE = build_type
 
 
+# Allowed server ids for upgrade
 ALLOWED_UPGRADE_SERVER_IDS = ("npbackup.upgrader", "npbackup.deployment_server")
+
+# Replacement string for sensible data
+HIDDEN_BY_NPBACKUP = "_[o_O]_hidden_by_npbackup"
