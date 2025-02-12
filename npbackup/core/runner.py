@@ -912,6 +912,15 @@ class NPBackupRunner:
                     self.write_logs("No backend binary found", level="error")
                     self._is_ready = False
                     return False
+
+        # Add currently in use backend binary to environment variables
+        # This is useful for additional parameters / scripts that would directly call the backend
+        try:
+            os.environ["NPBACKUP_BACKEND_BINARY"] = str(self.restic_runner.binary)
+        except OSError:
+            self.write_logs(
+                f"Cannot set env variable NPBACKUP_BACKEND_BINARY to {self.binary}", level="error"
+            )
         return True
 
     def convert_to_json_output(
