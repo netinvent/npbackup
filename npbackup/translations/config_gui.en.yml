@@ -61,6 +61,7 @@ en:
   no_runner: Cannot connect to backend. Please see logs
   runner_not_configured: Backend not configured properly. Please see logs
   no_binary: Cannot find backup backend. Please install restic binary from restic.net
+  key_error: Key from configuration has no match in GUI
 
   configuration_saved: Configuration saved
   cannot_save_configuration: Could not save configuration. See logs for further info

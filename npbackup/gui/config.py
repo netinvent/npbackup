@@ -312,8 +312,13 @@ def config_gui(full_config: dict, config_file: str):
                 "prometheus.http_password",
                 "prometheus.no_cert_verify",
                 "update_manager_password",
+                "permissions",
+                "manager_password",
             ) or key.startswith("prometheus.additional_labels"):
                 return
+            # Since FreeSimpleGUI does not allow to suppress the debugger anymore in v5.1.0, we need to handle KeyError
+            if key not in window.AllKeysDict:
+                raise KeyError
             if key == "permissions":
                 window["current_permissions"].Update(combo_boxes["permissions"][value])
                 return
@@ -480,7 +485,9 @@ def config_gui(full_config: dict, config_file: str):
                     window[inheritance_key].update(NON_INHERITED_ICON)
 
         except KeyError:
-            logger.error(f"Key {key} has no GUI equivalent")
+            msg = f"{_t('config_gui.key_error')}: {key}"
+            sg.PopupError(msg)
+            logger.error(msg)
             logger.debug("Trace:", exc_info=True)
         except TypeError as exc:
             logger.error(

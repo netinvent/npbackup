@@ -62,6 +62,7 @@ fr:
   no_runner: Impossible de se connecter au backend. Verifier les logs
   runner_not_configured: Backend non configuré proprement. Verifier les logs
   no_binary: Impossible de trouver le coeur de sauvegarde. Merci d'installer le binaire restic depuis restic.net
+  key_error: Un entrée de la configuration n'a pas d'équivalent dans l'interface
 
   configuration_saved: Configuration sauvegardée
   cannot_save_configuration: Impossible d'enregistrer la configuration. Veuillez consulter les journaux pour plus de détails
