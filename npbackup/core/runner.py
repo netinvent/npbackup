@@ -827,6 +827,11 @@ class NPBackupRunner:
                 self.restic_runner.additional_parameters = self.repo_config.g(
                     "backup_opts.additional_parameters"
                 )
+                try:
+                    self.restic_runner.additional_parameters = os.path.expanduser(self.restic_runner.additional_parameters)
+                    self.restic_runner.additional_parameters = os.path.expandvars(self.restic_runner.additional_parameters)
+                except OSError:
+                    self.write_logs(f"Failed expansion for additional parameters: {self.restic_runner.additional_parameters}", level="error")
         except KeyError:
             pass
         except ValueError:
@@ -1189,9 +1194,21 @@ class NPBackupRunner:
         except KeyError:
             tags = None
 
-        additional_backup_only_parameters = self.repo_config.g(
-            "backup_opts.additional_backup_only_parameters"
-        )
+        additional_backup_only_parameters = None
+        try:
+            if self.repo_config.g("backup_opts.additional_backup_only_parameters"):
+                additional_backup_only_parameters = self.repo_config.g(
+                    "backup_opts.additional_backup_only_parameters"
+                )
+                try:
+                    additional_backup_only_parameters = os.path.expanduser(additional_backup_only_parameters)
+                    additional_backup_only_parameters = os.path.expandvars(additional_backup_only_parameters)
+                except OSError:
+                    self.write_logs(f"Failed expansion for additional backup parameters: {additional_backup_only_parameters}", level="error")
+        except KeyError:
+            pass
+        except ValueError:
+            self.write_logs("Bogus additional backup parameters given", level="warning")
 
         if not force:
             # Check if backup is required, no need to be verbose, but we'll make sure we don't get a json result here
