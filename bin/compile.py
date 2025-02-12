@@ -33,7 +33,12 @@ from command_runner import command_runner
 from ofunctions.platform import python_arch, get_os
 
 if os.name == "nt":
-    from npbackup.windows.sign_windows import sign
+    EXTERNAL_SIGNER = r"C:\ev_signer_npbackup\ev_signer_npbackup.exe"
+    if os.path.isfile(EXTERNAL_SIGNER):
+        SIGN_EXTERNALY = True
+    else:
+        SIGN_EXTERNALY = False
+        from npbackup.windows.sign_windows import sign
 from npbackup.__version__ import IS_LEGACY
 
 AUDIENCES = ["public", "private"]
@@ -366,7 +371,16 @@ def compile(
         npbackup_executable = os.path.join(
             compiled_output_dir, "npbackup-{}.exe".format(build_type)
         )
-        if os.path.isfile(ev_cert_data):
+        if SIGN_EXTERNALY:
+            print(f"Signing with external signer {EXTERNAL_SIGNER}")
+            cmd = f"{EXTERNAL_SIGNER} --executable {npbackup_executable}"
+            print(cmd)
+            exit_code, output = command_runner(cmd, shell=True)
+            if exit_code != 0:
+                print(f"ERROR: Could not sign: {output}")
+                errors = True
+        elif os.path.isfile(ev_cert_data):
+            print(f"Signing with interal signer {ev_cert_data}")
             sign(
                 executable=npbackup_executable,
                 arch=arch,
@@ -374,7 +388,7 @@ def compile(
                 dry_run=args.dry_run,
             )
         else:
-            print("ERROR: Cannot sign windows executable without EV certificate data")
+            print(f"ERROR: Cannot sign windows executable: {SIGN_EXTERNALY} {ev_cert_data}")
             errors = True
 
     if not onefile:
