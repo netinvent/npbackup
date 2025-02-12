@@ -90,7 +90,7 @@ fr:
   machine_id: Identificateur machine
   machine_group: Groupe machine
 
-  show_decrypted: Voir déchiffré
+  show_decrypted: Voir les données sensibles
   no_manager_password_defined: Mot de passe gestionnaire non initialisé, ne peut montrer la version déchiffrée
 
   # compression
@@ -143,7 +143,7 @@ fr:
   cannot_delete_default_group: Impossible de supprimer le groupe par défaut
   
   # permissions
-  set_permissions: Régler les permissions
+  set_permissions: Définir les permissions et le mot de passe
   permissions_only_for_repos: Les permissions peuvent être appliquées uniquement à des dépots
   permissions: Permissions
   backup_perms: Sauvegardes uniquement

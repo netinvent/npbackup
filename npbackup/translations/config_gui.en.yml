@@ -89,7 +89,7 @@ en:
   machine_id: Machine identifier
   machine_group: Machine group
 
-  show_decrypted: Show decrypted
+  show_decrypted: Show sensible data
   no_manager_password_defined: No manager password defined, cannot show unencrypted
 
   # compression
@@ -142,7 +142,7 @@ en:
   cannot_delete_default_group: Cannot delete default group
   
   # permissions
-  set_permissions: Set permissions
+  set_permissions: Set permissions and password
   permissions_only_for_repos: Permissions can only be applied for repos
   permissions: Permissions
   backup_perms: Backup only

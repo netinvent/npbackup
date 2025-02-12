@@ -320,8 +320,10 @@ def config_gui(full_config: dict, config_file: str):
             if key == "manager_password":
                 if value:
                     window["manager_password_set"].Update(_t("generic.yes"))
+                    window["--SET-PERMISSIONS--"].Update(button_color="green")
                 else:
                     window["manager_password_set"].Update(_t("generic.no"))
+                    window["--SET-PERMISSIONS--"].Update(button_color="red")
                 return
 
             # NPF-SEC-00009
@@ -1426,7 +1428,16 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Image(NON_INHERITED_ICON, pad=1),
                 sg.Text(_t("generic.no"), key="manager_password_set", size=(25, 1)),
             ],
-            [sg.Button(_t("config_gui.set_permissions"), key="--SET-PERMISSIONS--")],
+            [
+                sg.Text(" ", size=(40, 1)),
+                sg.Image(NON_INHERITED_ICON, pad=1),
+                sg.Button(
+                    _t("config_gui.set_permissions"),
+                    key="--SET-PERMISSIONS--",
+                    size=(35, 1),
+                    button_color="green",
+                ),
+            ],
             [
                 sg.Text(_t("config_gui.repo_group"), size=(40, 1)),
                 sg.Image(NON_INHERITED_ICON, pad=1),
