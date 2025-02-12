@@ -2,16 +2,12 @@
 
 :: This is an example compiler script
 
-SET PYTHON64=c:\python312-64\python.exe
+SET PYTHON64=c:\python313-64\python.exe
 SET PYTHON32=c:\python37-32\python.exe
 
 
 cd C:\GIT\npbackup
 git pull || GOTO ERROR
-
-:: cd RESTIC_SOURCE_FILES
-:: cat update_restic.sh | dos2unix | sh
-:: cd ..
 
 :: Make sure we add npbackup in python path so bin and npbackup subfolders become packages
 SET OLD_PYTHONPATH=%PYTHONPATH%
