@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024122401"
+__build__ = "2025021201"
 
 
 from typing import Optional, Callable, Union, List
@@ -1112,6 +1112,7 @@ class NPBackupRunner:
         if source_type in (
             None,
             "folder_list",
+            "files_from",
             "files_from_verbatim",
             "files_from_raw",
         ):
@@ -1215,6 +1216,7 @@ class NPBackupRunner:
         if source_type in (
             None,
             "folder_list",
+            "files_from",
             "files_from_verbatim",
             "files_from_raw",
         ):
@@ -1239,7 +1241,7 @@ class NPBackupRunner:
                 level="info",
             )
         else:
-            raise ValueError("Unknown source type given")
+            raise ValueError(f"Unknown source type given: {source_type}")
 
         def _exec_commands(
             exec_type: str,
@@ -1288,6 +1290,7 @@ class NPBackupRunner:
             if source_type in (
                 None,
                 "folder_list",
+                "files_from",
                 "files_from_verbatim",
                 "files_from_raw",
             ):
