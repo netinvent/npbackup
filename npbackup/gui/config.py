@@ -1803,11 +1803,11 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             [
                 sg.Image(
                     NON_INHERITED_ICON,
-                    key="inherited.backup_opts.additional_parameters",
+                    key="inherited.repo_opts.additional_parameters",
                     tooltip=_t("config_gui.group_inherited"),
                     pad=1,
                 ),
-                sg.Input(key="backup_opts.additional_parameters", size=(100, 1)),
+                sg.Input(key="repo_opts.additional_parameters", size=(100, 1)),
             ],
         ]
 
