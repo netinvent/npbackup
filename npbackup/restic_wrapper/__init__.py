@@ -28,7 +28,7 @@ from npbackup.__env__ import (
     CHECK_INTERVAL,
     HEARTBEAT_INTERVAL,
     BUILD_TYPE,
-    HIDDEN_BY_NPBACKUP
+    HIDDEN_BY_NPBACKUP,
 )
 from npbackup.path_helper import CURRENT_DIR
 from npbackup.restic_wrapper import schema
