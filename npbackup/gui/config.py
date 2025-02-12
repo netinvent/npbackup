@@ -63,6 +63,7 @@ sg.TreeData.delete = delete
 
 
 ENCRYPTED_DATA_PLACEHOLDER = "<{}>".format(_t("config_gui.encrypted_data"))
+BAD_KEYS_FOUND_IN_CONFIG = set()
 
 
 def ask_manager_password(manager_password: str) -> bool:
@@ -191,7 +192,7 @@ def config_gui(full_config: dict, config_file: str):
                     raise ValueError("Bogus object type given")
         window.close()
         if object_type and object_name:
-            update_object_gui(full_config, object_type, object_name, unencrypted=False)
+            full_config = update_object_gui(full_config, object_type, object_name, unencrypted=False)
             update_global_gui(full_config, unencrypted=False)
         return full_config, object_type, object_name
 
@@ -202,7 +203,7 @@ def config_gui(full_config: dict, config_file: str):
         )
         if result:
             full_config.d(f"{object_type}.{object_name}")
-            update_object_gui(full_config, None, unencrypted=False)
+            full_config = update_object_gui(full_config, None, unencrypted=False)
             update_global_gui(full_config, unencrypted=False)
         return full_config
 
@@ -288,6 +289,8 @@ def config_gui(full_config: dict, config_file: str):
         Update gui values depending on their type
         This not called directly, but rather from update_object_gui which calls iter_over_config which calls this function
         """
+        global BAD_KEYS_FOUND_IN_CONFIG
+
         nonlocal backup_paths_tree
         nonlocal tags_tree
         nonlocal exclude_files_tree
@@ -489,6 +492,7 @@ def config_gui(full_config: dict, config_file: str):
             sg.PopupError(msg)
             logger.error(msg)
             logger.debug("Trace:", exc_info=True)
+            BAD_KEYS_FOUND_IN_CONFIG.add(key)
         except TypeError as exc:
             logger.error(
                 f"Error: Trying to update GUI with key {key} produced error: {exc}"
@@ -542,7 +546,7 @@ def config_gui(full_config: dict, config_file: str):
         object_type: str = None,
         object_name: str = None,
         unencrypted: bool = False,
-    ):
+    ) -> dict:
         """
         Reload current object configuration settings to GUI
         """
@@ -623,6 +627,14 @@ def config_gui(full_config: dict, config_file: str):
             window["backup_opts.source_type"].Get(),
         )
         update_source_layout(source_type)
+
+        if BAD_KEYS_FOUND_IN_CONFIG:
+            if sg.popup_yes_no(_t("config_gui.delete_bad_keys") + f":{BAD_KEYS_FOUND_IN_CONFIG}"):
+                for key in BAD_KEYS_FOUND_IN_CONFIG:
+                    full_key_path = f"{object_type}.{object_name}.{key}"
+                    logger.info(f"Deleting bogus key {full_key_path}")
+                    full_config.d(full_key_path)
+        return full_config
 
     def update_global_gui(full_config, unencrypted: bool = False):
         nonlocal global_prometheus_labels_tree
@@ -2229,7 +2241,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
     encrypted_env_variables_tree = sg.TreeData()
 
     # Update gui with first default object (repo or group)
-    update_object_gui(full_config, unencrypted=False)
+    full_config = update_object_gui(full_config, unencrypted=False)
     update_global_gui(full_config, unencrypted=False)
 
     # These contain object name/type so on object change we can update the current object before loading new one
@@ -2259,7 +2271,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 full_config, current_object_type, current_object_name, values
             )
             current_object_type, current_object_name = object_type, object_name
-            update_object_gui(
+            full_config = update_object_gui(
                 full_config, current_object_type, current_object_name, unencrypted=False
             )
             update_global_gui(full_config, unencrypted=False)
@@ -2298,7 +2310,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     object_type=current_object_type,
                     object_name=current_object_name,
                 )
-                update_object_gui(
+                full_config = update_object_gui(
                     full_config,
                     current_object_type,
                     current_object_name,
@@ -2531,7 +2543,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             if (
                 env_manager_password and env_manager_password == manager_password
             ) or ask_manager_password(manager_password):
-                update_object_gui(
+                full_config = update_object_gui(
                     full_config,
                     current_object_type,
                     current_object_name,
