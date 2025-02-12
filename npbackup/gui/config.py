@@ -63,7 +63,6 @@ sg.TreeData.delete = delete
 
 
 ENCRYPTED_DATA_PLACEHOLDER = "<{}>".format(_t("config_gui.encrypted_data"))
-BAD_KEYS_FOUND_IN_CONFIG = set()
 
 
 def ask_manager_password(manager_password: str) -> bool:
@@ -192,7 +191,9 @@ def config_gui(full_config: dict, config_file: str):
                     raise ValueError("Bogus object type given")
         window.close()
         if object_type and object_name:
-            full_config = update_object_gui(full_config, object_type, object_name, unencrypted=False)
+            full_config = update_object_gui(
+                full_config, object_type, object_name, unencrypted=False
+            )
             update_global_gui(full_config, unencrypted=False)
         return full_config, object_type, object_name
 
@@ -289,7 +290,7 @@ def config_gui(full_config: dict, config_file: str):
         Update gui values depending on their type
         This not called directly, but rather from update_object_gui which calls iter_over_config which calls this function
         """
-        global BAD_KEYS_FOUND_IN_CONFIG
+        nonlocal BAD_KEYS_FOUND_IN_CONFIG
 
         nonlocal backup_paths_tree
         nonlocal tags_tree
@@ -629,7 +630,12 @@ def config_gui(full_config: dict, config_file: str):
         update_source_layout(source_type)
 
         if BAD_KEYS_FOUND_IN_CONFIG:
-            if sg.popup_yes_no(_t("config_gui.delete_bad_keys") + f":{BAD_KEYS_FOUND_IN_CONFIG}"):
+            answer = sg.popup_yes_no(
+                _t("config_gui.delete_bad_keys")
+                + f": {','.join(BAD_KEYS_FOUND_IN_CONFIG)}",
+                keep_on_top=True,
+            )
+            if answer == "Yes":
                 for key in BAD_KEYS_FOUND_IN_CONFIG:
                     full_key_path = f"{object_type}.{object_name}.{key}"
                     logger.info(f"Deleting bogus key {full_key_path}")
@@ -2229,6 +2235,8 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
         enable_close_attempted_event=True,
     )
 
+    # Init fresh config objects
+    BAD_KEYS_FOUND_IN_CONFIG = set()
     backup_paths_tree = sg.TreeData()
     tags_tree = sg.TreeData()
     exclude_patterns_tree = sg.TreeData()

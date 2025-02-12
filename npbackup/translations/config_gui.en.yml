@@ -62,7 +62,7 @@ en:
   runner_not_configured: Backend not configured properly. Please see logs
   no_binary: Cannot find backup backend. Please install restic binary from restic.net
   key_error: Key from configuration has no match in GUI
-  delete_bad_keys: Do you want to delete the bogus keys ? Note that this only affects current object. If key is inherited, you will need to load corresponding group
+  delete_bad_keys: Do you want to delete the bogus keys ? Note that this only affects current object. If key is inherited, you will need to load corresponding group. Concerned keys in current object
 
   configuration_saved: Configuration saved
   cannot_save_configuration: Could not save configuration. See logs for further info
