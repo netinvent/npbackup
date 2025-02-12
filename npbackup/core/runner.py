@@ -919,7 +919,8 @@ class NPBackupRunner:
             os.environ["NPBACKUP_BACKEND_BINARY"] = str(self.restic_runner.binary)
         except OSError:
             self.write_logs(
-                f"Cannot set env variable NPBACKUP_BACKEND_BINARY to {self.binary}", level="error"
+                f"Cannot set env variable NPBACKUP_BACKEND_BINARY to {self.binary}",
+                level="error",
             )
         return True
 
