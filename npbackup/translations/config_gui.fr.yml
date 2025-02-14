@@ -94,7 +94,7 @@ fr:
   machine_group: Groupe machine
 
   show_decrypted: Voir les données sensibles
-  no_manager_password_defined: Mot de passe gestionnaire non initialisé, ne peut montrer la version déchiffrée
+  no_manager_password_defined: Mot de passe gestionnaire non initialisé, ne peut montrer la version déchiffrée. Si vous venez d'en définir un, vous devez sauvegarder la configuration actuelle avant de pouvoir l'utiliser
 
   # compression
   auto: Automatique
