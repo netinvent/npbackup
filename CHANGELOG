@@ -79,6 +79,9 @@
   - Added manual --init command (already executed by first backup)
   - Updated internal restic binary to restic 0.17.3 compiled with go1.23.1 (except for Windows legacy version which stays on 0.16.2 for compat)
   - Added heartbeat log for long commands
+  - Updated Nuitka compiler to 2.6.4
+  - Updated non-legacy Python from 3.12 to 3.13 on Windows builds
+  - Windows builds are done via msvc instead of gcc because AV engines don't like gcc (!)
 
 ## 2.2.2 - 14/12/2023 (internal build only)
   - Fixed backup paths of '/' root partitions
