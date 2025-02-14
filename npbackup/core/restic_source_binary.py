@@ -7,15 +7,17 @@ __intname__ = "npbackup.gui.core.restic_source_binary"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2023061102"
+__build__ = "2025021401"
 
 
 import os
 import sys
 import glob
+from logging import getLogger
 from npbackup.__version__ import IS_LEGACY
 from npbackup.path_helper import BASEDIR
 
+logger = getLogger()
 
 RESTIC_SOURCE_FILES_DIR = os.path.join(BASEDIR, os.pardir, "RESTIC_SOURCE_FILES")
 
@@ -26,11 +28,14 @@ def get_restic_internal_binary(arch: str) -> str:
         if os.name == "nt":
             if IS_LEGACY and arch == "x86":
                 # Last compatible restic binary for Windows 7, see https://github.com/restic/restic/issues/5065
+                logger.info(
+                    "Dealing with special case for Windows 7 32 bits that doesn't run with restic >= 0.16.2"
+                )
                 binary = "restic_0.16.2_windows_386.exe"
-            if arch == "x64":
-                binary = "restic_*_windows_amd64.exe"
-            else:
+            elif arch == "x86":
                 binary = "restic_*_windows_386.exe"
+            else:
+                binary = "restic_*_windows_amd64.exe"
         elif sys.platform.lower() == "darwin":
             if arch == "arm64":
                 binary = "restic_*_darwin_arm64"
