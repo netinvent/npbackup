@@ -534,24 +534,43 @@ def inject_permissions_into_full_config(full_config: dict) -> Tuple[bool, dict]:
                 f"{object_type}.{object_name}.manager_password"
             )
             permissions = full_config.g(f"{object_type}.{object_name}.permissions")
-            update_manager_password = full_config.g(
-                f"{object_type}.{object_name}.update_manager_password"
+            new_manager_password = full_config.g(
+                f"{object_type}.{object_name}.new_manager_password"
             )
-            if update_manager_password and manager_password:
+            # Getting current manager password is only needed in CLI mode, to avoid overwriting existing manager password
+            current_manager_password = full_config.g(
+                f"{object_type}.{object_name}.current_manager_password"
+            )
+            new_permissions = full_config.g(
+                f"{object_type}.{object_name}.new_permissions"
+            )
+
+            if new_manager_password and current_manager_password == manager_password:
+                full_config.s(
+                    f"{object_type}.{object_name}.repo_uri",
+                    (repo_uri, new_permissions, new_manager_password),
+                )
+                full_config.s(f"{object_type}.{object_name}.is_protected", True)
+                logger.info(f"New permissions set for {object_type} {object_name}")
+            elif new_manager_password:
+                logger.critical(
+                    f"Cannot set new permissions for {object_type} {object_name} without current manager password"
+                )
+            elif manager_password:
                 full_config.s(
                     f"{object_type}.{object_name}.repo_uri",
                     (repo_uri, permissions, manager_password),
                 )
                 full_config.s(f"{object_type}.{object_name}.is_protected", True)
-            elif manager_password:
-                full_config.s(f"{object_type}.{object_name}.is_protected", True)
                 logger.debug(f"Permissions exist for {object_type} {object_name}")
             else:
                 full_config.s(f"{object_type}.{object_name}.is_protected", False)
 
-            full_config.d(
-                f"{object_type}.{object_name}.update_manager_password"
-            )  # Don't keep decrypted manager password
+            # Don't keep decrypted manager password and permissions bare in config file
+            # They should be injected in repo_uri tuple
+            full_config.d(f"{object_type}.{object_name}.new_manager_password")
+            full_config.d(f"{object_type}.{object_name}.current_manager_password")
+            full_config.d(f"{object_type}.{object_name}.new_permissions")
             full_config.d(f"{object_type}.{object_name}.permissions")
             full_config.d(f"{object_type}.{object_name}.manager_password")
     return full_config

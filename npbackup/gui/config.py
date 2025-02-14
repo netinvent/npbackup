@@ -109,6 +109,7 @@ def config_gui(full_config: dict, config_file: str):
             "restore": _t("config_gui.restore_perms"),
             "restore_only": _t("config_gui.restore_only_perms"),
             "full": _t("config_gui.full_perms"),
+            None: _t("config_gui.full_perms"),
         },
     }
 
@@ -315,13 +316,15 @@ def config_gui(full_config: dict, config_file: str):
                 "prometheus.http_username",
                 "prometheus.http_password",
                 "prometheus.no_cert_verify",
-                "update_manager_password",
+                "current_manager_password",
             ) or key.startswith("prometheus.additional_labels"):
                 return
-            if key == "permissions":
+            # Note that keys with "new" must be processed after "current" keys
+            # This will happen automatically since adding new values are at the end of the config
+            if key in ("permissions", "new_permissions"):
                 window["current_permissions"].Update(combo_boxes["permissions"][value])
                 return
-            if key == "manager_password":
+            if key in ("manager_password", "new_manager_password"):
                 if value:
                     window["manager_password_set"].Update(_t("generic.yes"))
                     window["--SET-PERMISSIONS--"].Update(button_color="green")
@@ -902,13 +905,16 @@ def config_gui(full_config: dict, config_file: str):
                 permission = get_key_from_value(
                     combo_boxes["permissions"], values["permissions"]
                 )
-                full_config.s(f"{object_type}.{object_name}.permissions", permission)
                 full_config.s(
-                    f"{object_type}.{object_name}.manager_password",
+                    f"{object_type}.{object_name}.new_permissions", permission
+                )
+                full_config.s(
+                    f"{object_type}.{object_name}.new_manager_password",
                     values["-MANAGER-PASSWORD-"],
                 )
                 full_config.s(
-                    f"{object_type}.{object_name}.update_manager_password", True
+                    f"{object_type}.{object_name}.current_manager_password",
+                    full_config.g(f"{object_type}.{object_name}.manager_password"),
                 )
                 break
         window.close()
@@ -2307,7 +2313,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 full_config, object_name
             )
             if not manager_password or ask_manager_password(manager_password):
-                # We need to update full_config with current GUI values before using modifying it
+                # We need to update full_config with current GUI values before using or modifying it
                 full_config = update_config_dict(
                     full_config, current_object_type, current_object_name, values
                 )
