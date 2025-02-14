@@ -70,6 +70,7 @@ fr:
   repo_uri_cannot_be_empty: L'URI / chemin local dépot de sauvegarde ne peut-être vide
   set_manager_password: Mot de passe gestionnaire
   wrong_password: Mot de passe érroné
+  remove_password: Supprimer le mot de passe
 
   auto_upgrade: Mise à niveau
   auto_upgrade_server_url: Serveur de mise à niveau

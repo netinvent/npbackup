@@ -69,6 +69,7 @@ en:
   repo_uri_cannot_be_empty: Repo URI / path cannot be empty
   set_manager_password: Manager password
   wrong_password: Wrong password
+  remove_password: Remove password
 
   auto_upgrade: Auto upgrade
   auto_upgrade_server_url: Server URL
