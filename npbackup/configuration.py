@@ -545,7 +545,14 @@ def inject_permissions_into_full_config(full_config: dict) -> Tuple[bool, dict]:
                 f"{object_type}.{object_name}.new_permissions"
             )
 
-            if new_manager_password and current_manager_password == manager_password:
+            # Always first consider there is no protection
+            full_config.s(f"{object_type}.{object_name}.is_protected", False)
+
+            # We may set new_password_manager to false to explicitly disabling password manager
+            if (
+                new_manager_password is not None
+                and current_manager_password == manager_password
+            ):
                 full_config.s(
                     f"{object_type}.{object_name}.repo_uri",
                     (repo_uri, new_permissions, new_manager_password),
@@ -563,8 +570,6 @@ def inject_permissions_into_full_config(full_config: dict) -> Tuple[bool, dict]:
                 )
                 full_config.s(f"{object_type}.{object_name}.is_protected", True)
                 logger.debug(f"Permissions exist for {object_type} {object_name}")
-            else:
-                full_config.s(f"{object_type}.{object_name}.is_protected", False)
 
             # Don't keep decrypted manager password and permissions bare in config file
             # They should be injected in repo_uri tuple

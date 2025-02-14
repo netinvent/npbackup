@@ -864,7 +864,7 @@ def config_gui(full_config: dict, config_file: str):
             [
                 sg.Text(_t("config_gui.set_manager_password"), size=(40, 1)),
                 sg.Input(
-                    manager_password,
+                    None,
                     key="-MANAGER-PASSWORD-",
                     size=(50, 1),
                     password_char="*",
@@ -872,12 +872,28 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Push(),
+                sg.Button(
+                    _t("config_gui.remove_password"),
+                    key="--SUPPRESS-PASSWORD--",
+                    button_color="red",
+                ),
                 sg.Button(_t("generic.cancel"), key="--CANCEL--"),
                 sg.Button(_t("generic.accept"), key="--ACCEPT--"),
             ],
         ]
 
+        # We need to set current_manager_password variable to make sure we have sufficient permissions to modifiy settings
+        full_config.s(
+            f"{object_type}.{object_name}.current_manager_password",
+            full_config.g(f"{object_type}.{object_name}.manager_password"),
+        )
+
         window = sg.Window(_t("config_gui.permissions"), layout, keep_on_top=True)
+        window.finalize()
+        # Stupid fix because using window update method will fill input with "0" if False is given
+        window["-MANAGER-PASSWORD-"].Update(
+            manager_password if manager_password else ""
+        )
         while True:
             event, values = window.read()
             if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--CANCEL--"):
@@ -912,9 +928,11 @@ def config_gui(full_config: dict, config_file: str):
                     f"{object_type}.{object_name}.new_manager_password",
                     values["-MANAGER-PASSWORD-"],
                 )
+                break
+            if event == "--SUPPRESS-PASSWORD--":
+                full_config.s(f"{object_type}.{object_name}.new_permissions", "full")
                 full_config.s(
-                    f"{object_type}.{object_name}.current_manager_password",
-                    full_config.g(f"{object_type}.{object_name}.manager_password"),
+                    f"{object_type}.{object_name}.new_manager_password", False
                 )
                 break
         window.close()
