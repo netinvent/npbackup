@@ -362,6 +362,11 @@ def config_gui(full_config: dict, config_file: str):
                     if value is None:
                         window[key].Update(value="")
                     else:
+                        # Update possible values for repo group combobox after a new group is created
+                        if key == "repo_group":
+                            window[key].Update(
+                                values=configuration.get_group_list(full_config)
+                            )
                         window[key].Update(value=value)
                 return
 
@@ -596,6 +601,7 @@ def config_gui(full_config: dict, config_file: str):
             window["--SET-PERMISSIONS--"].Update(visible=True)
             window["current_permissions"].Update(visible=True)
             window["manager_password_set"].Update(visible=True)
+            window["repo_group"].Update(visible=True)
 
         elif object_type == "groups":
             object_config = configuration.get_group_config(
@@ -608,6 +614,7 @@ def config_gui(full_config: dict, config_file: str):
             window["--SET-PERMISSIONS--"].Update(visible=False)
             window["current_permissions"].Update(visible=False)
             window["manager_password_set"].Update(visible=False)
+            window["repo_group"].Update(visible=False)
 
         else:
             object_config = None
@@ -664,7 +671,10 @@ def config_gui(full_config: dict, config_file: str):
         if object_type == "repos":
             object_group = full_config.g(f"{object_type}.{object_name}.repo_group")
             if not object_group:
-                logger.warning(f"Current repo {object_name} has no group")
+                logger.error(
+                    f"Current repo {object_name} has no group. Cannot upgrade config"
+                )
+                return full_config
         else:
             object_group = None
 
@@ -1489,7 +1499,9 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Text(_t("config_gui.repo_group"), size=(40, 1)),
                 sg.Image(NON_INHERITED_ICON, pad=1),
                 sg.Combo(
-                    values=configuration.get_group_list(full_config), key="repo_group"
+                    values=configuration.get_group_list(full_config),
+                    key="repo_group",
+                    enable_events=True,
                 ),
             ],
             [
@@ -2295,7 +2307,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
         ):
             break
 
-        if event == "-OBJECT-SELECT-":
+        if event == "-OBJECT-SELECT-" or event == "repo_group":
             # Update full_config with current object before updating
             full_config = update_config_dict(
                 full_config, current_object_type, current_object_name, values
