@@ -737,7 +737,7 @@ def get_repo_config(
             logger.error(f"No repo with name {repo_name} found in config")
             return None, None
     except KeyError:
-        logger.error(f"No repo with name {repo_name} found in config")
+        logger.error(f"No repo key with name {repo_name} found in config")
         return None, None
 
     # Merge prometheus global settings with repo settings
@@ -766,9 +766,14 @@ def get_repo_config(
         repo_group = full_config.g(f"repos.{repo_name}.repo_group")
         group_config = full_config.g(f"groups.{repo_group}")
     except KeyError:
-        logger.error(f"Repo {repo_name} has no group, reset to default")
-        full_config.s(f"repos.{repo_name}.repo_group", "default_group")
-        group_config = full_config.g("groups.default_group")
+        logger.error(f"Repo {repo_name} has no group, reset to first available group")
+        try:
+            first_group = get_group_list()[0]
+            full_config.s(f"repos.{repo_name}.repo_group", first_group)
+            group_config = full_config.g(f"groups.{first_group}")
+        except IndexError:
+            logger.error("No group found in config")
+            group_config = {}
 
     repo_config.s("name", repo_name)
     repo_config, config_inheritance = inherit_group_settings(repo_config, group_config)

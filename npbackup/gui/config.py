@@ -213,7 +213,10 @@ def config_gui(full_config: dict, config_file: str):
     ) -> Tuple[str, str]:
         object_list = get_objects()
         if not object_name or not object_type:
-            obj = object_list[0]
+            if len(object_list) > 0:
+                obj = object_list[0]
+            else:
+                obj = None
         else:
             # We need to remove the "s" and the end if we want our combobox name to be usable later
             obj = f"{object_type.rstrip('s').capitalize()}: {object_name}"
@@ -232,20 +235,21 @@ def config_gui(full_config: dict, config_file: str):
         Extracts selected object from combobox
         Returns object type and name
         """
-        if combo_value.startswith("Repo: "):
-            object_type = "repos"
-            object_name = combo_value[len("Repo: ") :]
-        elif combo_value.startswith("Group: "):
-            object_type = "groups"
-            object_name = combo_value[len("Group: ") :]
-        else:
+        try:
+            if combo_value.startswith("Repo: "):
+                object_type = "repos"
+                object_name = combo_value[len("Repo: ") :]
+            elif combo_value.startswith("Group: "):
+                object_type = "groups"
+                object_name = combo_value[len("Group: ") :]
+            return object_type, object_name
+        except (AttributeError, UnboundLocalError):
             object_type = None
             object_name = None
             logger.error(
                 f"Could not obtain object_type and object_name from {combo_value}"
             )
-
-        return object_type, object_name
+            return None, None
 
     def update_source_layout(source_type: str):
         if source_type == "stdin_from_command":
@@ -571,7 +575,11 @@ def config_gui(full_config: dict, config_file: str):
 
         # Load fist available repo or group if none given
         if not object_name:
-            object_type, object_name = get_object_from_combo(get_objects()[0])
+            try:
+                object_type, object_name = get_object_from_combo(get_objects()[0])
+            except IndexError:
+                object_type = None
+                object_name = None
 
         # First we need to clear the whole GUI to reload new values
         for key in window.AllKeysDict:
@@ -622,6 +630,7 @@ def config_gui(full_config: dict, config_file: str):
             object_config = None
             config_inheritance = None
             logger.error(f"Bogus object {object_type}.{object_name}")
+            return full_config
 
         # Now let's iter over the whole config object and update keys accordingly
         iter_over_config(
@@ -2323,12 +2332,12 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             continue
         if event == "-OBJECT-DELETE-":
             object_type, object_name = get_object_from_combo(values["-OBJECT-SELECT-"])
-            if object_type == "repos" and object_name == "default":
-                sg.popup_error(_t("config_gui.cannot_delete_default_repo"))
-                continue
-            if object_type == "groups" and object_name == "default_group":
-                sg.popup_error(_t("config_gui.cannot_delete_default_group"))
-                continue
+            # if object_type == "repos" and object_name == "default":
+            #    sg.popup_error(_t("config_gui.cannot_delete_default_repo"))
+            #    continue
+            # if object_type == "groups" and object_name == "default_group":
+            #    sg.popup_error(_t("config_gui.cannot_delete_default_group"))
+            #    continue
             full_config = delete_object(full_config, values["-OBJECT-SELECT-"])
             current_object_type, current_object_name = update_object_selector()
             continue

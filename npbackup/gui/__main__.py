@@ -748,15 +748,24 @@ def _main_gui(viewer_mode: bool):
         return full_config, config_file
 
     def get_config(
-        config_file: str = None, window: sg.Window = None, repo_name: str = "default"
+        config_file: str = None, window: sg.Window = None, repo_name: str = None
     ) -> Tuple:
         full_config, config_file = get_config_file(config_file=config_file)
         if full_config and config_file:
-            repo_config, _ = npbackup.configuration.get_repo_config(
-                full_config, repo_name=repo_name
-            )
-            backup_destination = _t("main_gui.local_folder")
-            repo_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
+            # If no repo name is given, just show first one
+            try:
+                if not repo_name:
+                    repo_name = npbackup.configuration.get_repo_list(full_config)[0]
+                repo_config, _ = npbackup.configuration.get_repo_config(
+                    full_config, repo_name=repo_name
+                )
+                backup_destination = _t("main_gui.local_folder")
+                repo_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
+            except IndexError:
+                repo_config = None
+                backup_destination = "None"
+                repo_type = "None"
+                repo_uri = "None"
         else:
             repo_config = None
             backup_destination = "None"
@@ -806,7 +815,7 @@ def _main_gui(viewer_mode: bool):
         "--repo-name",
         dest="repo_name",
         type=str,
-        default="default",
+        default=None,
         required=False,
         help="Name of the repository to work with. Defaults to 'default'",
     )
