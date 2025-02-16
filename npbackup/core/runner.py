@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025021202"
+__build__ = "2025021601"
 
 
 from typing import Optional, Callable, Union, List
@@ -54,6 +54,7 @@ def metric_writer(
         labels = {
             "npversion": f"{NAME}{version_dict['version']}-{version_dict['build_type']}"
         }
+        repo_name = repo_config.g("name")
         if repo_config.g("prometheus.metrics"):
             labels["instance"] = repo_config.g("prometheus.instance")
             labels["backup_job"] = repo_config.g("prometheus.backup_job")
@@ -61,7 +62,6 @@ def metric_writer(
             no_cert_verify = repo_config.g("prometheus.no_cert_verify")
             destination = repo_config.g("prometheus.destination")
             prometheus_additional_labels = repo_config.g("prometheus.additional_labels")
-            repo_name = repo_config.g("name")
 
             if isinstance(prometheus_additional_labels, dict):
                 for k, v in prometheus_additional_labels.items():
@@ -73,7 +73,6 @@ def metric_writer(
         else:
             destination = None
             no_cert_verify = False
-            repo_name = None
 
         # We only analyse backup output of restic
         if operation == "backup":
