@@ -109,7 +109,6 @@ def config_gui(full_config: dict, config_file: str):
             "restore": _t("config_gui.restore_perms"),
             "restore_only": _t("config_gui.restore_only_perms"),
             "full": _t("config_gui.full_perms"),
-            None: _t("config_gui.full_perms"),
         },
     }
 
@@ -322,6 +321,9 @@ def config_gui(full_config: dict, config_file: str):
             # Note that keys with "new" must be processed after "current" keys
             # This will happen automatically since adding new values are at the end of the config
             if key in ("permissions", "new_permissions"):
+                # So we need to represent no permission as full in GUI
+                if value is None:
+                    value = "full"
                 window["current_permissions"].Update(combo_boxes["permissions"][value])
                 return
             if key in ("manager_password", "new_manager_password"):
@@ -858,6 +860,7 @@ def config_gui(full_config: dict, config_file: str):
         permissions = list(combo_boxes["permissions"].values())
         current_perm = full_config.g(f"{object_type}.{object_name}.permissions")
         if not current_perm:
+            # So we need to represent no permission as full in GUI, so if not set, let's take highest permission
             current_perm = permissions[-1]
         else:
             current_perm = combo_boxes["permissions"][current_perm]
