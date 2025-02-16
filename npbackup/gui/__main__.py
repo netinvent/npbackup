@@ -836,10 +836,14 @@ def _main_gui(viewer_mode: bool):
     if args.log_file:
         log_file = args.log_file
     else:
-        if os.name == "nt":
-            log_file = os.path.join(CURRENT_DIR, "{}.log".format(__intname__))
+        if viewer_mode:
+            app_log_name = "npbackup-viewer"
         else:
-            log_file = "/var/log/{}.log".format(__intname__)
+            app_log_name = __intname__
+        if os.name == "nt":
+            log_file = os.path.join(CURRENT_DIR, "{}.log".format(app_log_name))
+        else:
+            log_file = "/var/log/{}.log".format(app_log_name)
     logger = ofunctions.logger_utils.logger_get_logger(log_file, debug=_DEBUG)
     logger.info("GUI: " + version_string)
 
