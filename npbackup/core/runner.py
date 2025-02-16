@@ -1481,6 +1481,7 @@ class NPBackupRunner:
             # Offset should not be higher than 10 minutes, eg 600 seconds
             ntp_server = self.repo_config.g("repo_opts.retention_policy.ntp_server")
             if ntp_server:
+                self.write_logs(f"Checking time against ntp server {ntp_server}", level="info")
                 offset = get_ntp_offset(ntp_server)
                 if not offset or offset >= 600:
                     msg = f"Offset from NTP server {ntp_server} is too high: {int(offset)} seconds. Won't apply policy"
