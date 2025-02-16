@@ -649,8 +649,8 @@ def get_repo_config(
                         if can_replace_merged_list:
                             merged_lists = merged_items_dict
 
-                        # Make sure we avoid duplicates in lists
-                        merged_lists = list(set(merged_lists))
+                        # Make sure we avoid duplicates in lists while preserving order (do not use sets here)
+                        merged_lists = list(dict.fromkeys(merged_lists))
                         _repo_config.s(key, merged_lists)
                         _config_inheritance.s(key, {})
                         for v in merged_lists:
@@ -698,8 +698,8 @@ def get_repo_config(
                             if can_replace_merged_list:
                                 merged_lists = merged_items_dict
 
-                            # Make sure we avoid duplicates in lists
-                            merged_lists = list(set(merged_lists))
+                            # Make sure we avoid duplicates in lists while preserving order (do not use sets here)
+                            merged_lists = list(dict.fromkeys(merged_lists))
                             _repo_config.s(key, merged_lists)
 
                             _config_inheritance.s(key, {})
@@ -766,12 +766,12 @@ def get_repo_config(
         repo_group = full_config.g(f"repos.{repo_name}.repo_group")
         group_config = full_config.g(f"groups.{repo_group}")
     except KeyError:
-        logger.warning(f"Repo {repo_name} has no group")
-    else:
-        repo_config.s("name", repo_name)
-        repo_config, config_inheritance = inherit_group_settings(
-            repo_config, group_config
-        )
+        logger.error(f"Repo {repo_name} has no group, reset to default")
+        full_config.s(f"repos.{repo_name}.repo_group", "default_group")
+        group_config = full_config.g("groups.default_group")
+
+    repo_config.s("name", repo_name)
+    repo_config, config_inheritance = inherit_group_settings(repo_config, group_config)
 
     if eval_variables:
         repo_config = evaluate_variables(repo_config, full_config)
