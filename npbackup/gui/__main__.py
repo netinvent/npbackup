@@ -1081,6 +1081,7 @@ def _main_gui(viewer_mode: bool):
                     _,
                 ) = npbackup.configuration.get_repo_config(full_config, active_repo)
                 current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
+                repo_type, _ = get_anon_repo_uri(repo_config.g("repo_uri"))
                 gui_update_state()
             else:
                 sg.PopupError("Repo not existent in config", keep_on_top=True)
