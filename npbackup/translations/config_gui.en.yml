@@ -92,7 +92,7 @@ en:
   machine_id: Machine identifier
   machine_group: Machine group
 
-  show_decrypted: Show sensible data
+  show_decrypted: Show sensitive data
   no_manager_password_defined: No manager password defined, cannot show unencrypted. If you just set one, you need to save the confiugration before you can use it
 
   # compression

@@ -339,7 +339,7 @@ def config_gui(full_config: dict, config_file: str):
                 raise KeyError
 
             # NPF-SEC-00009
-            # Don't show sensible info unless unencrypted requested
+            # Don't show sensitive info unless unencrypted requested
             if not unencrypted:
                 # Use last part of key only
                 if key in configuration.ENCRYPTED_OPTIONS:

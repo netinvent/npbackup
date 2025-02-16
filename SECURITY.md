@@ -34,16 +34,16 @@ Hence, update permissions should only happen in two cases:
 
 # NPF-SEC-00007: Encrypted data needs to be protected
 
-Since encryption is symmetric, we need to protect our sensible data.
+Since encryption is symmetric, we need to protect our sensitive data.
 Best ways:
 - Compile with alternative aes-key
 - Use `NPBACKUP_KEY_LOCATION` or `NPBACKUP_KEY_COMMAND` to specify alternative AES keys
 
-# NPF-SEC-00008: Don't show manager password / sensible data with --show-config
+# NPF-SEC-00008: Don't show manager password / sensitive data with --show-config
 
-Using `--show-config` should hide sensible data, and manager password.
+Using `--show-config` should hide sensitive data, and manager password.
 
-# NPF-SEC-00009: Option to show sensible data
+# NPF-SEC-00009: Option to show sensitive data
 
 When using `--show-config` or right click `show unecrypted`, we should only show unencrypted config if password is set.  
 Environment variable `NPBACKUP_MANAGER_PASSWORD` will be read to verify access, or GUI may ask for password.
@@ -64,4 +64,4 @@ The PRIVATE directory might contain alternative AES keys and obfuscation functio
 
 # NPF-SEC-00013: Don't leave encrypted envrionment variables for script usage
 
-Sensible environment variables aren't available for scripts / additional parameters and will be replaced by a given string from __env__.py
+Sensitive environment variables aren't available for scripts / additional parameters and will be replaced by a given string from __env__.py

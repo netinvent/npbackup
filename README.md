@@ -126,7 +126,7 @@ You can use `npbackup --list` or the GUI to list backups.
 
 The GUI allows an end user to check current backups & restore files.rom backups:
 
-The YAML configuration file encrypts sensible data so the end user doesn't have to know repository URI or password.
+The YAML configuration file encrypts sensitive data so the end user doesn't have to know repository URI or password.
 
 ## Quickstart GUI
 
@@ -147,7 +147,7 @@ Configuration allows to edit the YAML configuration files directly as end user
 Orchestrator GUI allows to run commands on multiple repositories or groups.
 
 **Security**
-NPBackup' security model relies on symmetric encryption of all sensible data that allows to access a repository.  
+NPBackup' security model relies on symmetric encryption of all sensitive data that allows to access a repository.  
 In order to achieve this, NPBackup contains an AES-KEY that can be set:
  - at compile time
  - at run time via an AES-KEY file
@@ -219,9 +219,9 @@ npbackup-cli --housekeeping --repo-group default_group
 
 NPBackup inherits all security measures of it's backup backend (currently restic with AES-256 client side encryption including metadata) and all security options from it's storage backends.
 
-On top of those, NPBackup itself encrypts sensible information like the repo uri and password, as well as the metrics http username and password.  
+On top of those, NPBackup itself encrypts sensitive information like the repo uri and password, as well as the metrics http username and password.  
 This ensures that end users can backup/restore data without the need to know any password, avoiding secret compromission.  
-Note that NPBackup uses an AES-256 key itself, in order to encrypt sensible data. The public (git) version of NPBackup uses the default encryption key that comes with the official NPBackup repo.
+Note that NPBackup uses an AES-256 key itself, in order to encrypt sensitive data. The public (git) version of NPBackup uses the default encryption key that comes with the official NPBackup repo.
 
 You can generate a new AES-256 key with `npbackup-cli --create-key npbackup.key` and use it via an environment variable:
 

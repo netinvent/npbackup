@@ -990,7 +990,7 @@ def get_anonymous_repo_config(repo_config: dict, show_encrypted: bool = False) -
                 value = "__(o_O)__"
         return value
 
-    # NPF-SEC-00008: Don't show manager password / sensible data with --show-config unless it's empty
+    # NPF-SEC-00008: Don't show manager password / sensitive data with --show-config unless it's empty
     if repo_config.get("manager_password", None):
         repo_config["manager_password"] = "__(x_X)__"
     repo_config.pop("update_manager_password", None)
