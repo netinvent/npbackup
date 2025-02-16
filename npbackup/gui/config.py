@@ -242,14 +242,19 @@ def config_gui(full_config: dict, config_file: str):
             elif combo_value.startswith("Group: "):
                 object_type = "groups"
                 object_name = combo_value[len("Group: ") :]
-            return object_type, object_name
-        except (AttributeError, UnboundLocalError):
+            else:
+                object_type = None
+                object_name = None
+                logger.error(
+                    f"Could not obtain object_type and object_name from string {combo_value}"
+                )
+        except AttributeError:
             object_type = None
             object_name = None
             logger.error(
                 f"Could not obtain object_type and object_name from {combo_value}"
             )
-            return None, None
+        return object_type, object_name
 
     def update_source_layout(source_type: str):
         if source_type == "stdin_from_command":
