@@ -1175,17 +1175,9 @@ def _main_gui(viewer_mode: bool):
                 window["-NO-CONFIG-"].Update(visible=False)
             event = "--STATE-BUTTON--"
         if event == _t("generic.destination"):
-            try:
-                if repo_type:
-                    if repo_type in ["REST", "SFTP"]:
-                        destination_string = repo_config.g("repo_uri").split("@")[-1]
-                    else:
-                        destination_string = repo_config.g("repo_uri")
-                    sg.PopupNoFrame(destination_string)
-                else:
-                    sg.PopupNoFrame(_t("main_gui.unknown_repo"))
-            except (TypeError, KeyError):
-                sg.PopupNoFrame(_t("main_gui.unknown_repo"))
+            # This is the right click event
+            destination_string = get_anon_repo_uri(repo_config.g("repo_uri"))
+            sg.PopupNoFrame(destination_string)
         if event == "--ABOUT--":
             about_gui(
                 version_string,
