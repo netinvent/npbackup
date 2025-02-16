@@ -58,6 +58,9 @@ def create_scheduled_task(
     if hour and minute are given, npbackup will run regardless of minimum_backup_age
     """
 
+    # Transform possible PosixPath to string
+    config_file = str(config_file)
+
     try:
         if interval_minutes:
             interval_minutes = int(interval_minutes)
