@@ -103,26 +103,29 @@ The x64 binary is compatible with Windows 10+. The x86 binary is compatible with
 
 ### PyPI installation
 
-If you don't want to use the pre-built executables, you can install via pip with `pip install npbackup` or `pip install npbackup==3.0.0rc9` currently.
+If you don't want to use the pre-built executables, you can install via pip with `pip install npbackup` or `pip install npbackup==3.0.0rc14` currently.
 
-Python requirement: 3.7+
+Python minimal requirement: 3.7+  
+Note that using Python 3.8+ is recommended in order to have better memory usage.
 
 Note that if you want to use the GUI, you'll also need to install tkinter via `yum install python-tkinter` or `apt install python3-tk`.
 
-### Setup
+### Usage
+
+You can check the documentation on the [wiki](https://github.com/netinvent/npbackup/wiki) page in order to learn to use NPBackup.  
 
 Copy the example config from model `examples/npbackup.conf.dist` into the directory where npbackup is installed.  
 Also copy the `excludes` directory if you plan to use the prefilled bigger exclusion lists for your backups.
 
-You can adjust the parameters directly in the file, or via a config GUI by launching `npbackup --config-file=npbackup.conf --config-gui`
+You can adjust the parameters directly in the file, or via a config GUI by launching `npbackup-gui --config-file=npbackup.conf`
 
-Once configured, you can launch manual backups via `npbackup --backup`. Those can be scheduled.
+Once configured, you can launch manual backups via `npbackup-cli --backup`. Those can be scheduled.
 Windows schedule can be created from the configuration page. On Linux, you'll have to create a cronjob or a systemd timer.
 
 Since NPBackup is configured to only proceed with backups when no recent backups are detected, you should consider scheduling npbackup executions quite often.
 The default schedule should be somewhere around 15 minutes.
 
-You can use `npbackup --list` or the GUI to list backups.
+You can use `npbackup-cli --list` or the GUI to list backups.
 
 The GUI allows an end user to check current backups & restore files.rom backups:
 
