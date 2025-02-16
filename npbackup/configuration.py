@@ -138,6 +138,7 @@ empty_config_dict = {
     "conf_version": MAX_CONF_VERSION,
     "audience": None,
     "repos": {
+        # Don't allow repo names to contain dots
         "default": {
             "repo_uri": None,
             "permissions": "full",
@@ -156,6 +157,7 @@ empty_config_dict = {
         },
     },
     "groups": {
+        # Don't allow group names to contain dots
         "default_group": {
             "backup_opts": {
                 "paths": [],

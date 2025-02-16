@@ -155,7 +155,7 @@ def config_gui(full_config: dict, config_file: str):
                     "groups" if values["-OBJECT-TYPE-"] == "group" else "repos"
                 )
                 object_name = values["-OBJECT-NAME-"]
-                if object_name is None or object_name == "":
+                if object_name is None or object_name == "" or "." in object_name:
                     sg.PopupError(
                         _t("config_gui.object_name_cannot_be_empty"), keep_on_top=True
                     )
