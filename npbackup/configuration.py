@@ -768,7 +768,7 @@ def get_repo_config(
     except KeyError:
         logger.error(f"Repo {repo_name} has no group, reset to first available group")
         try:
-            first_group = get_group_list()[0]
+            first_group = get_group_list(full_config)[0]
             full_config.s(f"repos.{repo_name}.repo_group", first_group)
             group_config = full_config.g(f"groups.{first_group}")
         except IndexError:
