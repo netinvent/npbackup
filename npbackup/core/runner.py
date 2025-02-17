@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025021601"
+__build__ = "2025021701"
 
 
 from typing import Optional, Callable, Union, List
@@ -234,6 +234,7 @@ class NPBackupRunner:
         self.warnings_for_json = []
 
         self._produce_metrics = True
+        self._canceled = False
 
     @property
     def repo_config(self) -> dict:
@@ -1765,6 +1766,10 @@ class NPBackupRunner:
         js = {"result": None, "group": True, "output": []}
 
         for repo_config in repo_config_list:
+            if self._canceled:
+                self.write_logs("Operations canceled", level="info")
+                group_result = False
+                break
             repo_name = repo_config.g("name")
             self.write_logs(f"Running {operation} for repo {repo_name}", level="info")
             self.repo_config = repo_config
@@ -1800,4 +1805,5 @@ class NPBackupRunner:
         """
         This is just a shorthand to make sure restic_wrapper receives a cancel signal
         """
+        self._canceled = True
         self.restic_runner.cancel()
