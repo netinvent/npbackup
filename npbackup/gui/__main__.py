@@ -898,13 +898,24 @@ def _main_gui(viewer_mode: bool):
         ) = get_config(config_file=config_file, repo_name=args.repo_name)
 
     right_click_menu = ["", [_t("generic.destination")]]
-    headings = [
-        "ID    ",
-        "Date      ",
-        "Hostname     ",
-        "User               ",
-        "Tags            ",
-    ]
+    # So I did not find any good way to make sure tables have the right size on Linux
+    # So here is a hack to make sure the table is larger on linux
+    if os.name == "nt":
+        headings = [
+            "ID    ",
+            "Date      ",
+            "Hostname     ",
+            "User               ",
+            "Tags            ",
+        ]
+    else:
+        headings = [
+            "ID       ",
+            "Date         ",
+            "Hostname        ",
+            "User                  ",
+            "Tags               ",
+        ]
 
     layout = [
         [
