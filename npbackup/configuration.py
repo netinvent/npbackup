@@ -745,13 +745,17 @@ def get_repo_config(
     try:
         prometheus_backup_job = repo_config.g("prometheus.backup_job")
     except KeyError:
-        logger.info("No prometheus backup job found in repo config. Setting backup job to machine id")
+        logger.info(
+            "No prometheus backup job found in repo config. Setting backup job to machine id"
+        )
         prometheus_backup_job = full_config.g("identity.machine_id")
     prometheus_group = None
     try:
         prometheus_group = repo_config.g("prometheus.group")
     except KeyError:
-        logger.info("No prometheus group found in repo config. Setting prometheus group to machine group")
+        logger.info(
+            "No prometheus group found in repo config. Setting prometheus group to machine group"
+        )
         prometheus_group = full_config.g("identity.machine_group")
 
     try:
