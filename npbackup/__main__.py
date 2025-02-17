@@ -409,6 +409,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         sys.exit(0)
 
     repos = []
+    groups = []
     repos_and_group_repos = []
     if not args.repo_name and not args.repo_group:
         repos_and_group_repos.append("default")
@@ -749,8 +750,11 @@ This is free software, and you are welcome to redistribute it under certain cond
         if repos_and_group_repos is None or repos_and_group_repos == []:
             json_error_logging(False, "No valid repos selected", level="error")
             sys.exit(74)
+        group_info = ""
+        if groups:
+            group_info = f"corresponding to groups {', '.join(groups)}"
         logger.info(
-            f"Found repositories {', '.join(repos_and_group_repos)} corresponding to groups {', '.join(groups)}"
+            f"Found repositories {', '.join(repos_and_group_repos)}{group_info}"
         )
 
         op = cli_args["operation"]
