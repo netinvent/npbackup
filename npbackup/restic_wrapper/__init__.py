@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025021201"
-__version__ = "2.4.0"
+__build__ = "2025021701"
+__version__ = "2.4.1"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -1175,13 +1175,21 @@ class ResticRunner:
                 result, output = self.executor(cmd)
                 # NPF-RESTIC-00001
                 # restic output inconsistency: non existing snapshot IDs still produce exit code 0
-                if result and not "no matching ID found for prefix" in output:
-                    msg = f"Successfully {'applied retention policy' if policy else 'forgot snapshot'}"
-                    self.write_logs(
-                        msg,
-                        level="info",
-                    )
-                    batch_output += f"\n{msg}"
+                if result:
+                    if output and "no matching ID found for prefix" in output:
+                        self.write_logs(
+                            f"Snapshot not found for forget command:\n{output}",
+                            level="warning",
+                        )
+                        batch_result = False
+                        batch_output += f"\n{output}"
+                    else:
+                        msg = f"Successfully {'applied retention policy' if policy else 'forgot snapshot'}"
+                        self.write_logs(
+                            msg,
+                            level="info",
+                        )
+                        batch_output += f"\n{msg}"
                 else:
                     self.write_logs(f"Forget failed\n{output}", level="error")
                     batch_result = False
