@@ -63,7 +63,7 @@ def download_restic_binaries(arch: str = "amd64") -> bool:
         print(f"RESTIC SOURCE ALREADY PRESENT. NOT DOWNLOADING {dest_file}")
         return True
     else:
-        print(f"DOWNALOADING RESTIC {dest_file}")
+        print(f"DOWNLOADING RESTIC {dest_file}")
         # Also we need to move any earlier file that may not be current version to archives
         for file in dest_dir.glob(f"restic_*{fname}{suffix}"):
             # We need to keep legacy binary for Windows 7 32 bits
