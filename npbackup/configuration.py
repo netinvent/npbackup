@@ -593,7 +593,7 @@ def get_repo_config(
     """
     Create inherited repo config
     Returns a dict containing the repo config, with expanded variables
-    and a dict containing the repo interitance status
+    and a dict containing the repo inheritance status
     """
 
     def inherit_group_settings(
@@ -720,7 +720,7 @@ def get_repo_config(
                                 else:
                                     _config_inheritance.g(key)[v] = False
                         else:
-                            # In other cases, just keep repo confg
+                            # In other cases, just keep repo config
                             _config_inheritance.s(key, False)
 
             return _repo_config, _config_inheritance
@@ -859,7 +859,7 @@ def load_config(config_file: Path) -> Optional[dict]:
     config_file_is_updated = False
 
     # Make sure we expand every key that should be a list into a list
-    # We'll use iter_over_keys instead of replace_in_iterable to avoid chaning list contents by lists
+    # We'll use iter_over_keys instead of replace_in_iterable to avoid changing list contents by lists
     # This basically allows "bad" formatted (ie manually written yaml) to be processed correctly
     # without having to deal with various errors
     def _make_struct(key: str, value: Union[str, int, float, dict, list]) -> Any:

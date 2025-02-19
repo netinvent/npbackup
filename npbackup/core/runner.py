@@ -221,7 +221,7 @@ class NPBackupRunner:
         self._live_output = False
         self._json_output = False
         # struct_output is msgspec.Struct instead of json, which is less memory consuming
-        # struct_output neeeds json_output to be True
+        # struct_output needs json_output to be True
         self._struct_output = False
         self._binary = None
         self._no_cache = False
@@ -551,7 +551,7 @@ class NPBackupRunner:
             }
             try:
                 # When running group_runner, we need to extract operation from kwargs
-                # else, operarion is just the wrapped function name
+                # else, operation is just the wrapped function name
                 # pylint: disable=E1101 (no-member)
                 if fn.__name__ == "group_runner":
                     operation = kwargs.get("operation")
@@ -686,7 +686,7 @@ class NPBackupRunner:
                     js = {
                         "result": False,
                         "operation": operation,
-                        "reason": f"Runner catched exception: {exception_to_string(exc)}",
+                        "reason": f"Runner caught exception: {exception_to_string(exc)}",
                     }
                     return js
                 return False
@@ -804,7 +804,7 @@ class NPBackupRunner:
         except KeyError:
             pass
         except ValueError:
-            self.write_logs("Bogus backend connections value given.", level="erorr")
+            self.write_logs("Bogus backend connections value given.", level="error")
         try:
             if self.repo_config.g("backup_opts.priority"):
                 self.restic_runner.priority = self.repo_config.g("backup_opts.priority")
@@ -1490,7 +1490,7 @@ class NPBackupRunner:
                     self.write_logs(msg, level="critical")
                     return self.convert_to_json_output(False, msg)
 
-            # Build policiy from config
+            # Build policy from config
             policy = {}
             for entry in ["last", "hourly", "daily", "weekly", "monthly", "yearly"]:
                 value = self.repo_config.g(f"repo_opts.retention_policy.{entry}")
@@ -1551,7 +1551,7 @@ class NPBackupRunner:
         Runs unlock, check, forget and prune in one go
         """
         self.write_logs("Running housekeeping", level="info")
-        # Add special keywors __no_threads since we're already threaded in housekeeping function
+        # Add special keywords __no_threads since we're already threaded in housekeeping function
         # Also, pass it as kwargs to make linter happy
         kwargs = {"__no_threads": True, "__close_queues": False}
         # pylint: disable=E1123 (unexpected-keyword-arg)

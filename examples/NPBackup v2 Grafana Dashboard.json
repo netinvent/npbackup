@@ -104,7 +104,7 @@
         "type": "prometheus",
         "uid": "${DS_MIMIR}"
       },
-      "description": "Number of succesful npbackup executions",
+      "description": "Number of successful npbackup executions",
       "fieldConfig": {
         "defaults": {
           "color": {

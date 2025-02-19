@@ -65,7 +65,7 @@ venv/bin/python upgrade_server/upgrade_server.py -c /etc/npbackup_upgrade_server
 
 ## Create a service
 
-You can create a systemd service for the upgrade server as `/etc/systemd/system/npbackup_upgrade_server.service`, see the systemd file in the example directoy.
+You can create a systemd service for the upgrade server as `/etc/systemd/system/npbackup_upgrade_server.service`, see the systemd file in the example directory.
 
 ## Statistics
 

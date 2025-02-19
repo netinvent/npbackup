@@ -24,10 +24,10 @@ For the rest of this manual, we'll assume the you use:
     - Intel: `/usr/local/bin/python3`
     - ARM: `/opt/homebrew/bin/python3`
 
-You may also use a python virtual environement (venv) to have a python "sub interpreter", but this is out of scope here too.
+You may also use a python virtual environment (venv) to have a python "sub interpreter", but this is out of scope here too.
 
 Once you've got yourself a working Python environment, you should download and extract the NPBackup sources (or clone the git). NPBackup has multiple python dependencies, which are stated in a file named `requirements.txt`.  
-You can install them all toghether by running `python -m pip install -r path/to/requirements.txt` (please note that `path/to/requirements.txt` would give something like `C:\path\to\requirements` on Windows)
+You can install them all together by running `python -m pip install -r path/to/requirements.txt` (please note that `path/to/requirements.txt` would give something like `C:\path\to\requirements` on Windows)
 
 Examples:
 - On Windows: `C:\python310-64\python.exe -m pip install -r c:\npbackup\npbackup\requirements.txt`

@@ -22,7 +22,7 @@ import json
 logger = getLogger()
 
 
-# If set, debugging will be enabled by setting envrionment variable to __SPECIAL_DEBUG_STRING content
+# If set, debugging will be enabled by setting environment variable to __SPECIAL_DEBUG_STRING content
 # Else, a simple true or false will suffice
 __SPECIAL_DEBUG_STRING = ""
 __debug_os_env = os.environ.get("_DEBUG", "False").strip("'\"")

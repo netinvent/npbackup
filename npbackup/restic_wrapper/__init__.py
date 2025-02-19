@@ -135,7 +135,7 @@ class ResticRunner:
 
         for env_variable, value in self.environment_variables.items():
             self.write_logs(
-                f'Setting envrionment variable "{env_variable}"', level="debug"
+                f'Setting environment variable "{env_variable}"', level="debug"
             )
             os.environ[env_variable] = value
 
@@ -144,7 +144,7 @@ class ResticRunner:
             value,
         ) in self.encrypted_environment_variables.items():
             self.write_logs(
-                f'Setting encrypted envrionment variable "{encrypted_env_variable}"',
+                f'Setting encrypted environment variable "{encrypted_env_variable}"',
                 level="debug",
             )
             os.environ[encrypted_env_variable] = value
@@ -359,7 +359,7 @@ class ResticRunner:
                 self.write_logs(
                     "Running in dry mode. No modifications will be done", level="info"
                 )
-                # Replace first occurence of possible operation
+                # Replace first occurrence of possible operation
                 cmd = cmd.replace(operation, f"{operation} --dry-run", 1)
 
         _cmd = f'"{self._binary}"{additional_parameters}{self.generic_arguments} {cmd}'
@@ -607,7 +607,7 @@ class ResticRunner:
         Init repository. Let's make sure we always run in JSON mode so we don't need
         horrendous regexes to find whether initialized
 
-        --json output when inializing:
+        --json output when initializing:
           {"message_type":"initialized","id":"8daef59e2ac4c86535ae3f7414fcac6534f270077176af3ebddd34c364cac3c2","repository":"c:\\testy"}
         --json output when already initialized (is not json !!!)
         """
@@ -1345,13 +1345,13 @@ class ResticRunner:
         snapshot_list: List, delta: int = None
     ) -> Tuple[bool, Optional[datetime]]:
         """
-        Making the actual comparaison a static method so we can call it from GUI too
+        Making the actual comparison a static method so we can call it from GUI too
 
         Expects a restic snasphot_list (which is most recent at the end ordered)
         Returns bool if delta (in minutes) is not reached since last successful backup, and returns the last backup timestamp
         """
         backup_ts = datetime(1, 1, 1, 0, 0)
-        # Don't bother to deal with mising delta or snapshot list
+        # Don't bother to deal with missing delta or snapshot list
         if not snapshot_list or not delta:
             return False, backup_ts
         tz_aware_timestamp = datetime.now(timezone.utc).astimezone()
@@ -1376,7 +1376,7 @@ class ResticRunner:
         """
         Checks if a snapshot exists that is newer that delta minutes
         Eg: if delta = -60 we expect a snapshot newer than an hour ago, and return True if exists
-            if delta = +60 we expect a snpashot newer than one hour in future (!)
+            if delta = +60 we expect a snapshot newer than one hour in future (!)
 
             returns True, datetime if exists
             returns False, datetime if exists but too old
@@ -1386,7 +1386,7 @@ class ResticRunner:
         kwargs = locals()
         kwargs.pop("self")
 
-        # Don't bother to deal with mising delta
+        # Don't bother to deal with missing delta
         if not delta:
             if self.json_output:
                 msg = "No delta given"

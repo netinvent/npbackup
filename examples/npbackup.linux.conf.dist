@@ -9,7 +9,7 @@ backup:
   - excludes/generic_excludes
   #- excludes/windows_excludes
   - excludes/linux_excludes
-  exclude_case_ignore: false   # Exclusions will always have case ignored on Windows systems regarless of this setting
+  exclude_case_ignore: false   # Exclusions will always have case ignored on Windows systems regardless of this setting
   one_file_system: true
   ## Paths can contain multiple values, one per line, without quotation marks
   paths: path_to_directory

@@ -1,7 +1,7 @@
 ## What's planned / considered post v3
 
 ### Daemon mode (planned)
-Instead of relying on scheduled tasks, we could launch backup & housekeeping operations as deamon.
+Instead of relying on scheduled tasks, we could launch backup & housekeeping operations as daemon.
 Caveats:
  - We need a windows service (nuitka commercial implements one)
  - We need to use apscheduler (wait for v4)
@@ -40,7 +40,7 @@ We actually could improve upgrade_server to do so
 
 ### Hyper-V Backup plugin
 That's another story. Creating snapshots and dumping VM is easy
-Shall we go that route since alot of good commercial products exist ? Probably not
+Shall we go that route since a lot of good commercial products exist ? Probably not
 
 ### Full disk cloning
 Out of scope of NPBackup. There are plenty of good tools out there, designed for that job

@@ -24,7 +24,7 @@ en:
   old: Old
   up_to_date: Up to date
   unknown: Unknown
-  not_connected_yet: Not conntected to repo
+  not_connected_yet: Not connected to repo
 
   size: Size
   path: Path
@@ -40,7 +40,7 @@ en:
 
   is_uptodate: Program Up to date
 
-  succes: Succes
+  succes: Success
   successfully: successfully
   failure: Failure
 

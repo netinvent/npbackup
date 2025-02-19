@@ -191,7 +191,7 @@ def restic_json_to_prometheus(
                 found = True
                 break
         if not found:
-            logger.critical("Bogus data given. No message_type: summmary found")
+            logger.critical("Bogus data given. No message_type: summary found")
             return False, [], True
 
     if not isinstance(restic_json, dict):

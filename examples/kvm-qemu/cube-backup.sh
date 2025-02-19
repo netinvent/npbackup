@@ -21,7 +21,7 @@ NPBACKUP_CONF_FILE_TEMPLATE="${ROOT_DIR}/npbackup-cube.conf.template"
 NPBACKUP_CONF_FILE="${ROOT_DIR}/npbackup-cube.conf"
 SNAPSHOT_FAILED_FILE="${ROOT_DIR}/SNAPSHOT_FAILED"
 
-# Superseed tenants if this is set, else it is extracted from machine name, eg machine.tenant.something
+# Supersede tenants if this is set, else it is extracted from machine name, eg machine.tenant.something
 # TENANT_OVERRIDE=netperfect
 # default tenant if extraction of tenant name failed
 DEFAULT_TENANT=netperfect
@@ -173,7 +173,7 @@ function remove_snapshot {
                         qemu-img commit -dp "$disk_path" >> "$LOG_FILE" 2>&1
                         log "Note that you will need to modify the XML manually"
 
-                        # virsh snapshot delete will erase commited file if exist so we don't need to manually tamper with xml file
+                        # virsh snapshot delete will erase committed file if exist so we don't need to manually tamper with xml file
                         virsh snapshot-delete --current $vm
                         # TODO: test2
                         #virsh dumpxml --inactive --security-info "$vm" > "${ROOT_DIR}/$vm.xml.temp"
@@ -248,7 +248,7 @@ function main {
         # Make sure we remove snapshots no matter what
         trap 'cleanup' INT HUP TERM QUIT ERR EXIT
 
-        log "#### Make sure all template variables are encypted"
+        log "#### Make sure all template variables are encrypted"
         "${NPBACKUP_EXECUTABLE}" -c "${NPBACKUP_CONF_FILE_TEMPLATE}" --check-config-file
 
         log "#### Running backup `date`"

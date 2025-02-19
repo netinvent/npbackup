@@ -151,7 +151,7 @@
 ?:\Users\*\AppData\LocalLow
 ?:\Users\*\Tracing
 
-# Generic system file exlusions
+# Generic system file exclusions
 **\MSOCache
 **\MSOCache.*
 **\Config.Msi

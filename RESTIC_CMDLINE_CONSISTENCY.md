@@ -1,4 +1,4 @@
-## List of various restic problems encountered while developping NPBackup
+## List of various restic problems encountered while developing NPBackup
 
 As of 2024/01/02, version 0.16.2:
 

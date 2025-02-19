@@ -308,8 +308,8 @@ def create_scheduled_task_windows(
         </Exec>
     </Actions>
     </Task>"""
-    # Create task file, without specific encoding in order to use platform prefered encoding
-    # platform prefered encoding is locale.getpreferredencoding() (cp1252 on windows, utf-8 on linux)
+    # Create task file, without specific encoding in order to use platform preferred encoding
+    # platform preferred encoding is locale.getpreferredencoding() (cp1252 on windows, utf-8 on linux)
     try:
         # pylint: disable=W1514 (unspecified-encoding)
         with open(temp_task_file, "w") as file_handle:

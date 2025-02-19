@@ -8,7 +8,7 @@ __author__ = "Orsiris de Jong"
 __site__ = "https://www.netperfect.fr/npbackup"
 __description__ = "NetPerfect Backup Client"
 __copyright__ = "Copyright (C) 2023-2025 NetInvent"
-__build__ = "2024101201"
+__build__ = "2025021901"
 
 
 import sys
@@ -23,7 +23,7 @@ import json
 logger = getLogger()
 
 
-# If set, debugging will be enabled by setting envrionment variable to __SPECIAL_DEBUG_STRING content
+# If set, debugging will be enabled by setting environment variable to __SPECIAL_DEBUG_STRING content
 # Else, a simple true or false will suffice
 __SPECIAL_DEBUG_STRING = ""
 __debug_os_env = os.environ.get("_DEBUG", "False").strip("'\"")
@@ -57,7 +57,7 @@ _NPBACKUP_ALLOW_AUTOUPGRADE_DEBUG = (
 
 def exception_to_string(exc):
     """
-    Transform a catched exception to a string
+    Transform a caught exception to a string
     https://stackoverflow.com/a/37135014/2635443
     """
     stack = traceback.extract_stack()[:-3] + traceback.extract_tb(

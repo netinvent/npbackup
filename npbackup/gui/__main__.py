@@ -201,7 +201,7 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
         {'name': 'xmfbox.tcl', 'type': 'file', 'path': '/C/GIT/npbackup/npbackup.dist/tk/xmfbox.tcl', 'uid': 0, 'gid': 0, 'size': 27064, 'mode': 438, 'permissions': '-rw-rw-rw-', 'mtime': '2022-09-05T14:18:52+02:00', 'atime': '2022-09-05T14:18:52+02:00', 'ctime': '2022-09-05T14:18:52+02:00', 'struct_type': 'node'}
     ]
 
-    Since v3-rc6, we're actually using a msgspec.Struct represenation which uses dot notation, but only on Python 3.8+
+    Since v3-rc6, we're actually using a msgspec.Struct representation which uses dot notation, but only on Python 3.8+
     We still rely on json for Python 3.7
     """
     treedata = sg.TreeData()
@@ -674,7 +674,7 @@ def _main_gui(viewer_mode: bool):
                         "%Y-%m-%d %H:%M:%S"
                     )
                 else:
-                    snapshot_date = "Unparseable"
+                    snapshot_date = "Unparsable"
                 snapshot_username = snapshot["username"]
                 snapshot_hostname = snapshot["hostname"]
                 snapshot_id = snapshot["short_id"]

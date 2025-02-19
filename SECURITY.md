@@ -45,7 +45,7 @@ Using `--show-config` should hide sensitive data, and manager password.
 
 # NPF-SEC-00009: Option to show sensitive data
 
-When using `--show-config` or right click `show unecrypted`, we should only show unencrypted config if password is set.  
+When using `--show-config` or right click `show unencrypted`, we should only show unencrypted config if password is set.  
 Environment variable `NPBACKUP_MANAGER_PASSWORD` will be read to verify access, or GUI may ask for password.
 Also, when wrong password is entered, we should wait in order to reduce brute force attacks.
 
@@ -62,6 +62,6 @@ Using obfuscation() symmetric function in order to not store the bare AES key.
 
 The PRIVATE directory might contain alternative AES keys and obfuscation functions which should never be bundled for a PyPI release.
 
-# NPF-SEC-00013: Don't leave encrypted envrionment variables for script usage
+# NPF-SEC-00013: Don't leave encrypted environment variables for script usage
 
 Sensitive environment variables aren't available for scripts / additional parameters and will be replaced by a given string from __env__.py

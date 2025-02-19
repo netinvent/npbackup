@@ -79,7 +79,7 @@ def ask_manager_password(manager_password: str) -> bool:
 def config_gui(full_config: dict, config_file: str):
     logger.info("Launching configuration GUI")
 
-    # Don't let SimpleGUI handle key errros since we might have new keys in config file
+    # Don't let SimpleGUI handle key errors since we might have new keys in config file
     sg.set_options(
         suppress_raise_key_errors=True,
         suppress_error_popups=True,
@@ -588,7 +588,7 @@ def config_gui(full_config: dict, config_file: str):
 
         # First we need to clear the whole GUI to reload new values
         for key in window.AllKeysDict:
-            # We only clear config keys, wihch have '.' separator
+            # We only clear config keys, which have '.' separator
             if "." in str(key) and not "inherited" in str(key):
                 if isinstance(window[key], sg.Tree):
                     window[key].Update(sg.TreeData())
@@ -909,7 +909,7 @@ def config_gui(full_config: dict, config_file: str):
             ],
         ]
 
-        # We need to set current_manager_password variable to make sure we have sufficient permissions to modifiy settings
+        # We need to set current_manager_password variable to make sure we have sufficient permissions to modify settings
         full_config.s(
             f"{object_type}.{object_name}.current_manager_password",
             full_config.g(f"{object_type}.{object_name}.manager_password"),
@@ -1989,7 +1989,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
 
     def global_options_layout():
         """ "
-        Returns layout for global options that can't be overrided by group / repo settings
+        Returns layout for global options that can't be overridden by group / repo settings
         """
         identity_col = [
             [sg.Text(_t("config_gui.available_variables_id"))],

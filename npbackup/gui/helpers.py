@@ -318,7 +318,7 @@ def gui_thread_runner(
         read_queues = read_stdout_queue or read_stderr_queue
 
         if not read_queues:
-            # Arbitrary wait time so window get's time to get fully drawn
+            # Arbitrary wait time so window gets time to get fully drawn
             sleep(0.2)
             break
 

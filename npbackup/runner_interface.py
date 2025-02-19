@@ -62,7 +62,7 @@ def entrypoint(*args, **kwargs):
     )
     if not json_output:
         if not isinstance(result, bool):
-            # We need to temprarily remove the stdout handler
+            # We need to temporarily remove the stdout handler
             # Since we already get live output from the runner
             # Unless operation is "ls", because it's too slow for command_runner poller method that allows live_output
             # But we still need to log the result to our logfile

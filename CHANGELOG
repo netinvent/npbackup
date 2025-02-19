@@ -6,7 +6,7 @@
  - This is a major rewrite that allows using multiple repositories, adds repository groups and implements repository settings inheritance from group settings
 
 #### Features
-  - New viewer mode allowing to browse/restore restic repositories without any NPBackup configuation
+  - New viewer mode allowing to browse/restore restic repositories without any NPBackup configuration
     - Allows setting repository via environment variables, config file or directly in GUI
   - Multi repository support
   - Group settings for repositories
@@ -46,10 +46,10 @@
     - Metrics now include auto upgrade state
   - Dry mode now works for all operations where restic supports dry-mode
   - Implemented scheduled task creator for Windows & Unix
-  - Added --no-cache option to disable cache for restic operations (neeeded on RO systems)
+  - Added --no-cache option to disable cache for restic operations (needed on RO systems)
   - Added CRC32 logging for config files in order to know when a file was modified
   - Missing exclude files will now search in current binary directory for a excludes directory
-  - Splitted releases between legacy and non legacy
+  - Split releases between legacy and non legacy
     - Updated legacy tcl8.6.13 to tc8.6.15
     - Updated legacy Python 3.7 to Python 3.9 (with openssl 1.1.1) for x64 linux builds
   - Upgrade server
@@ -72,7 +72,7 @@
   - Concurrency checks (pidfile checks) are now directly part of the runner
   - Allow a 30 seconds grace period for child processes to close before asking them nicely, and than not nicely to quit
   - Fully refactored prometheus metrics parser to be able to read restic standard or json outputs
-  - Reimplmented auto upgrade after CLI/GUI split
+  - Reimplemented auto upgrade after CLI/GUI split
   - Added initial tests
   - Exclude lists have been updated
   - Removed Windows installer from the project. We need to come up with a better solution
@@ -101,7 +101,7 @@
 
 ## 2.2.0 - rtm - 03/06/2023
   - Fix potential deadlock in evaluate variables
-  - Fix additionnal parameters should only apply for backup operations
+  - Fix additional parameters should only apply for backup operations
   - Fix unnecessary exclude statements when no exclusions are given
   - Added source types (--files-from, --files-from-verbatim and --files-from-raw equivalent)
   - Add encrypted environment variables support
@@ -195,7 +195,7 @@
   - Fix config fails when restic password is an int
   - Fix empty config files did not show a proper error message
   - Fix various config file malformation will break execution
-  - Fix backup hangs when no restic password is given (restic asks for password in backgroud job)
+  - Fix backup hangs when no restic password is given (restic asks for password in background job)
   - Fix error message in logs when repo is not initialized
 
 ## v2.2.0 - rc1 - 02/02/2023

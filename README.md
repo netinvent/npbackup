@@ -207,7 +207,7 @@ While admin user experience is important, NPBackup also offers a GUI for end use
 `npbackup-cli` has all the functions the GUI has, and can run on any headless server.  
 It also has a `--json` parameter which guarantees parseable output.
 
-You may run operations on multiple repositories, or repositories groups by specifying paramater `--repo-group` or `--repo-name`.  
+You may run operations on multiple repositories, or repositories groups by specifying parameter `--repo-group` or `--repo-name`.  
 `--repo-name` allows to specify one or multiple comma separated repo names, also allows special `__all__` argument which selects all repositories.
 `--repo-group` allows to specify one or multiple comme separated repo group names, also allows special `__all__` argument which selects all groups.
 
@@ -312,7 +312,7 @@ python.exe -c "from windows_tools.signtool import SignTool; s=SignTool(); s.sign
 ## Misc
 
 NPBackup supports internationalization and automatically detects system's locale.
-Still, locale can be overrided via an environment variable, eg on Linux:
+Still, locale can be overridden via an environment variable, eg on Linux:
 ```
 export NPBACKUP_LOCALE=en-US
 ```

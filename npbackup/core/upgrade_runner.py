@@ -46,12 +46,12 @@ def need_upgrade(upgrade_interval: int) -> bool:
 
     def _get_count(file: str) -> Optional[int]:
         try:
-            with open(file, "r", encoding="utf-8") as fpr:
-                count = int(fpr.read())
+            with open(file, "r", encoding="utf-8") as fp:
+                count = int(fp.read())
                 return count
         except OSError as exc:
             # We may not have read privileges
-            logger.eror(f"Cannot read upgrade counter file {file}: {exc}")
+            logger.error(f"Cannot read upgrade counter file {file}: {exc}")
         except ValueError as exc:
             logger.error(f"Bogus upgrade counter in {file}: {exc}")
         return None

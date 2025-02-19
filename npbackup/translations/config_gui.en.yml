@@ -28,7 +28,7 @@ en:
   one_per_line: one per line
   backup_priority: Backup priority
   additional_parameters: Additional parameters
-  additional_backup_only_parameters: Additional backup only parmameters
+  additional_backup_only_parameters: Additional backup only parameters
 
   minimum_backup_age: Minimum delay between two backups
   backup_repo_uri: backup repo URI / path
@@ -55,7 +55,7 @@ en:
   saved_initial_config: If you saved your configuration, you may now reload this program
   bogus_config_file: Bogus configuration file found
 
-  encrypted_env_variables: Encrypted envrionment variables
+  encrypted_env_variables: Encrypted environment variables
   env_variables: Environment variables
 
   no_runner: Cannot connect to backend. Please see logs
@@ -85,7 +85,7 @@ en:
   create_backup_scheduled_task_at: Create scheduled backup task every day at
   create_housekeeping_scheduled_task_at: Create housekeeping scheduled every day at
   scheduled_task_explanation: Task can run at a given time to run a backup which is great to make server backups, or run every x minutes, but only run actual backup when more than maximum_backup_age minutes was reached, which is the best way to backup laptops which have flexible power on hours.
-  scheduled_task_creation_success: Scheduled task created successfuly
+  scheduled_task_creation_success: Scheduled task created successfully
   scheduled_task_creation_failure: Scheduled task could not be created. See logs for further info
 
   machine_identification: Machine identification
@@ -93,7 +93,7 @@ en:
   machine_group: Machine group
 
   show_decrypted: Show sensitive data
-  no_manager_password_defined: No manager password defined, cannot show unencrypted. If you just set one, you need to save the confiugration before you can use it
+  no_manager_password_defined: No manager password defined, cannot show unencrypted. If you just set one, you need to save the configuration before you can use it
 
   # compression
   auto: Automatic
@@ -114,7 +114,7 @@ en:
   stdin_from_command: Standard input from command
   stdin_filename: Optional filename for stdin backed up data
 
-  # retention policiy
+  # retention policy
   retention_policy: Retention policy
   keep: Keep
   last: last snapshots

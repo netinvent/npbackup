@@ -380,7 +380,7 @@ def compile(
                 print(f"ERROR: Could not sign: {output}")
                 errors = True
         elif os.path.isfile(ev_cert_data):
-            print(f"Signing with interal signer {ev_cert_data}")
+            print(f"Signing with internal signer {ev_cert_data}")
             sign(
                 executable=npbackup_executable,
                 arch=arch,

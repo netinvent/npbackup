@@ -36,7 +36,7 @@ def check_private_ev():
         from PRIVATE._ev_data import AES_EV_KEY
         from PRIVATE._obfuscation import obfuscation
 
-        print("We have private EV certifcate DATA")
+        print("We have private EV certificate DATA")
         return obfuscation(AES_EV_KEY)
     except ImportError as exc:
         print("ERROR: Cannot load private EV certificate DATA: {}".format(exc))
