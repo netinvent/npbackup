@@ -800,6 +800,7 @@ def _main_gui(viewer_mode: bool):
         description="""Portable Network Backup Client\n
         This program is distributed under the GNU General Public License and comes with ABSOLUTELY NO WARRANTY.\n
         This is free software, and you are welcome to redistribute it under certain conditions; Please type --license for more info.""",
+        epilog="You may also run this program with --run-as-cli, in which case, it will behave like npbackup-cli. See '--run-as-cli --help' for specific parameters",
     )
 
     parser.add_argument(
