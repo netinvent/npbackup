@@ -23,7 +23,7 @@ en:
   see_content: See content
   backup_content_from: Backup content from
   backup_from: Backup from
-  backup_activity: Backup activity
+  gui_activity: Current activity
   backup_in_progress: Backup in progress
   backup_done: Backup done
   backup_failed: Backup failed. Please check the logs

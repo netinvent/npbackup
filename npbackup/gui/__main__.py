@@ -497,7 +497,7 @@ def restore_window(
 
 
 def backup(repo_config: dict) -> bool:
-    gui_msg = _t("main_gui.backup_activity")
+    gui_msg = _t("main_gui.gui_activity")
     # on_success = _t("main_gui.backup_done")
     # on_failure = _t("main_gui.backup_failed")
     result = gui_thread_runner(

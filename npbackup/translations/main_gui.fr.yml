@@ -23,7 +23,7 @@ fr:
   see_content: Voir contenu
   backup_content_from: Contenu de la sauvegarde du
   backup_from: Sauvegarde du
-  backup_activity: Activité de sauvegarde
+  gui_activity: Activité courante
   backup_in_progress: Sauvegarde en cours
   backup_done: Sauvegarde terminée
   backup_failed: Sauvegarde échouée. veuillez vérifier les journaux
