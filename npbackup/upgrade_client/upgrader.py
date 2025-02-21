@@ -180,7 +180,7 @@ def auto_upgrader(
     """
     if not IS_COMPILED:
         logger.info(
-            "Auto upgrade will only upgrade compiled verions. Please use 'pip install --upgrade npbackup' instead"
+            "Auto upgrade will only upgrade compiled versions. Please use 'pip install --upgrade npbackup' instead"
         )
         if _NPBACKUP_ALLOW_AUTOUPGRADE_DEBUG is not True:
             return False
