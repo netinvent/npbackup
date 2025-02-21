@@ -3,4 +3,4 @@
 skip = .git*,.codespellrc,*.fr.yml,requirements.txt,customization.py,RESTIC_CMDLINE_CONSISTENCY.md
 check-hidden = true
 # ignore-regex = 
-# ignore-words-list = requestor
+ignore-words-list = requestor
