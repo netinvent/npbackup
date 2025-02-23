@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.config"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025013101"
+__build__ = "2025022301"
 
 
 from typing import List, Tuple
@@ -202,7 +202,7 @@ def config_gui(full_config: dict, config_file: str):
         result = sg.PopupYesNo(
             _t("config_gui.are_you_sure_to_delete") + f" {object_type} {object_name} ?"
         )
-        if result:
+        if result == "Yes":
             full_config.d(f"{object_type}.{object_name}")
             full_config = update_object_gui(full_config, None, unencrypted=False)
             update_global_gui(full_config, unencrypted=False)
