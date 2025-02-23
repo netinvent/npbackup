@@ -5,11 +5,11 @@ repos:
     repo_group: default_group
     backup_opts:
       paths:
-        - ### SOURCE ###
+        - ___SOURCE___
       source_type: files_from_verbatim
       exclude_files_larger_than: 0.0 KiB
       tags:
-        - ### VM ###
+        - ___VM___
     repo_opts:
       repo_password:
       retention_policy: {}
@@ -66,7 +66,7 @@ groups:
         keep_within: true
         ntp_server:
     prometheus:
-      backup_job: ### VM ###
+      backup_job: ___VM___
       group: ${MACHINE_GROUP}
     env:
       env_variables: {}
@@ -77,12 +77,12 @@ identity:
   machine_group: SOME_ARBITRARY_GROUP_NAME
 global_prometheus:
   metrics: false
-  instance: ### VM ###
+  instance: ___VM___
   destination:
   http_username:
   http_password:
   additional_labels:
-    npf_tenant: ### TENANT ###
+    npf_tenant: ___TENANT___
     backup_type: vm
   no_cert_verify: true
 global_options:

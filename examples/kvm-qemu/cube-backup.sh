@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Script ver 2024110401
+# Script ver 2025022301
 
 #TODO: blockcommit removes current snapshots, even if not done by cube
 #      - it's interesting to make housekeeping, let's make this an option
@@ -140,9 +140,9 @@ function run_backup {
         # Prepare config file
         rm -f "${NPBACKUP_CONF_FILE}"
         cp "${NPBACKUP_CONF_FILE_TEMPLATE}" "${NPBACKUP_CONF_FILE}"
-        sed -i "s%### TENANT ###%${tenant}%g" "${NPBACKUP_CONF_FILE}"
-        sed -i "s%### SOURCE ###%${BACKUP_FILE_LIST}%g" "${NPBACKUP_CONF_FILE}"
-        sed -i "s%### VM ###%${vm}%g" "${NPBACKUP_CONF_FILE}"
+        sed -i "s%___TENANT___%${tenant}%g" "${NPBACKUP_CONF_FILE}"
+        sed -i "s%___SOURCE___%${BACKUP_FILE_LIST}%g" "${NPBACKUP_CONF_FILE}"
+        sed -i "s%___VM___%${vm}%g" "${NPBACKUP_CONF_FILE}"
 
         "${NPBACKUP_EXECUTABLE}" --config-file "${NPBACKUP_CONF_FILE}" --backup --force >> "$LOG_FILE" 2>&1
         if [ $? -ne 0 ]; then
