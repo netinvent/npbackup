@@ -137,6 +137,7 @@ fr:
   add_object: Ajouter un autre dépot ou groupe
   delete_object: Supprimer le dépot ou groupe actuel
   are_you_sure_to_delete: Êtes-vous sûr de vouloir supprimer le
+  no_object_to_delete: Aucun objet à supprimer
   repo_already_exists: Dépot déjà existant
   group_already_exists: Groupe déjà existant
   cannot_remove_group_inherited_settings: Impossible de supprimer une option héritée de groupe. Veuillez supprimer l'option directement dans la configuration de groupe

@@ -136,6 +136,7 @@ en:
   add_object: Add another repo or group
   delete_object: Delete selected repo or group
   are_you_sure_to_delete: Are you sure you want to delete
+  no_object_to_delete: No object to delete
   repo_already_exists: Repo already exists
   group_already_exists: Group already exists
   cannot_remove_group_inherited_settings: Cannot remove group inherited settings. Please remove directly in group configuration

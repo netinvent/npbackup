@@ -199,7 +199,10 @@ def config_gui(full_config: dict, config_file: str):
 
     def delete_object(full_config: dict, full_object_name: str) -> dict:
         object_type, object_name = get_object_from_combo(full_object_name)
-        result = sg.PopupYesNo(
+        if not object_type and not object_name:
+            sg.popup_error(_t("config_gui.no_object_to_delete"), keep_on_top=True)
+            return full_config
+        result = sg.popup_yes_no(
             _t("config_gui.are_you_sure_to_delete") + f" {object_type} {object_name} ?"
         )
         if result == "Yes":
