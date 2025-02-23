@@ -15,7 +15,7 @@
 ?:\Users\*\AppData\Local\Application Data
 ?:\Users\*\AppData\Local\Microsoft\Internet Explorer
 ?:\Users\*\AppData\Local\Microsoft\Windows\History
-?:\Users\*\AppData\Local\Microsoft\Terminel Server Client\Cache
+?:\Users\*\AppData\Local\Microsoft\Terminal Server Client\Cache
 ?:\Users\*\AppData\**\Temp
 ?:\Users\*\AppData\Roaming\Microsoft\Windows\Themes\CachedFiles
 ?:\Users\*\AppData\Internet Explorer
@@ -64,7 +64,7 @@
 **\MruServiceCache
 
 # Error reports
-?:\Users\*\AppData\Local\Microosft\Windows\WER
+?:\Users\*\AppData\Local\Microsoft\Windows\WER
 ?:\Users\*\AppData\Local\CrashDumps
 ?:\Users\*\AppData\Local\Diagnostics
 
