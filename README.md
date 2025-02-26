@@ -8,11 +8,61 @@
 # NPBackup
 
 A secure and efficient file backup solution that fits both system administrators (CLI) and end users (GUI)  
-Includes an orchestrator that can schedule checks and retention policy operations on groups of backup repositories.
+Includes an orchestrator that can handle multiple repositories / groups in order to execute scheduled checks / housekeeping operations.
 
 Works on x64 **Linux** , **NAS** solutions based on arm/arm64, **Windows** x64 and x86 and MacOS X.
 
 ![image](img/grafana_dashboard_20250226.png)
+
+## About
+
+So, a new backup solution out of nowhere, packed with too much features for it's own good ? Not really !
+
+NPBackup relies on the well known [restic](https://restic.net) backup program, which has been battle proven for years.  
+While restic is a fanstastic program, NPBackup expands restic by offering a wider set of features and ecosystem integration.  
+Still, NPBackup repos are basically managed by restic, and can be viewed / restored / maintained by standalone restic, so data availability is guaranteed.
+
+## NPBackup Design Philosophy
+
+NPBackup is a multiparadigm backup solution which tries to solve two major backup problems, server and laptop backups !  
+The core design idea is to make backups available (obviously !), even partial, on system / network failures.  
+
+>[!IMPORTANT]
+> It's always better to have some data than none
+
+The NPBackup design is the result of a multitude of reald world experience. Examples include:
+
+- For instance, one can configure a "minimum backup size" under which NPBackup reports the backup as failed. Imagine a user moving all it's data from folder A to folder B, while only folder A is setup for backup. Most backup solutions would not complain, but when the time comes for a restore operation, there would be an empty folder. NPBackup informs the monitoring in that scenarios.
+
+- pre and post exec commands have timeouts. There are way too many situations where a pre command is stuck, so backup never happens.
+
+- retention policies can check an optional NTP server. Imagine the scenario where you keep last 12 months of backups, but someone setups your computer's date to 2037 ! On next retention run, you would loose all backups. Also, retention policy is configured by default to always keep at least the 3 most recents backups, regardless of their date.
+
+- Execution never happens, so monitoring doesn't show any errors. Once NPBackup has reported to the monitoring, the dashboard will show every client that hasn't successfully reported in days, making it easy to spot non-working clients
+
+>[!IMPORTANT]
+> It's always better to have too many alerts than none
+
+It is a set and forget solution. Still, every operation can send a metric to a prometheus monitoring system. Because forgetting the admin burden is okay only when everything is well monitored.
+
+#### The difficulty of laptop backups
+
+As a matter of fact, achieving laptop backups isn't easy. No one can predict when a laptop is on, and when it has internet access. A scheduled backup strategy will fail randomly in that case.
+
+NPBackup solves this by checking every couple of minutes if a recent backup exists.
+If a recent backup already exists, it will recheck later, or else, it will launch a backup immediately.
+In order to avoid a sluggish user experience while the backup is in progress, process and io priority are set to low by default.  
+Note that both the check interval and what's called recent backup (like a less than 24h old backup) options can be configured.  
+NPBackup also triggers Windows VSS, but still will proceed with backups on VSS failures, allowing a backup to exist in all scenarios.
+
+#### The usual server backup solution
+
+It's always most advisable to do server backups as complete disk image, which is especially easy when run as virtual machine.  
+But in a world of cloud servers, one needs a backup solution that will run inside a VM (or baremetal), and backup various services likes files and/or databases where snapshots/dump operations are required.  
+
+NPBackup can run pre-exec and post-exec commands (with timeouts and failure action), can accept direct database dumps via stdin_from_command parameter, can trigger VSS on windows, can filter 
+
+Backups are run by setting up a scheduled task / cron job manually or via integrated task creation.
 
 ## Features
 
@@ -23,12 +73,11 @@ Works on x64 **Linux** , **NAS** solutions based on arm/arm64, **Windows** x64 a
 - Housekeeping operations that run checks and retention policies on all requested backup repositories
 - First class Windows support
   - VSS snapshots*
-  - VSS snapshot fallback
   - Automatic cloud file exclusions (reparse points)
   - Windows pre-built executables*
 - Easy configuration via GUI or CLI yaml files
 - Remote automatic self upgrade capabilities
-  - Included upgrade server ready to run in production
+- Included upgrade server ready to run in production
 - Fullblown CLI interface with optional --json API mode
 - End User GUI
   - Optional viewer only binaries
@@ -49,13 +98,7 @@ Works on x64 **Linux** , **NAS** solutions based on arm/arm64, **Windows** x64 a
   - Alibaba Cloud (Aliyun) Object Storage System (OSS)*
   - Rclone support
 - Resume on interrupted backups*
-
-#### Performance
-
-- Data deduplication and fast zstd compression*
-- Backup process and IO priority settings
-- Upload / download speed limits*
-- Remote connectivity concurrency settings*
+- VSS snapshot fallback
 
 #### Security
 
@@ -70,11 +113,20 @@ Works on x64 **Linux** , **NAS** solutions based on arm/arm64, **Windows** x64 a
 - AES-256 keys can't be easily guessed in executables thanks to Nuitka Commercial compiler and programming hygiene
 - External AES-256 keys obfuscation
 
+
 #### Integrity
 
 - Housekeeping operation that checks all repositories before running retention policies
 - Retention policies can be executed with opt-in NTP queries in order to avoid date attacks
 - Check / repair repository options*
+- Minimum backup size checks
+
+#### Performance
+
+- Data deduplication and fast zstd compression*
+- Backup process and IO priority settings
+- Upload / download speed limits*
+- Remote connectivity concurrency settings*
 
 #### Logging
 
@@ -86,52 +138,6 @@ Works on x64 **Linux** , **NAS** solutions based on arm/arm64, **Windows** x64 a
 
 (*) Feature provided by [restic](https://restic.net) backup backend
 
-## About
-
-So, a new backup solution out of nowhere, packed with too much features for it's own good ? Not really !
-
-NPBackup relies on the well known [restic](https://restic.net) backup program, which has been battle proven for years.  
-While restic is a fanstastic program, NPBackup expands restic by offering a wider set of features and ecosystem integration.  
-Still, NPBackup repos are basically managed by restic, and can be viewed / restored / maintained by standalone restic, so data availability is guaranteed.
-
-## Philosophy
-
-NPBackup is a multiparadigm backup solution which tries to solve two major backup problems, server and laptop backups !  
-The core design idea is to make backups available (obviously !), even partial, on system / network failures.  
-
-> It's always better to have some data than none
-
-The NPBackup design is the result of a multitude of reald world experience. Examples include:
-
-- For instance, one can configure a "minimum backup size" under which NPBackup reports the backup as failed. Imagine a user moving all it's data from folder A to folder B, while only folder A is setup for backup. Most backup solutions would not complain, but when the time comes for a restore operation, there would be an empty folder. NPBackup informs the monitoring in that scenarios.
-
-- pre and post exec commands have timeouts. There are way too many situations where a pre command is stuck, so backup never happens.
-
-- retention policies can check an optional NTP server. Imagine the scenario where you keep last 12 months of backups, but someone setups your computer's date to 2037 ! On next retention run, you would loose all backups. Also, retention policy is configured by default to always keep at least the 3 most recents backups, regardless of their date.
-
-> It's always better to have too many alerts than none
-
-It is a set and forget solution. Still, every operation can send a metric to a prometheus monitoring system. Because forgetting the admin burden is different 
-
-#### The difficulty of laptop backups
-
-As a matter of fact, achieving laptop backups isn't easy. No one can predict when a laptop is on, and when it has internet access. A scheduled backup strategy will fail randomly in that case.
-
-NPBackup solves this by checking every couple of minutes if a recent backup exists.
-If a recent backup already exists, it will recheck later, or else, it will launch a backup immediately.
-In order to avoid a sluggish user experience while the backup is in progress, process and io priority are set to low by default.  
-Note that both the check interval and what's called recent backup (like a less than 24h old backup) options can be configured.  
-NPBackup also triggers Windows VSS, but still will proceed with backups on VSS failures, allowing a backup to exist in all scenarios.
-
-#### The usual server backup solution
-
-It's always most advisable to do server backups as complete disk image, which is especially easy when run as virtual machine.  
-But in a world of cloud servers, one needs a backup solution that will run inside a VM (or baremetal), and backup various services likes files and/or databases where snapshots/dump operations are required.  
-
-NPBackup can run pre-exec and post-exec commands (with timeouts and failure action), can accept direct database dumps via stdin_from_command parameter, can trigger VSS on windows, can filter 
-
-Backups are run by setting up a scheduled task / cron job manually or via integrated task creation.
-  
 ## Quickstart
 
 NPBackup consists of four programs:
