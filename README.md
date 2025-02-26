@@ -12,7 +12,7 @@ Includes an orchestrator that can schedule checks and retention policy operation
 
 Works on x64 **Linux** , **NAS** solutions based on arm/arm64, **Windows** x64 and x86 and MacOS X.
 
-![image](img/grafana_dashboard_20250211.png)
+![image](img/grafana_dashboard_20250226.png)
 
 ## Features
 
