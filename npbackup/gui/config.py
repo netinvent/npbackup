@@ -1512,7 +1512,7 @@ def config_gui(full_config: dict, config_file: str):
                     _t("config_gui.set_permissions"),
                     key="--SET-PERMISSIONS--",
                     size=(35, 1),
-                    button_color="green",
+                    button_color="red",
                 ),
             ],
             [
