@@ -236,7 +236,7 @@ def restic_json_to_prometheus(
     try:
         processed_bytes = BytesConverter(
             str(restic_json["total_bytes_processed"])
-        ).human
+        ).human_iec_bytes
         logger.info(f"Processed {processed_bytes} of data")
     except Exception as exc:
         logger.error(f"Cannot find processed bytes: {exc}")

@@ -159,7 +159,7 @@ def show_stats(statistics: List[dict]) -> None:
 
         # --stats output
         try:
-            total_size = BytesConverter(entry[repo_name]["output"]["total_size"]).human
+            total_size = BytesConverter(entry[repo_name]["output"]["total_size"]).human_iec_bytes
             total_file_count = entry[repo_name]["output"]["total_file_count"]
             snapshots_count = entry[repo_name]["output"]["snapshots_count"]
             stats_type = "std"
@@ -171,7 +171,7 @@ def show_stats(statistics: List[dict]) -> None:
             pass
         # --stats --mode raw-data output
         try:
-            total_size = BytesConverter(entry[repo_name]["output"]["total_size"]).human
+            total_size = BytesConverter(entry[repo_name]["output"]["total_size"]).human_iec_bytes
             total_uncompressed_size = BytesConverter(
                 entry[repo_name]["output"]["total_uncompressed_size"]
             ).human
