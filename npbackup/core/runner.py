@@ -176,6 +176,8 @@ def metric_writer(
                     logger.error(
                         "Cannot write metrics file {}: {}".format(destination, exc)
                     )
+        else:
+            logger.debug("No metrics destination set. Not sending metrics")
     except KeyError as exc:
         logger.info("Metrics error: {}".format(exc))
         logger.debug("Trace:", exc_info=True)
