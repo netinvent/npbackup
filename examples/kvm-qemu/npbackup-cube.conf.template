@@ -84,7 +84,7 @@ global_prometheus:
   additional_labels:
     npf_tenant: ___TENANT___
     backup_type: vm
-  no_cert_verify: true
+  no_cert_verify: false
 global_options:
   auto_upgrade: false
   auto_upgrade_interval: 10
