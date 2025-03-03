@@ -948,9 +948,10 @@ def save_config(config_file: Path, full_config: dict) -> bool:
         )
         # We also need to extract permissions again
         full_config = extract_permissions_from_full_config(full_config)
+        logger.info(f"Saved configuration file {config_file}")
         return True
-    except OSError:
-        logger.critical(f"Cannot save configuration file to {config_file}")
+    except OSError as exc:
+        logger.critical(f"Cannot save configuration file to {config_file}: {exc}")
         return False
 
 

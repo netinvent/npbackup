@@ -2586,10 +2586,8 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             result = configuration.save_config(config_file, full_config)
             if result:
                 sg.Popup(_t("config_gui.configuration_saved"), keep_on_top=True)
-                logger.info("Configuration saved successfully.")
                 break
             sg.PopupError(_t("config_gui.cannot_save_configuration"), keep_on_top=True)
-            logger.info("Could not save configuration")
             continue
         if event == _t("config_gui.show_decrypted"):
             manager_password = configuration.get_manager_password(
