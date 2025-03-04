@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.helpers"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025013001"
+__build__ = "2025030401"
 
 
 from typing import Tuple, Union
@@ -260,6 +260,8 @@ def gui_thread_runner(
 
     stdout_cache = ""
     stderr_cache = ""
+    previous_stdout_cache = ""
+    previous_stderr_cache = ""
 
     if USE_THREADING:
         thread = fn(*args, **kwargs)
@@ -330,7 +332,14 @@ def gui_thread_runner(
         if time.monotonic() - start_time > 1:
             if len(stdout_cache) > 1000:
                 stdout_cache = stdout_cache[-1000:]
-            _update_gui_from_cache(stdout_cache, stderr_cache)
+                # Don't update GUI if there isn't anything to update so it will avoid scrolling back to top every second
+                if (
+                    previous_stdout_cache != stdout_cache
+                    or previous_stderr_cache != stderr_cache
+                ):
+                    _update_gui_from_cache(stdout_cache, stderr_cache)
+                    previous_stdout_cache = stdout_cache
+                    previous_stderr_cache = stderr_cache
             start_time = time.monotonic()
 
     _update_gui_from_cache(stdout_cache, stderr_cache)
