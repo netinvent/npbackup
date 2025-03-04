@@ -25,7 +25,7 @@ groups:
       source_type:
       tags: []
       compression: auto
-      use_fs_snapshot: true
+      use_fs_snapshot: false
       ignore_cloud_files: true
       exclude_caches: true
       one_file_system: true
