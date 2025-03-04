@@ -262,7 +262,9 @@ def operations_gui(full_config: dict) -> dict:
     def _get_repo_list(selected_rows):
         if not selected_rows:
             if (
-                sg.popup_yes_no(_t("operations_gui.no_repo_selected_apply_all"), keep_on_top=True)
+                sg.popup_yes_no(
+                    _t("operations_gui.no_repo_selected_apply_all"), keep_on_top=True
+                )
                 == "No"
             ):
                 return False
@@ -420,7 +422,7 @@ def operations_gui(full_config: dict) -> dict:
                             visible=True,
                         ),
                     ],
-                    [sg.Button(_t("generic.quit"), key="--EXIT--")],
+                    [sg.Button(_t("generic.return"), key="--EXIT--")],
                 ],
                 element_justification="C",
             )
