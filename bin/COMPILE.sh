@@ -15,9 +15,10 @@ export PYTHONPATH=/opt/npbackup
 
 /opt/npbackup/venv/bin/python -m pip install --upgrade pip || exit 1
 /opt/npbackup/venv/bin/python -m pip install pytest ||exit 1
+/opt/npbackup/venv/bin/python -m pip install --upgrade -r npbackup/requirements.txt || exit 1
+
 /opt/npbackup/venv/bin/python -m pytest /opt/npbackup/tests || exit 1
 
-/opt/npbackup/venv/bin/python -m pip install --upgrade -r npbackup/requirements.txt || exit 1
 /opt/npbackup/venv/bin/python bin/compile.py $@
 
 export PYTHONPATH="$OLD_PYTHONPATH"

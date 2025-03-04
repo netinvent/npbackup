@@ -17,13 +17,19 @@ SET PYTHONPATH=c:\GIT\npbackup
 
 "%PYTHON64%" -m pip install --upgrade pip || GOTO ERROR
 "%PYTHON64%" -m pip install pytest
+"%PYTHON64%" -m pip install --upgrade -r npbackup/requirements.txt || GOTO ERROR
+
 "%PYTHON64%" -m pytest C:\GIT\npbackup\tests || GOTO ERROR
 
-"%PYTHON64%" -m pip install --upgrade -r npbackup/requirements.txt || GOTO ERROR
 "%PYTHON64%" bin\compile.py --sign "C:\ODJ\KEYS\NetInventEV.dat" %*
 
 
+"%PYTHON32%" -m pip install --upgrade pip || GOTO ERROR
+"%PYTHON32%" -m pip install pytest
 "%PYTHON32%" -m pip install --upgrade -r npbackup/requirements.txt || GOTO ERROR
+
+"%PYTHON32%" -m pytest C:\GIT\npbackup\tests || GOTO ERROR
+
 "%PYTHON32%" bin\compile.py --sign "C:\ODJ\KEYS\NetInventEV.dat" %*
 
 GOTO END
