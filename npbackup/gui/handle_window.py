@@ -35,4 +35,6 @@ def handle_current_window(action: str = "minimize") -> None:
             elif action == "hide":
                 win32gui.ShowWindow(hwndMain, win32con.SW_HIDE)
             else:
-                raise ValueError(f"Bad action parameter for handling current window: {action}")
+                raise ValueError(
+                    f"Bad action parameter for handling current window: {action}"
+                )
