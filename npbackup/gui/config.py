@@ -497,7 +497,6 @@ def config_gui(full_config: dict, config_file: str):
                         unit = "MiB"
                     window[key].Update(value)
                     window[f"{key}_unit"].Update(unit)
-                return
 
             if key in combo_boxes.keys() and value:
                 window[key].Update(value=combo_boxes[key][value])
