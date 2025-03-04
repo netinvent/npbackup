@@ -1765,13 +1765,13 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [sg.HorizontalSeparator()],
             [
+                sg.Text(_t("config_gui.prune_max_unused"), size=(40, 1)),
                 sg.Image(
                     NON_INHERITED_ICON,
                     key="inherited.repo_opts.prune_max_unused",
                     tooltip=_t("config_gui.group_inherited"),
                     pad=1,
                 ),
-                sg.Text(_t("config_gui.prune_max_unused"), size=(40, 1)),
                 sg.Input(key="repo_opts.prune_max_unused", size=(8, 1)),
                 sg.Combo(
                     byte_units + ["%"],
@@ -1783,13 +1783,13 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Text(_t("config_gui.prune_max_unused_explanation"), size=(100, 1)),
             ],
             [
+                sg.Text(_t("config_gui.prune_max_repack_size"), size=(40, 1)),
                 sg.Image(
                     NON_INHERITED_ICON,
                     key="inherited.repo_opts.prune_max_repack_size",
                     tooltip=_t("config_gui.group_inherited"),
                     pad=1,
                 ),
-                sg.Text(_t("config_gui.prune_max_repack_size"), size=(40, 1)),
                 sg.Input(key="repo_opts.prune_max_repack_size", size=(8, 1)),
                 sg.Combo(
                     byte_units,
