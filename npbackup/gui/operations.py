@@ -571,7 +571,7 @@ def operations_gui(full_config: dict) -> dict:
                 gui_msg = _t("operations_gui.standard_prune")
             if event == "--MAX-PRUNE--":
                 operation = "prune"
-                op_args = {"max": True}
+                op_args = {"prune_max": True}
                 gui_msg = _t("operations_gui.max_prune")
             if event == "--STATS--":
                 operation = "stats"
