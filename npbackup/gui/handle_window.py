@@ -3,7 +3,7 @@
 #
 # This file is part of npbackup
 
-__intname__ = "npbackup.gui.window_reducer"
+__intname__ = "npbackup.gui.windows_gui_helper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
@@ -14,9 +14,10 @@ import sys
 import os
 
 
-def minimize_current_window():
+def handle_current_window(action: str = "minimize") -> None:
     """
-    Minimizes current commandline window in GUI mode
+    Minimizes / hides current commandline window in GUI mode
+    This helps when Nuitka cmdline hide action does not work
     """
     if os.name == "nt":
         # pylint: disable=E0401 (import-error)
@@ -29,4 +30,9 @@ def minimize_current_window():
         # console window will have the name of current executable
         hwndMain = win32gui.FindWindow(None, current_executable)
         if hwndMain:
-            win32gui.ShowWindow(hwndMain, win32con.SW_MINIMIZE)
+            if action == "minimize":
+                win32gui.ShowWindow(hwndMain, win32con.SW_MINIMIZE)
+            elif action == "hide":
+                win32gui.ShowWindow(hwndMain, win32con.SW_HIDE)
+            else:
+                raise ValueError(f"Bad action parameter for handling current window: {action}")

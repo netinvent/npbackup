@@ -51,6 +51,7 @@ from resources.customization import (
 from npbackup.gui.config import config_gui
 from npbackup.gui.operations import operations_gui
 from npbackup.gui.helpers import get_anon_repo_uri, gui_thread_runner
+from npbackup.gui.handle_window import handle_current_window
 from npbackup.core.i18n_helper import _t
 from npbackup.core import upgrade_runner
 from npbackup.path_helper import CURRENT_DIR
@@ -1236,6 +1237,12 @@ def main_gui(viewer_mode=False):
         kill_childs, os.getpid(), grace_period=30, process_name=backend_process
     )
     try:
+        # Hide CMD window when Nuitka hide action does not work
+        if _DEBUG:
+            handle_current_window(action="minimize")
+        else:
+            handle_current_window(action="minimize")
+            handle_current_window(action="hide")
         _main_gui(viewer_mode=viewer_mode)
         sys.exit(logger.get_worst_logger_level())
     except _tkinter.TclError as exc:
