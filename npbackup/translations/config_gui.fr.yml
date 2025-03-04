@@ -127,6 +127,10 @@ fr:
   keep_within: Garder les instantanées dans une période relative au dernier instantané
   keep_tags: Garder les instantanés avec les tags suivants
   optional_ntp_server_uri: URI optionnelle serveur NTP
+  prune_max_unused: Données inutilisées max lors des purges
+  prune_max_unused_explanation: Taille maximale en pourcentage ou octets de données à conserver lors des opérations de purge maximales
+  prune_max_repack_size: Taille maximale de repack
+  prune_max_repack_size_explanation: Taille maximale de repack en bytes (permet de limiter la taille du stockage nécessaire lors des purges)
 
   # repo management
   repo_group: Groupe de dépots

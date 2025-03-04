@@ -1649,14 +1649,14 @@ class NPBackupRunner:
         self.write_logs(
             f"Pruning snapshots for repo {self.repo_config.g('name')}", level="info"
         )
+        max_repack_size = self.repo_config.g("repo_opts.prune_max_repack_size")
         if prune_max:
-            max_unused = self.repo_config.g("prune_max_unused")
-            max_repack_size = self.repo_config.g("prune_max_repack_size")
+            max_unused = self.repo_config.g("repo_opts.prune_max_unused")
             result = self.restic_runner.prune(
                 max_unused=max_unused, max_repack_size=max_repack_size
             )
         else:
-            result = self.restic_runner.prune()
+            result = self.restic_runner.prune(max_repack_size=max_repack_size)
         return result
 
     @threaded

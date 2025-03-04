@@ -126,7 +126,10 @@ en:
   keep_within: Keep snapshots within time period relative to current snapshot
   keep_tags: Keep snapshots with the following tags
   optional_ntp_server_uri: Optional NTP server URI
-
+  prune_max_unused: Prune max unused data
+  prune_max_unused_explanation: Maximum percentage or bytes of unused data to keep in when pruning with maximum parameter
+  prune_max_repack_size: Prune max repack size
+  prune_max_repack_size_explanation: Maxiumum size of repacks when pruning (limits needed storage size for prune operation)
   # repo / group managmeent
   repo_group: Repo group
   group_inherited: Group inherited

@@ -1195,7 +1195,7 @@ class ResticRunner:
 
     @check_if_init
     def prune(
-        self, max_unused: Optional[str] = None, max_repack_size: Optional[int] = None
+        self, max_unused: Optional[str] = None, max_repack_size: Optional[str] = None
     ) -> Union[bool, str, dict]:
         """
         Prune forgotten snapshots
@@ -1205,9 +1205,33 @@ class ResticRunner:
 
         cmd = "prune"
         if max_unused:
-            cmd += f"--max-unused {max_unused}"
+            try:
+                if isinstance(max_unused, str):
+                    if max_unused.endswith("%"):
+                        if " " in max_unused:
+                            max_unused = max_unused.replace(" ", "")
+                    else:
+                        max_unused = int(BytesConverter(max_unused).bytes)
+
+                else:
+                    max_unused = int(BytesConverter(max_unused).bytes)
+            except ValueError:
+                warning = f"Bogus unit for max_unused value given: {max_unused}"
+                self.write_logs(warning, level="warning")
+                max_unused = None
+            else:
+                cmd += f" --max-unused {max_unused}"
         if max_repack_size:
-            cmd += f"--max-repack-size {max_repack_size}"
+            try:
+                max_repack_size = int(BytesConverter(max_repack_size).bytes)
+            except ValueError:
+                warning = (
+                    f"Bogus unit for max_repack_size value given: {max_repack_size}"
+                )
+                self.write_logs(warning, level="warning")
+                max_repack_size = None
+            else:
+                cmd += f" --max-repack-size {max_repack_size}"
         verbose = self.verbose
         self.verbose = True
         result, output = self.executor(cmd)

@@ -180,7 +180,7 @@ empty_config_dict = {
                     "excludes/linux_excludes",
                 ],
                 "exclude_patterns": None,
-                "exclude_files_larger_than": None,
+                "exclude_files_larger_than": None,  # allows BytesConverter units
                 "additional_parameters": None,
                 "additional_backup_only_parameters": None,
                 "minimum_backup_size_error": "10 MiB",  # allows BytesConverter units
@@ -198,8 +198,8 @@ empty_config_dict = {
                 # Minimum time between two backups, in minutes
                 # Set to zero in order to disable time checks
                 "minimum_backup_age": 1440,
-                "upload_speed": "800 Mib",  # Mib(its) or MiB(ytes), use 0 for unlimited upload speed
-                "download_speed": "0 Mib",  # in KiB, use 0 for unlimited download speed
+                "upload_speed": "800 Mib",  # allows BytesConverter units, use 0 for unlimited upload speed
+                "download_speed": "0 Mib",  # allows BytesConverter units, use 0 for unlimited download speed
                 "backend_connections": 0,  # Fine tune simultaneous connections to backend, use 0 for standard configuration
                 "retention_policy": {
                     "last": 3,
@@ -215,8 +215,8 @@ empty_config_dict = {
                     "group_by_paths": False,
                     "ntp_server": None,
                 },
-                # "prune_max_unused": None,  # TODO
-                # "prune_max_repack_size": None,  # TODO
+                "prune_max_unused": "0 B",  # allows BytesConverter units, but also allows percents, ie 10%
+                "prune_max_repack_size": None,  # allows BytesConverter units
             },
             "prometheus": {
                 "backup_job": "${MACHINE_ID}",

@@ -475,13 +475,17 @@ def config_gui(full_config: dict, config_file: str):
                 "backup_opts.exclude_files_larger_than",
                 "repo_opts.upload_speed",
                 "repo_opts.download_speed",
+                "repo_opts.prune_max_unused",
+                "repo_opts.prune_max_repack_size",
             ):
                 # We don't need a better split here since the value string comes from BytesConverter
                 # which always provides "0 MiB" or "5 KB" etc.
+                # except repo_opts.prune_max_unused which also allows percent, eg "5%" or "5 %"
                 if value is not None:
                     unit = None
                     try:
-                        matches = re.search(r"(\d+(?:\.\d+)?)\s*(\w*)", value)
+
+                        matches = re.search(r"(\d+(?:\.\d+)?)\s*([\w%]*)", value)
                         if matches:
                             value = str(matches.group(1))
                             unit = str(matches.group(2))
@@ -773,8 +777,11 @@ def config_gui(full_config: dict, config_file: str):
                 "backup_opts.exclude_files_larger_than",
                 "repo_opts.upload_speed",
                 "repo_opts.download_speed",
+                "repo_opts.prune_max_unused",
+                "repo_opts.prune_max_repack_size",
             ):
-                value = f"{value} {values[f'{key}_unit']}"
+                if value:
+                    value = f"{value} {values[f'{key}_unit']}"
 
             # Don't update unit keys
             if key in (
@@ -782,6 +789,8 @@ def config_gui(full_config: dict, config_file: str):
                 "backup_opts.exclude_files_larger_than_unit",
                 "repo_opts.upload_speed_unit",
                 "repo_opts.download_speed_unit",
+                "repo_opts.prune_max_unused_unit",
+                "repo_opts.prune_max_repack_size_unit",
             ):
                 continue
             # Don't bother with inheritance on global options and host identity
@@ -1754,6 +1763,45 @@ def config_gui(full_config: dict, config_file: str):
                 ),
                 sg.Text(_t("config_gui.optional_ntp_server_uri"), size=(40, 1)),
                 sg.Input(key="repo_opts.retention_policy.ntp_server", size=(50, 1)),
+            ],
+            [sg.HorizontalSeparator()],
+            [
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.repo_opts.prune_max_unused",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
+                sg.Text(_t("config_gui.prune_max_unused"), size=(40, 1)),
+                sg.Input(key="repo_opts.prune_max_unused", size=(8, 1)),
+                sg.Combo(
+                    byte_units + ["%"],
+                    default_value=byte_units[3],
+                    key="repo_opts.prune_max_unused_unit",
+                ),
+            ],
+            [
+                sg.Text(_t("config_gui.prune_max_unused_explanation"), size=(100, 1)),
+            ],
+            [
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.repo_opts.prune_max_repack_size",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
+                sg.Text(_t("config_gui.prune_max_repack_size"), size=(40, 1)),
+                sg.Input(key="repo_opts.prune_max_repack_size", size=(8, 1)),
+                sg.Combo(
+                    byte_units,
+                    default_value=byte_units[3],
+                    key="repo_opts.prune_max_repack_size_unit",
+                ),
+            ],
+            [
+                sg.Text(
+                    _t("config_gui.prune_max_repack_size_explanation"), size=(100, 1)
+                ),
             ],
         ]
 
