@@ -707,7 +707,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         "list",
         "ls",
         "find",
-        "policy",
+        "forget",  # policy is actually forget with use_policy=True
         "housekeeping",
         "check",
         "quick_check",  # TODO: deprecated
