@@ -48,7 +48,7 @@ from resources.customization import (
     OEM_ICON,
     SHORT_PRODUCT_NAME,
 )
-from npbackup.gui.config import config_gui
+from npbackup.gui.config import config_gui, ask_manager_password
 from npbackup.gui.operations import operations_gui
 from npbackup.gui.helpers import get_anon_repo_uri, gui_thread_runner
 from npbackup.gui.handle_window import handle_current_window
@@ -1203,8 +1203,23 @@ def _main_gui(viewer_mode: bool):
             event = "--STATE-BUTTON--"
         if event == _t("generic.destination"):
             # This is the right click event
-            destination_string = get_anon_repo_uri(repo_config.g("repo_uri"))
-            sg.PopupNoFrame(destination_string)
+            object_name = values["-active_repo-"]
+            manager_password = npbackup.configuration.get_manager_password(
+                full_config, object_name
+            )
+            # NPF-SEC-00009
+            env_manager_password = os.environ.get("NPBACKUP_MANAGER_PASSWORD", None)
+            if not manager_password:
+                sg.PopupError(
+                    _t("config_gui.no_manager_password_defined"), keep_on_top=True
+                )
+                continue
+            if (
+                env_manager_password and env_manager_password == manager_password
+            ) or ask_manager_password(manager_password):
+                destination_string = get_anon_repo_uri(repo_config.g("repo_uri"))
+                sg.PopupNoFrame(destination_string)
+            continue
         if event == "--ABOUT--":
             about_gui(
                 version_string,
