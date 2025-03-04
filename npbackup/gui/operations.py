@@ -262,7 +262,7 @@ def operations_gui(full_config: dict) -> dict:
     def _get_repo_list(selected_rows):
         if not selected_rows:
             if (
-                sg.popup_yes_no(_t("operations_gui.no_repo_selected"), keep_on_top=True)
+                sg.popup_yes_no(_t("operations_gui.no_repo_selected_apply_all"), keep_on_top=True)
                 == "No"
             ):
                 return False
@@ -457,7 +457,8 @@ def operations_gui(full_config: dict) -> dict:
             break
         if event == _t("config_gui.show_decrypted"):
             try:
-                object_name = complete_repo_list[values["repo--group-list"][0]][0]
+                # Get first selected object
+                object_name = _get_repo_list(values["repo-and-group-list"])[0]
             except Exception as exc:
                 logger.error(f"Could not get object name: {exc}")
                 logger.debug("Trace:", exc_info=True)

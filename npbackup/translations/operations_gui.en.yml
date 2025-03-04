@@ -22,7 +22,8 @@ en:
   add_repo: Add repo
   edit_repo: Edit repo
   remove_repo: Remove repo
-  no_repo_selected: No repo selected, apply to all ?
+  no_repo_selected: No repo selected
+  no_repo_selected_apply_all: No repo selected, apply to all ?
   show_advanced: Show advanced options
 
   currently_configured_tasks: Currently configured tasks

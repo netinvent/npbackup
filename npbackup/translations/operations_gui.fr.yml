@@ -22,7 +22,8 @@ fr:
   add_repo: Ajouter dépot
   edit_repo: Modifier dépot
   remove_repo: Supprimer dépot
-  no_repo_selected: Aucun dépot sélectionné, appliquer à tous ?
+  no_repo_selected: Aucun dépot sélectionné
+  no_repo_selected_apply_all: Aucun dépot sélectionné, appliquer à tous ?
   show_advanced: Afficher les options avancées
 
   currently_configured_tasks: Tâches actuellement configurées
