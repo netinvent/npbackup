@@ -137,7 +137,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         "--housekeeping",
         action="store_true",
         default=False,
-        help="Run --check, --policy and --prune in one go",
+        help="Run --check quick, --policy and --prune in one go",
     )
     parser.add_argument(
         "--quick-check",
@@ -707,7 +707,8 @@ This is free software, and you are welcome to redistribute it under certain cond
         "list",
         "ls",
         "find",
-        "forget",  # policy is actually forget with use_policy=True
+        "forget",
+        "policy",  # policy is actually forget with use_policy=True
         "housekeeping",
         "check",
         "quick_check",  # TODO: deprecated
