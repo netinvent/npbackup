@@ -1002,16 +1002,12 @@ class ResticRunner:
 
             if exclude_caches:
                 cmd += " --exclude-caches"
-            if exclude_files_larger_than:
-                exclude_files_larger_than = int(
-                    BytesConverter(exclude_files_larger_than).bytes
-                )
 
             if exclude_files_larger_than:
                 try:
                     # Default --exclude_larger_than unit is bytes
                     exclude_files_larger_than = int(
-                        BytesConverter(exclude_files_larger_than)
+                        BytesConverter(exclude_files_larger_than).bytes
                     )
                 except ValueError:
                     warning = f"Bogus unit for exclude_files_larger_than value given: {exclude_files_larger_than}"
