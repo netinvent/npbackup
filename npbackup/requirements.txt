@@ -10,8 +10,10 @@ ofunctions.random
 ofunctions.requestor>=1.2.2
 python-pidfile>=3.0.0
 # pysimplegui 5 has gone commercial, let's switch to freesimplegui
-# also, we need to stick to freesimplegui 5.1.1 to keep Python 3.6 compat in order compile for elder linuxes
-freesimplegui==5.1.1
+# we need to stick to freesimplegui 5.1.1 to keep Python 3.6 compat in order compile for elder linuxes
+# finally we need freesimplegui with patch #51 since there are no newer releases ATM (2025/03/04)
+# keep in mind that freesimplegui might higher required python version in the future
+freesimplegui @ git+https://github.com/spyoungtech/FreeSimpleGUI@db26fd1
 requests
 ruamel.yaml
 psutil
