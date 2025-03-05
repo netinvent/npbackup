@@ -332,14 +332,14 @@ def gui_thread_runner(
         if time.monotonic() - start_time > 1:
             if len(stdout_cache) > 1000:
                 stdout_cache = stdout_cache[-1000:]
-                # Don't update GUI if there isn't anything to update so it will avoid scrolling back to top every second
-                if (
-                    previous_stdout_cache != stdout_cache
-                    or previous_stderr_cache != stderr_cache
-                ):
-                    _update_gui_from_cache(stdout_cache, stderr_cache)
-                    previous_stdout_cache = stdout_cache
-                    previous_stderr_cache = stderr_cache
+            # Don't update GUI if there isn't anything to update so it will avoid scrolling back to top every second
+            if (
+                previous_stdout_cache != stdout_cache
+                or previous_stderr_cache != stderr_cache
+            ):
+                _update_gui_from_cache(stdout_cache, stderr_cache)
+                previous_stdout_cache = stdout_cache
+                previous_stderr_cache = stderr_cache
             start_time = time.monotonic()
 
     _update_gui_from_cache(stdout_cache, stderr_cache)
