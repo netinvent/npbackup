@@ -427,7 +427,12 @@ def ls_window(parent_window: sg.Window, repo_config: dict, snapshot_id: str) -> 
     with HideWindow(parent_window):
         while True:
             event, values = window.read()
-            if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "quit", "-WINDOW CLOSE ATTEMPED-"):
+            if event in (
+                sg.WIN_CLOSED,
+                sg.WIN_X_EVENT,
+                "quit",
+                "-WINDOW CLOSE ATTEMPED-",
+            ):
                 break
             if event == "restore_to":
                 if not values["-TREE-"]:
@@ -942,11 +947,6 @@ def _main_gui(viewer_mode: bool):
                                     )
                                 ],
                                 (
-                                    [sg.Text(_t("main_gui.viewer_mode"))]
-                                    if viewer_mode
-                                    else []
-                                ),
-                                (
                                     [
                                         sg.Text(
                                             _t("main_gui.no_config"),
@@ -990,7 +990,11 @@ def _main_gui(viewer_mode: bool):
                                         ),
                                     ]
                                     if not viewer_mode
-                                    else []
+                                    else [
+                                        sg.Text(
+                                            _t("main_gui.viewer_mode"), size=(28, 1)
+                                        )
+                                    ]
                                 ),
                                 [
                                     sg.Text(_t("main_gui.repo_type"), size=(28, 1)),
@@ -1024,6 +1028,7 @@ def _main_gui(viewer_mode: bool):
                             key="--LAUNCH-BACKUP--",
                             disabled=viewer_mode
                             or (not viewer_mode and not full_config),
+                            visible=not viewer_mode,
                         ),
                         sg.Button(
                             _t("main_gui.see_content"),
@@ -1035,23 +1040,27 @@ def _main_gui(viewer_mode: bool):
                             key="--FORGET--",
                             disabled=viewer_mode
                             or (not viewer_mode and not full_config),
-                        ),  # TODO , visible=False if repo_config.g("permissions") != "full" else True),
+                            visible=not viewer_mode,
+                        ),
                         sg.Button(
                             _t("main_gui.operations"),
                             key="--OPERATIONS--",
                             disabled=viewer_mode
                             or (not viewer_mode and not full_config),
+                            visible=not viewer_mode,
                         ),
                         sg.Button(
                             _t("generic.configure"),
                             key="--CONFIGURE--",
                             disabled=viewer_mode
                             or (not viewer_mode and not full_config),
+                            visible=not viewer_mode,
                         ),
                         sg.Button(
                             _t("main_gui.load_config"),
                             key="--LOAD-CONF--",
                             disabled=viewer_mode,
+                            visible=not viewer_mode,
                         ),
                         sg.Button(_t("generic.about"), key="--ABOUT--"),
                         sg.Button(_t("generic.quit"), key="--EXIT--"),
@@ -1133,7 +1142,9 @@ def _main_gui(viewer_mode: bool):
                 sg.Popup(_t("main_gui.select_only_one_snapshot"))
                 continue
             snapshot_id = snapshot_list[values["snapshot-list"][0]][0]
-            ls_window(parent_window=window, repo_config=repo_config, snapshot_id=snapshot_id)
+            ls_window(
+                parent_window=window, repo_config=repo_config, snapshot_id=snapshot_id
+            )
             gc.collect()
         if event == "--FORGET--":
             if not full_config:
