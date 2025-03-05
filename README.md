@@ -244,6 +244,6 @@ Currently supported: `en-US`, `fr-FR`
 ## Special thanks
 
 - Thanks to the Restic Team without which this program would not be possible
-- Thanks to https://github.com/Krutyi-4el who packaged i18nice internationalization for us
+- Thanks to https://github.com/solaluset who packaged i18nice internationalization for us
 - Special thanks to the BTS SIO 2nd year class of 2022 at Lycee Marillac / Perpignan who volunteered as GUI Q&A team
 - Thanks to @Guitarbilly for his efforts in reporting bugs, asking questions, and general improvement suggestions
