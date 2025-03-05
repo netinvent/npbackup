@@ -740,8 +740,7 @@ def _main_gui(viewer_mode: bool):
             if config_file:
                 logger.info(f"Using configuration file {config_file}")
                 try:
-                    with HideWindow(window):
-                        full_config = npbackup.configuration.load_config(config_file)
+                    full_config = npbackup.configuration.load_config(config_file)
                     GUI_STATUS_IGNORE_ERRORS = True
                 except EnvironmentError as exc:
                     sg.PopupError(exc, keep_on_top=True)
