@@ -386,7 +386,7 @@ class NPBackupRunner:
     def is_first_metrics_run(self, value):
         if not isinstance(value, bool):
             raise ValueError("is_first_metrics_run value {value} is not a boolean")
-        self.is_first_metrics_run = value
+        self._is_first_metrics_run = value
 
     @property
     def exec_time(self):
