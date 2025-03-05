@@ -167,8 +167,6 @@ def metric_writer(
                     logger.info("No metrics authentication present.")
                     authentication = None
 
-                # Partial fix for #150, add repo name and action to backup
-                destination = f"{destination}_repo_name={repo_name}_action={operation}"
                 upload_metrics(destination, authentication, no_cert_verify, metrics)
             else:
                 write_metrics_file(
