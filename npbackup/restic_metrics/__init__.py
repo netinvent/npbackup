@@ -6,8 +6,8 @@ __intname__ = "restic_metrics"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "BSD-3-Clause"
-__version__ = "2.0.1"
-__build__ = "2024103001"
+__version__ = "2.0.2"
+__build__ = "2024030501"
 __description__ = (
     "Converts restic command line output to a text file node_exporter can scrape"
 )
@@ -490,9 +490,9 @@ def upload_metrics(destination: str, authentication, no_cert_verify: bool, metri
         logger.debug("Trace:", exc_info=True)
 
 
-def write_metrics_file(metrics: List[str], filename: str):
+def write_metrics_file(filename: str, metrics: List[str], append: bool = False):
     try:
-        with open(filename, "w", encoding="utf-8") as file_handle:
+        with open(filename, "a" if append else "w", encoding="utf-8") as file_handle:
             for metric in metrics:
                 file_handle.write(metric + "\n")
     except OSError as exc:
@@ -576,7 +576,7 @@ if __name__ == "__main__":
         if errors:
             logger.error("Script finished with errors.")
         try:
-            write_metrics_file(metrics, destination_file)
+            write_metrics_file(destination_file, metrics, append=False)
             logger.info("File {} written successfully.".format(destination_file))
             sys.exit(0)
         except OSError as exc:

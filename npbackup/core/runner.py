@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025021701"
+__build__ = "2025032501"
 
 
 from typing import Optional, Callable, Union, List
@@ -28,6 +28,7 @@ from npbackup.restic_metrics import (
     restic_str_output_to_json,
     restic_json_to_prometheus,
     upload_metrics,
+    write_metrics_file,
 )
 from npbackup.restic_wrapper import ResticRunner
 from npbackup.core.restic_source_binary import get_restic_internal_binary
@@ -45,6 +46,7 @@ def metric_writer(
     result_string: str,
     operation: str,
     dry_run: bool,
+    is_first_metrics_run: bool,
 ) -> bool:
     backup_too_small = False
     operation_success = True
@@ -167,22 +169,16 @@ def metric_writer(
 
                 upload_metrics(destination, authentication, no_cert_verify, metrics)
             else:
-                try:
-                    # We use append so if prometheus text collector did not get data yet, we'll not wipe it
-                    with open(destination, "a", encoding="utf-8") as file_handle:
-                        for metric in metrics:
-                            file_handle.write(metric + "\n")
-                except OSError as exc:
-                    logger.error(
-                        "Cannot write metrics file {}: {}".format(destination, exc)
-                    )
+                write_metrics_file(
+                    destination, metrics, append=not is_first_metrics_run
+                )
         else:
             logger.debug("No metrics destination set. Not sending metrics")
     except KeyError as exc:
         logger.info("Metrics error: {}".format(exc))
         logger.debug("Trace:", exc_info=True)
     except OSError as exc:
-        logger.error("Cannot write metric file: ".format(exc))
+        logger.error("Metrics OS error: ".format(exc))
         logger.debug("Trace:", exc_info=True)
     return backup_too_small
 
@@ -236,6 +232,7 @@ class NPBackupRunner:
         self.warnings_for_json = []
 
         self._produce_metrics = True
+        self._is_first_metrics_run = True
         self._canceled = False
 
     @property
@@ -376,8 +373,18 @@ class NPBackupRunner:
     @produce_metrics.setter
     def produce_metrics(self, value):
         if not isinstance(value, bool):
-            raise ValueError("metrics value {value} is not a boolean")
+            raise ValueError("produce_metrics value {value} is not a boolean")
         self._produce_metrics = value
+
+    @property
+    def is_first_metrics_run(self):
+        return self._is_first_metrics_run
+
+    @is_first_metrics_run.setter
+    def is_first_metrics_run(self, value):
+        if not isinstance(value, bool):
+            raise ValueError("is_first_metrics_run value {value} is not a boolean")
+        self.is_first_metrics_run = value
 
     @property
     def exec_time(self):
@@ -683,7 +690,15 @@ class NPBackupRunner:
 
                 # In case of error, we really need to write metrics
                 # pylint: disable=E1101 (no-member)
-                metric_writer(self.repo_config, False, None, fn.__name__, self.dry_run)
+                metric_writer(
+                    self.repo_config,
+                    False,
+                    None,
+                    fn.__name__,
+                    self.dry_run,
+                    self.is_first_metrics_run,
+                )
+                self.is_first_metrics_run = False
                 if self.json_output:
                     js = {
                         "result": False,
@@ -706,7 +721,15 @@ class NPBackupRunner:
             result = fn(self, *args, **kwargs)
             # pylint: disable=E1101 (no-member)
             if self._produce_metrics:
-                metric_writer(self.repo_config, result, None, fn.__name__, self.dry_run)
+                metric_writer(
+                    self.repo_config,
+                    result,
+                    None,
+                    fn.__name__,
+                    self.dry_run,
+                    self.is_first_metrics_run,
+                )
+                self.is_first_metrics_run = False
             else:
                 self.write_logs(
                     f"Metrics disabled for call {fn.__name__}", level="debug"
@@ -1417,7 +1440,9 @@ class NPBackupRunner:
             self.restic_runner.backup_result_content,
             "backup",
             self.restic_runner.dry_run,
+            self.is_first_metrics_run,
         )
+        self.is_first_metrics_run = False
         if backup_too_small:
             self.write_logs(
                 "Backup is smaller than configured minmium backup size", level="error"
