@@ -37,7 +37,7 @@ en:
   operations: Operations
   select_config_file: Load config file
   repo_and_password_cannot_be_empty: Repo and password cannot be empty
-  viewer_mode: Repository view-only mode
+  viewer_mode: Repo view-only mode
   open_repo: Open repo
   new_config: Create new config
   load_config: Load configuration
