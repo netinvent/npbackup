@@ -13,7 +13,6 @@ __build__ = "2025030501"
 __version__ = "3.0.1-dev"
 
 
-import os
 import sys
 import psutil
 from ofunctions.platform import python_arch, get_os
