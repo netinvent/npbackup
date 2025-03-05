@@ -835,7 +835,9 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
                 return False
             try:
                 conf_version = version.parse(full_config.g("conf_version"))
-                if conf_version < version.parse(MIN_CONF_VERSION) or conf_version > version.parse(MAX_CONF_VERSION):
+                if conf_version < version.parse(
+                    MIN_CONF_VERSION
+                ) or conf_version > version.parse(MAX_CONF_VERSION):
                     logger.critical(
                         f"Config file version {str(conf_version)} is not in required version range min={MIN_CONF_VERSION}, max={MAX_CONF_VERSION}"
                     )
