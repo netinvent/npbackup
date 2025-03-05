@@ -363,3 +363,20 @@ def gui_thread_runner(
     # Do not change this because of linter, it's a false positive to say we can remove the else statement
     else:
         return result
+
+
+class HideWindow:
+    """
+    Context manager to hide a window when a new one is opened
+    This prevents showing blocked windows
+    """
+
+    def __init__(self, window):
+        self.window = window
+
+    def __enter__(self):
+        self.window.hide()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        # exit method receives optional traceback from execution within with statement
+        self.window.un_hide()

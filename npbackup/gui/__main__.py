@@ -50,7 +50,7 @@ from resources.customization import (
 )
 from npbackup.gui.config import config_gui, ask_manager_password
 from npbackup.gui.operations import operations_gui
-from npbackup.gui.helpers import get_anon_repo_uri, gui_thread_runner
+from npbackup.gui.helpers import get_anon_repo_uri, gui_thread_runner, HideWindow
 from npbackup.gui.handle_window import handle_current_window
 from npbackup.core.i18n_helper import _t
 from npbackup.core import upgrade_runner
@@ -326,15 +326,16 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
 
 
 def ls_window(repo_config: dict, snapshot_id: str) -> bool:
-    result = gui_thread_runner(
-        repo_config,
-        "ls",
-        snapshot=snapshot_id,
-        __stdout=False,
-        __autoclose=True,
-        __compact=True,
-        __backend_binary=backend_binary,
-    )
+    with HideWindow(window):
+        result = gui_thread_runner(
+            repo_config,
+            "ls",
+            snapshot=snapshot_id,
+            __stdout=False,
+            __autoclose=True,
+            __compact=True,
+            __backend_binary=backend_binary,
+        )
     if not result or not result["result"]:
         sg.Popup(_t("main_gui.snapshot_is_empty"))
         return None, None
@@ -587,7 +588,8 @@ def _main_gui(viewer_mode: bool):
                     sg.PopupError(_t("generic.file_does_not_exist"), keep_on_top=True)
                     continue
                 try:
-                    full_config = npbackup.configuration.load_config(config_file)
+                    with HideWindow(window):
+                        full_config = npbackup.configuration.load_config(config_file)
                 except EnvironmentError as exc:
                     sg.PopupError(exc, keep_on_top=True)
                     continue
@@ -726,13 +728,15 @@ def _main_gui(viewer_mode: bool):
                 if action == "--CANCEL--":
                     break
                 if action == "--NEW-CONFIG--":
-                    full_config = config_gui(
-                        npbackup.configuration.get_default_config(), config_file
-                    )
+                    with HideWindow(window):
+                        full_config = config_gui(
+                            npbackup.configuration.get_default_config(), config_file
+                        )
             if config_file:
                 logger.info(f"Using configuration file {config_file}")
                 try:
-                    full_config = npbackup.configuration.load_config(config_file)
+                    with HideWindow(window):
+                        full_config = npbackup.configuration.load_config(config_file)
                     GUI_STATUS_IGNORE_ERRORS = True
                 except EnvironmentError as exc:
                     sg.PopupError(exc, keep_on_top=True)
@@ -1148,21 +1152,24 @@ def _main_gui(viewer_mode: bool):
             if not full_config:
                 sg.PopupError(_t("main_gui.no_config"), keep_on_top=True)
                 continue
-            full_config = operations_gui(full_config)
+            with HideWindow(window):
+                full_config = operations_gui(full_config)
             event = "--STATE-BUTTON--"
         if event == "--CONFIGURE--":
             if not full_config:
                 sg.PopupError(_t("main_gui.no_config"), keep_on_top=True)
                 continue
-            full_config = config_gui(full_config, config_file)
+            with HideWindow(window):
+                full_config = config_gui(full_config, config_file)
             GUI_STATUS_IGNORE_ERRORS = True
             # Make sure we trigger a GUI refresh when configuration is changed
             # Also make sure we retrigger get_config
             event = "--LOAD-EXISTING-CONF--"
         if event == "--OPEN-REPO--":
-            viewer_repo_uri, viewer_repo_password = viewer_repo_gui(
-                viewer_repo_uri, viewer_repo_password
-            )
+            with HideWindow(window):
+                viewer_repo_uri, viewer_repo_password = viewer_repo_gui(
+                    viewer_repo_uri, viewer_repo_password
+                )
             if not viewer_repo_uri or not viewer_repo_password:
                 sg.Popup(
                     _t("main_gui.repo_and_password_cannot_be_empty"), keep_on_top=True
@@ -1221,12 +1228,13 @@ def _main_gui(viewer_mode: bool):
                 sg.PopupNoFrame(destination_string)
             continue
         if event == "--ABOUT--":
-            about_gui(
-                version_string,
-                config_file,
-                full_config if not viewer_mode else None,
-                auto_upgrade_result,
-            )
+            with HideWindow(window):
+                about_gui(
+                    version_string,
+                    config_file,
+                    full_config if not viewer_mode else None,
+                    auto_upgrade_result,
+                )
         if event == "--STATE-BUTTON--":
             if full_config or (
                 viewer_mode and viewer_repo_uri and viewer_repo_password
