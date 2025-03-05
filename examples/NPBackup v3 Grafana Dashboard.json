@@ -3319,14 +3319,14 @@
           "type": "prometheus",
           "uid": "${DS_MIMIR}"
         },
-        "definition": "label_values(restic_backup_failure,__tenant_id__)",
+        "definition": "label_values(npbackup_exec_state,__tenant_id__)",
         "includeAll": true,
         "multi": true,
         "name": "tenant",
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(restic_backup_failure,__tenant_id__)",
+          "query": "label_values(npbackup_exec_state,__tenant_id__)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,
@@ -3339,14 +3339,14 @@
           "type": "prometheus",
           "uid": "${DS_MIMIR}"
         },
-        "definition": "label_values(restic_backup_failure{__tenant_id__=~\"$tenant\"},backup_job)",
+        "definition": "label_values({__tenant_id__=~\"$tenant\"},backup_job)",
         "includeAll": true,
         "multi": true,
         "name": "backup_job",
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(restic_backup_failure{__tenant_id__=~\"$tenant\"},backup_job)",
+          "query": "label_values({__tenant_id__=~\"$tenant\"},backup_job)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,
@@ -3397,13 +3397,13 @@
     ]
   },
   "time": {
-    "from": "now-15h",
+    "from": "now-12h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "NPBackup v3 20250226",
+  "title": "NPBackup v3 20250305",
   "uid": "XNGJDIgRx",
-  "version": 30,
+  "version": 32,
   "weekStart": ""
 }
