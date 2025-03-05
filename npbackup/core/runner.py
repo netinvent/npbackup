@@ -1488,6 +1488,11 @@ class NPBackupRunner:
                     raise PermissionError
                 elif randint(1, 100) <= post_backup_housekeeping_percent_chance:
                     self.write_logs("Running housekeeping after backup", level="info")
+                    # Housekeeping after backup needs to run without threads
+                    # We need to keep the queues open since we need to report back to GUI
+                    # Also, we need to disable concurrency check since we already did
+                    # for backup, and concurrency check would fail for unlock, forget and prune
+                    # pylint: disable=E1123 (unexpected-keyword-arg)
                     housekeeping_result = self.housekeeping(
                         __no_threads=True,
                         __close_queues=True,
