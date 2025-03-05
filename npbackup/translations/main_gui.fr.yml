@@ -45,6 +45,7 @@ fr:
   no_config: Veuillez charger / créer une configuration avant de procéder
   cannot_load_config_keep_current: Impossible de charger la configuration. Configuration actuelle conservée
   snapshot_is_empty: L'instantané est vide
+  select_only_one_snapshot: Veuillez sélectionner un seul instantané
   cancel_operation: Etes-vous sûr de vouloir annuler l'opération? Essayez d'éviter d'interrompre les opérations d'écriture
   open_existing_file: Ouvrir fichier de configuration existant
   failed_operation: Operation échouée. Vérifier les journaux

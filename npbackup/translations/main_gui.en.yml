@@ -45,6 +45,7 @@ en:
   no_config: Please load / create a configuration before proceeding
   cannot_load_config_keep_current: Cannot load configuration. Keep current configuration
   snapshot_is_empty: Snapshot is empty
+  select_only_one_snapshot: Please select only one snapshot
   cancel_operation: Are you sure you want to cancel the operation? Try to avoid interrupting write operations
   open_existing_file: Open existing config file
   failed_operation: Failed operation, Please check the logs
