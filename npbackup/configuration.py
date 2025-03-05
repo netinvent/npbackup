@@ -834,7 +834,7 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
                 logger.critical(f"Config file {config_file} seems empty !")
                 return False
             try:
-                conf_version = version.parse(full_config.g("conf_version"))
+                conf_version = version.parse(str(full_config.g("conf_version")))
                 if conf_version < version.parse(
                     MIN_CONF_VERSION
                 ) or conf_version > version.parse(MAX_CONF_VERSION):
@@ -842,17 +842,19 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
                         f"Config file version {str(conf_version)} is not in required version range min={MIN_CONF_VERSION}, max={MAX_CONF_VERSION}"
                     )
                     return False
-            except (AttributeError, TypeError):
+            except (AttributeError, TypeError) as exc:
                 logger.critical(
-                    f"Cannot read conf version from config file {config_file}, which seems bogus"
+                    f"Cannot read conf version from config file {config_file}, which seems bogus: {exc}"
                 )
+                logger.debug("Trace:", exc_info=True)
                 return False
             logger.info(
                 f"Loaded config {_get_config_file_checksum(config_file)} in {config_file.absolute()}"
             )
             return full_config
-    except OSError:
-        logger.critical(f"Cannot load configuration file from {config_file}")
+    except OSError as exc:
+        logger.critical(f"Cannot load configuration file from {config_file}: {exc}")
+        logger.debut("Trace:", exc_info=True)
         return False
 
 
