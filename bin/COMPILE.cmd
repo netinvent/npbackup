@@ -2,7 +2,7 @@
 
 :: This is an example compiler script
 
-SET PYTHON64=c:\python313-64\python.exe
+SET PYTHON64=c:\python312-64\python.exe
 SET PYTHON32=c:\python37-32\python.exe
 
 
@@ -17,6 +17,9 @@ SET PYTHONPATH=c:\GIT\npbackup
 
 "%PYTHON64%" -m pip install --upgrade pip || GOTO ERROR
 "%PYTHON64%" -m pip install pytest
+:: Uninstall prior versions of Freesimplegui if present so we get to use the git commit version
+:: which otherwise would not overwrite existing setup
+"%PYTHON64%" -m pip uninstall -y freesimplegui
 "%PYTHON64%" -m pip install --upgrade -r npbackup/requirements.txt || GOTO ERROR
 
 "%PYTHON64%" -m pytest C:\GIT\npbackup\tests || GOTO ERROR
@@ -26,6 +29,9 @@ SET PYTHONPATH=c:\GIT\npbackup
 
 "%PYTHON32%" -m pip install --upgrade pip || GOTO ERROR
 "%PYTHON32%" -m pip install pytest
+:: Uninstall prior versions of Freesimplegui if present so we get to use the git commit version
+:: which otherwise would not overwrite existing setup
+"%PYTHON32%" -m pip uninstall -y freesimplegui
 "%PYTHON32%" -m pip install --upgrade -r npbackup/requirements.txt || GOTO ERROR
 
 "%PYTHON32%" -m pytest C:\GIT\npbackup\tests || GOTO ERROR
