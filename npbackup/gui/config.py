@@ -1754,6 +1754,31 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [sg.HorizontalSeparator()],
             [
+                sg.Text(
+                    _t("config_gui.post_backup_housekeeping_percent_chance"),
+                    size=(40, 1),
+                ),
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.backup_opts.post_backup_housekeeping_percent_chance",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
+                sg.Input(
+                    key="backup_opts.post_backup_housekeeping_percent_chance",
+                    size=(8, 1),
+                ),
+            ],
+            [
+                sg.Text(
+                    _t(
+                        "config_gui.post_backup_housekeeping_percent_chance_explanation"
+                    ),
+                    size=(100, 1),
+                ),
+            ],
+            [sg.HorizontalSeparator()],
+            [
                 sg.Image(
                     NON_INHERITED_ICON,
                     key="inherited.repo_opts.retention_policy.ntp_server",

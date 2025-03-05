@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025032501"
+__build__ = "2025030501"
 
 
 from typing import Optional, Callable, Union, List
@@ -19,6 +19,7 @@ import queue
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 from copy import deepcopy
+from random import randint
 from command_runner import command_runner
 from ofunctions.threading import threaded
 from ofunctions.platform import os_arch
@@ -38,6 +39,37 @@ from npbackup.__debug__ import _DEBUG, exception_to_string
 
 
 logger = logging.getLogger()
+
+
+required_permissions = {
+    "init": ["backup", "restore", "full"],
+    "backup": ["backup", "restore", "full"],
+    "has_recent_snapshot": ["backup", "restore", "restore_only", "full"],
+    "snapshots": ["backup", "restore", "restore_only", "full"],
+    "stats": ["backup", "restore", "full"],
+    "ls": ["backup", "restore", "restore_only", "full"],
+    "find": ["backup", "restore", "restore_only", "full"],
+    "restore": ["restore", "restore_only", "full"],
+    "dump": ["restore", "retore_only", "full"],
+    "check": ["restore", "full"],
+    "recover": ["restore", "full"],
+    "list": ["full"],
+    "unlock": ["full", "restore", "backup"],
+    "repair": ["full"],
+    "forget": ["full"],
+    "housekeeping": ["full"],
+    "prune": ["full"],
+    "raw": ["full"],
+}
+
+locking_operations = [
+    "backup",
+    "repair",
+    "forget",
+    "prune",
+    "raw",
+    "unlock",
+]
 
 
 def metric_writer(
@@ -538,26 +570,6 @@ class NPBackupRunner:
 
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
-            required_permissions = {
-                "init": ["backup", "restore", "full"],
-                "backup": ["backup", "restore", "full"],
-                "has_recent_snapshot": ["backup", "restore", "restore_only", "full"],
-                "snapshots": ["backup", "restore", "restore_only", "full"],
-                "stats": ["backup", "restore", "full"],
-                "ls": ["backup", "restore", "restore_only", "full"],
-                "find": ["backup", "restore", "restore_only", "full"],
-                "restore": ["restore", "restore_only", "full"],
-                "dump": ["restore", "retore_only", "full"],
-                "check": ["restore", "full"],
-                "recover": ["restore", "full"],
-                "list": ["full"],
-                "unlock": ["full", "restore", "backup"],
-                "repair": ["full"],
-                "forget": ["full"],
-                "housekeeping": ["full"],
-                "prune": ["full"],
-                "raw": ["full"],
-            }
             try:
                 # When running group_runner, we need to extract operation from kwargs
                 # else, operation is just the wrapped function name
@@ -630,21 +642,16 @@ class NPBackupRunner:
 
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
-            locking_operations = [
-                "backup",
-                "repair",
-                "forget",
-                "prune",
-                "raw",
-                "unlock",
-            ]
+
+            __check_concurrency = kwargs.pop("__check_concurrency", True)
+
             # pylint: disable=E1101 (no-member)
             if fn.__name__ == "group_runner":
                 operation = kwargs.get("operation")
             else:
                 # pylint: disable=E1101 (no-member)
                 operation = fn.__name__
-            if operation in locking_operations:
+            if __check_concurrency and operation in locking_operations:
                 pid_file = os.path.join(
                     tempfile.gettempdir(), "{}.pid".format(__intname__)
                 )
@@ -654,7 +661,7 @@ class NPBackupRunner:
                         result = fn(self, *args, **kwargs)
                 except pidfile.AlreadyRunningError:
                     self.write_logs(
-                        f"There is already an {operation} operation running by NPBackup. Will not continue",
+                        f"There is already an operation running by NPBackup. Will not launch operation {operation} to avoid concurrency",
                         level="critical",
                     )
                     return False
@@ -1461,7 +1468,34 @@ class NPBackupRunner:
             ignore_additional_json=True,
         )
 
-        if not operation_result:
+        housekeeping_result = True
+        if operation_result:
+            post_backup_housekeeping_percent_chance = self.repo_config.g(
+                "backup_opts.post_backup_housekeeping_percent_chance"
+            )
+            if post_backup_housekeeping_percent_chance:
+                post_backup_op = "housekeeping"
+
+                current_permissions = self.repo_config.g("permissions")
+                if (
+                    current_permissions
+                    and not current_permissions in required_permissions[post_backup_op]
+                ):
+                    self.write_logs(
+                        f"Required permissions for post backup housekeeping must be one of {', '.join(required_permissions[post_backup_op])}, current permission is '{current_permissions}'",
+                        level="critical",
+                    )
+                    raise PermissionError
+                elif randint(1, 100) <= post_backup_housekeeping_percent_chance:
+                    self.write_logs("Running housekeeping after backup", level="info")
+                    housekeeping_result = self.housekeeping(
+                        __no_threads=True,
+                        __close_queues=True,
+                        __check_concurrency=False,
+                        check_concurrency=False,
+                    )
+
+        if not operation_result or not housekeeping_result:
             # patch result if json
             if isinstance(result, dict):
                 result["result"] = False
@@ -1573,14 +1607,18 @@ class NPBackupRunner:
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    def housekeeping(self) -> bool:
+    def housekeeping(self, check_concurrency: bool = True) -> bool:
         """
         Runs unlock, check, forget and prune in one go
         """
         self.write_logs("Running housekeeping", level="info")
         # Add special keywords __no_threads since we're already threaded in housekeeping function
         # Also, pass it as kwargs to make linter happy
-        kwargs = {"__no_threads": True, "__close_queues": False}
+        kwargs = {
+            "__no_threads": True,
+            "__close_queues": False,
+            "__check_concurrency": check_concurrency,
+        }
         # pylint: disable=E1123 (unexpected-keyword-arg)
 
         # We need to construct our own result here since this is a wrapper for 3 different subcommandzsz
