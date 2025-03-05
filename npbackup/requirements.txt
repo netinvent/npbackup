@@ -13,7 +13,7 @@ python-pidfile>=3.0.0
 # we need to stick to freesimplegui 5.1.1 to keep Python 3.6 compat in order compile for elder linuxes
 # finally we need freesimplegui with patch #51 since there are no newer releases ATM (2025/03/04)
 # keep in mind that freesimplegui might higher required python version in the future
-freesimplegui @ git+https://github.com/spyoungtech/FreeSimpleGUI@db26fd1
+freesimplegui @ git+https://github.com/spyoungtech/FreeSimpleGUI@db26fd15f2abec79fcd93d966c9677e1a3464753
 requests
 ruamel.yaml
 psutil
