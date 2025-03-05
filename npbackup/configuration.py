@@ -7,11 +7,11 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025012401"
+__build__ = "2025030501"
 __version__ = "npbackup 3.0.0+"
 
-MIN_CONF_VERSION = 3.0
-MAX_CONF_VERSION = 3.0
+MIN_CONF_VERSION = "3.0"
+MAX_CONF_VERSION = "3.0.1"
 
 from typing import Tuple, Optional, List, Any, Union
 import sys
@@ -25,6 +25,7 @@ from logging import getLogger
 import re
 import platform
 import zlib
+from packaging import version
 from cryptidy import symmetric_encryption as enc
 from ofunctions.random import random_string
 from ofunctions.misc import replace_in_iterable, BytesConverter, iter_over_keys
@@ -833,10 +834,10 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
                 logger.critical(f"Config file {config_file} seems empty !")
                 return False
             try:
-                conf_version = float(full_config.g("conf_version"))
-                if conf_version < MIN_CONF_VERSION or conf_version > MAX_CONF_VERSION:
+                conf_version = version.parse(full_config.g("conf_version"))
+                if conf_version < version.parse(MIN_CONF_VERSION) or conf_version > version.parse(MAX_CONF_VERSION):
                     logger.critical(
-                        f"Config file version {conf_version} is not in required version range min={MIN_CONF_VERSION}, max={MAX_CONF_VERSION}"
+                        f"Config file version {str(conf_version)} is not in required version range min={MIN_CONF_VERSION}, max={MAX_CONF_VERSION}"
                     )
                     return False
             except (AttributeError, TypeError):
