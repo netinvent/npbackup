@@ -191,7 +191,7 @@ empty_config_dict = {
                 "post_exec_per_command_timeout": 3600,
                 "post_exec_failure_is_fatal": False,
                 "post_exec_execute_even_on_backup_error": True,
-                "post_backup_housekeeping_percent_chance": 0,  # 0 means disabled, 100 means everytime
+                "post_backup_housekeeping_percent_chance": 0,  # 0 means disabled, 100 means always
             },
             "repo_opts": {
                 "repo_password": None,
