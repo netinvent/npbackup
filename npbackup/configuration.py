@@ -510,7 +510,7 @@ def extract_permissions_from_full_config(full_config: dict) -> dict:
                         manager_password,
                     )
                 else:
-                    logger.info(
+                    logger.debug(
                         f"No extra information for {object_type} {object_name} found"
                     )
                     # If no permissions are set, we get to use default permissions
