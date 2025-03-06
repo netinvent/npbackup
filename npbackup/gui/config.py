@@ -1771,9 +1771,7 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Text(
-                    _t(
-                        "config_gui.post_backup_housekeeping_percent_chance_explanation"
-                    ),
+                    _t("config_gui.post_backup_housekeeping_percent_chance"),
                     size=(100, 1),
                 ),
             ],
@@ -2098,6 +2096,10 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 sg.Input(
                     key="global_options.auto_upgrade_server_password", size=(50, 1)
                 ),
+            ],
+            [
+                sg.Text(_t("config_gui.auto_upgrade_percent_chance"), size=(40, 1)),
+                sg.Input(key="global_options.auto_upgrade_percent_chance", size=(50, 1)),
             ],
             [
                 sg.Text(_t("config_gui.auto_upgrade_interval"), size=(40, 1)),

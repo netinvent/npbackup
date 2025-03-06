@@ -7,13 +7,14 @@ __intname__ = "npbackup.gui.core.upgrade_runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024041801"
+__build__ = "2025030601"
 
 
 import os
 from typing import Optional
 import tempfile
 from logging import getLogger
+from random import randint
 from npbackup.upgrade_client.upgrader import auto_upgrader, _check_new_version
 import npbackup.configuration
 from npbackup.path_helper import CURRENT_DIR
@@ -22,8 +23,10 @@ from npbackup.path_helper import CURRENT_DIR
 logger = getLogger()
 
 
-def need_upgrade(upgrade_interval: int) -> bool:
+def _need_upgrade_interval(upgrade_interval: int) -> bool:
     """
+    TODO: Counter is now deprecated
+
     Basic counter which allows an upgrade only every X times this is called so failed operations won't end in an endless upgrade loop
 
     We need to make to select a write counter file that is writable
@@ -32,6 +35,7 @@ def need_upgrade(upgrade_interval: int) -> bool:
 
     The for loop logic isn't straight simple, but allows file fallback
     """
+
     # file counter, local, home, or temp if not available
     counter_file = "npbackup.autoupgrade.log"
 
@@ -89,6 +93,27 @@ def need_upgrade(upgrade_interval: int) -> bool:
         else:
             logger.debug("Cannot write upgrade counter to %s", file)
             continue
+    return False
+
+
+def _need_upgrade_percent(upgrade_percent: int) -> bool:
+    """
+    Randomly decide if we need an upgrade according to upgrade_percent
+    """
+    if not upgrade_percent:
+        return False
+    if randint(1, 100) <= upgrade_percent:
+        return True
+    return False
+
+
+def need_upgrade(upgrade_percent: int, upgrade_interval: int) -> bool:
+    """
+    Decide if we need an upgrade according to upgrade_interval and upgrade_percent
+    # TODO: Deprecate _need_upgrade_interval
+    """
+    if _need_upgrade_percent(upgrade_percent) or _need_upgrade_interval(upgrade_interval):
+        return True
     return False
 
 

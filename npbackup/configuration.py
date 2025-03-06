@@ -242,7 +242,7 @@ empty_config_dict = {
     },
     "global_options": {
         "auto_upgrade": False,
-        "auto_upgrade_interval": 10,
+        "auto_upgrade_percent_chance": 5,  # On all runs. On 15m interval runs, this could be 5% (ie once a day), on daily runs, this should be 95% (ie once a day)
         "auto_upgrade_server_url": None,
         "auto_upgrade_server_username": None,
         "auto_upgrade_server_password": None,
