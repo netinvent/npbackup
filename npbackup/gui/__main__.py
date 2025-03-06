@@ -945,19 +945,6 @@ def _main_gui(viewer_mode: bool):
                                         justification="center",
                                     )
                                 ],
-                                (
-                                    [
-                                        sg.Text(
-                                            _t("main_gui.no_config"),
-                                            text_color="red",
-                                            key="-NO-CONFIG-",
-                                            visible=False,
-                                            size=(25, 2),
-                                        )
-                                    ]
-                                    if not viewer_mode
-                                    else []
-                                ),
                             ],
                             justification="C",
                             element_justification="C",
@@ -1005,6 +992,19 @@ def _main_gui(viewer_mode: bool):
                             vertical_alignment="top",
                         ),
                     ],
+                    (
+                        [
+                            sg.Text(
+                                _t("main_gui.no_config"),
+                                text_color="red",
+                                key="-NO-CONFIG-",
+                                visible=False,
+                                justification="center",
+                            )
+                        ]
+                        if not viewer_mode
+                        else []
+                    ),
                     [
                         sg.Table(
                             values=[[]],
