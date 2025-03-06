@@ -7,10 +7,10 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025030501"
+__build__ = "2025030601"
 
 
-from typing import Optional, Callable, Union, List
+from typing import Optional, Callable, Union, List, Tuple
 import os
 import logging
 import tempfile
@@ -72,16 +72,20 @@ locking_operations = [
 ]
 
 
-def metric_writer(
+def metric_analyser(
     repo_config: dict,
     restic_result: bool,
     result_string: str,
     operation: str,
     dry_run: bool,
     is_first_metrics_run: bool,
-) -> bool:
-    backup_too_small = False
+) -> Tuple[bool, bool]:
+    """
+    Tries to get operation success and backup to small booleans from restic output
+    Returns op success, backup too small
+    """
     operation_success = True
+    backup_too_small = False
     metrics = []
 
     try:
@@ -143,6 +147,10 @@ def metric_writer(
             exec_state = 1
         else:
             exec_state = 0
+
+        # exec_state update according to metric_analyser
+        if not operation_success or backup_too_small:
+            exec_state = 2
 
         _labels = []
         for key, value in labels.items():
@@ -212,7 +220,7 @@ def metric_writer(
     except OSError as exc:
         logger.error("Metrics OS error: ".format(exc))
         logger.debug("Trace:", exc_info=True)
-    return backup_too_small
+    return operation_success, backup_too_small
 
 
 def get_ntp_offset(ntp_server: str) -> Optional[float]:
@@ -697,7 +705,7 @@ class NPBackupRunner:
 
                 # In case of error, we really need to write metrics
                 # pylint: disable=E1101 (no-member)
-                metric_writer(
+                metric_analyser(
                     self.repo_config,
                     False,
                     None,
@@ -728,7 +736,7 @@ class NPBackupRunner:
             result = fn(self, *args, **kwargs)
             # pylint: disable=E1101 (no-member)
             if self._produce_metrics:
-                metric_writer(
+                metric_analyser(
                     self.repo_config,
                     result,
                     None,
@@ -1441,7 +1449,7 @@ class NPBackupRunner:
         # Extract backup size from result_string
         # Metrics will not be in json format, since we need to diag cloud issues until
         # there is a fix for https://github.com/restic/restic/issues/4155
-        backup_too_small = metric_writer(
+        analyser_result, backup_too_small = metric_analyser(
             self.repo_config,
             result,
             self.restic_runner.backup_result_content,
@@ -1450,6 +1458,7 @@ class NPBackupRunner:
             self.is_first_metrics_run,
         )
         self.is_first_metrics_run = False
+
         if backup_too_small:
             self.write_logs(
                 "Backup is smaller than configured minmium backup size", level="error"
@@ -1457,6 +1466,7 @@ class NPBackupRunner:
 
         operation_result = (
             result
+            and analyser_result
             and pre_exec_commands_success
             and post_exec_commands_success
             and not backup_too_small

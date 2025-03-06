@@ -175,6 +175,9 @@ def restic_json_to_prometheus(
 ) -> Tuple[bool, List[str], bool]:
     """
     Transform a restic JSON result into prometheus metrics
+
+    Returns [operation_success: bool, List[metrics: str], backup_too_small: bool]
+
     """
     _labels = []
     for key, value in labels.items():
@@ -243,14 +246,14 @@ def restic_json_to_prometheus(
     backup_too_small = False
     if minimum_backup_size_error:
         try:
-            if not restic_json["total_bytes_processed"] or restic_json[
-                "total_bytes_processed"
-            ] < int(
+            if restic_json["total_bytes_processed"] < int(
                 BytesConverter(str(minimum_backup_size_error).replace(" ", "")).bytes
             ):
                 backup_too_small = True
         except KeyError:
-            backup_too_small = True
+            # Don't care if we cannot determine backup size error
+            # Other errors should be triggered, see #141
+            pass
     good_backup = restic_result and not backup_too_small
 
     prom_metrics.append(
