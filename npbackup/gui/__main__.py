@@ -1281,6 +1281,11 @@ def main_gui(viewer_mode=False):
     except _tkinter.TclError as exc:
         logger.critical(f'Tkinter error: "{exc}". Is this a headless server ?')
         sys.exit(250)
+    except KeyboardInterrupt as exc:
+        logger.error(f"Program interrupted by keyboard: {exc}", level="error")
+        logger.debug("Trace:", exc_info=True)
+        # EXIT_CODE 200 = keyboard interrupt
+        sys.exit(200)
     except Exception as exc:
         sg.Popup(_t("config_gui.unknown_error_see_logs") + f": {exc}", keep_on_top=True)
         logger.critical(f"GUI Execution error {exc}")

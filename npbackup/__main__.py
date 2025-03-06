@@ -794,7 +794,7 @@ def main():
         json_error_logging(
             False, f"Program interrupted by keyboard: {exc}", level="error"
         )
-        logger.info("Trace:", exc_info=True)
+        logger.debug("Trace:", exc_info=True)
         # EXIT_CODE 200 = keyboard interrupt
         sys.exit(200)
     except Exception as exc:
