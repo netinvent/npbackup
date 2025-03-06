@@ -112,7 +112,9 @@ def need_upgrade(upgrade_percent: int, upgrade_interval: int) -> bool:
     Decide if we need an upgrade according to upgrade_interval and upgrade_percent
     # TODO: Deprecate _need_upgrade_interval
     """
-    if _need_upgrade_percent(upgrade_percent) or _need_upgrade_interval(upgrade_interval):
+    if _need_upgrade_percent(upgrade_percent) or _need_upgrade_interval(
+        upgrade_interval
+    ):
         return True
     return False
 
