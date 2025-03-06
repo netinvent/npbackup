@@ -102,7 +102,7 @@
         "type": "prometheus",
         "uid": "${DS_MIMIR}"
       },
-      "description": "Number of failed npbackup executions",
+      "description": "Number of npbackup operations",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -184,7 +184,95 @@
         "type": "prometheus",
         "uid": "${DS_MIMIR}"
       },
-      "description": "Number of failed npbackup executions",
+      "description": "Number of successful npbackup operations",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "N/A"
+                }
+              },
+              "type": "special"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#d44a3a",
+                "value": null
+              },
+              {
+                "color": "rgba(237, 129, 40, 0.89)",
+                "value": 0
+              },
+              {
+                "color": "#299c46",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 4,
+        "y": 1
+      },
+      "id": 5,
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_MIMIR}"
+          },
+          "editorMode": "code",
+          "expr": "count(count_over_time((npbackup_exec_state{backup_job=~\"$backup_job\",__tenant_id__=~\"$tenant\"} == 0)[$__range:]))",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Successful Ops",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_MIMIR}"
+      },
+      "description": "Number of failed npbackup operations",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -225,7 +313,7 @@
       "gridPos": {
         "h": 3,
         "w": 4,
-        "x": 4,
+        "x": 8,
         "y": 1
       },
       "id": 4,
@@ -267,94 +355,6 @@
         }
       ],
       "title": "Failed Ops",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_MIMIR}"
-      },
-      "description": "Number of successful npbackup executions",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "N/A"
-                }
-              },
-              "type": "special"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#d44a3a",
-                "value": null
-              },
-              {
-                "color": "rgba(237, 129, 40, 0.89)",
-                "value": 0
-              },
-              {
-                "color": "#299c46",
-                "value": 0
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 4,
-        "x": 8,
-        "y": 1
-      },
-      "id": 5,
-      "maxDataPoints": 100,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "text": {},
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "11.5.2",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_MIMIR}"
-          },
-          "editorMode": "code",
-          "expr": "count(count_over_time((npbackup_exec_state{backup_job=~\"$backup_job\",__tenant_id__=~\"$tenant\"} == 0)[$__range:]))",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Successful Ops",
       "type": "stat"
     },
     {
@@ -534,7 +534,7 @@
         "type": "prometheus",
         "uid": "${DS_MIMIR}"
       },
-      "description": "Number of failed npbackup executions",
+      "description": "Number of --init executions",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -555,7 +555,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "dark-blue",
                 "value": null
               }
             ]
@@ -616,7 +616,7 @@
         "type": "prometheus",
         "uid": "${DS_MIMIR}"
       },
-      "description": "Number of failed npbackup executions",
+      "description": "Number of --unlock executions",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -637,7 +637,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "dark-blue",
                 "value": null
               }
             ]
@@ -698,7 +698,7 @@
         "type": "prometheus",
         "uid": "${DS_MIMIR}"
       },
-      "description": "Number of failed npbackup executions",
+      "description": "Number of --check executions",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -719,7 +719,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "dark-blue",
                 "value": null
               }
             ]
@@ -780,7 +780,7 @@
         "type": "prometheus",
         "uid": "${DS_MIMIR}"
       },
-      "description": "Number of failed npbackup executions",
+      "description": "Number of --snapshots executions",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -801,7 +801,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "dark-blue",
                 "value": null
               }
             ]
@@ -862,7 +862,7 @@
         "type": "prometheus",
         "uid": "${DS_MIMIR}"
       },
-      "description": "Number of failed npbackup executions",
+      "description": "Number of --list executions",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -883,7 +883,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "dark-blue",
                 "value": null
               }
             ]
@@ -944,7 +944,7 @@
         "type": "prometheus",
         "uid": "${DS_MIMIR}"
       },
-      "description": "Number of failed npbackup executions",
+      "description": "Number of --stats executions",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -965,7 +965,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "dark-blue",
                 "value": null
               }
             ]
@@ -1026,7 +1026,7 @@
         "type": "prometheus",
         "uid": "${DS_MIMIR}"
       },
-      "description": "Number of failed npbackup executions",
+      "description": "Number of --forget executions",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1047,7 +1047,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "dark-blue",
                 "value": null
               }
             ]
@@ -1108,7 +1108,7 @@
         "type": "prometheus",
         "uid": "${DS_MIMIR}"
       },
-      "description": "Number of failed npbackup executions",
+      "description": "Number of --prune executions",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1129,7 +1129,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "dark-blue",
                 "value": null
               }
             ]
@@ -1190,7 +1190,7 @@
         "type": "prometheus",
         "uid": "${DS_MIMIR}"
       },
-      "description": "Number of failed npbackup executions",
+      "description": "Number of --housekeeping executions",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1211,7 +1211,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "dark-blue",
                 "value": null
               }
             ]
@@ -1272,7 +1272,7 @@
         "type": "prometheus",
         "uid": "${DS_MIMIR}"
       },
-      "description": "Number of failed npbackup executions",
+      "description": "Number of --restore executions",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1293,7 +1293,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "dark-blue",
                 "value": null
               }
             ]
@@ -1354,7 +1354,7 @@
         "type": "prometheus",
         "uid": "${DS_MIMIR}"
       },
-      "description": "Number of failed npbackup executions",
+      "description": "Number of --ls executions",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1375,7 +1375,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "dark-blue",
                 "value": null
               }
             ]
@@ -1436,7 +1436,7 @@
         "type": "prometheus",
         "uid": "${DS_MIMIR}"
       },
-      "description": "Number of failed npbackup executions",
+      "description": "Number of upgrade ops",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1457,7 +1457,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "#299c46",
+                "color": "dark-blue",
                 "value": null
               }
             ]
@@ -1518,7 +1518,7 @@
         "type": "prometheus",
         "uid": "${DS_MIMIR}"
       },
-      "description": "Number of failed npbackup executions",
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1537,8 +1537,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
-        "w": 12,
+        "h": 7,
+        "w": 8,
         "x": 0,
         "y": 10
       },
@@ -1578,7 +1578,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "count by (action) (count_over_time(npbackup_exec_state{backup_job=~\"$backup_job\",__tenant_id__=~\"$tenant\"}[$__range:]))",
+          "expr": "count by (action) (count_over_time((npbackup_exec_state{backup_job=~\"$backup_job\",__tenant_id__=~\"$tenant\"} == 0)[$__range:]))",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -1588,7 +1588,85 @@
           "refId": "A"
         }
       ],
-      "title": "Action repartition",
+      "title": "Successful Action repartition",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_MIMIR}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "fieldMinMax": false,
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 10
+      },
+      "id": 52,
+      "maxDataPoints": 100,
+      "options": {
+        "displayLabels": [
+          "percent"
+        ],
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true,
+          "values": []
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_MIMIR}"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "count by (action) (count_over_time((npbackup_exec_state{backup_job=~\"$backup_job\",__tenant_id__=~\"$tenant\"} > 0)[$__range:]))",
+          "format": "time_series",
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "{{action}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Failed Action repartition",
       "type": "piechart"
     },
     {
@@ -1633,8 +1711,8 @@
       },
       "gridPos": {
         "h": 5,
-        "w": 6,
-        "x": 12,
+        "w": 4,
+        "x": 16,
         "y": 10
       },
       "id": 44,
@@ -1720,8 +1798,8 @@
       },
       "gridPos": {
         "h": 5,
-        "w": 6,
-        "x": 18,
+        "w": 4,
+        "x": 20,
         "y": 10
       },
       "id": 39,
@@ -1809,7 +1887,7 @@
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 15
+        "y": 17
       },
       "id": 28,
       "options": {
@@ -1957,7 +2035,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 25
+        "y": 27
       },
       "id": 29,
       "options": {
@@ -2070,7 +2148,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 34
+        "y": 36
       },
       "id": 19,
       "panels": [],
@@ -2118,7 +2196,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 35
+        "y": 37
       },
       "id": 30,
       "options": {
@@ -2269,7 +2347,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 42
+        "y": 44
       },
       "id": 31,
       "options": {
@@ -2438,7 +2516,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 49
+        "y": 51
       },
       "id": 24,
       "options": {
@@ -2540,13 +2618,38 @@
           },
           "unit": "decbytes"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "mail01p.ascelectronique.local vm"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 49
+        "y": 51
       },
       "id": 22,
       "options": {
@@ -2654,7 +2757,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 57
+        "y": 59
       },
       "id": 26,
       "options": {
@@ -2761,7 +2864,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 57
+        "y": 59
       },
       "id": 45,
       "options": {
@@ -2868,7 +2971,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 64
+        "y": 66
       },
       "id": 23,
       "options": {
@@ -3013,7 +3116,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 64
+        "y": 66
       },
       "id": 27,
       "options": {
@@ -3083,7 +3186,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 71
+        "y": 73
       },
       "id": 11,
       "panels": [],
@@ -3156,7 +3259,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 72
+        "y": 74
       },
       "id": 17,
       "options": {
@@ -3262,7 +3365,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 72
+        "y": 74
       },
       "id": 25,
       "options": {
@@ -3397,13 +3500,13 @@
     ]
   },
   "time": {
-    "from": "now-12h",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
-  "title": "NPBackup v3 20250305",
+  "title": "NPBackup v3 20250306",
   "uid": "XNGJDIgRx",
-  "version": 32,
+  "version": 34,
   "weekStart": ""
 }
