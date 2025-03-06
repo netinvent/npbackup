@@ -1015,6 +1015,40 @@ class NPBackupRunner:
             return js
         return result
 
+    def check_source_files_present(self, source_type: Optional[str], paths):
+        """
+        Checks if all specified paths actually exist and are readable
+        since restic won't do so https://github.com/restic/restic/issues/4467
+        """
+        paths_must_be_readable = []
+        all_files_are_reabable = True
+
+        if not source_type:
+            source_type = "folder_list"
+        if source_type == "folder_list":
+            paths_must_be_readable = paths
+        if source_type in ["files_from_verbatim", "files_from_raw"]:
+            for path in paths:
+                try:
+                    with open(path, "r") as path_file:
+                        paths_must_be_readable += path_file.readlines()
+                except OSError as exc:
+                    self.write_logs(
+                        f"Cannot open file {path} for reading: {exc}", level="error"
+                    )
+                    all_files_are_reabable = False
+        for path in paths_must_be_readable:
+            if source_type == "files_from_raw":
+                path = path.strip("\x00")
+            path = path.strip()
+            if not os.path.exists(path) or not os.access(path, os.R_OK):
+                self.write_logs(
+                    f"Path {path} does not exist or is not readable",
+                    level="error",
+                )
+                all_files_are_reabable = False
+        return all_files_are_reabable
+
     ###########################
     # ACTUAL RUNNER FUNCTIONS #
     ###########################
@@ -1388,6 +1422,19 @@ class NPBackupRunner:
             result = False
             post_exec_commands_success = None
         else:
+            if source_type in (
+                None,
+                "folder_list",
+                "files_from_verbatim",
+                "files_from_raw",
+            ):
+                all_files_present = self.check_source_files_present(source_type, paths)
+                if not all_files_present:
+                    self.write_logs(
+                        f"Not all files/folders are present in backup source",
+                        level="error",
+                    )
+
             # Run actual backup here
             if source_type in (
                 None,
