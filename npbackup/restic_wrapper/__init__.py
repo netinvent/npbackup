@@ -46,6 +46,11 @@ except ImportError:
 logger = getLogger()
 
 
+restic_output_filters = [
+    re.compile(r"^rclone:\s+[0-9]{4}\/[0-1][0-9]\/[0-3][0-9]", re.IGNORECASE | re.MULTILINE),
+]
+
+
 class ResticRunner:
     def __init__(
         self,
@@ -326,6 +331,15 @@ class ResticRunner:
             raise ValueError(msg)
         if raise_error:
             raise Exception(msg)
+        
+    def output_filter(self, output: str) -> str:
+        """
+        Filter potential unwanted garbage from restic output
+        """
+        # Filter out rclone logs
+        for filter in restic_output_filters:
+            output = filter.sub("", output)
+        return output
 
     def executor(
         self,
@@ -398,8 +412,9 @@ class ResticRunner:
 
         if exit_code == 0:
             self.last_command_status = True
-            return True, output
+            return True, self.output_filter(output)
         if exit_code == 3 and os.name == "nt" and self.ignore_cloud_files:
+            output = self.output_filter(output)
             # TEMP-FIX-4155, since we don't have reparse point support for Windows, see https://github.com/restic/restic/issues/4155, we have to filter manually for cloud errors which should not affect backup result
             # exit_code = 3 when errors are present but snapshot could be created
             # Since errors are always shown, we don't need restic --verbose option explicitly
