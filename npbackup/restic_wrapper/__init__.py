@@ -47,7 +47,9 @@ logger = getLogger()
 
 
 restic_output_filters = [
-    re.compile(r"^rclone:\s+[0-9]{4}\/[0-1][0-9]\/[0-3][0-9]", re.IGNORECASE | re.MULTILINE),
+    re.compile(
+        r"^rclone:\s+[0-9]{4}\/[0-1][0-9]\/[0-3][0-9]", re.IGNORECASE | re.MULTILINE
+    ),
 ]
 
 
@@ -331,7 +333,7 @@ class ResticRunner:
             raise ValueError(msg)
         if raise_error:
             raise Exception(msg)
-        
+
     def output_filter(self, output: str) -> str:
         """
         Filter potential unwanted garbage from restic output
