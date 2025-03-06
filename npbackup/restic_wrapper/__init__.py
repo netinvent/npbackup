@@ -46,6 +46,9 @@ except ImportError:
 logger = getLogger()
 
 
+no_output_filter_operations = ["dump"]
+dry_mode_operations = ["backup", "forget", "prune", "restore", "rewrite"]
+
 restic_output_filters = [
     re.compile(
         r"^rclone:\s+[0-9]{4}\/[0-1][0-9]\/[0-3][0-9]", re.IGNORECASE | re.MULTILINE
@@ -111,6 +114,7 @@ class ResticRunner:
 
         # Internal value to check whether executor is running, accessed via self.executor_running property
         self._executor_running = False
+        self._executor_operation = None
 
         # Error /warning messages to add for json output
         self.errors_for_json = []
@@ -330,15 +334,19 @@ class ResticRunner:
                 self.warnings_for_json.append(msg)
 
         if raise_error == "ValueError":
-            raise ValueError(msg)
+            raise -ValueError(msg)
         if raise_error:
             raise Exception(msg)
 
     def output_filter(self, output: str) -> str:
         """
-        Filter potential unwanted garbage from restic output
+        Filter potential unwanted garbage from restic output str
         """
         # Filter out rclone logs
+        if self._executor_operation in no_output_filter_operations or not isinstance(
+            output, str
+        ):
+            return output
         for filter in restic_output_filters:
             output = filter.sub("", output)
         return output
@@ -365,18 +373,21 @@ class ResticRunner:
             else ""
         )
 
+        self._executor_operation = fn_name(1)
+
         if self.dry_run:
             # Only some restic commands support --dry-run, and it must be added after the main command
             # eg restic --dry-run backup / doesn't work
             # but restic backup / --dry-run does
             # We need to make sure we put dry-run just after the main command, so we don't add it to the end of a stdin command
-            operation = fn_name(1)
-            if operation in ["backup", "forget", "prune", "restore", "rewrite"]:
+            if self._executor_operation in dry_mode_operations:
                 self.write_logs(
                     "Running in dry mode. No modifications will be done", level="info"
                 )
                 # Replace first occurrence of possible operation
-                cmd = cmd.replace(operation, f"{operation} --dry-run", 1)
+                cmd = cmd.replace(
+                    self._executor_operation, f"{self._executor_operation} --dry-run", 1
+                )
 
         _cmd = f'"{self._binary}"{additional_parameters}{self.generic_arguments} {cmd}'
 
