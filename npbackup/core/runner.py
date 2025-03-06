@@ -207,6 +207,10 @@ def metric_analyser(
                     logger.info("No metrics authentication present.")
                     authentication = None
 
+                # Fix for #150, job name needs to be unique in order to avoid overwriting previous job in push gateway
+                destination = (
+                    f"{destination}___repo_name={repo_name}___action={operation}"
+                )
                 upload_metrics(destination, authentication, no_cert_verify, metrics)
             else:
                 write_metrics_file(
