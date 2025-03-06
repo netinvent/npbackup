@@ -334,7 +334,7 @@ class ResticRunner:
                 self.warnings_for_json.append(msg)
 
         if raise_error == "ValueError":
-            raise -ValueError(msg)
+            raise ValueError(msg)
         if raise_error:
             raise Exception(msg)
 
