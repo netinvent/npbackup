@@ -1,5 +1,5 @@
 # NPBackup default configuration
-conf_version: 3.0
+conf_version: 3.0.1
 audience: public
 repos:
   default:
@@ -46,6 +46,8 @@ groups:
       post_exec_per_command_timeout: 3600
       post_exec_failure_is_fatal: false
       post_exec_execute_even_on_backup_error: true
+      post_backup_housekeeping_percent_chance: 0
+      post_backup_housekeeping_interval: 0																						  
     repo_opts:
       repo_password:
       repo_password_command:
@@ -66,6 +68,8 @@ groups:
         group_by_tags: true
         group_by_paths: false
         ntp_server:
+      prune_max_unused: 0 B
+      prune_max_repack_size:
     prometheus:
       backup_job: ${MACHINE_ID}
       group: ${MACHINE_GROUP}
@@ -86,7 +90,8 @@ global_prometheus:
   no_cert_verify: false
 global_options:
   auto_upgrade: false
-  auto_upgrade_interval: 10
+  auto_upgrade_percent_chance: 15
+  auto_upgrade_interval: 0
   auto_upgrade_server_url:
   auto_upgrade_server_username:
   auto_upgrade_server_password:
