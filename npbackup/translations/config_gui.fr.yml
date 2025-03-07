@@ -77,7 +77,7 @@ fr:
   auto_upgrade_server_username: Nom d'utilisateur serveur
   auto_upgrade_server_password: Mot de passe serveur
   auto_upgrade_percent_chance: Chance de mise à niveau automatique (%%)
-  auto_upgrade_interval: Intervalle de mise à niveau (deprécié)
+  auto_upgrade_interval: Intervalle de mise à niveau
   auto_upgrade_launch: Lancer une mise à niveau
   auto_upgrade_will_quit: Attnetion, la procédure de mise à niveau va quitter ce programme sans notification. Vous devrez attendre 5 minutes pour laisser la procédure se terminer avant de relancer le programme
   auto_upgrade_failed: Procédure de mise à niveau échouée, veuillez consulter les journaux pour plus de détails
@@ -129,6 +129,8 @@ fr:
   keep_tags: Garder les instantanés avec les tags suivants
   post_backup_housekeeping_percent_chance: Chance (%%) de lancer maintenance post-sauvegarde
   post_backup_housekeeping_percent_chance_explanation: Rend aléatoire la maintenance après sauvegarde (0-100%%, 0 = jamais, 100 = toujours)
+  post_backup_housekeeping_interval: Intervalle de maintenance post-sauvegarde
+  post_backup_housekeeping_interval_explanation: Intervalle de nombre d'exécutions de sauvegarde avant lancement operations de maintenance
   optional_ntp_server_uri: URI optionnelle serveur NTP
   prune_max_unused: Données inutilisées max lors des purges
   prune_max_unused_explanation: Taille maximale en pourcentage ou octets de données à conserver lors des opérations de purge maximales

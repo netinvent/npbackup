@@ -76,7 +76,7 @@ en:
   auto_upgrade_server_username: Server username
   auto_upgrade_server_password: Server password
   auto_upgrade_percent_chance: Auto upgrade percent chance (%%)
-  auto_upgrade_interval: Auto upgrade interval (deprecated)
+  auto_upgrade_interval: Auto upgrade runs interval
   auto_upgrade_launch: Launch auto upgrade
   auto_upgrade_will_quit: Warning, launching an upgrade procedure will quit this program without notice. You will have to wait 5 minutes before launching it again for the upgrade to complete
   auto_upgrade_failed: Auto upgrade procedure failed, see logs for further details
@@ -128,6 +128,8 @@ en:
   keep_tags: Keep snapshots with the following tags
   post_backup_housekeeping_percent_chance: Post backup housekeeping run chance (%%)
   post_backup_housekeeping_percent_chance_explanation: Randomize housekeeping runs after backup (0-100%%, 0 = never, 100 = always)
+  post_backup_housekeeping_interval: Post backup housekeeping interval
+  post_backup_housekeeping_interval_explanation: Interval in number of runs between housekeeping runs
   optional_ntp_server_uri: Optional NTP server URI
   prune_max_unused: Prune max unused data
   prune_max_unused_explanation: Maximum percentage or bytes of unused data to keep in when pruning with maximum parameter
