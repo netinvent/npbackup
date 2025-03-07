@@ -33,6 +33,7 @@ from npbackup.restic_metrics import (
 )
 from npbackup.restic_wrapper import ResticRunner
 from npbackup.core.restic_source_binary import get_restic_internal_binary
+from npbackup.core import jobs
 from npbackup.path_helper import CURRENT_DIR, BASEDIR
 from npbackup.__version__ import __intname__ as NAME, version_dict
 from npbackup.__debug__ import _DEBUG, exception_to_string
@@ -1534,7 +1535,13 @@ class NPBackupRunner:
             post_backup_housekeeping_percent_chance = self.repo_config.g(
                 "backup_opts.post_backup_housekeeping_percent_chance"
             )
-            if post_backup_housekeeping_percent_chance:
+            post_backup_housekeeping_interval = self.repo_config.g(
+                "backup_opts.post_backup_houskeeping_interval"
+            )
+            if (
+                post_backup_housekeeping_percent_chance
+                or post_backup_housekeeping_interval
+            ):
                 post_backup_op = "housekeeping"
 
                 current_permissions = self.repo_config.g("permissions")
@@ -1547,7 +1554,11 @@ class NPBackupRunner:
                         level="critical",
                     )
                     raise PermissionError
-                elif randint(1, 100) <= post_backup_housekeeping_percent_chance:
+                elif jobs.schedule_on_chance_or_interval(
+                    "housekeeping-after-backup",
+                    post_backup_housekeeping_percent_chance,
+                    post_backup_housekeeping_interval,
+                ):
                     self.write_logs("Running housekeeping after backup", level="info")
                     # Housekeeping after backup needs to run without threads
                     # We need to keep the queues open since we need to report back to GUI

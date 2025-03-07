@@ -7,116 +7,16 @@ __intname__ = "npbackup.gui.core.upgrade_runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025030601"
+__build__ = "2025030701"
 
 
-import os
-from typing import Optional
-import tempfile
 from logging import getLogger
 from random import randint
 from npbackup.upgrade_client.upgrader import auto_upgrader, _check_new_version
 import npbackup.configuration
-from npbackup.path_helper import CURRENT_DIR
 
 
 logger = getLogger()
-
-
-def _need_upgrade_interval(upgrade_interval: int) -> bool:
-    """
-    TODO: Counter is now deprecated
-
-    Basic counter which allows an upgrade only every X times this is called so failed operations won't end in an endless upgrade loop
-
-    We need to make to select a write counter file that is writable
-    So we actually test a local file and a temp file (less secure for obvious reasons)
-    We just have to make sure that once we can write to one file, we stick to it unless proven otherwise
-
-    The for loop logic isn't straight simple, but allows file fallback
-    """
-
-    # file counter, local, home, or temp if not available
-    counter_file = "npbackup.autoupgrade.log"
-
-    def _write_count(file: str, count: int) -> bool:
-        try:
-            with open(file, "w", encoding="utf-8") as fpw:
-                fpw.write(str(count))
-                return True
-        except OSError:
-            # We may not have write privileges, hence we need a backup plan
-            return False
-
-    def _get_count(file: str) -> Optional[int]:
-        try:
-            with open(file, "r", encoding="utf-8") as fp:
-                count = int(fp.read())
-                return count
-        except OSError as exc:
-            # We may not have read privileges
-            logger.error(f"Cannot read upgrade counter file {file}: {exc}")
-        except ValueError as exc:
-            logger.error(f"Bogus upgrade counter in {file}: {exc}")
-        return None
-
-    try:
-        upgrade_interval = int(upgrade_interval)
-    except ValueError:
-        logger.error("Bogus upgrade interval given. Will not upgrade")
-        return False
-
-    path_list = [
-        os.path.join(tempfile.gettempdir(), counter_file),
-        os.path.join(CURRENT_DIR, counter_file),
-    ]
-    if os.name != "nt":
-        path_list = [os.path.join("/var/log", counter_file)] + path_list
-
-    for file in path_list:
-        if not os.path.isfile(file):
-            if _write_count(file, 1):
-                logger.debug("Initial upgrade counter written to %s", file)
-            else:
-                logger.debug("Cannot write to upgrade counter file %s", file)
-                continue
-        count = _get_count(file)
-        # Make sure we can write to the file before we make any assumptions
-        result = _write_count(file, count + 1)
-        if result:
-            if count >= upgrade_interval:
-                # Reinitialize upgrade counter before we actually approve upgrades
-                if _write_count(file, 1):
-                    logger.info("Auto upgrade has decided upgrade check is required")
-                    return True
-            break
-        else:
-            logger.debug("Cannot write upgrade counter to %s", file)
-            continue
-    return False
-
-
-def _need_upgrade_percent(upgrade_percent: int) -> bool:
-    """
-    Randomly decide if we need an upgrade according to upgrade_percent
-    """
-    if not upgrade_percent:
-        return False
-    if randint(1, 100) <= upgrade_percent:
-        return True
-    return False
-
-
-def need_upgrade(upgrade_percent: int, upgrade_interval: int) -> bool:
-    """
-    Decide if we need an upgrade according to upgrade_interval and upgrade_percent
-    # TODO: Deprecate _need_upgrade_interval
-    """
-    if _need_upgrade_percent(upgrade_percent) or _need_upgrade_interval(
-        upgrade_interval
-    ):
-        return True
-    return False
 
 
 def check_new_version(full_config: dict) -> bool:

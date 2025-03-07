@@ -193,6 +193,7 @@ empty_config_dict = {
                 "post_exec_failure_is_fatal": False,
                 "post_exec_execute_even_on_backup_error": True,
                 "post_backup_housekeeping_percent_chance": 0,  # 0 means disabled, 100 means always
+                "post_backup_housekeeping_interval": 0,  # how many runs between a housekeeping after backup operation
             },
             "repo_opts": {
                 "repo_password": None,
@@ -243,6 +244,7 @@ empty_config_dict = {
     "global_options": {
         "auto_upgrade": False,
         "auto_upgrade_percent_chance": 5,  # On all runs. On 15m interval runs, this could be 5% (ie once a day), on daily runs, this should be 95% (ie once a day)
+        "auto_upgrade_interval": 15,  # How many NPBackup runs before an auto upgrade is attempted
         "auto_upgrade_server_url": None,
         "auto_upgrade_server_username": None,
         "auto_upgrade_server_password": None,

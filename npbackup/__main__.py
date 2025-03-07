@@ -25,6 +25,7 @@ from npbackup.__version__ import version_string, version_dict
 from npbackup.__debug__ import _DEBUG
 from npbackup.common import execution_logs
 from npbackup.core import upgrade_runner
+from npbackup.core import jobs
 from npbackup import key_management
 from npbackup.task import create_scheduled_task
 
@@ -553,7 +554,7 @@ This is free software, and you are welcome to redistribute it under certain cond
             "auto_upgrade_percent_chance"
         ]
     except KeyError:
-        auto_upgrade_percent_chance = 50
+        auto_upgrade_percent_chance = None
 
     # TODO: Deprecated auto_upgrade_interval in favor of auto_upgrade_percent_chance
     try:
@@ -563,8 +564,8 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     if (
         auto_upgrade
-        and upgrade_runner.need_upgrade(
-            auto_upgrade_percent_chance, auto_upgrade_interval
+        and jobs.schedule_on_chance_or_interval(
+            "auto_upgrade", auto_upgrade_percent_chance, auto_upgrade_interval
         )
     ) or args.auto_upgrade:
         if args.auto_upgrade:
