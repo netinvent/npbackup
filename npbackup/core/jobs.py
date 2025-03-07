@@ -92,7 +92,7 @@ def schedule_on_interval(job_name: str, interval: int) -> bool:
                 # Reinitialize counter before we actually approve job run
                 if _write_count(file, 1):
                     logger.info(
-                        f"schedule on inteval has decided {job_name} is required"
+                        f"schedule on interval has decided {job_name} is required"
                     )
                     return True
             break
