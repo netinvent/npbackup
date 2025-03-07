@@ -85,7 +85,7 @@ def _check_new_version(
         return None
     try:
         requestor = Requestor(upgrade_url, username, password)
-        requestor.app_name = "npbackup" + version_dict["version"]
+        requestor.app_name = version_dict["name"] + version_dict["version"]
         requestor.user_agent = __intname__
         requestor.ignore_errors = ignore_errors
         requestor.create_session(authenticated=True)
