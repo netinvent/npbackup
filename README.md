@@ -27,12 +27,14 @@ Still, NPBackup repos are basically managed by restic, and can be viewed / resto
 NPBackup is a multiparadigm backup solution which tries to solve two major backup problems, server and laptop backups !  
 The core design idea is to make backups available (obviously !), even partial, on system / network failures.  
 
->[!IMPORTANT]
+>[!TIP]
 > It's always better to have some data than none
 
 The NPBackup design is the result of a multitude of reald world experience. Examples include:
 
 - For instance, one can configure a "minimum backup size" under which NPBackup reports the backup as failed. Imagine a user moving all it's data from folder A to folder B, while only folder A is setup for backup. Most backup solutions would not complain, but when the time comes for a restore operation, there would be an empty folder. NPBackup informs the monitoring in that scenarios.
+
+- NPBackup checks that all specified backup paths exist prior to launching backups, and informs the monitoring if paths disappeared
 
 - pre and post exec commands have timeouts. There are way too many situations where a pre command is stuck, so backup never happens.
 
@@ -40,7 +42,7 @@ The NPBackup design is the result of a multitude of reald world experience. Exam
 
 - Execution never happens, so monitoring doesn't show any errors. Once NPBackup has reported to the monitoring, the dashboard will show every client that hasn't successfully reported in days, making it easy to spot non-working clients
 
->[!IMPORTANT]
+>[!TIP]
 > It's always better to have too many alerts than none
 
 It is a set and forget solution. Still, every operation can send a metric to a prometheus monitoring system. Because forgetting the admin burden is okay only when everything is well monitored.
@@ -54,6 +56,9 @@ If a recent backup already exists, it will recheck later, or else, it will launc
 In order to avoid a sluggish user experience while the backup is in progress, process and io priority are set to low by default.  
 Note that both the check interval and what's called recent backup (like a less than 24h old backup) options can be configured.  
 NPBackup also triggers Windows VSS, but still will proceed with backups on VSS failures, allowing a backup to exist in all scenarios.
+
+NPBackup also has the ability to launch housekeeping operations after backups in a random chance way (0-100%) so we don't get to run housekeeping after every backup.
+
 
 #### The usual server backup solution
 
@@ -120,6 +125,7 @@ Backups are run by setting up a scheduled task / cron job manually or via integr
 - Retention policies can be executed with opt-in NTP queries in order to avoid date attacks
 - Check / repair repository options*
 - Minimum backup size checks
+- Missing / moved backup location check
 
 #### Performance
 
