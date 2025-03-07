@@ -856,7 +856,7 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
             return full_config
     except OSError as exc:
         logger.critical(f"Cannot load configuration file from {config_file}: {exc}")
-        logger.debut("Trace:", exc_info=True)
+        logger.debug("Trace:", exc_info=True)
         return False
 
 
