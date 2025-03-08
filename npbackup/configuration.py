@@ -496,6 +496,9 @@ def extract_permissions_from_full_config(full_config: dict) -> dict:
     This function is in order to expand when loading config
     """
     for object_type in ("repos", "groups"):
+        if full_config.g(object_type) is None:
+            logger.info(f"No {object_type} found in config")
+            continue
         for object_name in full_config.g(object_type).keys():
             repo_uri = full_config.g(f"{object_type}.{object_name}.repo_uri")
             if repo_uri:
