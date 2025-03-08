@@ -1787,7 +1787,8 @@ class NPBackupRunner:
     @apply_config_to_restic_runner
     def prune(self, prune_max: bool = False) -> bool:
         self.write_logs(
-            f"Pruning snapshots for repo {self.repo_config.g('name')}", level="info"
+            f"Pruning snapshots for repo {self.repo_config.g('name')}{' at maximum efficiency' if prune_max else ''}",
+            level="info",
         )
         max_repack_size = self.repo_config.g("repo_opts.prune_max_repack_size")
         if prune_max:

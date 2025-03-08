@@ -157,11 +157,18 @@ This is free software, and you are welcome to redistribute it under certain cond
         required=False,
         help="Checks the repository. Valid arguments are 'quick' (metadata check) and 'full' (metadata + data check)",
     )
-    parser.add_argument("--prune", action="store_true", help="Prune data in repository")
+    parser.add_argument(
+        "--prune",
+        type=str,
+        default=None,
+        const="standard",
+        nargs="?",
+        help="Prune data in repository, also accepts max parameter in order prune reclaiming maximum space",
+    )
     parser.add_argument(
         "--prune-max",
         action="store_true",
-        help="Prune data in repository reclaiming maximum space",
+        help="Deprecated in favor of --prune max",
     )
     parser.add_argument("--unlock", action="store_true", help="Unlock repository")
     parser.add_argument(
@@ -666,7 +673,12 @@ This is free software, and you are welcome to redistribute it under certain cond
             sys.exit(76)
         cli_args["op_args"] = {"read_data": False if args.check == "quick" else True}
     elif args.prune or args.group_operation == "prune":
+        if args.prune not in ("standard", "max"):
+            json_error_logging(False, "Bogus prune operation given", level="critical")
+            sys.exit(76)
         cli_args["operation"] = "prune"
+        if args.prune == "max":
+            cli_args["op_args"] = {"prune_max": True}
     elif args.prune_max or args.group_operation == "prune_max":
         cli_args["operation"] = "prune"
         cli_args["op_args"] = {"prune_max": True}
