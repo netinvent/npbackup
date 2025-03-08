@@ -113,7 +113,7 @@ def test_npbackup_cli_wrong_config_path():
             __main__.main()
     except SystemExit:
         print(str(logs))
-        assert "Config file npbackup-non-existent.conf cannot be read" in str(
+        assert "Config file npbackup-non-existent.conf cannot be read or does not exist" in str(
             logs
         ), "There should be a critical error when config file is not given"
 

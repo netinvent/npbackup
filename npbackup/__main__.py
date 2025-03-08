@@ -380,7 +380,7 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     if args.config_file:
         if not os.path.isfile(args.config_file):
-            msg = f"Config file {args.config_file} cannot be read."
+            msg = f"Config file {args.config_file} cannot be read or does not exist"
             json_error_logging(False, msg, "critical")
             sys.exit(70)
         config_file = Path(args.config_file).absolute()
