@@ -555,8 +555,6 @@ This is free software, and you are welcome to redistribute it under certain cond
         ]
     except KeyError:
         auto_upgrade_percent_chance = None
-
-    # TODO: Deprecated auto_upgrade_interval in favor of auto_upgrade_percent_chance
     try:
         auto_upgrade_interval = full_config["global_options"]["auto_upgrade_interval"]
     except KeyError:
@@ -726,7 +724,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         "quick_check",  # TODO: deprecated
         "full_check",  # TODO: deprecated
         "prune",
-        "prune_max",
+        "prune_max",  # TODO: deprecated
         "unlock",
         "repair",
         "repair_index",  # TODO: deprecated
