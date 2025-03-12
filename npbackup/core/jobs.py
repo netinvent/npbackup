@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.jobs"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025030701"
+__build__ = "2025031201"
 
 # This module helps scheduling jobs without using a daemon
 # We can schedule on a random percentage or a fixed interval
@@ -35,13 +35,13 @@ def schedule_on_interval(job_name: str, interval: int) -> bool:
     The for loop logic isn't straight simple, but allows file fallback
     """
     if not interval:
-        logger.debug(f"No interval given for schedule: {interval}")
+        logger.debug(f"No interval given for job {job_name}: {interval}")
         return False
 
     try:
         interval = int(interval)
     except ValueError:
-        logger.error(f"No valid interval given for schedule: {interval}")
+        logger.error(f"No valid interval given for job {job_name}: {interval}")
         return False
 
     # file counter, local, home, or temp if not available
@@ -107,12 +107,13 @@ def schedule_on_chance(job_name: str, chance_percent: int) -> bool:
     Randomly decide if we need to run a job according to chance_percent
     """
     if not chance_percent:
+        logger.debug(f"No chance percent given for job {job_name}: {chance_percent}")
         return False
     try:
         chance_percent = int(chance_percent)
     except ValueError:
         logger.error(
-            f"No valid chance percent given for schedule: {chance_percent}, job {job_name}"
+            f"No valid chance percent given for job {job_name}: {chance_percent}"
         )
         return False
     if randint(1, 100) <= chance_percent:
@@ -128,7 +129,7 @@ def schedule_on_chance_or_interval(
     Decide if we will run a job according to chance_percent or interval
     """
     if schedule_on_chance(chance_percent, job_name) or schedule_on_interval(
-        interval, job_name
+        job_name, interval
     ):
         return True
     return False
