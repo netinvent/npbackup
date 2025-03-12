@@ -24,6 +24,19 @@ Since we run cube backup, we could "bake in" full KVM support
 Caveats:
  - We'll need to re-implement libvirt controller class for linux
 
+### Proxmox Backup plugin
+Assumption: Since we can backup KVM, we can also backup Proxmox ?
+Caveats:
+ - vzdump produces a specific archive format (using lzop) which would need to be decompressed to allow good deduplication (https://git.proxmox.com/?p=pve-qemu.git;a=blob;f=vma_spec.txt; )
+ - vzdump vanilla files can be deduped with block dedup tech, but badly (test done using two vzdump backups, one after another to zfs 2.3.0 with fast dedup and a 160GB ddt table limit):
+     - 1M recordsize = 0%
+     - 128K recordsize = 1%
+     - 64K recordsize = 19%
+     - 32K recordsize = 65%
+     - 16k recordsize = 79%
+  - So basically block dedup is bad for vzdump files. restic uses 4M pack sizes minimum. Tests have shown restic dedup algorithm to dedup 0% of data properly in the same file (rsync tests have shown about 40% file differences using patch method)
+  - We need to "open" the vzdump files in order to store them properly (with vma utility), but present them to proxmox as vzdump files. We could check if vzdump can produce proper tar files with --stdout, or we could also just not use vzdump but rather do it the good old way of backing up qcow2 + xml files via qm
+  
 ### SQL Backups
 That's a pre-script job ;)
 Perhaps, provide pre-scripts for major SQL engines
