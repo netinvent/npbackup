@@ -128,7 +128,7 @@ def schedule_on_chance_or_interval(
     """
     Decide if we will run a job according to chance_percent or interval
     """
-    if schedule_on_chance(chance_percent, job_name) or schedule_on_interval(
+    if schedule_on_chance(job_name, chance_percent) or schedule_on_interval(
         job_name, interval
     ):
         return True
