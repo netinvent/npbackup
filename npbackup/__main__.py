@@ -805,7 +805,11 @@ def main():
         datetime.now(timezone.utc),
     )
     # kill_childs normally would not be necessary, but let's just be foolproof here (kills restic subprocess in all cases)
-    atexit.register(kill_childs, os.getpid(), grace_period=30)
+    if os.name == "nt":
+        backend_process = "restic.exe"
+    else:
+        backend_process = "restic"
+    atexit.register(kill_childs, os.getpid(), grace_period=30, process_name=backend_process)
     try:
         cli_interface()
         worst_error = logger.get_worst_logger_level()
