@@ -809,7 +809,9 @@ def main():
         backend_process = "restic.exe"
     else:
         backend_process = "restic"
-    atexit.register(kill_childs, os.getpid(), grace_period=30, process_name=backend_process)
+    atexit.register(
+        kill_childs, os.getpid(), grace_period=30, process_name=backend_process
+    )
     try:
         cli_interface()
         worst_error = logger.get_worst_logger_level()
