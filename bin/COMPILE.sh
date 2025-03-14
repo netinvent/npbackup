@@ -15,9 +15,6 @@ export PYTHONPATH=/opt/npbackup
 
 /opt/npbackup/venv/bin/python -m pip install --upgrade pip || exit 1
 /opt/npbackup/venv/bin/python -m pip install pytest ||exit 1
-# Uninstall prior versions of Freesimplegui if present so we get to use the git commit version
-# which otherwise would not overwrite existing setup
-/opt/npbackup/venv/bin/python -m pip uninstall -y freesimplegui
 /opt/npbackup/venv/bin/python -m pip install --upgrade -r npbackup/requirements.txt || exit 1
 
 /opt/npbackup/venv/bin/python -m pytest /opt/npbackup/tests || exit 1
