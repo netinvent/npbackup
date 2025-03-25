@@ -596,7 +596,7 @@ This is free software, and you are welcome to redistribute it under certain cond
             # Don't actually log errors for upgrades, since they could fail for various reasons
             # but change the exit code of the program
             # Prefer using supervision for upgrades
-            logger.info("Interval initiated auto upgrade failed")
+            logger.info("Interval initiated auto upgrade not initiated")
 
     # Prepare program run
     cli_args = {
