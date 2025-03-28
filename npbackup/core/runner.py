@@ -37,6 +37,7 @@ from npbackup.core import jobs
 from npbackup.path_helper import CURRENT_DIR, BASEDIR
 from npbackup.__version__ import __intname__ as NAME, version_dict
 from npbackup.__debug__ import _DEBUG, exception_to_string
+from npbackup.__env__ import MAX_ALLOWED_NTP_OFFSET
 
 
 logger = logging.getLogger()
@@ -238,8 +239,10 @@ def get_ntp_offset(ntp_server: str) -> Optional[float]:
         return response.offset
     except ntplib.NTPException as exc:
         logger.error(f"Cannot get NTP offset from {ntp_server}: {exc}")
+        logger.debug("Trace:", exc_info=True)
     except Exception as exc:
         logger.error(f"Cannot reach NTP server {ntp_server}: {exc}")
+        logger.debug("Trace:", exc_info=True)
     return None
 
 
@@ -1623,10 +1626,13 @@ class NPBackupRunner:
                     f"Checking time against ntp server {ntp_server}", level="info"
                 )
                 offset = get_ntp_offset(ntp_server)
-                if not offset or offset >= 600:
-                    msg = f"Offset from NTP server {ntp_server} is too high: {int(offset)} seconds. Won't apply policy"
-                    self.write_logs(msg, level="critical")
-                    return self.convert_to_json_output(False, msg)
+                if not offset or offset > float(MAX_ALLOWED_NTP_OFFSET):
+                    if not offset:
+                        msg = f"Offset cannot be obtained from NTP server {ntp_server}"
+                    elif offset > float(MAX_ALLOWED_NTP_OFFSET):
+                        msg = f"Offset from NTP server {ntp_server} is too high: {offset} seconds. Won't apply policy"
+                        self.write_logs(msg, level="critical")
+                        return self.convert_to_json_output(False, msg)
 
             # Build policy from config
             policy = {}

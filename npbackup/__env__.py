@@ -34,6 +34,9 @@ FAST_COMMANDS_TIMEOUT = 180
 # # Wait x seconds before we actually do the upgrade so current program could quit before being erased
 UPGRADE_DEFER_TIME = 60
 
+# Maximum allowed time offset in seconds to allow policy operations to run
+MAX_ALLOWED_NTP_OFFSET = 600.0
+
 if not "BUILD_TYPE" in globals():
     BUILD_TYPE = "UnknownBuildType"
 
