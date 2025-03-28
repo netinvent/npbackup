@@ -52,7 +52,8 @@ dry_mode_operations = ["backup", "forget", "prune", "restore", "rewrite"]
 restic_output_filters = [
     # we need to remove rclone debug log lines so restic output becomes pareseable
     re.compile(
-        r"^rclone:\s+[0-9]{4}\/[0-1][0-9]\/[0-3][0-9]\s+[0-2][0-9]:[0-5][0-9]:[0-5][0-9]\s+DEBUG.*\n?", re.IGNORECASE | re.MULTILINE
+        r"^rclone:\s+[0-9]{4}\/[0-1][0-9]\/[0-3][0-9]\s+[0-2][0-9]:[0-5][0-9]:[0-5][0-9]\s+DEBUG.*\n?",
+        re.IGNORECASE | re.MULTILINE,
     ),
 ]
 
