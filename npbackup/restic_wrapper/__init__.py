@@ -1404,7 +1404,12 @@ class ResticRunner:
         """
         backup_ts = datetime(1, 1, 1, 0, 0)
         # Don't bother to deal with missing delta or snapshot list
-        if not snapshot_list or not delta:
+        if not snapshot_list or not isinstance(snapshot_list, list):
+            logger.warning("No valid snapshot list given")
+            logger.debug(f"Snapshot list: {snapshot_list}")
+            return False, backup_ts
+        if not delta:
+            logger.warning("No delta given for determining recent snapshot")
             return False, backup_ts
         tz_aware_timestamp = datetime.now(timezone.utc).astimezone()
 
