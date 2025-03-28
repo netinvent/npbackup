@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025021701"
-__version__ = "2.4.1"
+__build__ = "2025032801"
+__version__ = "2.4.2"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -50,8 +50,9 @@ no_output_filter_operations = ["dump"]
 dry_mode_operations = ["backup", "forget", "prune", "restore", "rewrite"]
 
 restic_output_filters = [
+    # we need to remove rclone debug log lines so restic output becomes pareseable
     re.compile(
-        r"^rclone:\s+[0-9]{4}\/[0-1][0-9]\/[0-3][0-9]", re.IGNORECASE | re.MULTILINE
+        r"^rclone:\s+[0-9]{4}\/[0-1][0-9]\/[0-3][0-9]\s+[0-2][0-9]:[0-5][0-9]:[0-5][0-9]\s+DEBUG.*\n?", re.IGNORECASE | re.MULTILINE
     ),
 ]
 
@@ -343,9 +344,11 @@ class ResticRunner:
         Filter potential unwanted garbage from restic output str
         """
         # Filter out rclone logs
-        if self._executor_operation in no_output_filter_operations or not isinstance(
-            output, str
-        ):
+        if self._executor_operation in no_output_filter_operations:
+            logger.debug(f"Skipping output filter for {self._executor_operation}")
+            return output
+        if not isinstance(output, str):
+            logger.debug(f"Skipping output filter for non str output")
             return output
         for filter in restic_output_filters:
             output = filter.sub("", output)
