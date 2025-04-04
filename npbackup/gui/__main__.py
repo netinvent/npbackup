@@ -606,10 +606,11 @@ def _main_gui(viewer_mode: bool):
         return config_file, action
 
     def gui_update_state() -> None:
-        nonlocal current_state
-        nonlocal backup_tz
-        nonlocal repo_type
-        nonlocal snapshot_list
+        # Do not redefine those variables here since they're not modified, fixes flake8 F824
+        # nonlocal current_state
+        # nonlocal backup_tz
+        # nonlocal repo_type
+        # nonlocal snapshot_list
 
         if current_state:
             window["--STATE-BUTTON--"].Update(

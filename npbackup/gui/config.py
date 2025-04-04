@@ -302,17 +302,18 @@ def config_gui(full_config: dict, config_file: str):
         Update gui values depending on their type
         This not called directly, but rather from update_object_gui which calls iter_over_config which calls this function
         """
-        nonlocal BAD_KEYS_FOUND_IN_CONFIG
+        # Do not redefine those variables here since they're not modified, fixes flake8 F824
+        # nonlocal BAD_KEYS_FOUND_IN_CONFIG
 
-        nonlocal backup_paths_tree
-        nonlocal tags_tree
-        nonlocal exclude_files_tree
-        nonlocal exclude_patterns_tree
-        nonlocal pre_exec_commands_tree
-        nonlocal post_exec_commands_tree
-        nonlocal global_prometheus_labels_tree
-        nonlocal env_variables_tree
-        nonlocal encrypted_env_variables_tree
+        # nonlocal backup_paths_tree
+        # nonlocal tags_tree
+        # nonlocal exclude_files_tree
+        # nonlocal exclude_patterns_tree
+        # nonlocal pre_exec_commands_tree
+        # nonlocal post_exec_commands_tree
+        # nonlocal global_prometheus_labels_tree
+        # nonlocal env_variables_tree
+        # nonlocal encrypted_env_variables_tree
 
         try:
             # Don't bother to update repo name
