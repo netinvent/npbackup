@@ -10,8 +10,6 @@ __license__ = "GPL-3.0-only"
 __build__ = "2025040401"
 __version__ = "npbackup 3.0.0+"
 
-MIN_CONF_VERSION = "3.0"
-from npbackup.__version__ import __version__ as MAX_CONF_VERSION
 
 from typing import Tuple, Optional, List, Any, Union
 import sys
@@ -30,43 +28,18 @@ from cryptidy import symmetric_encryption as enc
 from ofunctions.random import random_string
 from ofunctions.misc import replace_in_iterable, BytesConverter, iter_over_keys
 from resources.customization import ID_STRING
-from npbackup import key_management
+from npbackup.key_management import AES_KEY, EARLIER_AES_KEY, IS_PRIV_BUILD, get_aes_key
+
+
+MIN_CONF_VERSION = "3.0"
+from npbackup.__version__ import __version__ as MAX_CONF_VERSION
 
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
 
-# Try to import a private key, if not available, fallback to the default key
-try:
-    from PRIVATE._private_secret_keys import AES_KEY
-    from PRIVATE._obfuscation import obfuscation
-
-    AES_KEY = obfuscation(AES_KEY)
-    IS_PRIV_BUILD = True
-    try:
-        from PRIVATE._private_secret_keys import EARLIER_AES_KEY
-
-        EARLIER_AES_KEY = obfuscation(EARLIER_AES_KEY)
-    except ImportError:
-        EARLIER_AES_KEY = None
-except ImportError:
-    # If no private keys are used, then let's use the public ones
-    try:
-        from npbackup.secret_keys import AES_KEY
-        from npbackup.obfuscation import obfuscation
-
-        AES_KEY = obfuscation(AES_KEY)
-        IS_PRIV_BUILD = False
-        try:
-            from npbackup.secret_keys import EARLIER_AES_KEY
-        except ImportError:
-            EARLIER_AES_KEY = None
-    except ImportError:
-        print("No secret_keys file. Please read documentation.")
-        sys.exit(1)
-
 
 logger = getLogger()
-opt_aes_key = key_management.get_aes_key()
+opt_aes_key = get_aes_key()
 if opt_aes_key:
     AES_KEY = opt_aes_key
 

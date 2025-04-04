@@ -17,7 +17,7 @@ import sys
 import psutil
 from ofunctions.platform import python_arch, get_os
 import npbackup.__env__
-from npbackup.configuration import IS_PRIV_BUILD
+from npbackup.key_management import IS_PRIV_BUILD
 from npbackup.core.nuitka_helper import IS_COMPILED
 
 

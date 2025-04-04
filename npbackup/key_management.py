@@ -3,17 +3,50 @@
 #
 # This file is part of npbackup
 
-__intname__ = "npbackup.get_key"
+__intname__ = "npbackup.key_management"
 
 
+import sys
 import os
 from logging import getLogger
 from command_runner import command_runner
 from cryptidy.symmetric_encryption import generate_key
 from npbackup.obfuscation import obfuscation
 
+sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
+
 
 logger = getLogger()
+
+
+# Try to import a private key, if not available, fallback to the default key
+try:
+    from PRIVATE._private_secret_keys import AES_KEY
+    from PRIVATE._obfuscation import obfuscation
+
+    AES_KEY = obfuscation(AES_KEY)
+    IS_PRIV_BUILD = True
+    try:
+        from PRIVATE._private_secret_keys import EARLIER_AES_KEY
+
+        EARLIER_AES_KEY = obfuscation(EARLIER_AES_KEY)
+    except ImportError:
+        EARLIER_AES_KEY = None
+except ImportError:
+    # If no private keys are used, then let's use the public ones
+    try:
+        from npbackup.secret_keys import AES_KEY
+        from npbackup.obfuscation import obfuscation
+
+        AES_KEY = obfuscation(AES_KEY)
+        IS_PRIV_BUILD = False
+        try:
+            from npbackup.secret_keys import EARLIER_AES_KEY
+        except ImportError:
+            EARLIER_AES_KEY = None
+    except ImportError:
+        print("No secret_keys file. Please read documentation.")
+        sys.exit(1)
 
 
 def get_aes_key():
