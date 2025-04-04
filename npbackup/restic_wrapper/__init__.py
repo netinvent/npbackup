@@ -1094,9 +1094,10 @@ class ResticRunner:
         if additional_backup_only_parameters:
             cmd += " {}".format(additional_backup_only_parameters)
 
-        # Only restic versions 0.18+ support this parameter
+        # Only restic versions 0.18+ support this parameter under Windows
         if (
             self.ignore_cloud_files
+            and os.name == "nt"
             and self._binary_version
             and version_parse(str(self._binary_version)) >= version_parse("0.18")
         ):
