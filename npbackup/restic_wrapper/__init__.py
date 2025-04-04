@@ -612,7 +612,7 @@ class ResticRunner:
             if exit_code == 0:
                 try:
                     self._binary_version = re.search(
-                        "restic\s+(.*)\s+compiled", output
+                        r"restic\s+(.*)\s+compiled", output
                     ).group(1)
                 except AttributeError:
                     self.write_logs(
