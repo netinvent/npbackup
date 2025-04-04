@@ -7,11 +7,11 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025030501"
+__build__ = "2025040401"
 __version__ = "npbackup 3.0.0+"
 
 MIN_CONF_VERSION = "3.0"
-MAX_CONF_VERSION = "3.0.1"
+from npbackup.__version__ import __version__ as MAX_CONF_VERSION
 
 from typing import Tuple, Optional, List, Any, Union
 import sys
@@ -25,7 +25,7 @@ from logging import getLogger
 import re
 import platform
 import zlib
-from packaging import version
+from packaging.version import parse as version_parse
 from cryptidy import symmetric_encryption as enc
 from ofunctions.random import random_string
 from ofunctions.misc import replace_in_iterable, BytesConverter, iter_over_keys
@@ -839,10 +839,10 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
                 logger.critical(f"Config file {config_file} seems empty !")
                 return False
             try:
-                conf_version = version.parse(str(full_config.g("conf_version")))
-                if conf_version < version.parse(
+                conf_version = version_parse(str(full_config.g("conf_version")))
+                if conf_version < version_parse(
                     MIN_CONF_VERSION
-                ) or conf_version > version.parse(MAX_CONF_VERSION):
+                ) or conf_version > version_parse(MAX_CONF_VERSION):
                     logger.critical(
                         f"Config file version {str(conf_version)} is not in required version range min={MIN_CONF_VERSION}, max={MAX_CONF_VERSION}"
                     )
