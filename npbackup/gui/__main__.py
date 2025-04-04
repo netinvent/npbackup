@@ -605,12 +605,7 @@ def _main_gui(viewer_mode: bool):
         window.close()
         return config_file, action
 
-    def gui_update_state() -> None:
-        # Do not redefine those variables here since they're not modified, fixes flake8 F824
-        # nonlocal current_state
-        # nonlocal backup_tz
-        # nonlocal repo_type
-        # nonlocal snapshot_list
+    def gui_update_state(current_state, backup_tz, snapshot_list, repo_type) -> None:
 
         if current_state:
             window["--STATE-BUTTON--"].Update(
@@ -1104,7 +1099,7 @@ def _main_gui(viewer_mode: bool):
             current_state = None
             backup_tz = None
             snapshot_list = []
-        gui_update_state()
+        gui_update_state(current_state, backup_tz, snapshot_list, repo_type)
 
     while True:
         event, values = window.read(timeout=60000)
@@ -1120,7 +1115,7 @@ def _main_gui(viewer_mode: bool):
                 ) = npbackup.configuration.get_repo_config(full_config, active_repo)
                 current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
                 repo_type, _ = get_anon_repo_uri(repo_config.g("repo_uri"))
-                gui_update_state()
+                gui_update_state(current_state, backup_tz, snapshot_list, repo_type)
             else:
                 sg.PopupError("Repo not existent in config", keep_on_top=True)
                 continue
@@ -1250,7 +1245,7 @@ def _main_gui(viewer_mode: bool):
                 viewer_mode and viewer_repo_uri and viewer_repo_password
             ):
                 current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
-                gui_update_state()
+                gui_update_state(current_state, backup_tz, snapshot_list, repo_type)
                 if current_state is None:
                     sg.Popup(_t("main_gui.cannot_get_repo_status"))
 
