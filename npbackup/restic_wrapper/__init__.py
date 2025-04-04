@@ -440,7 +440,7 @@ class ResticRunner:
             and os.name == "nt"
             and self.ignore_cloud_files
             and self._binary_version
-            and version_parse(str(self._binary_version)) < version_parse(0.18)
+            and version_parse(str(self._binary_version)) < version_parse("0.18")
         ):
             output = self.output_filter(output)
             # We need restic >= 0.18 to have the --ignore-cloud-files option
@@ -624,7 +624,9 @@ class ResticRunner:
                         level="warning",
                     )
             else:
-                self.write_logs(f"Cannot get backend version: {output}", level="warning")
+                self.write_logs(
+                    f"Cannot get backend version: {output}", level="warning"
+                )
         else:
             self.write_logs(
                 "Cannot get backend version: No binary defined.", level="error"
@@ -1096,7 +1098,7 @@ class ResticRunner:
         if (
             self.ignore_cloud_files
             and self._binary_version
-            and version_parse(str(self._binary_version)) >= version_parse(0.18)
+            and version_parse(str(self._binary_version)) >= version_parse("0.18")
         ):
             cmd += " --exclude-cloud-files"
 
