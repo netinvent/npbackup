@@ -10,7 +10,7 @@ __description__ = "NetPerfect Backup Client"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2025040401"
-__version__ = "3.0.2"
+__version__ = "3.0.2-dev"
 
 
 import sys
