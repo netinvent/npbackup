@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025032801"
-__version__ = "2.4.2"
+__build__ = "2025040401"
+__version__ = "2.5.0"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -21,6 +21,7 @@ import dateutil.parser
 import queue
 from functools import wraps
 from command_runner import command_runner
+from packaging.version import parse as version_parse
 from ofunctions.misc import BytesConverter, fn_name
 from npbackup.__debug__ import _DEBUG
 from npbackup.__env__ import (
@@ -80,6 +81,7 @@ class ResticRunner:
         self.backup_result_content = None
 
         self._binary = None
+        self._binary_version = None
         self.binary_search_paths = binary_search_paths
 
         self._is_init = None
@@ -106,7 +108,7 @@ class ResticRunner:
                 self._repo_type = "local"
         except AttributeError:
             self._repo_type = None
-        self._ignore_cloud_files = True
+        self._ignore_cloud_files = False
         self._additional_parameters = None
         self._environment_variables = {}
         self._encrypted_environment_variables = {}
@@ -430,9 +432,17 @@ class ResticRunner:
         if exit_code == 0:
             self.last_command_status = True
             return True, self.output_filter(output)
-        if exit_code == 3 and os.name == "nt" and self.ignore_cloud_files:
+        if (
+            exit_code == 3
+            and os.name == "nt"
+            and self.ignore_cloud_files
+            and self._binary_version
+            and version_parse(str(self._binary_version)) < version_parse(0.18)
+        ):
             output = self.output_filter(output)
-            # TEMP-FIX-4155, since we don't have reparse point support for Windows, see https://github.com/restic/restic/issues/4155, we have to filter manually for cloud errors which should not affect backup result
+            # We need restic >= 0.18 to have the --ignore-cloud-files option
+            # Elder versions will use this pathetic workaround
+            # FIX-4155, since we don't have reparse point support for Windows, see https://github.com/restic/restic/issues/4155, we have to filter manually for cloud errors which should not affect backup result
             # exit_code = 3 when errors are present but snapshot could be created
             # Since errors are always shown, we don't need restic --verbose option explicitly
 
@@ -450,7 +460,7 @@ class ResticRunner:
                 self.last_command_status = True
                 return True, output
             self.write_logs("Some files could not be backed up", level="error")
-            # TEMP-FIX-4155-END
+            # FIX-4155-END
         self.last_command_status = False
 
         # From here, we assume that we have errors
@@ -586,12 +596,12 @@ class ResticRunner:
         if not os.path.isfile(value):
             raise ValueError("Non existent binary given: {}".format(value))
         self._binary = value
-        version = self.binary_version
-        self.write_logs(f"Using binary {version}", level="info")
+        self.binary_version
+        self.write_logs(f"Using binary {self._binary_version}", level="info")
 
     @property
     def binary_version(self) -> Optional[str]:
-        if self._binary:
+        if self._binary and self._binary_version is None:
             _cmd = "{} version".format(self._binary)
             exit_code, output = command_runner(
                 _cmd,
@@ -600,7 +610,15 @@ class ResticRunner:
                 encoding="utf-8",
             )
             if exit_code == 0:
-                return output.strip()
+                try:
+                    self._binary_version = re.search(
+                        "restic\s+(.*)\s+compiled", output
+                    ).group(1)
+                except AttributeError:
+                    self.write_logs(
+                        f"Cannot extract backend version from output: {output}",
+                        level="warning",
+                    )
             self.write_logs(f"Cannot get backend version: {output}", level="warning")
         else:
             self.write_logs(
@@ -1068,6 +1086,14 @@ class ResticRunner:
                 cmd += " --tag {}".format(tag)
         if additional_backup_only_parameters:
             cmd += " {}".format(additional_backup_only_parameters)
+
+        # Only restic versions 0.18+ support this parameter
+        if (
+            self.ignore_cloud_files
+            and self._binary_version
+            and version_parse(str(self._binary_version)) >= version_parse(0.18)
+        ):
+            cmd += " --exclude-cloud-files"
 
         if read_from_stdin:
             cmd += " --stdin"
