@@ -81,6 +81,9 @@ class ResticRunner:
         self.backup_result_content = None
 
         self._binary = None
+        # Contains output of restic version command
+        self._binary_full_version = ""
+        # Contains parsed version number only
         self._binary_version = None
         self.binary_search_paths = binary_search_paths
 
@@ -597,7 +600,7 @@ class ResticRunner:
             raise ValueError("Non existent binary given: {}".format(value))
         self._binary = value
         self.binary_version
-        self.write_logs(f"Using binary {self._binary_version}", level="info")
+        self.write_logs(f"Using binary {self._binary_full_version}", level="info")
 
     @property
     def binary_version(self) -> Optional[str]:
@@ -611,6 +614,7 @@ class ResticRunner:
             )
             if exit_code == 0:
                 try:
+                    self._binary_full_version = output.strip()
                     self._binary_version = re.search(
                         r"restic\s+(.*)\s+compiled", output
                     ).group(1)
@@ -619,7 +623,8 @@ class ResticRunner:
                         f"Cannot extract backend version from output: {output}",
                         level="warning",
                     )
-            self.write_logs(f"Cannot get backend version: {output}", level="warning")
+            else:
+                self.write_logs(f"Cannot get backend version: {output}", level="warning")
         else:
             self.write_logs(
                 "Cannot get backend version: No binary defined.", level="error"
