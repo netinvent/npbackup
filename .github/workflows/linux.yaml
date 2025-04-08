@@ -14,7 +14,7 @@ jobs:
         # As of 2023/08/30, we have removed python 2.7 since github actions won't provide it anymore
         # As of 2024/09/15, we have (temporarily) removed 'pypy-3.10' and 'pypy-3.8' since msgspec won't compile properly
         # As of 2024/12/24, we have remove python 3.7 as they don't work anymore with linux on github actions
-        python-version: [3.8, 3.9, "3.10", "3.11", "3.12"]
+        python-version: [3.8, 3.9, "3.10", "3.11", "3.12", "3.13"]
 
     steps:
     - uses: actions/checkout@v3

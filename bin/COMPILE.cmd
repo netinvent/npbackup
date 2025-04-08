@@ -3,9 +3,9 @@
 :: This is an example compiler script
 
 SET PYTHON64=c:\python313-64\python.exe
-SET PYTHON64-LEGACY=c:\python37-64\python.exe
+SET PYTHON64-LEGACY=c:\python38-64\python.exe
 SET PYTHON32=c:\python313-32\python.exe
-SET PYTHON32-LEGACY=c:\python37-32\python.exe
+SET PYTHON32-LEGACY=c:\python38-32\python.exe
 
 
 cd C:\GIT\npbackup
