@@ -30,7 +30,7 @@ import shutil
 import argparse
 import atexit
 from command_runner import command_runner
-from ofunctions.platform import python_arch, get_os
+from ofunctions.platform import python_arch
 
 if os.name == "nt":
     EXTERNAL_SIGNER = r"C:\ev_signer_npbackup\ev_signer_npbackup.exe"
@@ -175,27 +175,6 @@ def move_audience_files(audience):
             raise "Bogus audience"
 
 
-"""
-def get_conf_dist_file(audience):
-    platform = get_os().lower()
-    if audience == "private":
-        dist_conf_file_path = os.path.join(
-            BASEDIR,
-            os.pardir,
-            "PRIVATE",
-            "_private_npbackup.{}.conf.dist".format(platform),
-        )
-    else:
-        dist_conf_file_path = os.path.join(
-            BASEDIR, os.pardir, "examples", "npbackup.{}.conf.dist".format(platform)$
-        )
-    if not os.path.isfile(dist_conf_file_path):
-        print("DIST CONF FILE NOT FOUND: {}".format(dist_conf_file_path))
-        return None
-    return dist_conf_file_path
-"""
-
-
 def have_nuitka_commercial():
     try:
         import nuitka.plugins.commercial
@@ -221,6 +200,8 @@ def compile(
         sys.exit(1)
     source_program = "bin/npbackup-{}".format(build_type)
 
+    if IS_LEGACY:
+        arch = f"{arch}-legacy"
     if onefile:
         suffix = "-{}-{}".format(build_type, arch)
 
@@ -424,8 +405,7 @@ def create_archive(
         archive_extension = "zip"
     else:
         archive_extension = "tar.gz"
-    if IS_LEGACY:
-        arch = f"{arch}-legacy"
+
     target_archive = f"{output_dir}/npbackup-{platform}-{arch}-{build_type}-{audience}.{archive_extension}"
     if os.path.isfile(target_archive):
         os.remove(target_archive)
