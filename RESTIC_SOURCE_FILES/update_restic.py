@@ -6,7 +6,7 @@ __intname__ = "npbackup.restic_update"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2024-2025 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2024121001"
+__build__ = "2025040801"
 
 import os
 import sys
@@ -68,8 +68,8 @@ def download_restic_binaries(arch: str = "amd64") -> bool:
         for file in dest_dir.glob(f"restic_*{fname}{suffix}"):
             # We need to keep legacy binary for Windows 7 32 bits
             if (
-                not file == "restic_0.16.2_windows_386.exe"
-                and not file == "restic_0.16.2_windows_amd64.exe"
+                not file.name == "restic_0.16.2_windows_386.exe"
+                and not file.name == "restic_0.16.2_windows_amd64.exe"
             ):
                 try:
                     archive_file = dest_dir.joinpath("ARCHIVES").joinpath(file.name)
