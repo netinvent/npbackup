@@ -152,6 +152,7 @@ cython_debug/
 #.idea/
 
 RESTIC_SOURCE_FILES/restic*
+!RESTIC_SOURCE_FILES/restic*legacy*.exe
 RESTIC_SOURCE_FILES/ARCHIVES
 PRIVATE/_ev_data.py
 PRIVATE/_obfuscation.py
