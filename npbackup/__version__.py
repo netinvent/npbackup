@@ -22,8 +22,9 @@ from npbackup.core.nuitka_helper import IS_COMPILED
 
 
 # Python 3.7 versions are considered legacy since they don't support msgspec
+# msgspec is only supported on Python 3.8 64-bit and above
 # Since development currently follows Python 3.12, let's consider anything below 3.12 as legacy
-IS_LEGACY = True if sys.version_info[1] < 12 else False
+IS_LEGACY = True if (sys.version_info[1] < 12 or python_arch() == "x86") else False
 
 try:
     CURRENT_USER = psutil.Process().username()
