@@ -26,12 +26,16 @@ def get_restic_internal_binary(arch: str) -> str:
     binary = None
     if os.path.isdir(RESTIC_SOURCE_FILES_DIR):
         if os.name == "nt":
-            if IS_LEGACY and arch == "x86":
+            if IS_LEGACY:
                 # Last compatible restic binary for Windows 7, see https://github.com/restic/restic/issues/5065
+                # We build a legacy version of restic for windows 7 and Server 2008R2
                 logger.info(
                     "Dealing with special case for Windows 7 32 bits that doesn't run with restic >= 0.16.2"
                 )
-                binary = "restic_0.16.2_windows_386.exe"
+                if arch == "x86":
+                    binary = "restic_*_windows_legacy_386.exe"
+                else:
+                    binary = "restic_*_windows_legacy_amd64.exe"
             elif arch == "x86":
                 binary = "restic_*_windows_386.exe"
             else:

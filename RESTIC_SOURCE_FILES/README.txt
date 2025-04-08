@@ -1,1 +1,1 @@
-This folder should contain restic binaries directly downloaded from github.com/restic/restic for Linux / macOS and Windows
+This folder should contain restic binaries directly downloaded from github.com/restic/restic for Linux / macOS and Windows and restic legacy builds

@@ -66,11 +66,8 @@ def download_restic_binaries(arch: str = "amd64") -> bool:
         print(f"DOWNLOADING RESTIC {dest_file}")
         # Also we need to move any earlier file that may not be current version to archives
         for file in dest_dir.glob(f"restic_*{fname}{suffix}"):
-            # We need to keep legacy binary for Windows 7 32 bits
-            if (
-                not file.name == "restic_0.16.2_windows_386.exe"
-                and not file.name == "restic_0.16.2_windows_amd64.exe"
-            ):
+            # We need to keep legacy binary for Windows 7 / Server 2008
+            if "legacy" in file.name:
                 try:
                     archive_file = dest_dir.joinpath("ARCHIVES").joinpath(file.name)
                     if archive_file.is_file():
