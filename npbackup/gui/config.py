@@ -1197,6 +1197,22 @@ def config_gui(full_config: dict, config_file: str):
                     key="backup_opts.additional_backup_only_parameters", size=(100, 1)
                 ),
             ],
+            [
+                sg.Text(
+                    _t("config_gui.additional_restore_only_parameters"), size=(40, 1)
+                ),
+            ],
+            [
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.backup_opts.additional_restore_only_parameters",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
+                sg.Input(
+                    key="backup_opts.additional_restore_only_parameters", size=(100, 1)
+                ),
+            ],
         ]
 
         exclusions_col = [

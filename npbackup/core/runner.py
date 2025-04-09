@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025030601"
+__build__ = "2025040901"
 
 
 from typing import Optional, Callable, Union, List, Tuple
@@ -1594,10 +1594,35 @@ class NPBackupRunner:
     @apply_config_to_restic_runner
     def restore(self, snapshot: str, target: str, restore_includes: List[str]) -> bool:
         self.write_logs(f"Launching restore to {target}", level="info")
+
+        additional_restore_only_parameters = None
+        try:
+            if self.repo_config.g("backup_opts.additional_restore_only_parameters"):
+                additional_restore_only_parameters = self.repo_config.g(
+                    "backup_opts.additional_restore_only_parameters"
+                )
+                try:
+                    additional_restore_only_parameters = os.path.expanduser(
+                        additional_restore_only_parameters
+                    )
+                    additional_restore_only_parameters = os.path.expandvars(
+                        additional_restore_only_parameters
+                    )
+                except OSError:
+                    self.write_logs(
+                        f"Failed expansion for additional backup parameters: {additional_restore_only_parameters}",
+                        level="error",
+                    )
+        except KeyError:
+            pass
+        except ValueError:
+            self.write_logs("Bogus additional backup parameters given", level="warning")
+
         return self.restic_runner.restore(
             snapshot=snapshot,
             target=target,
             includes=restore_includes,
+            additional_restore_only_parameters=additional_restore_only_parameters,
         )
 
     @threaded

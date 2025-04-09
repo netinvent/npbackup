@@ -29,6 +29,7 @@ en:
   backup_priority: Backup priority
   additional_parameters: Additional parameters
   additional_backup_only_parameters: Additional backup only parameters
+  additional_restore_only_parameters: Additional restore only parameters
 
   minimum_backup_age: Minimum delay between two backups
   backup_repo_uri: backup repo URI / path

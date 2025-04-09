@@ -30,6 +30,7 @@ fr:
   backup_priority: Priorité de sauvegarde
   additional_parameters: Paramètres supplémentaires
   additional_backup_only_parameters: Paramètres supplémentaires de sauvegarde
+  additional_restore_only_parameters: Paramètres supplémentaires de restauration
 
   minimum_backup_age: Délai minimal entre deux sauvegardes
   backup_repo_uri: URI / chemin local dépot de sauvegarde
@@ -123,7 +124,7 @@ fr:
   hourly: instantanés horaires
   daily: instantanés journalières
   weekly: instantanés hebdomadaires
-  monthly: instantanés mensuelles
+  monthly: instantanés mensuellesf
   yearly: instantanés annuelles
   keep_within: Garder les instantanées dans une période relative au dernier instantané
   keep_tags: Garder les instantanés avec les tags suivants

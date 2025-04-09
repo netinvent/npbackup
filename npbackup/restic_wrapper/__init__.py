@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025040401"
-__version__ = "2.5.0"
+__build__ = "2025040901"
+__version__ = "2.6.0"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -1163,7 +1163,10 @@ class ResticRunner:
 
     @check_if_init
     def restore(
-        self, snapshot: str, target: str, includes: List[str] = None
+        self, snapshot: str,
+        target: str,
+        includes: List[str] = None,
+        additional_restore_only_parameters: Optional[str] = None,
     ) -> Union[bool, str, dict]:
         """
         Restore given snapshot to directory
@@ -1175,11 +1178,14 @@ class ResticRunner:
         # Always use case ignore excludes under windows
         if os.name == "nt":
             case_ignore_param = "i"
-        cmd = 'restore "{}" --target "{}"'.format(snapshot, target)
+        cmd = f'restore'
+        if additional_restore_only_parameters:
+            cmd += f" {additional_restore_only_parameters}"
+        cmd += f'" {snapshot}" --target "{target}"'
         if includes:
             for include in includes:
                 if include:
-                    cmd += ' --{}include "{}"'.format(case_ignore_param, include)
+                    cmd += f' --{case_ignore_param}include "{include}"'
         result, output = self.executor(cmd)
         if result:
             msg = "Successfully restored data"
