@@ -1178,10 +1178,10 @@ class ResticRunner:
         # Always use case ignore excludes under windows
         if os.name == "nt":
             case_ignore_param = "i"
-        cmd = f'restore'
+        cmd = f'restore "{snapshot}"'
         if additional_restore_only_parameters:
             cmd += f" {additional_restore_only_parameters}"
-        cmd += f'" {snapshot}" --target "{target}"'
+        cmd += f' --target "{target}"'
         if includes:
             for include in includes:
                 if include:
