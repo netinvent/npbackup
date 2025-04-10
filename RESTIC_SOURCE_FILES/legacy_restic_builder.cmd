@@ -3,7 +3,7 @@
 :: Blatantly copied from https://gist.github.com/DRON-666/6e29eb6a8635fae9ab822782f34d8fd6
 :: with some mods to specify restic versions and produce both 32 and 64 bit executables
 
-
+8
 SET RESTIC_VERSION=0.18.0
 SET GO_BINARIES_VERSION=1.21.3
 SET GO23_VERSION=1.23.8
@@ -41,7 +41,7 @@ call:build_restic amd64
 goto END
 
 :GetTime
-:: US Date /T returns Day MM/DD/YYYY whereas other languges may DD/MM/YYYY, Try to catch both
+:: US Date /T returns Day MM/DD/YYYY whereas other languages may DD/MM/YYYY, Try to catch both
 FOR /F "tokens=1,2,3,4 delims=/" %%a IN ('Date /T') DO (
 IF "%%d"=="" set now_date=%%a-%%b-%%c
 IF NOT "%%d"=="" set now_date=%%a-%%b-%%c-%%d

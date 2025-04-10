@@ -1163,7 +1163,8 @@ class ResticRunner:
 
     @check_if_init
     def restore(
-        self, snapshot: str,
+        self,
+        snapshot: str,
         target: str,
         includes: List[str] = None,
         additional_restore_only_parameters: Optional[str] = None,
