@@ -7,7 +7,7 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025040901"
+__build__ = "2025041001"
 __version__ = "2.6.0"
 
 
@@ -616,7 +616,7 @@ class ResticRunner:
                 try:
                     self._binary_full_version = output.strip()
                     self._binary_version = re.search(
-                        r"restic\s+(.*)\s+compiled", output
+                        r"restic\s+([0-9\.]+).*compiled", output
                     ).group(1)
                 except AttributeError:
                     self.write_logs(
@@ -1163,8 +1163,7 @@ class ResticRunner:
 
     @check_if_init
     def restore(
-        self,
-        snapshot: str,
+        self, snapshot: str,
         target: str,
         includes: List[str] = None,
         additional_restore_only_parameters: Optional[str] = None,
