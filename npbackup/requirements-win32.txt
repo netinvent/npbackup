@@ -28,5 +28,5 @@ packaging
 pywin32; platform_system == "Windows"
 imageio; platform_system == "Darwin"
 ntplib>=0.4.0
-# msgspec needs python 3.8+ (see pep-0496 for environment markers)
-msgspec; python_version >= "3.8"
+# msgspec needs python 3.8+ and is not compatible with win 32-bit
+
