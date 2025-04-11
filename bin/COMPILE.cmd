@@ -49,7 +49,7 @@ SET PYTHONPATH=c:\GIT\npbackup
 :: BUILD 32-BIT LEGACY VERSION
 "%PYTHON32-LEGACY%" -m pip install --upgrade pip || GOTO ERROR
 "%PYTHON32-LEGACY%" -m pip install pytest
-"%PYTHON32-LEGACY%" -m pip install --upgrade -r npbackup/requirements.txt || GOTO ERROR
+"%PYTHON32-LEGACY%" -m pip install --upgrade -r npbackup/requirements-win32.txt || GOTO ERROR
 
 "%PYTHON32-LEGACY%" -m pytest C:\GIT\npbackup\tests || GOTO ERROR
 
