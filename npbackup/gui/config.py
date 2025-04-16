@@ -389,7 +389,14 @@ def config_gui(full_config: dict, config_file: str):
             if key == "backup_opts.paths":
                 if value:
                     for val in value:
-                        if pathlib.Path(val).is_dir():
+                        try:
+                            is_dir = pathlib.Path(val).is_dir()
+                        except (OSError, PermissionError, TypeError):
+                            # We might not be able to check paths that are not present
+                            # on current computer when preparing configuration files
+                            # In that case, just assume it's a file
+                            is_dir = False
+                        if is_dir:
                             if object_type != "groups" and inherited[val]:
                                 icon = INHERITED_FOLDER_ICON
                             else:
