@@ -282,6 +282,11 @@ This is free software, and you are welcome to redistribute it under certain cond
         action="store_true",
         help="Run operations without cache",
     )
+    parser.add_argument(
+        "--no-lock",
+        action="store_true",
+        help="Run operations without lock",
+    )
     parser.add_argument("--license", action="store_true", help="Show license")
     parser.add_argument(
         "--auto-upgrade", action="store_true", help="Auto upgrade NPBackup"
@@ -605,6 +610,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         "json_output": args.json,
         "backend_binary": backend_binary,
         "no_cache": args.no_cache,
+        "no_lock": args.no_lock,
         "operation": None,
         "op_args": {},
     }

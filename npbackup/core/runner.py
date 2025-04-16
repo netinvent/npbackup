@@ -271,6 +271,7 @@ class NPBackupRunner:
         self._struct_output = False
         self._binary = None
         self._no_cache = False
+        self._no_lock = False
         self.restic_runner = None
         self.minimum_backup_age = None
         self._exec_time = None
@@ -323,6 +324,17 @@ class NPBackupRunner:
             msg = f"Bogus no_cache parameter given: {value}"
             self.write_logs(msg, level="critical", raise_error="ValueError")
         self._no_cache = value
+
+    @property
+    def no_lock(self) -> bool:
+        return self._no_lock
+
+    @no_lock.setter
+    def no_lock(self, value: bool):
+        if not isinstance(value, bool):
+            msg = f"Bogus no_lock parameter given: {value}"
+            self.write_logs(msg, level="critical", raise_error="ValueError")
+        self._no_lock = value
 
     @property
     def verbose(self):
@@ -957,6 +969,7 @@ class NPBackupRunner:
         self.restic_runner.verbose = self.verbose
         self.restic_runner.dry_run = self.dry_run
         self.restic_runner.no_cache = self.no_cache
+        self.restic_runner.no_lock = self.no_lock
         self.restic_runner.live_output = self.live_output
         self.restic_runner.json_output = self.json_output
         self.restic_runner.struct_output = self.struct_output

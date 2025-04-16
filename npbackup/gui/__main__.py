@@ -63,6 +63,7 @@ from npbackup.restic_wrapper import schema
 
 logger = getLogger()
 backend_binary = None
+__no_lock = False
 
 # This bool allows to not show errors on freshly configured repos or first runs, when repo isn't initialized yet
 # Also prevents showing errors when config was just changed
@@ -334,6 +335,7 @@ def ls_window(parent_window: sg.Window, repo_config: dict, snapshot_id: str) -> 
         __autoclose=True,
         __compact=True,
         __backend_binary=backend_binary,
+        __no_lock=__no_lock,
     )
     if not result or not result["result"]:
         sg.Popup(_t("main_gui.snapshot_is_empty"))
@@ -463,6 +465,7 @@ def restore_window(
             restore_includes=restore_includes,
             __backend_binary=backend_binary,
             __autoclose=True,
+            __no_lock=__no_lock,
         )
         return result["result"]
 
@@ -515,6 +518,7 @@ def backup(repo_config: dict) -> bool:
         __compact=False,
         __gui_msg=gui_msg,
         __backend_binary=backend_binary,
+        __no_lock=__no_lock,
     )
     return result["result"]
 
@@ -530,6 +534,7 @@ def forget_snapshot(repo_config: dict, snapshot_ids: List[str]) -> bool:
         __gui_msg=gui_msg,
         __autoclose=True,
         __backend_binary=backend_binary,
+        __no_lock=__no_lock,
     )
     return result["result"]
 
@@ -537,6 +542,7 @@ def forget_snapshot(repo_config: dict, snapshot_ids: List[str]) -> bool:
 def _main_gui(viewer_mode: bool):
     global logger
     global backend_binary
+    global __no_lock
     global GUI_STATUS_IGNORE_ERRORS
 
     def check_for_auto_upgrade(config_file: str, full_config: dict) -> bool:
@@ -645,6 +651,7 @@ def _main_gui(viewer_mode: bool):
             __compact=True,
             __backend_binary=backend_binary,
             __ignore_errors=GUI_STATUS_IGNORE_ERRORS,
+            __no_lock=__no_lock,
         )
         GUI_STATUS_IGNORE_ERRORS = False
         try:
@@ -878,6 +885,9 @@ def _main_gui(viewer_mode: bool):
             logger.critical(msg)
             sg.PopupError(msg, keep_on_top=True)
             sys.exit(73)
+
+    if viewer_mode:
+        __no_lock = True
 
     # Let's try to read standard restic repository env variables
     viewer_repo_uri = os.environ.get("RESTIC_REPOSITORY", None)
