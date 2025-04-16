@@ -838,15 +838,21 @@ def config_gui(full_config: dict, config_file: str):
                         "repo_opts.upload_speed",
                         "repo_opts.download_speed",
                     ):
-                        if (
-                            full_config.g(inheritance_key) is not None
-                            and value is not None
-                            and (
-                                BytesConverter(full_config.g(inheritance_key)).bytes
-                                == BytesConverter(value).bytes
+                        try:
+                            if (
+                                full_config.g(inheritance_key) not in (None, "")
+                                and value not in (None, "")
+                                and (
+                                    BytesConverter(full_config.g(inheritance_key)).bytes
+                                    == BytesConverter(value).bytes
+                                )
+                            ):
+                                continue
+                        except ValueError as exc:
+                            logger.debug(
+                                f"BytesConverter could not convert value: {exc}"
                             )
-                        ):
-                            continue
+                            pass
 
             # Don't bother to update empty strings, empty lists and None
             # unless we have False, or 0, which or course need to be updated
