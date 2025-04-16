@@ -30,6 +30,8 @@ from resources.customization import (
     INHERITED_FOLDER_ICON,
     TREE_ICON,
     INHERITED_TREE_ICON,
+    IRREGULAR_FILE_ICON,
+    INHERITED_IRREGULAR_FILE_ICON,
 )
 from npbackup.task import create_scheduled_task
 
@@ -390,22 +392,21 @@ def config_gui(full_config: dict, config_file: str):
                 if value:
                     for val in value:
                         try:
-                            is_dir = pathlib.Path(val).is_dir()
+                            if pathlib.Path(val).is_dir():
+                                icon = FOLDER_ICON
+                                inherited_icon = INHERITED_FOLDER_ICON
+                            else:
+                                icon = FILE_ICON
+                                inherited_icon = INHERITED_FILE_ICON
                         except (OSError, PermissionError, TypeError):
                             # We might not be able to check paths that are not present
                             # on current computer when preparing configuration files
                             # In that case, just assume it's a file
-                            is_dir = False
-                        if is_dir:
-                            if object_type != "groups" and inherited[val]:
-                                icon = INHERITED_FOLDER_ICON
-                            else:
-                                icon = FOLDER_ICON
-                        else:
-                            if object_type != "groups" and inherited[val]:
-                                icon = INHERITED_FILE_ICON
-                            else:
-                                icon = FILE_ICON
+                            icon = IRREGULAR_FILE_ICON
+                            inherited_icon = INHERITED_IRREGULAR_FILE_ICON
+
+                        if object_type != "groups" and inherited[val]:
+                            icon = inherited_icon
                         backup_paths_tree.insert("", val, val, val, icon=icon)
                     window["backup_opts.paths"].update(values=backup_paths_tree)
                 return
