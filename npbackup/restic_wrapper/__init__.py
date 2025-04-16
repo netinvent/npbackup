@@ -415,13 +415,19 @@ class ResticRunner:
         self._executor_running = True
         self._make_env()
 
+        # Make sure we can have stdout set to False, which will reduce logs for is_init()
+        if self.stdout is False or not no_output_queues and method == "poller":
+            stdout = self.stdout
+        else:
+            stdout = None
+
         exit_code, output = command_runner(
             _cmd,
             timeout=timeout,
             split_streams=False,
             encoding="utf-8",
             stdin=stdin,
-            stdout=self.stdout if not no_output_queues and method == "poller" else None,
+            stdout=stdout,
             stderr=self.stderr if not no_output_queues and method == "poller" else None,
             no_close_queues=True,
             valid_exit_codes=errors_allowed,
@@ -720,13 +726,16 @@ class ResticRunner:
 
         # Disable live output for this check
         live_output = self.live_output
-        self.live_output = False
+        self.live_outgput = False
+        stdout = self.stdout
+        self.stdout = False
         self._is_init, output = self.executor(
             cmd,
             timeout=FAST_COMMANDS_TIMEOUT,
             errors_allowed=True,
             no_output_queues=True,
         )
+        self.stdout = stdout
         self.live_output = live_output
         if not self._is_init:
             self.write_logs("Repository is not initialized or accessible", level="info")
