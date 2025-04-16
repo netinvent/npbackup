@@ -7,7 +7,7 @@ __intname__ = "npbackup.customization_creator"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2024-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024060401"
+__build__ = "2025041601"
 __version__ = "1.0.0"
 
 import os
@@ -37,13 +37,18 @@ def update_custom_icons():
     """
 
     custom_resources = {
-        "FOLDER_ICON": "folder_icon.png",
-        "INHERITED_FOLDER_ICON": "inherited_folder_icon.png",
         "FILE_ICON": "file_icon.png",
+        "FOLDER_ICON": "folder_icon.png",
         "INHERITED_FILE_ICON": "inherited_file_icon.png",
-        "TREE_ICON": "tree_icon.png",
+        "INHERITED_FOLDER_ICON": "inherited_folder_icon.png",
+        "INHERITED_ICON": "inherited_icon.png",
+        "INHERITED_IRREGULAR_FILE_ICON": "inherited_irregular_file_icon.png",
+        "INHERITED_NEUTRAL_ICON": "inherited_neutral_icon.png",
         "INHERITED_TREE_ICON": "inherited_tree_icon.png",
+        "IRREGULER_FILE_ICON": "irregular_file_icon.png",
         "NON_INHERITED_ICON": "non_inherited_icon.png",
+        "SYMLINK_ICON": "symlink_icon.png",
+        "TREE_ICON": "tree_icon.png",
         "LOADING_ANIMATION": "loading.gif",
         "OEM_LOGO": "oem_logo.png",
         "OEM_ICON": "oem_icon.png",
