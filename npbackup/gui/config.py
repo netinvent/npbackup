@@ -837,6 +837,8 @@ def config_gui(full_config: dict, config_file: str):
                         "backup_opts.exclude_files_larger_than",
                         "repo_opts.upload_speed",
                         "repo_opts.download_speed",
+                        "repo_opts.prune_max_unused",
+                        "repo_opts.prune_max_repack_size",
                     ):
                         try:
                             if (
