@@ -39,9 +39,12 @@ sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), ".."
 
 
 logger = getLogger()
-opt_aes_key = get_aes_key()
+opt_aes_key, msg = get_aes_key()
 if opt_aes_key:
+    logger.info(msg)
     AES_KEY = opt_aes_key
+elif opt_aes_key is False:
+    logger.critical(msg)
 
 
 # Monkeypatching ruamel.yaml ordreddict so we get to use pseudo dot notations

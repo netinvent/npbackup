@@ -55,23 +55,31 @@ def get_aes_key():
     """
     key = None
 
-    key_location = os.environ.get("NPBACKUP_KEY_LOCATION", None)
-    if key_location and os.path.isfile(key_location):
-        try:
-            with open(key_location, "rb") as key_file:
-                key = key_file.read()
-        except OSError as exc:
-            msg = f"Cannot read encryption key file: {exc}"
-            return False, msg
-    else:
-        key_command = os.environ.get("NPBACKUP_KEY_COMMAND", None)
-        if key_command:
-            exit_code, output = command_runner(key_command, encoding=False, shell=True)
-            if exit_code != 0:
-                msg = f"Cannot run encryption key command: {output}"
+    try:
+        key_location = os.environ.get("NPBACKUP_KEY_LOCATION", None)
+        if key_location and os.path.isfile(key_location):
+            try:
+                with open(key_location, "rb") as key_file:
+                    key = key_file.read()
+                    msg = f"Encryption key file read"
+            except OSError as exc:
+                msg = f"Cannot read encryption key file: {exc}"
                 return False, msg
-            key = bytes(output)
-    return obfuscation(key)
+        else:
+            key_command = os.environ.get("NPBACKUP_KEY_COMMAND", None)
+            if key_command:
+                exit_code, output = command_runner(key_command, encoding=False, shell=True)
+                if exit_code != 0:
+                    msg = f"Cannot run encryption key command: {output}"
+                    return False, msg
+                key = bytes(output)
+                msg = f"Encryption key read from command"
+    except Exception as exc:
+        msg = f"Error reading encryption key: {exc}"
+        return False, msg
+    if key:
+        return obfuscation(key), msg
+    return None, ""
 
 
 def create_key_file(key_location: str):
