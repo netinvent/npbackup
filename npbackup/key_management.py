@@ -68,7 +68,9 @@ def get_aes_key():
         else:
             key_command = os.environ.get("NPBACKUP_KEY_COMMAND", None)
             if key_command:
-                exit_code, output = command_runner(key_command, encoding=False, shell=True)
+                exit_code, output = command_runner(
+                    key_command, encoding=False, shell=True
+                )
                 if exit_code != 0:
                     msg = f"Cannot run encryption key command: {output}"
                     return False, msg
