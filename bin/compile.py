@@ -245,7 +245,7 @@ def compile(
 
     # npbackup compilation
     # Strip possible version suffixes '-dev'
-    print(npbackup_version)
+    print(f"Compiling version {npbackup_version} for {audience} {platform} {arch}")
     _npbackup_version = npbackup_version.split("-")[0]
     PRODUCT_VERSION = _npbackup_version + ".0"
     FILE_VERSION = _npbackup_version + ".0"
@@ -259,7 +259,7 @@ def compile(
 
     restic_source_file = get_restic_internal_binary(arch)
     if not restic_source_file:
-        print("Cannot find restic source file.")
+        print(f"Cannot find restic source file for arch {arch}.")
         return False
     else:
         os.chmod(restic_source_file, 0o775)
@@ -555,15 +555,11 @@ if __name__ == "__main__":
                     audience_build = "private" if private_build else "public"
                     if result:
                         print(
-                            "SUCCESS: MADE {} build for audience {}".format(
-                                audience_build, audience
-                            )
+                            f"SUCCESS: MADE {build_type} build for audience {audience_build}"
                         )
                     else:
                         print(
-                            "ERROR: Failed making {} build for audience {}".format(
-                                audience_build, audience
-                            )
+                            f"ERROR: Failed making {build_type} build for audience {audience_build}"
                         )
                         errors = True
         if errors:
