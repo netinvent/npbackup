@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025041601"
-__version__ = "2.6.1"
+__build__ = "2025041801"
+__version__ = "2.7.0"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -220,6 +220,17 @@ class ResticRunner:
             raise ValueError("Bogus verbose value given")
 
     @property
+    def is_init(self) -> bool:
+        return self._is_init
+
+    @is_init.setter
+    def is_init(self, value: bool):
+        if isinstance(value, bool):
+            self._is_init = value
+        else:
+            raise ValueError("Bogus is_init value given")
+
+    @property
     def live_output(self) -> bool:
         return self._live_output
 
@@ -393,7 +404,6 @@ class ResticRunner:
             if self.additional_parameters
             else ""
         )
-
         self._executor_operation = fn_name(1)
 
         if self.dry_run:
@@ -415,6 +425,17 @@ class ResticRunner:
         self._executor_running = True
         self._make_env()
 
+        if errors_allowed:
+            stderr = False
+        elif method == "poller" and not no_output_queues:
+            stderr = self.stderr
+        else:
+            stderr = None
+
+        if self._executor_operation == "backup" and not self.is_init:
+            self.init(errors_allowed=True)
+            self._make_env()
+
         exit_code, output = command_runner(
             _cmd,
             timeout=timeout,
@@ -422,7 +443,7 @@ class ResticRunner:
             encoding="utf-8",
             stdin=stdin,
             stdout=self.stdout if not no_output_queues and method == "poller" else None,
-            stderr=self.stderr if not no_output_queues and method == "poller" else None,
+            stderr=stderr,
             no_close_queues=True,
             valid_exit_codes=errors_allowed,
             stop_on=self.is_cancelled,
@@ -437,6 +458,38 @@ class ResticRunner:
             windows_no_window=True,
             heartbeat=HEARTBEAT_INTERVAL,
         )
+        """
+        # Special case for backups when repository is not initialized yet and we need to run init first
+        # This exit code exists since restic 0.17.0 so we need to fallback for earlier restic versions:
+        if exit_code == 10 or (isinstance(output, str) and "Fatal: repository does not exist" in output):
+            # If we wanted to make a backup, try to init the repository then launch it again
+            if self._executor_operation == "backup":
+                self.init()
+                # We need to remake env since init removed it for security reasons
+                self._make_env()
+                exit_code, output = command_runner(
+                    _cmd,
+                    timeout=timeout,
+                    split_streams=False,
+                    encoding="utf-8",
+                    stdin=stdin,
+                    stdout=self.stdout if not no_output_queues and method == "poller" else None,
+                    stderr=self.stderr if not no_output_queues and method == "poller" else None,
+                    no_close_queues=True,
+                    valid_exit_codes=None, # errors_allowed only afect first operation to check init
+                    stop_on=self.is_cancelled,
+                    on_exit=self.on_exit,
+                    method=method,
+                    # Live output is only useful in CLI non json mode
+                    # But must not be used with ls since restic may produce too much output
+                    live_output=self._live_output if method != "monitor" else False,
+                    check_interval=CHECK_INTERVAL,
+                    priority=self._priority,
+                    io_priority=self._priority,
+                    windows_no_window=True,
+                    heartbeat=HEARTBEAT_INTERVAL,
+                )
+        """
         # Don't keep protected environment variables in memory when not necessary
         self._remove_env()
 
@@ -446,7 +499,18 @@ class ResticRunner:
 
         if exit_code == 0:
             self.last_command_status = True
+            self.is_init = True
             return True, self.output_filter(output)
+        if exit_code == 10 or (
+            isinstance(output, str) and "Fatal: repository does not exist" in output
+        ):
+            self.write_logs(
+                "Repository is not initialized or does not exist. Please create a backup to initialize it",
+                level="info",
+            )
+            self.last_command_status = False
+            self.is_init = False
+            return False, self.output_filter(output)
         if (
             exit_code == 3
             and os.name == "nt"
@@ -483,7 +547,7 @@ class ResticRunner:
         if not errors_allowed and output:
             # We won't write to stdout/stderr queues since command_runner already did that for us
             logger.error(output)
-        return False, output
+        return False, self.output_filter(output)
 
     def _get_binary(self) -> None:
         """
@@ -673,6 +737,7 @@ class ResticRunner:
         self,
         repository_version: int = 2,
         compression: str = "auto",
+        errors_allowed: bool = False,
     ) -> bool:
         """
         Init repository. Let's make sure we always run in JSON mode so we don't need
@@ -686,13 +751,12 @@ class ResticRunner:
             repository_version, compression
         )
         result, output = self.executor(
-            cmd,
-            timeout=FAST_COMMANDS_TIMEOUT,
+            cmd, timeout=FAST_COMMANDS_TIMEOUT, errors_allowed=errors_allowed
         )
         if result:
             if re.search(
                 r"created restic repository ([a-z0-9]+) at .+|{\"message_type\":\"initialized\"",
-                output,
+                str(output),
                 re.IGNORECASE,
             ):
                 self.write_logs("Repo initialized successfully", level="info")
@@ -700,45 +764,17 @@ class ResticRunner:
                 return True
         else:
             if re.search(
-                ".*already exists|.*already initialized", output, re.IGNORECASE
+                ".*already exists|.*already initialized", str(output), re.IGNORECASE
             ):
                 self.write_logs("Repo is already initialized.", level="info")
                 self.is_init = True
                 return True
-            self.write_logs(f"Cannot contact repo: {output}", level="error")
+            if not errors_allowed:
+                self.write_logs(f"Cannot contact repo: {output}", level="error")
             self.is_init = False
             return False
         self.is_init = False
         return False
-
-    @property
-    def is_init(self):
-        """
-        We'll just check if snapshots can be read
-        """
-        cmd = "snapshots"
-
-        # Disable live output for this check
-        live_output = self.live_output
-        self.live_output = False
-        self._is_init, output = self.executor(
-            cmd,
-            timeout=FAST_COMMANDS_TIMEOUT,
-            errors_allowed=True,
-            no_output_queues=True,
-        )
-        self.live_output = live_output
-        if not self._is_init:
-            self.write_logs("Repository is not initialized or accessible", level="info")
-            output = output.replace(
-                self.repository,
-                self.repository_anonymous,
-            )
-        return self._is_init, output
-
-    @is_init.setter
-    def is_init(self, value: bool):
-        self._is_init = value
 
     @property
     def last_command_status(self):
@@ -747,50 +783,6 @@ class ResticRunner:
     @last_command_status.setter
     def last_command_status(self, value: bool):
         self._last_command_status = value
-
-    # pylint: disable=E0213 (no-self-argument)
-    def check_if_init(fn: Callable):
-        """
-        Decorator to check that we don't do anything unless repo is initialized
-        Also auto init repo when backing up
-        """
-
-        @wraps(fn)
-        def wrapper(self, *args, **kwargs):
-            is_init, output = self.is_init
-            if not is_init:
-                # For backup operations, we'll auto-initialize the repo
-                # pylint: disable=E1101 (no-member)
-                if fn.__name__ == "backup" or fn_name(1) == "has_recent_snapshot":
-                    msg = "Repo is not initialized. Initializing repo for backup operation"
-                    self.write_logs(msg, level="info")
-                    init = self.init()
-                    if not init:
-                        msg = "Could not initialize repo for backup operation"
-                        self.write_logs(
-                            msg,
-                            level="critical",
-                        )
-                        return self.convert_to_json_output(False, output=msg)
-                else:
-                    # pylint: disable=E1101 (no-member)
-                    output = output.replace(
-                        self.repository,
-                        self.repository_anonymous,
-                    )
-                    if (
-                        "repository is already locked" in output
-                        and fn.__name__ == "unlock"
-                    ):
-                        # our is ready check should not fail if repo is locked
-                        pass
-                    else:
-                        msg = f"Backend is not ready to perform operation {fn.__name__}. Repo maybe inaccessible or not initialized. You can try to run a backup to initialize the repository:\n{output}."  # pylint: disable=E1101 (no-member)
-                        return self.convert_to_json_output(False, msg=msg)
-            # pylint: disable=E1102 (not-callable)
-            return fn(self, *args, **kwargs)
-
-        return wrapper
 
     def convert_to_json_output(self, result, output=None, msg=None, **kwargs):
         """
@@ -907,7 +899,6 @@ class ResticRunner:
             self.write_logs(msg, level="error")
         return False
 
-    @check_if_init
     def list(self, subject: str) -> Union[bool, str, dict]:
         """
         Returns list of snapshots
@@ -930,7 +921,6 @@ class ResticRunner:
             msg = f"Failed to list {subject} objects:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
-    @check_if_init
     def ls(self, snapshot: str) -> Union[bool, str, dict]:
         """
         Returns list of objects in a snapshot
@@ -966,24 +956,35 @@ class ResticRunner:
             msg = f"Could not list snapshot {snapshot} content:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
-    @check_if_init
-    def snapshots(self) -> Union[bool, str, dict]:
+    def snapshots(
+        self, id: str = None, errors_allowed: bool = False
+    ) -> Union[bool, str, dict]:
         """
         Returns a list of snapshots
         --json is directly parseable
+
+        errors_allowed is needed since we're testing if repo is already initialized in backup function
         """
         kwargs = locals()
         kwargs.pop("self")
 
         cmd = "snapshots"
-        result, output = self.executor(cmd, timeout=FAST_COMMANDS_TIMEOUT)
+        if id:
+            cmd += f" {id}"
+        result, output = self.executor(
+            cmd, timeout=FAST_COMMANDS_TIMEOUT, errors_allowed=errors_allowed
+        )
         if result:
             msg = "Snapshots listed successfully"
+        elif errors_allowed:
+            # Patch results when we use snapshots to check if repo is initialized
+            result = True
+            msg = "snapshots not listed, perhaps repo is not initialized yet"
+            output = []
         else:
             msg = f"Could not list snapshots:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
-    @check_if_init
     def backup(
         self,
         paths: List[str] = None,
@@ -1153,7 +1154,6 @@ class ResticRunner:
         self.backup_result_content = output
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
-    @check_if_init
     def find(self, path: str) -> Union[bool, str, dict]:
         """
         Returns find command
@@ -1175,7 +1175,6 @@ class ResticRunner:
             msg = f"Could not find path {path}:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
-    @check_if_init
     def restore(
         self,
         snapshot: str,
@@ -1208,7 +1207,6 @@ class ResticRunner:
             msg = f"Data not restored:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
-    @check_if_init
     def forget(
         self,
         snapshots: Optional[Union[List[str], Optional[str]]] = None,
@@ -1280,7 +1278,6 @@ class ResticRunner:
         self.verbose = verbose
         return self.convert_to_json_output(batch_result, batch_output, **kwargs)
 
-    @check_if_init
     def prune(
         self, max_unused: Optional[str] = None, max_repack_size: Optional[str] = None
     ) -> Union[bool, str, dict]:
@@ -1329,7 +1326,6 @@ class ResticRunner:
             msg = "Could not prune repository"
         return self.convert_to_json_output(result, output=output, msg=msg, **kwargs)
 
-    @check_if_init
     def check(self, read_data: bool = True) -> Union[bool, str, dict]:
         """
         Check current repo status
@@ -1345,7 +1341,6 @@ class ResticRunner:
             msg = "Repo check failed"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
-    @check_if_init
     def repair(self, subject: str, pack_ids) -> Union[bool, str, dict]:
         """
         Check current repo status
@@ -1366,7 +1361,6 @@ class ResticRunner:
             msg = f"Repo repair failed:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
-    @check_if_init
     def recover(self) -> Union[bool, str, dict]:
         """
         Try to recover lost snapshots
@@ -1382,7 +1376,6 @@ class ResticRunner:
             msg = f"Recovery failed:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
-    @check_if_init
     def unlock(self) -> Union[bool, str, dict]:
         """
         Remove stale locks from repos
@@ -1398,7 +1391,6 @@ class ResticRunner:
             msg = f"Repo unlock failed:\n{output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
-    @check_if_init
     def dump(self, snapshot: str, path: str) -> Union[bool, str, dict]:
         """
         Dump given file directly to stdout
@@ -1414,7 +1406,6 @@ class ResticRunner:
             msg = f"Cannot dump file {path}:\n {output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
-    @check_if_init
     def stats(self, subject: str = None) -> Union[bool, str, dict]:
         """
         Gives various repository statistics
@@ -1432,7 +1423,6 @@ class ResticRunner:
             msg = f"Cannot get repo statistics:\n {output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
-    @check_if_init
     def raw(self, command: str) -> Union[bool, str, dict]:
         """
         Execute plain restic command without any interpretation"
@@ -1460,7 +1450,7 @@ class ResticRunner:
         backup_ts = datetime(1, 1, 1, 0, 0)
         # Don't bother to deal with missing delta or snapshot list
         if not snapshot_list or not isinstance(snapshot_list, list):
-            logger.warning("No valid snapshot list given")
+            logger.info("No valid snapshot list given")
             logger.debug(f"Snapshot list: {snapshot_list}")
             return False, backup_ts
         if not delta:
@@ -1470,20 +1460,28 @@ class ResticRunner:
 
         # Now just take the last snapshot in list (being the more recent), and check whether it's too old
         last_snapshot = snapshot_list[-1]
-        if re.match(
-            r"[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9](\.\d*)?(\+[0-2][0-9]:[0-9]{2})?",
-            last_snapshot["time"],
-        ):
-            backup_ts = dateutil.parser.parse(last_snapshot["time"])
-            snapshot_age_minutes = (tz_aware_timestamp - backup_ts).total_seconds() / 60
-            if delta - snapshot_age_minutes > 0:
-                logger.info(
-                    f"Recent snapshot {last_snapshot['short_id']} of {last_snapshot['time']} exists !"
-                )
-                return True, backup_ts
+        if not last_snapshot:
+            return False, backup_ts
+        try:
+            if re.match(
+                r"[0-9]{4}-[0-1][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9](\.\d*)?(\+[0-2][0-9]:[0-9]{2})?",
+                last_snapshot["time"],
+            ):
+                backup_ts = dateutil.parser.parse(last_snapshot["time"])
+                snapshot_age_minutes = (
+                    tz_aware_timestamp - backup_ts
+                ).total_seconds() / 60
+                if delta - snapshot_age_minutes > 0:
+                    logger.info(
+                        f"Recent snapshot {last_snapshot['short_id']} of {last_snapshot['time']} exists !"
+                    )
+                    return True, backup_ts
+        except TypeError:
+            logger.debug(
+                f"Cannot parse snapshot time from last_snapshot: {last_snapshot}"
+            )
         return False, backup_ts
 
-    #  @check_if_init  # We don't need to run if init before checking snapshots since if init searches for snapshots
     def has_recent_snapshot(self, delta: int = None) -> Tuple[bool, Optional[datetime]]:
         """
         Checks if a snapshot exists that is newer that delta minutes
@@ -1508,7 +1506,8 @@ class ResticRunner:
             # Make sure we run with json support for this one
             json_output = self.json_output
             self.json_output = True
-            result = self.snapshots()
+            # Check for recent snapshots may fail on uninitialized repos, so we need to allow errors
+            result = self.snapshots("latest", errors_allowed=True)
             self.json_output = json_output
             if self.last_command_status is False:
                 if self.json_output:
