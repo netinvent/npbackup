@@ -1,4 +1,4 @@
-command_runner>=1.7.0
+command_runner>=1.8.0
 cryptidy>=1.2.4
 python-dateutil
 ofunctions.logger_utils>=2.4.2
