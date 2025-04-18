@@ -458,38 +458,6 @@ class ResticRunner:
             windows_no_window=True,
             heartbeat=HEARTBEAT_INTERVAL,
         )
-        """
-        # Special case for backups when repository is not initialized yet and we need to run init first
-        # This exit code exists since restic 0.17.0 so we need to fallback for earlier restic versions:
-        if exit_code == 10 or (isinstance(output, str) and "Fatal: repository does not exist" in output):
-            # If we wanted to make a backup, try to init the repository then launch it again
-            if self._executor_operation == "backup":
-                self.init()
-                # We need to remake env since init removed it for security reasons
-                self._make_env()
-                exit_code, output = command_runner(
-                    _cmd,
-                    timeout=timeout,
-                    split_streams=False,
-                    encoding="utf-8",
-                    stdin=stdin,
-                    stdout=self.stdout if not no_output_queues and method == "poller" else None,
-                    stderr=self.stderr if not no_output_queues and method == "poller" else None,
-                    no_close_queues=True,
-                    valid_exit_codes=None, # errors_allowed only afect first operation to check init
-                    stop_on=self.is_cancelled,
-                    on_exit=self.on_exit,
-                    method=method,
-                    # Live output is only useful in CLI non json mode
-                    # But must not be used with ls since restic may produce too much output
-                    live_output=self._live_output if method != "monitor" else False,
-                    check_interval=CHECK_INTERVAL,
-                    priority=self._priority,
-                    io_priority=self._priority,
-                    windows_no_window=True,
-                    heartbeat=HEARTBEAT_INTERVAL,
-                )
-        """
         # Don't keep protected environment variables in memory when not necessary
         self._remove_env()
 
