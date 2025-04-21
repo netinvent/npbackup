@@ -718,10 +718,12 @@ def get_repo_config(
         # Let's make a copy of config since it's a "pointer object"
         repo_config = deepcopy(full_config.g(f"repos.{repo_name}"))
         if not repo_config:
-            logger.error(f"No repo with name {repo_name} found in config")
+            logger.error(
+                f"No repo with name {repo_name} found in config. If running CLI, please use --repo-name or --repo-group"
+            )
             return None, None
     except KeyError:
-        logger.error(f"No repo key with name {repo_name} found in config")
+        logger.error(f"No repo with name {repo_name} found in configuration file")
         return None, None
 
     # Merge prometheus global settings with repo settings
