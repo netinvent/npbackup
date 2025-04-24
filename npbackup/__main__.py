@@ -781,7 +781,7 @@ This is free software, and you are welcome to redistribute it under certain cond
             sys.exit(74)
         group_info = ""
         if groups:
-            group_info = f"corresponding to groups {', '.join(groups)}"
+            group_info = f" corresponding to groups {', '.join(groups)}"
         logger.info(
             f"Found repositories {', '.join(repos_and_group_repos)}{group_info}"
         )
