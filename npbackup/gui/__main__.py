@@ -652,7 +652,6 @@ def _main_gui(viewer_mode: bool):
             __backend_binary=backend_binary,
             __ignore_errors=GUI_STATUS_IGNORE_ERRORS,
             __no_lock=__no_lock,
-            id="latest",
             errors_allowed=True,
         )
         GUI_STATUS_IGNORE_ERRORS = False
@@ -674,7 +673,6 @@ def _main_gui(viewer_mode: bool):
         )
         snapshot_list = []
         if snapshots:
-            print("SNAPS:", snapshots)
             snapshots.reverse()  # Let's show newer snapshots first
             for snapshot in snapshots:
                 # So we get different snapshot time formats depending on platforms:
