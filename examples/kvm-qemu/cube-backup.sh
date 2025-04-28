@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Script ver 2025022301
+# Script ver 2025042801
 
 #TODO: blockcommit removes current snapshots, even if not done by cube
 #      - it's interesting to make housekeeping, let's make this an option
@@ -25,6 +25,9 @@ SNAPSHOT_FAILED_FILE="${ROOT_DIR}/SNAPSHOT_FAILED"
 # TENANT_OVERRIDE=netperfect
 # default tenant if extraction of tenant name failed
 DEFAULT_TENANT=netperfect
+
+# Force libvirt to talk in parseable english
+export LANG=C
 
 SCRIPT_ERROR=false
 
