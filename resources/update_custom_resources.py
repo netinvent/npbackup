@@ -47,6 +47,8 @@ def update_custom_icons():
         "INHERITED_TREE_ICON": "inherited_tree_icon.png",
         "IRREGULER_FILE_ICON": "irregular_file_icon.png",
         "NON_INHERITED_ICON": "non_inherited_icon.png",
+        "MISSING_FILE_ICON": "missing_file_icon.png",
+        "INHERITED_MISSING_FILE_ICON": "inherited_missing_file_icon.png",
         "SYMLINK_ICON": "symlink_icon.png",
         "TREE_ICON": "tree_icon.png",
         "LOADING_ANIMATION": "loading.gif",
