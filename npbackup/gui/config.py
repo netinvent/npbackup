@@ -32,6 +32,8 @@ from resources.customization import (
     INHERITED_TREE_ICON,
     IRREGULAR_FILE_ICON,
     INHERITED_IRREGULAR_FILE_ICON,
+    MISSING_FILE_ICON,
+    INHERITED_MISSING_FILE_ICON,
 )
 from npbackup.task import create_scheduled_task
 
@@ -261,6 +263,35 @@ def config_gui(full_config: dict, config_file: str):
             )
         return object_type, object_name
 
+    def get_icons_per_file(file_path: str) -> Tuple[str, bytes]:
+        """
+        Get icons depending on file/folder existing paths
+        """
+        try:
+            if not file_path:
+                icon = MISSING_FILE_ICON
+                inherited_icon = INHERITED_MISSING_FILE_ICON
+            elif os.path.isfile(file_path):
+                icon = FILE_ICON
+                inherited_icon = INHERITED_FILE_ICON
+            elif os.path.isdir(file_path):
+                icon = FOLDER_ICON
+                inherited_icon = INHERITED_FOLDER_ICON
+            elif os.path.islink(file_path):
+                icon = IRREGULAR_FILE_ICON
+                inherited_icon = INHERITED_IRREGULAR_FILE_ICON
+            else:
+                icon = MISSING_FILE_ICON
+                inherited_icon = INHERITED_MISSING_FILE_ICON
+        except (OSError, PermissionError, TypeError):
+            # We might not be able to check paths that are not present
+            # on current computer when preparing configuration files
+            # In that case, just assume it's a file
+            icon = IRREGULAR_FILE_ICON
+            inherited_icon = INHERITED_IRREGULAR_FILE_ICON
+
+        return icon, inherited_icon
+
     def update_source_layout(source_type: str):
         if source_type == "stdin_from_command":
             window["backup_opts.paths"].update(visible=False)
@@ -391,23 +422,14 @@ def config_gui(full_config: dict, config_file: str):
             if key == "backup_opts.paths":
                 if value:
                     for val in value:
-                        try:
-                            if pathlib.Path(val).is_dir():
-                                icon = FOLDER_ICON
-                                inherited_icon = INHERITED_FOLDER_ICON
-                            else:
-                                icon = FILE_ICON
-                                inherited_icon = INHERITED_FILE_ICON
-                        except (OSError, PermissionError, TypeError):
-                            # We might not be able to check paths that are not present
-                            # on current computer when preparing configuration files
-                            # In that case, just assume it's a file
-                            icon = IRREGULAR_FILE_ICON
-                            inherited_icon = INHERITED_IRREGULAR_FILE_ICON
+                        icon, inherited_icon = get_icons_per_file(val)
 
                         if object_type != "groups" and inherited[val]:
-                            icon = inherited_icon
-                        backup_paths_tree.insert("", val, val, val, icon=icon)
+                            backup_paths_tree.insert(
+                                "", val, val, val, icon=inherited_icon
+                            )
+                        else:
+                            backup_paths_tree.insert("", val, val, val, icon=icon)
                     window["backup_opts.paths"].update(values=backup_paths_tree)
                 return
             elif key in (
@@ -2539,20 +2561,17 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     key = "backup_opts.exclude_files"
                     tree = exclude_files_tree
                 node = values[event]
-                icon = FILE_ICON
+                icon, _ = get_icons_per_file(node)
             elif event == "--ADD-PATHS-FOLDER--":
                 key = "backup_opts.paths"
                 tree = backup_paths_tree
                 node = values[event]
-                icon = FOLDER_ICON
+                icon, _ = get_icons_per_file(node)
             elif event == "--ADD-PATHS-MANUALLY--":
                 key = "backup_opts.paths"
                 tree = backup_paths_tree
                 node = sg.PopupGetText(_t("generic.add_manually"))
-                if node and os.path.exists(node) and os.path.isdir(node):
-                    icon = FOLDER_ICON
-                else:
-                    icon = FILE_ICON
+                icon, _ = get_icons_per_file(node)
             elif event == "--ADD-EXCLUDE-FILE-MANUALLY--":
                 key = "backup_opts.exclude_files"
                 tree = exclude_files_tree
