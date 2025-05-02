@@ -255,7 +255,8 @@ def gui_thread_runner(
     )
     # Finalize the window
     event, _ = progress_window.read(timeout=0.01)
-    progress_window.bring_to_front()
+    # window.bring_to_front() does not work, so we need to force focus on it
+    progress_window.TKroot.focus_force()
 
     read_stdout_queue = __stdout
     read_stderr_queue = True
