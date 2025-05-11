@@ -7,7 +7,7 @@ __intname__ = "npbackup.customization_creator"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2024-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025041601"
+__build__ = "2025051101"
 __version__ = "1.0.0"
 
 import os
@@ -45,10 +45,11 @@ def update_custom_icons():
         "INHERITED_IRREGULAR_FILE_ICON": "inherited_irregular_file_icon.png",
         "INHERITED_NEUTRAL_ICON": "inherited_neutral_icon.png",
         "INHERITED_TREE_ICON": "inherited_tree_icon.png",
-        "IRREGULER_FILE_ICON": "irregular_file_icon.png",
+        "IRREGULAR_FILE_ICON": "irregular_file_icon.png",
         "NON_INHERITED_ICON": "non_inherited_icon.png",
         "MISSING_FILE_ICON": "missing_file_icon.png",
         "INHERITED_MISSING_FILE_ICON": "inherited_missing_file_icon.png",
+        "INHERITED_SYMLINK_ICON": "inherited_symlink_icon.png",
         "SYMLINK_ICON": "symlink_icon.png",
         "TREE_ICON": "tree_icon.png",
         "LOADING_ANIMATION": "loading.gif",
@@ -62,12 +63,11 @@ def update_custom_icons():
         customization = f.read()
     for var_name, file in custom_resources.items():
         file_path = os.path.join(resources_dir, file)
-        print(file_path)
         if os.path.exists(file_path):
             print(f"Updating {var_name} with {file_path}")
             encoded_b64 = image_to_data_url(file_path)
             customization = re.sub(
-                f'{var_name} = b".*"', f'{var_name} = b"{encoded_b64}"', customization
+                f'\n{var_name} = .*', f'\n{var_name} = b"{encoded_b64}"', customization, re.MULTILINE
             )
         else:
             print("No file found for", var_name)

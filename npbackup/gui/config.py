@@ -34,6 +34,8 @@ from resources.customization import (
     INHERITED_IRREGULAR_FILE_ICON,
     MISSING_FILE_ICON,
     INHERITED_MISSING_FILE_ICON,
+    SYMLINK_ICON,
+    INHERITED_SYMLINK_ICON,
 )
 from npbackup.task import create_scheduled_task
 
@@ -271,22 +273,27 @@ def config_gui(full_config: dict, config_file: str):
             if not file_path:
                 icon = MISSING_FILE_ICON
                 inherited_icon = INHERITED_MISSING_FILE_ICON
+            elif os.path.isdir(file_path):
+                if os.access(file_path, os.X_OK):
+                    icon = FOLDER_ICON
+                    inherited_icon = INHERITED_FOLDER_ICON
+                else:
+                    icon = IRREGULAR_FILE_ICON
+                    inherited_icon = INHERITED_IRREGULAR_FILE_ICON
             elif os.path.isfile(file_path):
                 icon = FILE_ICON
                 inherited_icon = INHERITED_FILE_ICON
-            elif os.path.isdir(file_path):
-                icon = FOLDER_ICON
-                inherited_icon = INHERITED_FOLDER_ICON
             elif os.path.islink(file_path):
-                icon = IRREGULAR_FILE_ICON
-                inherited_icon = INHERITED_IRREGULAR_FILE_ICON
+                icon = SYMLINK_ICON
+                inherited_icon = INHERITED_SYMLINK_ICON
             else:
                 icon = MISSING_FILE_ICON
                 inherited_icon = INHERITED_MISSING_FILE_ICON
-        except (OSError, PermissionError, TypeError):
+        except (OSError, PermissionError, TypeError) as exc:
             # We might not be able to check paths that are not present
             # on current computer when preparing configuration files
             # In that case, just assume it's a file
+            logger.debug(f"Current path {file_path} cannot be processed: {exc}")
             icon = IRREGULAR_FILE_ICON
             inherited_icon = INHERITED_IRREGULAR_FILE_ICON
 
