@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025041801"
-__version__ = "2.7.0"
+__build__ = "2025051101"
+__version__ = "2.7.1"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -939,9 +939,12 @@ class ResticRunner:
         cmd = "snapshots"
         if id:
             cmd += f" {id}"
+        no_lock = self.no_lock
+        self.no_lock = True
         result, output = self.executor(
             cmd, timeout=FAST_COMMANDS_TIMEOUT, errors_allowed=errors_allowed
         )
+        self.no_lock = no_lock
         if result:
             msg = "Snapshots listed successfully"
         elif errors_allowed:
