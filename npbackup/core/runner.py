@@ -81,7 +81,7 @@ non_locking_operations = [
     "list",
     "ls",
     "find",
-    # check should not be locking, but we definitly don't want to play with fire here
+    # check should not be locking, but we definitely don't want to play with fire here
     # "check"
 ]
 
