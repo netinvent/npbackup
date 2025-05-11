@@ -341,7 +341,7 @@ class NPBackupRunner:
     def no_lock(self) -> bool:
         return self._no_lock
 
-    @no_aquire_lock.setter
+    @no_lock.setter
     def no_lock(self, value: bool):
         if not isinstance(value, bool):
             msg = f"Bogus no_lock parameter given: {value}"
