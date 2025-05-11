@@ -939,12 +939,9 @@ class ResticRunner:
         cmd = "snapshots"
         if id:
             cmd += f" {id}"
-        no_lock = self.no_lock
-        self.no_lock = True
         result, output = self.executor(
             cmd, timeout=FAST_COMMANDS_TIMEOUT, errors_allowed=errors_allowed
         )
-        self.no_lock = no_lock
         if result:
             msg = "Snapshots listed successfully"
         elif errors_allowed:

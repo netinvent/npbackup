@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025040901"
+__build__ = "2025051101"
 
 
 from typing import Optional, Callable, Union, List, Tuple
@@ -64,6 +64,7 @@ required_permissions = {
     "raw": ["full"],
 }
 
+# Specific operations that should never be run concurrently
 locking_operations = [
     "backup",
     "repair",
@@ -71,6 +72,17 @@ locking_operations = [
     "prune",
     "raw",
     "unlock",
+]
+
+# Specific operations that should not lock the repository (--no-lock)
+non_locking_operations = [
+    "snapshots",
+    "stats",
+    "list",
+    "ls",
+    "find",
+    # check should not be locking, but we definitly don't want to play with fire here
+    # "check"
 ]
 
 
@@ -329,7 +341,7 @@ class NPBackupRunner:
     def no_lock(self) -> bool:
         return self._no_lock
 
-    @no_lock.setter
+    @no_aquire_lock.setter
     def no_lock(self, value: bool):
         if not isinstance(value, bool):
             msg = f"Bogus no_lock parameter given: {value}"
@@ -697,6 +709,30 @@ class NPBackupRunner:
                 result = fn(  # pylint: disable=E1102 (not-callable)
                     self, *args, **kwargs
                 )
+            return result
+
+        return wrapper
+
+    def no_aquire_lock(fn: Callable):
+        """
+        Don't lock some operations
+        """
+
+        @wraps(fn)
+        def wrapper(self, *args, **kwargs):
+            # pylint: disable=E1101 (no-member)
+            if fn.__name__ == "group_runner":
+                operation = kwargs.get("operation")
+            else:
+                # pylint: disable=E1101 (no-member)
+                operation = fn.__name__
+
+            no_lock = self._no_lock
+            if operation in non_locking_operations:
+                self._no_lock = True
+            # pylint: disable=E1102 (not-callable)
+            result = fn(self, *args, **kwargs)
+            self._no_lock = no_lock
             return result
 
         return wrapper
@@ -1102,6 +1138,7 @@ class NPBackupRunner:
     @metrics
     @exec_timer
     @check_concurrency
+    @no_aquire_lock
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
@@ -1118,6 +1155,7 @@ class NPBackupRunner:
     @metrics
     @exec_timer
     @check_concurrency
+    @no_aquire_lock
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
@@ -1134,6 +1172,7 @@ class NPBackupRunner:
     @metrics
     @exec_timer
     @check_concurrency
+    @no_aquire_lock
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
@@ -1151,6 +1190,7 @@ class NPBackupRunner:
     @metrics
     @exec_timer
     @check_concurrency
+    @no_aquire_lock
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
