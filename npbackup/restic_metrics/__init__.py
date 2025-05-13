@@ -239,11 +239,16 @@ def restic_json_to_prometheus(
     backup_too_small = False
     try:
         if restic_json["total_bytes_processed"]:
-            processed_bytes = BytesConverter(
+            # We need human iec bytes for normalization accross other values
+            processed_bytes_iec = BytesConverter(
                 str(restic_json["total_bytes_processed"])
             ).human_iec_bytes
-            logger.info(f"Processed {processed_bytes} of data")
+            logger.info(f"Processed {processed_bytes_iec} of data")
             if minimum_backup_size_error:
+                # We need bytes for litteral comparison
+                processed_bytes = BytesConverter(
+                    str(restic_json["total_bytes_processed"])
+                ).bytes
                 if processed_bytes < int(
                     BytesConverter(
                         str(minimum_backup_size_error).replace(" ", "")
