@@ -236,26 +236,25 @@ def restic_json_to_prometheus(
         if value is not None:
             prom_metrics.append(f'restic_{key}{{{labels},action="backup"}} {value}')
 
-    try:
-        processed_bytes = BytesConverter(
-            str(restic_json["total_bytes_processed"])
-        ).human_iec_bytes
-        logger.info(f"Processed {processed_bytes} of data")
-    except Exception as exc:
-        logger.error(f"Cannot find processed bytes: {exc}")
     backup_too_small = False
-    if minimum_backup_size_error:
-        try:
-            if restic_json["total_bytes_processed"] and restic_json[
-                "total_bytes_processed"
-            ] < int(
-                BytesConverter(str(minimum_backup_size_error).replace(" ", "")).bytes
-            ):
-                backup_too_small = True
-        except KeyError:
-            # Don't care if we cannot determine backup size error
-            # Other errors should be triggered, see #141
-            pass
+    try:
+        if restic_json["total_bytes_processed"]:
+            processed_bytes = BytesConverter(
+                str(restic_json["total_bytes_processed"])
+            ).human_iec_bytes
+            logger.info(f"Processed {processed_bytes} of data")
+            if minimum_backup_size_error:
+                if processed_bytes < int(
+                    BytesConverter(
+                        str(minimum_backup_size_error).replace(" ", "")
+                    ).bytes
+                ):
+                    backup_too_small = True
+    except Exception as exc:
+        logger.warning(f"Cannot determine processed bytes: {exc}")
+        logger.debug("Trace:", exc_info=True)
+        # We don't care if this exception happens, as error state still will raise from
+        # other parts of this code
     good_backup = restic_result and not backup_too_small
 
     prom_metrics.append(
