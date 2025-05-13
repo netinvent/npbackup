@@ -245,7 +245,7 @@ def restic_json_to_prometheus(
             ).human_iec_bytes
             logger.info(f"Processed {processed_bytes_iec} of data")
             if minimum_backup_size_error:
-                # We need bytes for litteral comparison
+                # We need bytes for literal comparison
                 processed_bytes = BytesConverter(
                     str(restic_json["total_bytes_processed"])
                 ).bytes
