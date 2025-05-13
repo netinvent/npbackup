@@ -239,7 +239,7 @@ def restic_json_to_prometheus(
     backup_too_small = False
     try:
         if restic_json["total_bytes_processed"]:
-            # We need human iec bytes for normalization accross other values
+            # We need human iec bytes for normalization across other values
             processed_bytes_iec = BytesConverter(
                 str(restic_json["total_bytes_processed"])
             ).human_iec_bytes
