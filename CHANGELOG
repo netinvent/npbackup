@@ -4,7 +4,7 @@
 
 ## 3.0.2
 #### Features
-- Implement --no-lock paramater
+- Implement --no-lock parameter
 - Viewer: Automatically adds --no-lock
 - NTP maximum offset is now configurable at compile time
 - Implement a filter for Rclone debug messages, Fixes #132
