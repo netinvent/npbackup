@@ -2,6 +2,60 @@
 ## Planned ahead
  ! Operation center must be able to create scheduled tasks for every operation
 
+## 3.0.2
+#### Features
+- Implement --no-lock paramater
+- Viewer: Automatically adds --no-lock
+- NTP maximum offset is now configurable at compile time
+- Implement a filter for Rclone debug messages, Fixes #132
+- Reimplement cloud file exclusion for windows since it's now included in restic 0.18.0
+- GUI: Show sources with missing / irregular / link files
+
+#### Fixes
+- Fix NTP server potential error message when offset cannot be computed
+- Don't throw an error on missing  metrics backup size
+- GUI: Fix when setting empty strings for byte values
+- GUI: Add missing inheritance checks for prune settings
+- GUI: Don't fail on non existing source path checks, fixes #157
+
+#### Misc
+- Remove double logging when debugging is active
+- Operations now don't check if repository is initialized anymore by running snapshots command
+- Config file version check is now subversion aware
+- Update Nuitka compiler to 2.6.9
+- Update restic binary to 0.18.0 compiled with go1.24.1;
+- Update legacy build process
+  - Added special restic legacvy binary to 0.18.0 compiled with go1.24.2-win7sup7
+  - Added restic legacy build script
+  - Drop Python 3.7 support (except for ARM builds)
+  - Also generate Windows 64-bit legacy builds
+- Set default minimum_backup_age to 23h55 (see #162)
+
+## 3.0.1
+
+#### Features
+- Enable prune tuning parameters
+- Add housekeeping after backup run chance parameter
+- Add auto upgrade run chance parameter
+- Configuration file checks are now subversion aware
+- Allow partial configuration files (missing default repo / group)
+
+#### Fixes
+- Missing specified backup paths won't trigger errors (backend behavior), see #151
+- Updated Grafana Dashboard: fixed variable gathering from wrong metric name)
+- CLI: Fix --prune-max (deprecated)
+- CLI: Add --prune max (replaces --prune-max)
+- CLI: Fix --policy not allowed in group operations
+- GUI: Fix CTRL+C triggers and error, #125
+- GUI: Fix showing inheritance icon on entries wiith units, #148
+- GUI: Permission set button should be red if no permission set
+- GUI: Default units should be IEC bytes, like restic backend, fixes #143
+- Fix for textcollector & push gateway data being overwritten in group operations mode, #150
+- Dissociate minimum backup size error from absent backup error, #141
+
+#### Misc
+- GUI: General UX and cosmetic fixes 
+
 ## 3.0.0
  - This is a major rewrite that allows using multiple repositories, adds repository groups and implements repository settings inheritance from group settings
 
