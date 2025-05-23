@@ -51,7 +51,7 @@ groups:
     repo_opts:
       repo_password:
       repo_password_command:
-      minimum_backup_age: 1440
+      minimum_backup_age: 1435
       upload_speed: 800 Mib
       download_speed: 0 Mib
       backend_connections: 0

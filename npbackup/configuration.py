@@ -177,7 +177,7 @@ empty_config_dict = {
                 "repo_password_command": None,
                 # Minimum time between two backups, in minutes
                 # Set to zero in order to disable time checks
-                "minimum_backup_age": 1440,
+                "minimum_backup_age": 1435,
                 "upload_speed": "800 Mib",  # allows BytesConverter units, use 0 for unlimited upload speed
                 "download_speed": "0 Mib",  # allows BytesConverter units, use 0 for unlimited download speed
                 "backend_connections": 0,  # Fine tune simultaneous connections to backend, use 0 for standard configuration
