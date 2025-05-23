@@ -1585,7 +1585,6 @@ class NPBackupRunner:
             ignore_additional_json=True,
         )
 
-        housekeeping_result = True
         if operation_result:
             post_backup_housekeeping_percent_chance = self.repo_config.g(
                 "backup_opts.post_backup_housekeeping_percent_chance"
@@ -1626,11 +1625,16 @@ class NPBackupRunner:
                         __check_concurrency=False,
                         check_concurrency=False,
                     )
+                    if not housekeeping_result:
+                        self.write_logs("After backup housekeeping failed", level="error")
 
-        if not operation_result or not housekeeping_result:
+        # housekeeping has it's own metrics, so we won't include them in the operational result of the backup
+        if not operation_result:
             # patch result if json
             if isinstance(result, dict):
                 result["result"] = False
+            else:
+                result = False
             # Don't overwrite backend output in case of failure
             return self.convert_to_json_output(result)
         return self.convert_to_json_output(result, msg)
