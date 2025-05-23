@@ -1626,7 +1626,9 @@ class NPBackupRunner:
                         check_concurrency=False,
                     )
                     if not housekeeping_result:
-                        self.write_logs("After backup housekeeping failed", level="error")
+                        self.write_logs(
+                            "After backup housekeeping failed", level="error"
+                        )
 
         # housekeeping has it's own metrics, so we won't include them in the operational result of the backup
         if not operation_result:
