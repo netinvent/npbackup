@@ -467,7 +467,10 @@ def restore_window(
             __autoclose=True,
             __no_lock=__no_lock,
         )
-        return result["result"]
+        try:
+            return result["result"]
+        except TypeError:
+            return result
 
     left_col = [
         [
@@ -520,7 +523,10 @@ def backup(repo_config: dict) -> bool:
         __backend_binary=backend_binary,
         __no_lock=__no_lock,
     )
-    return result["result"]
+    try:
+        return result["result"]
+    except TypeError:
+        return result
 
 
 def forget_snapshot(repo_config: dict, snapshot_ids: List[str]) -> bool:
@@ -536,7 +542,10 @@ def forget_snapshot(repo_config: dict, snapshot_ids: List[str]) -> bool:
         __backend_binary=backend_binary,
         __no_lock=__no_lock,
     )
-    return result["result"]
+    try:
+        return result["result"]
+    except TypeError:
+        return result
 
 
 def _main_gui(viewer_mode: bool):
