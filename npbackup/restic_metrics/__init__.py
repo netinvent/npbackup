@@ -6,8 +6,8 @@ __intname__ = "restic_metrics"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "BSD-3-Clause"
-__version__ = "2.0.2"
-__build__ = "2024030501"
+__version__ = "2.0.3"
+__build__ = "2025052301"
 __description__ = (
     "Converts restic command line output to a text file node_exporter can scrape"
 )
@@ -185,6 +185,11 @@ def restic_json_to_prometheus(
             _labels.append(f'{key.strip()}="{value.strip()}"')
     labels = ",".join(_labels)
 
+    # If restic_json is a bool, just fail
+    if isinstance(restic_json, bool):
+        logger.error("Backup data could not be analayzed.")
+        return False, [], False
+
     # Take last line of restic output
     if isinstance(restic_json, str):
         found = False
@@ -195,7 +200,7 @@ def restic_json_to_prometheus(
                 break
         if not found:
             logger.critical("Bogus data given. No message_type: summary found")
-            return False, [], True
+            return False, [], False
 
     if not isinstance(restic_json, dict):
         try:

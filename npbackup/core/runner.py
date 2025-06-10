@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025051101"
+__build__ = "2025052301"
 
 
 from typing import Optional, Callable, Union, List, Tuple
@@ -92,7 +92,9 @@ def metric_analyser(
     result_string: str,
     operation: str,
     dry_run: bool,
-    is_first_metrics_run: bool,
+    append_metrics_file: bool,
+    exec_time: Optional[float] = None,
+    analyze_only: bool = False,
 ) -> Tuple[bool, bool]:
     """
     Tries to get operation success and backup to small booleans from restic output
@@ -185,53 +187,50 @@ def metric_analyser(
             )
         except (ValueError, TypeError):
             pass
-        # Add exec time
-        try:
-            exec_time = os.environ.get("NPBACKUP_EXEC_TIME", None)
-            exec_time = float(exec_time)
-            metrics.append(
-                f'npbackup_exec_time{{{labels},action="{operation}",repo_name="{repo_name}",timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {exec_time}'
-            )
-        except (ValueError, TypeError):
-            logger.warning("Cannot get exec time from environment")
-
-        logger.debug("Metrics computed:\n{}".format("\n".join(metrics)))
-        if destination and dry_run:
-            logger.info("Dry run mode. Not sending metrics.")
-        elif destination:
-            logger.debug("Sending metrics to {}".format(destination))
-            dest = destination.lower()
-            if dest.startswith("http"):
-                if not "metrics" in dest:
-                    logger.error(
-                        "Destination does not contain 'metrics' keyword. Not uploading."
-                    )
-                    return backup_too_small
-                if not "job" in dest:
-                    logger.error(
-                        "Destination does not contain 'job' keyword. Not uploading."
-                    )
-                    return backup_too_small
-                try:
-                    authentication = (
-                        repo_config.g("prometheus.http_username"),
-                        repo_config.g("prometheus.http_password"),
-                    )
-                except KeyError:
-                    logger.info("No metrics authentication present.")
-                    authentication = None
-
-                # Fix for #150, job name needs to be unique in order to avoid overwriting previous job in push gateway
-                destination = (
-                    f"{destination}___repo_name={repo_name}___action={operation}"
+        if isinstance(exec_time, (int, float)):
+            try:
+                metrics.append(
+                    f'npbackup_exec_time{{{labels},action="{operation}",repo_name="{repo_name}",timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {exec_time}'
                 )
-                upload_metrics(destination, authentication, no_cert_verify, metrics)
+            except (ValueError, TypeError):
+                logger.warning("Cannot get exec time from environment")
+
+        if not analyze_only:
+            logger.debug("Metrics computed:\n{}".format("\n".join(metrics)))
+            if destination and dry_run:
+                logger.info("Dry run mode. Not sending metrics.")
+            elif destination:
+                logger.debug("Sending metrics to {}".format(destination))
+                dest = destination.lower()
+                if dest.startswith("http"):
+                    if not "metrics" in dest:
+                        logger.error(
+                            "Destination does not contain 'metrics' keyword. Not uploading."
+                        )
+                        return backup_too_small
+                    if not "job" in dest:
+                        logger.error(
+                            "Destination does not contain 'job' keyword. Not uploading."
+                        )
+                        return backup_too_small
+                    try:
+                        authentication = (
+                            repo_config.g("prometheus.http_username"),
+                            repo_config.g("prometheus.http_password"),
+                        )
+                    except KeyError:
+                        logger.info("No metrics authentication present.")
+                        authentication = None
+
+                    # Fix for #150, job name needs to be unique in order to avoid overwriting previous job in push gateway
+                    destination = (
+                        f"{destination}___repo_name={repo_name}___action={operation}"
+                    )
+                    upload_metrics(destination, authentication, no_cert_verify, metrics)
+                else:
+                    write_metrics_file(destination, metrics, append=append_metrics_file)
             else:
-                write_metrics_file(
-                    destination, metrics, append=not is_first_metrics_run
-                )
-        else:
-            logger.debug("No metrics destination set. Not sending metrics")
+                logger.debug("No metrics destination set. Not sending metrics")
     except KeyError as exc:
         logger.info("Metrics error: {}".format(exc))
         logger.debug("Trace:", exc_info=True)
@@ -293,7 +292,7 @@ class NPBackupRunner:
         self.warnings_for_json = []
 
         self._produce_metrics = True
-        self._is_first_metrics_run = True
+        self._append_metrics_file = False
         self._canceled = False
 
     @property
@@ -449,14 +448,14 @@ class NPBackupRunner:
         self._produce_metrics = value
 
     @property
-    def is_first_metrics_run(self):
-        return self._is_first_metrics_run
+    def append_metrics_file(self):
+        return self._append_metrics_file
 
-    @is_first_metrics_run.setter
-    def is_first_metrics_run(self, value):
+    @append_metrics_file.setter
+    def append_metrics_file(self, value):
         if not isinstance(value, bool):
-            raise ValueError("is_first_metrics_run value {value} is not a boolean")
-        self._is_first_metrics_run = value
+            raise ValueError("append_metrics_file value {value} is not a boolean")
+        self._append_metrics_file = value
 
     @property
     def exec_time(self):
@@ -533,10 +532,6 @@ class NPBackupRunner:
             self.write_logs(
                 f"Runner took {self.exec_time} seconds for {fn.__name__}", level="info"
             )
-            try:
-                os.environ["NPBACKUP_EXEC_TIME"] = str(self.exec_time)
-            except OSError:
-                pass
             return result
 
         return wrapper
@@ -764,12 +759,17 @@ class NPBackupRunner:
                 metric_analyser(
                     self.repo_config,
                     False,
-                    None,
+                    self.restic_runner.backup_result_content,
                     fn.__name__,
                     self.dry_run,
-                    self.is_first_metrics_run,
+                    self.append_metrics_file,
+                    self.exec_time,
+                    analyze_only=False,
                 )
-                self.is_first_metrics_run = False
+                # We need to reset backup result content once it's parsed
+                self.restic_runner.backup_result_content = None
+                # We need to append to metric file once we begin writing to it
+                self.append_metrics_file = True
                 if self.json_output:
                     js = {
                         "result": False,
@@ -791,16 +791,21 @@ class NPBackupRunner:
             # pylint: disable=E1102 (not-callable)
             result = fn(self, *args, **kwargs)
             # pylint: disable=E1101 (no-member)
-            if self._produce_metrics:
+            if self.produce_metrics:
                 metric_analyser(
                     self.repo_config,
                     result,
-                    None,
+                    self.restic_runner.backup_result_content,
                     fn.__name__,
                     self.dry_run,
-                    self.is_first_metrics_run,
+                    self.append_metrics_file,
+                    self.exec_time,
+                    analyze_only=False,
                 )
-                self.is_first_metrics_run = False
+                # We need to reset backup result content once it's parsed
+                self.restic_runner.backup_result_content = None
+                # We need to append to metric file once we begin writing to it
+                self.append_metrics_file = True
             else:
                 self.write_logs(
                     f"Metrics disabled for call {fn.__name__}", level="debug"
@@ -1260,6 +1265,7 @@ class NPBackupRunner:
     @threaded
     @close_queues
     @catch_exceptions
+    @metrics
     @exec_timer
     @check_concurrency
     @has_permission
@@ -1546,14 +1552,6 @@ class NPBackupRunner:
                 post_exec_failure_is_fatal,
             )
 
-        # So we must duplicate @exec_time code here since we must call @metrics manually
-        # because it will need restic output from backup function
-        self.exec_time = (datetime.now(timezone.utc) - start_time).total_seconds()
-        try:
-            os.environ["NPBACKUP_EXEC_TIME"] = str(self.exec_time)
-        except OSError:
-            pass
-
         # Extract backup size from result_string
         # Metrics will not be in json format, since we need to diag cloud issues until
         # there is a fix for https://github.com/restic/restic/issues/4155
@@ -1563,9 +1561,10 @@ class NPBackupRunner:
             self.restic_runner.backup_result_content,
             "backup",
             self.restic_runner.dry_run,
-            self.is_first_metrics_run,
+            self.append_metrics_file,
+            self.exec_time,
+            analyze_only=True,
         )
-        self.is_first_metrics_run = False
 
         if backup_too_small:
             self.write_logs(
@@ -1586,7 +1585,6 @@ class NPBackupRunner:
             ignore_additional_json=True,
         )
 
-        housekeeping_result = True
         if operation_result:
             post_backup_housekeeping_percent_chance = self.repo_config.g(
                 "backup_opts.post_backup_housekeeping_percent_chance"
@@ -1627,11 +1625,18 @@ class NPBackupRunner:
                         __check_concurrency=False,
                         check_concurrency=False,
                     )
+                    if not housekeeping_result:
+                        self.write_logs(
+                            "After backup housekeeping failed", level="error"
+                        )
 
-        if not operation_result or not housekeeping_result:
+        # housekeeping has it's own metrics, so we won't include them in the operational result of the backup
+        if not operation_result:
             # patch result if json
             if isinstance(result, dict):
                 result["result"] = False
+            else:
+                result = False
             # Don't overwrite backend output in case of failure
             return self.convert_to_json_output(result)
         return self.convert_to_json_output(result, msg)
