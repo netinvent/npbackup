@@ -174,10 +174,10 @@ def metric_analyser(
         for key, value in labels.items():
             if value:
                 _labels.append(f'{key.strip()}="{value.strip()}"')
-        labels = ",".join(list(set(_labels)))
+        labels_string = ",".join(list(set(_labels)))
 
         metrics.append(
-            f'npbackup_exec_state{{{labels},timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {exec_state}'
+            f'npbackup_exec_state{{{labels_string},timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {exec_state}'
         )
 
         # Add upgrade state if upgrades activated
@@ -189,16 +189,16 @@ def metric_analyser(
             for key, value in labels.items():
                 if value:
                     _labels.append(f'{key.strip()}="{value.strip()}"')
-            labels = ",".join(list(set(_labels)))
+            labels_string = ",".join(list(set(_labels)))
             metrics.append(
-                f'npbackup_exec_state{{{labels},timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {upgrade_state}'
+                f'npbackup_exec_state{{{labels_string},timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {upgrade_state}'
             )
         except (ValueError, TypeError):
             pass
         if isinstance(exec_time, (int, float)):
             try:
                 metrics.append(
-                    f'npbackup_exec_time{{{labels},timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {exec_time}'
+                    f'npbackup_exec_time{{{labels_string},timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {exec_time}'
                 )
             except (ValueError, TypeError):
                 logger.warning("Cannot get exec time from environment")

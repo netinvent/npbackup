@@ -183,7 +183,7 @@ def restic_json_to_prometheus(
     for key, value in labels.items():
         if value:
             _labels.append(f'{key.strip()}="{value.strip()}"')
-    labels = ",".join(list(set(_labels)))
+    labels_string = ",".join(list(set(_labels)))
 
     # If restic_json is a bool, just fail
     if isinstance(restic_json, bool):
@@ -222,25 +222,27 @@ def restic_json_to_prometheus(
                     if key.endswith(enders):
                         if value is not None:
                             prom_metrics.append(
-                                f'restic_{starters}{{{labels},state="{enders}"}} {value}'
+                                f'restic_{starters}{{{labels_string},state="{enders}"}} {value}'
                             )
                             skip = True
         if skip:
             continue
         if key == "total_files_processed":
             if value is not None:
-                prom_metrics.append(f'restic_files{{{labels},state="total"}} {value}')
+                prom_metrics.append(
+                    f'restic_files{{{labels_string},state="total"}} {value}'
+                )
                 continue
         if key == "total_bytes_processed":
             if value is not None:
                 prom_metrics.append(
-                    f'restic_snasphot_size_bytes{{{labels},type="processed"}} {value}'
+                    f'restic_snasphot_size_bytes{{{labels_string},type="processed"}} {value}'
                 )
                 continue
         if "duration" in key:
             key += "_seconds"
         if value is not None:
-            prom_metrics.append(f"restic_{key}{{{labels}}} {value}")
+            prom_metrics.append(f"restic_{key}{{{labels_string}}} {value}")
 
     backup_too_small = False
     try:
@@ -270,7 +272,7 @@ def restic_json_to_prometheus(
 
     prom_metrics.append(
         'restic_backup_failure{{{},timestamp="{}"}} {}'.format(
-            labels,
+            labels_string,
             int(datetime.now(timezone.utc).timestamp()),
             1 if not good_backup else 0,
         )
@@ -325,17 +327,17 @@ def restic_output_2_metrics(restic_result, output, labels=None):
                 try:
                     metrics.append(
                         'restic_repo_files{{{},state="new"}} {}'.format(
-                            labels, matches.group(1)
+                            labels_string, matches.group(1)
                         )
                     )
                     metrics.append(
                         'restic_repo_files{{{},state="changed"}} {}'.format(
-                            labels, matches.group(2)
+                            labels_string, matches.group(2)
                         )
                     )
                     metrics.append(
                         'restic_repo_files{{{},state="unmodified"}} {}'.format(
-                            labels, matches.group(3)
+                            labels_string, matches.group(3)
                         )
                     )
                 except IndexError:
@@ -579,14 +581,14 @@ if __name__ == "__main__":
         logger.error("Output directory {} does not exist.".format(destination_dir))
         sys.exit(2)
 
-    labels = 'instance="{}",backup_job="{}"'.format(instance, backup_job)
+    labels_string = 'instance="{}",backup_job="{}"'.format(instance, backup_job)
     if args.labels:
-        labels += ",{}".format(labels)
+        labels_string += ",{}".format(args.labels)
     destination_file = os.path.join(destination_dir, output_filename)
     try:
         with open(log_file, "r", encoding="utf-8") as file_handle:
             errors, metrics = restic_output_2_metrics(
-                True, output=file_handle.readlines(), labels=labels
+                True, output=file_handle.readlines(), labels=labels_string
             )
         if errors:
             logger.error("Script finished with errors.")
