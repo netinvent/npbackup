@@ -295,6 +295,9 @@ class NPBackupRunner:
         self._append_metrics_file = False
         self._canceled = False
 
+        # Allow running multiple npbackup instances
+        self._concurrency = False
+
     @property
     def repo_config(self) -> dict:
         return self._repo_config
@@ -446,6 +449,16 @@ class NPBackupRunner:
         if not isinstance(value, bool):
             raise ValueError("produce_metrics value {value} is not a boolean")
         self._produce_metrics = value
+
+    @property
+    def concurrency(self):
+        return self._concurrency
+
+    @concurrency.setter
+    def concurrency(self, value):
+        if not isinstance(value, bool):
+            raise ValueError("concurrency value {value} is not a boolean")
+        self._concurrency = value
 
     @property
     def append_metrics_file(self):
@@ -695,11 +708,18 @@ class NPBackupRunner:
                         # pylint: disable=E1102 (not-callable)
                         result = fn(self, *args, **kwargs)
                 except pidfile.AlreadyRunningError:
-                    self.write_logs(
-                        f"There is already an operation running by NPBackup. Will not launch operation {operation} to avoid concurrency",
-                        level="critical",
-                    )
-                    return False
+                    if self.concurrency:
+                        self.write_logs(
+                            f"There is already an operation running by NPBackup, but concurrency is allowed",
+                            level="info",
+                        )
+                        result = fn(self, *args, **kwargs)
+                    else:
+                        self.write_logs(
+                            f"There is already an operation running by NPBackup. Will not launch operation {operation} to avoid concurrency",
+                            level="critical",
+                        )
+                        return False
             else:
                 result = fn(  # pylint: disable=E1102 (not-callable)
                     self, *args, **kwargs

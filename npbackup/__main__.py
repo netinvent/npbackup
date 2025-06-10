@@ -603,6 +603,10 @@ This is free software, and you are welcome to redistribute it under certain cond
             # Prefer using supervision for upgrades
             logger.info("Interval initiated auto upgrade not initiated")
 
+    concurrency = full_config.g("global_options.allow_concurrent_runs")
+    if concurrency is None:
+        concurrency = False
+
     # Prepare program run
     cli_args = {
         "verbose": args.verbose,
@@ -611,6 +615,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         "backend_binary": backend_binary,
         "no_cache": args.no_cache,
         "no_lock": args.no_lock,
+        "concurrency": concurrency,
         "operation": None,
         "op_args": {},
     }

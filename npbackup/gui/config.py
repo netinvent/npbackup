@@ -2202,6 +2202,12 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 sg.Input(key="global_options.auto_upgrade_group", size=(50, 1)),
             ],
             [sg.HorizontalSeparator()],
+            [
+                sg.Text(_t("config_gui.allow_concurrent_runs"), size=(40, 1)),
+                sg.Checkbox(
+                    "", key="global_options.allow_concurrent_runs", size=(41, 1)
+                ),
+            ],
         ]
 
         global_prometheus_col = [
