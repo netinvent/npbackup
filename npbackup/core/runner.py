@@ -713,6 +713,7 @@ class NPBackupRunner:
                             f"There is already an operation running by NPBackup, but concurrency is allowed",
                             level="info",
                         )
+                        # pylint: disable=E1102 (not-callable)
                         result = fn(self, *args, **kwargs)
                     else:
                         self.write_logs(
