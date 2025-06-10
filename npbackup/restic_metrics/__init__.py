@@ -187,6 +187,9 @@ def restic_json_to_prometheus(
 
     # If restic_json is a bool, just fail
     if isinstance(restic_json, bool):
+        if restic_json is True:
+            # This case happens when backup is not necessary
+            return True, [], False
         logger.error("Backup data could not be analayzed.")
         return False, [], False
 
