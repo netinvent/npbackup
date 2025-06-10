@@ -6,8 +6,8 @@ __intname__ = "restic_metrics"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "BSD-3-Clause"
-__version__ = "2.0.3"
-__build__ = "2025052301"
+__version__ = "2.1.0"
+__build__ = "2025061001"
 __description__ = (
     "Converts restic command line output to a text file node_exporter can scrape"
 )
@@ -183,7 +183,7 @@ def restic_json_to_prometheus(
     for key, value in labels.items():
         if value:
             _labels.append(f'{key.strip()}="{value.strip()}"')
-    labels = ",".join(_labels)
+    labels = ",".join(list(set(_labels)))
 
     # If restic_json is a bool, just fail
     if isinstance(restic_json, bool):
@@ -222,27 +222,25 @@ def restic_json_to_prometheus(
                     if key.endswith(enders):
                         if value is not None:
                             prom_metrics.append(
-                                f'restic_{starters}{{{labels},state="{enders}",action="backup"}} {value}'
+                                f'restic_{starters}{{{labels},state="{enders}"}} {value}'
                             )
                             skip = True
         if skip:
             continue
         if key == "total_files_processed":
             if value is not None:
-                prom_metrics.append(
-                    f'restic_files{{{labels},state="total",action="backup"}} {value}'
-                )
+                prom_metrics.append(f'restic_files{{{labels},state="total"}} {value}')
                 continue
         if key == "total_bytes_processed":
             if value is not None:
                 prom_metrics.append(
-                    f'restic_snasphot_size_bytes{{{labels},action="backup",type="processed"}} {value}'
+                    f'restic_snasphot_size_bytes{{{labels},type="processed"}} {value}'
                 )
                 continue
         if "duration" in key:
             key += "_seconds"
         if value is not None:
-            prom_metrics.append(f'restic_{key}{{{labels},action="backup"}} {value}')
+            prom_metrics.append(f"restic_{key}{{{labels}}} {value}")
 
     backup_too_small = False
     try:
@@ -438,7 +436,7 @@ def restic_output_2_metrics(restic_result, output, labels=None):
                     seconds_elapsed = convert_time_to_seconds(matches.group(4))
                     try:
                         metrics.append(
-                            'restic_backup_duration_seconds{{{},action="backup"}} {}'.format(
+                            "restic_backup_duration_seconds{{{}}} {}".format(
                                 labels, int(seconds_elapsed)
                             )
                         )

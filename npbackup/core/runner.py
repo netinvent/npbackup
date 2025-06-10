@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025052301"
+__build__ = "2025061001"
 
 
 from typing import Optional, Callable, Union, List, Tuple
@@ -105,10 +105,12 @@ def metric_analyser(
     metrics = []
 
     try:
-        labels = {
-            "npversion": f"{NAME}{version_dict['version']}-{version_dict['build_type']}"
-        }
         repo_name = repo_config.g("name")
+        labels = {
+            "npversion": f"{NAME}{version_dict['version']}-{version_dict['build_type']}",
+            "repo_name": repo_name,
+            "action": operation,
+        }
         if repo_config.g("prometheus.metrics"):
             labels["instance"] = repo_config.g("prometheus.instance")
             labels["backup_job"] = repo_config.g("prometheus.backup_job")
@@ -172,25 +174,31 @@ def metric_analyser(
         for key, value in labels.items():
             if value:
                 _labels.append(f'{key.strip()}="{value.strip()}"')
-        labels = ",".join(_labels)
+        labels = ",".join(list(set(_labels)))
 
         metrics.append(
-            f'npbackup_exec_state{{{labels},action="{operation}",repo_name="{repo_name}",timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {exec_state}'
+            f'npbackup_exec_state{{{labels},timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {exec_state}'
         )
 
         # Add upgrade state if upgrades activated
         upgrade_state = os.environ.get("NPBACKUP_UPGRADE_STATE", None)
         try:
             upgrade_state = int(upgrade_state)
+            _labels = []
+            labels["action"] = "upgrade"
+            for key, value in labels.items():
+                if value:
+                    _labels.append(f'{key.strip()}="{value.strip()}"')
+            labels = ",".join(list(set(_labels)))
             metrics.append(
-                f'npbackup_exec_state{{{labels},action="upgrade",repo_name="{repo_name}",timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {upgrade_state}'
+                f'npbackup_exec_state{{{labels},timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {upgrade_state}'
             )
         except (ValueError, TypeError):
             pass
         if isinstance(exec_time, (int, float)):
             try:
                 metrics.append(
-                    f'npbackup_exec_time{{{labels},action="{operation}",repo_name="{repo_name}",timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {exec_time}'
+                    f'npbackup_exec_time{{{labels},timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {exec_time}'
                 )
             except (ValueError, TypeError):
                 logger.warning("Cannot get exec time from environment")
