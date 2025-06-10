@@ -556,7 +556,6 @@ def _main_gui(viewer_mode: bool):
     global logger
     global backend_binary
     global __no_lock
-    global __concurrency
     global GUI_STATUS_IGNORE_ERRORS
 
     def check_for_auto_upgrade(config_file: str, full_config: dict) -> bool:
@@ -777,6 +776,7 @@ def _main_gui(viewer_mode: bool):
     def get_config(
         config_file: str = None, window: sg.Window = None, repo_name: str = None
     ) -> Tuple:
+        global __concurrency
         full_config, config_file = get_config_file(config_file=config_file)
         if full_config and config_file:
             __concurrency = full_config.g("global_options.allow_concurrent_runs")
