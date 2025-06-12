@@ -33,7 +33,6 @@ class PIDFile(object):
         self._file = "{}-{}".format(self._file, self.sanitize(self._process_name))
         if identifier:
             self._file = "{}-{}".format(self._file, self.sanitize(identifier))
-        print(self._file)
 
     @staticmethod
     def sanitize(filename: str) -> str:
