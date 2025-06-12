@@ -64,7 +64,8 @@ from npbackup.restic_wrapper import schema
 logger = getLogger()
 backend_binary = None
 __no_lock = False
-__concurrency = False
+__full_concurrency = False
+__repo_aware_concurrency = False
 
 # This bool allows to not show errors on freshly configured repos or first runs, when repo isn't initialized yet
 # Also prevents showing errors when config was just changed
@@ -467,7 +468,8 @@ def restore_window(
             __backend_binary=backend_binary,
             __autoclose=True,
             __no_lock=__no_lock,
-            __concurrency=__concurrency,
+            __full_concurrency=__full_concurrency,
+            __repo_aware_concurrency=__repo_aware_concurrency,
         )
         try:
             return result["result"]
@@ -524,7 +526,8 @@ def backup(repo_config: dict) -> bool:
         __gui_msg=gui_msg,
         __backend_binary=backend_binary,
         __no_lock=__no_lock,
-        __concurrency=__concurrency,
+        __full_concurrency=__full_concurrency,
+        __repo_aware_concurrency=__repo_aware_concurrency,
     )
     try:
         return result["result"]
@@ -544,7 +547,8 @@ def forget_snapshot(repo_config: dict, snapshot_ids: List[str]) -> bool:
         __autoclose=True,
         __backend_binary=backend_binary,
         __no_lock=__no_lock,
-        __concurrency=__concurrency,
+        __full_concurrency=__full_concurrency,
+        __repo_aware_concurrency=__repo_aware_concurrency,
     )
     try:
         return result["result"]
@@ -665,7 +669,8 @@ def _main_gui(viewer_mode: bool):
             __backend_binary=backend_binary,
             __ignore_errors=GUI_STATUS_IGNORE_ERRORS,
             __no_lock=__no_lock,
-            __concurrency=__concurrency,
+            __full_concurrency=__full_concurrency,
+            __repo_aware_concurrency=__repo_aware_concurrency,
             errors_allowed=True,
         )
         GUI_STATUS_IGNORE_ERRORS = False
@@ -779,9 +784,14 @@ def _main_gui(viewer_mode: bool):
         global __concurrency
         full_config, config_file = get_config_file(config_file=config_file)
         if full_config and config_file:
-            __concurrency = full_config.g("global_options.allow_concurrent_runs")
-            if __concurrency is None:
-                __concurrency = False
+            __full_concurrency = full_config.g("global_options.full_concurrency")
+            if __full_concurrency is None:
+                __full_concurrency = False
+            __repo_aware_concurrency = full_config.g(
+                "global_options.repo_aware_concurrency"
+            )
+            if __repo_aware_concurrency is None:
+                __repo_aware_concurrency = False
             # If no repo name is given, just show first one
             try:
                 if not repo_name:

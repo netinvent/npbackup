@@ -2203,9 +2203,13 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             ],
             [sg.HorizontalSeparator()],
             [
-                sg.Text(_t("config_gui.allow_concurrent_runs"), size=(40, 1)),
+                sg.Text(_t("config_gui.full_concurrency"), size=(40, 1)),
+                sg.Checkbox("", key="global_options.full_concurrency", size=(41, 1)),
+            ],
+            [
+                sg.Text(_t("config_gui.repo_aware_concurrency"), size=(40, 1)),
                 sg.Checkbox(
-                    "", key="global_options.allow_concurrent_runs", size=(41, 1)
+                    "", key="global_options.repo_aware_concurrency", size=(41, 1)
                 ),
             ],
         ]

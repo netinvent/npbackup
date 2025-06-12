@@ -14,7 +14,6 @@ from typing import Optional, Callable, Union, List, Tuple
 import os
 import logging
 import tempfile
-import pidfile
 import queue
 from datetime import datetime, timedelta, timezone
 from functools import wraps
@@ -36,6 +35,7 @@ from npbackup.restic_wrapper import ResticRunner
 from npbackup.core.restic_source_binary import get_restic_internal_binary
 from npbackup.core import jobs
 from npbackup.path_helper import CURRENT_DIR, BASEDIR
+import npbackup.pidfile_ng
 from npbackup.__version__ import __intname__ as NAME, version_dict
 from npbackup.__debug__ import _DEBUG, exception_to_string
 from npbackup.__env__ import MAX_ALLOWED_NTP_OFFSET
@@ -296,8 +296,10 @@ class NPBackupRunner:
         self._append_metrics_file = False
         self._canceled = False
 
-        # Allow running multiple npbackup instances
-        self._concurrency = False
+        # Allow running multiple npbackup instances regardless of the repo
+        self._full_concurrency = False
+        # Allow running multiple npbackup instances if they use different repos
+        self._repo_aware_concurrency = False
 
     @property
     def repo_config(self) -> dict:
@@ -452,14 +454,24 @@ class NPBackupRunner:
         self._produce_metrics = value
 
     @property
-    def concurrency(self):
-        return self._concurrency
+    def full_concurrency(self):
+        return self._full_concurrency
 
-    @concurrency.setter
-    def concurrency(self, value):
+    @full_concurrency.setter
+    def full_concurrency(self, value):
+        if not isinstance(value, bool):
+            raise ValueError("full_concurrency value {value} is not a boolean")
+        self._full_concurrency = value
+
+    @property
+    def repo_aware_concurrency(self):
+        return self._repo_aware_concurrency
+
+    @repo_aware_concurrency.setter
+    def repo_aware_concurrency(self, value):
         if not isinstance(value, bool):
             raise ValueError("concurrency value {value} is not a boolean")
-        self._concurrency = value
+        self._repo_aware_concurrency = value
 
     @property
     def append_metrics_file(self):
@@ -693,6 +705,12 @@ class NPBackupRunner:
         def wrapper(self, *args, **kwargs):
 
             __check_concurrency = kwargs.pop("__check_concurrency", True)
+            if self.full_concurrency:
+                __check_concurrency = False
+            if self.repo_aware_concurrency:
+                identifier = self.repo_config.g("name")
+            else:
+                identifier = None
 
             # pylint: disable=E1101 (no-member)
             if fn.__name__ == "group_runner":
@@ -705,23 +723,17 @@ class NPBackupRunner:
                     tempfile.gettempdir(), "{}.pid".format(__intname__)
                 )
                 try:
-                    with pidfile.PIDFile(pid_file):
+                    with npbackup.pidfile_ng.PIDFile(
+                        pid_file, check_full_commandline=False, identifier=identifier
+                    ):
                         # pylint: disable=E1102 (not-callable)
                         result = fn(self, *args, **kwargs)
-                except pidfile.AlreadyRunningError:
-                    if self.concurrency:
-                        self.write_logs(
-                            f"There is already an operation running by NPBackup, but concurrency is allowed",
-                            level="info",
-                        )
-                        # pylint: disable=E1102 (not-callable)
-                        result = fn(self, *args, **kwargs)
-                    else:
-                        self.write_logs(
-                            f"There is already an operation running by NPBackup. Will not launch operation {operation} to avoid concurrency",
-                            level="critical",
-                        )
-                        return False
+                except npbackup.pidfile_ng.AlreadyRunningError:
+                    self.write_logs(
+                        f"There is already an operation running by NPBackup (full_concurrency = {self.full_concurrency}, repo_aware_concurrency = {self.repo_aware_concurrency}). Will not launch operation {operation} to avoid concurrency",
+                        level="critical",
+                    )
+                    return False
             else:
                 result = fn(  # pylint: disable=E1102 (not-callable)
                     self, *args, **kwargs

@@ -190,4 +190,5 @@ en:
   value_cannot_be_empty: Value cannot be empty
   repo_uri_cloud_hint: Cloud repo URI requires to set encrypted environment variables (see environment tab)
 
-  allow_concurrent_runs: Allow concurrent runs on different repos
+  full_concurrency: Don't check for concurrency
+  repo_aware_concurrency: Allow concurrent runs on different repos

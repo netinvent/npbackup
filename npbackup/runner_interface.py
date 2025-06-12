@@ -56,7 +56,8 @@ def entrypoint(*args, **kwargs):
     npbackup_runner.json_output = json_output
     npbackup_runner.no_cache = kwargs.pop("no_cache", False)
     npbackup_runner.no_lock = kwargs.pop("no_lock", False)
-    npbackup_runner.concurrency = kwargs.pop("concurrency", False)
+    npbackup_runner.full_concurrency = kwargs.pop("full_concurrency", False)
+    npbackup_runner.repo_aware_concurrency = kwargs.pop("repo_aware_concurrency", False)
     if backend_binary:
         npbackup_runner.binary = backend_binary
     result = npbackup_runner.__getattribute__(operation)(

@@ -603,9 +603,12 @@ This is free software, and you are welcome to redistribute it under certain cond
             # Prefer using supervision for upgrades
             logger.info("Interval initiated auto upgrade not initiated")
 
-    concurrency = full_config.g("global_options.allow_concurrent_runs")
-    if concurrency is None:
-        concurrency = False
+    full_concurrency = full_config.g("global_options.full_concurrency")
+    if full_concurrency is None:
+        full_concurrency = False
+    repo_aware_concurrency = full_config.g("global_options.repo_aware_concurrency")
+    if repo_aware_concurrency is None:
+        repo_aware_concurrency = True
 
     # Prepare program run
     cli_args = {
@@ -615,7 +618,8 @@ This is free software, and you are welcome to redistribute it under certain cond
         "backend_binary": backend_binary,
         "no_cache": args.no_cache,
         "no_lock": args.no_lock,
-        "concurrency": concurrency,
+        "full_concurrency": full_concurrency,
+        "repo_aware_concurrency": repo_aware_concurrency,
         "operation": None,
         "op_args": {},
     }

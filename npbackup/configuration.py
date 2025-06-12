@@ -227,7 +227,8 @@ empty_config_dict = {
         "auto_upgrade_server_password": None,
         "auto_upgrade_host_identity": "${MACHINE_ID}",
         "auto_upgrade_group": "${MACHINE_GROUP}",
-        "allow_concurrent_runs": False,  # Allow multiple npbackup instances to run at the same time
+        "full_concurrency": False,  # Allow multiple npbackup instances to run at the same time
+        "repo_aware_concurrency": False,  # Allow multiple npbackup instances to run at the same time, but only for different repos
     },
 }
 

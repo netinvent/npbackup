@@ -84,7 +84,8 @@ def gui_thread_runner(
     __backend_binary: str = None,
     __ignore_errors: bool = False,
     __no_lock: bool = False,
-    __concurrency: bool = False,
+    __full_concurrency: bool = False,
+    __repo_aware_concurrency: bool = False,
     *args,
     **kwargs,
 ) -> Union[dict, str]:
@@ -130,7 +131,8 @@ def gui_thread_runner(
 
     runner.no_lock = __no_lock
 
-    runner.concurrency = __concurrency
+    runner.full_concurrency = __full_concurrency
+    runner.repo_aware_concurrency = __repo_aware_concurrency
 
     # We'll always use json output in GUI mode
     runner.json_output = True

@@ -192,4 +192,5 @@ fr:
   value_cannot_be_empty: La valeur ne peut être vide
   repo_uri_cloud_hint: L'URI du dépot Cloud nécessite de définir des variables d'environnement chiffrées (voir l'onglet environnement)
 
-  allow_concurrent_runs: Autoriser concurrence si dépots différents
+  full_concurrency: Ne pas vérifier la concurrence
+  repo_aware_concurrency: Autoriser concurrencesur dépots différents
