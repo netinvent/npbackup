@@ -114,7 +114,7 @@ def test_restic_str_output_2_metrics():
     instance = "test"
     backup_job = "some_nas"
     labels_string = f'action="backup",backup_job="{backup_job}",instance="{instance}"'
-    
+
     for version, output in restic_str_outputs.items():
         print(f"Testing V1 parser restic str output from version {version}")
         errors, prom_metrics = restic_output_2_metrics(True, output, labels_string)

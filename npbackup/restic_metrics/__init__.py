@@ -478,7 +478,9 @@ def restic_output_2_metrics(restic_result, output, labels_string=None):
 
     metrics.append(
         'restic_backup_failure{{{},timestamp="{}"}} {}'.format(
-            labels_string, int(datetime.now(timezone.utc).timestamp()), 1 if errors else 0
+            labels_string,
+            int(datetime.now(timezone.utc).timestamp()),
+            1 if errors else 0,
         )
     )
     return errors, metrics
@@ -590,14 +592,16 @@ if __name__ == "__main__":
         logger.error("Output directory {} does not exist.".format(destination_dir))
         sys.exit(2)
 
-    labels_string = 'action="backup",backup_job="{}",instance="{}"'.format(instance, backup_job)
+    labels_string = 'action="backup",backup_job="{}",instance="{}"'.format(
+        instance, backup_job
+    )
     if args.labels:
         labels_string += ",{}".format(args.labels)
     destination_file = os.path.join(destination_dir, output_filename)
     try:
         with open(log_file, "r", encoding="utf-8") as file_handle:
             errors, metrics = restic_output_2_metrics(
-                True, output=file_handle.readlines(), labels=labels_string
+                True, output=file_handle.readlines(), labels_string=labels_string
             )
         if errors:
             logger.error("Script finished with errors.")
