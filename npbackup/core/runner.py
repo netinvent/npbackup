@@ -3,7 +3,7 @@
 #
 # This file is part of npbackup
 
-__intname__ = "npbackup.gui.core.runner"
+__intname__ = "npbackup.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
@@ -15,6 +15,7 @@ import os
 import logging
 import tempfile
 import queue
+import time
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 from copy import deepcopy
@@ -286,6 +287,7 @@ class NPBackupRunner:
         self._no_lock = False
         self.restic_runner = None
         self.minimum_backup_age = None
+        self.random_delay_before_backup = None
         self._exec_time = None
 
         # Error /warning messages to add for json output
@@ -718,6 +720,8 @@ class NPBackupRunner:
             else:
                 # pylint: disable=E1101 (no-member)
                 operation = fn.__name__
+
+            # Actual operation concurrency check
             if __check_concurrency and operation in locking_operations:
                 pid_file = os.path.join(
                     tempfile.gettempdir(), "{}.pid".format(__intname__)
@@ -1040,6 +1044,13 @@ class NPBackupRunner:
         except (KeyError, ValueError, TypeError):
             # In doubt, launch the backup regardless of last backup age
             self.minimum_backup_age = 0
+        try:
+            self.random_delay_before_backup = int(
+                self.repo_config.g("repo_opts.random_delay_before_backup")
+            )
+        except (KeyError, ValueError, TypeError):
+            # In doubt, launch the backup regardless of last backup age
+            self.random_delay_before_backup = 0
 
         self.restic_runner.verbose = self.verbose
         self.restic_runner.dry_run = self.dry_run
@@ -1308,15 +1319,14 @@ class NPBackupRunner:
     def backup(
         self,
         force: bool = False,
+        honor_delay: bool = True,
         read_from_stdin: bool = False,
         stdin_filename: str = None,
     ) -> bool:
         """
         Run backup after checking if no recent backup exists, unless force == True
         """
-
-        start_time = datetime.now(timezone.utc)
-
+        repo_name = self.repo_config.g("name")
         stdin_from_command = self.repo_config.g("backup_opts.stdin_from_command")
         if not stdin_filename:
             stdin_filename = self.repo_config.g("backup_opts.stdin_filename")
@@ -1444,6 +1454,30 @@ class NPBackupRunner:
                 self.write_logs(msg, level="info")
                 return self.convert_to_json_output(True, msg)
             self.restic_runner.verbose = self.verbose
+
+        # Now add a random delay before backup if configured
+        # We also need to make sure that npbackup executions that happen between this delay don't actually run
+        if self.random_delay_before_backup and honor_delay:
+            # Random delay before backup
+            delay_backup_seconds = randint(0, self.random_delay_before_backup * 60)
+            delay_file = os.path.join(
+                tempfile.gettempdir(), "{}.delay".format(__intname__)
+            )
+            try:
+                with npbackup.pidfile_ng.PIDFile(
+                    delay_file, check_full_commandline=False, identifier=repo_name
+                ):
+                    self.write_logs(
+                        f"Delaying backup for {delay_backup_seconds} seconds",
+                        level="info",
+                    )
+                    time.sleep(delay_backup_seconds)
+            except npbackup.pidfile_ng.AlreadyRunningError:
+                self.write_logs(
+                    f"There is already a delayed NPBackup operation (full_concurrency = {self.full_concurrency}, repo_aware_concurrency = {self.repo_aware_concurrency}). Will not launch backup to avoid concurrency",
+                    level="info",
+                )
+                return True
 
         # Run backup preps here
         if source_type in (

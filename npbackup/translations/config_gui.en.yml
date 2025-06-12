@@ -32,6 +32,7 @@ en:
   additional_restore_only_parameters: Additional restore only parameters
 
   minimum_backup_age: Minimum delay between two backups
+  random_delay_before_backup: Random delay before launching backup
   backup_repo_uri: backup repo URI / path
   backup_repo_password: Backup repo encryption password
   backup_repo_password_command: Command that returns backup repo encryption password

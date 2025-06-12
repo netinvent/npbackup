@@ -528,6 +528,7 @@ def backup(repo_config: dict) -> bool:
         __no_lock=__no_lock,
         __full_concurrency=__full_concurrency,
         __repo_aware_concurrency=__repo_aware_concurrency,
+        honor_delay=False,
     )
     try:
         return result["result"]

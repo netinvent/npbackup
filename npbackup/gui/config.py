@@ -1609,6 +1609,20 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Text(_t("generic.minutes")),
             ],
             [
+                sg.Text(
+                    _t("config_gui.random_delay_before_backup"),
+                    size=(40, 2),
+                ),
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.repo_opts.random_delay_before_backup",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
+                sg.Input(key="repo_opts.random_delay_before_backup", size=(8, 1)),
+                sg.Text(_t("generic.minutes")),
+            ],
+            [
                 sg.Text(_t("config_gui.upload_speed"), size=(40, 1)),
                 sg.Image(
                     NON_INHERITED_ICON,
