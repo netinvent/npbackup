@@ -782,7 +782,8 @@ def _main_gui(viewer_mode: bool):
     def get_config(
         config_file: str = None, window: sg.Window = None, repo_name: str = None
     ) -> Tuple:
-        global __concurrency
+        global __full_concurrency
+        global __repo_aware_concurrency
         full_config, config_file = get_config_file(config_file=config_file)
         if full_config and config_file:
             __full_concurrency = full_config.g("global_options.full_concurrency")
