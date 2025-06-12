@@ -26,11 +26,22 @@ class PIDFile(object):
         self._check_full_commandline = check_full_commandline
         self._file = str(filename)
         if not self._check_full_commandline:
-            self._process_name = self._process_name[0]
+            self._process_name = self.sanitize(self._process_name[0])
         else:
-            self._file = "{}-{}".format(self._file, self._process_name)
+            self._process_name = "-".join(self._process_name)
+
+        self._file = "{}-{}".format(self._file, self.sanitize(self._process_name))
         if identifier:
-            self._file = "{}-{}".format(self._file, identifier)
+            self._file = "{}-{}".format(self._file, self.sanitize(identifier))
+        print(self._file)
+
+    @staticmethod
+    def sanitize(filename: str) -> str:
+        """
+        Sanitizes the filename by replacing slashes and backslashes with dots.
+        This is useful to ensure that the filename is valid across different filesystems.
+        """
+        return "".join(x for x in filename if x.isalnum())
 
     @property
     def is_running(self) -> bool:
@@ -49,8 +60,8 @@ class PIDFile(object):
         try:
             cmd1 = psutil.Process(pid).cmdline()
             if not self._check_full_commandline:
-                cmd1 = cmd1[0]
-            return cmd1 == self._process_name
+                cmd1 = self.sanitize(cmd1[0])
+            return cmd1 == self.sanitize("-".join(self._process_name))
         except psutil.AccessDenied:
             return False
 
