@@ -6,7 +6,7 @@ __intname__ = "restic_metrics_tests"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2024120301"
+__build__ = "2025061201"
 __description__ = (
     "Converts restic command line output to a text file node_exporter can scrape"
 )
@@ -76,28 +76,28 @@ processed 110381 files, 107.331 GiB in 0:36
 
 # restic_metrics_v1 prometheus output
 expected_results_V1 = [
-    r'restic_repo_files{instance="test",backup_job="some_nas",state="new"} (\d+)',
-    r'restic_repo_files{instance="test",backup_job="some_nas",state="changed"} (\d+)',
-    r'restic_repo_files{instance="test",backup_job="some_nas",state="unmodified"} (\d+)',
-    r'restic_repo_dirs{instance="test",backup_job="some_nas",state="new"} (\d+)',
-    r'restic_repo_dirs{instance="test",backup_job="some_nas",state="changed"} (\d+)',
-    r'restic_repo_dirs{instance="test",backup_job="some_nas",state="unmodified"} (\d+)',
-    r'restic_repo_files{instance="test",backup_job="some_nas",state="total"} (\d+)',
-    r'restic_repo_size_bytes{instance="test",backup_job="some_nas",state="total"} (\d+)',
-    r'restic_backup_duration_seconds{instance="test",backup_job="some_nas",action="backup"} (\d+)',
+    r'restic_files{action="backup",backup_job="some_nas",instance="test",state="new"} (\d+)',
+    r'restic_files{action="backup",backup_job="some_nas",instance="test",state="changed"} (\d+)',
+    r'restic_files{action="backup",backup_job="some_nas",instance="test",state="unmodified"} (\d+)',
+    r'restic_dirs{action="backup",backup_job="some_nas",instance="test",state="new"} (\d+)',
+    r'restic_dirs{action="backup",backup_job="some_nas",instance="test",state="changed"} (\d+)',
+    r'restic_dirs{action="backup",backup_job="some_nas",instance="test",state="unmodified"} (\d+)',
+    r'restic_files{action="backup",backup_job="some_nas",instance="test",state="total"} (\d+)',
+    r'restic_repo_size_bytes{action="backup",backup_job="some_nas",instance="test",state="total"} (\d+)',
+    r'restic_backup_duration_seconds{action="backup",backup_job="some_nas",instance="test"} (\d+)',
 ]
 
 # restic_metrics_v2 prometheus output
 expected_results_V2 = [
-    r'restic_files{instance="test",backup_job="some_nas",state="new",action="backup"} (\d+)',
-    r'restic_files{instance="test",backup_job="some_nas",state="changed",action="backup"} (\d+)',
-    r'restic_files{instance="test",backup_job="some_nas",state="unmodified",action="backup"} (\d+)',
-    r'restic_dirs{instance="test",backup_job="some_nas",state="new",action="backup"} (\d+)',
-    r'restic_dirs{instance="test",backup_job="some_nas",state="changed",action="backup"} (\d+)',
-    r'restic_dirs{instance="test",backup_job="some_nas",state="unmodified",action="backup"} (\d+)',
-    r'restic_files{instance="test",backup_job="some_nas",state="total",action="backup"} (\d+)',
-    r'restic_snasphot_size_bytes{instance="test",backup_job="some_nas",action="backup",type="processed"} (\d+)',
-    r'restic_total_duration_seconds{instance="test",backup_job="some_nas",action="backup"} (\d+)',
+    r'restic_files{action="backup",backup_job="some_nas",instance="test",state="new"} (\d+)',
+    r'restic_files{action="backup",backup_job="some_nas",instance="test",state="changed"} (\d+)',
+    r'restic_files{action="backup",backup_job="some_nas",instance="test",state="unmodified"} (\d+)',
+    r'restic_dirs{action="backup",backup_job="some_nas",instance="test",state="new"} (\d+)',
+    r'restic_dirs{action="backup",backup_job="some_nas",instance="test",state="changed"} (\d+)',
+    r'restic_dirs{action="backup",backup_job="some_nas",instance="test",state="unmodified"} (\d+)',
+    r'restic_files{action="backup",backup_job="some_nas",instance="test",state="total"} (\d+)',
+    r'restic_snasphot_size_bytes{action="backup",backup_job="some_nas",instance="test",type="processed"} (\d+)',
+    r'restic_total_duration_seconds{action="backup",backup_job="some_nas",instance="test"} (\d+)',
 ]
 
 
@@ -113,12 +113,13 @@ def running_on_github_actions():
 def test_restic_str_output_2_metrics():
     instance = "test"
     backup_job = "some_nas"
-    labels = 'instance="{}",backup_job="{}"'.format(instance, backup_job)
+    labels_string = f'action="backup",backup_job="{backup_job}",instance="{instance}"'
+    
     for version, output in restic_str_outputs.items():
         print(f"Testing V1 parser restic str output from version {version}")
-        errors, prom_metrics = restic_output_2_metrics(True, output, labels)
+        errors, prom_metrics = restic_output_2_metrics(True, output, labels_string)
         assert errors is False
-        # print(f"Parsed result:\n{prom_metrics}")
+        print(f"Parsed result:\n{prom_metrics}")
         for expected_result in expected_results_V1:
             match_found = False
             # print("Searching for {}".format(expected_result))
@@ -131,15 +132,14 @@ def test_restic_str_output_2_metrics():
 
 
 def test_restic_str_output_to_json():
-    labels = {"instance": "test", "backup_job": "some_nas"}
+    labels = {"instance": "test", "backup_job": "some_nas", "action": "backup"}
     for version, output in restic_str_outputs.items():
         print(f"Testing V2 parser restic str output from version {version}")
         json_metrics = restic_str_output_to_json(True, output)
         assert json_metrics["errors"] == False
-        # print(json_metrics)
         _, prom_metrics, _ = restic_json_to_prometheus(True, json_metrics, labels)
 
-        # print(f"Parsed result:\n{prom_metrics}")
+        print(f"Parsed result:\n{prom_metrics}")
         for expected_result in expected_results_V2:
             match_found = False
             # print("Searching for {}".format(expected_result))
@@ -152,7 +152,7 @@ def test_restic_str_output_to_json():
 
 
 def test_restic_json_output():
-    labels = {"instance": "test", "backup_job": "some_nas"}
+    labels = {"instance": "test", "backup_job": "some_nas", "action": "backup"}
     for version, json_output in restic_json_outputs.items():
         print(f"Testing V2 direct restic --json output from version {version}")
         restic_json = json.loads(json_output)
@@ -171,7 +171,7 @@ def test_restic_json_output():
 
 def test_real_restic_output():
     # We rely on the binaries downloaded in npbackup_tests here
-    labels = {"instance": "test", "backup_job": "some_nas"}
+    labels = {"instance": "test", "backup_job": "some_nas", "action": "backup"}
     restic_binary = get_restic_internal_binary(os_arch())
     print(f"Testing real restic output, Running with restic {restic_binary}")
     assert restic_binary is not None, "No restic binary found"
