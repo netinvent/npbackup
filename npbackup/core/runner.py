@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025061001"
+__build__ = "2025061201"
 
 
 from typing import Optional, Callable, Union, List, Tuple
@@ -26,6 +26,7 @@ from ofunctions.platform import os_arch
 from ofunctions.misc import fn_name
 import ntplib
 from npbackup.restic_metrics import (
+    create_labels_string,
     restic_str_output_to_json,
     restic_json_to_prometheus,
     upload_metrics,
@@ -170,11 +171,7 @@ def metric_analyser(
         if not operation_success or backup_too_small:
             exec_state = 2
 
-        _labels = []
-        for key, value in labels.items():
-            if value:
-                _labels.append(f'{key.strip()}="{value.strip()}"')
-        labels_string = ",".join(list(set(_labels)))
+        labels_string = create_labels_string(labels)
 
         metrics.append(
             f'npbackup_exec_state{{{labels_string},timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {exec_state}'
@@ -184,12 +181,8 @@ def metric_analyser(
         upgrade_state = os.environ.get("NPBACKUP_UPGRADE_STATE", None)
         try:
             upgrade_state = int(upgrade_state)
-            _labels = []
-            labels["action"] = "upgrade"
-            for key, value in labels.items():
-                if value:
-                    _labels.append(f'{key.strip()}="{value.strip()}"')
-            labels_string = ",".join(list(set(_labels)))
+            labels_string = create_labels_string(labels)
+
             metrics.append(
                 f'npbackup_exec_state{{{labels_string},timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {upgrade_state}'
             )

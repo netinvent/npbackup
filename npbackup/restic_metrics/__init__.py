@@ -6,8 +6,8 @@ __intname__ = "restic_metrics"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "BSD-3-Clause"
-__version__ = "2.1.0"
-__build__ = "2025061001"
+__version__ = "2.1.1"
+__build__ = "2025061201"
 __description__ = (
     "Converts restic command line output to a text file node_exporter can scrape"
 )
@@ -29,6 +29,18 @@ from ofunctions.misc import BytesConverter, convert_time_to_seconds
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
+
+
+def create_labels_string(labels: dict) -> str:
+    """
+    Create a string with labels for prometheus metrics
+    """
+    _labels = []
+    for key, value in sorted(labels.items()):
+        if value:
+            _labels.append(f'{key.strip()}="{value.strip()}"')
+    labels_string = ",".join(sorted(list(set(_labels))))
+    return labels_string
 
 
 def restic_str_output_to_json(
@@ -179,11 +191,8 @@ def restic_json_to_prometheus(
     Returns [operation_success: bool, List[metrics: str], backup_too_small: bool]
 
     """
-    _labels = []
-    for key, value in labels.items():
-        if value:
-            _labels.append(f'{key.strip()}="{value.strip()}"')
-    labels_string = ",".join(list(set(_labels)))
+
+    labels_string = create_labels_string(labels)
 
     # If restic_json is a bool, just fail
     if isinstance(restic_json, bool):
@@ -281,7 +290,7 @@ def restic_json_to_prometheus(
     return restic_result, prom_metrics, backup_too_small
 
 
-def restic_output_2_metrics(restic_result, output, labels=None):
+def restic_output_2_metrics(restic_result, output, labels_string=None):
     # type: (Union[bool, int], str, str) -> Tuple[bool, List[str]]
     """
     Logfile format with restic 0.14:
@@ -326,17 +335,17 @@ def restic_output_2_metrics(restic_result, output, labels=None):
             if matches:
                 try:
                     metrics.append(
-                        'restic_repo_files{{{},state="new"}} {}'.format(
+                        'restic_files{{{},state="new"}} {}'.format(
                             labels_string, matches.group(1)
                         )
                     )
                     metrics.append(
-                        'restic_repo_files{{{},state="changed"}} {}'.format(
+                        'restic_files{{{},state="changed"}} {}'.format(
                             labels_string, matches.group(2)
                         )
                     )
                     metrics.append(
-                        'restic_repo_files{{{},state="unmodified"}} {}'.format(
+                        'restic_files{{{},state="unmodified"}} {}'.format(
                             labels_string, matches.group(3)
                         )
                     )
@@ -352,18 +361,18 @@ def restic_output_2_metrics(restic_result, output, labels=None):
             if matches:
                 try:
                     metrics.append(
-                        'restic_repo_dirs{{{},state="new"}} {}'.format(
-                            labels, matches.group(1)
+                        'restic_dirs{{{},state="new"}} {}'.format(
+                            labels_string, matches.group(1)
                         )
                     )
                     metrics.append(
-                        'restic_repo_dirs{{{},state="changed"}} {}'.format(
-                            labels, matches.group(2)
+                        'restic_dirs{{{},state="changed"}} {}'.format(
+                            labels_string, matches.group(2)
                         )
                     )
                     metrics.append(
-                        'restic_repo_dirs{{{},state="unmodified"}} {}'.format(
-                            labels, matches.group(3)
+                        'restic_dirs{{{},state="unmodified"}} {}'.format(
+                            labels_string, matches.group(3)
                         )
                     )
                 except IndexError:
@@ -383,7 +392,7 @@ def restic_output_2_metrics(restic_result, output, labels=None):
                         value = int(BytesConverter("{} {}".format(size, unit)))
                         metrics.append(
                             'restic_repo_size_bytes{{{},state="new"}} {}'.format(
-                                labels, value
+                                labels_string, value
                             )
                         )
                     except TypeError:
@@ -396,7 +405,7 @@ def restic_output_2_metrics(restic_result, output, labels=None):
                         stored_size = int(BytesConverter(stored_size))
                         metrics.append(
                             'restic_repo_size_files_stored_bytes{{{},state="new"}} {}'.format(
-                                labels, stored_size
+                                labels_string, stored_size
                             )
                         )
                     except TypeError:
@@ -418,8 +427,8 @@ def restic_output_2_metrics(restic_result, output, labels=None):
             if matches:
                 try:
                     metrics.append(
-                        'restic_repo_files{{{},state="total"}} {}'.format(
-                            labels, matches.group(1)
+                        'restic_files{{{},state="total"}} {}'.format(
+                            labels_string, matches.group(1)
                         )
                     )
                     size = matches.group(2)
@@ -428,7 +437,7 @@ def restic_output_2_metrics(restic_result, output, labels=None):
                         value = int(BytesConverter("{} {}".format(size, unit)))
                         metrics.append(
                             'restic_repo_size_bytes{{{},state="total"}} {}'.format(
-                                labels, value
+                                labels_string, value
                             )
                         )
                     except TypeError:
@@ -439,7 +448,7 @@ def restic_output_2_metrics(restic_result, output, labels=None):
                     try:
                         metrics.append(
                             "restic_backup_duration_seconds{{{}}} {}".format(
-                                labels, int(seconds_elapsed)
+                                labels_string, int(seconds_elapsed)
                             )
                         )
                     except ValueError:
@@ -469,7 +478,7 @@ def restic_output_2_metrics(restic_result, output, labels=None):
 
     metrics.append(
         'restic_backup_failure{{{},timestamp="{}"}} {}'.format(
-            labels, int(datetime.now(timezone.utc).timestamp()), 1 if errors else 0
+            labels_string, int(datetime.now(timezone.utc).timestamp()), 1 if errors else 0
         )
     )
     return errors, metrics
@@ -581,7 +590,7 @@ if __name__ == "__main__":
         logger.error("Output directory {} does not exist.".format(destination_dir))
         sys.exit(2)
 
-    labels_string = 'instance="{}",backup_job="{}"'.format(instance, backup_job)
+    labels_string = 'action="backup",backup_job="{}",instance="{}"'.format(instance, backup_job)
     if args.labels:
         labels_string += ",{}".format(args.labels)
     destination_file = os.path.join(destination_dir, output_filename)
