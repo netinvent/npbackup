@@ -49,7 +49,7 @@ en:
   no_cert_verify: Do not verify SSL certificate
   metrics_username: HTTP metrics username
   metrics_password: HTTP metrics password
-  instance: Prometheus instance
+  prometheus_instance: Prometheus instance
   additional_labels: Additional labels
 
   no_config_available: No configuration file found. Please use --config-file "path" to specify one or copy a config file next to the NPBackup binary
@@ -193,3 +193,21 @@ en:
 
   full_concurrency: Don't check for concurrency
   repo_aware_concurrency: Allow concurrent runs on different repos
+
+  email_config: Email configuration
+  enable_email_notifications: Enable email notifications
+  email_instance: Instance name
+  smtp_server: SMTP server
+  smtp_port: SMTP port
+  smtp_security: SMTP security (none, tls, ssl)
+  smtp_username: SMTP username
+  smtp_password: SMTP password
+  sender: Sender email address
+  recipients: Comma separated recipient addresses
+  email_on_backup_success: Email on backup success
+  email_on_backup_failure: Email on backup failure
+  email_on_operations_success: Email on all operations success
+  email_on_operations_failure: Email on all operations failure
+  test_email: Send test notification email
+  test_email_success: Test email sent successfully
+  test_email_failure: Test email failed, see logs for details

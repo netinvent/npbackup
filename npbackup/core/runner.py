@@ -10,7 +10,7 @@ __license__ = "GPL-3.0-only"
 __build__ = "2025061201"
 
 
-from typing import Optional, Callable, Union, List, Tuple
+from typing import Optional, Callable, Union, List
 import os
 import logging
 import tempfile
@@ -25,19 +25,12 @@ from ofunctions.threading import threaded
 from ofunctions.platform import os_arch
 from ofunctions.misc import fn_name
 import ntplib
-from npbackup.restic_metrics import (
-    create_labels_string,
-    restic_str_output_to_json,
-    restic_json_to_prometheus,
-    upload_metrics,
-    write_metrics_file,
-)
+from npbackup.core.metrics import metric_analyser
 from npbackup.restic_wrapper import ResticRunner
 from npbackup.core.restic_source_binary import get_restic_internal_binary
 from npbackup.core import jobs
 from npbackup.path_helper import CURRENT_DIR, BASEDIR
 import npbackup.pidfile_ng
-from npbackup.__version__ import __intname__ as NAME, version_dict
 from npbackup.__debug__ import _DEBUG, exception_to_string
 from npbackup.__env__ import MAX_ALLOWED_NTP_OFFSET
 
@@ -86,160 +79,6 @@ non_locking_operations = [
     # check should not be locking, but we definitely don't want to play with fire here
     # "check"
 ]
-
-
-def metric_analyser(
-    repo_config: dict,
-    restic_result: bool,
-    result_string: str,
-    operation: str,
-    dry_run: bool,
-    append_metrics_file: bool,
-    exec_time: Optional[float] = None,
-    analyze_only: bool = False,
-) -> Tuple[bool, bool]:
-    """
-    Tries to get operation success and backup to small booleans from restic output
-    Returns op success, backup too small
-    """
-    operation_success = True
-    backup_too_small = False
-    metrics = []
-
-    try:
-        repo_name = repo_config.g("name")
-        labels = {
-            "npversion": f"{NAME}{version_dict['version']}-{version_dict['build_type']}",
-            "repo_name": repo_name,
-            "action": operation,
-        }
-        if repo_config.g("prometheus.metrics"):
-            labels["instance"] = repo_config.g("prometheus.instance")
-            labels["backup_job"] = repo_config.g("prometheus.backup_job")
-            labels["group"] = repo_config.g("prometheus.group")
-            no_cert_verify = repo_config.g("prometheus.no_cert_verify")
-            destination = repo_config.g("prometheus.destination")
-            prometheus_additional_labels = repo_config.g("prometheus.additional_labels")
-
-            if isinstance(prometheus_additional_labels, dict):
-                for k, v in prometheus_additional_labels.items():
-                    labels[k] = v
-            else:
-                logger.error(
-                    f"Bogus value in configuration for prometheus additional labels: {prometheus_additional_labels}"
-                )
-        else:
-            destination = None
-            no_cert_verify = False
-
-        # We only analyse backup output of restic
-        if operation == "backup":
-            minimum_backup_size_error = repo_config.g(
-                "backup_opts.minimum_backup_size_error"
-            )
-            # If result was a str, we need to transform it into json first
-            if isinstance(result_string, str):
-                restic_result = restic_str_output_to_json(restic_result, result_string)
-
-            operation_success, metrics, backup_too_small = restic_json_to_prometheus(
-                restic_result=restic_result,
-                restic_json=restic_result,
-                labels=labels,
-                minimum_backup_size_error=minimum_backup_size_error,
-            )
-        if not operation_success or not restic_result:
-            logger.error("Backend finished with errors.")
-
-        """
-        Add a metric for informing if any warning raised while executing npbackup_tasks
-
-        CRITICAL = 50 will be 3 in this metric, but should not really exist
-        ERROR = 40 will be 2 in this metric
-        WARNING = 30 will be 1 in this metric
-        INFO = 20 will be 0
-        """
-        worst_exec_level = logger.get_worst_logger_level()
-        if worst_exec_level == 50:
-            exec_state = 3
-        elif worst_exec_level == 40:
-            exec_state = 2
-        elif worst_exec_level == 30:
-            exec_state = 1
-        else:
-            exec_state = 0
-
-        # exec_state update according to metric_analyser
-        if not operation_success or backup_too_small:
-            exec_state = 2
-
-        labels_string = create_labels_string(labels)
-
-        metrics.append(
-            f'npbackup_exec_state{{{labels_string},timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {exec_state}'
-        )
-
-        # Add upgrade state if upgrades activated
-        upgrade_state = os.environ.get("NPBACKUP_UPGRADE_STATE", None)
-        try:
-            upgrade_state = int(upgrade_state)
-            labels_string = create_labels_string(labels)
-
-            metrics.append(
-                f'npbackup_exec_state{{{labels_string},timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {upgrade_state}'
-            )
-        except (ValueError, TypeError):
-            pass
-        if isinstance(exec_time, (int, float)):
-            try:
-                metrics.append(
-                    f'npbackup_exec_time{{{labels_string},timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {exec_time}'
-                )
-            except (ValueError, TypeError):
-                logger.warning("Cannot get exec time from environment")
-
-        if not analyze_only:
-            logger.debug("Metrics computed:\n{}".format("\n".join(metrics)))
-            if destination and dry_run:
-                logger.info("Dry run mode. Not sending metrics.")
-            elif destination:
-                logger.debug("Sending metrics to {}".format(destination))
-                dest = destination.lower()
-                if dest.startswith("http"):
-                    if not "metrics" in dest:
-                        logger.error(
-                            "Destination does not contain 'metrics' keyword. Not uploading."
-                        )
-                        return backup_too_small
-                    if not "job" in dest:
-                        logger.error(
-                            "Destination does not contain 'job' keyword. Not uploading."
-                        )
-                        return backup_too_small
-                    try:
-                        authentication = (
-                            repo_config.g("prometheus.http_username"),
-                            repo_config.g("prometheus.http_password"),
-                        )
-                    except KeyError:
-                        logger.info("No metrics authentication present.")
-                        authentication = None
-
-                    # Fix for #150, job name needs to be unique in order to avoid overwriting previous job in push gateway
-                    destination = (
-                        f"{destination}___repo_name={repo_name}___action={operation}"
-                    )
-                    upload_metrics(destination, authentication, no_cert_verify, metrics)
-                else:
-                    write_metrics_file(destination, metrics, append=append_metrics_file)
-            else:
-                logger.debug("No metrics destination set. Not sending metrics")
-    except KeyError as exc:
-        logger.info("Metrics error: {}".format(exc))
-        logger.debug("Trace:", exc_info=True)
-    except OSError as exc:
-        logger.error("Metrics OS error: ".format(exc))
-        logger.debug("Trace:", exc_info=True)
-    return operation_success, backup_too_small
 
 
 def get_ntp_offset(ntp_server: str) -> Optional[float]:
@@ -821,7 +660,7 @@ class NPBackupRunner:
 
     def metrics(fn: Callable):
         """
-        Write prometheus metrics
+        Analyse metrics and notify
         """
 
         @wraps(fn)

@@ -7,20 +7,21 @@ __intname__ = "npbackup.gui.config"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025022301"
+__build__ = "2025061301"
 
 
 from typing import List, Tuple
 import os
 import re
-import pathlib
 from logging import getLogger
 import FreeSimpleGUI as sg
 import textwrap
+from datetime import datetime, timezone
 from ruamel.yaml.comments import CommentedMap
 from npbackup import configuration
 from ofunctions.misc import get_key_from_value, BytesConverter
 from npbackup.core.i18n_helper import _t
+from npbackup.core.metrics import send_metrics_mail
 from resources.customization import (
     INHERITED_ICON,
     NON_INHERITED_ICON,
@@ -719,7 +720,12 @@ def config_gui(full_config: dict, config_file: str):
 
         # Only update global options gui with identified global keys
         for key in full_config.keys():
-            if key in ("identity", "global_prometheus", "global_options"):
+            if key in (
+                "identity",
+                "global_prometheus",
+                "global_email",
+                "global_options",
+            ):
                 global_config.s(key, full_config.g(key))
         iter_over_config(global_config, None, "group", unencrypted, None)
 
@@ -835,6 +841,7 @@ def config_gui(full_config: dict, config_file: str):
                 key.startswith("global_options")
                 or key.startswith("identity")
                 or key.startswith("global_prometheus")
+                or key.startswith("global_email")
             ):
                 active_object_key = f"{key}"
                 current_value = full_config.g(active_object_key)
@@ -2268,7 +2275,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 sg.Input(key="global_prometheus.http_password", size=(50, 1)),
             ],
             [
-                sg.Text(_t("config_gui.instance"), size=(40, 1)),
+                sg.Text(_t("config_gui.prometheus_instance"), size=(40, 1)),
                 sg.Input(key="global_prometheus.instance", size=(50, 1)),
             ],
             [
@@ -2306,6 +2313,86 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             ],
         ]
 
+        global_email_col = [
+            [sg.Text(_t("config_gui.available_variables"))],
+            [
+                sg.Checkbox(
+                    _t("config_gui.enable_email_notifications"),
+                    key="global_email.enable",
+                    size=(41, 1),
+                ),
+            ],
+            [
+                sg.Text(_t("config_gui.email_instance"), size=(40, 1)),
+                sg.Input(key="global_email.instance", size=(50, 1)),
+            ],
+            [
+                sg.Text(_t("config_gui.smtp_server"), size=(40, 1)),
+                sg.Input(key="global_email.smtp_server", size=(50, 1)),
+            ],
+            [
+                sg.Text(_t("config_gui.smtp_port"), size=(40, 1)),
+                sg.Input(key="global_email.smtp_port", size=(50, 1)),
+            ],
+            [
+                sg.Text(_t("config_gui.smtp_security"), size=(40, 1)),
+                sg.Combo(
+                    ["None", "ssl", "tls"],
+                    key="global_email.smtp_security",
+                    size=(50, 1),
+                ),
+            ],
+            [
+                sg.Text(_t("config_gui.smtp_username"), size=(40, 1)),
+                sg.Input(key="global_email.smtp_username", size=(50, 1)),
+            ],
+            [
+                sg.Text(_t("config_gui.smtp_password"), size=(40, 1)),
+                sg.Input(key="global_email.smtp_password", size=(50, 1)),
+            ],
+            [
+                sg.Text(_t("config_gui.sender"), size=(40, 1)),
+                sg.Input(key="global_email.sender", size=(50, 1)),
+            ],
+            [
+                sg.Text(_t("config_gui.recipients"), size=(40, 1)),
+                sg.Input(key="global_email.recipients", size=(50, 1)),
+            ],
+            [
+                sg.Checkbox(
+                    _t("config_gui.email_on_backup_success"),
+                    key="global_email.on_backup_success",
+                    size=(41, 1),
+                ),
+            ],
+            [
+                sg.Checkbox(
+                    _t("config_gui.email_on_backup_failure"),
+                    key="global_email.on_backup_failure",
+                    size=(41, 1),
+                ),
+            ],
+            [
+                sg.Checkbox(
+                    _t("config_gui.email_on_operations_success"),
+                    key="global_email.on_operations_success",
+                    size=(41, 1),
+                ),
+            ],
+            [
+                sg.Checkbox(
+                    _t("config_gui.email_on_operations_failure"),
+                    key="global_email.on_operations_failure",
+                    size=(41, 1),
+                ),
+            ],
+            [
+                sg.Button(
+                    _t("config_gui.test_email"), key="--TEST-EMAIL--", size=(20, 1)
+                )
+            ],
+        ]
+
         tab_group_layout = [
             [
                 sg.Tab(
@@ -2329,6 +2416,14 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     global_prometheus_col,
                     font="helvetica 16",
                     key="--tab-global-prometheus--",
+                )
+            ],
+            [
+                sg.Tab(
+                    _t("config_gui.email_config"),
+                    global_email_col,
+                    font="helvetica 16",
+                    key="--tab-global-email--",
                 )
             ],
         ]
@@ -2756,6 +2851,24 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                         continue
                     tree.delete(key)
             window[option_key].Update(values=tree)
+            continue
+        if event == "--TEST-EMAIL--":
+            repo_config, _ = configuration.get_repo_config(
+                full_config, object_name, eval_variables=False
+            )
+            if send_metrics_mail(
+                repo_config=repo_config,
+                operation="test_email",
+                restic_result=None,
+                operation_success=True,
+                backup_too_small=False,
+                exec_state=0,
+                date=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+            ):
+                sg.Popup(_t("config_gui.test_email_success"), keep_on_top=True)
+            else:
+                sg.Popup(_t("config_gui.test_email_failure"), keep_on_top=True)
+            # WIP
             continue
         if event == "--ACCEPT--":
             if object_type != "groups" and not values["repo_uri"]:

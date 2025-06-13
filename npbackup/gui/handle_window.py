@@ -37,8 +37,9 @@ def handle_current_window(action: str = "minimize") -> None:
             logger.debug(
                 "No hwndmain found for current executable, trying foreground window"
             )
+            # This will hide the console and the main gui
             # pylint: disable=I1101 (c-extension-no-member)
-            hwndMain = win32gui.GetForegroundWindow()
+            # hwndMain = win32gui.GetForegroundWindow()
         if hwndMain:
             if action == "minimize":
                 # pylint: disable=I1101 (c-extension-no-member)
