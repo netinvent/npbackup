@@ -16,10 +16,6 @@ from logging import getLogger
 
 logger = getLogger()
 
-import win32gui
-import win32process
-import psutil
-
 
 def handle_current_window(action: str = "minimize") -> None:
     """
