@@ -2975,5 +2975,5 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
     # Closing this window takes ages
     window.hide()
     quick_close_simplegui_window(window)
-    del window
+    del window # noqa: F821 (undefined name)
     return full_config
