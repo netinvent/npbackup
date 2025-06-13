@@ -2,6 +2,21 @@
 ## Planned ahead
  ! Operation center must be able to create scheduled tasks for every operation
 
+## 3.0.3
+#### Features
+- New finer grained concurrency control
+- New optional random delay before backup operations
+- All prometheus metrics now have repo_name label
+- Metrics are now send for non executed backups because of concurrency checks
+- Implement emailing capacities
+
+#### Fixes
+
+#### Misc
+- Make another attempt to hide the console window on Windows when running in GUI mode
+- Update restic metrics tests
+- Don't encrypt auto upgrade / prometheus push gateway usernames
+
 ## 3.0.2
 #### Features
 - Implement --no-lock parameter
