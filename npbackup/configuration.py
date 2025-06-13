@@ -105,6 +105,7 @@ ENCRYPTED_OPTIONS = [
     "repo_opts.repo_password_command",
     "global_prometheus.http_username",
     "global_prometheus.http_password",
+    "global_email.smtp_username" "global_email.smtp_password",
     "env.encrypted_env_variables",
     "global_options.auto_upgrade_server_username",
     "global_options.auto_upgrade_server_password",
@@ -218,6 +219,20 @@ empty_config_dict = {
         "http_password": None,
         "additional_labels": [],
         "no_cert_verify": False,
+    },
+    "global_email": {
+        "enable": False,
+        "instance": "${MACHINE_ID}",
+        "smtp_server": None,
+        "smtp_port": 587,
+        "smtp_username": None,
+        "smtp_password": None,
+        "sender": None,
+        "recipients": None,
+        "on_backup_success": True,
+        "on_backup_failure": True,
+        "on_operations_success": True,
+        "on_operations_failure": True,
     },
     "global_options": {
         "auto_upgrade": False,
@@ -730,32 +745,15 @@ def get_repo_config(
         return None, None
 
     # Merge prometheus global settings with repo settings
-    prometheus_backup_job = None
     try:
-        prometheus_backup_job = repo_config.g("prometheus.backup_job")
+        repo_config.s("global_email", deepcopy(full_config.g("global_email")))
     except KeyError:
-        logger.info(
-            "No prometheus backup job found in repo config. Setting backup job to machine id"
-        )
-        prometheus_backup_job = full_config.g("identity.machine_id")
-    prometheus_group = None
-    try:
-        prometheus_group = repo_config.g("prometheus.group")
-    except KeyError:
-        logger.info(
-            "No prometheus group found in repo config. Setting prometheus group to machine group"
-        )
-        prometheus_group = full_config.g("identity.machine_group")
+        logger.info("No global email settings found")
 
     try:
-        repo_config.s("prometheus", deepcopy(full_config.g("global_prometheus")))
+        repo_config.s("global_prometheus", deepcopy(full_config.g("global_prometheus")))
     except KeyError:
         logger.info("No global prometheus settings found")
-
-    if prometheus_backup_job:
-        repo_config.s("prometheus.backup_job", prometheus_backup_job)
-    if prometheus_group:
-        repo_config.s("prometheus.group", prometheus_group)
 
     try:
         repo_group = full_config.g(f"repos.{repo_name}.repo_group")
