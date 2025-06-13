@@ -196,7 +196,7 @@ en:
 
   email_config: Email configuration
   enable_email_notifications: Enable email notifications
-  email_instance: Email instance name
+  email_instance: Instance name
   smtp_server: SMTP server
   smtp_port: SMTP port
   smtp_security: SMTP security (none, tls, ssl)

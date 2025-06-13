@@ -7,7 +7,7 @@ __intname__ = "npbackup.core.metrics"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025061201"
+__build__ = "2025061301"
 
 import os
 from typing import Optional, Tuple, List
@@ -22,8 +22,8 @@ from npbackup.restic_metrics import (
     write_metrics_file,
 )
 from npbackup.__version__ import __intname__ as NAME, version_dict
-from npbackup.__debug__ import _DEBUG
-
+from npbackup.__debug__ import _DEBUG, fmt_json
+from resources.customization import OEM_STRING
 
 logger = getLogger()
 
@@ -44,21 +44,20 @@ def metric_analyser(
     """
     operation_success = True
     backup_too_small = False
+    timestamp = int(datetime.now(timezone.utc).timestamp())
+    date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     metrics = []
-    print(repo_config)
+    repo_name = repo_config.g("name")
     try:
-        repo_name = repo_config.g("name")
         labels = {
             "npversion": f"{NAME}{version_dict['version']}-{version_dict['build_type']}",
             "repo_name": repo_name,
             "action": operation,
         }
-        if repo_config.g("global_prometheus.metrics"):
+        if repo_config.g("global_prometheus") and repo_config.g("global_prometheus.metrics"):
             labels["backup_job"] = repo_config.g("prometheus.backup_job")
             labels["group"] = repo_config.g("prometheus.group")
             labels["instance"] = repo_config.g("global_prometheus.instance")
-            no_cert_verify = repo_config.g("global_prometheus.no_cert_verify")
-            destination = repo_config.g("global_prometheus.destination")
             prometheus_additional_labels = repo_config.g(
                 "global_prometheus.additional_labels"
             )
@@ -70,9 +69,6 @@ def metric_analyser(
                 logger.error(
                     f"Bogus value in configuration for prometheus additional labels: {prometheus_additional_labels}"
                 )
-        else:
-            destination = None
-            no_cert_verify = False
 
         # We only analyse backup output of restic
         if operation == "backup":
@@ -117,7 +113,7 @@ def metric_analyser(
         labels_string = create_labels_string(labels)
 
         metrics.append(
-            f'npbackup_exec_state{{{labels_string},timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {exec_state}'
+            f'npbackup_exec_state{{{labels_string},timestamp="{timestamp}"}} {exec_state}'
         )
 
         # Add upgrade state if upgrades activated
@@ -127,14 +123,14 @@ def metric_analyser(
             labels_string = create_labels_string(labels)
 
             metrics.append(
-                f'npbackup_exec_state{{{labels_string},timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {upgrade_state}'
+                f'npbackup_exec_state{{{labels_string},timestamp="{timestamp}"}} {upgrade_state}'
             )
         except (ValueError, TypeError):
             pass
         if isinstance(exec_time, (int, float)):
             try:
                 metrics.append(
-                    f'npbackup_exec_time{{{labels_string},timestamp="{int(datetime.now(timezone.utc).timestamp())}"}} {exec_time}'
+                    f'npbackup_exec_time{{{labels_string},timestamp="{timestamp}"}} {exec_time}'
                 )
             except (ValueError, TypeError):
                 logger.warning("Cannot get exec time from environment")
@@ -144,14 +140,19 @@ def metric_analyser(
             send_prometheus_metrics(
                 repo_config,
                 metrics,
-                destination,
-                no_cert_verify,
                 dry_run,
                 append_metrics_file,
-                repo_name,
                 operation,
             )
-            send_metrics_mail(repo_config, metrics)
+            send_metrics_mail(
+                repo_config,
+                operation,
+                restic_result=restic_result,
+                operation_success=operation_success,
+                backup_too_small=backup_too_small,
+                exec_state=exec_state,
+                date=date,
+            )
     except KeyError as exc:
         logger.info("Metrics error: {}".format(exc))
         logger.debug("Trace:", exc_info=True)
@@ -164,13 +165,27 @@ def metric_analyser(
 def send_prometheus_metrics(
     repo_config: dict,
     metrics: List[str],
-    destination: Optional[str] = None,
-    no_cert_verify: bool = False,
     dry_run: bool = False,
     append_metrics_file: bool = False,
-    repo_name: Optional[str] = None,
     operation: Optional[str] = None,
 ) -> bool:
+
+    try:
+        no_cert_verify = repo_config.g("global_prometheus.no_cert_verify")
+        if not no_cert_verify:
+            no_cert_verify = False
+        destination = repo_config.g("global_prometheus.destination")
+
+        repo_name = repo_config.g("name")
+        if repo_config.g("global_prometheus.metrics") is not True:
+            logger.debug(
+                "Metrics not enabled in configuration. Not sending metrics to Prometheus."
+            )
+            return False
+    except KeyError as exc:
+        logger.error("No prometheus configuration found in config file.")
+        return False
+
     if destination and dry_run:
         logger.info("Dry run mode. Not sending metrics.")
     elif destination:
@@ -205,48 +220,108 @@ def send_prometheus_metrics(
         logger.debug("No metrics destination set. Not sending metrics")
 
 
-def send_metrics_mail(repo_config: dict, metrics: List[str]):
+def send_metrics_mail(
+    repo_config: dict,
+    operation: str,
+    restic_result: Optional[dict] = None,
+    operation_success: Optional[bool] = None,
+    backup_too_small: Optional[bool] = None,
+    exec_state: Optional[int] = None,
+    date: Optional[int] = None,
+):
     """
     Sends metrics via email.
     """
-    if not metrics:
-        logger.warning("No metrics to send via email.")
+
+    op_success = (
+        True
+        if operation_success and not backup_too_small and exec_state == 0
+        else False
+    )
+
+    repo_name = repo_config.g("name")
+    try:
+        if not repo_config.g("global_email") or repo_config.g("global_email.enable"):
+            logger.debug(
+                "Email not enabled in configuration. Not sending notifications."
+            )
+            return False
+        instance = repo_config.g("global_email.instance")
+        smtp_server = repo_config.g("global_email.smtp_server")
+        smtp_port = repo_config.g("global_email.smtp_port")
+        smtp_security = repo_config.g("global_email.smtp_security")
+        if not smtp_server or not smtp_port or not smtp_security:
+            logger.warning(
+                "SMTP server/port or security not set. Not sending notifications via email."
+            )
+            return False
+        smtp_username = repo_config.g("global_email.smtp_username")
+        smtp_password = repo_config.g("global_email.smtp_password")
+        sender = repo_config.g("global_email.sender")
+        recipients = repo_config.g("global_email.recipients")
+        if not sender or not recipients:
+            logger.warning(
+                "Sender or recipients not set. Not sending metrics via email."
+            )
+            return False
+
+        on_backup_success = repo_config.g("global_email.on_backup_success")
+        on_backup_failure = repo_config.g("global_email.on_backup_failure")
+        on_operations_success = repo_config.g("global_email.on_operations_success")
+        on_operations_failure = repo_config.g("global_email.on_operations_failure")
+        if operation == "backup":
+            if not on_backup_success and op_success:
+                logger.debug("Not sending email for backup success.")
+                return True
+            if not on_backup_failure and not op_success:
+                logger.debug("Not sending email for backup failure.")
+                return False
+        elif operation != "test_email":
+            if not on_operations_success and op_success:
+                logger.debug("Not sending email for operation success.")
+                return True
+            if not on_operations_failure and not op_success:
+                logger.debug("Not sending email for operation failure.")
+                return False
+
+    except KeyError as exc:
+        logger.error(f"Missing email configuration: {exc}")
         return False
 
-    if not repo_config.g("global_email.enable"):
-        logger.debug(
-            "Metrics not enabled in configuration. Not sending metrics via email."
-        )
-        return False
-
-    smtp_server = repo_config.g("global_email.smtp_server")
-    smtp_port = repo_config.g("global_email.smtp_port")
-    smtp_security = repo_config.g("global_email.smtp_security")
-    if not smtp_server or not smtp_port or not smtp_security:
-        logger.warning(
-            "SMTP server/port or security not set. Not sending metrics via email."
-        )
-        return False
-    smtp_username = repo_config.g("global_email.smtp_username")
-    smtp_password = repo_config.g("global_email.smtp_password")
-    sender = repo_config.g("global_email.sender")
-    recipients = repo_config.g("global_email.recipients")
-    if not sender or not recipients:
-        logger.warning("Sender or recipients not set. Not sending metrics via email.")
-        return False
-
+    logger.info(f"Sending metrics via email to {recipients}.")
+    recipients = [recipient.strip() for recipient in recipients.split(",")]
     mailer = Mailer(
         smtp_server=smtp_server,
         smtp_port=smtp_port,
         security=smtp_security,
         smtp_user=smtp_username,
         smtp_password=smtp_password,
-        debug=_DEBUG,
+        debug=False,  # Make sure we don't send debug info so we don't get to leak passwords
     )
+
     subject = (
-        f"Metrics for {NAME} {version_dict['version']}-{version_dict['build_type']}"
+        f"{OEM_STRING} failure report for {instance} {operation} on repo {repo_name}"
     )
-    body = "\n".join(metrics)
+    body = f"Operation: {operation}\nRepo: {repo_name}"
+    if op_success:
+        body += "\nStatus: Success"
+        subject = f"{OEM_STRING} success report for {instance} {operation} on repo {repo_name}"
+    elif backup_too_small:
+        body += "\nStatus: Backup too small"
+    elif exec_state == 1:
+        body += "\nStatus: Warning"
+    elif exec_state == 2:
+        body += "\nStatus: Error"
+    elif exec_state == 3:
+        body += "\nStatus: Critical error"
+
+    body += f"\nDate: {date}"
+
+    if isinstance(restic_result, dict):
+        body += f"\n\nDetail: {fmt_json(restic_result)}"
+
+    body += f"\n\nGenerated by {OEM_STRING} {version_dict['version']}\n"
+
     try:
         result = mailer.send_email(
             sender_mail=sender, recipient_mails=recipients, subject=subject, body=body

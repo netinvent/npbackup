@@ -198,7 +198,7 @@ fr:
 
   email_config: Configuration email
   enable_email_notifications: Activer les notifications email
-  email_instance: Instance email
+  email_instance: Nom d'instance
   smtp_server: Serveur SMTP
   smtp_port: Port SMTP
   smtp_security: Sécurité
@@ -210,6 +210,6 @@ fr:
   email_on_backup_failure: Email sur échec de sauvegarde
   email_on_operations_success: Email sur succès des opérations
   email_on_operations_failure: Email sur échec des opérations
-  test_email: Envoyer un email de testr
+  test_email: Envoyer un email de test
   test_email_success: Email de test envoyé avec succès
   test_email_failure: Échec de l'envoi du test email, veuillez consulter les journaux pour plus de détails

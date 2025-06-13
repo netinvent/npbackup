@@ -7,8 +7,8 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025040401"
-__version__ = "npbackup 3.0.0+"
+__build__ = "2025061301"
+__version__ = "npbackup 3.0.3+"
 
 
 from typing import Tuple, Optional, List, Any, Union
@@ -105,7 +105,8 @@ ENCRYPTED_OPTIONS = [
     "repo_opts.repo_password_command",
     "global_prometheus.http_username",
     "global_prometheus.http_password",
-    "global_email.smtp_username" "global_email.smtp_password",
+    "global_email.smtp_username",
+    "global_email.smtp_password",
     "env.encrypted_env_variables",
     "global_options.auto_upgrade_server_username",
     "global_options.auto_upgrade_server_password",
@@ -231,7 +232,7 @@ empty_config_dict = {
         "recipients": None,
         "on_backup_success": True,
         "on_backup_failure": True,
-        "on_operations_success": True,
+        "on_operations_success": False,
         "on_operations_failure": True,
     },
     "global_options": {

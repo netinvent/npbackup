@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.config"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025022301"
+__build__ = "2025061301"
 
 
 from typing import List, Tuple
@@ -16,6 +16,7 @@ import re
 from logging import getLogger
 import FreeSimpleGUI as sg
 import textwrap
+from datetime import datetime, timezone
 from ruamel.yaml.comments import CommentedMap
 from npbackup import configuration
 from ofunctions.misc import get_key_from_value, BytesConverter
@@ -38,7 +39,6 @@ from resources.customization import (
     INHERITED_SYMLINK_ICON,
 )
 from npbackup.task import create_scheduled_task
-from npbackup.__debug__ import fmt_json
 
 logger = getLogger()
 
@@ -2332,7 +2332,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             ],
             [
                 sg.Text(_t("config_gui.smtp_port"), size=(40, 1)),
-                sg.Input(key="global_email.smtp_port", size=(41, 1)),
+                sg.Input(key="global_email.smtp_port", size=(50, 1)),
             ],
             [
                 sg.Text(_t("config_gui.smtp_security"), size=(40, 1)),
@@ -2856,9 +2856,14 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             repo_config, _ = configuration.get_repo_config(
                 full_config, object_name, eval_variables=False
             )
-            print(fmt_json(repo_config))
             if send_metrics_mail(
-                repo_config=repo_config, metrics=["Thisis a test email"]
+                repo_config=repo_config,
+                operation="test_email",
+                restic_result=None,
+                operation_success=True,
+                backup_too_small=False,
+                exec_state=0,
+                date=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
             ):
                 sg.Popup(_t("config_gui.test_email_success"), keep_on_top=True)
             else:
