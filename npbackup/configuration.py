@@ -747,12 +747,14 @@ def get_repo_config(
 
     # Merge prometheus global settings with repo settings
     try:
-        repo_config.s("global_email", deepcopy(full_config.g("global_email")))
+        if full_config.g("global_email"):
+            repo_config.s("global_email", deepcopy(full_config.g("global_email")))
     except KeyError:
         logger.info("No global email settings found")
 
     try:
-        repo_config.s("global_prometheus", deepcopy(full_config.g("global_prometheus")))
+        if full_config.g("global_prometheus"):
+            repo_config.s("global_prometheus", deepcopy(full_config.g("global_prometheus")))
     except KeyError:
         logger.info("No global prometheus settings found")
 
