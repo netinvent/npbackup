@@ -39,6 +39,7 @@ from resources.customization import (
     INHERITED_SYMLINK_ICON,
 )
 from npbackup.task import create_scheduled_task
+from npbackup.gui.helpers import quick_close_simplegui_window
 
 logger = getLogger()
 
@@ -2970,5 +2971,8 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     break
                 else:
                     window["repo_uri_cloud_hint"].Update(visible=False)
-    window.close()
+
+    # Closing this window takes ages
+    quick_close_simplegui_window(window)
+    del window
     return full_config

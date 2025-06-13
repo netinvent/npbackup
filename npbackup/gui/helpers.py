@@ -17,6 +17,7 @@ import re
 import queue
 import time
 import FreeSimpleGUI as sg
+from ofunctions.threading import threaded
 from npbackup.core.i18n_helper import _t
 from resources.customization import (
     LOADER_ANIMATION,
@@ -389,3 +390,17 @@ class HideWindow:
     def __exit__(self, exc_type, exc_value, traceback):
         # exit method receives optional traceback from execution within with statement
         self.window.un_hide()
+
+
+@threaded
+def quick_close_simplegui_window(window: sg.Window) -> None:
+    """
+    Closes a SimpleGUI window without waiting for the framework to "deconstruct the window"
+    This is useful for closing windows that are not needed anymore
+    """
+    if window:
+        try:
+            window.hide()
+            window.close()
+        except Exception as exc:
+            logger.error(f"Error closing SimpleGUI window: {exc}")
