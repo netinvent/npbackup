@@ -287,7 +287,7 @@ def compile(
         NUITKA_OPTIONS += " --plugin-enable=tk-inter"
         # So for an unknown reason, some windows builds will not hide the console, see #146
         # We replaced this option with a python version in gui\__main__.py
-        # NUITKA_OPTIONS += " --windows-console-mode=hide"
+        NUITKA_OPTIONS += " --windows-console-mode=hide"
     else:
         NUITKA_OPTIONS += " --plugin-disable=tk-inter --nofollow-import-to=FreeSimpleGUI --nofollow-import-to=_tkinter --nofollow-import-to=npbackup.gui"
     if onefile:
