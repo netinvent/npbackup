@@ -54,7 +54,9 @@ def metric_analyser(
             "repo_name": repo_name,
             "action": operation,
         }
-        if repo_config.g("global_prometheus") and repo_config.g("global_prometheus.metrics"):
+        if repo_config.g("global_prometheus") and repo_config.g(
+            "global_prometheus.metrics"
+        ):
             labels["backup_job"] = repo_config.g("prometheus.backup_job")
             labels["group"] = repo_config.g("prometheus.group")
             labels["instance"] = repo_config.g("global_prometheus.instance")
