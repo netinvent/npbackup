@@ -2973,6 +2973,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     window["repo_uri_cloud_hint"].Update(visible=False)
 
     # Closing this window takes ages
+    window.hide()
     quick_close_simplegui_window(window)
     del window
     return full_config
