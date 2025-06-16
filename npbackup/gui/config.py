@@ -249,10 +249,10 @@ def config_gui(full_config: dict, config_file: str):
         try:
             if combo_value.startswith("Repo: "):
                 object_type = "repos"
-                object_name = combo_value[len("Repo: "):]
+                object_name = combo_value[len("Repo: ") :]
             elif combo_value.startswith("Group: "):
                 object_type = "groups"
-                object_name = combo_value[len("Group: "):]
+                object_name = combo_value[len("Group: ") :]
             else:
                 object_type = None
                 object_name = None
@@ -2609,7 +2609,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
         ):
             break
 
-        if event == "-OBJECT-SELECT-" or event == "repo_group":
+        if event in ("-OBJECT-SELECT-", "repo_group"):
             # Update full_config with current object before updating
             full_config = update_config_dict(
                 full_config, current_object_type, current_object_name, values

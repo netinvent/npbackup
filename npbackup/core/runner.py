@@ -200,6 +200,7 @@ class NPBackupRunner:
 
     @verbose.setter
     def verbose(self, value):
+        logger.info("Verbosity mode set")
         if not isinstance(value, bool):
             msg = f"Bogus verbose parameter given: {value}"
             self.write_logs(msg, level="critical", raise_error="ValueError")

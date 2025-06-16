@@ -496,9 +496,7 @@ def upload_metrics(destination: str, authentication, no_cert_verify: bool, metri
             "Content-type": "text/html",
         }
 
-        data = ""
-        for metric in metrics:
-            data += f"{metric}\n"
+        data = "\n".join(metrics) + "\n"
         result = requests.post(
             destination,
             headers=headers,

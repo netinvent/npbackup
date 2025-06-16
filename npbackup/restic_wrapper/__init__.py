@@ -674,7 +674,6 @@ class ResticRunner:
             self.write_logs(
                 "Cannot get backend version: No binary defined.", level="error"
             )
-        return None
 
     @property
     def generic_arguments(self):

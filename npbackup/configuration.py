@@ -753,7 +753,9 @@ def get_repo_config(
 
     try:
         if full_config.g("global_prometheus"):
-            repo_config.s("global_prometheus", deepcopy(full_config.g("global_prometheus")))
+            repo_config.s(
+                "global_prometheus", deepcopy(full_config.g("global_prometheus"))
+            )
     except KeyError:
         logger.info("No global prometheus settings found")
 
