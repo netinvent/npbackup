@@ -11,7 +11,6 @@ __build__ = "2025030701"
 
 
 from logging import getLogger
-from random import randint
 from npbackup.upgrade_client.upgrader import auto_upgrader, _check_new_version
 import npbackup.configuration
 

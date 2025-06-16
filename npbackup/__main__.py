@@ -387,9 +387,6 @@ This is free software, and you are welcome to redistribute it under certain cond
         else:
             sys.exit(1)
 
-    if args.verbose:
-        _VERBOSE = True
-
     if args.config_file:
         if not os.path.isfile(args.config_file):
             msg = f"Config file {args.config_file} cannot be read or does not exist"
@@ -630,6 +627,9 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     # On group operations, we also need to set op_args
 
+    if args.verbose:
+        cli_args["verbose"] = True
+
     if args.stdin:
         cli_args["operation"] = "backup"
         cli_args["op_args"] = {
@@ -736,7 +736,7 @@ This is free software, and you are welcome to redistribute it under certain cond
     elif args.init:
         cli_args["operation"] = "init"
 
-    #### Group operation mode
+    # Group operation mode
     possible_group_ops = (
         "backup",
         "restore",

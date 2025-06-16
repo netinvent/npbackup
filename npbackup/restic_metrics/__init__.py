@@ -171,7 +171,7 @@ def restic_str_output_to_json(
                         matches.group(), line
                     )
                 )
-            except IndexError as exc:
+            except IndexError:
                 logger.error("Trace:", exc_info=True)
             errors = True
 
@@ -472,7 +472,7 @@ def restic_output_2_metrics(restic_result, output, labels_string=None):
                             matches.group(), line
                         )
                     )
-                except IndexError as exc:
+                except IndexError:
                     logger.error("Trace:", exc_info=True)
                 errors = True
 

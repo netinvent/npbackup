@@ -22,7 +22,7 @@ from npbackup.restic_metrics import (
     write_metrics_file,
 )
 from npbackup.__version__ import __intname__ as NAME, version_dict
-from npbackup.__debug__ import _DEBUG, fmt_json
+from npbackup.__debug__ import fmt_json
 from resources.customization import OEM_STRING
 
 logger = getLogger()
@@ -156,10 +156,10 @@ def metric_analyser(
                 date=date,
             )
     except KeyError as exc:
-        logger.info("Metrics error: {}".format(exc))
+        logger.info(f"Metrics error: {exc}")
         logger.debug("Trace:", exc_info=True)
     except OSError as exc:
-        logger.error("Metrics OS error: ".format(exc))
+        logger.error(f"Metrics OS error: {exc}")
         logger.debug("Trace:", exc_info=True)
     return operation_success, backup_too_small
 
@@ -185,7 +185,7 @@ def send_prometheus_metrics(
             )
             return False
     except KeyError as exc:
-        logger.error("No prometheus configuration found in config file.")
+        logger.error("No prometheus configuration found in config file: {exc}")
         return False
 
     if destination and dry_run:
@@ -194,12 +194,12 @@ def send_prometheus_metrics(
         logger.debug("Sending metrics to {}".format(destination))
         dest = destination.lower()
         if dest.startswith("http"):
-            if not "metrics" in dest:
+            if "metrics" not in dest:
                 logger.error(
                     "Destination does not contain 'metrics' keyword. Not uploading."
                 )
                 return False
-            if not "job" in dest:
+            if "job" not in dest:
                 logger.error(
                     "Destination does not contain 'job' keyword. Not uploading."
                 )

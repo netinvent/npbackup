@@ -61,7 +61,7 @@ def get_aes_key():
             try:
                 with open(key_location, "rb") as key_file:
                     key = key_file.read()
-                    msg = f"Encryption key file read"
+                    msg = "Encryption key file read"
             except OSError as exc:
                 msg = f"Cannot read encryption key file: {exc}"
                 return False, msg

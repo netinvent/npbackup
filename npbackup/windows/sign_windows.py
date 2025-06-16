@@ -59,7 +59,7 @@ def get_ev_data(cert_data_path):
             cryptographic_provider,
         ) = ev_cert
     except Exception as exc:
-        print("EV Cert data is corrupt")
+        print("EV Cert data is corrupt: {exc}")
         sys.exit(1)
     return pkcs12_certificate, pkcs12_password, container_name, cryptographic_provider
 

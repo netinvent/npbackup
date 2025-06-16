@@ -19,7 +19,6 @@ import re
 from datetime import datetime, timezone
 import dateutil.parser
 import queue
-from functools import wraps
 from command_runner import command_runner
 from packaging.version import parse as version_parse
 from ofunctions.misc import BytesConverter, fn_name
@@ -169,7 +168,7 @@ class ResticRunner:
             os.environ[encrypted_env_variable] = value
 
         # Configure default cpu usage when not specifically set
-        if not "GOMAXPROCS" in self.environment_variables:
+        if "GOMAXPROCS" not in self.environment_variables:
             nb_cores = os.cpu_count()
             if nb_cores < 2:
                 gomaxprocs = nb_cores
@@ -377,7 +376,7 @@ class ResticRunner:
             logger.debug(f"Skipping output filter for {self._executor_operation}")
             return output
         if not isinstance(output, str):
-            logger.debug(f"Skipping output filter for non str output")
+            logger.debug("Skipping output filter for non str output")
             return output
         for filter in restic_output_filters:
             output = filter.sub("", output)

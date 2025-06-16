@@ -249,10 +249,10 @@ def config_gui(full_config: dict, config_file: str):
         try:
             if combo_value.startswith("Repo: "):
                 object_type = "repos"
-                object_name = combo_value[len("Repo: ") :]
+                object_name = combo_value[len("Repo: "):]
             elif combo_value.startswith("Group: "):
                 object_type = "groups"
-                object_name = combo_value[len("Group: ") :]
+                object_name = combo_value[len("Group: "):]
             else:
                 object_type = None
                 object_name = None
@@ -635,7 +635,7 @@ def config_gui(full_config: dict, config_file: str):
         # First we need to clear the whole GUI to reload new values
         for key in window.AllKeysDict:
             # We only clear config keys, which have '.' separator
-            if "." in str(key) and not "inherited" in str(key):
+            if "." in str(key) and "inherited" not in str(key):
                 if isinstance(window[key], sg.Tree):
                     window[key].Update(sg.TreeData())
                 else:
@@ -791,7 +791,7 @@ def config_gui(full_config: dict, config_file: str):
                 continue
             if not isinstance(key, str) or (
                 isinstance(key, str)
-                and (not "." in key and not key in ("repo_uri", "repo_group"))
+                and ("." not in key and key not in ("repo_uri", "repo_group"))
             ):
                 # Don't bother with keys that don't contain with "." since they're not in the YAML config file
                 # but are most probably for GUI events
@@ -2975,5 +2975,4 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
     # Closing this window takes ages
     window.hide()
     quick_close_simplegui_window(window)
-    del window # noqa: F821 (undefined name)
     return full_config

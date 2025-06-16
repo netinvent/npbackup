@@ -35,7 +35,7 @@ if not __SPECIAL_DEBUG_STRING:
         sys.argv.pop(sys.argv.index("--debug"))
 
 
-if not "_DEBUG" in globals():
+if "_DEBUG" not in globals():
     _DEBUG = False
     if __SPECIAL_DEBUG_STRING:
         if __debug_os_env == __SPECIAL_DEBUG_STRING:

@@ -37,7 +37,7 @@ UPGRADE_DEFER_TIME = 60
 # Maximum allowed time offset in seconds to allow policy operations to run
 MAX_ALLOWED_NTP_OFFSET = 600.0
 
-if not "BUILD_TYPE" in globals():
+if "BUILD_TYPE" not in globals():
     BUILD_TYPE = "UnknownBuildType"
 
 

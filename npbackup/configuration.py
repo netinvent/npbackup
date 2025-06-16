@@ -29,10 +29,9 @@ from ofunctions.random import random_string
 from ofunctions.misc import replace_in_iterable, BytesConverter, iter_over_keys
 from resources.customization import ID_STRING
 from npbackup.key_management import AES_KEY, EARLIER_AES_KEY, IS_PRIV_BUILD, get_aes_key
-
+from npbackup.__version__ import __version__ as MAX_CONF_VERSION
 
 MIN_CONF_VERSION = "3.0"
-from npbackup.__version__ import __version__ as MAX_CONF_VERSION
 
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
@@ -891,13 +890,13 @@ def load_config(config_file: Path) -> Optional[dict]:
     full_config = crypt_config(
         full_config, AES_KEY, ENCRYPTED_OPTIONS, operation="decrypt"
     )
-    if full_config == False:
+    if full_config is False:
         if EARLIER_AES_KEY:
             logger.warning("Trying to migrate encryption key")
             full_config = crypt_config(
                 full_config, EARLIER_AES_KEY, ENCRYPTED_OPTIONS, operation="decrypt"
             )
-            if full_config == False:
+            if full_config is False:
                 msg = "Cannot decrypt config file. Looks like our keys don't match."
                 logger.critical(msg)
                 raise EnvironmentError(msg)

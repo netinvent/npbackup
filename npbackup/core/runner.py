@@ -486,7 +486,7 @@ class NPBackupRunner:
                     current_permissions = self.repo_config.g("permissions")
                     if (
                         current_permissions
-                        and not current_permissions in required_permissions[operation]
+                        and current_permissions not in required_permissions[operation]
                     ):
                         self.write_logs(
                             f"Required permissions for operation '{operation}' must be one of {', '.join(required_permissions[operation])}, current permission is '{current_permissions}'",
@@ -935,9 +935,9 @@ class NPBackupRunner:
         if self.json_output:
             if isinstance(result, dict):
                 js = result
-                if not "additional_error_info" in js.keys():
+                if "additional_error_info" not in js.keys():
                     js["additional_error_info"] = []
-                if not "additional_warning_info" in js.keys():
+                if "additional_warning_info" not in js.keys():
                     js["additional_warning_info"] = []
             else:
                 js = {
@@ -1405,7 +1405,7 @@ class NPBackupRunner:
                 all_files_present = self.check_source_files_present(source_type, paths)
                 if not all_files_present:
                     self.write_logs(
-                        f"Not all files/folders are present in backup source",
+                        "Not all files/folders are present in backup source",
                         level="error",
                     )
 
@@ -1508,7 +1508,7 @@ class NPBackupRunner:
                 current_permissions = self.repo_config.g("permissions")
                 if (
                     current_permissions
-                    and not current_permissions in required_permissions[post_backup_op]
+                    and current_permissions not in required_permissions[post_backup_op]
                 ):
                     self.write_logs(
                         f"Required permissions for post backup housekeeping must be one of {', '.join(required_permissions[post_backup_op])}, current permission is '{current_permissions}'",
