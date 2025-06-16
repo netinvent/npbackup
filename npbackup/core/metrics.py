@@ -206,8 +206,8 @@ def send_prometheus_metrics(
                 return False
             try:
                 authentication = (
-                    repo_config.g("prometheus.http_username"),
-                    repo_config.g("prometheus.http_password"),
+                    repo_config.g("global_prometheus.http_username"),
+                    repo_config.g("global_prometheus.http_password"),
                 )
             except KeyError:
                 logger.info("No metrics authentication present.")
