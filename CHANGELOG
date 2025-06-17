@@ -13,9 +13,11 @@
 #### Fixes
 
 #### Misc
-- Make another attempt to hide the console window on Windows when running in GUI mode
+- GUI: Make another attempt to hide the console window on Windows when running in GUI mode
+- GUI: Workaround to make the config window close faster
 - Update restic metrics tests
 - Don't encrypt auto upgrade / prometheus push gateway usernames
+- Updated Nuitka compiler to 2.7.8
 
 ## 3.0.2
 #### Features
