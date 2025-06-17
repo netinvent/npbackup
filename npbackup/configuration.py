@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025061301"
+__build__ = "2025061701"
 __version__ = "npbackup 3.0.3+"
 
 
@@ -23,7 +23,7 @@ from logging import getLogger
 import re
 import platform
 import zlib
-from packaging.version import parse as version_parse
+from packaging.version import parse as version_parse, InvalidVersion
 from cryptidy import symmetric_encryption as enc
 from ofunctions.random import random_string
 from ofunctions.misc import replace_in_iterable, BytesConverter, iter_over_keys
@@ -824,6 +824,11 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
                 return False
             try:
                 conf_version = version_parse(str(full_config.g("conf_version")))
+                if not conf_version:
+                    logger.critical(
+                        f"Config file {config_file} has no configuration version. Is this a valid npbackup config file?"
+                    )
+                    return False
                 if conf_version < version_parse(
                     MIN_CONF_VERSION
                 ) or conf_version > version_parse(MAX_CONF_VERSION):
@@ -831,7 +836,7 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
                         f"Config file version {str(conf_version)} is not in required version range min={MIN_CONF_VERSION}, max={MAX_CONF_VERSION}"
                     )
                     return False
-            except (AttributeError, TypeError) as exc:
+            except (AttributeError, TypeError, InvalidVersion) as exc:
                 logger.critical(
                     f"Cannot read conf version from config file {config_file}, which seems bogus: {exc}"
                 )
