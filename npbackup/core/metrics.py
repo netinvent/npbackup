@@ -214,6 +214,7 @@ def send_prometheus_metrics(
                 authentication = None
 
             # Fix for #150, job name needs to be unique in order to avoid overwriting previous job in push gateway
+            # destination contains the URI of the push gateway as well as the job name
             destination = f"{destination}___repo_name={repo_name}___action={operation}"
             upload_metrics(destination, authentication, no_cert_verify, metrics)
         else:
