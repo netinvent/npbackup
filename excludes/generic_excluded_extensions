@@ -40,6 +40,8 @@
 *.swp
 
 # Microsoft Outlook Exchange sync files (can still be backed up since we may convert from ost to pst)
+# ATTENTION: By default, Windows VSS ignores ost files
+# Can be set in HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\BackupRestore\FilesNotToSnapshot
 #*.ost
 
 # Microsoft Tracelog files
