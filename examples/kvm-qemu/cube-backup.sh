@@ -12,6 +12,8 @@ VMS=$(virsh list --name --all)
 # Optional manual machine selection
 #VMS=(some.vm.local some.other.vm.local)
 
+EXCLUDE_VMS=(some_lab_vm.local some_other_non_to_backup_vm.local)
+
 DEFAULT_TAG=retention3y
 SPECIAL_TAG=retention30d
 SPECIAL_TAG_VMS=(some.vm.local some.other.vm.local)
@@ -242,6 +244,10 @@ function run {
         for vm in ${VMS[@]}; do
                 # Empty file
                 : > "$BACKUP_FILE_LIST"
+
+                if [ $(ArrayContains "$vm" "${EXCLUDE_VMS[@]}") -eq 0 ]; then
+                        log "Not backing up $vm due to being in exclusion list"
+                fi
 
                 CURRENT_VM_SNAPSHOT=""
 
