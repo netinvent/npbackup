@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Script ver 2025042801
+# Script ver 2025062501
 
 #TODO: blockcommit removes current snapshots, even if not done by cube
 #      - it's interesting to make housekeeping, let's make this an option
@@ -67,6 +67,12 @@ function create_snapshot {
         # Ignore SC2068 here
         # Add VM xml description from virsh
         ## At least use a umask
+
+        if [ "$(virsh domstate $vm)" == "shut off" ]; then
+                log "Domain is not running, no need for snapshots"
+                return
+        fi
+
 
         # Don't redirect direct virsh output or SELinux may complain that we cannot write with virsh context
         xml=$(virsh dumpxml --security-info $vm || log "Failed to create XML file" "ERROR")
