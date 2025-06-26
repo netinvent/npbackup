@@ -10,6 +10,7 @@ repos:
       exclude_files_larger_than: 0.0 KiB
       tags:
         - ___VM___
+        - ___TAG___
     repo_opts:
       repo_password:
       retention_policy: {}

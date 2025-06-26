@@ -12,6 +12,12 @@ VMS=$(virsh list --name --all)
 # Optional manual machine selection
 #VMS=(some.vm.local some.other.vm.local)
 
+DEFAULT_TAG=retention3y
+SPECIAL_TAG=retention30d
+SPECIAL_TAG_VMS=(some.vm.local some.other.vm.local)
+
+
+
 LOG_FILE="/var/log/cube_npv2.log"
 ROOT_DIR="/opt/cube"
 BACKUP_IDENTIFIER="CUBE-BACKUP-NP.$(date +"%Y%m%dT%H%M%S" --utc)"
@@ -68,11 +74,6 @@ function create_snapshot {
         # Add VM xml description from virsh
         ## At least use a umask
 
-        if [ "$(virsh domstate $vm)" == "shut off" ]; then
-                log "Domain is not running, no need for snapshots"
-                return
-        fi
-
 
         # Don't redirect direct virsh output or SELinux may complain that we cannot write with virsh context
         xml=$(virsh dumpxml --security-info $vm || log "Failed to create XML file" "ERROR")
@@ -92,6 +93,12 @@ function create_snapshot {
                         echo "${disk_path}" >> "$BACKUP_FILE_LIST"
                 fi
         done
+
+        if [ "$(virsh domstate $vm)" == "shut off" ]; then
+                log "Domain is not running, no need for snapshots"
+                return
+        fi
+
         log "Creating snapshot for $vm"
         rm -f "${SNAPSHOT_FAILED_FILE}" > /dev/null 2>&1
         virsh snapshot-create-as $vm --name "${backup_identifier}" --description "${backup_identifier}" --atomic --quiesce --disk-only >> "$LOG_FILE" 2>&1
@@ -152,6 +159,14 @@ function run_backup {
         sed -i "s%___TENANT___%${tenant}%g" "${NPBACKUP_CONF_FILE}"
         sed -i "s%___SOURCE___%${BACKUP_FILE_LIST}%g" "${NPBACKUP_CONF_FILE}"
         sed -i "s%___VM___%${vm}%g" "${NPBACKUP_CONF_FILE}"
+
+        if [ $(ArrayContains "$vm" "${SPECIAL_TAG_VMS[@]}") -eq 0 ]; then
+                log "Changing tag for $vm to $SPECIAL_TAG"
+                tags="${SPECIAL_TAG}"
+        else
+                tags="${DEFAULT_TAG}"
+        fi
+        sed -i "s%___TAG___%${tags}%" "${NPBACKUP_CONF_FILE}"
 
         "${NPBACKUP_EXECUTABLE}" --config-file "${NPBACKUP_CONF_FILE}" --backup --force >> "$LOG_FILE" 2>&1
         if [ $? -ne 0 ]; then
