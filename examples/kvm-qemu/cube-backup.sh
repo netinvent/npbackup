@@ -247,6 +247,7 @@ function run {
 
                 if [ $(ArrayContains "$vm" "${EXCLUDE_VMS[@]}") -eq 0 ]; then
                         log "Not backing up $vm due to being in exclusion list"
+                        continue
                 fi
 
                 CURRENT_VM_SNAPSHOT=""
