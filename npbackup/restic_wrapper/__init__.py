@@ -378,8 +378,8 @@ class ResticRunner:
         if not isinstance(output, str):
             logger.debug("Skipping output filter for non str output")
             return output
-        for filter in restic_output_filters:
-            output = filter.sub("", output)
+        for regex_filter in restic_output_filters:
+            output = regex_filter.sub("", output)
         return output
 
     def executor(
@@ -923,7 +923,7 @@ class ResticRunner:
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
     def snapshots(
-        self, id: str = None, errors_allowed: bool = False
+        self, snapshot_id: str = None, errors_allowed: bool = False
     ) -> Union[bool, str, dict]:
         """
         Returns a list of snapshots
@@ -935,8 +935,8 @@ class ResticRunner:
         kwargs.pop("self")
 
         cmd = "snapshots"
-        if id:
-            cmd += f" {id}"
+        if snapshot_id:
+            cmd += f" {snapshot_id}"
         result, output = self.executor(
             cmd, timeout=FAST_COMMANDS_TIMEOUT, errors_allowed=errors_allowed
         )
@@ -1206,6 +1206,11 @@ class ResticRunner:
                         for tag in value:
                             if tag:
                                 cmd += f" --keep-tag {tag}"
+                elif key == "apply-on-tags":
+                    if isinstance(value, list):
+                        for tag in value:
+                            if tag:
+                                cmd += f" --tag {tag}"
                 else:
                     cmd += f" --{key.replace('_', '-')} {value}"
             if group_by:

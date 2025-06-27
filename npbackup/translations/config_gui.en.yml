@@ -128,6 +128,7 @@ en:
   yearly: yearly snapshots
   keep_within: Keep snapshots within time period relative to current snapshot
   keep_tags: Keep snapshots with the following tags
+  apply_on_tagds: Apply only on snapshots with the following tags
   post_backup_housekeeping_percent_chance: Post backup housekeeping run chance (%%)
   post_backup_housekeeping_percent_chance_explanation: Randomize housekeeping runs after backup (0-100%%, 0 = never, 100 = always)
   post_backup_housekeeping_interval: Post backup housekeeping interval

@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025061701"
+__build__ = "2025072701"
 __version__ = "npbackup 3.0.3+"
 
 
@@ -31,7 +31,8 @@ from resources.customization import ID_STRING
 from npbackup.key_management import AES_KEY, EARLIER_AES_KEY, IS_PRIV_BUILD, get_aes_key
 from npbackup.__version__ import __version__ as MAX_CONF_VERSION
 
-MIN_CONF_VERSION = "3.0"
+MIN_MIGRATABLE_CONF_VERSION = "3.0.0"
+MIN_CONF_VERSION = "3.0.3"
 
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
@@ -190,7 +191,8 @@ empty_config_dict = {
                     "weekly": 4,
                     "monthly": 12,
                     "yearly": 3,
-                    "tags": [],
+                    "keep_tags": [],
+                    "apply_on_tags": [],
                     "keep_within": True,
                     "group_by_host": True,
                     "group_by_tags": True,
@@ -811,6 +813,63 @@ def _get_config_file_checksum(config_file: Path) -> str:
         return "%08X" % (cur_hash & 0xFFFFFFFF)
 
 
+def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) -> dict:
+    """
+    Migrate config dict from old version to new version
+    This is used when config file version is not the same as current version
+    """
+    logger.info(f"Migrating config file from version {old_version} to {new_version}")
+
+    def _migrate_retetion_policy_3_0_0_to_3_0_3(
+        full_config: dict,
+        object_name: str,
+        object_type: str,
+    ) -> dict:
+        try:
+            if full_config.g(
+                f"{object_type}.{object_name}.repo_opts.retention_policy.tags"
+            ) is not None and not full_config.g(
+                f"{object_type}.{object_name}.repo_opts.retention_policy.keep_tags"
+            ):
+                full_config.s(
+                    f"{object_type}.{object_name}.repo_opts.retention_policy.keep_tags",
+                    full_config.g(
+                        f"{object_type}.{object_name}.repo_opts.retention_policy.tags"
+                    ),
+                )
+                full_config.d(
+                    f"{object_type}.{object_name}.repo_opts.retention_policy.tags"
+                )
+                logger.info(
+                    f"Migrated {object_name} retention policy tags to keep_tags"
+                )
+        except KeyError:
+            logger.info(
+                f"{object_type} {object_name} has no retention policy, skipping migration"
+            )
+        return full_config
+
+    def _apply_migrations(
+        full_config: dict,
+        object_name: str,
+        object_type: str,
+    ) -> dict:
+        if version_parse(old_version) < version_parse("3.0.3"):
+            full_config = _migrate_retetion_policy_3_0_0_to_3_0_3(
+                full_config, object_name, object_type
+            )
+        return full_config
+
+    for repo in get_repo_list(full_config):
+        _apply_migrations(full_config, repo, "repos")
+
+    for group in get_group_list(full_config):
+        _apply_migrations(full_config, group, "groups")
+
+    full_config.s("conf_version", new_version)
+    return full_config
+
+
 def _load_config_file(config_file: Path) -> Union[bool, dict]:
     """
     Checks whether config file is valid
@@ -830,12 +889,18 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
                     )
                     return False
                 if conf_version < version_parse(
-                    MIN_CONF_VERSION
+                    MIN_MIGRATABLE_CONF_VERSION
                 ) or conf_version > version_parse(MAX_CONF_VERSION):
                     logger.critical(
-                        f"Config file version {str(conf_version)} is not in required version range min={MIN_CONF_VERSION}, max={MAX_CONF_VERSION}"
+                        f"Config file version {str(conf_version)} is not in required version range min={MIN_MIGRATABLE_CONF_VERSION}, max={MAX_CONF_VERSION}"
                     )
                     return False
+                if conf_version < version_parse(MIN_CONF_VERSION):
+                    full_config = _migrate_config_dict(
+                        full_config, str(conf_version), MIN_CONF_VERSION
+                    )
+                    logger.info("Writing migrated config file")
+                    save_config(config_file, full_config)
             except (AttributeError, TypeError, InvalidVersion) as exc:
                 logger.critical(
                     f"Cannot read conf version from config file {config_file}, which seems bogus: {exc}"

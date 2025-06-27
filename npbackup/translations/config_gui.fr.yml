@@ -128,7 +128,8 @@ fr:
   monthly: instantanés mensuels
   yearly: instantanés annuelles
   keep_within: Garder les instantanées dans une période relative au dernier instantané
-  keep_tags: Garder les instantanés avec les tags suivants
+  keep_tags: Garder les instantanés aux tags suivants
+  apply_on_tags: Appliquer uniquement sur les instantanés aux tags suivants
   post_backup_housekeeping_percent_chance: Chance (%%) de lancer maintenance post-sauvegarde
   post_backup_housekeeping_percent_chance_explanation: Rend aléatoire la maintenance après sauvegarde (0-100%%, 0 = jamais, 100 = toujours)
   post_backup_housekeeping_interval: Intervalle de maintenance post-sauvegarde

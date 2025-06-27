@@ -447,7 +447,8 @@ def config_gui(full_config: dict, config_file: str):
                 "backup_opts.post_exec_commands",
                 "backup_opts.exclude_files",
                 "backup_opts.exclude_patterns",
-                "repo_opts.retention_policy.tags",
+                "repo_opts.retention_policy.keep_tags",
+                "repo_opts.retention_policy.apply_tags",
             ):
                 if key == "backup_opts.tags":
                     tree = tags_tree
@@ -459,8 +460,10 @@ def config_gui(full_config: dict, config_file: str):
                     tree = exclude_files_tree
                 elif key == "backup_opts.exclude_patterns":
                     tree = exclude_patterns_tree
-                elif key == "repo_opts.retention_policy.tags":
-                    tree = retention_policy_tags_tree
+                elif key == "repo_opts.retention_policy.keep_tags":
+                    tree = retention_policy_keep_tags_tree
+                elif key == "repo_opts.retention_policy.apply_on_tags":
+                    tree = retention_policy_apply_on_tags_tree
                 else:
                     tree = None
 
@@ -618,7 +621,8 @@ def config_gui(full_config: dict, config_file: str):
         nonlocal tags_tree
         nonlocal exclude_files_tree
         nonlocal exclude_patterns_tree
-        nonlocal retention_policy_tags_tree
+        nonlocal retention_policy_keep_tags_tree
+        nonlocal retention_policy_apply_on_tags_tree
         nonlocal pre_exec_commands_tree
         nonlocal post_exec_commands_tree
         nonlocal env_variables_tree
@@ -646,7 +650,8 @@ def config_gui(full_config: dict, config_file: str):
         tags_tree = sg.TreeData()
         exclude_patterns_tree = sg.TreeData()
         exclude_files_tree = sg.TreeData()
-        retention_policy_tags_tree = sg.TreeData()
+        retention_policy_keep_tags_tree = sg.TreeData()
+        retention_policy_apply_on_tags_tree = sg.TreeData()
         pre_exec_commands_tree = sg.TreeData()
         post_exec_commands_tree = sg.TreeData()
         env_variables_tree = sg.TreeData()
@@ -755,7 +760,8 @@ def config_gui(full_config: dict, config_file: str):
             "backup_opts.post_exec_commands",
             "backup_opts.exclude_files",
             "backup_opts.exclude_patterns",
-            "repo_opts.retention_policy.tags",
+            "repo_opts.retention_policy.keep_tags",
+            "repo_opts.retention_policy.apply_on_tags",
         ]
         for tree_data_key in list_tree_data_keys:
             values[tree_data_key] = []
@@ -1813,8 +1819,12 @@ def config_gui(full_config: dict, config_file: str):
             [
                 sg.Column(
                     [
-                        [sg.Button("+", key="--ADD-RETENTION-TAG--", size=(3, 1))],
-                        [sg.Button("-", key="--REMOVE-RETENTION-TAG--", size=(3, 1))],
+                        [sg.Button("+", key="--ADD-RETENTION-KEEP-TAG--", size=(3, 1))],
+                        [
+                            sg.Button(
+                                "-", key="--REMOVE-RETENTION-KEEP-TAG--", size=(3, 1)
+                            )
+                        ],
                     ],
                     pad=0,
                 ),
@@ -1823,10 +1833,44 @@ def config_gui(full_config: dict, config_file: str):
                         [
                             sg.Tree(
                                 sg.TreeData(),
-                                key="repo_opts.retention_policy.tags",
+                                key="repo_opts.retention_policy.keep_tags",
                                 headings=[],
                                 col0_heading=_t("config_gui.keep_tags"),
-                                num_rows=4,
+                                num_rows=3,
+                                expand_x=True,
+                                expand_y=True,
+                            )
+                        ]
+                    ],
+                    pad=0,
+                    expand_x=True,
+                ),
+                sg.Column(
+                    [
+                        [
+                            sg.Button(
+                                "+", key="--ADD-RETENTION-APPLY-ON-TAG--", size=(3, 1)
+                            )
+                        ],
+                        [
+                            sg.Button(
+                                "-",
+                                key="--REMOVE-RETENTION-APPLY-ON-TAG--",
+                                size=(3, 1),
+                            )
+                        ],
+                    ],
+                    pad=0,
+                ),
+                sg.Column(
+                    [
+                        [
+                            sg.Tree(
+                                sg.TreeData(),
+                                key="repo_opts.retention_policy.apply_on_tags",
+                                headings=[],
+                                col0_heading=_t("config_gui.apply_on_tags"),
+                                num_rows=3,
                                 expand_x=True,
                                 expand_y=True,
                             )
@@ -1836,6 +1880,8 @@ def config_gui(full_config: dict, config_file: str):
                     expand_x=True,
                 ),
             ],
+            [sg.HorizontalSeparator()],
+            [],
             [sg.HorizontalSeparator()],
             [
                 sg.Text(
@@ -2577,7 +2623,8 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
     tags_tree = sg.TreeData()
     exclude_patterns_tree = sg.TreeData()
     exclude_files_tree = sg.TreeData()
-    retention_policy_tags_tree = sg.TreeData()
+    retention_policy_keep_tags_tree = sg.TreeData()
+    retention_policy_apply_on_tags_tree = sg.TreeData()
     pre_exec_commands_tree = sg.TreeData()
     post_exec_commands_tree = sg.TreeData()
     global_prometheus_labels_tree = sg.TreeData()
@@ -2716,7 +2763,8 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
         if event in (
             "--ADD-BACKUP-TAG--",
             "--ADD-EXCLUDE-PATTERN--",
-            "--ADD-RETENTION-TAG--",
+            "--ADD-RETENTION-KEEP-TAG--",
+            "--ADD-RETENTION-APPLY-ON-TAG--",
             "--ADD-PRE-EXEC-COMMAND--",
             "--ADD-POST-EXEC-COMMAND--",
             "--ADD-PROMETHEUS-LABEL--",
@@ -2730,7 +2778,8 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             "--REMOVE-BACKUP-TAG--",
             "--REMOVE-EXCLUDE-PATTERN--",
             "--REMOVE-EXCLUDE-FILE--",
-            "--REMOVE-RETENTION-TAG--",
+            "--REMOVE-RETENTION-KEEP-TAG--",
+            "--REMOVE-RETENTION-APPLY-ON-TAG--",
             "--REMOVE-PRE-EXEC-COMMAND--",
             "--REMOVE-POST-EXEC-COMMAND--",
             "--REMOVE-PROMETHEUS-LABEL--",
@@ -2754,10 +2803,14 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 popup_text = None
                 tree = exclude_files_tree
                 option_key = "backup_opts.exclude_files"
-            elif "RETENTION-TAG" in event:
+            elif "RETENTION-KEEP-TAG" in event:
                 popup_text = _t("config_gui.enter_tag")
-                tree = retention_policy_tags_tree
-                option_key = "repo_opts.retention_policy.tags"
+                tree = retention_policy_keep_tags_tree
+                option_key = "repo_opts.retention_policy.keep_tags"
+            elif "RETENTION-APPLY-ON-TAG" in event:
+                popup_text = _t("config_gui.enter_tag")
+                tree = retention_policy_apply_on_tags_tree
+                option_key = "repo_opts.retention_policy.apply_on_tags"
             elif "PRE-EXEC-COMMAND" in event:
                 popup_text = _t("config_gui.enter_command")
                 tree = pre_exec_commands_tree

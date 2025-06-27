@@ -1032,11 +1032,11 @@ class NPBackupRunner:
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    def snapshots(self, id: str = None, errors_allowed: bool = False) -> Optional[dict]:
+    def snapshots(self, snapshot_id: str = None, errors_allowed: bool = False) -> Optional[dict]:
         self.write_logs(
             f"Listing snapshots of repo {self.repo_config.g('name')}", level="info"
         )
-        snapshots = self.restic_runner.snapshots(id=id, errors_allowed=errors_allowed)
+        snapshots = self.restic_runner.snapshots(snapshot_id=snapshot_id, errors_allowed=errors_allowed)
         return snapshots
 
     @threaded
@@ -1643,10 +1643,23 @@ class NPBackupRunner:
                             unit = "d"
                             value = value * 7
                         policy[f"keep-within-{entry}"] = f"{value}{unit}"
+
+            # DEPRECATED: since we renamed tags to keep_tags, we still neeed to fetch
+            # old tag name. Will be removed in 3.1
             keep_tags = self.repo_config.g("repo_opts.retention_policy.tags")
             if not isinstance(keep_tags, list) and keep_tags:
                 keep_tags = [keep_tags]
                 policy["keep-tags"] = keep_tags
+            keep_tags = self.repo_config.g("repo_opts.retention_policy.keep_tags")
+            if not isinstance(keep_tags, list) and keep_tags:
+                keep_tags = [keep_tags]
+                policy["keep-tags"] = keep_tags
+            apply_on_tags = self.repo_config.g(
+                "repo_opts.retention_policy.apply_on_tags"
+            )
+            if not isinstance(apply_on_tags, list) and apply_on_tags:
+                apply_on_tags = [apply_on_tags]
+                policy["apply-on-tags"] = apply_on_tags
             # Fool proof, don't run without policy, or else we'll get
             if not policy:
                 msg = "Empty retention policy. Won't run"
