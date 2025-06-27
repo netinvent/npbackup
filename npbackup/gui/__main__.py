@@ -442,7 +442,8 @@ def ls_window(parent_window: sg.Window, repo_config: dict, snapshot_id: str) -> 
                 if not values["-TREE-"]:
                     sg.PopupError(_t("main_gui.select_folder"), keep_on_top=True)
                     continue
-                restore_window(repo_config, snapshot_id, values["-TREE-"])
+                with HideWindow(window):
+                    restore_window(repo_config, snapshot_id, values["-TREE-"])
 
         # Closing a big sg.Tree is really slow
         # We can workaround this by emptying the Tree with a new sg.TreeData() object
@@ -464,6 +465,8 @@ def restore_window(
             "restore",
             snapshot=snapshot,
             target=target,
+            __gui_msg=_t("main_gui.restore_in_progress"),
+            __compact=False,
             restore_includes=restore_includes,
             __backend_binary=backend_binary,
             __autoclose=True,
@@ -498,17 +501,18 @@ def restore_window(
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "cancel"):
             break
         if event == "restore":
-            result = _restore_window(
-                repo_config,
-                snapshot=snapshot_id,
-                target=values["-RESTORE-FOLDER-"],
-                restore_includes=restore_include,
-            )
-            if result:
-                sg.popup(_t("main_gui.restore_done"), keep_on_top=True)
-            else:
-                sg.popup(_t("main_gui.restore_failed"), keep_on_top=True)
-            break
+            with HideWindow(window):
+                result = _restore_window(
+                    repo_config,
+                    snapshot=snapshot_id,
+                    target=values["-RESTORE-FOLDER-"],
+                    restore_includes=restore_include,
+                )
+                if result:
+                    sg.popup(_t("main_gui.restore_done"), keep_on_top=True)
+                else:
+                    sg.popup(_t("main_gui.restore_failed"), keep_on_top=True)
+                break
     window.close()
     return result
 
