@@ -8,13 +8,17 @@
 - New optional random delay before backup operations
 - All prometheus metrics now have repo_name label
 - Metrics are now send for non executed backups because of concurrency checks
-- Implement emailing capacities
+- Implement notifications per email
+- CLI: Add --list-selected-repos command
 
 #### Fixes
 
+- GUI: Fix possible result mismatch with concurrency checks
+- GUI: Hide background window while restoration is running
+
 #### Misc
-- GUI: Make another attempt to hide the console window on Windows when running in GUI mode
-- GUI: Workaround to make the config window close faster
+- GUI: Finally a worthy fix for hiding the console window in Windows 11 (they changed conhost.exe to Windows Terminal)
+- GUI: Workaround to make the config window close faster by threading it into background
 - Update restic metrics tests
 - Don't encrypt auto upgrade / prometheus push gateway usernames
 - Updated Nuitka compiler to 2.7.8
