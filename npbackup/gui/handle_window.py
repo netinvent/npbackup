@@ -33,26 +33,31 @@ def handle_current_window(action: str = "minimize") -> None:
         import win32con
         import ctypes
 
-        kernel32 = ctypes.WinDLL('kernel32')
+        kernel32 = ctypes.WinDLL("kernel32")
 
         # get the console window
+        # pylint: disable=I1101 (c-extension-no-member)
         hWnd = kernel32.GetConsoleWindow()
 
         # set it as foreground
-        win32gui.SetForegroundWindow(hWnd) 
+        # pylint: disable=I1101 (c-extension-no-member)
+        win32gui.SetForegroundWindow(hWnd)
 
         # get the foreground window
-        hWnd = win32gui.GetForegroundWindow() 
+        # pylint: disable=I1101 (c-extension-no-member)
+        hWnd = win32gui.GetForegroundWindow()
 
         # hide it
         if action == "minimize":
+            # pylint: disable=I1101 (c-extension-no-member)
             win32gui.ShowWindow(hWnd, win32con.SW_MINIMIZE)
         elif action == "hide":
+            # pylint: disable=I1101 (c-extension-no-member)
             win32gui.ShowWindow(hWnd, win32con.SW_HIDE)
         elif action == "show":
+            # pylint: disable=I1101 (c-extension-no-member)
             win32gui.ShowWindow(hWnd, win32con.SW_SHOW)
         else:
             raise ValueError(
                 f"Bad action parameter for handling current window: {action}"
             )
-
