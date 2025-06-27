@@ -83,6 +83,12 @@ This is free software, and you are welcome to redistribute it under certain cond
         required=False,
         help="Comme separated list of groups to work with. Can accept special name '__all__' to work with all repositories.",
     )
+    parser.add_argument(
+        "--list-selected-repos",
+        action="store_true",
+        default=False,
+        help="List selected repositories and groups when using --repo-name and/or --repo-group.",
+    )
     parser.add_argument("-b", "--backup", action="store_true", help="Run a backup")
     parser.add_argument(
         "-f",
@@ -444,6 +450,13 @@ This is free software, and you are welcome to redistribute it under certain cond
             sys.exit(74)
     # Cheap duplicate filter
     repos_and_group_repos = list(set(repos_and_group_repos))
+
+    if args.list_selected_repos:
+        if _JSON:
+            print(json.dumps({"result": True, "repositories": repos_and_group_repos}))
+        else:
+            logger.info(f"Repository list:\n{repos_and_group_repos}")
+        sys.exit(0)
 
     # Single repo usage
     if len(repos_and_group_repos) == 1:
