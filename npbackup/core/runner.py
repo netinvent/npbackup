@@ -1648,12 +1648,6 @@ class NPBackupRunner:
                             value = value * 7
                         policy[f"keep-within-{entry}"] = f"{value}{unit}"
 
-            # DEPRECATED: since we renamed tags to keep_tags, we still neeed to fetch
-            # old tag name. Will be removed in 3.1
-            keep_tags = self.repo_config.g("repo_opts.retention_policy.tags")
-            if not isinstance(keep_tags, list) and keep_tags:
-                keep_tags = [keep_tags]
-                policy["keep-tags"] = keep_tags
             keep_tags = self.repo_config.g("repo_opts.retention_policy.keep_tags")
             if not isinstance(keep_tags, list) and keep_tags:
                 keep_tags = [keep_tags]
