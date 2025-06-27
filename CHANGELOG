@@ -3,6 +3,12 @@
  ! Operation center must be able to create scheduled tasks for every operation
 
 ## 3.0.3
+#### Disruptive changes
+- An automatic config file migration tool has been added which can migrate config files from 3.0.0 to 3.0.3
+- The configuration file format has changed for retention policies
+  - 'tags' has become 'keep_tags' which is more meaningful
+  - 'apply_tags' has been added to filter retention policies only on specific snapshots containing defined tags
+
 #### Features
 - New finer grained concurrency control
 - New optional random delay before backup operations
@@ -10,9 +16,9 @@
 - Metrics are now send for non executed backups because of concurrency checks
 - Implement notifications per email
 - CLI: Add --list-selected-repos command
+- Retention policies can now be filtered by tags
 
 #### Fixes
-
 - GUI: Fix possible result mismatch with concurrency checks
 - GUI: Hide background window while restoration is running
 
@@ -20,7 +26,6 @@
 - GUI: Finally a worthy fix for hiding the console window in Windows 11 (they changed conhost.exe to Windows Terminal)
 - GUI: Workaround to make the config window close faster by threading it into background
 - Update restic metrics tests
-- Don't encrypt auto upgrade / prometheus push gateway usernames
 - Updated Nuitka compiler to 2.7.8
 
 ## 3.0.2
