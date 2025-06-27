@@ -398,7 +398,7 @@ def evaluate_variables(repo_config: dict, full_config: dict) -> dict:
     Also replaces human bytes notation with ints
     """
 
-    def _evaluate_variables(key, value):
+    def _evaluate_variables(_, value):
         if isinstance(value, str):
             if "${MACHINE_ID}" in value:
                 machine_id = full_config.g("identity.machine_id")

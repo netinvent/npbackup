@@ -344,7 +344,9 @@ def auto_upgrader(
         )
         try:
             # We must replace the script variables with actual values
-            with open(file_info["script"]["local_fs_path"], "r") as fh:
+            with open(
+                file_info["script"]["local_fs_path"], "r", encoding="utf-8"
+            ) as fh:
                 script_content = (
                     fh.read()
                     .replace("{CURRENT_DIR}", CURRENT_DIR)
@@ -359,7 +361,9 @@ def auto_upgrader(
                     )
                     .replace("{original_args}", original_args)
                 )
-            with open(file_info["script"]["local_fs_path"], "w") as fh:
+            with open(
+                file_info["script"]["local_fs_path"], "w", encoding="utf-8"
+            ) as fh:
                 fh.write(script_content)
         except OSError as exc:
             logger.error(f"Failed to replace variables in upgrade script: {exc}")

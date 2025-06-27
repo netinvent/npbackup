@@ -905,7 +905,6 @@ def config_gui(full_config: dict, config_file: str):
                             logger.debug(
                                 f"BytesConverter could not convert value: {exc}"
                             )
-                            pass
 
             # Don't bother to update empty strings, empty lists and None
             # unless we have False, or 0, which or course need to be updated

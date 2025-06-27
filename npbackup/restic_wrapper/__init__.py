@@ -365,6 +365,7 @@ class ResticRunner:
         if raise_error == "ValueError":
             raise ValueError(msg)
         if raise_error:
+            # pylint: disable=W0703 (broad-except)
             raise Exception(msg)
 
     def output_filter(self, output: str) -> str:

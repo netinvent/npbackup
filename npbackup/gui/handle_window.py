@@ -10,7 +10,6 @@ __license__ = "GPL-3.0-only"
 __build__ = "2025062701"
 
 
-import sys
 import os
 from logging import getLogger
 

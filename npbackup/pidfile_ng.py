@@ -47,7 +47,7 @@ class PIDFile(object):
         if not os.path.exists(self._file):
             return False
 
-        with open(self._file, "r") as f:
+        with open(self._file, "r", encoding="utf-8") as f:
             try:
                 pid = int(f.read())
             except (OSError, ValueError):
@@ -75,7 +75,7 @@ class PIDFile(object):
         if self.is_running:
             raise AlreadyRunningError
 
-        with open(self._file, "w") as f:
+        with open(self._file, "w", encoding="utf-8") as f:
             f.write(str(os.getpid()))
 
         atexit.register(self.close)

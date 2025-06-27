@@ -35,6 +35,7 @@ try:
 except ImportError:
     # If no private keys are used, then let's use the public ones
     try:
+        # pylint: disable=W0404 (reimported)
         from npbackup.secret_keys import AES_KEY
         from npbackup.obfuscation import obfuscation
 
@@ -75,7 +76,7 @@ def get_aes_key():
                     msg = f"Cannot run encryption key command: {output}"
                     return False, msg
                 key = bytes(output)
-                msg = f"Encryption key read from command"
+                msg = "Encryption key read from command"
     except Exception as exc:
         msg = f"Error reading encryption key: {exc}"
         return False, msg

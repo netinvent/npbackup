@@ -185,7 +185,7 @@ def send_prometheus_metrics(
             )
             return False
     except KeyError as exc:
-        logger.error("No prometheus configuration found in config file: {exc}")
+        logger.error(f"No prometheus configuration found in config file: {exc}")
         return False
 
     if destination and dry_run:

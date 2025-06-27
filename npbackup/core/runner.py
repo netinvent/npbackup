@@ -1032,11 +1032,15 @@ class NPBackupRunner:
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    def snapshots(self, snapshot_id: str = None, errors_allowed: bool = False) -> Optional[dict]:
+    def snapshots(
+        self, snapshot_id: str = None, errors_allowed: bool = False
+    ) -> Optional[dict]:
         self.write_logs(
             f"Listing snapshots of repo {self.repo_config.g('name')}", level="info"
         )
-        snapshots = self.restic_runner.snapshots(snapshot_id=snapshot_id, errors_allowed=errors_allowed)
+        snapshots = self.restic_runner.snapshots(
+            snapshot_id=snapshot_id, errors_allowed=errors_allowed
+        )
         return snapshots
 
     @threaded
