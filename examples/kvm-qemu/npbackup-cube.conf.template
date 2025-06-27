@@ -64,7 +64,8 @@ groups:
         weekly: 4
         monthly: 12
         yearly: 3
-        tags: []
+        keep_tags: []
+        apply_on_tags: []
         keep_within: true
         ntp_server:
     prometheus:

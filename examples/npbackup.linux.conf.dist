@@ -63,7 +63,8 @@ groups:
         weekly: 4
         monthly: 12
         yearly: 3
-        tags: []
+        keep_tags: []
+        apply_on_tags: []
         keep_within: true
         group_by_host: true
         group_by_tags: true
