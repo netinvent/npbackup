@@ -1311,10 +1311,9 @@ def main_gui(viewer_mode=False):
     )
     try:
         # Hide CMD window when Nuitka hide action does not work
-        if _DEBUG:
+        if _DEBUG and version_dict["comp"]:
             handle_current_window(action="minimize")
-        else:
-            handle_current_window(action="minimize")
+        elif version_dict["comp"]:
             handle_current_window(action="hide")
         _main_gui(viewer_mode=viewer_mode)
         sys.exit(logger.get_worst_logger_level())
