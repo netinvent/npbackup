@@ -144,7 +144,7 @@ def test_npbackup_cli_init():
         print(str(logs))
         assert "created restic repository" in str(logs), "Did not create repo"
         assert "Repo initialized successfully" in str(logs), "Repo init failed"
-
+    os.environ["_DEBUG"] = "False"
 
 def test_npbackup_cli_has_no_recent_snapshots():
     """
