@@ -32,6 +32,6 @@ jobs:
         RUNNING_ON_GITHUB_ACTIONS: true
       run: |
         pip install pytest coverage
-        python -m coverage run -m pytest -vvs tests
+        sudo python -m coverage run -m pytest -vvs tests
     - name: Upload Coverage to Codecov
       uses: codecov/codecov-action@v3
