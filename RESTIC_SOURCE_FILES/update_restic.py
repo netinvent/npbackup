@@ -137,6 +137,9 @@ def download_restic_binaries_for_arch():
     if os.name == "nt":
         if not download_restic_binaries("amd64") or not download_restic_binaries("386"):
             sys.exit(1)
+    elif sys.platform.lower() == "darwin":
+        if not download_restic_binaries("arm64") or not download_restic_binaries("amd64"):
+            sys.exit(1)
     else:
         if (
             not download_restic_binaries("amd64")
