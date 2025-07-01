@@ -44,7 +44,6 @@ def get_restic_internal_binary(arch: str) -> str:
             # We don't have restic legacy builds for unixes
             # so we can drop the -legacy suffix
             arch = arch.replace("-legacy", "")
-            print(sys.platform.lower())
             if sys.platform.lower() == "darwin":
                 if arch == "arm64":
                     binary = "restic_*_darwin_arm64"
