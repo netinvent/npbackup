@@ -36,12 +36,13 @@ def handle_current_window(action: str = "minimize") -> None:
 
             kernel32 = ctypes.WinDLL("kernel32")
 
-
             current_executable = os.path.abspath(sys.argv[0])
             # console window will have the name of current executable
             hWnd = win32gui.FindWindow(None, current_executable)
             if not hWnd:
-                logger.debug(f"Could not find window with name {current_executable}, trying to get console window.")
+                logger.debug(
+                    f"Could not find window with name {current_executable}, trying to get console window."
+                )
                 # get the console window
                 # pylint: disable=I1101 (c-extension-no-member)
                 hWnd = kernel32.GetConsoleWindow()
