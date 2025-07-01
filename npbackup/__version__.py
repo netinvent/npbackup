@@ -26,6 +26,9 @@ from npbackup.core.nuitka_helper import IS_COMPILED
 # Since development currently follows Python 3.12, let's consider anything below 3.12 as legacy
 IS_LEGACY = True if (sys.version_info[1] < 12 or python_arch() == "x86") else False
 
+import os
+print(os.uname())
+exit()
 try:
     CURRENT_USER = psutil.Process().username()
 except Exception:
