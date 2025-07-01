@@ -27,8 +27,40 @@ from npbackup.core.nuitka_helper import IS_COMPILED
 IS_LEGACY = True if (sys.version_info[1] < 12 or python_arch() == "x86") else False
 
 import os
-print(os.uname())
-exit()
+import platform
+def python_arch():
+    # type: () -> str
+    """
+    Get current python interpreter architecture
+    """
+    if os.name == "nt":
+        arch = platform.machine()
+        if "AMD64" in arch:
+            return "x64"
+        if "ARM64" in arch:
+            return "arm64"
+        if "ARM" in arch:
+            return "arm"
+        if "i386" in arch or "i686" in arch:
+            return "x86"
+
+    # uname property does not exist under windows
+    # pylint: disable=E1101
+    arch = os.uname()[4].lower()
+
+    if "x86_64" in arch:
+        return "x64"
+    # 64 bit arm
+    elif "aarch64" in arch or "armv8" in arch or "arm64" in arch:
+        return "arm64"
+    # 32 bit arm
+    elif "arm" in arch and not 64 in arch:
+        return "arm"
+    elif "i386" in arch or "i686" in arch:
+        return "x86"
+    else:
+        return arch
+
 try:
     CURRENT_USER = psutil.Process().username()
 except Exception:
