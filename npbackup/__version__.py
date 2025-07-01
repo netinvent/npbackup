@@ -28,6 +28,8 @@ IS_LEGACY = True if (sys.version_info[1] < 12 or python_arch() == "x86") else Fa
 
 import os
 import platform
+
+
 def python_arch():
     # type: () -> str
     """
@@ -60,6 +62,7 @@ def python_arch():
         return "x86"
     else:
         return arch
+
 
 try:
     CURRENT_USER = psutil.Process().username()

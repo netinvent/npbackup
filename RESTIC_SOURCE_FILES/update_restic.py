@@ -23,7 +23,7 @@ sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), ".."
 from npbackup.path_helper import BASEDIR
 
 
-def download_restic_binaries(arch: str = "amd64") -> bool:
+def download_restic_binaries(arch: str = "amd64", failure_allowed: bool = False) -> bool:
     """
     We must first download latest restic binaries to make sure we can run all tests and/or compile
     """
@@ -37,7 +37,10 @@ def download_restic_binaries(arch: str = "amd64") -> bool:
     if response.status_code != 200:
         print(f"ERROR: Cannot get latest restic release: {response.status_code}")
         print("RESPONSE TEXT: ", response.text)
-        return False
+        if not failure_allowed:
+            return False
+        else:
+            return True
     json_response = json.loads(response.text)
     current_version = json_response["tag_name"].lstrip("v")
 

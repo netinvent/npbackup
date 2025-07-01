@@ -91,7 +91,9 @@ def test_download_restic_binaries():
     We must first download latest restic binaries to make sure we can run all tests
     Currently we only run these on amd64
     """
-    assert download_restic_binaries_for_arch(), "Could not download restic binaries"
+    # We'll try to download restic binaries, but it may fail on github actions because of rate limiting
+    # so we allow failure for this test
+    assert download_restic_binaries_for_arch(failure_allowed=True), "Could not download restic binaries"
 
 
 def test_npbackup_cli_no_config():
@@ -131,7 +133,7 @@ def test_npbackup_cli_show_config():
 
 def test_npbackup_cli_init():
     shutil.rmtree(repo_config.g("repo_uri"), ignore_errors=True)
-    sys.argv = ["", "-c", str(CONF_FILE), "--init"]
+    sys.argv = ["", "-c", str(CONF_FILE), "--init", "--debug"]
     try:
         with RedirectedStdout() as logs:
             e = __main__.main()
@@ -155,6 +157,7 @@ def test_npbackup_cli_has_no_recent_snapshots():
         print(str(logs))
         json_logs = json.loads(str(logs))
         assert json_logs["result"] == False, "Should not have recent snapshots"
+        assert json_logs["operation"] == "has_recent_snapshot", "Bogus operation name, probably failed somewhere earlier"
 
 
 def test_npbackup_cli_create_backup():

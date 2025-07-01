@@ -544,6 +544,7 @@ class ResticRunner:
             if os.path.isfile(probed_path):
                 self._binary = probed_path
                 return
+        self.write_logs(f"Could not find restic binary in {probe_paths}", level="debug")
         self.write_logs(
             "No backup engine binary found. Please install latest binary from restic.net",
             level="error",
