@@ -134,7 +134,7 @@ def test_npbackup_cli_show_config():
 
 def test_npbackup_cli_init():
     shutil.rmtree(repo_config.g("repo_uri"), ignore_errors=True)
-    os.environ["_DEBUG"] = True
+    os.environ["_DEBUG"] = "True"
     sys.argv = ["", "-c", str(CONF_FILE), "--init"]
     try:
         with RedirectedStdout() as logs:
