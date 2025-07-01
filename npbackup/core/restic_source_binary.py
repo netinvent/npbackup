@@ -44,6 +44,7 @@ def get_restic_internal_binary(arch: str) -> str:
             # We don't have restic legacy builds for unixes
             # so we can drop the -legacy suffix
             arch = arch.replace("-legacy", "")
+            print(sys.platform.lower())
             if sys.platform.lower() == "darwin":
                 if arch == "arm64":
                     binary = "restic_*_darwin_arm64"
@@ -58,11 +59,14 @@ def get_restic_internal_binary(arch: str) -> str:
                     binary = "restic_*_linux_amd64"
                 else:
                     binary = "restic_*_linux_386"
+    else:
+        logger.info("Internal binary directory not set")
+        return None
     if binary:
         guessed_path = glob.glob(os.path.join(RESTIC_SOURCE_FILES_DIR, binary))
         if guessed_path:
             # Take glob results reversed so we get newer version
             # Does not always compute, but is g00denough(TM) for our dev
             return guessed_path[-1]
-        logger.info(f"Could not find internal restic bianry in {guessed_path}")
+        logger.info(f"Could not find internal restic binary, guess {os.path.join(RESTIC_SOURCE_FILES_DIR, binary)} in {guessed_path}")
     return None
