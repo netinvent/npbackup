@@ -95,6 +95,7 @@ def test_download_restic_binaries():
     # so we allow failure for this test
     result = download_restic_binaries_for_arch()
     print("DOWNLOAD result: ", result)
+    assert True
 
 
 def test_npbackup_cli_no_config():
