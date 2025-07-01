@@ -64,5 +64,5 @@ def get_restic_internal_binary(arch: str) -> str:
             # Take glob results reversed so we get newer version
             # Does not always compute, but is g00denough(TM) for our dev
             return guessed_path[-1]
-        logger.debug(f"Could not find internal restic bianry in {guessed_path}")
+        logger.info(f"Could not find internal restic bianry in {guessed_path}")
     return None
