@@ -51,6 +51,7 @@ def download_restic_binaries(arch: str = "amd64") -> bool:
         arch_suffix = ".zip"
     elif sys.platform.lower() == "darwin":
         fname = f"_darwin_{arch}"
+        suffix = ""
         arch_suffix = ".bz2"
     else:
         fname = f"_linux_{arch}"
