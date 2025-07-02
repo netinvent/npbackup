@@ -1321,7 +1321,7 @@ def main_gui(viewer_mode=False):
         logger.critical(f'Tkinter error: "{exc}". Is this a headless server ?')
         sys.exit(250)
     except KeyboardInterrupt as exc:
-        logger.error(f"Program interrupted by keyboard: {exc}", level="error")
+        logger.error(f"Program interrupted by keyboard: {exc}")
         logger.debug("Trace:", exc_info=True)
         # EXIT_CODE 200 = keyboard interrupt
         sys.exit(200)
