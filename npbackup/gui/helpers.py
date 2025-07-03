@@ -48,6 +48,8 @@ else:
 
 # Seconds between screen refreshes
 UPDATE_INTERVAL = 1
+# Seconds between total average speed updates
+TOTAL_AVERAGE_INTERVAL = 5
 
 
 def get_anon_repo_uri(repository: str) -> Tuple[str, str]:
@@ -285,8 +287,11 @@ def gui_thread_runner(
         result = runner.__getattribute__(fn.__name__)(*args, **kwargs)
 
     start_time = time.monotonic()
-    restore_speed = 0
-    previous_bytes_restored = 0
+    restore_data = None
+    previous_bytes_restored = None
+    restore_speed_history = []
+    average_speed_history = []
+    loop_counter = 0
     while True:
         # No idea why pylint thinks that UpdateAnimation does not exist in SimpleGUI
         # pylint: disable=E1101 (no-member)
@@ -357,14 +362,38 @@ def gui_thread_runner(
                 try:
                     restore_data = json.loads(stdout_cache)
                     try:
-                        if previous_bytes_restored > 0:
-                            restore_data["restore_speed_seconds"] = BytesConverter(
-                                (
-                                    restore_data["bytes_restored"]
-                                    - previous_bytes_restored
+                        if previous_bytes_restored:
+                            instant_throughput_per_second = (
+                                restore_data["bytes_restored"] - previous_bytes_restored
+                            ) / UPDATE_INTERVAL
+                            restore_data["instant_throughput_per_second"] = (
+                                BytesConverter(
+                                    instant_throughput_per_second
+                                ).human_iec_bytes
+                            )
+                            restore_speed_history.append(instant_throughput_per_second)
+                                # Keep only last 300 seconds of restore speed history
+                            restore_speed_history = restore_speed_history[-300:]
+                            restore_data["average_5m_throughput_per_second"] = (
+                                BytesConverter(
+                                    sum(restore_speed_history)
+                                    / len(restore_speed_history)
+                                ).human_iec_bytes
+                            )
+                            restore_data["loop_counter"] = loop_counter
+                            restore_data["mod"] = loop_counter % TOTAL_AVERAGE_INTERVAL
+                            if loop_counter % TOTAL_AVERAGE_INTERVAL == 0:
+                                average_speed_history.append(
+                                    sum(restore_speed_history)
+                                    / len(restore_speed_history)
                                 )
-                                / UPDATE_INTERVAL
-                            ).human_iec_bytes
+                            if average_speed_history:
+                                restore_data["total_average_throughput_per_second"] = (
+                                    BytesConverter(
+                                        sum(average_speed_history)
+                                        / len(average_speed_history)
+                                    ).human_iec_bytes
+                                )
                         previous_bytes_restored = restore_data["bytes_restored"]
                         restore_data["total_bytes"] = BytesConverter(
                             restore_data["total_bytes"]
@@ -386,7 +415,10 @@ def gui_thread_runner(
                 previous_stdout_cache = stdout_cache
                 previous_stderr_cache = stderr_cache
             start_time = time.monotonic()
+            loop_counter += 1
 
+    if restore_data:
+       stdout_cache = json.dumps(restore_data, indent=4) + '\n\n' + stdout_cache
     _update_gui_from_cache(stdout_cache, stderr_cache)
 
     progress_window["--CANCEL--"].Update(disabled=True)
