@@ -113,6 +113,10 @@ def metric_analyser(
         if not operation_success or backup_too_small:
             exec_state = 2
 
+        if not analyze_only:
+            # reset worst_exec_level after getting it so we don't keep exec level between runs in the same session
+            logger.set_worst_logger_level(0)
+
         labels_string = create_labels_string(labels)
 
         metrics.append(

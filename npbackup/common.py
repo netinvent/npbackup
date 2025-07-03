@@ -14,7 +14,7 @@ __build__ = "2023121801"
 
 from datetime import datetime, timezone
 from logging import getLogger
-import ofunctions.logger_utils
+from ofunctions.logger_utils import get_worst_logger_level
 
 
 logger = getLogger()
@@ -37,10 +37,7 @@ def execution_logs(start_time: datetime) -> None:
 
     end_time = datetime.now(timezone.utc)
 
-    logger_worst_level = 0
-    for flt in logger.filters:
-        if isinstance(flt, ofunctions.logger_utils.ContextFilterWorstLevel):
-            logger_worst_level = flt.worst_level
+    logger_worst_level = get_worst_logger_level(logger, all_time=True)
 
     log_level_reached = "success"
     try:
