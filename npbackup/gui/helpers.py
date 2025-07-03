@@ -16,6 +16,7 @@ from time import sleep
 import re
 import queue
 import time
+import json
 import FreeSimpleGUI as sg
 from ofunctions.threading import threaded
 from npbackup.core.i18n_helper import _t
@@ -308,8 +309,11 @@ def gui_thread_runner(
                     read_stdout_queue = False
                 else:
                     if __fn_name == "restore":
-                        # We only need last line since restore outputs self contained status lines
-                        stdout_cache = stdout_data
+                        # We only need last line since restore outputs self contained json status lines
+                        try:
+                            stdout_cache = json.dumps(json.loads(stdout_data), indent=4)
+                        except json.JSONDecodeError:
+                            stdout_cache = stdout_data
                     else:
                         stdout_cache += stdout_data.strip("\r\n") + "\n"
                         # So the FreeSimpleGUI update implementation is **really** slow to update multiline when autoscroll=True
