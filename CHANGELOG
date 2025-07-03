@@ -31,7 +31,7 @@
 - Updated Nuitka compiler to 2.7.8
 - KVM Qemu script now has VM exclusion lists
 - KVM Qemu script does not try to create snapshots for VMs that aren't running
-- KVM Qemu can now add specific tags to VMs definied in a list
+- KVM Qemu can now add specific tags to VMs defined in a list
 
 ## 3.0.2
 #### Features
