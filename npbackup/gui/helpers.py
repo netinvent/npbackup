@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.helpers"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025070301"
+__build__ = "2025070302"
 
 
 from typing import Tuple, Union
@@ -19,6 +19,7 @@ import time
 import json
 import FreeSimpleGUI as sg
 from ofunctions.threading import threaded
+from ofunctions.misc import BytesConverter
 from npbackup.core.i18n_helper import _t
 from resources.customization import (
     LOADER_ANIMATION,
@@ -44,6 +45,9 @@ if not _DEBUG:
 else:
     USE_THREADING = False
     logger.info("Running without threads as per debug requirements")
+
+# Seconds between screen refreshes
+UPDATE_INTERVAL = 1
 
 
 def get_anon_repo_uri(repository: str) -> Tuple[str, str]:
@@ -281,6 +285,8 @@ def gui_thread_runner(
         result = runner.__getattribute__(fn.__name__)(*args, **kwargs)
 
     start_time = time.monotonic()
+    restore_speed = 0
+    previous_bytes_restored = 0
     while True:
         # No idea why pylint thinks that UpdateAnimation does not exist in SimpleGUI
         # pylint: disable=E1101 (no-member)
@@ -344,12 +350,31 @@ def gui_thread_runner(
             # Make sure we will keep the window visible since we have errors
             __autoclose = False
 
-        if time.monotonic() - start_time > 1:
+        if time.monotonic() - start_time > UPDATE_INTERVAL:
             if len(stdout_cache) > 1000:
                 stdout_cache = stdout_cache[-1000:]
             if __fn_name == "restore":
                 try:
-                    stdout_cache = json.dumps(json.loads(stdout_cache), indent=4)
+                    restore_data = json.loads(stdout_cache)
+                    try:
+                        if previous_bytes_restored > 0:
+                            restore_data["restore_speed_seconds"] = BytesConverter(
+                                (
+                                    restore_data["bytes_restored"]
+                                    - previous_bytes_restored
+                                )
+                                / UPDATE_INTERVAL
+                            ).human_iec_bytes
+                        previous_bytes_restored = restore_data["bytes_restored"]
+                        restore_data["total_bytes"] = BytesConverter(
+                            restore_data["total_bytes"]
+                        ).human_iec_bytes
+                        restore_data["bytes_restored"] = BytesConverter(
+                            restore_data["bytes_restored"]
+                        ).human_iec_bytes
+                    except KeyError:
+                        pass
+                    stdout_cache = json.dumps(restore_data, indent=4)
                 except json.JSONDecodeError:
                     pass
             # Don't update GUI if there isn't anything to update so it will avoid scrolling back to top every second
