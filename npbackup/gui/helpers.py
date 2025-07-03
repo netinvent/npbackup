@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.helpers"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025030401"
+__build__ = "2025070301"
 
 
 from typing import Tuple, Union
@@ -307,11 +307,15 @@ def gui_thread_runner(
                     logger.debug("gui_thread_runner got stdout queue close signal")
                     read_stdout_queue = False
                 else:
-                    stdout_cache += stdout_data.strip("\r\n") + "\n"
-                    # So the FreeSimpleGUI update implementation is **really** slow to update multiline when autoscroll=True
-                    # and there's too much invisible text
-                    # we need to create a cache that's updated once
-                    # every second or so in order to not block the GUI waiting for GUI redraw
+                    if __fn_name == "restore":
+                        # We only need last line since restore outputs self contained status lines
+                        stdout_cache = stdout_data
+                    else:
+                        stdout_cache += stdout_data.strip("\r\n") + "\n"
+                        # So the FreeSimpleGUI update implementation is **really** slow to update multiline when autoscroll=True
+                        # and there's too much invisible text
+                        # we need to create a cache that's updated once
+                        # every second or so in order to not block the GUI waiting for GUI redraw
 
         # Read stderr queue
         if read_stderr_queue:
