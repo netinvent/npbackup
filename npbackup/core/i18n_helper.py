@@ -49,6 +49,6 @@ def _t(*args, **kwargs):
     except TypeError as exc:
         logger.error("Translation failed: {}".format(exc))
         logger.error("Arguments: {}".format(*args))
-        if len(args) > 0:
-            return args[0]
-        return args
+    if len(args) > 0:
+        return args[0]
+    return args

@@ -219,8 +219,10 @@ def send_prometheus_metrics(
             upload_metrics(destination, authentication, no_cert_verify, metrics)
         else:
             write_metrics_file(destination, metrics, append=append_metrics_file)
+        return True
     else:
         logger.debug("No metrics destination set. Not sending metrics")
+    return True
 
 
 def send_metrics_mail(

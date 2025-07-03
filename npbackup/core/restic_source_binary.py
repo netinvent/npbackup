@@ -26,7 +26,7 @@ def get_restic_internal_binary(arch: str) -> str:
     binary = None
     if os.path.isdir(RESTIC_SOURCE_FILES_DIR):
         if os.name == "nt":
-            if IS_LEGACY or "legacy" in "arch":
+            if IS_LEGACY or "legacy" in arch:
                 # Last compatible restic binary for Windows 7, see https://github.com/restic/restic/issues/5065
                 # We build a legacy version of restic for windows 7 and Server 2008R2
                 logger.info(

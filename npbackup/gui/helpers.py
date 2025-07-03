@@ -350,7 +350,7 @@ def gui_thread_runner(
             if __fn_name == "restore":
                 try:
                     stdout_cache = json.dumps(json.loads(stdout_cache), indent=4)
-                except json.JSONDecodeError as exc:
+                except json.JSONDecodeError:
                     pass
             # Don't update GUI if there isn't anything to update so it will avoid scrolling back to top every second
             if (

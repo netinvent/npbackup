@@ -38,6 +38,7 @@ def handle_current_window(action: str = "minimize") -> None:
 
             current_executable = os.path.abspath(sys.argv[0])
             # console window will have the name of current executable
+            # pylint: disable=I1101 (c-extension-no-member)
             hWnd = win32gui.FindWindow(None, current_executable)
             if not hWnd:
                 logger.debug(
