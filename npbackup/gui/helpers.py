@@ -310,10 +310,7 @@ def gui_thread_runner(
                 else:
                     if __fn_name == "restore":
                         # We only need last line since restore outputs self contained json status lines
-                        try:
-                            stdout_cache = json.dumps(json.loads(stdout_data), indent=4)
-                        except json.JSONDecodeError:
-                            stdout_cache = stdout_data
+                        stdout_cache = stdout_data
                     else:
                         stdout_cache += stdout_data.strip("\r\n") + "\n"
                         # So the FreeSimpleGUI update implementation is **really** slow to update multiline when autoscroll=True
@@ -350,6 +347,11 @@ def gui_thread_runner(
         if time.monotonic() - start_time > 1:
             if len(stdout_cache) > 1000:
                 stdout_cache = stdout_cache[-1000:]
+            if __fn_name == "restore":
+                try:
+                    stdout_cache = json.dumps(json.loads(stdout_cache), indent=4)
+                except json.JSONDecodeError as exc:
+                    pass
             # Don't update GUI if there isn't anything to update so it will avoid scrolling back to top every second
             if (
                 previous_stdout_cache != stdout_cache
