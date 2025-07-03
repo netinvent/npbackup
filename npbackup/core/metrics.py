@@ -244,7 +244,9 @@ def send_metrics_mail(
 
     repo_name = repo_config.g("name")
     try:
-        if not repo_config.g("global_email") or repo_config.g("global_email.enable"):
+        if not repo_config.g("global_email") or not repo_config.g(
+            "global_email.enable"
+        ):
             logger.debug(
                 "Email not enabled in configuration. Not sending notifications."
             )
