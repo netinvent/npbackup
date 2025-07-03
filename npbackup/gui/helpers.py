@@ -372,7 +372,7 @@ def gui_thread_runner(
                                 ).human_iec_bytes
                             )
                             restore_speed_history.append(instant_throughput_per_second)
-                                # Keep only last 300 seconds of restore speed history
+                            # Keep only last 300 seconds of restore speed history
                             restore_speed_history = restore_speed_history[-300:]
                             restore_data["average_5m_throughput_per_second"] = (
                                 BytesConverter(
@@ -418,7 +418,7 @@ def gui_thread_runner(
             loop_counter += 1
 
     if restore_data:
-       stdout_cache = json.dumps(restore_data, indent=4) + '\n\n' + stdout_cache
+        stdout_cache = json.dumps(restore_data, indent=4) + "\n\n" + stdout_cache
     _update_gui_from_cache(stdout_cache, stderr_cache)
 
     progress_window["--CANCEL--"].Update(disabled=True)
