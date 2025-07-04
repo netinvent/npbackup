@@ -54,6 +54,9 @@ def metric_analyser(
             "npversion": f"{NAME}{version_dict['version']}-{version_dict['build_type']}",
             "repo_name": repo_name,
             "action": operation,
+            "audience": version_dict["audience"],
+            "os": version_dict["os"],
+            "arch": version_dict["arch"],
         }
         if repo_config.g("global_prometheus") and repo_config.g(
             "global_prometheus.metrics"
