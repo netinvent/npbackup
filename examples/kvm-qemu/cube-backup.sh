@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Script ver 2025062501
+# Script ver 2025070401
 
 #TODO: blockcommit removes current snapshots, even if not done by cube
 #      - it's interesting to make housekeeping, let's make this an option
@@ -162,7 +162,7 @@ function run_backup {
         sed -i "s%___SOURCE___%${BACKUP_FILE_LIST}%g" "${NPBACKUP_CONF_FILE}"
         sed -i "s%___VM___%${vm}%g" "${NPBACKUP_CONF_FILE}"
 
-        if [ $(ArrayContains "$vm" "${SPECIAL_TAG_VMS[@]}") -eq 0 ]; then
+        if [ $(ArrayContains "$vm" "${SPECIAL_TAG_VMS[@]}") -eq 1 ]; then
                 log "Changing tag for $vm to $SPECIAL_TAG"
                 tags="${SPECIAL_TAG}"
         else
@@ -245,7 +245,7 @@ function run {
                 # Empty file
                 : > "$BACKUP_FILE_LIST"
 
-                if [ $(ArrayContains "$vm" "${EXCLUDE_VMS[@]}") -eq 0 ]; then
+                if [ $(ArrayContains "$vm" "${EXCLUDE_VMS[@]}") -eq 1 ]; then
                         log "Not backing up $vm due to being in exclusion list"
                         continue
                 fi
