@@ -380,8 +380,6 @@ def gui_thread_runner(
                                     / len(restore_speed_history)
                                 ).human_iec_bytes
                             )
-                            restore_data["loop_counter"] = loop_counter
-                            restore_data["mod"] = loop_counter % TOTAL_AVERAGE_INTERVAL
                             if loop_counter % TOTAL_AVERAGE_INTERVAL == 0:
                                 average_speed_history.append(
                                     sum(restore_speed_history)
