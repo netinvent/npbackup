@@ -32,6 +32,7 @@
 - KVM Qemu script now has VM exclusion lists
 - KVM Qemu script does not try to create snapshots for VMs that aren't running
 - KVM Qemu can now add specific tags to VMs defined in a list
+- KVM Qemu now issues thaw command after a quiescing snapshot in order to workaround some FreeBSD corner cases
 
 ## 3.0.2
 #### Features
