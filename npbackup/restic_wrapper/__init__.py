@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025051101"
-__version__ = "2.7.1"
+__build__ = "2025070101"
+__version__ = "2.7.2"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -22,6 +22,7 @@ import queue
 from command_runner import command_runner
 from packaging.version import parse as version_parse
 from ofunctions.misc import BytesConverter, fn_name
+from ofunctions.platform import get_os
 from npbackup.__debug__ import _DEBUG
 from npbackup.__env__ import (
     FAST_COMMANDS_TIMEOUT,
@@ -454,7 +455,8 @@ class ResticRunner:
             live_output=self._live_output if method != "monitor" else False,
             check_interval=CHECK_INTERVAL,
             priority=self._priority,
-            io_priority=self._priority,
+            # psutil.Process().ionice() does not exist on MacOS
+            io_priority=self._priority if get_os() != "Darwin" else None,
             windows_no_window=True,
             heartbeat=HEARTBEAT_INTERVAL,
         )
@@ -544,6 +546,7 @@ class ResticRunner:
             if os.path.isfile(probed_path):
                 self._binary = probed_path
                 return
+        self.write_logs(f"Could not find restic binary in {probe_paths}", level="debug")
         self.write_logs(
             "No backup engine binary found. Please install latest binary from restic.net",
             level="error",
