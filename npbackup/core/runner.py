@@ -37,6 +37,8 @@ from npbackup.__env__ import MAX_ALLOWED_NTP_OFFSET
 
 logger = logging.getLogger()
 
+METRICS_NOT_NEEDED = False
+
 
 required_permissions = {
     "init": ["backup", "restore", "full"],
@@ -666,10 +668,11 @@ class NPBackupRunner:
 
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
+            global METRICS_NOT_NEEDED
             # pylint: disable=E1102 (not-callable)
             result = fn(self, *args, **kwargs)
             # pylint: disable=E1101 (no-member)
-            if self.produce_metrics:
+            if self.produce_metrics and not METRICS_NOT_NEEDED:
                 metric_analyser(
                     self.repo_config,
                     result,
@@ -688,6 +691,7 @@ class NPBackupRunner:
                 self.write_logs(
                     f"Metrics disabled for call {fn.__name__}", level="debug"
                 )
+            METRICS_NOT_NEEDED = False
             return result
 
         return wrapper
@@ -1170,6 +1174,8 @@ class NPBackupRunner:
         """
         Run backup after checking if no recent backup exists, unless force == True
         """
+        global METRICS_NOT_NEEDED
+
         repo_name = self.repo_config.g("name")
         stdin_from_command = self.repo_config.g("backup_opts.stdin_from_command")
         if not stdin_filename:
@@ -1295,6 +1301,7 @@ class NPBackupRunner:
             self.restic_runner.json_output = json_output
             if has_recent_snapshots:
                 msg = "No backup necessary"
+                METRICS_NOT_NEEDED = True
                 self.write_logs(msg, level="info")
                 return self.convert_to_json_output(True, msg)
             self.restic_runner.verbose = self.verbose

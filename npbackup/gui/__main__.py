@@ -1316,12 +1316,12 @@ def main_gui(viewer_mode=False):
         elif version_dict["comp"]:
             handle_current_window(action="hide")
         _main_gui(viewer_mode=viewer_mode)
-        sys.exit(logger.get_worst_logger_level())
+        sys.exit(logger.get_worst_logger_level(all_time=True))
     except _tkinter.TclError as exc:
         logger.critical(f'Tkinter error: "{exc}". Is this a headless server ?')
         sys.exit(250)
     except KeyboardInterrupt as exc:
-        logger.error(f"Program interrupted by keyboard: {exc}", level="error")
+        logger.error(f"Program interrupted by keyboard: {exc}")
         logger.debug("Trace:", exc_info=True)
         # EXIT_CODE 200 = keyboard interrupt
         sys.exit(200)

@@ -1,11 +1,11 @@
-command_runner>=1.7.3
+command_runner>=1.7.4
 cryptidy>=1.2.4
 python-dateutil
-ofunctions.logger_utils>=2.4.2
+ofunctions.logger_utils>=2.5.0
 ofunctions.misc>=1.8.0
 ofunctions.process>=2.1.0
 ofunctions.threading>=2.2.0
-ofunctions.platform>=1.5.3
+ofunctions.platform>=1.5.5
 ofunctions.random
 ofunctions.requestor>=1.2.2
 ofunctions.mailer>=1.3.0
@@ -29,5 +29,4 @@ packaging
 pywin32; platform_system == "Windows"
 imageio; platform_system == "Darwin"
 ntplib>=0.4.0
-# msgspec needs python 3.8+ (see pep-0496 for environment markers)
-msgspec; python_version >= "3.8"
+# msgspec needs python 3.8+ and is not compatible with win 32-bit

@@ -258,8 +258,7 @@ def convert_to_commented_map(
         return CommentedMap(
             {k: convert_to_commented_map(v) for k, v in source_dict.items()}
         )
-    else:
-        return source_dict
+    return source_dict
 
 
 def get_default_config() -> dict:

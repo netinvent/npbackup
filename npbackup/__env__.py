@@ -51,3 +51,6 @@ ALLOWED_UPGRADE_SERVER_IDS = ("npbackup.upgrader", "npbackup.deployment_server")
 
 # Replacement string for sensitive data
 HIDDEN_BY_NPBACKUP = "_[o_O]_hidden_by_npbackup"
+
+# Maximum number of characters for details content in emails
+MAX_EMAIL_DETAIL_LENGTH = 1000

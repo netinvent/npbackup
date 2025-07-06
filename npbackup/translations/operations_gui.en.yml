@@ -1,4 +1,5 @@
 en:
+  operation_center: Operation Center
   select_repositories: Select one or more repositories, or groups of repositories
   configured_repositories: Configured repositories
   housekeeping: Housekeeping and retention operation

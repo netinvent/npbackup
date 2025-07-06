@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.helpers"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025030401"
+__build__ = "2025070302"
 
 
 from typing import Tuple, Union
@@ -16,8 +16,10 @@ from time import sleep
 import re
 import queue
 import time
+import json
 import FreeSimpleGUI as sg
 from ofunctions.threading import threaded
+from ofunctions.misc import BytesConverter
 from npbackup.core.i18n_helper import _t
 from resources.customization import (
     LOADER_ANIMATION,
@@ -43,6 +45,11 @@ if not _DEBUG:
 else:
     USE_THREADING = False
     logger.info("Running without threads as per debug requirements")
+
+# Seconds between screen refreshes
+UPDATE_INTERVAL = 1
+# Seconds between total average speed updates
+TOTAL_AVERAGE_INTERVAL = 5
 
 
 def get_anon_repo_uri(repository: str) -> Tuple[str, str]:
@@ -280,11 +287,16 @@ def gui_thread_runner(
         result = runner.__getattribute__(fn.__name__)(*args, **kwargs)
 
     start_time = time.monotonic()
+    restore_data = None
+    previous_bytes_restored = None
+    restore_speed_history = []
+    average_speed_history = []
+    loop_counter = 0
     while True:
         # No idea why pylint thinks that UpdateAnimation does not exist in SimpleGUI
         # pylint: disable=E1101 (no-member)
         progress_window["-LOADER-ANIMATION-"].UpdateAnimation(
-            LOADER_ANIMATION, time_between_frames=100
+            LOADER_ANIMATION, time_between_frames=75
         )
         # So we actually need to read the progress window for it to refresh...
         event, _ = progress_window.read(0.000000001)
@@ -307,11 +319,15 @@ def gui_thread_runner(
                     logger.debug("gui_thread_runner got stdout queue close signal")
                     read_stdout_queue = False
                 else:
-                    stdout_cache += stdout_data.strip("\r\n") + "\n"
-                    # So the FreeSimpleGUI update implementation is **really** slow to update multiline when autoscroll=True
-                    # and there's too much invisible text
-                    # we need to create a cache that's updated once
-                    # every second or so in order to not block the GUI waiting for GUI redraw
+                    if __fn_name == "restore":
+                        # We only need last line since restore outputs self contained json status lines
+                        stdout_cache = stdout_data
+                    else:
+                        stdout_cache += stdout_data.strip("\r\n") + "\n"
+                        # So the FreeSimpleGUI update implementation is **really** slow to update multiline when autoscroll=True
+                        # and there's too much invisible text
+                        # we need to create a cache that's updated once
+                        # every second or so in order to not block the GUI waiting for GUI redraw
 
         # Read stderr queue
         if read_stderr_queue:
@@ -339,9 +355,55 @@ def gui_thread_runner(
             # Make sure we will keep the window visible since we have errors
             __autoclose = False
 
-        if time.monotonic() - start_time > 1:
+        if time.monotonic() - start_time > UPDATE_INTERVAL:
             if len(stdout_cache) > 1000:
                 stdout_cache = stdout_cache[-1000:]
+            if __fn_name == "restore":
+                try:
+                    restore_data = json.loads(stdout_cache)
+                    try:
+                        if previous_bytes_restored:
+                            instant_throughput_per_second = (
+                                restore_data["bytes_restored"] - previous_bytes_restored
+                            ) / UPDATE_INTERVAL
+                            restore_data["instant_throughput_per_second"] = (
+                                BytesConverter(
+                                    instant_throughput_per_second
+                                ).human_iec_bytes
+                            )
+                            restore_speed_history.append(instant_throughput_per_second)
+                            # Keep only last 300 seconds of restore speed history
+                            restore_speed_history = restore_speed_history[-300:]
+                            restore_data["average_5m_throughput_per_second"] = (
+                                BytesConverter(
+                                    sum(restore_speed_history)
+                                    / len(restore_speed_history)
+                                ).human_iec_bytes
+                            )
+                            if loop_counter % TOTAL_AVERAGE_INTERVAL == 0:
+                                average_speed_history.append(
+                                    sum(restore_speed_history)
+                                    / len(restore_speed_history)
+                                )
+                            if average_speed_history:
+                                restore_data["total_average_throughput_per_second"] = (
+                                    BytesConverter(
+                                        sum(average_speed_history)
+                                        / len(average_speed_history)
+                                    ).human_iec_bytes
+                                )
+                        previous_bytes_restored = restore_data["bytes_restored"]
+                        restore_data["total_bytes"] = BytesConverter(
+                            restore_data["total_bytes"]
+                        ).human_iec_bytes
+                        restore_data["bytes_restored"] = BytesConverter(
+                            restore_data["bytes_restored"]
+                        ).human_iec_bytes
+                    except KeyError:
+                        pass
+                    stdout_cache = json.dumps(restore_data, indent=4)
+                except json.JSONDecodeError:
+                    pass
             # Don't update GUI if there isn't anything to update so it will avoid scrolling back to top every second
             if (
                 previous_stdout_cache != stdout_cache
@@ -351,7 +413,10 @@ def gui_thread_runner(
                 previous_stdout_cache = stdout_cache
                 previous_stderr_cache = stderr_cache
             start_time = time.monotonic()
+            loop_counter += 1
 
+    if restore_data:
+        stdout_cache = json.dumps(restore_data, indent=4) + "\n\n" + stdout_cache
     _update_gui_from_cache(stdout_cache, stderr_cache)
 
     progress_window["--CANCEL--"].Update(disabled=True)

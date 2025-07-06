@@ -14,19 +14,25 @@
 - New optional random delay before backup operations
 - All prometheus metrics now have repo_name label
 - Metrics are now send for non executed backups because of concurrency checks
-- Implement notifications per email
+- Implement operations notifications per email
 - CLI: Add --list-selected-repos command
 - Retention policies can now be filtered by tags
+- GUI: Restore operation now has throughput statistics and a better overall presentation
 
 #### Fixes
 - GUI: Fix possible result mismatch with concurrency checks
 - GUI: Hide background window while restoration is running
+- Fix npbackup_exec_state inherited previous run states in the same session (ie GUI or group operations)
 
 #### Misc
 - GUI: Finally a worthy fix for hiding the console window in Windows 11 (they changed conhost.exe to Windows Terminal)
 - GUI: Workaround to make the config window close faster by threading it into background
 - Update restic metrics tests
 - Updated Nuitka compiler to 2.7.8
+- KVM Qemu script now has VM exclusion lists
+- KVM Qemu script does not try to create snapshots for VMs that aren't running
+- KVM Qemu can now add specific tags to VMs defined in a list
+- KVM Qemu now issues thaw command after a quiescing snapshot in order to workaround some FreeBSD corner cases
 
 ## 3.0.2
 #### Features

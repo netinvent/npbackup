@@ -432,7 +432,7 @@ def operations_gui(full_config: dict) -> dict:
     right_click_menu = ["", [_t("config_gui.show_decrypted")]]
 
     window = sg.Window(
-        "Configuration",
+        _t("operations_gui.operation_center"),
         layout,
         # size=(600, 600),
         text_justification="C",

@@ -842,7 +842,7 @@ def main():
     )
     try:
         cli_interface()
-        worst_error = logger.get_worst_logger_level()
+        worst_error = logger.get_worst_logger_level(all_time=True)
         if worst_error >= logging.WARNING:
             sys.exit(worst_error)
         sys.exit()
