@@ -16,13 +16,13 @@ import sys
 import os
 from copy import deepcopy
 from pathlib import Path
-from ruamel.yaml import YAML
-from ruamel.yaml.compat import ordereddict
-from ruamel.yaml.comments import CommentedMap
-from logging import getLogger
 import re
 import platform
 import zlib
+from logging import getLogger
+from ruamel.yaml import YAML
+from ruamel.yaml.compat import ordereddict
+from ruamel.yaml.comments import CommentedMap
 from packaging.version import parse as version_parse, InvalidVersion
 from cryptidy import symmetric_encryption as enc
 from ofunctions.random import random_string
