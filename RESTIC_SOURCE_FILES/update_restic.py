@@ -37,9 +37,13 @@ def download_restic_binaries(arch: str = "amd64") -> bool:
     if response.status_code != 200:
         print(f"ERROR: Cannot get latest restic release: {response.status_code}")
         print("RESPONSE TEXT: ", response.text)
-    json_response = json.loads(response.text)
-    current_version = json_response["tag_name"].lstrip("v")
-
+    json_response = json.loads(response.text);
+    try:
+        current_version = json_response["tag_name"].lstrip("v")
+    except KeyError:
+        print("ERROR: Cannot find tag_name in response")
+        print("RESPONSE TEXT: ", response.text)
+        return False
     # print("JSON RESPONSE")
     # pprint(json_response, indent=5)
 
