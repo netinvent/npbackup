@@ -6,7 +6,7 @@ __intname__ = "npbackup.restic_update"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2024-2025 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2025040801"
+__build__ = "2025062901"
 
 import os
 import sys
@@ -37,7 +37,6 @@ def download_restic_binaries(arch: str = "amd64") -> bool:
     if response.status_code != 200:
         print(f"ERROR: Cannot get latest restic release: {response.status_code}")
         print("RESPONSE TEXT: ", response.text)
-        return False
     json_response = json.loads(response.text)
     current_version = json_response["tag_name"].lstrip("v")
 
@@ -49,6 +48,10 @@ def download_restic_binaries(arch: str = "amd64") -> bool:
         fname = f"_windows_{arch}"
         suffix = ".exe"
         arch_suffix = ".zip"
+    elif sys.platform.lower() == "darwin":
+        fname = f"_darwin_{arch}"
+        suffix = ""
+        arch_suffix = ".bz2"
     else:
         fname = f"_linux_{arch}"
         suffix = ""
@@ -58,6 +61,7 @@ def download_restic_binaries(arch: str = "amd64") -> bool:
         os.makedirs(dest_dir.joinpath("ARCHIVES"))
 
     dest_file = dest_dir.joinpath("restic_" + current_version + fname + suffix)
+    print(f"Projected dest file is {dest_file}")
 
     if dest_file.is_file():
         print(f"RESTIC SOURCE ALREADY PRESENT. NOT DOWNLOADING {dest_file}")
@@ -132,6 +136,9 @@ def download_restic_binaries_for_arch():
     """
     if os.name == "nt":
         if not download_restic_binaries("amd64") or not download_restic_binaries("386"):
+            sys.exit(1)
+    elif sys.platform.lower() == "darwin":
+        if not download_restic_binaries("arm64") or not download_restic_binaries("amd64"):
             sys.exit(1)
     else:
         if (

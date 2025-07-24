@@ -58,10 +58,16 @@ def get_restic_internal_binary(arch: str) -> str:
                     binary = "restic_*_linux_amd64"
                 else:
                     binary = "restic_*_linux_386"
+    else:
+        logger.debug("Internal binary directory not set")
+        return None
     if binary:
         guessed_path = glob.glob(os.path.join(RESTIC_SOURCE_FILES_DIR, binary))
         if guessed_path:
             # Take glob results reversed so we get newer version
             # Does not always compute, but is g00denough(TM) for our dev
             return guessed_path[-1]
+        logger.debug(
+            f"Could not find internal restic binary, guess {os.path.join(RESTIC_SOURCE_FILES_DIR, binary)} in {guessed_path}"
+        )
     return None
