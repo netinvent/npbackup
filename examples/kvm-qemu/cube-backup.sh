@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Script ver 2025070501
+# Script ver 2025082101
 
 #TODO: blockcommit removes current snapshots, even if not done by cube
 #      - it's interesting to make housekeeping, let's make this an option
@@ -115,7 +115,7 @@ function create_snapshot {
                 fi
         else
                 log "Issung fs-thaw command to guest OS to mitigate some issues (FreeBSD with 0 frozen FS)"
-                virsh domfsthaw $vm "$LOG_FILE" 2>&1
+                virsh domfsthaw $vm >> "$LOG_FILE" 2>&1
                 if [ $? -ne 0 ]; then
                         log "Failed to run fs-thaw command on guest FS" "ERROR"
                 fi
