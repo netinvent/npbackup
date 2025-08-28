@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Script ver 2025082101
+# Script ver 2025082801
 
 #TODO: blockcommit removes current snapshots, even if not done by cube
 #      - it's interesting to make housekeeping, let's make this an option
@@ -79,20 +79,24 @@ function create_snapshot {
 
         # Don't redirect direct virsh output or SELinux may complain that we cannot write with virsh context
         xml=$(virsh dumpxml --security-info $vm || log "Failed to create XML file" "ERROR")
-        echo "${xml}" > "${ROOT_DIR}/${vm}.xml"
-        echo "${ROOT_DIR}/${vm}.xml" >> "$BACKUP_FILE_LIST"
+        vm_xml=""
 
         # Get current disk paths to include into snapshot
         for disk_path in $(virsh domblklist $vm --details | grep file | grep disk | awk '{print $4}'); do
         if [ -f "${disk_path}" ]; then
                         # Add current disk path and all necessary backing files for current disk to backup file list
-                        echo "${disk_path}" >> "$BACKUP_FILE_LIST"
+                        echo "${disk_path}" >> "$BACKUP_FILE_LIST" || log "Cannot add ${disk_path} to backup file list"
                         qemu-img info --backing-chain -U "$disk_path" | grep "backing file:" | awk '{print $3}' >> "$BACKUP_FILE_LIST"
                         log "Current disk path: $disk_path"
+                        if [ "${vm_xml}" == "" ]; then
+                                vm_xml="$(dirname "${disk_path}")/$vm.xml"
+                                echo "${xml}" > "${vm_xml}" || log "Cannot create XML"
+                                echo "${vm_xml}" >> "${BACKUP_FILE_LIST}" || log "Cannot add xml file to backup file list"
+                        fi
                 else
                         log "$vm has a non existent disk path: $disk_path. Cannot backup this disk"
                         # Let's still include this file in the backup list so we are sure backup will be marked as failed
-                        echo "${disk_path}" >> "$BACKUP_FILE_LIST"
+                        echo "${disk_path}" >> "$BACKUP_FILE_LIST" || log "Cannot add non existing ${disk_path} to backup file list"
                 fi
         done
 
@@ -187,50 +191,58 @@ function remove_snapshot {
         local vm="${1}"
         local backup_identifier="${2}"
 
-        can_delete_metadata=true
-        for disk_name in $(virsh domblklist $vm --details | grep file | grep disk | grep "${backup_identifier}" | awk '{print $3}'); do
-                disk_path=$(virsh domblklist $vm --details | grep file | grep disk | grep "${backup_identifier}" | grep "${disk_name}" | awk '{print $4}')
-                if [ $(ArrayContains "$disk_path" "${SNAPSHOTS_PATHS[@]}") -eq 0 ]; then
-                        log "No snapshot found for $vm"
-                fi
+        can_delete_metadata=false
 
-                # virsh blockcommit only works if machine is running, else we need to use qemu-img
-                if [ "$(virsh domstate $vm)" == "running" ]; then
-                        log "Trying to online blockcommit for $disk_name: $disk_path"
-                        virsh blockcommit $vm "$disk_name" --active --pivot --verbose --delete >> "$LOG_FILE" 2>&1
-                else
-                        log "Trying to offline blockcommit for $disk_name: $disk_path"
-                        # -p = progress, we actually don't need that hee
-                        qemu-img commit -dp "$disk_path" >> "$LOG_FILE" 2>&1
-                        log "Note that you will need to modify the XML manually"
-
-                        # virsh snapshot delete will erase committed file if exist so we don't need to manually tamper with xml file
-                        virsh snapshot-delete --current $vm
-                        # TODO: test2
-                        #virsh dumpxml --inactive --security-info "$vm" > "${ROOT_DIR}/$vm.xml.temp"
-                        #sed -i "s%${backup_identifier}//g" "${ROOT_DIR}/$vm.xml.temp"
-                        #virsh define "${ROOT_DIR}/$vm.xml.temp"
-                        #rm -f "${ROOT_DIR}/$vm.xml.temp"
-
-                        ##TODO WE NEED TO UPDATE DISK PATH IN XML OF OFFLINE FILE
-                fi
-                if [ $? -ne 0 ]; then
-                        log "Failed to flatten snapshot $vm: $disk_name: $disk_path"
-                        can_delete_metadata=false
-                else
-                        # Delete if disk is not in use
-                        if [ -f "$disk_path" ]; then
-                                log "Trying to delete $disk_path"
-                                if ! lsof "$disk_path" > /dev/null 2>&1; then
-                                        log "Deleting file ${disk_path}"
-                                        rm -f "$disk_path"
-                                else
-                                        log "File $disk_path is in use"
-                                fi
+        log "Trying to properly delete snapshot for $disk_name: $disk_path"
+        valgrind virsh snapshot-delete $vm --snapshotname "${backup_identifier}" >> "$LOG_FILE" 2>&1
+        exit_code=$?
+        if [ $exit_code -ne 0 ]; then
+                log "Proper snapshot deletion failed with code $exit_code"
+                can_delete_metadata=true
+                for disk_name in $(virsh domblklist $vm --details | grep file | grep disk | grep "${backup_identifier}" | awk '{print $3}'); do
+                        disk_path=$(virsh domblklist $vm --details | grep file | grep disk | grep "${backup_identifier}" | grep "${disk_name}" | awk '{print $4}')
+                        if [ $(ArrayContains "$disk_path" "${SNAPSHOTS_PATHS[@]}") -eq 0 ]; then
+                                log "No snapshot found for $vm"
                         fi
-                        CURRENT_VM_SNAPSHOT=""
-                fi
-        done
+
+                        # virsh blockcommit only works if machine is running, else we need to use qemu-img
+                        if [ "$(virsh domstate $vm)" == "running" ]; then
+                                log "Trying to online blockcommit for $disk_name: $disk_path"
+                                valgrind virsh blockcommit $vm "$disk_name" --active --pivot --verbose --delete >> "$LOG_FILE" 2>&1
+                        else
+                                log "Trying to offline blockcommit for $disk_name: $disk_path"
+                                # -p = progress, we actually don't need that hee
+                                qemu-img commit -dp "$disk_path" >> "$LOG_FILE" 2>&1
+                                log "Note that you will need to modify the XML manually"
+
+                                # virsh snapshot delete will erase committed file if exist so we don't need to manually tamper with xml file
+                                virsh snapshot-delete --current $vm
+                                # TODO: test2
+                                #virsh dumpxml --inactive --security-info "$vm" > "${ROOT_DIR}/$vm.xml.temp"
+                                #sed -i "s%${backup_identifier}//g" "${ROOT_DIR}/$vm.xml.temp"
+                                #virsh define "${ROOT_DIR}/$vm.xml.temp"
+                                #rm -f "${ROOT_DIR}/$vm.xml.temp"
+
+                                ##TODO WE NEED TO UPDATE DISK PATH IN XML OF OFFLINE FILE
+                        fi
+                        if [ $? -ne 0 ]; then
+                                log "Failed to flatten snapshot $vm: $disk_name: $disk_path"
+                                can_delete_metadata=false
+                        else
+                                # Delete if disk is not in use
+                                if [ -f "$disk_path" ]; then
+                                        log "Trying to delete $disk_path"
+                                        if ! lsof "$disk_path" > /dev/null 2>&1; then
+                                                log "Deleting file ${disk_path}"
+                                                rm -f "$disk_path"
+                                        else
+                                                log "File $disk_path is in use"
+                                        fi
+                                fi
+                                CURRENT_VM_SNAPSHOT=""
+                        fi
+                done
+        fi
 
         # delete snapshot metadata
         if [ $can_delete_metadata == true ]; then
@@ -265,8 +277,7 @@ function run {
                 if [ "${CURRENT_VM_SNAPSHOT}" != "" ]; then
                         remove_snapshot "${CURRENT_VM_SNAPSHOT}" "${BACKUP_IDENTIFIER}"
                 fi
-                log "Delete former XML file"
-                rm -f "${ROOT_DIR}/${vm}.xml" > /dev/null 2>&1
+                log "Delete temporary files"
                 rm -f "${SNAPSHOT_FAILED_FILE}" > /dev/null 2>&1
         done
 }
