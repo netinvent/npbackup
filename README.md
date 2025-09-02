@@ -21,18 +21,18 @@ Works on x64 **Linux** , **NAS** solutions based on arm/arm64, **Windows** x64 a
 So, a new backup solution out of nowhere, packed with too much features for it's own good ? Not really !
 
 NPBackup relies on the well known [restic](https://restic.net) backup program, which has been battle proven for years.  
-While restic is a fanstastic program, NPBackup expands restic by offering a wider set of features and ecosystem integration.  
+While restic is a fantastic program, NPBackup expands restic by offering a wider set of features and ecosystem integration.  
 Still, NPBackup repos are basically managed by restic, and can be viewed / restored / maintained by standalone restic, so data availability is guaranteed.
 
 ## NPBackup Design Philosophy
 
-NPBackup is a multiparadigm backup solution which tries to solve two major backup problems, server and laptop backups !  
+NPBackup is a multiparadigm backup solution which tries to solve two major backup problems, server and laptop backups!  
 The core design idea is to make backups available (obviously !), even partial, on system / network failures.  
 
 >[!TIP]
 > It's always better to have some data than none
 
-The NPBackup design is the result of a multitude of reald world experience. Examples include:
+The NPBackup design is the result of a multitude of real world experience. Examples include:
 
 - For instance, one can configure a "minimum backup size" under which NPBackup reports the backup as failed. Imagine a user moving all it's data from folder A to folder B, while only folder A is setup for backup. Most backup solutions would not complain, but when the time comes for a restore operation, there would be an empty folder. NPBackup informs the monitoring in that scenarios.
 
@@ -87,7 +87,7 @@ Backups are run by setting up a scheduled task / cron job manually or via integr
 - Included upgrade server ready to run in production
 - Fullblown CLI interface with optional --json API mode
 - End User GUI
-  - Optional viewer only binaries
+  - Optional viewer-only binaries
   - Internationalization support (en, fr as of Apr 2024)
 - Comes with full exclusion lists for Linux, Synology and Windows OSes
 
@@ -167,7 +167,7 @@ Linux distributions comes in two flavors:
 - non legacy: any distribution with glibc >= 2.34 should work (compiled on RHEL 9)
 - arm and arm64 builds are compiled on Debian stretch for use with glibc > 2.2
 
-On Windows, you should decompress zip archive and run the executable inside it.
+On Windows, you should decompress the zip archive and run the executable inside it.
 The x64 binary is compatible with Windows 10+. The x86 binary is compatible with windows Vista and higher. On those old systems, you might need to install Visual C runtime 2015.
 
 For other install methods, please see the [wiki](https://github.com/netinvent/npbackup/wiki)
