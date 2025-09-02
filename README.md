@@ -64,10 +64,10 @@ NPBackup also has the ability to launch housekeeping operations after backups in
 
 #### The usual server backup solution
 
-It's always most advisable to do server backups as complete disk image, which is especially easy when run as virtual machine.  
+It's always most advisable to do server backups as complete disk images, which is especially easy when run as virtual machine.  
 But in a world of cloud servers, one needs a backup solution that will run inside a VM (or baremetal), and backup various services likes files and/or databases where snapshots/dump operations are required.  
 
-NPBackup can run pre-exec and post-exec commands (with timeouts and failure action), can accept direct database dumps via stdin_from_command parameter, can trigger VSS on windows, can filter 
+NPBackup can run pre-exec and post-exec commands (with timeouts and failure action), can accept direct database dumps via stdin_from_command parameter, can trigger VSS on windows and can exclude various unnecessary files. 
 
 Backups are run by setting up a scheduled task / cron job manually or via integrated task creation.
 
@@ -103,7 +103,7 @@ Backups are run by setting up a scheduled task / cron job manually or via integr
   - Google Cloud Storage*
   - OpenStack Swift*
   - Alibaba Cloud (Aliyun) Object Storage System (OSS)*
-  - Rclone support
+  - Rclone support*
 - Resume on interrupted backups*
 - VSS snapshot fallback
 
