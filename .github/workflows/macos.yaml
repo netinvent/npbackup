@@ -30,6 +30,7 @@ jobs:
     - name: Generate Report
       env:
         RUNNING_ON_GITHUB_ACTIONS: true
+        TEST_VAR: test
       run: |
         pip install pytest coverage
         sudo python -m coverage run -m pytest -vvs tests

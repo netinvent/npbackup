@@ -92,6 +92,8 @@ def running_on_github_actions():
           env:
         RUNNING_ON_GITHUB_ACTIONS: true
     """
+    print(os.environ)
+    print(os.environ.get("RUNNING_ON_GITHUB_ACTIONS"))
     print(os.environ.get("RUNNING_ON_GITHUB_ACTIONS", "False").lower())
     return os.environ.get("RUNNING_ON_GITHUB_ACTIONS", "False").lower() == "true"
 
