@@ -92,6 +92,7 @@ def running_on_github_actions():
           env:
         RUNNING_ON_GITHUB_ACTIONS: true
     """
+    print(os.environ.get("RUNNING_ON_GITHUB_ACTIONS", "False").lower())
     return os.environ.get("RUNNING_ON_GITHUB_ACTIONS", "False").lower() == "true"
 
 
@@ -104,6 +105,7 @@ def test_download_restic_binaries():
     # so we allow failure for this test
     result = download_restic_binaries_for_arch()
     print("DOWNLOAD result: ", result)
+    print("Running on github actions: ", running_on_github_actions())
     if running_on_github_actions():
         assert True, "Allow restic download failure on github actions because of rate limiting"
     else:
