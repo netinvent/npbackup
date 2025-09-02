@@ -6,7 +6,7 @@ __intname__ = "npbackup.restic_update"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2024-2025 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2025062901"
+__build__ = "2025090201"
 
 import os
 import sys
@@ -140,19 +140,23 @@ def download_restic_binaries_for_arch():
     """
     if os.name == "nt":
         if not download_restic_binaries("amd64") or not download_restic_binaries("386"):
-            sys.exit(1)
+            return False
     elif sys.platform.lower() == "darwin":
         if not download_restic_binaries("arm64") or not download_restic_binaries("amd64"):
-            sys.exit(1)
+            return False
     else:
         if (
             not download_restic_binaries("amd64")
             or not download_restic_binaries("arm64")
             or not download_restic_binaries("arm")
         ):
-            sys.exit(1)
+            return False
     return True
 
 
 if __name__ == "__main__":
-    download_restic_binaries_for_arch()
+    result = download_restic_binaries_for_arch()
+    if not result:
+        print("FAILED TO DOWNLOAD RESTIC BINARIES")
+        sys.exit(1)
+    sys.exit(0)

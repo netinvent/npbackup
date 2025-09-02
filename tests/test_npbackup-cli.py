@@ -6,7 +6,7 @@ __intname__ = "npbackup_cli_tests"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2024121001"
+__build__ = "2025090201"
 
 
 """
@@ -84,6 +84,15 @@ class RedirectedStdout:
 
     def __str__(self):
         return self._string_io.getvalue()
+    
+
+def running_on_github_actions():
+    """
+    This is set in github actions workflow with
+          env:
+        RUNNING_ON_GITHUB_ACTIONS: true
+    """
+    return os.environ.get("RUNNING_ON_GITHUB_ACTIONS", "False").lower() == "true"
 
 
 def test_download_restic_binaries():
@@ -95,7 +104,10 @@ def test_download_restic_binaries():
     # so we allow failure for this test
     result = download_restic_binaries_for_arch()
     print("DOWNLOAD result: ", result)
-    assert True
+    if running_on_github_actions():
+        assert True, "Allow restic download failure on github actions because of rate limiting"
+    else:
+        assert result is True, "Could not download restic binaries"
 
 
 def test_npbackup_cli_no_config():
