@@ -30,9 +30,8 @@ jobs:
     - name: Generate Report
       env:
         RUNNING_ON_GITHUB_ACTIONS: true
-        TEST_VAR: test
-      run: |
-        pip install pytest coverage
-        sudo python -m coverage run -m pytest -vvs tests
+      run: | 
+        pip install pytest coverage   
+        sudo -E python -m coverage run -m pytest -vvs tests
     - name: Upload Coverage to Codecov
       uses: codecov/codecov-action@v3
