@@ -6,7 +6,7 @@ __intname__ = "npbackup_cli_tests"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2025090201"
+__build__ = "2025090401"
 
 
 """
@@ -92,9 +92,6 @@ def running_on_github_actions():
           env:
         RUNNING_ON_GITHUB_ACTIONS: true
     """
-    print(os.environ)
-    print(os.environ.get("RUNNING_ON_GITHUB_ACTIONS"))
-    print(os.environ.get("RUNNING_ON_GITHUB_ACTIONS", "False").lower())
     return os.environ.get("RUNNING_ON_GITHUB_ACTIONS", "False").lower() == "true"
 
 
@@ -106,9 +103,9 @@ def test_download_restic_binaries():
     # We'll try to download restic binaries, but it may fail on github actions because of rate limiting
     # so we allow failure for this test
     result = download_restic_binaries_for_arch()
-    print("DOWNLOAD result: ", result)
-    print("Running on github actions: ", running_on_github_actions())
-    if running_on_github_actions():
+    github_actions = running_on_github_actions()
+    print(f"DOWNLOAD result: {result}, github actions: {github_actions}")
+    if github_actions:
         assert True, "Allow restic download failure on github actions because of rate limiting"
     else:
         assert result is True, "Could not download restic binaries"
