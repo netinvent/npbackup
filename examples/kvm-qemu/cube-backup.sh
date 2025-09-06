@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Script ver 2025082801
+# Script ver 2025090601
 
 #TODO: blockcommit removes current snapshots, even if not done by cube
 #      - it's interesting to make housekeeping, let's make this an option
@@ -194,7 +194,7 @@ function remove_snapshot {
         can_delete_metadata=false
 
         log "Trying to properly delete snapshot for $disk_name: $disk_path"
-        valgrind virsh snapshot-delete $vm --snapshotname "${backup_identifier}" >> "$LOG_FILE" 2>&1
+        virsh snapshot-delete $vm --snapshotname "${backup_identifier}" >> "$LOG_FILE" 2>&1
         exit_code=$?
         if [ $exit_code -ne 0 ]; then
                 log "Proper snapshot deletion failed with code $exit_code"
@@ -208,7 +208,7 @@ function remove_snapshot {
                         # virsh blockcommit only works if machine is running, else we need to use qemu-img
                         if [ "$(virsh domstate $vm)" == "running" ]; then
                                 log "Trying to online blockcommit for $disk_name: $disk_path"
-                                valgrind virsh blockcommit $vm "$disk_name" --active --pivot --verbose --delete >> "$LOG_FILE" 2>&1
+                                virsh blockcommit $vm "$disk_name" --active --pivot --verbose --delete >> "$LOG_FILE" 2>&1
                         else
                                 log "Trying to offline blockcommit for $disk_name: $disk_path"
                                 # -p = progress, we actually don't need that hee
