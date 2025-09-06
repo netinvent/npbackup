@@ -154,6 +154,7 @@ cython_debug/
 RESTIC_SOURCE_FILES/restic*
 !RESTIC_SOURCE_FILES/restic*legacy*.exe
 !RESTIC_SOURCE_FILES/restic*darwin*
+!RESTIC_SOURCE_FILES/restic*linux*
 RESTIC_SOURCE_FILES/ARCHIVES
 PRIVATE/_ev_data.py
 PRIVATE/_obfuscation.py
