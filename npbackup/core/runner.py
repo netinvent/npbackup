@@ -7,7 +7,7 @@ __intname__ = "npbackup.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025061201"
+__build__ = "2025090901"
 
 
 from typing import Optional, Callable, Union, List
@@ -889,7 +889,7 @@ class NPBackupRunner:
             # In doubt, launch the backup regardless of last backup age
             self.minimum_backup_age = 0
         try:
-            self.random_delay_before_backup = int(
+            self.random_delay_before_backup = float(
                 self.repo_config.g("repo_opts.random_delay_before_backup")
             )
         except (KeyError, ValueError, TypeError):
@@ -1310,7 +1310,7 @@ class NPBackupRunner:
         # We also need to make sure that npbackup executions that happen between this delay don't actually run
         if self.random_delay_before_backup and honor_delay:
             # Random delay before backup
-            delay_backup_seconds = randint(0, self.random_delay_before_backup * 60)
+            delay_backup_seconds = randint(0, int(self.random_delay_before_backup * 60.0))
             delay_file = os.path.join(
                 tempfile.gettempdir(), "{}.delay".format(__intname__)
             )
