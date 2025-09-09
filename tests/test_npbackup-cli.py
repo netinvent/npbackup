@@ -16,18 +16,20 @@ Missing:
 - VSS test
 - backup minimum size tests
 - proper retention policy tests
+
+Note that these tests will log concurrent exec time because atexit is only called once in the whole script
 """
 
 import sys
 import os
 from pathlib import Path
 import shutil
-from io import StringIO
+from io import StringIO, BytesIO
 import json
-import requests
 import tempfile
-import bz2
 from pprint import pprint
+import hashlib
+from command_runner import command_runner
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -63,6 +65,8 @@ repo_config, _ = get_repo_config(full_config)
 
 # File we will request in dump mode
 DUMP_FILE = "__version__.py"
+DUMP_FILE_RESTORED = Path(tempfile.gettempdir()).absolute().joinpath("restored__version__.py")
+DUMP_FILE_RESTIC_PATH = "/npbackup/npbackup/__version__.py"
 
 
 class RedirectedStdout:
@@ -73,16 +77,22 @@ class RedirectedStdout:
     def __init__(self):
         self._stdout = None
         self._string_io = None
+        self._bytes_io = None
 
     def __enter__(self):
         self._stdout = sys.stdout
         sys.stdout = self._string_io = StringIO()
+        sys.stdout.buffer = self._bytes_io = BytesIO()
         return self
 
     def __exit__(self, type, value, traceback):
         sys.stdout = self._stdout
 
     def __str__(self):
+        print("BYTES IO", self._bytes_io.getvalue())
+        print("STRING IO", self._string_io.getvalue())
+        if self._bytes_io.getvalue():
+            return self._bytes_io.getvalue()
         return self._string_io.getvalue()
     
 
@@ -93,6 +103,40 @@ def running_on_github_actions():
         RUNNING_ON_GITHUB_ACTIONS: true
     """
     return os.environ.get("RUNNING_ON_GITHUB_ACTIONS", "False").lower() == "true"
+
+
+# Import from ofunctions.checksums 1.1.0
+def sha256sum_data(data):
+    # type: (bytes) -> str
+    """
+    Returns sha256sum of some data
+    """
+    sha256 = hashlib.sha256()
+    sha256.update(data)
+    return sha256.hexdigest()
+
+
+# Import from ofunctions.checksums 1.1.0
+def sha256sum(file):
+    # type: (str) -> str
+    """
+    Returns the sha256 sum of a file
+
+    :param file: (str) path to file
+    :return: (str) checksum
+    """
+    sha256 = hashlib.sha256()
+
+    try:
+        with open(file, "rb") as file_handle:
+            while True:
+                data = file_handle.read(65536)
+                if not data:
+                    break
+                sha256.update(data)
+        return sha256.hexdigest()
+    except IOError as exc:
+        raise IOError('Cannot create SHA256 sum for file "%s": %s' % (file, exc))
 
 
 def test_download_restic_binaries():
@@ -427,8 +471,6 @@ def test_npbackup_cli_housekeeping():
 
 
 def test_npbackup_cli_raw():
-    global DUMP_FILE
-
     sys.argv = ["", "-c", str(CONF_FILE), "--raw", "ls latest"]
     try:
         with RedirectedStdout() as logs:
@@ -439,25 +481,32 @@ def test_npbackup_cli_raw():
         assert "Running raw command" in str(logs), "Did not run raw command"
         assert "Successfully run raw command" in str(logs), "Did not run raw command"
         assert DUMP_FILE in str(logs), "raw ls output should contain DUMP_FILE name"
+        found = False
         for line in str(logs).split("\n"):
             if DUMP_FILE in line:
-                DUMP_FILE = line
                 print("FOUND DUMP FILE", DUMP_FILE)
+                found = True
                 break
+        if not found:
+            assert False, "Did not find dump file in raw ls output"
+
 
 
 def test_npbackup_cli_dump():
-    sys.argv = ["", "-c", str(CONF_FILE), "--dump", DUMP_FILE]
-    try:
-        with RedirectedStdout() as logs:
-            e = __main__.main()
-            print(e)
-    except SystemExit:
-        print("DUMPED FILE", DUMP_FILE)
-        print(logs)
-        assert '__intname__ = "npbackup"' in str(logs), "version file seems bogus"
-        assert '"pv": sys.version_info,' in str(logs), "Version file still seems bogus"
+    """
+    Don't use RedirectedStdout since dump will output binary data
+    """
+    print("DUMPING FILE", DUMP_FILE_RESTIC_PATH, "TO", DUMP_FILE_RESTORED)
+    cmd = f"{sys.executable} ..{os.sep}npbackup{os.sep}bin{os.sep}npbackup-cli -c {CONF_FILE} --dump {DUMP_FILE_RESTIC_PATH} > {DUMP_FILE_RESTORED}"
+    print(cmd)
+    exit_code, output = command_runner(cmd, shell=True)
+    print(exit_code, output)
+    assert exit_code == 0, "Dump command failed"
 
+    original_sha = sha256sum(os.path.join("..", "npbackup", "npbackup", DUMP_FILE))
+    restored_sha = sha256sum(DUMP_FILE_RESTORED)
+
+    assert original_sha == restored_sha, "Dumped file has different sha256sum than original file"
 
 if __name__ == "__main__":
     test_download_restic_binaries()
