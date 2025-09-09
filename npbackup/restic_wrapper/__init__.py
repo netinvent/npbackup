@@ -1376,7 +1376,8 @@ class ResticRunner:
 
         cmd = f"dump {snapshot} {path}"
         # We need to make sure that we get binary output for dumps
-        result, output = self.executor(cmd, encoding=False)
+        # Also, don't use poller method which is too slow
+        result, output = self.executor(cmd, encoding=False, method="monitor")
         if result:
             msg = f"File {path} successfully dumped"
         else:
