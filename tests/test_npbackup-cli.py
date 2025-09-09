@@ -468,6 +468,11 @@ def test_npbackup_cli_housekeeping():
 
 
 def test_npbackup_cli_raw():
+    """
+    This test also updates DUMP_FILE_RESTIC_PATH variable with current snapshot path
+    """
+    global DUMP_FILE_RESTIC_PATH
+
     sys.argv = ["", "-c", str(CONF_FILE), "--raw", "ls latest"]
     try:
         with RedirectedStdout() as logs:
@@ -481,7 +486,8 @@ def test_npbackup_cli_raw():
         found = False
         for line in str(logs).split("\n"):
             if DUMP_FILE in line:
-                print("FOUND DUMP FILE", DUMP_FILE)
+                print("FOUND DUMP FILE", line)
+                DUMP_FILE_RESTIC_PATH = line
                 found = True
                 break
         if not found:
