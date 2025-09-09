@@ -1310,7 +1310,9 @@ class NPBackupRunner:
         # We also need to make sure that npbackup executions that happen between this delay don't actually run
         if self.random_delay_before_backup and honor_delay:
             # Random delay before backup
-            delay_backup_seconds = randint(0, int(self.random_delay_before_backup * 60.0))
+            delay_backup_seconds = randint(
+                0, int(self.random_delay_before_backup * 60.0)
+            )
             delay_file = os.path.join(
                 tempfile.gettempdir(), "{}.delay".format(__intname__)
             )
