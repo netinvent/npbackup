@@ -242,9 +242,8 @@ def test_npbackup_cli_has_recent_snapshots():
             e = __main__.main()
             print(e)
     except SystemExit:
-        print(f"logs: {str(logs)} END")
         json_logs = json.loads(str(logs))
-        assert json_logs["result"], "Should  have recent snapshots"
+        assert json_logs["result"], "Should have recent snapshots"
 
 
 def test_npbackup_cli_unlock():
@@ -495,10 +494,12 @@ def test_npbackup_cli_dump():
     Don't use RedirectedStdout since dump will output binary data
     """
     print("DUMPING FILE", DUMP_FILE_RESTIC_PATH, "TO", DUMP_FILE_RESTORED)
-    cmd = f"{sys.executable} ..{os.sep}npbackup{os.sep}bin{os.sep}npbackup-cli -c {CONF_FILE} --dump {DUMP_FILE_RESTIC_PATH} --debug > {DUMP_FILE_RESTORED}"
+    cmd = f"{sys.executable} ..{os.sep}npbackup{os.sep}bin{os.sep}npbackup-cli -c {CONF_FILE} --dump {DUMP_FILE_RESTIC_PATH} > {DUMP_FILE_RESTORED}"
     print(cmd)
     exit_code, output = command_runner(cmd, shell=True)
     print(exit_code, output)
+    with open(DUMP_FILE_RESTORED, "rb") as f:
+        print(f"Restored file {DUMP_FILE_RESTORED} contents:\n{f.read()}")
     assert exit_code == 0, "Dump command failed"
 
     original_sha = sha256sum(os.path.join("..", "npbackup", "npbackup", DUMP_FILE))
