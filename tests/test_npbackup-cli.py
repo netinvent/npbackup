@@ -494,7 +494,7 @@ def test_npbackup_cli_dump():
     Don't use RedirectedStdout since dump will output binary data
     """
     print("DUMPING FILE", DUMP_FILE_RESTIC_PATH, "TO", DUMP_FILE_RESTORED)
-    cmd = f"{sys.executable} ..{os.sep}npbackup{os.sep}bin{os.sep}npbackup-cli -c {CONF_FILE} --dump {DUMP_FILE_RESTIC_PATH} > {DUMP_FILE_RESTORED}"
+    cmd = f"{sys.executable} ..{os.sep}npbackup{os.sep}bin{os.sep}npbackup-cli -c {CONF_FILE} --debug --dump {DUMP_FILE_RESTIC_PATH} > {DUMP_FILE_RESTORED}"
     print(cmd)
     exit_code, output = command_runner(cmd, shell=True)
     print(exit_code, output)
