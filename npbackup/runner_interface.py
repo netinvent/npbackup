@@ -9,7 +9,7 @@ __site__ = "https://www.netperfect.fr/npbackup"
 __description__ = "NetPerfect Backup Client"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024103001"
+__build__ = "2025090901"
 
 
 import sys
@@ -68,15 +68,16 @@ def entrypoint(*args, **kwargs):
             # We need to temporarily remove the stdout handler
             # Since we already get live output from the runner
             # Unless operation is "ls", because it's too slow for command_runner poller method that allows live_output
+            # Unless operation is "dump", because it outputs binary data
             # But we still need to log the result to our logfile
-            if not operation == "ls":
+            if not operation in ("ls", "dump"):
                 handler = None
                 for handler in logger.handlers:
                     if handler.stream == sys.stdout:
                         logger.removeHandler(handler)
                         break
             logger.info(f"\n{result}")
-            if not operation == "ls" and handler:
+            if not operation in ("ls", "dump") and handler:
                 logger.addHandler(handler)
         if result:
             logger.info("Operation finished")
@@ -87,4 +88,4 @@ def entrypoint(*args, **kwargs):
             print(msgspec.json.encode(result).decode("utf-8", errors="ignore"))
         else:
             print(json.dumps(result, default=serialize_datetime))
-        sys.exit(0)
+    return result

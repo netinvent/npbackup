@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025070101"
-__version__ = "2.7.2"
+__build__ = "2025090901"
+__version__ = "2.7.3"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -392,6 +392,7 @@ class ResticRunner:
         method: str = "poller",
         timeout: int = None,
         stdin=None,
+        encoding="utf-8",
     ) -> Tuple[bool, str]:
         """
         Executes restic with given command
@@ -441,7 +442,7 @@ class ResticRunner:
             _cmd,
             timeout=timeout,
             split_streams=False,
-            encoding="utf-8",
+            encoding=encoding,
             stdin=stdin,
             stdout=self.stdout if not no_output_queues and method == "poller" else None,
             stderr=stderr,
@@ -1374,7 +1375,8 @@ class ResticRunner:
         kwargs.pop("self")
 
         cmd = f"dump {snapshot} {path}"
-        result, output = self.executor(cmd)
+        # We need to make sure that we get binary output for dumps
+        result, output = self.executor(cmd, encoding=False)
         if result:
             msg = f"File {path} successfully dumped"
         else:

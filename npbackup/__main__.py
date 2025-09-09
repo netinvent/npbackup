@@ -817,7 +817,12 @@ This is free software, and you are welcome to redistribute it under certain cond
         }
 
     if cli_args["operation"]:
-        entrypoint(**cli_args)
+        result = entrypoint(**cli_args)
+        # Explicit failure in dump mode so users don't get to think the dump was successful
+        if not result and cli_args["operation"] == "dump":
+            print("FATAL ERROR: Could not dump file, see logs")
+            sys.exit(1)
+
     else:
         json_error_logging(
             False, "No operation has been requested. Try --help", level="warning"
