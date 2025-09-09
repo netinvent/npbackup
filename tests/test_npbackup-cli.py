@@ -89,8 +89,6 @@ class RedirectedStdout:
         sys.stdout = self._stdout
 
     def __str__(self):
-        print("BYTES IO", self._bytes_io.getvalue())
-        print("STRING IO", self._string_io.getvalue())
         if self._bytes_io.getvalue():
             return self._bytes_io.getvalue()
         return self._string_io.getvalue()
@@ -244,7 +242,7 @@ def test_npbackup_cli_has_recent_snapshots():
             e = __main__.main()
             print(e)
     except SystemExit:
-        print(str(logs))
+        print(f"logs: {str(logs)} END")
         json_logs = json.loads(str(logs))
         assert json_logs["result"], "Should  have recent snapshots"
 
@@ -497,7 +495,7 @@ def test_npbackup_cli_dump():
     Don't use RedirectedStdout since dump will output binary data
     """
     print("DUMPING FILE", DUMP_FILE_RESTIC_PATH, "TO", DUMP_FILE_RESTORED)
-    cmd = f"{sys.executable} ..{os.sep}npbackup{os.sep}bin{os.sep}npbackup-cli -c {CONF_FILE} --dump {DUMP_FILE_RESTIC_PATH} > {DUMP_FILE_RESTORED}"
+    cmd = f"{sys.executable} ..{os.sep}npbackup{os.sep}bin{os.sep}npbackup-cli -c {CONF_FILE} --dump {DUMP_FILE_RESTIC_PATH} --debug > {DUMP_FILE_RESTORED}"
     print(cmd)
     exit_code, output = command_runner(cmd, shell=True)
     print(exit_code, output)
