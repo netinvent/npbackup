@@ -1379,6 +1379,9 @@ class ResticRunner:
         # Also, don't use poller method which is too slow
         result, output = self.executor(cmd, encoding=False, method="monitor")
         if result:
+            # We need to write binary data directly to stdout on success
+            # Dump should only be used by CLI
+            sys.stdout.buffer.write(output)
             msg = f"File {path} successfully dumped"
         else:
             msg = f"Cannot dump file {path}:\n {output}"
