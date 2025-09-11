@@ -195,7 +195,7 @@ fr:
   repo_uri_cloud_hint: L'URI du dépot Cloud nécessite de définir des variables d'environnement chiffrées (voir l'onglet environnement)
 
   full_concurrency: Ne pas vérifier la concurrence
-  repo_aware_concurrency: Autoriser concurrencesur dépots différents
+  repo_aware_concurrency: Autoriser concurrence sur dépots différents
 
   email_config: Configuration email
   enable_email_notifications: Activer les notifications email
