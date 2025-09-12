@@ -7,7 +7,7 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025090901"
+__build__ = "2025091201"
 __version__ = "2.7.3"
 
 
@@ -1382,6 +1382,8 @@ class ResticRunner:
             # We need to write binary data directly to stdout on success
             # Dump should only be used by CLI
             sys.stdout.buffer.write(output)
+            # Also make sure we flush said buffer
+            sys.stdout.buffer.flush()
             msg = f"File {path} successfully dumped"
         else:
             msg = f"Cannot dump file {path}:\n {output}"
