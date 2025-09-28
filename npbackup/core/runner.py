@@ -1167,7 +1167,6 @@ class NPBackupRunner:
     def backup(
         self,
         force: bool = False,
-        honor_delay: bool = True,
         read_from_stdin: bool = False,
         stdin_filename: str = None,
     ) -> bool:
@@ -1308,7 +1307,7 @@ class NPBackupRunner:
 
         # Now add a random delay before backup if configured
         # We also need to make sure that npbackup executions that happen between this delay don't actually run
-        if self.random_delay_before_backup and honor_delay:
+        if not force and self.random_delay_before_backup:
             # Random delay before backup
             delay_backup_seconds = randint(
                 0, int(self.random_delay_before_backup * 60.0)
