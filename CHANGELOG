@@ -2,6 +2,26 @@
 ## Planned ahead
  ! Operation center must be able to create scheduled tasks for every operation
 
+## 3.0.4
+#### Fixes
+ - CLI: --force switch now bypasses random delay before backup
+ - CLI: Fix --dump command that tried to interpret output as strings, also make it faster by changing polling method
+ - Fix grafana dashboard when no tenants are available
+ - KVM: Fix backup script typo for fsthaw command
+ - KVM: Use new snapshot-delete command, with fallback for earlier implementation
+ - KVM: Keep VM xml files in the path of the first VM disk
+
+#### Misc
+ - Tests: Added MacOS to test suite
+ - Tests: Improve --dump test to check against sha256 sums
+ - Tests: Improve --raw test
+ - Tests: Allow restic binary fallback when no new version can be downloaded
+ - Only load windows_signtool on Windows platforms
+ - Updated internal restic binary to 0.18.1 compiled with go1.24.3
+ - Updated Nuitka compiler to 2.7.16
+ - README typos and fixes, see #168
+ - CLI: Do not log verbose mode
+
 ## 3.0.3
 #### Disruptive changes
 - An automatic config file migration tool has been added which can migrate config files from 3.0.0 to 3.0.3
