@@ -7,7 +7,7 @@ __intname__ = "npbackup.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025090901"
+__build__ = "2025100201"
 
 
 from typing import Optional, Callable, Union, List
@@ -1374,6 +1374,7 @@ class NPBackupRunner:
         ):
             commands_success = True
             if command_list:
+                self.write_logs("Running {}-execution commands".format(exec_type))
                 for command in command_list:
                     exit_code, output = command_runner(
                         command, shell=True, timeout=per_command_timeout
