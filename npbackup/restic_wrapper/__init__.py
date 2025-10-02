@@ -328,7 +328,7 @@ class ResticRunner:
     def write_logs(
         self,
         msg: str,
-        level: str,
+        level: str = "info",
         raise_error: str = None,
         ignore_additional_json: bool = False,
     ):
