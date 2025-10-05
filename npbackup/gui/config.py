@@ -1222,18 +1222,14 @@ def config_gui(full_config: dict, config_file: str):
                             ),
                         ],
                         [
-                            sg.Text(
-                                _t("config_gui.pack_size"), size=(20, 1)
-                            ),
+                            sg.Text(_t("config_gui.pack_size"), size=(20, 1)),
                             sg.Image(
                                 NON_INHERITED_ICON,
                                 key="inherited.backup_opts.pack_size",
                                 tooltip=_t("config_gui.group_inherited"),
                                 pad=1,
                             ),
-                            sg.Input(
-                                key="backup_opts.pack_size", size=(8, 1)
-                            ),
+                            sg.Input(key="backup_opts.pack_size", size=(8, 1)),
                         ],
                     ]
                 ),
@@ -1603,7 +1599,8 @@ def config_gui(full_config: dict, config_file: str):
                     NON_INHERITED_ICON,
                     key="inherited_repo_group",
                     tooltip=_t("config_gui.group_inherited"),
-                    pad=1),
+                    pad=1,
+                ),
                 sg.Combo(
                     values=configuration.get_group_list(full_config),
                     key="repo_group",

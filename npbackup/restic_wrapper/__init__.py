@@ -275,7 +275,7 @@ class ResticRunner:
             self._no_lock = value
         else:
             raise ValueError("Bogus no_lock value given")
-        
+
     @property
     def compression(self) -> str:
         return self._compression
@@ -297,7 +297,7 @@ class ResticRunner:
             self._pack_size = value
         else:
             raise ValueError("Bogus pack_size value given")
-    
+
     @property
     def json_output(self) -> bool:
         return self._json_output

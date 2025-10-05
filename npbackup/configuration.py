@@ -177,7 +177,7 @@ empty_config_dict = {
             "repo_opts": {
                 "repo_password": None,
                 "repo_password_command": None,
-                "compression": "auto", # Can be auto, max, off
+                "compression": "auto",  # Can be auto, max, off
                 # Minimum time between two backups, in minutes
                 # Set to zero in order to disable time checks
                 "minimum_backup_age": 1435,
@@ -848,28 +848,26 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
                 f"{object_type} {object_name} has no retention policy, skipping migration"
             )
         return full_config
-    
+
     def _migrate_compression_3_0_0_to_3_0_4(
         full_config: dict,
         object_name: str,
         object_type: str,
     ) -> dict:
         try:
-            if full_config.g(
-                f"{object_type}.{object_name}.repo_opts.compression"
-            ) is None and f"{object_type}.{object_name}.backup_opts.compression" is not None:
+            if (
+                full_config.g(f"{object_type}.{object_name}.repo_opts.compression")
+                is None
+                and f"{object_type}.{object_name}.backup_opts.compression" is not None
+            ):
                 full_config.s(
                     f"{object_type}.{object_name}.repo_opts.compression",
                     full_config.g(
                         f"{object_type}.{object_name}.backup_opts.compression"
                     ),
                 )
-                full_config.d(
-                    f"{object_type}.{object_name}.backup_opts.compression"
-                )
-                logger.info(
-                    f"Migrated {object_name} compression to repo_opts"
-                )
+                full_config.d(f"{object_type}.{object_name}.backup_opts.compression")
+                logger.info(f"Migrated {object_name} compression to repo_opts")
         except KeyError:
             logger.info(
                 f"{object_type} {object_name} has no compression, skipping migration"
