@@ -16,6 +16,7 @@
  - Compression value was not honored on init command
  - CLI: --force switch now bypasses random delay before backup
  - CLI: Fix --dump command that tried to interpret output as strings, also make it faster by changing polling method
+ - GUI: Fix appply_on_tags not shown properly
  - Fix grafana dashboard when no tenants are available
  - KVM: Fix backup script typo for fsthaw command
  - KVM: Use new snapshot-delete command, with fallback for earlier implementation
