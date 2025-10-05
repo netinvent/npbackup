@@ -280,7 +280,7 @@ class ResticRunner:
     def compression(self) -> str:
         return self._compression
 
-    @no_lock.setter
+    @compression.setter
     def compression(self, value: str):
         if value in ("auto", "off", "max"):
             self._compression = value
