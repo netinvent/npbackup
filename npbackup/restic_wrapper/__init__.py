@@ -435,7 +435,11 @@ class ResticRunner:
             stderr = None
 
         if self._executor_operation == "backup" and not self.is_init:
-            self.init(errors_allowed=True)
+            try:
+                compression = self.repo_config.g("repo_opts.compression")
+            except (KeyError, ValueError):
+                compression = None
+            self.init(errors_allowed=True, compression=compression)
             self._make_env()
 
         exit_code, output = command_runner(

@@ -1024,7 +1024,11 @@ class NPBackupRunner:
     @apply_config_to_restic_runner
     def init(self) -> bool:
         self.write_logs(f"Initializing repo {self.repo_config.g('name')}", level="info")
-        return self.restic_runner.init()
+        try:
+            compression = self.repo_config.g("repo_opts.compression")
+        except (KeyError, ValueError):
+            compression = None
+        return self.restic_runner.init(compression=compression)
 
     @threaded
     @close_queues
@@ -1463,7 +1467,7 @@ class NPBackupRunner:
 
             self.write_logs(
                 f"Restic output:\n{self.restic_runner.backup_result_content}",
-                level="debug",
+                level="info",
             )
 
             post_exec_commands_success = _exec_commands(

@@ -95,7 +95,7 @@ def config_gui(full_config: dict, config_file: str):
     )
 
     combo_boxes = {
-        "backup_opts.compression": {
+        "repo_opts.compression": {
             "auto": _t("config_gui.auto"),
             "max": _t("config_gui.max"),
             "off": _t("config_gui.off"),
@@ -1127,21 +1127,6 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Column(
                     [
                         [
-                            sg.Text(_t("config_gui.compression"), size=(20, None)),
-                            sg.Image(
-                                NON_INHERITED_ICON,
-                                key="inherited.backup_opts.compression",
-                                tooltip=_t("config_gui.group_inherited"),
-                                pad=1,
-                            ),
-                            sg.Combo(
-                                list(combo_boxes["backup_opts.compression"].values()),
-                                key="backup_opts.compression",
-                                size=(20, 1),
-                                pad=0,
-                            ),
-                        ],
-                        [
                             sg.Text(_t("config_gui.backup_priority"), size=(20, 1)),
                             sg.Image(
                                 NON_INHERITED_ICON,
@@ -1600,11 +1585,29 @@ def config_gui(full_config: dict, config_file: str):
             ],
             [
                 sg.Text(_t("config_gui.repo_group"), size=(40, 1)),
-                sg.Image(NON_INHERITED_ICON, pad=1),
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited_repo_group",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1),
                 sg.Combo(
                     values=configuration.get_group_list(full_config),
                     key="repo_group",
                     enable_events=True,
+                ),
+            ],
+            [
+                sg.Text(_t("config_gui.compression"), size=(40, 1)),
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.repo_opts.compression",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
+                sg.Combo(
+                    list(combo_boxes["repo_opts.compression"].values()),
+                    key="repo_opts.compression",
+                    size=(20, 1),
                 ),
             ],
             [

@@ -3,7 +3,17 @@
  ! Operation center must be able to create scheduled tasks for every operation
 
 ## 3.0.4
+#### Disruptive changes
+ - compression option is decided at repo level, so it was moved to repo_opts section
+   - The configuration files will be automatically migrated on first run
+ - This is the last version to support deprecated parameters --*-check, --repair-* and --prune-max
+   - They have been replaced by --check, --repair and --prune with additional parameters to fine tune the operations
+
+#### Features
+ - pack_size option has been added to backup_opts section, allowing to set restic pack size for finer grained deduplication
+
 #### Fixes
+ - Compression value was not honored on init command
  - CLI: --force switch now bypasses random delay before backup
  - CLI: Fix --dump command that tried to interpret output as strings, also make it faster by changing polling method
  - Fix grafana dashboard when no tenants are available

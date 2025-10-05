@@ -7,8 +7,8 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025072701"
-__version__ = "npbackup 3.0.3+"
+__build__ = "2025100401"
+__version__ = "npbackup 3.0.4+"
 
 
 from typing import Tuple, Optional, List, Any, Union
@@ -32,7 +32,7 @@ from npbackup.key_management import AES_KEY, EARLIER_AES_KEY, IS_PRIV_BUILD, get
 from npbackup.__version__ import __version__ as MAX_CONF_VERSION
 
 MIN_MIGRATABLE_CONF_VERSION = "3.0.0"
-MIN_CONF_VERSION = "3.0.3"
+MIN_CONF_VERSION = "3.0.4"
 
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
@@ -145,7 +145,6 @@ empty_config_dict = {
                 "stdin_from_command": None,
                 "stdin_filename": None,
                 "tags": [],
-                "compression": "auto",
                 "use_fs_snapshot": True,
                 "ignore_cloud_files": True,
                 "one_file_system": False,
@@ -177,6 +176,7 @@ empty_config_dict = {
             "repo_opts": {
                 "repo_password": None,
                 "repo_password_command": None,
+                "compression": "auto", # Can be auto, max, off
                 # Minimum time between two backups, in minutes
                 # Set to zero in order to disable time checks
                 "minimum_backup_age": 1435,
@@ -847,6 +847,33 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
                 f"{object_type} {object_name} has no retention policy, skipping migration"
             )
         return full_config
+    
+    def _migrate_compression_3_0_0_to_3_0_4(
+        full_config: dict,
+        object_name: str,
+        object_type: str,
+    ) -> dict:
+        try:
+            if full_config.g(
+                f"{object_type}.{object_name}.repo_opts.compression"
+            ) is None and f"{object_type}.{object_name}.backup_opts.compression" is not None:
+                full_config.s(
+                    f"{object_type}.{object_name}.repo_opts.compression",
+                    full_config.g(
+                        f"{object_type}.{object_name}.backup_opts.compression"
+                    ),
+                )
+                full_config.d(
+                    f"{object_type}.{object_name}.backup_opts.compression"
+                )
+                logger.info(
+                    f"Migrated {object_name} compression to repo_opts"
+                )
+        except KeyError:
+            logger.info(
+                f"{object_type} {object_name} has no compression, skipping migration"
+            )
+        return full_config
 
     def _apply_migrations(
         full_config: dict,
@@ -857,7 +884,10 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
             full_config = _migrate_retetion_policy_3_0_0_to_3_0_3(
                 full_config, object_name, object_type
             )
-        return full_config
+        if version_parse(old_version) < version_parse("3.0.4"):
+            full_config = _migrate_compression_3_0_0_to_3_0_4(
+                full_config, object_name, object_type
+            )
 
     for repo in get_repo_list(full_config):
         _apply_migrations(full_config, repo, "repos")
