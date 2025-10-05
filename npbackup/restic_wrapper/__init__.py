@@ -76,6 +76,8 @@ class ResticRunner:
         self._dry_run = False
         self._no_cache = False
         self._no_lock = False
+        self._compression = "auto"
+        self._pack_size = None
         self._json_output = False
         self._struct_output = False
 
@@ -273,7 +275,29 @@ class ResticRunner:
             self._no_lock = value
         else:
             raise ValueError("Bogus no_lock value given")
+        
+    @property
+    def compression(self) -> str:
+        return self._compression
 
+    @no_lock.setter
+    def compression(self, value: str):
+        if value in ("auto", "off", "max"):
+            self._compression = value
+        else:
+            raise ValueError("Bogus compression value given")
+
+    @property
+    def pack_size(self) -> int:
+        return self._pack_size
+
+    @pack_size.setter
+    def pack_size(self, value: int):
+        if isinstance(value, int):
+            self._pack_size = value
+        else:
+            raise ValueError("Bogus pack_size value given")
+    
     @property
     def json_output(self) -> bool:
         return self._json_output
@@ -435,11 +459,7 @@ class ResticRunner:
             stderr = None
 
         if self._executor_operation == "backup" and not self.is_init:
-            try:
-                compression = self.repo_config.g("repo_opts.compression")
-            except (KeyError, ValueError):
-                compression = None
-            self.init(errors_allowed=True, compression=compression)
+            self.init(errors_allowed=True)
             self._make_env()
 
         exit_code, output = command_runner(
@@ -711,7 +731,6 @@ class ResticRunner:
     def init(
         self,
         repository_version: int = 2,
-        compression: str = "auto",
         errors_allowed: bool = False,
     ) -> bool:
         """
@@ -723,7 +742,7 @@ class ResticRunner:
         --json output when already initialized (is not json !!!)
         """
         cmd = "init --repository-version {} --compression {}".format(
-            repository_version, compression
+            repository_version, self.compression
         )
         result, output = self.executor(
             cmd, timeout=FAST_COMMANDS_TIMEOUT, errors_allowed=errors_allowed
@@ -1081,6 +1100,9 @@ class ResticRunner:
             if tag:
                 tag = tag.strip()
                 cmd += " --tag {}".format(tag)
+        if self.pack_size:
+            cmd += " --pack-size {}".format(self.pack_size)
+
         if additional_backup_only_parameters:
             cmd += " {}".format(additional_backup_only_parameters)
 

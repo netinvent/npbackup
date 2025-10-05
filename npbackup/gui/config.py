@@ -1221,6 +1221,20 @@ def config_gui(full_config: dict, config_file: str):
                                 pad=0,
                             ),
                         ],
+                        [
+                            sg.Text(
+                                _t("config_gui.pack_size"), size=(20, 1)
+                            ),
+                            sg.Image(
+                                NON_INHERITED_ICON,
+                                key="inherited.backup_opts.pack_size",
+                                tooltip=_t("config_gui.group_inherited"),
+                                pad=1,
+                            ),
+                            sg.Input(
+                                key="backup_opts.pack_size", size=(8, 1)
+                            ),
+                        ],
                     ]
                 ),
             ],
@@ -2924,7 +2938,6 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 sg.Popup(_t("config_gui.test_email_success"), keep_on_top=True)
             else:
                 sg.Popup(_t("config_gui.test_email_failure"), keep_on_top=True)
-            # WIP
             continue
         if event == "--ACCEPT--":
             if object_type != "groups" and not values["repo_uri"]:

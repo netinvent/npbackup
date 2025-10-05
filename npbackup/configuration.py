@@ -145,6 +145,7 @@ empty_config_dict = {
                 "stdin_from_command": None,
                 "stdin_filename": None,
                 "tags": [],
+                "pack_size": 0,  # integer, 4 is minimum, 16 is default with restic 0.18
                 "use_fs_snapshot": True,
                 "ignore_cloud_files": True,
                 "one_file_system": False,

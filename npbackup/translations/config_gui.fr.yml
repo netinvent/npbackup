@@ -28,6 +28,7 @@ fr:
   tags: Tags
   one_per_line: un par ligne
   backup_priority: Priorité de sauvegarde
+  pack_size: Taille des packs (MB)
   additional_parameters: Paramètres supplémentaires
   additional_backup_only_parameters: Paramètres supplémentaires de sauvegarde
   additional_restore_only_parameters: Paramètres supplémentaires de restauration

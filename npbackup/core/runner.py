@@ -1025,10 +1025,10 @@ class NPBackupRunner:
     def init(self) -> bool:
         self.write_logs(f"Initializing repo {self.repo_config.g('name')}", level="info")
         try:
-            compression = self.repo_config.g("repo_opts.compression")
+            self.restic_runner.compression = self.repo_config.g("repo_opts.compression")
         except (KeyError, ValueError):
-            compression = None
-        return self.restic_runner.init(compression=compression)
+            self.write_logs("No compression value given. Using auto", level="info")
+        return self.restic_runner.init()
 
     @threaded
     @close_queues
@@ -1265,6 +1265,9 @@ class NPBackupRunner:
                 tags = [tags]
         except KeyError:
             tags = None
+
+        if self.repo_config.g("backup_opts.pack_size"):
+            self.restic_runner.pack_size = self.repo_config.g("backup_opts.pack_size")
 
         additional_backup_only_parameters = None
         try:
