@@ -448,7 +448,7 @@ def config_gui(full_config: dict, config_file: str):
                 "backup_opts.exclude_files",
                 "backup_opts.exclude_patterns",
                 "repo_opts.retention_policy.keep_tags",
-                "repo_opts.retention_policy.apply_tags",
+                "repo_opts.retention_policy.apply_on_tags",
             ):
                 if key == "backup_opts.tags":
                     tree = tags_tree
