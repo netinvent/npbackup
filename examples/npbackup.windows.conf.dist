@@ -1,5 +1,5 @@
 # NPBackup default configuration
-conf_version: 3.0.1
+conf_version: 3.0.4
 audience: public
 repos:
   default:
@@ -22,7 +22,7 @@ groups:
       stdin_from_command:
       stdin_filename:
       tags: []
-      compression: auto
+      pack_size:
       use_fs_snapshot: true
       ignore_cloud_files: true
       one_file_system: false
@@ -51,6 +51,7 @@ groups:
       repo_password:
       repo_password_command:
       minimum_backup_age: 1435
+      compression: auto
       random_delay_before_backup: 200
       upload_speed: 800 Mib
       download_speed: 0 Mib

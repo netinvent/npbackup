@@ -1,4 +1,4 @@
-conf_version: 3.0.1
+conf_version: 3.0.4
 repos:
   default:
     repo_uri: ./test
@@ -25,7 +25,7 @@ groups:
       paths: []
       source_type:
       tags: []
-      compression: auto
+      pack_size:
       use_fs_snapshot: false
       ignore_cloud_files: true
       exclude_caches: true
@@ -55,6 +55,7 @@ groups:
       repo_password:
       repo_password_command:
       minimum_backup_age: 1435
+      compression: auto
       random_delay_before_backup: 0.1
       upload_speed: 100 Mib
       download_speed: 0 Mib
