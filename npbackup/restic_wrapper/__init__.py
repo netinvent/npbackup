@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025091201"
-__version__ = "2.7.3"
+__build__ = "2025100601"
+__version__ = "2.7.4"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -1128,7 +1128,8 @@ class ResticRunner:
         json_output = self.json_output
         self.json_output = False
         if read_from_stdin:
-            result, output = self.executor(cmd, stdin=sys.stdin.buffer)
+            # We must ensure that encoding is none when reading from stdin so we get to read bytes
+            result, output = self.executor(cmd, stdin=sys.stdin.buffer, encoding=None)
         else:
             result, output = self.executor(cmd)
 
