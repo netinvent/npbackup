@@ -14,6 +14,7 @@ ofunctions.mailer>=1.3.0
 # keep in mind that freesimplegui might higher required python version in the future
 freesimplegui==5.2.0.post1
 reskinner==4.0.0
+pillow
 requests
 ruamel.yaml
 psutil
