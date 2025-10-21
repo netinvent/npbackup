@@ -1,0 +1,12 @@
+
+import { ProgressIndicator } from "std-widgets.slint";
+export component MainWindow inherits Window {
+    width: 200px;
+    height: 25px;
+    background: transparent;
+    ProgressIndicator {
+        width: 90%;
+        height: parent.height;
+        progress: 10%;
+    }
+}

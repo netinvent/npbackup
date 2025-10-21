@@ -1,0 +1,36 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import { CheckBox, StandardListView } from "std-widgets.slint";
+import { WizardStartPage, BackupSource, AboutPage, ControlsPage, EasingsPage, ListViewPage, TableViewPage, TableViewPageAdapter, TextEditPage } from "ui/pages/pages.slint";
+import { GallerySettings } from "ui/gallery_settings.slint";
+import { SideBar } from "ui/side_bar.slint";
+import { Logic } from "ui/logic.slint";
+
+export { TableViewPageAdapter }
+
+
+export component App inherits Window {
+    preferred-width: 700px;
+    preferred-height: 500px;
+    title: @tr("NPBackup Wizard");
+    icon: @image-url("../../resources/npbackup_logo.png");
+
+    pure callback add_source_folder <=> Logic.add_source_folder;
+
+    HorizontalLayout {
+        side-bar := SideBar {
+            title: @tr("Setup steps");
+            model: [@tr("Menu" => "Wizard"), @tr("Menu" => "Backup Source"), @tr("Menu" => "Backup Destination"), @tr("Menu" => "Options"), @tr("Menu" => "Supervision"), @tr("Menu" => "Review"), @tr("Menu" => "About")];
+        }
+
+        if(side-bar.current-item == 0) : WizardStartPage {}
+        if(side-bar.current-item == 1) : BackupSource {}
+        if(side-bar.current-item == 2) : ControlsPage {}
+        if(side-bar.current-item == 3) : ListViewPage {}
+        if(side-bar.current-item == 4) : TableViewPage {}
+        if(side-bar.current-item == 5) : TextEditPage {}
+        if(side-bar.current-item == 6) : EasingsPage {}
+        if(side-bar.current-item == 7) : AboutPage {}
+    }
+}

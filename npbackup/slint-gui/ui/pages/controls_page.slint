@@ -1,0 +1,257 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import { Button, GroupBox, SpinBox, ComboBox, CheckBox, LineEdit, TabWidget, VerticalBox, HorizontalBox,
+    Slider, ProgressIndicator, SpinBox, Switch, Spinner, GridBox, TimePickerPopup, DatePickerPopup } from "std-widgets.slint";
+import { GallerySettings } from "../gallery_settings.slint";
+import { Page } from "page.slint";
+
+export component ControlsPage inherits Page {
+    title: @tr("Destination");
+    show-enable-read-only: true;
+    description: @tr("This page gives an overview of the default widget set provided by Slint. The widgets are available in different styles native, fluent-(dark/light) and material-(dark/light). The widgets can be imported from \"std-widgets.slint\".");
+
+    GroupBox {
+        vertical-stretch: 0;
+        title: @tr("Buttons");
+
+        VerticalLayout {
+            padding: 0px;
+
+            HorizontalBox {
+                alignment: start;
+
+                Button {
+                    text: @tr("Regular Button");
+                    enabled: GallerySettings.widgets-enabled;
+                }
+
+                Button {
+                    text: @tr("Primary Button with Icon");
+                    icon: @image-url("../../thumbsup.png");
+                    enabled: GallerySettings.widgets-enabled;
+                    primary: true;
+                }
+
+                Button {
+                    icon: @image-url("../../thumbsup.png");
+                    enabled: GallerySettings.widgets-enabled;
+                    primary: true;
+                }
+
+                Button {
+                    checkable: true;
+                    text: self.checked ? @tr("ON") : @tr("OFF");
+                    enabled: GallerySettings.widgets-enabled;
+                }
+            }
+
+            HorizontalBox {
+                alignment: start;
+
+                Button {
+                    text: @tr("Primary Button with colorized icon");
+                    icon: @image-url("../../thumbsup.png");
+                    enabled: GallerySettings.widgets-enabled;
+                    colorize-icon: true;
+                    primary: true;
+                }
+            }
+        }
+    }
+
+    GroupBox {
+        title: @tr("CheckBox - ComboBox - Switch");
+        vertical-stretch: 0;
+
+        HorizontalBox {
+            alignment: start;
+            padding: 0px;
+
+            checkbox := CheckBox {
+                text: checkbox.checked ? @tr("(checked)") : @tr("(unchecked)");
+                checked: true;
+                enabled: GallerySettings.widgets-enabled;
+            }
+
+            ComboBox {
+                model: [@tr("Select Something"), @tr("From this"), @tr("Combobox")];
+                enabled: GallerySettings.widgets-enabled;
+            }
+
+            Switch {
+                text: @tr("Flight Mode");
+                checked: true;
+                enabled: GallerySettings.widgets-enabled;
+            }
+        }
+    }
+
+    GroupBox {
+        title: @tr("LineEdit - SpinBox - TimePickerPopup - DatePickerPopup");
+        vertical-stretch: 0;
+        VerticalBox {
+            HorizontalBox {
+                alignment: start;
+                padding: 0px;
+
+                LineEdit {
+                    placeholder-text: @tr("Enter some text");
+                    enabled: GallerySettings.widgets-enabled;
+                    read-only: GallerySettings.widgets-read-only;
+                }
+
+                LineEdit {
+                    placeholder-text: @tr("Password");
+                    enabled: GallerySettings.widgets-enabled;
+                    read-only: GallerySettings.widgets-read-only;
+                    input-type: InputType.password;
+                }
+
+                SpinBox {
+                    vertical-stretch: 0;
+                    value: 42;
+                    enabled: GallerySettings.widgets-enabled;
+                }
+            }
+
+            HorizontalBox {
+                alignment: start;
+                padding: 0px;
+
+                time-picker-button := Button {
+                    text: @tr("Open TimePickerPopup");
+                    enabled: GallerySettings.widgets-enabled;
+                    clicked => {
+                        time-picker.show();
+                    }
+                }
+
+                Button {
+                    text: @tr("Open DatePickerPopup");
+                    enabled: GallerySettings.widgets-enabled;
+                    clicked => {
+                        date-picker.show();
+                    }
+                }
+            }
+        }
+    }
+
+    GroupBox {
+        title: @tr("Slider");
+        vertical-stretch: 0;
+
+        slider := Slider {
+            min-width: 160px;
+            minimum: -100;
+            maximum: 100;
+            value: 42;
+            enabled: GallerySettings.widgets-enabled;
+        }
+    }
+
+    GroupBox {
+        title: @tr("ProgressIndicator | Spinner");
+        vertical-stretch: 0;
+
+        GridBox {
+            spacing: 16px;
+
+            progress-indicator := ProgressIndicator {
+                row: 0;
+                col: 0;
+                min-width: 160px;
+                progress: (slider.value - slider.minimum) / (slider.maximum - slider.minimum);
+                indeterminate: true;
+            }
+
+            Rectangle {
+                row: 0;
+                col: 1;
+                rowspan: 2;
+
+                Spinner {
+                    progress: progress-indicator.progress;
+                    indeterminate: progress-indicator.indeterminate;
+                }
+            }
+
+            CheckBox {
+                row: 1;
+                col: 0;
+                text: @tr("indeterminate");
+                checked <=> progress-indicator.indeterminate;
+                enabled: GallerySettings.widgets-enabled;
+            }
+        }
+    }
+
+    GroupBox {
+        title: @tr("TabWidget");
+
+        TabWidget {
+            Tab {
+                title: @tr("Tab 1");
+
+                VerticalBox {
+                    alignment: start;
+
+                    GroupBox {
+                        title: @tr("Content of tab 1");
+
+                        HorizontalBox {
+                            alignment: start;
+
+                            Button {
+                                text: @tr("Click me");
+                                enabled: GallerySettings.widgets-enabled;
+                            }
+                        }
+                    }
+                }
+            }
+
+            Tab {
+                title: @tr("Tab 2");
+
+                VerticalBox {
+                    alignment: start;
+
+                    GroupBox {
+                        title: @tr("Content of tab 2");
+
+                        VerticalBox {
+                            alignment: start;
+
+                            CheckBox {
+                                text: @tr("Check me");
+                                enabled: GallerySettings.widgets-enabled;
+                            }
+                        }
+                    }
+                }
+            }
+
+            Tab {
+                title: @tr("Tab 3");
+
+                VerticalBox {
+                    Text {
+                        text: @tr("Content of tab 3");
+                    }
+                }
+            }
+        }
+    }
+
+    time-picker := TimePickerPopup {
+        x: (root.width - self.width) / 2;
+        y: (root.height - self.height) / 2;
+    }
+
+    date-picker := DatePickerPopup {
+        x: (root.width - self.width) / 2;
+        y: (root.height - self.height) / 2;
+    }
+}

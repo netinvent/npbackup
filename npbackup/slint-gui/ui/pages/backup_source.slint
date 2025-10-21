@@ -1,0 +1,54 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: MIT
+
+import { HorizontalBox, VerticalBox, StandardTableView, GroupBox, StyleMetrics, StandardListView, Button} from "std-widgets.slint";
+import { GallerySettings } from "../gallery_settings.slint";
+import { Page } from "page.slint";
+import { Logic } from "../logic.slint";
+
+
+export component BackupSource inherits Page {
+    in-out property<string> source_list: 42;
+    pure callback add_source_folder;
+    title: @tr("Backup source");
+
+    //Text {
+    //    text: root.source_list;
+    //}
+
+        HorizontalBox {
+        vertical-stretch: 1;
+        GroupBox {
+            title: @tr("Current sources");
+
+            StandardListView {
+                //vertical-scrollbar-policy: vertical-scrollbar-policy.current-policy;
+               // horizontal-scrollbar-policy: horizontal-scrollbar-policy.current-policy;
+                vertical-stretch: 0;
+                model: [{ text: "/var/lib" }, { text: "/etc" }, { text: "/opt" }];
+                //model: [Image {source: @image-url("../../../../resources/folder_icon.png");} ];
+                /*for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] : HorizontalBox {
+                   Image {
+                        width: 24px;
+                        source: @image-url("../../../../resources/folder_icon.png");
+                   }
+                   Text {
+                        text: @tr("Item {}", i);
+                   }
+                }*/
+                current-item-changed(index) => {
+                    debug("Current item: ", index);
+                    root.source_list = "Current item: " + index;
+                }
+
+            }
+        }
+    }
+    Button{
+        text: @tr("Select source folder");
+        clicked => Logic.add_source_folder();
+    }
+
+    // Spacer
+    Rectangle { }
+}
