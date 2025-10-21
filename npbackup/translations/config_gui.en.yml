@@ -8,6 +8,7 @@ en:
   encrypted_data: Encrypted_Data
   compression: Compression
   backup_paths: Backup paths
+  backup_sources: Backup sources
   use_fs_snapshot: Use VSS snapshots
   ignore_cloud_files: Ignore in-cloud files
   windows_only: Windows only

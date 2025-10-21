@@ -1,0 +1,11 @@
+fr:
+  wizard_start: Début
+  select_backup_sources: Sélectionner les éléments à sauvegarder
+  backup_source: Fichiers & dossiers
+  backup_location: Emplacement de la sauvegarde
+  backup_options: Options de sauvegarde
+  summary: Résumé
+  welcome: Bienvenue dans l'assistant NPBackup
+  welcome_description: Cet assistant vous guidera à travers la configuration initiale de NPBackup.
+
+  thank_you: Merci d'utiliser NPBackup!

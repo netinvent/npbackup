@@ -9,6 +9,7 @@ fr:
   encrypted_data: Donnée_Chiffrée
   compression: Compression
   backup_paths: Chemins à sauvegarder
+  backup_sources: Éléments à sauvegarder
   use_fs_snapshot: Utiliser les instantanés VSS
   ignore_cloud_files: Exclure le fichiers dans le cloud
   windows_only: Windows seulement

@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.helpers"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025070302"
+__build__ = "2025102101"
 
 
 from typing import Tuple, Union
@@ -29,11 +29,12 @@ from resources.customization import (
 from npbackup.core.runner import NPBackupRunner
 from npbackup.__debug__ import _DEBUG
 from npbackup.__env__ import GUI_CHECK_INTERVAL
-from resources.customization import SIMPLEGUI_THEME, OEM_ICON
+from resources.customization import SIMPLEGUI_THEME, OEM_ICON, LOOK_AND_FEEL_TABLE
 
 logger = getLogger()
 
-
+sg.LOOK_AND_FEEL_TABLE["CLEAR"] = LOOK_AND_FEEL_TABLE["CLEAR"]
+sg.LOOK_AND_FEEL_TABLE["DARK"] = LOOK_AND_FEEL_TABLE["DARK"]
 sg.theme(SIMPLEGUI_THEME)
 sg.SetOptions(icon=OEM_ICON)
 

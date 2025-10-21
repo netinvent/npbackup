@@ -31,6 +31,7 @@ import _tkinter
 import npbackup.configuration
 import npbackup.common
 from resources.customization import (
+    LOOK_AND_FEEL_TABLE,
     OEM_STRING,
     OEM_LOGO,
     BG_COLOR_LDR,
@@ -71,7 +72,8 @@ __repo_aware_concurrency = False
 # Also prevents showing errors when config was just changed
 GUI_STATUS_IGNORE_ERRORS = True
 
-
+sg.LOOK_AND_FEEL_TABLE["CLEAR"] = LOOK_AND_FEEL_TABLE["CLEAR"]
+sg.LOOK_AND_FEEL_TABLE["DARK"] = LOOK_AND_FEEL_TABLE["DARK"]
 sg.theme(SIMPLEGUI_THEME)
 sg.SetOptions(icon=OEM_ICON)
 

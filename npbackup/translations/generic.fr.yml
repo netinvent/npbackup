@@ -10,6 +10,10 @@ fr:
   change: Changer
   close: Fermer
   finished: Terminé
+  next: suivant
+  previous: Précédent
+  start: Démarrer
+  finish: Terminer
 
   yes: Oui
   no: Non

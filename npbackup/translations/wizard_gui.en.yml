@@ -1,0 +1,11 @@
+en:
+  wizard_start: Start
+  select_backup_sources: Select backup sources
+  backup_source: Files & folders
+  backup_location: Backup location
+  backup_options: Backup options
+  summary: Summary
+  welcome: Welcome to the NPBackup wizard
+  welcome_description: This wizard will guide you through the initial configuration of NPBackup.
+
+  thank_you: Thank you for using NPBackup!

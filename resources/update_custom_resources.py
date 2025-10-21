@@ -55,6 +55,7 @@ def update_custom_icons():
         "LOADING_ANIMATION": "loading.gif",
         "OEM_LOGO": "oem_logo.png",
         "OEM_ICON": "oem_icon.png",
+        "THEME_CHOOSER_ICON": "theme_chooser_icon.png",
     }
 
     resources_dir = os.path.join(BASEDIR, os.path.pardir, "resources")

@@ -10,6 +10,10 @@ en:
   change: Change
   close: Close
   finished: Finished
+  next: next
+  previous: previous
+  start: Start
+  finish: Finish
 
   yes: Yes
   no: No
