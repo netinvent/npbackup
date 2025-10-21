@@ -42,6 +42,16 @@ combo_boxes = {
         "30days": _t("wizard_gui.retention_30days"),
         "keep_all": _t("wizard_gui.retention_keep_all"),
     },
+    "backends": {
+        "local": _t("config_gui.backend_local"),
+        "sftp": _t("config_gui.backend_sftp"),
+        #"rclone": _t("config_gui.backend_rclone"),
+        "b2": _t("config_gui.backend_b2"),
+        "s3": _t("config_gui.backend_s3"),
+        "azure": _t("config_gui.backend_azure"),
+        "gcs": _t("config_gui.backend_gcs"),
+        "rest": _t("config_gui.backend_rest"),
+    },
 }
 
 byte_units = ["B", "KB", "KiB", "MB", "MiB", "GB", "GiB", "TB", "TiB", "PB", "PiB"]

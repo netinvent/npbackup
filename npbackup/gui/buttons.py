@@ -14,6 +14,8 @@ from PIL import Image, ImageDraw
 import FreeSimpleGUI as sg
 
 
+# balanty stolen from https://github.com/PySimpleGUI/PySimpleGUI/issues/5091
+
 def backgroundPNG(MAX_W, MAX_H, backgroundColor=None):
     background = Image.new("RGBA", (MAX_W, MAX_H), color=backgroundColor)
     draw = ImageDraw.Draw(background)
@@ -75,11 +77,17 @@ def RoundedButton(button_text=' ', corner_radius=0, button_type=sg.BUTTON_TYPE_R
                   auto_size_button=None, button_color=None, disabled_button_color=None, highlight_colors=None, 
                   mouseover_colors=(None, None), use_ttk_buttons=None, font=None, bind_return_key=False, focus=False, 
                   pad=None, key=None, right_click_menu=None, expand_x=False, expand_y=False, visible=True, 
-                  metadata=None):
+                  metadata=None, btn_size=(None, None)):
 
-    button_img = backgroundPNG(50*5, 50*5, button_color[1])
+    if btn_size != (None, None):
+        btn_width: int = btn_size[0]
+        btn_height: int = btn_size[1]
+    else:
+        btn_width: int = 100
+        btn_height: int = 30
+    button_img = backgroundPNG(btn_width*5, btn_height*5, button_color[1])
     button_img[0] = roundCorners(button_img[0], 30*5)
-    button_img[0] = button_img[0].resize((50, 50), resample=Image.LANCZOS)
+    button_img[0] = button_img[0].resize((btn_width, btn_height), resample=Image.LANCZOS)
     btn_img = image_to_data(button_img[0])
     if button_color is None:
         button_color = sg.theme_button_color()

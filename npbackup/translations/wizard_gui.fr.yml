@@ -3,9 +3,18 @@ fr:
   select_backup_sources: Sélectionner les éléments à sauvegarder
   backup_source: Fichiers & dossiers
   backup_location: Emplacement de la sauvegarde
+  backend: Backend de sauvegarde
   backup_options: Options de sauvegarde
   summary: Résumé
-  welcome: Bienvenue dans l'assistant NPBackup
-  welcome_description: Cet assistant vous guidera à travers la configuration initiale de NPBackup.
+  welcome: Configuration initiale
+  welcome_description: Bienvenue, cet assistant vous guidera à travers la configuration initiale de NPBackup.
 
   thank_you: Merci d'utiliser NPBackup!
+
+  step_1: Eléments à sauvegarder
+  step_2: Emplacement de la sauvegarde
+  step_3: Configurer les options de sauvegarde
+  step_4: Revoir le résumé
+  step_5: Finaliser la configuration
+
+

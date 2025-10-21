@@ -3,9 +3,19 @@ en:
   select_backup_sources: Select backup sources
   backup_source: Files & folders
   backup_location: Backup location
+  backend: Backup backend
   backup_options: Backup options
   summary: Summary
-  welcome: Welcome to the NPBackup wizard
-  welcome_description: This wizard will guide you through the initial configuration of NPBackup.
+  welcome: Wizard setup
+  welcome_description: This setup will guide you through the initial configuration of NPBackup.
 
   thank_you: Thank you for using NPBackup!
+
+  step_1: Select backup sources
+  step_2: Select backup location
+  step_3: Configure backup options
+  step_4: Review summary
+  step_5: Finalize setup
+
+
+

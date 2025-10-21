@@ -216,3 +216,12 @@ fr:
   test_email: Envoyer un email de test
   test_email_success: Email de test envoyé avec succès
   test_email_failure: Échec de l'envoi du test email, veuillez consulter les journaux pour plus de détails
+
+  backend_local: Stockage local
+  backend_sftp: SFTP
+  backend_rclone: Rclone
+  backend_b2: Backblaze B2
+  backend_s3: Amazon / Compatible S3
+  backend_azure: Microsoft Azure Blob Storage
+  backend_gcs: Google Cloud Storage
+  backend_rest: Serveur HTTP Restic
