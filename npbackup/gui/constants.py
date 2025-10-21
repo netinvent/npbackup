@@ -45,7 +45,7 @@ combo_boxes = {
     "backends": {
         "local": _t("config_gui.backend_local"),
         "sftp": _t("config_gui.backend_sftp"),
-        #"rclone": _t("config_gui.backend_rclone"),
+        # "rclone": _t("config_gui.backend_rclone"),
         "b2": _t("config_gui.backend_b2"),
         "s3": _t("config_gui.backend_s3"),
         "azure": _t("config_gui.backend_azure"),

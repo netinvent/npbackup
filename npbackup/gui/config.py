@@ -95,8 +95,6 @@ def config_gui(full_config: dict, config_file: str):
         suppress_key_guessing=True,
     )
 
-
-
     def get_objects() -> List[str]:
         """
         Adds repos and groups in a list for combobox

@@ -117,7 +117,14 @@ wizard_layouts = {
     "wizard_layout_2": [
         [sg.Text(_t("wizard_gui.backup_location"), font=("Helvetica", 16))],
         [
-            sg.Text(_t("wizard_gui.backend"), size=(20, 1)), sg.Combo(list(combo_boxes["backends"].values()), default_value=next(iter(combo_boxes["backends"])), key="-BACKEND-TYPE-", enable_events=True, size=(40, 1))
+            sg.Text(_t("wizard_gui.backend"), size=(20, 1)),
+            sg.Combo(
+                list(combo_boxes["backends"].values()),
+                default_value=next(iter(combo_boxes["backends"])),
+                key="-BACKEND-TYPE-",
+                enable_events=True,
+                size=(40, 1),
+            ),
         ],
     ],
     "wizard_layout_3": [
@@ -213,7 +220,6 @@ for i in range(1, len(wizard_layouts)):
     )
 
 
-
 wizard_layout = [
     [
         sg.Image(OEM_LOGO),
@@ -227,14 +233,35 @@ wizard_layout = [
         sg.Text(_t("wizard_gui.welcome_description")),
     ],
     [
-        sg.Column(wizard_breadcrumbs, element_justification="L", vertical_alignment="top"),
-        sg.Column([wizard_tabs], expand_x=True, expand_y=True, vertical_alignment="top"),
+        sg.Column(
+            wizard_breadcrumbs, element_justification="L", vertical_alignment="top"
+        ),
+        sg.Column(
+            [wizard_tabs], expand_x=True, expand_y=True, vertical_alignment="top"
+        ),
     ],
     [
-        sg.Column([[
-            RoundedButton(_t("generic.cancel"), key="-PREVIOUS-", button_color=(TXT_COLOR_LDR, BG_COLOR_LDR), border_width=0),
-            RoundedButton(_t("generic.start"), key="-NEXT-", button_color=(TXT_COLOR_LDR, BG_COLOR_LDR), border_width=0),
-        ],], element_justification="C", expand_x=True, expand_y=False)
+        sg.Column(
+            [
+                [
+                    RoundedButton(
+                        _t("generic.cancel"),
+                        key="-PREVIOUS-",
+                        button_color=(TXT_COLOR_LDR, BG_COLOR_LDR),
+                        border_width=0,
+                    ),
+                    RoundedButton(
+                        _t("generic.start"),
+                        key="-NEXT-",
+                        button_color=(TXT_COLOR_LDR, BG_COLOR_LDR),
+                        border_width=0,
+                    ),
+                ],
+            ],
+            element_justification="C",
+            expand_x=True,
+            expand_y=False,
+        )
     ],
 ]
 
@@ -268,9 +295,7 @@ def start_wizard():
                     button_color=("#FAFAFA", None)
                 )
         wizard[f"-TAB{active_number}-"].Update(visible=True)
-        wizard[f"-BREADCRUMB-{active_number}-"].Update(
-            button_color=("#3F2DCB", None)
-        )
+        wizard[f"-BREADCRUMB-{active_number}-"].Update(button_color=("#3F2DCB", None))
 
     wizard.finalize()
     set_active_tab(1)
