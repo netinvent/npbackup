@@ -62,7 +62,6 @@ wizard_layouts = {
                 "",  # _t("generic.add_files"
                 target="--ADD-PATHS-FILE--",
                 key="--ADD-PATHS-FILE-BUTTON--",
-                border_width=0,
                 # button_color=(None, sg.LOOK_AND_FEEL_TABLE[SIMPLEGUI_THEME]["BACKGROUND"])
             ),
             sg.Input(visible=False, key="--ADD-PATHS-FOLDER--", enable_events=True),
@@ -70,7 +69,6 @@ wizard_layouts = {
                 "",  # _t("generic.add_folder"),
                 target="--ADD-PATHS-FOLDER--",
                 key="--ADD-PATHS-FOLDER-BUTTON--",
-                border_width=0,
                 # button_color=(None, sg.LOOK_AND_FEEL_TABLE[SIMPLEGUI_THEME]["BACKGROUND"])
             ),
             sg.Button(
