@@ -28,7 +28,7 @@ from ofunctions.process import kill_childs
 from ofunctions.threading import threaded
 from ofunctions.misc import BytesConverter
 import FreeSimpleGUI as sg
-from psg_reskinner import animated_reskin, reskin
+from reskinner import reskin
 import _tkinter
 import npbackup.configuration
 import npbackup.common
@@ -52,22 +52,6 @@ from resources.customization import (
     OEM_ICON,
     SHORT_PRODUCT_NAME,
     THEME_CHOOSER_ICON,
-    # WIZARD
-    ADD_FOLDER,
-    ADD_FILE,
-    ADD_PROPERTY,
-    REMOVE_PROPERTY,
-    HYPERV,
-    KVM,
-    WINDOWS_SYSTEM,
-    BACKEND_LOCAL,
-    BACKEND_SFTP,
-    BACKEND_B2,
-    BACKEND_S3,
-    BACKEND_REST,
-    BACKEND_WASABI,
-    BACKEND_GOOGLE,
-    BACKEND_AZURE
 )
 from npbackup.gui.config import config_gui, ask_manager_password
 from npbackup.gui.operations import operations_gui
@@ -110,7 +94,6 @@ wizard_layout_2 = [
                     "", # _t("generic.add_files"
                     target="--ADD-PATHS-FILE--",
                     key="--ADD-PATHS-FILE-BUTTON--",
-                    image_data=ADD_FILE,
                     border_width=0,
                     #button_color=(None, sg.LOOK_AND_FEEL_TABLE[SIMPLEGUI_THEME]["BACKGROUND"])
                 ),
@@ -119,39 +102,33 @@ wizard_layout_2 = [
                     "", # _t("generic.add_folder"),
                     target="--ADD-PATHS-FOLDER--",
                     key="--ADD-PATHS-FOLDER-BUTTON--",
-                    image_data=ADD_FOLDER,
                     border_width=0,
                     #button_color=(None, sg.LOOK_AND_FEEL_TABLE[SIMPLEGUI_THEME]["BACKGROUND"])
                 ),
                 sg.Button(
                     "",  # _t("generic.add_manually"),
                     key="--ADD-PATHS-MANUALLY--",
-                    image_source=ADD_PROPERTY,
                     border_width=0,
                     #button_color=(None, sg.LOOK_AND_FEEL_TABLE[SIMPLEGUI_THEME]["BACKGROUND"])
                 ),
                 sg.Button(
                     "", # _t("generic.remove_selected"),
                     key="--REMOVE-PATHS--",
-                    image_data=REMOVE_PROPERTY,
                     border_width=0,
                     #button_color=(None, sg.LOOK_AND_FEEL_TABLE[SIMPLEGUI_THEME]["BACKGROUND"])
                 ),
                 sg.Button(
                     "",
-                    image_data=WINDOWS_SYSTEM,
                     key="-ADD-WINDOWS-SYSTEM-",
                     border_width=0,
                 ),
                 sg.Button(
                     "",
-                    image_data=HYPERV,
                     key="-ADD-HYPERV-",
                     border_width=0,
                 ),
                 sg.Button(
                     "",
-                    image_data=KVM,
                     key="-ADD-KVM-",
                     border_width=0,
                 ),
@@ -176,10 +153,10 @@ wizard_layout_3 = [
     ],
     [
         sg.Input(visible=False, key="--ADD-DESTINATION-FOLDER--", enable_events=True),
-        sg.FolderBrowse("", image_data=BACKEND_LOCAL, key="-BACKEND-LOCAL", border_width=0, target="--ADD-DESTINATION-FOLDER--"),
-        sg.Button(image_data=BACKEND_SFTP, key="-BACKEND-SFTP", border_width=0),
-        sg.Button(image_data=BACKEND_B2, key="-BACKEND-B2", border_width=0),
-        sg.Button(image_data=BACKEND_S3, key="-BACKEND-S3", border_width=0),
+        sg.FolderBrowse("", key="-BACKEND-LOCAL", border_width=0, target="--ADD-DESTINATION-FOLDER--"),
+        sg.Button(key="-BACKEND-SFTP", border_width=0),
+        sg.Button(key="-BACKEND-B2", border_width=0),
+        sg.Button(key="-BACKEND-S3", border_width=0),
     ],
     [
         sg.Text("      HDD        "),
@@ -188,10 +165,10 @@ wizard_layout_3 = [
         sg.Text("        S3        "),
     ],
     [
-        sg.Button(image_data=BACKEND_REST, key="-BACKEND-REST", border_width=0),
-        sg.Button(image_data=BACKEND_GOOGLE, key="-BACKEND-GOOGLE", border_width=0),
-        sg.Button(image_data=BACKEND_AZURE, key="-BACKEND-AZURE", border_width=0),
-        sg.Button(image_data=BACKEND_WASABI, key="-BACKEND-WASABI", border_width=0),
+        sg.Button(key="-BACKEND-REST", border_width=0),
+        sg.Button(key="-BACKEND-GOOGLE", border_width=0),
+        sg.Button(key="-BACKEND-AZURE", border_width=0),
+        sg.Button(key="-BACKEND-WASABI", border_width=0),
     ],
     [
         sg.Text("       REST       "),
@@ -307,7 +284,7 @@ def start_wizard():
 
     def _reskin_job():
         nonlocal CURRENT_THEME
-        animated_reskin(
+        reskin(
             window=wizard,
             new_theme=CURRENT_THEME,
             theme_function=sg.theme,
