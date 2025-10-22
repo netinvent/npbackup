@@ -32,7 +32,7 @@ from npbackup.key_management import AES_KEY, EARLIER_AES_KEY, IS_PRIV_BUILD, get
 from npbackup.__version__ import __version__ as MAX_CONF_VERSION
 
 MIN_MIGRATABLE_CONF_VERSION = "3.0.0"
-MIN_CONF_VERSION = "3.1.0"
+CURRENT_CONF_VERSION = "3.1.0-dev"
 
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
@@ -898,6 +898,14 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
                 f"{object_type} {object_name} has no compression, skipping migration"
             )
         return full_config
+    
+    def _migrate_presets_3_0_4_to_3_1_0(
+        full_config: dict
+    ):
+        if full_config.g("presets") is None:
+            full_config.s("presets", get_default_config().g("presets"))
+            logger.info("Migrated presets to new config structure")
+        return full_config
 
     def _apply_migrations(
         full_config: dict,
@@ -918,6 +926,9 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
 
     for group in get_group_list(full_config):
         _apply_migrations(full_config, group, "groups")
+
+    if version_parse(old_version) < version_parse("3.1.0"):
+        full_config = _migrate_presets_3_0_4_to_3_1_0(full_config)
 
     full_config.s("conf_version", new_version)
     return full_config
@@ -943,14 +954,19 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
                     return False
                 if conf_version < version_parse(
                     MIN_MIGRATABLE_CONF_VERSION
-                ) or conf_version > version_parse(MAX_CONF_VERSION):
+                ):
                     logger.critical(
-                        f"Config file version {str(conf_version)} is not in required version range min={MIN_MIGRATABLE_CONF_VERSION}, max={MAX_CONF_VERSION}"
+                        f"Config file {config_file} version {str(conf_version)} is not in required version range min={MIN_MIGRATABLE_CONF_VERSION}"
                     )
                     return False
-                if conf_version < version_parse(MIN_CONF_VERSION):
+                if conf_version > version_parse(MAX_CONF_VERSION):
+                    logger.critical(
+                        f"Config file {config_file} version {str(conf_version)} is not in required version range max={MAX_CONF_VERSION}. We will try to load it nevertheless."
+                    )
+                    
+                if conf_version < version_parse(CURRENT_CONF_VERSION):
                     full_config = _migrate_config_dict(
-                        full_config, str(conf_version), MIN_CONF_VERSION
+                        full_config, str(conf_version), CURRENT_CONF_VERSION
                     )
                     logger.info("Writing migrated config file")
                     save_config(config_file, full_config)
