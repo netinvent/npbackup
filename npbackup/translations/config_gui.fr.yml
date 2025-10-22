@@ -36,8 +36,8 @@ fr:
 
   minimum_backup_age: Délai minimal entre deux sauvegardes
   random_delay_before_backup: Délai aléatoire avant la sauvegarde
-  backup_repo_uri: URI / chemin local dépot de sauvegarde
-  backup_repo_password: Mot de passe (chiffrement) dépot de sauvegarde
+  backup_repo_uri: URI / chemin dépot de sauvegarde
+  backup_repo_password: Mot de passe dépot de sauvegarde
   backup_repo_password_command: Commande qui retourne le mot de passe de chiffrement dépot
   upload_speed: Vitesse limite de téléversement (KB/s)
   download_speed: Vitesse limite de téléchargement (KB/s)

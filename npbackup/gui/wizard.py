@@ -43,7 +43,6 @@ from npbackup.gui.buttons import RoundedButton
 import npbackup.configuration
 import sv_ttk
 
-
 CONFIG_FILE = "npbackup.conf"  # WIP override via --config-file
 sg.LOOK_AND_FEEL_TABLE["CLEAR"] = LOOK_AND_FEEL_TABLE["CLEAR"]
 sg.LOOK_AND_FEEL_TABLE["DARK"] = LOOK_AND_FEEL_TABLE["DARK"]
@@ -86,7 +85,7 @@ wizard_layouts = {
     "wizard_layout_1": [
         [
             sg.Text(
-                textwrap.fill(f"{_t('wizard_gui.select_backup_sources')}"),
+                textwrap.fill(f"{_t('wizard_gui.step_1')}"),
                 size=(40, 1),
                 expand_x=False,
                 font=("Helvetica", 16),
@@ -101,42 +100,64 @@ wizard_layouts = {
         ],
         [
             sg.Text(
-                textwrap.fill(f"{_t('wizard_gui.select_backup_sources_description')}"),
-                size=(80, 2),
-                expand_x=False,
-                justification="L",
+                _t('wizard_gui.step_1_description'),
+                size=(80, 1),
             ),
         ],
         [
             sg.Tree(
                 sg.TreeData(),
                 key="backup_opts.paths",
-                headings=["Type", "Details"],
-                # col0_heading=_t("config_gui.backup_sources"),
+                headings=[],
+                col0_heading=_t("config_gui.backup_sources"),
                 expand_x=True,
                 expand_y=True,
                 header_text_color=TXT_COLOR_LDR,
                 header_background_color=BG_COLOR_LDR,
             )
         ],
+        [
+            sg.Push(), RoundedButton(_t("generic.remove_selected"), key="-REMOVE-SOURCE-", button_color=(TXT_COLOR_LDR, BG_COLOR_LDR),
+                border_width=0, btn_size=(150, 30))
+        ]
     ],
     "wizard_layout_2": [
         [sg.Text(_t("wizard_gui.backup_location"), font=("Helvetica", 16))],
+                [
+            sg.Text(
+                _t('wizard_gui.step_2_description'),
+                size=(80, 1),
+            ),
+        ],
         [
             sg.Text(_t("wizard_gui.backend"), size=(20, 1)),
             sg.Combo(
                 list(combo_boxes["backends"].values()),
-                default_value=next(iter(combo_boxes["backends"])),
+                default_value=_t("wizard_gui.select_backend"),
                 key="-BACKEND-TYPE-",
                 enable_events=True,
                 size=(40, 1),
             ),
         ],
+        [
+            sg.Text(_t("config_gui.backup_repo_uri"), size=(20, 1), key="-BACKEND-URI-LABEL-", visible=False),
+            sg.Input(key="-BACKEND-URI-", size=(45, 1), visible=False, background_color=sg.theme_background_color()),
+        ],
+        [
+            sg.Text(_t("config_gui.backup_repo_password"), size=(20, 1), key="-BACKEND-REPO-PASSWORD-LABEL-", visible=False),
+            sg.Input(key="-BACKEND-REPO-PASSWORD-", size=(45, 1), visible=False, background_color=sg.theme_background_color(), password_char="*"),
+        ]
     ],
     "wizard_layout_3": [
         [sg.Text(_t("wizard_gui.step_3"), font=("Helvetica", 16))],
         [
-            sg.Input("YYYY/MM/DD", key="-FIRST-BACKUP-DATE-", size=(12, 1)),
+            sg.Text(
+                _t('wizard_gui.step_3_description'),
+                size=(80, 1),
+            ),
+        ],
+        [
+            sg.Input("YYYY/MM/DD", key="-FIRST-BACKUP-DATE-", size=(12, 1), background_color=sg.theme_background_color()),
             sg.Combo(
                 values=[h for h in range(0, 24)],
                 default_value=0,
@@ -158,6 +179,13 @@ wizard_layouts = {
         ],
     ],
     "wizard_layout_4": [
+        [sg.Text(_t("wizard_gui.step_4"), font=("Helvetica", 16))],
+        [
+            sg.Text(
+                _t('wizard_gui.step_4_description'),
+                size=(80, 1),
+            ),
+        ],
         [
             sg.Column(
                 [
@@ -201,7 +229,13 @@ wizard_layouts = {
         ],
     ],
     "wizard_layout_5": [
-        [sg.T(_t("wizard_gui.retention_settings"), font=("Helvetica", 16))],
+        [sg.Text(_t("wizard_gui.step_5"), font=("Helvetica", 16))],
+        [
+            sg.Text(
+                _t('wizard_gui.step_5_description'),
+                size=(80, 1),
+            ),
+        ],
         [
             sg.Combo(
                 values=retention_policies,
@@ -212,7 +246,13 @@ wizard_layouts = {
         ],
     ],
     "wizard_layout_6": [
-        [sg.Text(_t("wizard_gui.end_user_experience"), font=("Helvetica", 16))],
+        [sg.Text(_t("wizard_gui.step_6"), font=("Helvetica", 16))],
+        [
+            sg.Text(
+                _t('wizard_gui.step_6_description'),
+                size=(80, 1),
+            ),
+        ],
         [
             sg.Checkbox(
                 _t("wizard_gui.disable_config_button"),
@@ -222,13 +262,19 @@ wizard_layouts = {
         ],
     ],
     "wizard_layout_7": [
-        [sg.Text(_t("wizard_gui.end_user_experience"), font=("Helvetica", 16))],
+        [sg.Text(_t("wizard_gui.step_7"), font=("Helvetica", 16))],
+        [
+            sg.Text(
+                _t('wizard_gui.step_7_description'),
+                size=(80, 1),
+            ),
+        ],
     ],
 }
 
 wizard_tabs = []
 wizard_breadcrumbs = []
-for i in range(1, len(wizard_layouts)):
+for i in range(1, len(wizard_layouts) + 1):
     wizard_tabs.append(
         sg.Column(
             wizard_layouts[f"wizard_layout_{i}"],
@@ -253,14 +299,19 @@ for i in range(1, len(wizard_layouts)):
 wizard_layout = [
     [
         sg.Image(OEM_LOGO),
-        sg.Push(),
-        sg.Image(source=THEME_CHOOSER_ICON, key="-THEME-", enable_events=True),
-    ],
-    [
-        sg.Text(_t("wizard_gui.welcome"), font=("Helvetica", 16)),
-    ],
-    [
-        sg.Text(_t("wizard_gui.welcome_description")),
+        sg.Column(
+            [
+
+            [
+                sg.Text(_t("wizard_gui.welcome"), font=("Helvetica", 16)),
+            ],
+            [
+                sg.Text(_t("wizard_gui.welcome_description")),
+            ],
+            ]
+        )
+        # Don't allow skins on rounded buttons that messes up the corners
+        # sg.Image(source=THEME_CHOOSER_ICON, key="-THEME-", enable_events=True),
     ],
     [
         sg.Column(
@@ -305,6 +356,7 @@ def start_wizard():
         layout=wizard_layout,
         size=(900, 600),
         element_justification="L",
+        #ttk_theme="xpnative"
     )
 
     def _reskin_job():
@@ -330,13 +382,15 @@ def start_wizard():
     wizard.finalize()
     # Widget theming from https://github.com/rdbende/Sun-Valley-ttk-theme?tab=readme-ov-file
     sv_ttk.set_theme("light")
+
     set_active_tab(1)
 
     while True:
         event, values = wizard.read()
-        print(event, values)
         if event == sg.WIN_CLOSED or event == _t("generic.cancel"):
             break
+        """
+        # Don't allow skins on rounded buttons that messes up the corners
         if event == "-THEME-":
             if CURRENT_THEME != "DARK":
                 CURRENT_THEME = "DARK"
@@ -344,6 +398,7 @@ def start_wizard():
                 CURRENT_THEME = "CLEAR"
             _reskin_job()
             continue
+        """
         if event == "-NEXT-":
             if current_tab < NUMBER_OF_TABS:
                 current_tab += 1
@@ -400,6 +455,18 @@ def start_wizard():
                         tree.delete(node)
                     tree.insert("", node, node, node, icon=icon)
                 wizard["backup_opts.paths"].update(values=tree)
+        if event == "-REMOVE-SOURCE-":
+            selected_items = values["backup_opts.paths"]
+            tree = backup_paths_tree
+            for item in selected_items:
+                tree.delete(item)
+            wizard["backup_opts.paths"].update(values=tree)
+        if event == "-BACKEND-TYPE-":
+            wizard["-BACKEND-URI-LABEL-"].update(visible=True)
+            wizard["-BACKEND-URI-"].update(visible=True)
+            wizard["-BACKEND-REPO-PASSWORD-LABEL-"].update(visible=True)
+            wizard["-BACKEND-REPO-PASSWORD-"].update(visible=True)
+            wizard["-BACKEND-URI-"].Update("")
     wizard.close()
 
 

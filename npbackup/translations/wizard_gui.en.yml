@@ -12,8 +12,12 @@ en:
   thank_you: Thank you for using NPBackup!
 
   step_1: Select backup sources
+  step_1_description: Choose the objects you want to back up
   step_2: Select backup location
-  step_3: Configure backup options
+  step_2_description: Choose where you want to store your backups
+  select_backend: Select backend
+  step_3: Schedule
+  step_3_description: Configure backup scheduling options
   step_4: Review summary
   step_5: Finalize setup
 

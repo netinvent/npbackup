@@ -12,8 +12,12 @@ fr:
   thank_you: Merci d'utiliser NPBackup!
 
   step_1: Eléments à sauvegarder
+  step_1_description: Choisissez les éléments que vous souhaitez sauvegarder
   step_2: Emplacement de la sauvegarde
-  step_3: Configurer les options de sauvegarde
+  step_2_description: Choisissez où vous souhaitez stocker vos sauvegardes
+  select_backend: Sélectionner le backend
+  step_3: Planification
+  step_3_description: Configurez les options de planification des sauvegardes
   step_4: Revoir le résumé
   step_5: Finaliser la configuration
 
