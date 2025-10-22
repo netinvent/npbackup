@@ -7,8 +7,8 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025100401"
-__version__ = "npbackup 3.0.4+"
+__build__ = "2025102201"
+__version__ = "npbackup 3.1.0+"
 
 
 from typing import Tuple, Optional, List, Any, Union
@@ -32,7 +32,7 @@ from npbackup.key_management import AES_KEY, EARLIER_AES_KEY, IS_PRIV_BUILD, get
 from npbackup.__version__ import __version__ as MAX_CONF_VERSION
 
 MIN_MIGRATABLE_CONF_VERSION = "3.0.0"
-MIN_CONF_VERSION = "3.0.4"
+MIN_CONF_VERSION = "3.1.0"
 
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
@@ -248,6 +248,31 @@ empty_config_dict = {
         "auto_upgrade_group": "${MACHINE_GROUP}",
         "full_concurrency": False,  # Allow multiple npbackup instances to run at the same time
         "repo_aware_concurrency": False,  # Allow multiple npbackup instances to run at the same time, but only for different repos
+    },
+    "presets": {
+        "adds_to_existing": True,
+        "replaces_existing": False,
+        "retention_policies": {
+            "gfs": {
+                "keep_daily": 30,
+                "keep_weekly": 4,
+                "keep_monthly": 12,
+                "keep_yearly": 3,
+                "keep_within": True,
+                "group_by_host": True,
+                "group_by_tags": True,
+                "group_by_paths": False,
+                "ntp_server": None,
+                "keep_tags": [],
+                "apply_on_tags": [],
+            }
+        },
+    },
+    "destinations": {
+        "default_destination": {
+            "repo_uri": None,
+            "repo_password": None,
+        }
     },
 }
 
@@ -946,6 +971,8 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
 
 
 def load_config(config_file: Path) -> Optional[dict]:
+    if not isinstance(config_file, Path):
+        config_file = Path(config_file)
     full_config = _load_config_file(config_file)
     if not full_config:
         return None

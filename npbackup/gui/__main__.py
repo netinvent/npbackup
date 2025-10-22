@@ -60,6 +60,7 @@ from npbackup.__version__ import version_dict, version_string
 from npbackup.__debug__ import _DEBUG, _NPBACKUP_ALLOW_AUTOUPGRADE_DEBUG
 from npbackup.restic_wrapper import ResticRunner
 from npbackup.restic_wrapper import schema
+import sv_ttk
 
 
 logger = getLogger()
@@ -1128,10 +1129,11 @@ def _main_gui(viewer_mode: bool):
         alpha_channel=1.0,
         default_button_element_size=(16, 1),
         right_click_menu=right_click_menu,
-        finalize=True,
+        use_ttk_buttons=True,
     )
-
-    # Auto reisze table to window size
+    window.finalize()
+    sv_ttk.set_theme("light")
+    # Auto resize table to window size
     window["snapshot-list"].expand(True, True)
 
     window.read(timeout=0.01)
@@ -1140,7 +1142,8 @@ def _main_gui(viewer_mode: bool):
 
     if repo_config:
         try:
-            current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
+            # current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
+            raise TypeError  # WIP
         except (TypeError, ValueError):
             current_state = None
             backup_tz = None

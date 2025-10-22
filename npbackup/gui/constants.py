@@ -39,7 +39,8 @@ combo_boxes = {
     },
     "retention_options": {
         "GFS": _t("wizard_gui.retention_gfs"),
-        "30days": _t("wizard_gui.retention_30days"),
+        "14days": _t("wizard_gui.retention_14_days"),
+        "30days": _t("wizard_gui.retention_30_days"),
         "keep_all": _t("wizard_gui.retention_keep_all"),
     },
     "backends": {

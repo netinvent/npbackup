@@ -41,6 +41,7 @@ from resources.customization import (
 from npbackup.task import create_scheduled_task
 from npbackup.gui.helpers import quick_close_simplegui_window
 from npbackup.gui.constants import combo_boxes, byte_units
+import sv_ttk
 
 logger = getLogger()
 
@@ -2628,6 +2629,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
     if config_file:
         window.set_title(f"Configuration - {config_file}")
 
+    # sv_ttk.set_theme("light")
     while True:
         event, values = window.read()
         # Get object type for various delete operations
@@ -2822,6 +2824,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 tree = env_variables_tree
                 option_key = "env.env_variables"
 
+            # It's --ADD- and not --ADD-- since we include --ADD-*-- STYLE events
             if event.startswith("--ADD-"):
                 icon = TREE_ICON
                 if "ENV-VARIABLE" in event or "ENCRYPTED-ENV-VARIABLE" in event:

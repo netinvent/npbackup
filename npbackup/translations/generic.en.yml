@@ -71,6 +71,7 @@ en:
   bad_file: Bad file
   file_does_not_exist: File does not exist
 
+  add: Add
   add_files: Add files
   add_folder: Add folder
   add_manually: Add manually

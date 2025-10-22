@@ -111,7 +111,8 @@ def RoundedButton(
     metadata=None,
     btn_size=(None, None),
 ):
-
+    if button_color is None:
+        button_color = sg.theme_button_color()
     if btn_size != (None, None):
         btn_width: int = btn_size[0]
         btn_height: int = btn_size[1]

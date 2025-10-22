@@ -17,5 +17,12 @@ en:
   step_4: Review summary
   step_5: Finalize setup
 
+  add_system: Add Windows system
+  add_hyper_v: Add Hyper-V virtual machines
+  add_kvm: Add KVM virtual machines
 
+  retention_gfs: GFS Retention
+  retention_30_days: 30 Days Retention
+  retention_14_days: 14 Days Retention
+  retention_keep_all: Keep All Backups
 

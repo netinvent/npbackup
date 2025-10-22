@@ -71,6 +71,7 @@ fr:
   bad_file: Fichier erroné
   file_does_not_exist: Fichier inexistant
 
+  add: Ajouter
   add_files: Ajouter fichiers
   add_folder: Ajouter dossier
   add_manually: Ajouter manuellement

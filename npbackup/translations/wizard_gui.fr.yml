@@ -17,4 +17,11 @@ fr:
   step_4: Revoir le résumé
   step_5: Finaliser la configuration
 
+  add_system: Ajouter un système Windows
+  add_hyper_v: Ajouter des machines virtuelles Hyper-V
+  add_kvm: Ajouter des machines virtuelles KVM
 
+  retention_gfs: Rétention GFS
+  retention_30_days: Rétention de 30 jours
+  retention_14_days: Rétention de 14 jours
+  retention_keep_all: Conserver toutes les sauvegardes

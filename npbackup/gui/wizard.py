@@ -34,77 +34,85 @@ from resources.customization import (
     TXT_COLOR_LDR,
     SIMPLEGUI_THEME,
     THEME_CHOOSER_ICON,
+    TREE_ICON,
 )
 
 from npbackup.gui.constants import combo_boxes, byte_units
-from npbackup.core.i18n_helper import _t
+from npbackup.core.i18n_helper import _t, _locale
 from npbackup.gui.buttons import RoundedButton
+import npbackup.configuration
+import sv_ttk
 
 
+CONFIG_FILE = "npbackup.conf"  # WIP override via --config-file
 sg.LOOK_AND_FEEL_TABLE["CLEAR"] = LOOK_AND_FEEL_TABLE["CLEAR"]
 sg.LOOK_AND_FEEL_TABLE["DARK"] = LOOK_AND_FEEL_TABLE["DARK"]
 sg.theme(SIMPLEGUI_THEME)
 logger = getLogger()
 
+add_source_menu = [
+    "-ADD-SOURCE-",
+    [
+        _t("generic.add_files"),
+        _t("generic.add_folder"),
+        _t("wizard_gui.add_system"),
+        _t("wizard_gui.add_hyper_v"),
+        _t("wizard_gui.add_kvm"),
+    ],
+]
+
+date_options = {
+    "format": "%Y-%m-%d",
+    "default_date_m_d_y": (
+        datetime.now().month,
+        datetime.now().day,
+        datetime.now().year,
+    ),
+    "close_when_date_chosen": True,
+}
+
+conf = npbackup.configuration.load_config(CONFIG_FILE)
+if not conf:
+    conf = npbackup.configuration.get_default_config()
+try:
+    retention_policies = list(conf.g("presets.retention_policies").keys())
+except Exception:
+    retention_policies = {}
+
+backup_paths_tree = sg.TreeData()
+# retention_policies = list(combo_boxes["retention_options"].values())
+
 wizard_layouts = {
     "wizard_layout_1": [
         [
             sg.Text(
-                textwrap.fill(f"{_t('wizard_gui.select_backup_sources')}", 70),
-                size=(None, None),
-                expand_x=True,
-                justification="c",
+                textwrap.fill(f"{_t('wizard_gui.select_backup_sources')}"),
+                size=(40, 1),
+                expand_x=False,
+                font=("Helvetica", 16),
+            ),
+            sg.Push(),
+            sg.ButtonMenu(
+                _t("generic.add"),
+                menu_def=add_source_menu,
+                key="-ADD-SOURCE-MENU-",
+                button_color=(TXT_COLOR_LDR, BG_COLOR_LDR),
             ),
         ],
         [
-            sg.Input(visible=False, key="--ADD-PATHS-FILE--", enable_events=True),
-            sg.FilesBrowse(
-                "",  # _t("generic.add_files"
-                target="--ADD-PATHS-FILE--",
-                key="--ADD-PATHS-FILE-BUTTON--",
-                # button_color=(None, sg.LOOK_AND_FEEL_TABLE[SIMPLEGUI_THEME]["BACKGROUND"])
-            ),
-            sg.Input(visible=False, key="--ADD-PATHS-FOLDER--", enable_events=True),
-            sg.FolderBrowse(
-                "",  # _t("generic.add_folder"),
-                target="--ADD-PATHS-FOLDER--",
-                key="--ADD-PATHS-FOLDER-BUTTON--",
-                # button_color=(None, sg.LOOK_AND_FEEL_TABLE[SIMPLEGUI_THEME]["BACKGROUND"])
-            ),
-            sg.Button(
-                "",  # _t("generic.add_manually"),
-                key="--ADD-PATHS-MANUALLY--",
-                border_width=0,
-                # button_color=(None, sg.LOOK_AND_FEEL_TABLE[SIMPLEGUI_THEME]["BACKGROUND"])
-            ),
-            sg.Button(
-                "",  # _t("generic.remove_selected"),
-                key="--REMOVE-PATHS--",
-                border_width=0,
-                # button_color=(None, sg.LOOK_AND_FEEL_TABLE[SIMPLEGUI_THEME]["BACKGROUND"])
-            ),
-            sg.Button(
-                "",
-                key="-ADD-WINDOWS-SYSTEM-",
-                border_width=0,
-            ),
-            sg.Button(
-                "",
-                key="-ADD-HYPERV-",
-                border_width=0,
-            ),
-            sg.Button(
-                "",
-                key="-ADD-KVM-",
-                border_width=0,
+            sg.Text(
+                textwrap.fill(f"{_t('wizard_gui.select_backup_sources_description')}"),
+                size=(80, 2),
+                expand_x=False,
+                justification="L",
             ),
         ],
         [
             sg.Tree(
                 sg.TreeData(),
                 key="backup_opts.paths",
-                headings=[],
-                col0_heading=_t("config_gui.backup_sources"),
+                headings=["Type", "Details"],
+                # col0_heading=_t("config_gui.backup_sources"),
                 expand_x=True,
                 expand_y=True,
                 header_text_color=TXT_COLOR_LDR,
@@ -126,6 +134,30 @@ wizard_layouts = {
         ],
     ],
     "wizard_layout_3": [
+        [sg.Text(_t("wizard_gui.step_3"), font=("Helvetica", 16))],
+        [
+            sg.Input("YYYY/MM/DD", key="-FIRST-BACKUP-DATE-", size=(12, 1)),
+            sg.Combo(
+                values=[h for h in range(0, 24)],
+                default_value=0,
+                key="-FIRST-BACKUP-HOUR-",
+                size=(3, 1),
+            ),
+            sg.Text(" : "),
+            sg.Combo(
+                values=[m for m in range(0, 60)],
+                default_value=0,
+                key="-FIRST-BACKUP-MINUTE-",
+                size=(3, 1),
+            ),
+        ],
+        [
+            sg.CalendarButton(
+                "Calendar", target="-FIRST-BACKUP-DATE-", key="CALENDAR", **date_options
+            ),
+        ],
+    ],
+    "wizard_layout_4": [
         [
             sg.Column(
                 [
@@ -168,18 +200,18 @@ wizard_layouts = {
             ),
         ],
     ],
-    "wizard_layout_4": [
+    "wizard_layout_5": [
         [sg.T(_t("wizard_gui.retention_settings"), font=("Helvetica", 16))],
         [
             sg.Combo(
-                values=list(combo_boxes["retention_options"].values()),
-                default_value=next(iter(combo_boxes["retention_options"])),
+                values=retention_policies,
+                default_value=retention_policies[0],
                 key="-RETENTION-TYPE-",
                 enable_events=True,
             )
         ],
     ],
-    "wizard_layout_5": [
+    "wizard_layout_6": [
         [sg.Text(_t("wizard_gui.end_user_experience"), font=("Helvetica", 16))],
         [
             sg.Checkbox(
@@ -189,7 +221,7 @@ wizard_layouts = {
             )
         ],
     ],
-    "wizard_layout_6": [
+    "wizard_layout_7": [
         [sg.Text(_t("wizard_gui.end_user_experience"), font=("Helvetica", 16))],
     ],
 }
@@ -208,7 +240,7 @@ for i in range(1, len(wizard_layouts)):
         [
             RoundedButton(
                 str(i),
-                button_color=("#FAFAFA", "#ADADAD"),
+                button_color=(TXT_COLOR_LDR, BG_COLOR_LDR),
                 border_width=0,
                 key=f"-BREADCRUMB-{i}-",
                 btn_size=(30, 30),
@@ -249,7 +281,7 @@ wizard_layout = [
                         border_width=0,
                     ),
                     RoundedButton(
-                        _t("generic.start"),
+                        _t("generic.next"),
                         key="-NEXT-",
                         button_color=(TXT_COLOR_LDR, BG_COLOR_LDR),
                         border_width=0,
@@ -266,8 +298,8 @@ wizard_layout = [
 
 def start_wizard():
     CURRENT_THEME = SIMPLEGUI_THEME
-    NUMBER_OF_TABS = len(wizard_tabs) + 1
-    current_tab = 0
+    NUMBER_OF_TABS = len(wizard_tabs)
+    current_tab = 1
     wizard = sg.Window(
         "NPBackup Wizard",
         layout=wizard_layout,
@@ -286,7 +318,7 @@ def start_wizard():
         wizard.TKroot.after(60000, _reskin_job)
 
     def set_active_tab(active_number):
-        for tab_index in range(1, NUMBER_OF_TABS):
+        for tab_index in range(1, NUMBER_OF_TABS + 1):
             if tab_index != active_number:
                 wizard[f"-TAB{tab_index}-"].Update(visible=False)
                 wizard[f"-BREADCRUMB-{tab_index}-"].Update(
@@ -296,9 +328,13 @@ def start_wizard():
         wizard[f"-BREADCRUMB-{active_number}-"].Update(button_color=("#3F2DCB", None))
 
     wizard.finalize()
+    # Widget theming from https://github.com/rdbende/Sun-Valley-ttk-theme?tab=readme-ov-file
+    sv_ttk.set_theme("light")
     set_active_tab(1)
+
     while True:
         event, values = wizard.read()
+        print(event, values)
         if event == sg.WIN_CLOSED or event == _t("generic.cancel"):
             break
         if event == "-THEME-":
@@ -337,6 +373,33 @@ def start_wizard():
                 set_active_tab(current_tab)
             elif current_tab == 1:
                 break
+        if event == "-ADD-SOURCE-MENU-":
+            node = None
+            if values["-ADD-SOURCE-MENU-"] == _t("generic.add_files"):
+                sg.FileBrowse(_t("generic.add_files"), target="backup_opts.paths")
+                node = sg.popup_get_file("Add files clicked", no_window=True)
+            elif values["-ADD-SOURCE-MENU-"] == _t("generic.add_folder"):
+                node = sg.popup_get_folder("Add folder clicked", no_window=True)
+            elif values["-ADD-SOURCE-MENU-"] == _t("wizard_gui.add_system"):
+                sg.popup("Add Windows system clicked", keep_on_top=True)
+            elif values["-ADD-SOURCE-MENU-"] == _t("wizard_gui.add_hyper_v"):
+                sg.popup("Add Hyper-V virtual machines clicked", keep_on_top=True)
+            elif values["-ADD-SOURCE-MENU-"] == _t("wizard_gui.add_kvm"):
+                sg.popup("Add KVM virtual machines clicked", keep_on_top=True)
+            if node:
+                icon = TREE_ICON
+                tree = backup_paths_tree
+                # Check if node is ADD-PATH-FILES which can contain multiple elements separated by semicolon
+                if ";" in node:
+                    for path in node.split(";"):
+                        if tree.tree_dict.get(path):
+                            tree.delete(path)
+                        tree.insert("", path, path, path, icon=icon)
+                else:
+                    if tree.tree_dict.get(node):
+                        tree.delete(node)
+                    tree.insert("", node, node, node, icon=icon)
+                wizard["backup_opts.paths"].update(values=tree)
     wizard.close()
 
 
