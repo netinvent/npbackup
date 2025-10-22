@@ -100,7 +100,7 @@ wizard_layouts = {
         ],
         [
             sg.Text(
-                _t('wizard_gui.step_1_description'),
+                _t("wizard_gui.step_1_description"),
                 size=(80, 1),
             ),
         ],
@@ -117,15 +117,21 @@ wizard_layouts = {
             )
         ],
         [
-            sg.Push(), RoundedButton(_t("generic.remove_selected"), key="-REMOVE-SOURCE-", button_color=(TXT_COLOR_LDR, BG_COLOR_LDR),
-                border_width=0, btn_size=(150, 30))
-        ]
+            sg.Push(),
+            RoundedButton(
+                _t("generic.remove_selected"),
+                key="-REMOVE-SOURCE-",
+                button_color=(TXT_COLOR_LDR, BG_COLOR_LDR),
+                border_width=0,
+                btn_size=(150, 30),
+            ),
+        ],
     ],
     "wizard_layout_2": [
         [sg.Text(_t("wizard_gui.backup_location"), font=("Helvetica", 16))],
-                [
+        [
             sg.Text(
-                _t('wizard_gui.step_2_description'),
+                _t("wizard_gui.step_2_description"),
                 size=(80, 1),
             ),
         ],
@@ -140,24 +146,50 @@ wizard_layouts = {
             ),
         ],
         [
-            sg.Text(_t("config_gui.backup_repo_uri"), size=(20, 1), key="-BACKEND-URI-LABEL-", visible=False),
-            sg.Input(key="-BACKEND-URI-", size=(45, 1), visible=False, background_color=sg.theme_background_color()),
+            sg.Text(
+                _t("config_gui.backup_repo_uri"),
+                size=(20, 1),
+                key="-BACKEND-URI-LABEL-",
+                visible=False,
+            ),
+            sg.Input(
+                key="-BACKEND-URI-",
+                size=(45, 1),
+                visible=False,
+                background_color=sg.theme_background_color(),
+            ),
         ],
         [
-            sg.Text(_t("config_gui.backup_repo_password"), size=(20, 1), key="-BACKEND-REPO-PASSWORD-LABEL-", visible=False),
-            sg.Input(key="-BACKEND-REPO-PASSWORD-", size=(45, 1), visible=False, background_color=sg.theme_background_color(), password_char="*"),
-        ]
+            sg.Text(
+                _t("config_gui.backup_repo_password"),
+                size=(20, 1),
+                key="-BACKEND-REPO-PASSWORD-LABEL-",
+                visible=False,
+            ),
+            sg.Input(
+                key="-BACKEND-REPO-PASSWORD-",
+                size=(45, 1),
+                visible=False,
+                background_color=sg.theme_background_color(),
+                password_char="*",
+            ),
+        ],
     ],
     "wizard_layout_3": [
         [sg.Text(_t("wizard_gui.step_3"), font=("Helvetica", 16))],
         [
             sg.Text(
-                _t('wizard_gui.step_3_description'),
+                _t("wizard_gui.step_3_description"),
                 size=(80, 1),
             ),
         ],
         [
-            sg.Input("YYYY/MM/DD", key="-FIRST-BACKUP-DATE-", size=(12, 1), background_color=sg.theme_background_color()),
+            sg.Input(
+                "YYYY/MM/DD",
+                key="-FIRST-BACKUP-DATE-",
+                size=(12, 1),
+                background_color=sg.theme_background_color(),
+            ),
             sg.Combo(
                 values=[h for h in range(0, 24)],
                 default_value=0,
@@ -182,7 +214,7 @@ wizard_layouts = {
         [sg.Text(_t("wizard_gui.step_4"), font=("Helvetica", 16))],
         [
             sg.Text(
-                _t('wizard_gui.step_4_description'),
+                _t("wizard_gui.step_4_description"),
                 size=(80, 1),
             ),
         ],
@@ -232,7 +264,7 @@ wizard_layouts = {
         [sg.Text(_t("wizard_gui.step_5"), font=("Helvetica", 16))],
         [
             sg.Text(
-                _t('wizard_gui.step_5_description'),
+                _t("wizard_gui.step_5_description"),
                 size=(80, 1),
             ),
         ],
@@ -249,7 +281,7 @@ wizard_layouts = {
         [sg.Text(_t("wizard_gui.step_6"), font=("Helvetica", 16))],
         [
             sg.Text(
-                _t('wizard_gui.step_6_description'),
+                _t("wizard_gui.step_6_description"),
                 size=(80, 1),
             ),
         ],
@@ -265,7 +297,7 @@ wizard_layouts = {
         [sg.Text(_t("wizard_gui.step_7"), font=("Helvetica", 16))],
         [
             sg.Text(
-                _t('wizard_gui.step_7_description'),
+                _t("wizard_gui.step_7_description"),
                 size=(80, 1),
             ),
         ],
@@ -301,15 +333,14 @@ wizard_layout = [
         sg.Image(OEM_LOGO),
         sg.Column(
             [
-
-            [
-                sg.Text(_t("wizard_gui.welcome"), font=("Helvetica", 16)),
-            ],
-            [
-                sg.Text(_t("wizard_gui.welcome_description")),
-            ],
+                [
+                    sg.Text(_t("wizard_gui.welcome"), font=("Helvetica", 16)),
+                ],
+                [
+                    sg.Text(_t("wizard_gui.welcome_description")),
+                ],
             ]
-        )
+        ),
         # Don't allow skins on rounded buttons that messes up the corners
         # sg.Image(source=THEME_CHOOSER_ICON, key="-THEME-", enable_events=True),
     ],
@@ -356,7 +387,7 @@ def start_wizard():
         layout=wizard_layout,
         size=(900, 600),
         element_justification="L",
-        #ttk_theme="xpnative"
+        # ttk_theme="xpnative"
     )
 
     def _reskin_job():
