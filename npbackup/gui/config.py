@@ -41,35 +41,11 @@ from resources.customization import (
 from npbackup.task import create_scheduled_task
 from npbackup.gui.helpers import quick_close_simplegui_window
 from npbackup.gui.constants import combo_boxes, byte_units
+
+# import npbackup.gui.freesimplegui_extensions
 import sv_ttk
 
 logger = getLogger()
-
-
-# Monkeypatching SimpleGUI
-# @SimpleGUI: Why is there no delete method for TreeData ?
-def delete(self, key):
-    if key == "":
-        return False
-    try:
-        node = self.tree_dict[key]
-        key_list = [
-            key,
-        ]
-        parent_node = self.tree_dict[node.parent]
-        parent_node.children.remove(node)
-        while key_list != []:
-            temp = []
-            for item in key_list:
-                temp += self.tree_dict[item].children
-                del self.tree_dict[item]
-            key_list = temp
-        return True
-    except KeyError:
-        return False
-
-
-sg.TreeData.delete = delete
 
 
 ENCRYPTED_DATA_PLACEHOLDER = "<{}>".format(_t("config_gui.encrypted_data"))
