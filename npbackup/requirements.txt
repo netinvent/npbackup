@@ -13,7 +13,7 @@ ofunctions.mailer>=1.3.0
 # pysimplegui 5 has gone commercial, let's switch to freesimplegui
 # keep in mind that freesimplegui might higher required python version in the future
 freesimplegui==5.2.0.post1
-reskinner==4.0.0
+reskinner==4.0.1
 sv_ttk
 pillow
 requests
