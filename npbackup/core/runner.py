@@ -49,7 +49,7 @@ required_permissions = {
     "ls": ["backup", "restore", "restore_only", "full"],
     "find": ["backup", "restore", "restore_only", "full"],
     "restore": ["restore", "restore_only", "full"],
-    "dump": ["restore", "retore_only", "full"],
+    "dump": ["restore", "restore_only", "full"],
     "check": ["restore", "full"],
     "recover": ["restore", "full"],
     "list": ["full"],
@@ -158,7 +158,7 @@ class NPBackupRunner:
         self.create_restic_runner()
 
     @property
-    def backend_version(self) -> bool:
+    def backend_version(self) -> str:
         if self._is_ready:
             return self.restic_runner.binary_version
         return None
@@ -710,6 +710,7 @@ class NPBackupRunner:
         except (KeyError, AttributeError):
             self.write_logs("Repo password cannot be empty", level="error")
             can_run = False
+            password = None
         if not password or password == "":
             try:
                 password_command = self.repo_config.g("repo_opts.repo_password_command")
@@ -756,6 +757,7 @@ class NPBackupRunner:
             password=password,
             binary_search_paths=[BASEDIR, CURRENT_DIR],
         )
+        return True
 
     def _apply_config_to_restic_runner(self) -> bool:
         if not isinstance(self.restic_runner, ResticRunner):
@@ -1348,8 +1350,6 @@ class NPBackupRunner:
         ):
             if source_type not in ["folder_list", None]:
                 if not source_type or source_type == "folder_list":
-                    pretty_source_type = "files and folders"
-                else:
                     pretty_source_type = " ".join(source_type.split("_"))
                 self.write_logs(
                     f"Running backup of {pretty_source_type}: {paths} to repo {self.repo_config.g('name')}",
@@ -1496,7 +1496,7 @@ class NPBackupRunner:
 
         if backup_too_small:
             self.write_logs(
-                "Backup is smaller than configured minmium backup size", level="error"
+                "Backup is smaller than configured minimum backup size", level="error"
             )
 
         operation_result = (
@@ -1518,7 +1518,7 @@ class NPBackupRunner:
                 "backup_opts.post_backup_housekeeping_percent_chance"
             )
             post_backup_housekeeping_interval = self.repo_config.g(
-                "backup_opts.post_backup_houskeeping_interval"
+                "backup_opts.post_backup_housekeeping_interval"
             )
             if (
                 post_backup_housekeeping_percent_chance
@@ -1596,13 +1596,13 @@ class NPBackupRunner:
                     )
                 except OSError:
                     self.write_logs(
-                        f"Failed expansion for additional backup parameters: {additional_restore_only_parameters}",
+                        f"Failed expansion for additional restore parameters: {additional_restore_only_parameters}",
                         level="error",
                     )
         except KeyError:
             pass
         except ValueError:
-            self.write_logs("Bogus additional backup parameters given", level="warning")
+            self.write_logs("Bogus additional restore parameters given", level="warning")
 
         return self.restic_runner.restore(
             snapshot=snapshot,
@@ -1637,8 +1637,8 @@ class NPBackupRunner:
                     f"Checking time against ntp server {ntp_server}", level="info"
                 )
                 offset = get_ntp_offset(ntp_server)
-                if not offset or offset > float(MAX_ALLOWED_NTP_OFFSET):
-                    if not offset:
+                if offset in [False, None, ""] or offset > float(MAX_ALLOWED_NTP_OFFSET):
+                    if offset in [False, None, ""]:
                         msg = f"Offset cannot be obtained from NTP server {ntp_server}"
                     elif offset > float(MAX_ALLOWED_NTP_OFFSET):
                         msg = f"Offset from NTP server {ntp_server} is too high: {offset} seconds. Won't apply policy"
@@ -1667,13 +1667,13 @@ class NPBackupRunner:
             keep_tags = self.repo_config.g("repo_opts.retention_policy.keep_tags")
             if not isinstance(keep_tags, list) and keep_tags:
                 keep_tags = [keep_tags]
-                policy["keep-tags"] = keep_tags
+            policy["keep-tags"] = keep_tags
             apply_on_tags = self.repo_config.g(
                 "repo_opts.retention_policy.apply_on_tags"
             )
             if not isinstance(apply_on_tags, list) and apply_on_tags:
                 apply_on_tags = [apply_on_tags]
-                policy["apply-on-tags"] = apply_on_tags
+            policy["apply-on-tags"] = apply_on_tags
             # Fool proof, don't run without policy, or else we'll get
             if not policy:
                 msg = "Empty retention policy. Won't run"
@@ -1692,7 +1692,7 @@ class NPBackupRunner:
             result = self.restic_runner.forget(policy=policy, group_by=group_by)
         else:
             self.write_logs(
-                "Bogus options given to forget: snapshots={snapshots}, policy={policy}",
+                f"Bogus options given to forget: snapshots={snapshots}, policy={policy}",
                 level="critical",
                 raise_error=True,
             )
@@ -1722,7 +1722,7 @@ class NPBackupRunner:
         }
         # pylint: disable=E1123 (unexpected-keyword-arg)
 
-        # We need to construct our own result here since this is a wrapper for 3 different subcommandzsz
+        # We need to construct our own result here since this is a wrapper for 3 different subcommands
         js = {
             "result": True,
             "operation": fn_name(0),

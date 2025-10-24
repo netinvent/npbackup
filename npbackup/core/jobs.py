@@ -65,8 +65,8 @@ def schedule_on_interval(job_name: str, interval: int) -> bool:
             # We may not have read privileges
             logger.error(f"Cannot read {job_name} counter file {file}: {exc}")
         except ValueError as exc:
-            logger.error(f"Bogus {job_name} counter in {file}: {exc}")
-        return None
+            logger.error(f"Bogus {job_name} counter with value {count} in {file}: {exc}")
+        return 0
 
     path_list = [
         os.path.join(tempfile.gettempdir(), counter_file),
