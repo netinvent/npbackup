@@ -132,6 +132,8 @@ class NPBackupRunner:
         self._exec_time = None
 
         # Error /warning messages to add for json output
+        # These will pile up since they're supposed to be for CLI json runs
+        # which get cleared on every run
         self.errors_for_json = []
         self.warnings_for_json = []
 
@@ -440,7 +442,7 @@ class NPBackupRunner:
                 else:
                     # pylint: disable=E1101 (no-member)
                     operation = fn.__name__
-                msg = "Runner cannot execute, backend not ready"
+                msg = "Runner cannot execute, backend not ready\n"
                 if self.stderr:
                     self.stderr.put(msg)
                 if self.json_output:
@@ -476,16 +478,15 @@ class NPBackupRunner:
 
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
-            try:
-                # When running group_runner, we need to extract operation from kwargs
-                # else, operation is just the wrapped function name
+            # When running group_runner, we need to extract operation from kwargs
+            # else, operation is just the wrapped function name
+            # pylint: disable=E1101 (no-member)
+            if fn.__name__ == "group_runner":
+                operation = kwargs.get("operation")
+            else:
                 # pylint: disable=E1101 (no-member)
-                if fn.__name__ == "group_runner":
-                    operation = kwargs.get("operation")
-                else:
-                    # pylint: disable=E1101 (no-member)
-                    operation = fn.__name__
-
+                operation = fn.__name__
+            try:
                 if self.repo_config:
                     current_permissions = self.repo_config.g("permissions")
                     if (
@@ -502,9 +503,12 @@ class NPBackupRunner:
                     self.write_logs(
                         "No repo config. Ignoring permission check", level="info"
                     )
-            except (IndexError, KeyError, PermissionError):
+            except (IndexError, KeyError, PermissionError, AttributeError) as exc:
                 self.write_logs(
                     "You don't have sufficient permissions", level="critical"
+                )
+                self.write_logs(
+                    f"Error: {exception_to_string(exc)}", level="debug"
                 )
                 if self.json_output:
                     js = {
@@ -623,6 +627,17 @@ class NPBackupRunner:
             try:
                 # pylint: disable=E1102 (not-callable)
                 return fn(self, *args, **kwargs)
+            except KeyboardInterrupt:
+                self.write_logs("Runner: Caught keyboard interrupt, cancelling...", level="warning")
+                self.cancel()
+                if self.json_output:
+                    js = {
+                        "result": False,
+                        "operation": operation,
+                        "reason": f"Runner caught exception: {exception_to_string(exc)}",
+                    }
+                    return js
+                return False
             except Exception as exc:
                 # pylint: disable=E1101 (no-member)
                 if fn.__name__ == "group_runner":
@@ -950,7 +965,7 @@ class NPBackupRunner:
             else:
                 js = {
                     "result": result,
-                    "operation": fn_name,
+                    "operation": fn_name(0),
                     "additional_error_info": [],
                     "additional_warning_info": [],
                 }
@@ -1978,4 +1993,5 @@ class NPBackupRunner:
         This is just a shorthand to make sure restic_wrapper receives a cancel signal
         """
         self._canceled = True
-        self.restic_runner.cancel()
+        if self.restic_runner:
+            self.restic_runner.cancel()
