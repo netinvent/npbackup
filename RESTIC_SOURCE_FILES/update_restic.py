@@ -37,7 +37,7 @@ def download_restic_binaries(arch: str = "amd64") -> bool:
     if response.status_code != 200:
         print(f"ERROR: Cannot get latest restic release: {response.status_code}")
         print("RESPONSE TEXT: ", response.text)
-    json_response = json.loads(response.text);
+    json_response = json.loads(response.text)
     try:
         current_version = json_response["tag_name"].lstrip("v")
     except KeyError:
@@ -142,7 +142,9 @@ def download_restic_binaries_for_arch():
         if not download_restic_binaries("amd64") or not download_restic_binaries("386"):
             return False
     elif sys.platform.lower() == "darwin":
-        if not download_restic_binaries("arm64") or not download_restic_binaries("amd64"):
+        if not download_restic_binaries("arm64") or not download_restic_binaries(
+            "amd64"
+        ):
             return False
     else:
         if (

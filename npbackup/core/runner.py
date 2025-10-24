@@ -1602,7 +1602,9 @@ class NPBackupRunner:
         except KeyError:
             pass
         except ValueError:
-            self.write_logs("Bogus additional restore parameters given", level="warning")
+            self.write_logs(
+                "Bogus additional restore parameters given", level="warning"
+            )
 
         return self.restic_runner.restore(
             snapshot=snapshot,
@@ -1637,7 +1639,9 @@ class NPBackupRunner:
                     f"Checking time against ntp server {ntp_server}", level="info"
                 )
                 offset = get_ntp_offset(ntp_server)
-                if offset in [False, None, ""] or offset > float(MAX_ALLOWED_NTP_OFFSET):
+                if offset in [False, None, ""] or offset > float(
+                    MAX_ALLOWED_NTP_OFFSET
+                ):
                     if offset in [False, None, ""]:
                         msg = f"Offset cannot be obtained from NTP server {ntp_server}"
                     elif offset > float(MAX_ALLOWED_NTP_OFFSET):

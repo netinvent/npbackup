@@ -898,10 +898,8 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
                 f"{object_type} {object_name} has no compression, skipping migration"
             )
         return full_config
-    
-    def _migrate_presets_3_0_4_to_3_1_0(
-        full_config: dict
-    ):
+
+    def _migrate_presets_3_0_4_to_3_1_0(full_config: dict):
         if full_config.g("presets") is None:
             full_config.s("presets", get_default_config().g("presets"))
             logger.info("Migrated presets to new config structure")
@@ -952,9 +950,7 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
                         f"Config file {config_file} has no configuration version. Is this a valid npbackup config file?"
                     )
                     return False
-                if conf_version < version_parse(
-                    MIN_MIGRATABLE_CONF_VERSION
-                ):
+                if conf_version < version_parse(MIN_MIGRATABLE_CONF_VERSION):
                     logger.critical(
                         f"Config file {config_file} version {str(conf_version)} is not in required version range min={MIN_MIGRATABLE_CONF_VERSION}"
                     )
@@ -963,7 +959,7 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
                     logger.critical(
                         f"Config file {config_file} version {str(conf_version)} is not in required version range max={MAX_CONF_VERSION}. We will try to load it nevertheless."
                     )
-                    
+
                 if conf_version < version_parse(CURRENT_CONF_VERSION):
                     full_config = _migrate_config_dict(
                         full_config, str(conf_version), CURRENT_CONF_VERSION

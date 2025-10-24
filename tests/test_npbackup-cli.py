@@ -65,7 +65,9 @@ repo_config, _ = get_repo_config(full_config)
 
 # File we will request in dump mode
 DUMP_FILE = "__version__.py"
-DUMP_FILE_RESTORED = Path(tempfile.gettempdir()).absolute().joinpath("restored__version__.py")
+DUMP_FILE_RESTORED = (
+    Path(tempfile.gettempdir()).absolute().joinpath("restored__version__.py")
+)
 DUMP_FILE_RESTIC_PATH = "/npbackup/npbackup/__version__.py"
 
 
@@ -92,7 +94,7 @@ class RedirectedStdout:
         if self._bytes_io.getvalue():
             return self._bytes_io.getvalue()
         return self._string_io.getvalue()
-    
+
 
 def running_on_github_actions():
     """
@@ -148,7 +150,9 @@ def test_download_restic_binaries():
     github_actions = running_on_github_actions()
     print(f"DOWNLOAD result: {result}, github actions: {github_actions}")
     if github_actions:
-        assert True, "Allow restic download failure on github actions because of rate limiting"
+        assert (
+            True
+        ), "Allow restic download failure on github actions because of rate limiting"
     else:
         assert result is True, "Could not download restic binaries"
 
@@ -202,6 +206,7 @@ def test_npbackup_cli_init():
         assert "Repo initialized successfully" in str(logs), "Repo init failed"
     os.environ["_DEBUG"] = "False"
 
+
 def test_npbackup_cli_has_no_recent_snapshots():
     """
     After init, we should not have recent snapshots
@@ -215,7 +220,9 @@ def test_npbackup_cli_has_no_recent_snapshots():
         print(str(logs))
         json_logs = json.loads(str(logs))
         assert json_logs["result"] == False, "Should not have recent snapshots"
-        assert json_logs["operation"] == "has_recent_snapshot", "Bogus operation name, probably failed somewhere earlier"
+        assert (
+            json_logs["operation"] == "has_recent_snapshot"
+        ), "Bogus operation name, probably failed somewhere earlier"
 
 
 def test_npbackup_cli_create_backup():
@@ -494,7 +501,6 @@ def test_npbackup_cli_raw():
             assert False, "Did not find dump file in raw ls output"
 
 
-
 def test_npbackup_cli_dump():
     """
     Don't use RedirectedStdout since dump will output binary data
@@ -512,7 +518,10 @@ def test_npbackup_cli_dump():
     original_sha = sha256sum(os.path.join("..", "npbackup", "npbackup", DUMP_FILE))
     restored_sha = sha256sum(DUMP_FILE_RESTORED)
 
-    assert original_sha == restored_sha, "Dumped file has different sha256sum than original file"
+    assert (
+        original_sha == restored_sha
+    ), "Dumped file has different sha256sum than original file"
+
 
 if __name__ == "__main__":
     test_download_restic_binaries()

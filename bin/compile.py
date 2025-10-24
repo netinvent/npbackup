@@ -372,7 +372,9 @@ def compile(
                 dry_run=args.dry_run,
             )
         else:
-            print(f"ERROR: Cannot sign windows executable: {SIGN_EXTERNALY} {ev_cert_data}")
+            print(
+                f"ERROR: Cannot sign windows executable: {SIGN_EXTERNALY} {ev_cert_data}"
+            )
             errors = True
 
     if not onefile:

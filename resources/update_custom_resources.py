@@ -68,7 +68,10 @@ def update_custom_icons():
             print(f"Updating {var_name} with {file_path}")
             encoded_b64 = image_to_data_url(file_path)
             customization = re.sub(
-                f'\n{var_name} = .*', f'\n{var_name} = b"{encoded_b64}"', customization, re.MULTILINE
+                f"\n{var_name} = .*",
+                f'\n{var_name} = b"{encoded_b64}"',
+                customization,
+                re.MULTILINE,
             )
         else:
             print("No file found for", var_name)
