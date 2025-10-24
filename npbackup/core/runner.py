@@ -253,7 +253,7 @@ class NPBackupRunner:
             and not isinstance(value, Callable)
             and not isinstance(value, queue.Queue)
         ):
-            raise ValueError("Bogus stdout parameter given: {}".format(value))
+            raise ValueError(f"Bogus stdout parameter given: {value}")
         self._stdout = value
 
     @property
@@ -268,7 +268,7 @@ class NPBackupRunner:
             and not isinstance(value, Callable)
             and not isinstance(value, queue.Queue)
         ):
-            raise ValueError("Bogus stdout parameter given: {}".format(value))
+            raise ValueError(f"Bogus stderr parameter given: {value}")
         self._stderr = value
 
     @property
@@ -278,8 +278,9 @@ class NPBackupRunner:
     @binary.setter
     def binary(self, value):
         if not isinstance(value, str) or not os.path.isfile(value):
-            raise ValueError("Backend binary {value} is not readable")
-        self._binary = value
+            raise ValueError(f"Backend binary {value} is not readable")
+        else:
+            self._binary = value
 
     @property
     def has_binary(self) -> bool:
@@ -294,7 +295,7 @@ class NPBackupRunner:
     @produce_metrics.setter
     def produce_metrics(self, value):
         if not isinstance(value, bool):
-            raise ValueError("produce_metrics value {value} is not a boolean")
+            raise ValueError(f"produce_metrics value {value} is not a boolean")
         self._produce_metrics = value
 
     @property
@@ -304,7 +305,7 @@ class NPBackupRunner:
     @full_concurrency.setter
     def full_concurrency(self, value):
         if not isinstance(value, bool):
-            raise ValueError("full_concurrency value {value} is not a boolean")
+            raise ValueError(f"full_concurrency value {value} is not a boolean")
         self._full_concurrency = value
 
     @property
@@ -314,7 +315,7 @@ class NPBackupRunner:
     @repo_aware_concurrency.setter
     def repo_aware_concurrency(self, value):
         if not isinstance(value, bool):
-            raise ValueError("concurrency value {value} is not a boolean")
+            raise ValueError(f"concurrency value {value} is not a boolean")
         self._repo_aware_concurrency = value
 
     @property
@@ -324,7 +325,7 @@ class NPBackupRunner:
     @append_metrics_file.setter
     def append_metrics_file(self, value):
         if not isinstance(value, bool):
-            raise ValueError("append_metrics_file value {value} is not a boolean")
+            raise ValueError(f"append_metrics_file value {value} is not a boolean")
         self._append_metrics_file = value
 
     @property
@@ -332,7 +333,7 @@ class NPBackupRunner:
         return self._exec_time
 
     @exec_time.setter
-    def exec_time(self, value: int):
+    def exec_time(self, value: float):
         self._exec_time = value
 
     def write_logs(
@@ -346,6 +347,8 @@ class NPBackupRunner:
         Write logs to log file and stdout / stderr queues if exist for GUI usage
         Also collect errors and warnings for json output
         """
+        if msg is None:
+            raise ValueError("None log message received")
         if level == "warning":
             logger.warning(msg)
         elif level == "error":
@@ -359,8 +362,6 @@ class NPBackupRunner:
         else:
             raise ValueError(f"Bogus log level given {level}")
 
-        if msg is None:
-            raise ValueError("None log message received")
         if self.stdout and (level == "info" or (level == "debug" and _DEBUG)):
             self.stdout.put(f"\n{msg}")
         if self.stderr and level in ("critical", "error", "warning"):
@@ -588,7 +589,7 @@ class NPBackupRunner:
 
         return wrapper
 
-    def no_aquire_lock(fn: Callable):
+    def no_acquire_lock(fn: Callable):
         """
         Don't lock some operations
         """
@@ -929,7 +930,7 @@ class NPBackupRunner:
             os.environ["NPBACKUP_BACKEND_BINARY"] = str(self.restic_runner.binary)
         except OSError:
             self.write_logs(
-                f"Cannot set env variable NPBACKUP_BACKEND_BINARY to {self.binary}",
+                f"Cannot set env variable NPBACKUP_BACKEND_BINARY to {self.restic_runner.binary}",
                 level="error",
             )
         return True
@@ -983,7 +984,7 @@ class NPBackupRunner:
         if source_type in ["files_from_verbatim", "files_from_raw"]:
             for path in paths:
                 try:
-                    with open(path, "r") as path_file:
+                    with open(path, "r", encoding="utf-8") as path_file:
                         paths_must_be_readable += path_file.readlines()
                 except OSError as exc:
                     self.write_logs(
@@ -1038,7 +1039,7 @@ class NPBackupRunner:
     @metrics
     @exec_timer
     @check_concurrency
-    @no_aquire_lock
+    @no_acquire_lock
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
@@ -1059,7 +1060,7 @@ class NPBackupRunner:
     @metrics
     @exec_timer
     @check_concurrency
-    @no_aquire_lock
+    @no_acquire_lock
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
@@ -1076,7 +1077,7 @@ class NPBackupRunner:
     @metrics
     @exec_timer
     @check_concurrency
-    @no_aquire_lock
+    @no_acquire_lock
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
@@ -1094,7 +1095,7 @@ class NPBackupRunner:
     @metrics
     @exec_timer
     @check_concurrency
-    @no_aquire_lock
+    @no_acquire_lock
     @has_permission
     @is_ready
     @apply_config_to_restic_runner

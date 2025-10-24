@@ -332,11 +332,11 @@ class ResticRunner:
             raise ValueError("Bogus ignore_cloud_files value given")
 
     @property
-    def exec_time(self) -> Optional[int]:
+    def exec_time(self) -> Optional[float]:
         return self._exec_time
 
     @exec_time.setter
-    def exec_time(self, value: int):
+    def exec_time(self, value: float):
         self._exec_time = value
 
     @property
@@ -359,6 +359,8 @@ class ResticRunner:
         """
         Write logs to log file and stdout / stderr queues if exist for GUI usage
         """
+        if msg is None:
+            raise ValueError("None log message received")
         if level == "warning":
             logger.warning(msg)
         elif level == "error":
@@ -372,8 +374,6 @@ class ResticRunner:
         else:
             raise ValueError("Bogus log level given {level}")
 
-        if msg is None:
-            raise ValueError("None log message received")
         if self.stdout and (level == "info" or (level == "debug" and _DEBUG)):
             # pylint: disable=E1101 (no-member)
             self.stdout.put(msg)
@@ -670,9 +670,10 @@ class ResticRunner:
     def binary(self, value):
         if not os.path.isfile(value):
             raise ValueError("Non existent binary given: {}".format(value))
-        self._binary = value
-        self.binary_version
-        self.write_logs(f"Using binary {self._binary_full_version}", level="info")
+        else:
+            self._binary = value
+            self.binary_version
+            self.write_logs(f"Using binary {self._binary_full_version}", level="info")
 
     @property
     def binary_version(self) -> Optional[str]:
