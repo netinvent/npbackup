@@ -701,10 +701,10 @@ def get_repo_config(
                                 _config_inheritance.g(key)[v] = False
                     else:
                         # repo_config may or may not already contain data
-                        if _repo_config is None or _repo_config == "":
+                        if _repo_config in [None, ""]:
                             _repo_config = CommentedMap()
                             _config_inheritance = CommentedMap()
-                        if _repo_config.g(key) is None or _repo_config.g(key) == "":
+                        if _repo_config.g(key) in [None, ""]:
                             _repo_config.s(key, value)
                             _config_inheritance.s(key, True)
                         # Case where repo_config contains list but group info has single str
@@ -832,7 +832,7 @@ def _get_config_file_checksum(config_file: Path) -> str:
         cur_hash = 0
         while True:
             s = fh.read(65536)
-            if not s:
+            if len(s) == 0:
                 break
             cur_hash = zlib.crc32(s, cur_hash)
         return "%08X" % (cur_hash & 0xFFFFFFFF)
