@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025100601"
-__version__ = "2.7.4"
+__build__ = "2025112601"
+__version__ = "2.7.5"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -1321,7 +1321,7 @@ class ResticRunner:
                 cmd += f" --max-repack-size {max_repack_size}"
         verbose = self.verbose
         self.verbose = True
-        result, output = self.executor(cmd)
+        result, output = self.executor(cmd, method="monitor")
         self.verbose = verbose
         if result:
             msg = "Successfully pruned repository"
