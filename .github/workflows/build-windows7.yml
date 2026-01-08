@@ -1,0 +1,188 @@
+name: Build npbackup for Windows 7
+
+on:
+  push:
+    branches: [ main, master, win7 ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'gui'
+        type: choice
+        options:
+          - cli
+          - gui
+          - viewer
+          - all
+      architecture:
+        description: 'Architecture'
+        required: true
+        default: 'x64'
+        type: choice
+        options:
+          - x64
+          - x86
+          - both
+
+env:
+  # Python 3.8 is the last version with Windows 7 support
+  PYTHON_VERSION: '3.8'
+
+jobs:
+  build-windows7-x86:
+    runs-on: windows-2019
+    if: ${{ github.event.inputs.architecture == 'x86' || github.event.inputs.architecture == 'both' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.8 (x86)
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          architecture: x86
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install nuitka ordered-set zstandard
+          pip install -r npbackup/requirements.txt
+          pip install -r npbackup/requirements-win32.txt
+
+      - name: Verify legacy restic binary exists
+        run: |
+          if (Test-Path "RESTIC_SOURCE_FILES/restic_*_windows_legacy_386.exe") {
+            Write-Host "Legacy restic binary for x86 found"
+          } else {
+            Write-Error "Legacy restic binary for x86 not found!"
+            exit 1
+          }
+        shell: pwsh
+
+      - name: Build GUI (x86)
+        if: ${{ github.event.inputs.build_type == 'gui' || github.event.inputs.build_type == 'all' || github.event.inputs.build_type == '' }}
+        run: python bin/compile.py --audience public --build-type gui
+        env:
+          PYTHONPATH: .
+
+      - name: Build CLI (x86)
+        if: ${{ github.event.inputs.build_type == 'cli' || github.event.inputs.build_type == 'all' }}
+        run: python bin/compile.py --audience public --build-type cli
+        env:
+          PYTHONPATH: .
+
+      - name: Build Viewer (x86)
+        if: ${{ github.event.inputs.build_type == 'viewer' || github.event.inputs.build_type == 'all' }}
+        run: python bin/compile.py --audience public --build-type viewer
+        env:
+          PYTHONPATH: .
+
+      - name: Upload artifacts (x86)
+        uses: actions/upload-artifact@v4
+        with:
+          name: npbackup-windows7-x86-legacy
+          path: BUILDS/public/windows/x86-legacy/*.zip
+          if-no-files-found: error
+
+  build-windows7-x64:
+    runs-on: windows-2019
+    if: ${{ github.event.inputs.architecture == 'x64' || github.event.inputs.architecture == 'both' || github.event.inputs.architecture == '' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.8 (x64)
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          architecture: x64
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install nuitka ordered-set zstandard
+          pip install -r npbackup/requirements.txt
+          pip install -r npbackup/requirements-win32.txt
+
+      - name: Verify legacy restic binary exists
+        run: |
+          if (Test-Path "RESTIC_SOURCE_FILES/restic_*_windows_legacy_amd64.exe") {
+            Write-Host "Legacy restic binary for x64 found"
+          } else {
+            Write-Error "Legacy restic binary for x64 not found!"
+            exit 1
+          }
+        shell: pwsh
+
+      - name: Build GUI (x64)
+        if: ${{ github.event.inputs.build_type == 'gui' || github.event.inputs.build_type == 'all' || github.event.inputs.build_type == '' }}
+        run: |
+          echo "=== Nuitka version ==="
+          python -m nuitka --version
+          echo "=== Running compile.py ==="
+          python bin/compile.py --audience public --build-type gui 2>&1 | tee build.log
+          echo "=== Checking for --standalone in command ==="
+          grep -i "standalone\|onefile" build.log || echo "No standalone/onefile found in log"
+        env:
+          PYTHONPATH: .
+
+      - name: Build CLI (x64)
+        if: ${{ github.event.inputs.build_type == 'cli' || github.event.inputs.build_type == 'all' }}
+        run: python bin/compile.py --audience public --build-type cli
+        env:
+          PYTHONPATH: .
+
+      - name: Build Viewer (x64)
+        if: ${{ github.event.inputs.build_type == 'viewer' || github.event.inputs.build_type == 'all' }}
+        run: python bin/compile.py --audience public --build-type viewer
+        env:
+          PYTHONPATH: .
+
+      - name: List build output
+        run: |
+          echo "=== BUILDS directory structure ==="
+          Get-ChildItem -Recurse BUILDS -Force | Select-Object FullName, Length
+          echo "=== Content of .dist folder ==="
+          Get-ChildItem "BUILDS/public/windows/x64-legacy/npbackup-gui.dist" -Force | Select-Object Name, Length
+        shell: pwsh
+
+      - name: Upload artifacts (x64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: npbackup-windows7-x64-legacy-gui
+          path: BUILDS/public/windows/x64-legacy/npbackup-gui.dist/
+          if-no-files-found: error
+
+  release:
+    needs: [build-windows7-x64]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download x86 artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: npbackup-windows7-x86-legacy
+          path: artifacts
+
+      - name: Download x64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: npbackup-windows7-x64-legacy
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/*
+          draft: true
+          prerelease: false
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
