@@ -16,6 +16,7 @@ from logging import getLogger
 from collections import namedtuple
 from ofunctions.misc import BytesConverter
 import FreeSimpleGUI as sg
+from npbackup.gui.window_utils import fit_window_to_screen
 from npbackup.configuration import (
     get_repo_config,
     get_repo_list,
@@ -444,6 +445,7 @@ def operations_gui(full_config: dict) -> dict:
         alpha_channel=1.0,
         default_button_element_size=(20, 1),
         right_click_menu=right_click_menu,
+        resizable=True,
         finalize=True,
     )
 
@@ -451,6 +453,7 @@ def operations_gui(full_config: dict) -> dict:
 
     # Auto reisze table to window size
     window["repo-and-group-list"].expand(True, True)
+    fit_window_to_screen(window)
 
     while True:
         event, values = window.read()

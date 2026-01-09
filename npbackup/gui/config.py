@@ -18,6 +18,7 @@ import FreeSimpleGUI as sg
 import textwrap
 from datetime import datetime, timezone
 from ruamel.yaml.comments import CommentedMap
+from npbackup.gui.window_utils import fit_window_to_screen
 from npbackup import configuration
 from ofunctions.misc import get_key_from_value, BytesConverter
 from npbackup.core.i18n_helper import _t
@@ -2626,9 +2627,11 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
         alpha_channel=1.0,
         default_button_element_size=(16, 1),
         right_click_menu=right_click_menu,
+        resizable=True,
         finalize=True,
         enable_close_attempted_event=True,
     )
+    fit_window_to_screen(window)
 
     # Init fresh config objects
     BAD_KEYS_FOUND_IN_CONFIG = set()

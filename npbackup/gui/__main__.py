@@ -28,6 +28,7 @@ from ofunctions.threading import threaded
 from ofunctions.misc import BytesConverter
 import FreeSimpleGUI as sg
 import _tkinter
+from npbackup.gui.window_utils import fit_window_to_screen
 import npbackup.configuration
 import npbackup.common
 from resources.customization import (
@@ -419,8 +420,11 @@ def ls_window(parent_window: sg.Window, repo_config: dict, snapshot_id: str) -> 
         layout=layout,
         grab_anywhere=True,
         keep_on_top=False,
+        resizable=True,
         enable_close_attempted_event=True,
+        finalize=True,
     )
+    fit_window_to_screen(window)
 
     # Reclaim memory from thread result
     # Note from v3 dev: This doesn't actually improve memory usage
@@ -493,8 +497,14 @@ def restore_window(
 
     layout = [[sg.Column(left_col, element_justification="C")]]
     window = sg.Window(
-        _t("main_gui.restoration"), layout=layout, grab_anywhere=True, keep_on_top=False
+        _t("main_gui.restoration"),
+        layout=layout,
+        grab_anywhere=True,
+        keep_on_top=False,
+        resizable=True,
+        finalize=True,
     )
+    fit_window_to_screen(window)
     result = None
     while True:
         event, values = window.read()
@@ -1126,11 +1136,14 @@ def _main_gui(viewer_mode: bool):
         alpha_channel=1.0,
         default_button_element_size=(16, 1),
         right_click_menu=right_click_menu,
+        resizable=True,
         finalize=True,
     )
 
     # Auto reisze table to window size
     window["snapshot-list"].expand(True, True)
+    # Fit window to screen if too large
+    fit_window_to_screen(window)
 
     window.read(timeout=0.01)
     if not config_file and not full_config and not viewer_mode:
