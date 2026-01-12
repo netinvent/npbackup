@@ -453,7 +453,10 @@ def operations_gui(full_config: dict) -> dict:
 
     # Auto reisze table to window size
     window["repo-and-group-list"].expand(True, True)
-    fit_window_to_screen(window)
+    
+    # Let window render to get actual size
+    window.read(timeout=0)
+    fit_window_to_screen(window, min_width=550, min_height=400)
 
     while True:
         event, values = window.read()

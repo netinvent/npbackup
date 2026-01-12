@@ -21,6 +21,18 @@ def get_work_area() -> Optional[Tuple[int, int]]:
             import ctypes
             from ctypes import wintypes
 
+            # Try to set process DPI aware (Windows 7+)
+            # This prevents DPI virtualization and ensures we get real pixel coordinates
+            try:
+                # PROCESS_SYSTEM_DPI_AWARE = 1
+                ctypes.windll.shcore.SetProcessDpiAwareness(1)
+            except (AttributeError, OSError):
+                # Fallback for Windows 7 (shcore not available)
+                try:
+                    ctypes.windll.user32.SetProcessDPIAware()
+                except (AttributeError, OSError):
+                    pass  # DPI awareness not critical
+
             class RECT(ctypes.Structure):
                 _fields_ = [
                     ("left", wintypes.LONG),
@@ -36,6 +48,28 @@ def get_work_area() -> Optional[Tuple[int, int]]:
             height = rect.bottom - rect.top
             if width > 0 and height > 0:
                 return width, height
+        except Exception:
+            pass
+    elif os.name == "posix":
+        try:
+            import subprocess
+            # Try to get work area from X11 _NET_WORKAREA property
+            result = subprocess.run(
+                ["xprop", "-root", "_NET_WORKAREA"],
+                capture_output=True,
+                text=True,
+                timeout=1
+            )
+            if result.returncode == 0:
+                # Format: _NET_WORKAREA(CARDINAL) = x, y, width, height
+                output = result.stdout.strip()
+                if "=" in output:
+                    values = output.split("=")[1].strip().split(",")
+                    if len(values) >= 4:
+                        width = int(values[2].strip())
+                        height = int(values[3].strip())
+                        if width > 0 and height > 0:
+                            return width, height
         except Exception:
             pass
     return None
@@ -77,10 +111,28 @@ def get_available_size(margin: int = 0) -> Tuple[int, int]:
     return screen_width - FALLBACK_MARGIN - margin, screen_height - FALLBACK_MARGIN - margin
 
 
+def set_minimum_window_size(window: sg.Window, min_width: int = 400, min_height: int = 300) -> None:
+    """
+    Set minimum window size using tkinter.
+    
+    Args:
+        window: The window to set minimum size for
+        min_width: Minimum width in pixels
+        min_height: Minimum height in pixels
+    """
+    try:
+        window.TKroot.minsize(min_width, min_height)
+    except Exception:
+        # Silently fail - not critical
+        pass
+
+
 def fit_window_to_screen(
     window: sg.Window,
     margin: int = 0,
-    center: bool = True
+    center: bool = True,
+    min_width: int = None,
+    min_height: int = None
 ) -> None:
     """
     Resize window to fit within screen bounds if it's too large.
@@ -90,8 +142,14 @@ def fit_window_to_screen(
         window: The window to resize
         margin: Pixels margin for decorations
         center: Whether to center the window after resizing
+        min_width: Optional minimum width (will be set via tkinter)
+        min_height: Optional minimum height (will be set via tkinter)
     """
     try:
+        # Set minimum size if specified
+        if min_width is not None and min_height is not None:
+            set_minimum_window_size(window, min_width, min_height)
+        
         available_width, available_height = get_available_size(margin)
         current_size = window.size
 

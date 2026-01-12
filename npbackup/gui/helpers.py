@@ -161,43 +161,77 @@ def gui_thread_runner(
     if not __gui_msg:
         __gui_msg = "Operation"
 
+    # Create frames for stdout and stderr to use in Pane
+    stdout_frame = sg.Column(
+        [
+            [
+                sg.Text(
+                    _t("main_gui.last_messages"),
+                    key="-OPERATIONS-PROGRESS-STDOUT-TITLE-",
+                    text_color=TXT_COLOR_LDR,
+                    background_color=BG_COLOR_LDR,
+                    visible=not __compact,
+                )
+            ],
+            [
+                sg.Multiline(
+                    key="-OPERATIONS-PROGRESS-STDOUT-",
+                    size=(70, 15),
+                    visible=not __compact,
+                    # Setting autoscroll=True on not visible Multiline takes
+                    # huge time depending on the amount of text (up to minutes for 80k chars)
+                    autoscroll=False,
+                    expand_x=True,
+                    expand_y=True,
+                )
+            ],
+        ],
+        expand_x=True,
+        expand_y=True,
+        background_color=BG_COLOR_LDR,
+    )
+
+    stderr_frame = sg.Column(
+        [
+            [
+                sg.Text(
+                    _t("main_gui.error_messages"),
+                    key="-OPERATIONS-PROGRESS-STDERR-TITLE-",
+                    text_color=TXT_COLOR_LDR,
+                    background_color=BG_COLOR_LDR,
+                    visible=not __compact,
+                )
+            ],
+            [
+                sg.Multiline(
+                    key="-OPERATIONS-PROGRESS-STDERR-",
+                    size=(70, 5),
+                    visible=not __compact,
+                    autoscroll=True,
+                    expand_x=True,
+                    expand_y=True,
+                )
+            ],
+        ],
+        expand_x=True,
+        expand_y=True,
+        background_color=BG_COLOR_LDR,
+    )
+
     progress_layout = [
         # Replaced by custom title bar
         # [sg.Text(__gui_msg, text_color=GUI_LOADER_TEXT_COLOR, background_color=GUI_LOADER_COLOR, visible=__compact, justification='C')],
         [
-            sg.Text(
-                _t("main_gui.last_messages"),
-                key="-OPERATIONS-PROGRESS-STDOUT-TITLE-",
-                text_color=TXT_COLOR_LDR,
+            sg.Pane(
+                [stdout_frame, stderr_frame],
+                orientation="v",
                 background_color=BG_COLOR_LDR,
-                visible=not __compact,
-            )
-        ],
-        [
-            sg.Multiline(
-                key="-OPERATIONS-PROGRESS-STDOUT-",
-                size=(70, 15),
-                visible=not __compact,
-                # Setting autoscroll=True on not visible Multiline takes
-                # huge time depending on the amount of text (up to minutes for 80k chars)
-                autoscroll=False,
-            )
-        ],
-        [
-            sg.Text(
-                _t("main_gui.error_messages"),
-                key="-OPERATIONS-PROGRESS-STDERR-TITLE-",
-                text_color=TXT_COLOR_LDR,
-                background_color=BG_COLOR_LDR,
-                visible=not __compact,
-            )
-        ],
-        [
-            sg.Multiline(
-                key="-OPERATIONS-PROGRESS-STDERR-",
-                size=(70, 5),
-                visible=not __compact,
-                autoscroll=True,
+                show_handle=True,
+                border_width=0,
+                relief=sg.RELIEF_FLAT,
+                key="-OUTPUT-PANE-",
+                expand_x=True,
+                expand_y=True,
             )
         ],
         [
@@ -252,6 +286,7 @@ def gui_thread_runner(
                 progress_layout,
                 element_justification="C",
                 expand_x=True,
+                expand_y=True,
                 background_color=BG_COLOR_LDR,
             )
         ]
@@ -262,12 +297,15 @@ def gui_thread_runner(
         full_layout,
         use_custom_titlebar=False,  # Will not show an icon in task bar if custom titlebar is set unless window is minimized, basically it can be hidden behind others with this option
         grab_anywhere=True,
-        disable_close=True,  # Don't allow closing this window via "X" since we still need to update it
+        disable_close=False,  # Allow closing window
         background_color=BG_COLOR_LDR,
         titlebar_icon=OEM_ICON,
+        resizable=True,
     )
     # Finalize the window
     event, _ = progress_window.read(timeout=0.01)
+    # Set minimum window size to ensure buttons are always visible
+    progress_window.TKroot.minsize(500, 400)
     # window.bring_to_front() does not work, so we need to force focus on it
     progress_window.TKroot.focus_force()
 

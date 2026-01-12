@@ -424,7 +424,8 @@ def ls_window(parent_window: sg.Window, repo_config: dict, snapshot_id: str) -> 
         enable_close_attempted_event=True,
         finalize=True,
     )
-    fit_window_to_screen(window)
+    window.read(timeout=0)
+    fit_window_to_screen(window, min_width=600, min_height=400)
 
     # Reclaim memory from thread result
     # Note from v3 dev: This doesn't actually improve memory usage
@@ -504,7 +505,8 @@ def restore_window(
         resizable=True,
         finalize=True,
     )
-    fit_window_to_screen(window)
+    window.read(timeout=0)
+    fit_window_to_screen(window, min_width=400, min_height=150)
     result = None
     while True:
         event, values = window.read()
@@ -1142,10 +1144,11 @@ def _main_gui(viewer_mode: bool):
 
     # Auto reisze table to window size
     window["snapshot-list"].expand(True, True)
-    # Fit window to screen if too large
-    fit_window_to_screen(window)
 
+    # Let window render to get actual size
     window.read(timeout=0.01)
+    # Fit window to screen if too large with minimum size
+    fit_window_to_screen(window, min_width=500, min_height=300)
     if not config_file and not full_config and not viewer_mode:
         window["-NO-CONFIG-"].Update(visible=True)
 

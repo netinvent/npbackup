@@ -2618,6 +2618,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     )]],
                     scrollable=True,
                     vertical_scroll_only=False,  # Allow horizontal scrolling too
+                    size=(None, None),  # Allow unrestricted expansion
                     expand_x=True,
                     expand_y=True,
                     key="--config-scroll-area--",
@@ -2627,7 +2628,11 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 sg.Push(),
                 sg.Column(
                     buttons,
+                    pad=((0, 0), (5, 0)),  # Small top padding
+                    expand_x=True,
+                    element_justification="right",
                 ),
+                sg.Push(),
             ],
         ]
         return _global_layout
@@ -2649,13 +2654,16 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
         finalize=True,
         enable_close_attempted_event=True,
     )
-    fit_window_to_screen(window)
-
     # Expand TabGroups after window finalization for proper resizing
     window["--configtabgroup--"].expand(expand_x=True, expand_y=True)
     window["--object-tabgroup--"].expand(expand_x=True, expand_y=True)
     window["--global-tabgroup--"].expand(expand_x=True, expand_y=True)
     window["--config-scroll-area--"].expand(expand_x=True, expand_y=True)
+    
+    # Let window render to get actual size
+    window.read(timeout=0)
+    # Fit window to screen after all expansions with minimum size
+    fit_window_to_screen(window, min_width=600, min_height=400)
 
     # Init fresh config objects
     BAD_KEYS_FOUND_IN_CONFIG = set()
