@@ -120,8 +120,10 @@ def about_gui(
         layout,
         keep_on_top=True,
         element_justification="C",
+        resizable=True,
         finalize=True,
     )
+    window.TKroot.minsize(400, 300)
 
     while True:
         event, _ = window.read()

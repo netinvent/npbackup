@@ -246,8 +246,9 @@ def show_stats(statistics: List[dict]) -> None:
     ]
 
     window = sg.Window(
-        "Statistics", layout, keep_on_top=True, element_justification="R"
+        "Statistics", layout, keep_on_top=True, element_justification="R", resizable=True, finalize=True
     )
+    window.TKroot.minsize(400, 200)
     while True:
         event, _ = window.read()
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--EXIT--"):
@@ -291,143 +292,169 @@ def operations_gui(full_config: dict) -> dict:
         "URI                                 ",
     ]
 
+    # Header with logo, title and table
+    header_frame = sg.Column(
+        [
+            [
+                sg.Image(data=OEM_LOGO, subsample=2),
+                sg.Column(
+                    [
+                        [sg.Text(OEM_STRING, font="Arial 14")],
+                        [sg.Text(_t("operations_gui.configured_repositories"))],
+                    ],
+                    vertical_alignment="center",
+                    pad=(0, 0),
+                ),
+            ],
+            [
+                sg.Table(
+                    values=[[]],
+                    headings=headings,
+                    key="repo-and-group-list",
+                    auto_size_columns=True,
+                    justification="left",
+                    num_rows=4,
+                    expand_x=True,
+                    expand_y=True,
+                ),
+            ],
+        ],
+        expand_x=True,
+        expand_y=True,
+        element_justification="C",
+    )
+
+    # Buttons layout
+    buttons_layout = [
+        [sg.Text(_t("operations_gui.select_repositories"))],
+        [
+            sg.Button(
+                _t("operations_gui.housekeeping"),
+                key="--HOUSEKEEPING--",
+                size=(35, 1),
+            ),
+            sg.Button(
+                _t("operations_gui.task_scheduler"),
+                key="--TASK-SCHEDULER--",
+                size=(35, 1),
+            ),
+        ],
+        [
+            sg.Button(
+                _t("operations_gui.quick_check"),
+                key="--QUICK-CHECK--",
+                size=(35, 1),
+                visible=False,
+            ),
+            sg.Button(
+                _t("operations_gui.full_check"),
+                key="--FULL-CHECK--",
+                size=(35, 1),
+                visible=False,
+            ),
+        ],
+        [
+            sg.Button(
+                _t("operations_gui.repair_index"),
+                key="--REPAIR-INDEX--",
+                size=(35, 1),
+                visible=False,
+            ),
+            sg.Button(
+                _t("operations_gui.repair_snapshots"),
+                key="--REPAIR-SNAPSHOTS--",
+                size=(35, 1),
+                visible=False,
+            ),
+        ],
+        [
+            sg.Button(
+                _t("operations_gui.repair_packs"),
+                key="--REPAIR-PACKS--",
+                size=(35, 1),
+                visible=False,
+            ),
+            sg.Button(
+                _t("operations_gui.forget_using_retention_policy"),
+                key="--FORGET--",
+                size=(35, 1),
+                visible=False,
+            ),
+        ],
+        [
+            sg.Button(
+                _t("operations_gui.standard_prune"),
+                key="--STANDARD-PRUNE--",
+                size=(35, 1),
+                visible=False,
+            ),
+            sg.Button(
+                _t("operations_gui.max_prune"),
+                key="--MAX-PRUNE--",
+                size=(35, 1),
+                visible=False,
+            ),
+        ],
+        [
+            sg.Button(
+                _t("operations_gui.unlock"),
+                key="--UNLOCK--",
+                size=(35, 1),
+                visible=False,
+            ),
+            sg.Button(
+                _t("operations_gui.recover"),
+                key="--RECOVER--",
+                size=(35, 1),
+                visible=False,
+            ),
+        ],
+        [
+            sg.Button(
+                _t("operations_gui.stats"),
+                key="--STATS--",
+                size=(35, 1),
+            ),
+            sg.Button(
+                _t("operations_gui.stats_raw"),
+                key="--STATS-RAW--",
+                size=(35, 1),
+                visible=False,
+            ),
+        ],
+        [
+            sg.Button(
+                _t("operations_gui.show_advanced"),
+                key="--ADVANCED--",
+                size=(35, 1),
+                visible=True,
+            ),
+        ],
+    ]
+
+    # Buttons frame
+    buttons_frame = sg.Column(
+        buttons_layout,
+        expand_x=True,
+        expand_y=True,
+        element_justification="C",
+        key="-BUTTONS-FRAME-",
+    )
+
     layout = [
         [
-            sg.Column(
-                [
-                    [
-                        sg.Column(
-                            [[sg.Image(data=OEM_LOGO)]],
-                            vertical_alignment="top",
-                        ),
-                        sg.Column(
-                            [
-                                [sg.Text(OEM_STRING, font="Arial 14")],
-                            ],
-                            justification="C",
-                            element_justification="C",
-                            vertical_alignment="top",
-                        ),
-                    ],
-                    [sg.Text(_t("operations_gui.configured_repositories"))],
-                    [
-                        sg.Table(
-                            values=[[]],
-                            headings=headings,
-                            key="repo-and-group-list",
-                            auto_size_columns=True,
-                            justification="left",
-                        ),
-                    ],
-                    [
-                        sg.Text(_t("operations_gui.select_repositories")),
-                    ],
-                    [
-                        sg.Button(
-                            _t("operations_gui.housekeeping"),
-                            key="--HOUSEKEEPING--",
-                            size=(45, 1),
-                        ),
-                        sg.Button(
-                            _t("operations_gui.task_scheduler"),
-                            key="--TASK-SCHEDULER--",
-                            size=(45, 1),
-                        ),
-                    ],
-                    [
-                        sg.Button(
-                            _t("operations_gui.quick_check"),
-                            key="--QUICK-CHECK--",
-                            size=(45, 1),
-                            visible=False,
-                        ),
-                        sg.Button(
-                            _t("operations_gui.full_check"),
-                            key="--FULL-CHECK--",
-                            size=(45, 1),
-                            visible=False,
-                        ),
-                    ],
-                    [
-                        sg.Button(
-                            _t("operations_gui.repair_index"),
-                            key="--REPAIR-INDEX--",
-                            size=(45, 1),
-                            visible=False,
-                        ),
-                        sg.Button(
-                            _t("operations_gui.repair_snapshots"),
-                            key="--REPAIR-SNAPSHOTS--",
-                            size=(45, 1),
-                            visible=False,
-                        ),
-                    ],
-                    [
-                        sg.Button(
-                            _t("operations_gui.repair_packs"),
-                            key="--REPAIR-PACKS--",
-                            size=(45, 1),
-                            visible=False,
-                        ),
-                        sg.Button(
-                            _t("operations_gui.forget_using_retention_policy"),
-                            key="--FORGET--",
-                            size=(45, 1),
-                            visible=False,
-                        ),
-                    ],
-                    [
-                        sg.Button(
-                            _t("operations_gui.standard_prune"),
-                            key="--STANDARD-PRUNE--",
-                            size=(45, 1),
-                            visible=False,
-                        ),
-                        sg.Button(
-                            _t("operations_gui.max_prune"),
-                            key="--MAX-PRUNE--",
-                            size=(45, 1),
-                            visible=False,
-                        ),
-                    ],
-                    [
-                        sg.Button(
-                            _t("operations_gui.unlock"),
-                            key="--UNLOCK--",
-                            size=(45, 1),
-                            visible=False,
-                        ),
-                        sg.Button(
-                            _t("operations_gui.recover"),
-                            key="--RECOVER--",
-                            size=(45, 1),
-                            visible=False,
-                        ),
-                    ],
-                    [
-                        sg.Button(
-                            _t("operations_gui.stats"),
-                            key="--STATS--",
-                            size=(45, 1),
-                        ),
-                        sg.Button(
-                            _t("operations_gui.stats_raw"),
-                            key="--STATS-RAW--",
-                            size=(45, 1),
-                            visible=False,
-                        ),
-                        sg.Button(
-                            _t("operations_gui.show_advanced"),
-                            key="--ADVANCED--",
-                            size=(45, 1),
-                            visible=True,
-                        ),
-                    ],
-                    [sg.Button(_t("generic.return"), key="--EXIT--")],
-                ],
-                element_justification="C",
+            sg.Pane(
+                [header_frame, buttons_frame],
+                orientation="v",
+                show_handle=True,
+                border_width=0,
+                relief=sg.RELIEF_FLAT,
+                key="-OPERATIONS-PANE-",
+                expand_x=True,
+                expand_y=True,
             )
-        ]
+        ],
+        [sg.Button(_t("generic.return"), key="--EXIT--")],
     ]
 
     right_click_menu = ["", [_t("config_gui.show_decrypted")]]
