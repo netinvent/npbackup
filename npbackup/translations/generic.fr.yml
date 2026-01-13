@@ -74,3 +74,6 @@ fr:
 
   refresh: Recharger les informations du dépot
   load: Charger
+
+  click_to_copy: Cliquer pour copier
+  copied_to_clipboard: Copié dans le presse-papiers

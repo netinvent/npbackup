@@ -74,3 +74,6 @@ en:
 
   refresh: Refresh repo info
   load: Load
+
+  click_to_copy: Click to copy
+  copied_to_clipboard: Copied to clipboard

@@ -108,7 +108,17 @@ def about_gui(
         # auto_upgrade_result is None
         new_version = [sg.Text(_t("config_gui.auto_upgrade_disabled"))]
     layout = [
-        [sg.Text(version_string)],
+        [
+            sg.Input(
+                version_string,
+                key="-VERSION-STRING-",
+                readonly=True,
+                enable_events=True,
+                justification="center",
+                size=(len(version_string) + 2, 1),
+                tooltip=_t("generic.click_to_copy"),
+            )
+        ],
         new_version,
         [sg.Text("License: GNU GPLv3")],
         [sg.Multiline(LICENSE_TEXT, size=(65, 20), disabled=True)],
@@ -129,6 +139,13 @@ def about_gui(
         event, _ = window.read()
         if event in [sg.WIN_CLOSED, "exit"]:
             break
+        if event == "-VERSION-STRING-":
+            sg.clipboard_set(version_string)
+            sg.popup_quick_message(
+                _t("generic.copied_to_clipboard"),
+                keep_on_top=True,
+                auto_close_duration=1,
+            )
         if event == "autoupgrade":
             result = sg.PopupOKCancel(
                 _t("config_gui.auto_upgrade_will_quit"), keep_on_top=True
