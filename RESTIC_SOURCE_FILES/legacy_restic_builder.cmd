@@ -2,9 +2,13 @@
 
 :: Blatantly copied from https://gist.github.com/DRON-666/6e29eb6a8635fae9ab822782f34d8fd6
 :: with some mods to specify restic versions and produce both 32 and 64 bit executables
+::
+:: This script builds restic with a patched Go compiler that restores Windows 7 support.
+:: Official Go dropped Windows 7/Server 2008 R2 support in Go 1.21.
+:: The win7sup patch from DRON-666 re-enables it by patching Go source.
+:: Without this patch, restic crashes on Windows 7 when using VSS snapshots.
 
-8
-SET RESTIC_VERSION=0.18.0
+SET RESTIC_VERSION=0.18.1
 SET GO_BINARIES_VERSION=1.21.3
 SET GO23_VERSION=1.23.8
 SET GO24_VERSION=1.24.2
