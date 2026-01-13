@@ -400,7 +400,7 @@ def ls_window(parent_window: sg.Window, repo_config: dict, snapshot_id: str) -> 
                 headings=[_t("generic.size"), _t("generic.modification_date")],
                 auto_size_columns=True,
                 select_mode=sg.TABLE_SELECT_MODE_EXTENDED,
-                num_rows=40,
+                num_rows=10,
                 col0_heading=_t("generic.path"),
                 col0_width=80,
                 key="-TREE-",
@@ -416,7 +416,7 @@ def ls_window(parent_window: sg.Window, repo_config: dict, snapshot_id: str) -> 
             sg.Button(_t("generic.quit"), key="quit"),
         ],
     ]
-    layout = [[sg.Column(left_col, element_justification="C")]]
+    layout = [[sg.Column(left_col, element_justification="C", expand_x=True, expand_y=True)]]
     window = sg.Window(
         _t("generic.content"),
         layout=layout,
@@ -498,7 +498,7 @@ def restore_window(
         ],
     ]
 
-    layout = [[sg.Column(left_col, element_justification="C")]]
+    layout = [[sg.Column(left_col, element_justification="C", expand_x=True, expand_y=True)]]
     window = sg.Window(
         _t("main_gui.restoration"),
         layout=layout,
