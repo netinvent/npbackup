@@ -1496,7 +1496,7 @@ class NPBackupRunner:
 
         if backup_too_small:
             self.write_logs(
-                "Backup is smaller than configured minmium backup size", level="error"
+                "Backup is smaller than configured minimum backup size", level="error"
             )
 
         operation_result = (
