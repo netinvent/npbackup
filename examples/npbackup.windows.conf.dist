@@ -46,7 +46,7 @@ groups:
       post_exec_failure_is_fatal: false
       post_exec_execute_even_on_backup_error: true
       post_backup_housekeeping_percent_chance: 0
-      post_backup_housekeeping_interval: 0																					  
+      post_backup_housekeeping_interval: 0
     repo_opts:
       repo_password:
       repo_password_command:
