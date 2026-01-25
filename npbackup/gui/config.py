@@ -18,6 +18,7 @@ import FreeSimpleGUI as sg
 import textwrap
 from datetime import datetime, timezone
 from ruamel.yaml.comments import CommentedMap
+from npbackup.gui.window_utils import fit_window_to_screen
 from npbackup import configuration
 from ofunctions.misc import get_key_from_value, BytesConverter
 from npbackup.core.i18n_helper import _t
@@ -1083,6 +1084,7 @@ def config_gui(full_config: dict, config_file: str):
                     col0_heading=_t("generic.paths"),
                     expand_x=True,
                     expand_y=True,
+                    num_rows=2,  # Minimum height: header + 1 row
                 )
             ],
             [
@@ -2217,11 +2219,16 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             [
                 sg.Column(
                     object_selector,
+                    expand_x=True,
                 )
             ],
             [
                 sg.TabGroup(
-                    tab_group_layout, enable_events=True, key="--object-tabgroup--"
+                    tab_group_layout,
+                    enable_events=True,
+                    key="--object-tabgroup--",
+                    expand_x=True,
+                    expand_y=True,
                 )
             ],
         ]
@@ -2491,7 +2498,11 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
         _layout = [
             [
                 sg.TabGroup(
-                    tab_group_layout, enable_events=True, key="--global-tabgroup--"
+                    tab_group_layout,
+                    enable_events=True,
+                    key="--global-tabgroup--",
+                    expand_x=True,
+                    expand_y=True,
                 )
             ],
         ]
@@ -2593,22 +2604,35 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             ],
         ]
 
+        # Wrap TabGroup in scrollable Column so buttons stay fixed at bottom
         _global_layout = [
             [
-                sg.TabGroup(
-                    tab_group_layout,
-                    enable_events=True,
-                    key="--configtabgroup--",
+                sg.Column(
+                    [[sg.TabGroup(
+                        tab_group_layout,
+                        enable_events=True,
+                        key="--configtabgroup--",
+                        expand_x=True,
+                        expand_y=True,
+                        pad=0,
+                    )]],
+                    scrollable=True,
+                    vertical_scroll_only=False,  # Allow horizontal scrolling too
+                    size=(None, None),  # Allow unrestricted expansion
                     expand_x=True,
                     expand_y=True,
-                    pad=0,
+                    key="--config-scroll-area--",
                 )
             ],
             [
                 sg.Push(),
                 sg.Column(
                     buttons,
+                    pad=((0, 0), (5, 0)),  # Small top padding
+                    expand_x=True,
+                    element_justification="right",
                 ),
+                sg.Push(),
             ],
         ]
         return _global_layout
@@ -2626,9 +2650,20 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
         alpha_channel=1.0,
         default_button_element_size=(16, 1),
         right_click_menu=right_click_menu,
+        resizable=True,
         finalize=True,
         enable_close_attempted_event=True,
     )
+    # Expand TabGroups after window finalization for proper resizing
+    window["--configtabgroup--"].expand(expand_x=True, expand_y=True)
+    window["--object-tabgroup--"].expand(expand_x=True, expand_y=True)
+    window["--global-tabgroup--"].expand(expand_x=True, expand_y=True)
+    window["--config-scroll-area--"].expand(expand_x=True, expand_y=True)
+    
+    # Let window render to get actual size
+    window.read(timeout=0)
+    # Fit window to screen after all expansions with minimum size
+    fit_window_to_screen(window, min_width=600, min_height=400)
 
     # Init fresh config objects
     BAD_KEYS_FOUND_IN_CONFIG = set()
@@ -2896,7 +2931,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                                 tree.delete(var_name)
                             tree.insert("", var_name, var_name, [var_value], icon=icon)
                         else:
-                            sg.Popup_error(_t("config_gui.value_cannot_be_empty"))
+                            sg.PopupError(_t("config_gui.value_cannot_be_empty"))
                             break
                 else:
                     node = sg.PopupGetText(popup_text)

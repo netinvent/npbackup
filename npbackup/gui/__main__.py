@@ -28,6 +28,7 @@ from ofunctions.threading import threaded
 from ofunctions.misc import BytesConverter
 import FreeSimpleGUI as sg
 import _tkinter
+from npbackup.gui.window_utils import fit_window_to_screen
 import npbackup.configuration
 import npbackup.common
 from resources.customization import (
@@ -107,7 +108,17 @@ def about_gui(
         # auto_upgrade_result is None
         new_version = [sg.Text(_t("config_gui.auto_upgrade_disabled"))]
     layout = [
-        [sg.Text(version_string)],
+        [
+            sg.Input(
+                version_string,
+                key="-VERSION-STRING-",
+                readonly=True,
+                enable_events=True,
+                justification="center",
+                size=(len(version_string) + 2, 1),
+                tooltip=_t("generic.click_to_copy"),
+            )
+        ],
         new_version,
         [sg.Text("License: GNU GPLv3")],
         [sg.Multiline(LICENSE_TEXT, size=(65, 20), disabled=True)],
@@ -119,13 +130,22 @@ def about_gui(
         layout,
         keep_on_top=True,
         element_justification="C",
+        resizable=True,
         finalize=True,
     )
+    window.TKroot.minsize(400, 300)
 
     while True:
         event, _ = window.read()
         if event in [sg.WIN_CLOSED, "exit"]:
             break
+        if event == "-VERSION-STRING-":
+            sg.clipboard_set(version_string)
+            sg.popup_quick_message(
+                _t("generic.copied_to_clipboard"),
+                keep_on_top=True,
+                auto_close_duration=1,
+            )
         if event == "autoupgrade":
             result = sg.PopupOKCancel(
                 _t("config_gui.auto_upgrade_will_quit"), keep_on_top=True
@@ -397,7 +417,7 @@ def ls_window(parent_window: sg.Window, repo_config: dict, snapshot_id: str) -> 
                 headings=[_t("generic.size"), _t("generic.modification_date")],
                 auto_size_columns=True,
                 select_mode=sg.TABLE_SELECT_MODE_EXTENDED,
-                num_rows=40,
+                num_rows=10,
                 col0_heading=_t("generic.path"),
                 col0_width=80,
                 key="-TREE-",
@@ -413,14 +433,18 @@ def ls_window(parent_window: sg.Window, repo_config: dict, snapshot_id: str) -> 
             sg.Button(_t("generic.quit"), key="quit"),
         ],
     ]
-    layout = [[sg.Column(left_col, element_justification="C")]]
+    layout = [[sg.Column(left_col, element_justification="C", expand_x=True, expand_y=True)]]
     window = sg.Window(
         _t("generic.content"),
         layout=layout,
         grab_anywhere=True,
         keep_on_top=False,
+        resizable=True,
         enable_close_attempted_event=True,
+        finalize=True,
     )
+    window.read(timeout=0)
+    fit_window_to_screen(window, min_width=600, min_height=400)
 
     # Reclaim memory from thread result
     # Note from v3 dev: This doesn't actually improve memory usage
@@ -491,10 +515,17 @@ def restore_window(
         ],
     ]
 
-    layout = [[sg.Column(left_col, element_justification="C")]]
+    layout = [[sg.Column(left_col, element_justification="C", expand_x=True, expand_y=True)]]
     window = sg.Window(
-        _t("main_gui.restoration"), layout=layout, grab_anywhere=True, keep_on_top=False
+        _t("main_gui.restoration"),
+        layout=layout,
+        grab_anywhere=True,
+        keep_on_top=False,
+        resizable=True,
+        finalize=True,
     )
+    window.read(timeout=0)
+    fit_window_to_screen(window, min_width=400, min_height=150)
     result = None
     while True:
         event, values = window.read()
@@ -1126,13 +1157,17 @@ def _main_gui(viewer_mode: bool):
         alpha_channel=1.0,
         default_button_element_size=(16, 1),
         right_click_menu=right_click_menu,
+        resizable=True,
         finalize=True,
     )
 
     # Auto reisze table to window size
     window["snapshot-list"].expand(True, True)
 
+    # Let window render to get actual size
     window.read(timeout=0.01)
+    # Fit window to screen if too large with minimum size
+    fit_window_to_screen(window, min_width=500, min_height=300)
     if not config_file and not full_config and not viewer_mode:
         window["-NO-CONFIG-"].Update(visible=True)
 

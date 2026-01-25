@@ -281,6 +281,8 @@ def compile(
     # As of Nuitka v1.8, `-c` parameter is used to prevent fork bomb self execution
     # We don't need this, so let's disable it so we can use `-c`as `--config-file` shortcut
     NUITKA_OPTIONS = " --no-deployment-flag=self-execution"
+    # Auto-accept downloads in CI environments (dependency walker, etc.)
+    NUITKA_OPTIONS += " --assume-yes-for-downloads"
     NUITKA_OPTIONS += " --enable-plugin=data-hiding" if have_nuitka_commercial() else ""
 
     if build_type in ("gui", "viewer"):

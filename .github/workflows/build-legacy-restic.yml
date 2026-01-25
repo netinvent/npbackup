@@ -1,0 +1,187 @@
+name: Build Legacy Restic (Windows 7 compatible)
+
+# This workflow builds restic with a patched Go compiler that restores Windows 7 support.
+# Official Go dropped Windows 7/Server 2008 R2 support in Go 1.21.
+# The win7sup patch from DRON-666 re-enables it.
+
+on:
+  push:
+    paths:
+      - '.github/workflows/build-legacy-restic.yml'
+      - 'RESTIC_SOURCE_FILES/legacy_restic_builder.cmd'
+  workflow_dispatch:
+    inputs:
+      restic_version:
+        description: 'Restic version to build'
+        required: true
+        default: '0.18.1'
+      go_patch_version:
+        description: 'Go version to patch (must have win7sup patch available)'
+        required: true
+        default: '1.24.2'
+      architecture:
+        description: 'Architecture to build'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - x64
+          - x86
+          - all
+
+env:
+  GO_BOOTSTRAP_VERSION: '1.21.3'
+  GO23_VERSION: '1.23.8'
+  # Defaults for push trigger (workflow_dispatch will override via inputs)
+  DEFAULT_RESTIC_VERSION: '0.18.1'
+  DEFAULT_GO_PATCH_VERSION: '1.24.2'
+  DEFAULT_ARCHITECTURE: 'all'
+
+jobs:
+  build-legacy-restic:
+    runs-on: windows-2019
+    env:
+      RESTIC_VERSION: ${{ inputs.restic_version || '0.18.1' }}
+      GO_PATCH_VERSION: ${{ inputs.go_patch_version || '1.24.2' }}
+      ARCHITECTURE: ${{ inputs.architecture || 'all' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup build environment
+        shell: pwsh
+        run: |
+          $buildDir = "BUILD"
+          New-Item -ItemType Directory -Force -Path $buildDir
+          Write-Host "Build directory created: $buildDir"
+
+      - name: Download busybox (for tar, patch, wget)
+        shell: pwsh
+        run: |
+          $busyboxUrl = "https://frippery.org/files/busybox/busybox64.exe"
+          $busyboxPath = "BUILD\busybox64.exe"
+          Write-Host "Downloading busybox..."
+          Invoke-WebRequest -Uri $busyboxUrl -OutFile $busyboxPath
+          Write-Host "Busybox downloaded"
+
+      - name: Download Go ${{ env.GO_BOOTSTRAP_VERSION }} (bootstrap, Win7 compatible)
+        shell: pwsh
+        run: |
+          $goUrl = "https://go.dev/dl/go${{ env.GO_BOOTSTRAP_VERSION }}.windows-amd64.zip"
+          $goZip = "BUILD\go-bootstrap.zip"
+          Write-Host "Downloading Go ${{ env.GO_BOOTSTRAP_VERSION }} bootstrap..."
+          Invoke-WebRequest -Uri $goUrl -OutFile $goZip
+          Expand-Archive -Path $goZip -DestinationPath "BUILD\go-bootstrap-tmp"
+          Move-Item "BUILD\go-bootstrap-tmp\go" "BUILD\go-bootstrap"
+          Remove-Item $goZip
+          Write-Host "Go bootstrap ready"
+
+      - name: Download and patch Go ${{ env.GO23_VERSION }}
+        shell: cmd
+        run: |
+          cd BUILD
+          echo Downloading Go %GO23_VERSION% source...
+          busybox64.exe wget https://go.dev/dl/go%GO23_VERSION%.src.tar.gz
+          mkdir go23
+          busybox64.exe tar x -z --strip-components 1 -C go23 -f go%GO23_VERSION%.src.tar.gz
+          echo Downloading win7sup patch...
+          busybox64.exe wget https://gist.github.com/DRON-666/6e29eb6a8635fae9ab822782f34d8fd6/raw/win7sup.diff
+          cd go23
+          echo Applying win7sup patch...
+          ..\busybox64.exe patch -p 0 -i ..\win7sup.diff
+          ..\busybox64.exe sed -E -i "s/^go1.+[0-9]$/\0-win7sup/" VERSION
+          echo Building Go %GO23_VERSION%-win7sup...
+          cd src
+          set GOROOT_BOOTSTRAP=%CD%\..\..\go-bootstrap
+          call make.bat
+          cd ..\..\..
+          echo Go %GO23_VERSION%-win7sup built successfully
+
+      - name: Download and patch Go ${{ env.GO_PATCH_VERSION }}
+        shell: cmd
+        run: |
+          cd BUILD
+          echo Downloading Go ${{ env.GO_PATCH_VERSION }} source...
+          busybox64.exe wget https://go.dev/dl/go${{ env.GO_PATCH_VERSION }}.src.tar.gz
+          mkdir go-final
+          busybox64.exe tar x -z --strip-components 1 -C go-final -f go${{ env.GO_PATCH_VERSION }}.src.tar.gz
+          cd go-final
+          echo Applying win7sup patch...
+          ..\busybox64.exe patch -p 0 -i ..\win7sup.diff
+          ..\busybox64.exe sed -E -i "s/^go1.+[0-9]$/\0-win7sup/" VERSION
+          echo Building Go ${{ env.GO_PATCH_VERSION }}-win7sup...
+          cd src
+          set GOROOT_BOOTSTRAP=%CD%\..\..\go23
+          call make.bat
+          cd ..\..\..
+          echo Go ${{ env.GO_PATCH_VERSION }}-win7sup built successfully
+
+      - name: Download restic ${{ env.RESTIC_VERSION }} source
+        shell: cmd
+        run: |
+          cd BUILD
+          echo Downloading restic ${{ env.RESTIC_VERSION }}...
+          busybox64.exe wget https://github.com/restic/restic/releases/download/v${{ env.RESTIC_VERSION }}/restic-${{ env.RESTIC_VERSION }}.tar.gz
+          mkdir restic-src
+          busybox64.exe tar x -z --strip-components 1 -C restic-src -f restic-${{ env.RESTIC_VERSION }}.tar.gz
+          echo Restic source ready
+
+      - name: Build restic for amd64
+        if: ${{ env.ARCHITECTURE == 'x64' || env.ARCHITECTURE == 'all' }}
+        shell: cmd
+        run: |
+          cd BUILD\restic-src
+          set PATH=%CD%\..\go-final\bin;%PATH%
+          set GOARCH=amd64
+          set GOTOOLCHAIN=local
+          echo Building restic ${{ env.RESTIC_VERSION }} for amd64...
+          go.exe run build.go
+          move /y restic.exe ..\restic_${{ env.RESTIC_VERSION }}_windows_legacy_amd64.exe
+          ..\restic_${{ env.RESTIC_VERSION }}_windows_legacy_amd64.exe version
+          cd ..\..
+
+      - name: Build restic for 386
+        if: ${{ env.ARCHITECTURE == 'x86' || env.ARCHITECTURE == 'all' }}
+        shell: cmd
+        run: |
+          cd BUILD\restic-src
+          set PATH=%CD%\..\go-final\bin;%PATH%
+          set GOARCH=386
+          set GOTOOLCHAIN=local
+          echo Building restic ${{ env.RESTIC_VERSION }} for 386...
+          go.exe run build.go
+          move /y restic.exe ..\restic_${{ env.RESTIC_VERSION }}_windows_legacy_386.exe
+          ..\restic_${{ env.RESTIC_VERSION }}_windows_legacy_386.exe version
+          cd ..\..
+
+      - name: Prepare artifacts
+        shell: pwsh
+        run: |
+          $version = "${{ env.RESTIC_VERSION }}"
+          $goVersion = "${{ env.GO_PATCH_VERSION }}"
+          $artifactName = "restic-${version}-win7sup-go${goVersion}"
+
+          New-Item -ItemType Directory -Force -Path "artifacts"
+
+          Get-ChildItem "BUILD\restic_*_windows_legacy_*.exe" | ForEach-Object {
+            Copy-Item $_.FullName "artifacts\"
+            Write-Host "Artifact: $($_.Name)"
+            # Show version info
+            & $_.FullName version
+          }
+
+          # Create version info file
+          @"
+          Restic version: $version
+          Go version: $goVersion-win7sup
+          Build date: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC")
+          Windows 7/Server 2008 R2 compatible: Yes
+          "@ | Out-File "artifacts\BUILD-INFO.txt"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: restic-${{ env.RESTIC_VERSION }}-win7sup-go${{ env.GO_PATCH_VERSION }}
+          path: artifacts/
+          retention-days: 90
