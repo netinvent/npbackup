@@ -33,8 +33,6 @@ import npbackup.common
 from resources.customization import (
     OEM_STRING,
     OEM_LOGO,
-    BG_COLOR_LDR,
-    TXT_COLOR_LDR,
     GUI_STATE_OK_BUTTON,
     GUI_STATE_OLD_BUTTON,
     GUI_STATE_UNKNOWN_BUTTON,
@@ -45,8 +43,10 @@ from resources.customization import (
     IRREGULAR_FILE_ICON,
     LICENSE_TEXT,
     SIMPLEGUI_THEME,
+    SIMPLEGUI_DARK_THEME,
     OEM_ICON,
     SHORT_PRODUCT_NAME,
+    #THEME_CHOOSER_ICON
 )
 from npbackup.gui.config import config_gui, ask_manager_password
 from npbackup.gui.operations import operations_gui
@@ -59,6 +59,7 @@ from npbackup.__version__ import version_dict, version_string
 from npbackup.__debug__ import _DEBUG, _NPBACKUP_ALLOW_AUTOUPGRADE_DEBUG
 from npbackup.restic_wrapper import ResticRunner
 from npbackup.restic_wrapper import schema
+from npbackup.gui.ttk_theme import reskin_job
 
 
 logger = getLogger()
@@ -72,8 +73,7 @@ __repo_aware_concurrency = False
 GUI_STATUS_IGNORE_ERRORS = True
 
 
-sg.theme(SIMPLEGUI_THEME)
-sg.SetOptions(icon=OEM_ICON)
+sg.set_options(icon=OEM_ICON)
 
 
 def popup_wait_for_upgrade(text: str):
@@ -118,6 +118,8 @@ def about_gui(
         _t("generic.about"),
         layout,
         keep_on_top=True,
+        grab_anywhere=True,
+        no_titlebar=False,
         element_justification="C",
         finalize=True,
     )
@@ -178,7 +180,7 @@ def viewer_repo_gui(
             sg.Button(_t("generic.accept"), key="--ACCEPT--"),
         ],
     ]
-    window = sg.Window("Viewer", layout, keep_on_top=True, grab_anywhere=True)
+    window = sg.Window("Viewer", layout, keep_on_top=True, no_titlebar=False, grab_anywhere=True)
     while True:
         event, values = window.read()
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--CANCEL--"):
@@ -382,8 +384,6 @@ def ls_window(parent_window: sg.Window, repo_config: dict, snapshot_id: str) -> 
             LOADER_ANIMATION,
             message="{}...".format(_t("main_gui.creating_tree")),
             time_between_frames=50,
-            background_color=BG_COLOR_LDR,
-            text_color=TXT_COLOR_LDR,
         )
     sg.PopupAnimated(None)
 
@@ -418,6 +418,7 @@ def ls_window(parent_window: sg.Window, repo_config: dict, snapshot_id: str) -> 
         _t("generic.content"),
         layout=layout,
         grab_anywhere=True,
+        no_titlebar=False,
         keep_on_top=False,
         enable_close_attempted_event=True,
     )
@@ -493,7 +494,7 @@ def restore_window(
 
     layout = [[sg.Column(left_col, element_justification="C")]]
     window = sg.Window(
-        _t("main_gui.restoration"), layout=layout, grab_anywhere=True, keep_on_top=False
+        _t("main_gui.restoration"), layout=layout, grab_anywhere=True, keep_on_top=False, no_titlebar=False
     )
     result = None
     while True:
@@ -603,7 +604,7 @@ def _main_gui(viewer_mode: bool):
                 sg.Button(_t("main_gui.open_existing_file"), key="--LOAD--"),
             ],
         ]
-        window = sg.Window("Configuration File", layout=layout, keep_on_top=True)
+        window = sg.Window("Configuration File", layout=layout, keep_on_top=True, no_titlebar=False, grab_anywhere=True)
         while True:
             action = None
             event, values = window.read()
@@ -946,7 +947,7 @@ def _main_gui(viewer_mode: bool):
             repo_list,
         ) = get_config(config_file=config_file, repo_name=args.repo_name)
 
-    right_click_menu = ["", [_t("generic.destination")]]
+    right_click_menu = ["", [_t("generic.destination"), "Theme"]]
     # So I did not find any good way to make sure tables have the right size on Linux
     # So here is a hack to make sure the table is larger on linux
     if os.name == "nt":
@@ -972,7 +973,7 @@ def _main_gui(viewer_mode: bool):
                 [
                     [
                         sg.Column(
-                            [[sg.Image(data=OEM_LOGO)]], vertical_alignment="middle"
+                            [[sg.Image(data=OEM_LOGO, subsample=2)]], vertical_alignment="top"
                         ),
                         sg.Column(
                             [
@@ -1121,7 +1122,7 @@ def _main_gui(viewer_mode: bool):
         auto_size_text=True,
         auto_size_buttons=True,
         no_titlebar=False,
-        grab_anywhere=False,
+        grab_anywhere=True,
         keep_on_top=False,
         alpha_channel=1.0,
         default_button_element_size=(16, 1),
@@ -1292,6 +1293,13 @@ def _main_gui(viewer_mode: bool):
                 gui_update_state(current_state, backup_tz, snapshot_list, repo_type)
                 if current_state is None:
                     sg.Popup(_t("main_gui.cannot_get_repo_status"))
+        if event == "Theme":
+            if sg.theme() != SIMPLEGUI_DARK_THEME:
+                CURRENT_THEME = SIMPLEGUI_DARK_THEME
+            else:
+                CURRENT_THEME = SIMPLEGUI_THEME
+            reskin_job(window, CURRENT_THEME)
+            continue
 
 
 def main_gui(viewer_mode=False):

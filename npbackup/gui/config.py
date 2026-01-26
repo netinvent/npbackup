@@ -151,7 +151,7 @@ def config_gui(full_config: dict, config_file: str):
         ]
 
         window = sg.Window(
-            _t("config_gui.create_object"), layout=layout, keep_on_top=True
+            _t("config_gui.create_object"), layout=layout, keep_on_top=True, no_titlebar=False, grab_anywhere=True
         )
         while True:
             event, values = window.read()
@@ -985,7 +985,7 @@ def config_gui(full_config: dict, config_file: str):
             full_config.g(f"{object_type}.{object_name}.manager_password"),
         )
 
-        window = sg.Window(_t("config_gui.permissions"), layout, keep_on_top=True)
+        window = sg.Window(_t("config_gui.permissions"), layout, keep_on_top=True, no_titlebar=False, grab_anywhere=True)
         window.finalize()
         # Stupid fix because using window update method will fill input with "0" if False is given
         window["-MANAGER-PASSWORD-"].Update(
@@ -2617,7 +2617,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
     window = sg.Window(
         title="Configuration",
         layout=config_layout(),
-        # size=(800, 650),
+        #size=(800, 650),
         auto_size_text=True,
         auto_size_buttons=False,
         no_titlebar=False,
@@ -2938,10 +2938,9 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             continue
         if event == "--ACCEPT--":
             if object_type != "groups" and not values["repo_uri"]:
-                sg.PopupError(
-                    _t("config_gui.repo_uri_cannot_be_empty"), keep_on_top=True
+                sg.Popup(
+                    _t("config_gui.repo_uri_should_not_be_empty"), keep_on_top=True
                 )
-                continue
             full_config = update_config_dict(
                 full_config, current_object_type, current_object_name, values
             )

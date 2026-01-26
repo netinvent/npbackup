@@ -8,6 +8,7 @@ en:
   encrypted_data: Encrypted_Data
   compression: Compression
   backup_paths: Backup paths
+  backup_sources: Backup sources
   use_fs_snapshot: Use VSS snapshots
   ignore_cloud_files: Ignore in-cloud files
   windows_only: Windows only
@@ -69,7 +70,7 @@ en:
 
   configuration_saved: Configuration saved
   cannot_save_configuration: Could not save configuration. See logs for further info
-  repo_uri_cannot_be_empty: Repo URI / path cannot be empty
+  repo_uri_should_not_be_empty: Repo URI / path should not be empty
   set_manager_password: Manager password
   wrong_password: Wrong password
   remove_password: Remove password
@@ -213,3 +214,12 @@ en:
   test_email: Send test notification email
   test_email_success: Test email sent successfully
   test_email_failure: Test email failed, see logs for details
+
+  backend_local: Local Storage
+  backend_sftp: SFTP
+  backend_rclone: Rclone
+  backend_b2: Backblaze B2
+  backend_s3: Amazon / Compatible S3
+  backend_azure: Microsoft Azure Blob Storage
+  backend_gcs: Google Cloud Storage
+  backend_rest: Restic HTTP Server

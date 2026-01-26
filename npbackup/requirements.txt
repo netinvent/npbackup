@@ -12,7 +12,7 @@ ofunctions.mailer>=1.3.0
 #python-pidfile>=3.0.0
 # pysimplegui 5 has gone commercial, let's switch to freesimplegui
 # keep in mind that freesimplegui might higher required python version in the future
-freesimplegui==5.2.0
+freesimplegui@https://github.com/netinvent/FreeSimpleGUI/archive/refs/heads/npb-fixes.zip
 requests
 ruamel.yaml
 psutil
@@ -30,3 +30,4 @@ pywin32; platform_system == "Windows"
 imageio; platform_system == "Darwin"
 ntplib>=0.4.0
 # msgspec needs python 3.8+ and is not compatible with win 32-bit
+sv_ttk
