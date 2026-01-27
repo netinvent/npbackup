@@ -31,3 +31,4 @@ imageio; platform_system == "Darwin"
 ntplib>=0.4.0
 # msgspec needs python 3.8+ and is not compatible with win 32-bit
 sv_ttk
+reskinner
