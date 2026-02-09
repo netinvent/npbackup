@@ -35,7 +35,6 @@ import upgrade_server.crud as crud
 import upgrade_server.configuration as configuration
 from upgrade_server.__debug__ import _DEBUG
 
-
 # Make sure we load given config files again
 parser = ArgumentParser()
 parser.add_argument(
