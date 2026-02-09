@@ -38,21 +38,26 @@ else:
     CURRENT_TTK_THEME = "sun-valley-light"
 
 root = sg.tk.Tk()
-scale = 96/root.winfo_fpixels('1i')     # Format your layout if when 96 DPI
+scale = 96 / root.winfo_fpixels("1i")  # Format your layout if when 96 DPI
 root.destroy()
 
+
 def scaled(pixels):
-    return round(scale*pixels)
+    return round(scale * pixels)
+
 
 sg.theme(CURRENT_THEME)
 sg.DEFAULT_TTK_THEME = CURRENT_TTK_THEME
-sg.ADDITIONAL_TTK_STYLING_PATHS = os.path.join(os.path.dirname(sv_ttk.__file__), "sv.tcl")
-#sg.DEFAULT_TTK_THEME = "azure-light"
-#sg.ADDITIONAL_TTK_STYLING_PATHS = os.path.join(os.path.dirname(__file__), "azure/azure.tcl")
+sg.ADDITIONAL_TTK_STYLING_PATHS = os.path.join(
+    os.path.dirname(sv_ttk.__file__), "sv.tcl"
+)
+# sg.DEFAULT_TTK_THEME = "azure-light"
+# sg.ADDITIONAL_TTK_STYLING_PATHS = os.path.join(os.path.dirname(__file__), "azure/azure.tcl")
 sg.USE_TTK_BUTTONS = False
 
 CURRENT_THEME = SIMPLEGUI_THEME
 RESKIN_WINDOW = None
+
 
 def reskin_job(window=None, theme=None):
     global CURRENT_THEME
@@ -61,17 +66,21 @@ def reskin_job(window=None, theme=None):
     RESKIN_WINDOW = window
     CURRENT_THEME = theme
     if RESKIN_WINDOW:
+        sg.DEFAULT_TTK_THEME = (
+            "sun-valley-dark"
+            if CURRENT_THEME == SIMPLEGUI_DARK_THEME
+            else "sun-valley-light"
+        )
+        # sg.DEFAULT_TTK_THEME = "azure-dark" if CURRENT_THEME == SIMPLEGUI_DARK_THEME else "azure-light"
+
+        # We must force SimpleGUI to update it's ttk theme as well
+        style = ttk.Style(window.hidden_master_root)
+        sg._change_ttk_theme(style, sg.DEFAULT_TTK_THEME)
         reskin(
             window=RESKIN_WINDOW,
             new_theme=CURRENT_THEME,
             theme_function=sg.theme,
             lf_table=sg.LOOK_AND_FEEL_TABLE,
         )
-        sg.DEFAULT_TTK_THEME = "sun-valley-dark" if CURRENT_THEME == SIMPLEGUI_DARK_THEME else "sun-valley-light"
-        #sg.DEFAULT_TTK_THEME = "azure-dark" if CURRENT_THEME == SIMPLEGUI_DARK_THEME else "azure-light"
-        
-        # We must force SimpleGUI to update it's ttk theme as well
-        style = ttk.Style(window.hidden_master_root)
-        sg._change_ttk_theme(style, sg.DEFAULT_TTK_THEME)
 
     RESKIN_WINDOW.TKroot.after(60000, reskin_job)
