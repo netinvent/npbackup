@@ -46,7 +46,7 @@ from resources.customization import (
     SIMPLEGUI_DARK_THEME,
     OEM_ICON,
     SHORT_PRODUCT_NAME,
-    #THEME_CHOOSER_ICON
+    # THEME_CHOOSER_ICON
 )
 from npbackup.gui.config import config_gui, ask_manager_password
 from npbackup.gui.operations import operations_gui
@@ -180,7 +180,9 @@ def viewer_repo_gui(
             sg.Button(_t("generic.accept"), key="--ACCEPT--"),
         ],
     ]
-    window = sg.Window("Viewer", layout, keep_on_top=True, no_titlebar=False, grab_anywhere=True)
+    window = sg.Window(
+        "Viewer", layout, keep_on_top=True, no_titlebar=False, grab_anywhere=True
+    )
     while True:
         event, values = window.read()
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--CANCEL--"):
@@ -494,7 +496,11 @@ def restore_window(
 
     layout = [[sg.Column(left_col, element_justification="C")]]
     window = sg.Window(
-        _t("main_gui.restoration"), layout=layout, grab_anywhere=True, keep_on_top=False, no_titlebar=False
+        _t("main_gui.restoration"),
+        layout=layout,
+        grab_anywhere=True,
+        keep_on_top=False,
+        no_titlebar=False,
     )
     result = None
     while True:
@@ -604,7 +610,13 @@ def _main_gui(viewer_mode: bool):
                 sg.Button(_t("main_gui.open_existing_file"), key="--LOAD--"),
             ],
         ]
-        window = sg.Window("Configuration File", layout=layout, keep_on_top=True, no_titlebar=False, grab_anywhere=True)
+        window = sg.Window(
+            "Configuration File",
+            layout=layout,
+            keep_on_top=True,
+            no_titlebar=False,
+            grab_anywhere=True,
+        )
         while True:
             action = None
             event, values = window.read()
@@ -973,7 +985,8 @@ def _main_gui(viewer_mode: bool):
                 [
                     [
                         sg.Column(
-                            [[sg.Image(data=OEM_LOGO, subsample=2)]], vertical_alignment="top"
+                            [[sg.Image(data=OEM_LOGO, subsample=2)]],
+                            vertical_alignment="top",
                         ),
                         sg.Column(
                             [

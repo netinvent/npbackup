@@ -151,7 +151,11 @@ def config_gui(full_config: dict, config_file: str):
         ]
 
         window = sg.Window(
-            _t("config_gui.create_object"), layout=layout, keep_on_top=True, no_titlebar=False, grab_anywhere=True
+            _t("config_gui.create_object"),
+            layout=layout,
+            keep_on_top=True,
+            no_titlebar=False,
+            grab_anywhere=True,
         )
         while True:
             event, values = window.read()
@@ -985,7 +989,13 @@ def config_gui(full_config: dict, config_file: str):
             full_config.g(f"{object_type}.{object_name}.manager_password"),
         )
 
-        window = sg.Window(_t("config_gui.permissions"), layout, keep_on_top=True, no_titlebar=False, grab_anywhere=True)
+        window = sg.Window(
+            _t("config_gui.permissions"),
+            layout,
+            keep_on_top=True,
+            no_titlebar=False,
+            grab_anywhere=True,
+        )
         window.finalize()
         # Stupid fix because using window update method will fill input with "0" if False is given
         window["-MANAGER-PASSWORD-"].Update(
@@ -2617,7 +2627,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
     window = sg.Window(
         title="Configuration",
         layout=config_layout(),
-        #size=(800, 650),
+        # size=(800, 650),
         auto_size_text=True,
         auto_size_buttons=False,
         no_titlebar=False,
@@ -2625,6 +2635,8 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
         keep_on_top=False,
         alpha_channel=1.0,
         default_button_element_size=(16, 1),
+        # margins=(0, 0),
+        # element_padding=(0, 0),
         right_click_menu=right_click_menu,
         finalize=True,
         enable_close_attempted_event=True,

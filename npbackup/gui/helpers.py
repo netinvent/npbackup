@@ -406,9 +406,13 @@ def gui_thread_runner(
     progress_window["--CANCEL--"].Update(disabled=True)
     progress_window["--EXIT--"].Update(disabled=False)
     if stderr_has_messages:
-        progress_window["--EXIT--"].update(button_color=(sg.theme_button_color()[0], "red"))
+        progress_window["--EXIT--"].update(
+            button_color=(sg.theme_button_color()[0], "red")
+        )
     else:
-        progress_window["--EXIT--"].update(button_color=(sg.theme_button_color()[0], "green"))
+        progress_window["--EXIT--"].update(
+            button_color=(sg.theme_button_color()[0], "green")
+        )
     # Keep the window open until user has done something
     progress_window["-LOADER-ANIMATION-"].Update(visible=False)
     if (not __autoclose or stderr_has_messages) and not __ignore_errors:
