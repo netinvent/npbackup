@@ -12,7 +12,6 @@ __build__ = "2025102101"
 
 from npbackup.core.i18n_helper import _t
 
-
 combo_boxes = {
     "repo_opts.compression": {
         "auto": _t("config_gui.auto"),

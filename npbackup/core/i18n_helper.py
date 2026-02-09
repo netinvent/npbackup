@@ -16,7 +16,6 @@ from locale import getlocale
 import i18n
 from npbackup.path_helper import BASEDIR
 
-
 logger = getLogger()
 
 

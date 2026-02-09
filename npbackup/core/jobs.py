@@ -20,7 +20,6 @@ from logging import getLogger
 from random import randint
 from npbackup.path_helper import CURRENT_DIR
 
-
 logger = getLogger()
 
 

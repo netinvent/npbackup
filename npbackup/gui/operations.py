@@ -31,7 +31,6 @@ from resources.customization import (
 )
 from npbackup.gui.config import ENCRYPTED_DATA_PLACEHOLDER, ask_manager_password
 
-
 logger = getLogger(__intname__)
 
 

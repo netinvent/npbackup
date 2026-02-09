@@ -26,7 +26,6 @@ from datetime import datetime, timezone
 from argparse import ArgumentParser
 from ofunctions.misc import BytesConverter, convert_time_to_seconds
 
-
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 

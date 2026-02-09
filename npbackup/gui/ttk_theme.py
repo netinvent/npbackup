@@ -19,7 +19,7 @@ from resources.customization import SIMPLEGUI_THEME, SIMPLEGUI_DARK_THEME
 # Make app DPI aware on Windows
 # Balantly stolen from https://github.com/PySimpleGUI/PySimpleGUI/issues/3880#issuecomment-775990455
 # WIP: We might want this to be optional
-# WIP: Dcumentation
+# WIP: Documentation
 if os.environ.get("NPBACKUP_DPI_AWARENESS", "True").lower() == "true":
     pass
 sg.set_options(dpi_awareness=True)

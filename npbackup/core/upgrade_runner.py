@@ -14,7 +14,6 @@ from logging import getLogger
 from npbackup.upgrade_client.upgrader import auto_upgrader, _check_new_version
 import npbackup.configuration
 
-
 logger = getLogger()
 
 

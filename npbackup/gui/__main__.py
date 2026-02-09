@@ -61,7 +61,6 @@ from npbackup.restic_wrapper import ResticRunner
 from npbackup.restic_wrapper import schema
 from npbackup.gui.ttk_theme import reskin_job
 
-
 logger = getLogger()
 backend_binary = None
 __no_lock = False
