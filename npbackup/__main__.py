@@ -95,7 +95,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         "--force",
         action="store_true",
         default=False,
-        help="Force running a backup regardless of existing backups age",
+        help="Force running a backup regardless of existing backups age (This is not the same as restic's own --force)",
     )
     parser.add_argument(
         "-r",
