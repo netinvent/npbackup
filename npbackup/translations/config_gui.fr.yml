@@ -17,7 +17,7 @@ fr:
   exclude_files: Fichiers contenant des patterns d'exclusions
   exclude_files_larger_than: Exclure les fichiers plus grands que
   excludes_case_ignore: Ignorer la casse des exclusions patterns/fichiers
-  windows_always: toujours actif pour Windows
+  windows_no_effect: aucun effet sous Windows
   exclude_cache_dirs: Exclure dossiers cache
   one_file_system: Ne pas suivre les points de montage
   minimum_backup_size_error: Taille minimale en dessous de laquelle la sauvegarde est considérée échouée

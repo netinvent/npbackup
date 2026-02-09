@@ -16,7 +16,7 @@ en:
   exclude_files: Files containing exclude patterns
   excludes_case_ignore: Ignore case for excludes patterns/files
   exclude_files_larger_than: Exclude files larger than
-  windows_always: always enabled for Windows
+  windows_no_effect: has no effect on Windows
   exclude_cache_dirs: Exclude cache dirs
   one_file_system: Do not follow mountpoints
   minimum_backup_size_error: Minimum size under which backup is considered failed

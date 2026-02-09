@@ -1386,7 +1386,7 @@ def config_gui(full_config: dict, config_file: str):
                     pad=1,
                 ),
                 sg.Checkbox(
-                    f'{_t("config_gui.excludes_case_ignore")} ({_t("config_gui.windows_always")})',
+                    f'{_t("config_gui.excludes_case_ignore")} ({_t("config_gui.windows_no_effect")})',
                     key="backup_opts.excludes_case_ignore",
                     size=(None, 1),
                 ),
