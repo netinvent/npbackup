@@ -20,7 +20,6 @@ from ofunctions.logger_utils import logger_get_logger
 import upgrade_server.api
 from upgrade_server.__debug__ import _DEBUG
 
-
 if __name__ == "__main__":
     _DEV = os.environ.get("_DEV", False)
 

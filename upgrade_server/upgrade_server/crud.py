@@ -18,7 +18,6 @@ from datetime import datetime, timezone
 from upgrade_server.models.files import ClientTargetIdentification, FileGet, FileSend
 from upgrade_server.models.oper import CurrentVersion
 
-
 logger = getLogger()
 
 

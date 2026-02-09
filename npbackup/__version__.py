@@ -20,7 +20,6 @@ import npbackup.__env__
 from npbackup.key_management import IS_PRIV_BUILD
 from npbackup.core.nuitka_helper import IS_COMPILED
 
-
 # Python 3.7 versions are considered legacy since they don't support msgspec
 # msgspec is only supported on Python 3.8 64-bit and above
 # Since development currently follows Python 3.12, let's consider anything below 3.12 as legacy

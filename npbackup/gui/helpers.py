@@ -23,8 +23,6 @@ from ofunctions.misc import BytesConverter
 from npbackup.core.i18n_helper import _t
 from resources.customization import (
     LOADER_ANIMATION,
-    BG_COLOR_LDR,
-    TXT_COLOR_LDR,
 )
 from npbackup.core.runner import NPBackupRunner
 from npbackup.__debug__ import _DEBUG
@@ -34,7 +32,6 @@ from resources.customization import SIMPLEGUI_THEME, OEM_ICON
 logger = getLogger()
 
 
-sg.theme(SIMPLEGUI_THEME)
 sg.SetOptions(icon=OEM_ICON)
 
 
@@ -168,8 +165,6 @@ def gui_thread_runner(
             sg.Text(
                 _t("main_gui.last_messages"),
                 key="-OPERATIONS-PROGRESS-STDOUT-TITLE-",
-                text_color=TXT_COLOR_LDR,
-                background_color=BG_COLOR_LDR,
                 visible=not __compact,
             )
         ],
@@ -187,8 +182,6 @@ def gui_thread_runner(
             sg.Text(
                 _t("main_gui.error_messages"),
                 key="-OPERATIONS-PROGRESS-STDERR-TITLE-",
-                text_color=TXT_COLOR_LDR,
-                background_color=BG_COLOR_LDR,
                 visible=not __compact,
             )
         ],
@@ -204,13 +197,11 @@ def gui_thread_runner(
             sg.Column(
                 [
                     [
-                        sg.Push(background_color=BG_COLOR_LDR),
+                        sg.Push(),
                         sg.Text(
                             "↓",
                             key="--EXPAND--",
                             enable_events=True,
-                            background_color=BG_COLOR_LDR,
-                            text_color=TXT_COLOR_LDR,
                             visible=__compact,
                         ),
                     ],
@@ -218,8 +209,6 @@ def gui_thread_runner(
                         sg.Image(
                             LOADER_ANIMATION,
                             key="-LOADER-ANIMATION-",
-                            background_color=BG_COLOR_LDR,
-                            visible=USE_THREADING,
                         )
                     ],
                     [sg.Text("Debugging active", visible=not USE_THREADING)],
@@ -227,20 +216,17 @@ def gui_thread_runner(
                 expand_x=True,
                 justification="C",
                 element_justification="C",
-                background_color=BG_COLOR_LDR,
             )
         ],
         [
             sg.Button(
                 _t("generic.cancel"),
                 key="--CANCEL--",
-                button_color=(TXT_COLOR_LDR, BG_COLOR_LDR),
                 disabled=False,
             ),
             sg.Button(
                 _t("generic.close"),
                 key="--EXIT--",
-                button_color=(TXT_COLOR_LDR, BG_COLOR_LDR),
                 disabled=True,
             ),
         ],
@@ -252,7 +238,6 @@ def gui_thread_runner(
                 progress_layout,
                 element_justification="C",
                 expand_x=True,
-                background_color=BG_COLOR_LDR,
             )
         ]
     ]
@@ -263,7 +248,6 @@ def gui_thread_runner(
         use_custom_titlebar=False,  # Will not show an icon in task bar if custom titlebar is set unless window is minimized, basically it can be hidden behind others with this option
         grab_anywhere=True,
         disable_close=True,  # Don't allow closing this window via "X" since we still need to update it
-        background_color=BG_COLOR_LDR,
         titlebar_icon=OEM_ICON,
     )
     # Finalize the window
@@ -422,9 +406,13 @@ def gui_thread_runner(
     progress_window["--CANCEL--"].Update(disabled=True)
     progress_window["--EXIT--"].Update(disabled=False)
     if stderr_has_messages:
-        progress_window["--EXIT--"].update(button_color=(TXT_COLOR_LDR, "red"))
+        progress_window["--EXIT--"].update(
+            button_color=(sg.theme_button_color()[0], "red")
+        )
     else:
-        progress_window["--EXIT--"].update(button_color=(TXT_COLOR_LDR, "green"))
+        progress_window["--EXIT--"].update(
+            button_color=(sg.theme_button_color()[0], "green")
+        )
     # Keep the window open until user has done something
     progress_window["-LOADER-ANIMATION-"].Update(visible=False)
     if (not __autoclose or stderr_has_messages) and not __ignore_errors:

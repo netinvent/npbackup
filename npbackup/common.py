@@ -16,7 +16,6 @@ from datetime import datetime, timezone
 from logging import getLogger
 from ofunctions.logger_utils import get_worst_logger_level
 
-
 logger = getLogger()
 
 

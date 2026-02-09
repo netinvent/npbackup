@@ -9,6 +9,7 @@ fr:
   encrypted_data: Donnée_Chiffrée
   compression: Compression
   backup_paths: Chemins à sauvegarder
+  backup_sources: Éléments à sauvegarder
   use_fs_snapshot: Utiliser les instantanés VSS
   ignore_cloud_files: Exclure le fichiers dans le cloud
   windows_only: Windows seulement
@@ -35,8 +36,8 @@ fr:
 
   minimum_backup_age: Délai minimal entre deux sauvegardes
   random_delay_before_backup: Délai aléatoire avant la sauvegarde
-  backup_repo_uri: URI / chemin local dépot de sauvegarde
-  backup_repo_password: Mot de passe (chiffrement) dépot de sauvegarde
+  backup_repo_uri: URI / chemin dépot de sauvegarde
+  backup_repo_password: Mot de passe dépot de sauvegarde
   backup_repo_password_command: Commande qui retourne le mot de passe de chiffrement dépot
   upload_speed: Vitesse limite de téléversement (KB/s)
   download_speed: Vitesse limite de téléchargement (KB/s)
@@ -70,7 +71,7 @@ fr:
 
   configuration_saved: Configuration sauvegardée
   cannot_save_configuration: Impossible d'enregistrer la configuration. Veuillez consulter les journaux pour plus de détails
-  repo_uri_cannot_be_empty: L'URI / chemin local dépot de sauvegarde ne peut-être vide
+  repo_uri_should_not_be_empty: L'URI / chemin local dépot de sauvegarde ne devrait pas être vide
   set_manager_password: Mot de passe gestionnaire
   wrong_password: Mot de passe érroné
   remove_password: Supprimer le mot de passe
@@ -215,3 +216,12 @@ fr:
   test_email: Envoyer un email de test
   test_email_success: Email de test envoyé avec succès
   test_email_failure: Échec de l'envoi du test email, veuillez consulter les journaux pour plus de détails
+
+  backend_local: Stockage local
+  backend_sftp: SFTP
+  backend_rclone: Rclone
+  backend_b2: Backblaze B2
+  backend_s3: Amazon / Compatible S3
+  backend_azure: Microsoft Azure Blob Storage
+  backend_gcs: Google Cloud Storage
+  backend_rest: Serveur HTTP Restic

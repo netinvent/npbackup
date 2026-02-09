@@ -27,7 +27,6 @@ except ImportError:
 import datetime
 from npbackup.core.runner import NPBackupRunner
 
-
 logger = getLogger()
 
 

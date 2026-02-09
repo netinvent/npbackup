@@ -34,7 +34,6 @@ import npbackup.pidfile_ng
 from npbackup.__debug__ import _DEBUG, exception_to_string
 from npbackup.__env__ import MAX_ALLOWED_NTP_OFFSET
 
-
 logger = logging.getLogger()
 
 METRICS_NOT_NEEDED = False
