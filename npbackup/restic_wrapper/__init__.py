@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025112601"
-__version__ = "2.7.5"
+__build__ = "2026020901"
+__version__ = "2.7.6"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -1324,9 +1324,9 @@ class ResticRunner:
         result, output = self.executor(cmd, method="monitor")
         self.verbose = verbose
         if result:
-            msg = "Successfully pruned repository"
+            msg = f"Successfully pruned repository:\n{output}"
         else:
-            msg = "Could not prune repository"
+            msg = f"Could not prune repository:\n{output}"
         return self.convert_to_json_output(result, output=output, msg=msg, **kwargs)
 
     def check(self, read_data: bool = True) -> Union[bool, str, dict]:
