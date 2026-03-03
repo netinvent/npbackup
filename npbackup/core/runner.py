@@ -7,7 +7,7 @@ __intname__ = "npbackup.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2025 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025100201"
+__build__ = "2026030301"
 
 
 from typing import Optional, Callable, Union, List
@@ -48,7 +48,7 @@ required_permissions = {
     "ls": ["backup", "restore", "restore_only", "full"],
     "find": ["backup", "restore", "restore_only", "full"],
     "restore": ["restore", "restore_only", "full"],
-    "dump": ["restore", "retore_only", "full"],
+    "dump": ["restore", "restore_only", "full"],
     "check": ["restore", "full"],
     "recover": ["restore", "full"],
     "list": ["full"],
@@ -160,7 +160,7 @@ class NPBackupRunner:
     def backend_version(self) -> bool:
         if self._is_ready:
             return self.restic_runner.binary_version
-        return None
+        return False
 
     @property
     def dry_run(self):
@@ -267,7 +267,7 @@ class NPBackupRunner:
             and not isinstance(value, Callable)
             and not isinstance(value, queue.Queue)
         ):
-            raise ValueError("Bogus stdout parameter given: {}".format(value))
+            raise ValueError("Bogus stderr parameter given: {}".format(value))
         self._stderr = value
 
     @property
@@ -277,7 +277,7 @@ class NPBackupRunner:
     @binary.setter
     def binary(self, value):
         if not isinstance(value, str) or not os.path.isfile(value):
-            raise ValueError("Backend binary {value} is not readable")
+            raise ValueError(f"Backend binary {value} is not readable")
         self._binary = value
 
     @property
@@ -345,6 +345,9 @@ class NPBackupRunner:
         Write logs to log file and stdout / stderr queues if exist for GUI usage
         Also collect errors and warnings for json output
         """
+        if msg is None:
+            raise ValueError("None log message received")
+
         if level == "warning":
             logger.warning(msg)
         elif level == "error":
@@ -358,8 +361,6 @@ class NPBackupRunner:
         else:
             raise ValueError(f"Bogus log level given {level}")
 
-        if msg is None:
-            raise ValueError("None log message received")
         if self.stdout and (level == "info" or (level == "debug" and _DEBUG)):
             self.stdout.put(f"\n{msg}")
         if self.stderr and level in ("critical", "error", "warning"):
@@ -946,7 +947,7 @@ class NPBackupRunner:
             else:
                 js = {
                     "result": result,
-                    "operation": fn_name,
+                    "operation": fn_name(),
                     "additional_error_info": [],
                     "additional_warning_info": [],
                 }
@@ -1517,7 +1518,7 @@ class NPBackupRunner:
                 "backup_opts.post_backup_housekeeping_percent_chance"
             )
             post_backup_housekeeping_interval = self.repo_config.g(
-                "backup_opts.post_backup_houskeeping_interval"
+                "backup_opts.post_backup_housekeeping_interval"
             )
             if (
                 post_backup_housekeeping_percent_chance
@@ -1639,6 +1640,7 @@ class NPBackupRunner:
                 if not offset or offset > float(MAX_ALLOWED_NTP_OFFSET):
                     if not offset:
                         msg = f"Offset cannot be obtained from NTP server {ntp_server}"
+                        self.write_logs(msg, level="error")
                     elif offset > float(MAX_ALLOWED_NTP_OFFSET):
                         msg = f"Offset from NTP server {ntp_server} is too high: {offset} seconds. Won't apply policy"
                         self.write_logs(msg, level="critical")
