@@ -5,10 +5,10 @@
 
 __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2022-2025 NetInvent"
+__copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026020901"
-__version__ = "2.7.6"
+__build__ = "2026030601"
+__version__ = "2.8.0"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -359,6 +359,9 @@ class ResticRunner:
         """
         Write logs to log file and stdout / stderr queues if exist for GUI usage
         """
+        if msg is None:
+            raise ValueError("None log message received")
+
         if level == "warning":
             logger.warning(msg)
         elif level == "error":
@@ -372,8 +375,6 @@ class ResticRunner:
         else:
             raise ValueError("Bogus log level given {level}")
 
-        if msg is None:
-            raise ValueError("None log message received")
         if self.stdout and (level == "info" or (level == "debug" and _DEBUG)):
             # pylint: disable=E1101 (no-member)
             self.stdout.put(msg)
@@ -1329,7 +1330,9 @@ class ResticRunner:
             msg = f"Could not prune repository:\n{output}"
         return self.convert_to_json_output(result, output=output, msg=msg, **kwargs)
 
-    def check(self, read_data: bool = True) -> Union[bool, str, dict]:
+    def check(
+        self, read_data: bool = True, read_data_subset: str = None
+    ) -> Union[bool, str, dict]:
         """
         Check current repo status
         """
@@ -1337,6 +1340,7 @@ class ResticRunner:
         kwargs.pop("self")
 
         cmd = "check{}".format(" --read-data" if read_data else "")
+        cmd += f" --read-data-subset {read_data_subset}" if read_data_subset else ""
         result, output = self.executor(cmd)
         if result:
             msg = "Repo checked successfully"
