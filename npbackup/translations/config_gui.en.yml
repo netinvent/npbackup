@@ -1,13 +1,14 @@
 en:
   # tabs
   backup: Backup
+  operations: Operations
   backup_destination: Destination
   exclusions: Exclusions
   pre_post: Pre/Post exec
 
   encrypted_data: Encrypted_Data
   compression: Compression
-  backup_paths: Backup paths
+  backup_objects: Objects to backup
   backup_sources: Backup sources
   use_fs_snapshot: Use VSS snapshots
   ignore_cloud_files: Ignore in-cloud files
@@ -26,6 +27,7 @@ en:
   post_exec_commands: Post-exec commands
   execute_even_on_backup_error: Execute even if backup failed
   tags: Tags
+  backup_tags_explanation: Tags are a great way to label your backups in order to apply selective retention policies
   one_per_line: one per line
   backup_priority: Backup priority
   pack_size: Pack size (MB)
@@ -41,18 +43,6 @@ en:
   upload_speed: Upload speed limit (KB/s)
   download_speed: Download speed limit (KB/s)
   backend_connections: Simultaneous repo connections
-
-  prometheus_config: Prometheus configuration
-  available_variables: Available variables ${HOSTNAME}, ${BACKUP_JOB}, ${MACHINE_ID}, ${MACHINE_GROUP}, ${RANDOM}[n]
-  available_variables_id: Available variables ${HOSTNAME}, ${RANDOM}[n] where n is the number of random chars
-  enable_prometheus: Enable prometheus metrics
-  job_name: Job name (backup_job)
-  metrics_destination: Metrics destination (Push URI / file)
-  no_cert_verify: Do not verify SSL certificate
-  metrics_username: HTTP metrics username
-  metrics_password: HTTP metrics password
-  prometheus_instance: Prometheus instance
-  additional_labels: Additional labels
 
   no_config_available: No configuration file found. Please use --config-file "path" to specify one or copy a config file next to the NPBackup binary
   create_new_config: Would you like to create a new configuration ?
@@ -71,6 +61,10 @@ en:
   configuration_saved: Configuration saved
   cannot_save_configuration: Could not save configuration. See logs for further info
   repo_uri_should_not_be_empty: Repo URI / path should not be empty
+  repo_passwoord_should_not_be_empty: Repo password or password command should not be empty
+  backup_source_should_not_be_empty: Backup source should not be empty
+  there_are_invalid_email_addresses: There are invalid email addresses
+  invalid_email_address: Invalid email address
   set_manager_password: Manager password
   wrong_password: Wrong password
   remove_password: Remove password
@@ -86,12 +80,14 @@ en:
   auto_upgrade_failed: Auto upgrade procedure failed, see logs for further details
   auto_upgrade_disabled: Auto upgrade is disabled or server is not reachable
 
+  # Scheduling
   create_backup_scheduled_task_every: Create scheduled backup task every
   create_backup_scheduled_task_at: Create scheduled backup task every day at
   create_housekeeping_scheduled_task_at: Create housekeeping scheduled every day at
   scheduled_task_explanation: Task can run at a given time to run a backup which is great to make server backups, or run every x minutes, but only run actual backup when more than maximum_backup_age minutes was reached, which is the best way to backup laptops which have flexible power on hours.
   scheduled_task_creation_success: Scheduled task created successfully
   scheduled_task_creation_failure: Scheduled task could not be created. See logs for further info
+  task_type: Task type
 
   machine_identification: Machine identification
   machine_id: Machine identifier
@@ -122,24 +118,30 @@ en:
   # retention policy
   retention_policy: Retention policy
   keep: Keep
-  last: last snapshots
-  hourly: hourly snapshots
-  daily: daily snapshots
-  weekly: weekly snapshots
-  monthly: monthly snapshots
-  yearly: yearly snapshots
+  hourly: hourly
+  daily: daily
+  weekly: weekly
+  monthly: monthly
+  yearly: yearly
   keep_within: Keep snapshots within time period relative to current snapshot
-  keep_tags: Keep snapshots with the following tags
-  apply_on_tagds: Apply only on snapshots with the following tags
+  keep_tags: Always keep these tags
+  apply_on_tags: Never apply on these tags
+  optional_ntp_server_uri: Optional NTP server URI
+
+  # housekeeping
+  housekeeping: Housekeeping
   post_backup_housekeeping_percent_chance: Post backup housekeeping run chance (%%)
   post_backup_housekeeping_percent_chance_explanation: Randomize housekeeping runs after backup (0-100%%, 0 = never, 100 = always)
   post_backup_housekeeping_interval: Post backup housekeeping interval
   post_backup_housekeeping_interval_explanation: Interval in number of runs between housekeeping runs
-  optional_ntp_server_uri: Optional NTP server URI
+
   prune_max_unused: Prune max unused data
   prune_max_unused_explanation: Maximum percentage or bytes of unused data to keep in when pruning with maximum parameter
   prune_max_repack_size: Prune max repack size
   prune_max_repack_size_explanation: Maximum size of repacks when pruning (limits needed storage size for prune operation)
+  read_data_subset: Read data subset for checks
+  read_data_subset_explanation: Subset of data to read when checking repo integrity. This can be used to speed up checks by only reading a percentage of data or a maximum amount of bytes. Format is either percentage (0-100%%) or bytes (e.g. 10GB, 500MB, 200KB)
+
   # repo / group managmeent
   repo_group: Repo group
   group_inherited: Group inherited
@@ -167,7 +169,7 @@ en:
   restore_only_perms: Restore only
   full_perms: Full permissions
   setting_permissions_requires_manager_password: Setting permissions requires manager password
-  manager_password_too_simple: Manager password needs at least 8 uppercase, lowercase and digits characters
+  password_too_simple: Password needs at least 8 uppercase, lowercase and digits characters
   current_permissions: Current permissions (no inheritance)
   manager_password_set: Manager password initialized (no inheritance)
   
@@ -197,16 +199,50 @@ en:
   full_concurrency: Don't check for concurrency
   repo_aware_concurrency: Allow concurrent runs on different repos
 
+  prometheus: Prometheus
+  prometheus_config: Prometheus configuration
+  available_variables: Available variables ${HOSTNAME}, ${BACKUP_JOB}, ${REPO_NAME}, ${REPO_GROUP}, ${MACHINE_ID}, ${MACHINE_GROUP}, ${RANDOM}[n]
+  available_variables_id: Available variables ${HOSTNAME}, ${RANDOM}[n] where n is the number of random chars
+  prometheus_enable: Enable prometheus metrics
+  job_name: Job name (backup_job)
+  metrics_destination: Metrics destination (Push URI / file)
+  no_cert_verify: Do not verify SSL certificate
+  metrics_username: HTTP metrics username
+  metrics_password: HTTP metrics password
+
+  zabbix: Zabbix
+  zabbix_config: Zabbix configuration
+  zabbix_enable: Enable Zabbix active checks
+  zabbix_server: Zabbix server
+  zabbix_port: Zabbix port
+
+  healthchecksio: Healthchecks.io
+  healthchecksio_config: Healthchecks.io configuration
+  healthchecksio_enable: Enable Healthchecks.io notifications
+  healthchecksio_url: Healthchecks.io URL
+
+  webhooks: Webhooks
+  webhooks_config: Webhook notifications configuration
+  webhooks_enable: Enable Webhooks
+  webhooks_url: Webhook URL
+  webhooks_method: Webhook method
+
+  repo_monitoring_identity: Repo monitoring identity
+  global_monitoring_identity: Global monitoring identity
+  instance_name: Instance name
+  backup_job: Backup job name
+  additional_labels: Additional monitoring labels
+
+  email: Email
   email_config: Email configuration
-  enable_email_notifications: Enable email notifications
-  email_instance: Instance name
+  email_enable: Enable email notifications
   smtp_server: SMTP server
   smtp_port: SMTP port
   smtp_security: SMTP security (none, tls, ssl)
   smtp_username: SMTP username
   smtp_password: SMTP password
-  sender: Sender email address
-  recipients: Comma separated recipient addresses
+  email_sender: Sender email address
+  email_recipients: Comma separated recipient addresses
   email_on_backup_success: Email on backup success
   email_on_backup_failure: Email on backup failure
   email_on_operations_success: Email on all operations success
@@ -214,6 +250,7 @@ en:
   test_email: Send test notification email
   test_email_success: Test email sent successfully
   test_email_failure: Test email failed, see logs for details
+  add_recipient: Add recipient
 
   backend_local: Local Storage
   backend_sftp: SFTP
@@ -223,3 +260,4 @@ en:
   backend_azure: Microsoft Azure Blob Storage
   backend_gcs: Google Cloud Storage
   backend_rest: Restic HTTP Server
+

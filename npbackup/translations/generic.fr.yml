@@ -21,10 +21,17 @@ fr:
   seconds: secondes
   minutes: minutes
   hours: heures
+  days: jours
+  weeks: semaines
+  months: mois
+  years: années
 
   user: Utilisateur
   group: Groupe
   identity: Identité
+
+  username: nom d'utilisateur
+  password: mot de passe
 
   old: Ancien
   up_to_date: A jour
@@ -79,3 +86,38 @@ fr:
 
   refresh: Recharger les informations du dépot
   load: Charger
+
+  monday: lundi
+  tuesday: mardi
+  wednesday: mercredi
+  thursday: jeudi
+  friday: vendredi
+  saturday: samedi
+  sunday: dimanche
+
+  prometheus: Prometheus
+  zabbix: Zabbix
+  email: Email
+  webhooks: Webhooks
+  healthchecksio: Healthchecks.io
+
+  error: erreur
+  warning: avertissement
+  success: succès
+  failure: échec
+
+  date: date
+  time: heure
+  every: tous les
+
+  advanced_settings: Paramètres avancés
+
+  tag: étiquette
+  optional: optionnel
+
+  minimum_size: Taille minimale
+  maximum_size: Taille maximale
+
+  help: Aide
+
+  timeout: Délai d'attente

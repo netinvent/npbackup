@@ -21,10 +21,17 @@ en:
   seconds: seconds
   minutes: minutes
   hours: hours
+  days: days
+  weeks: weeks
+  months: months
+  years: years
 
   user: User
   group: Group
   identity: Identity
+
+  username: username
+  password: password
 
   old: Old
   up_to_date: Up to date
@@ -79,3 +86,38 @@ en:
 
   refresh: Refresh repo info
   load: Load
+
+  monday: monday
+  tuesday: tuesday
+  wednesday: wednesday
+  thursday: thursday
+  friday: friday
+  saturday: saturday
+
+  prometheus: Prometheus
+  zabbix: Zabbix
+  email: Email
+  webhooks: Webhooks
+  healthchecksio: Healthchecks.io
+
+  error: error
+  warning: warning
+  success: success
+  failure: failure
+
+  date: date
+  time: time
+  every: every
+
+  advanced_settings: Advanced settings
+
+  tag: tag
+  optional: optional
+
+  minmimum_size: Minimum size
+  maximum_size: Maximum size
+
+  help: Help
+
+  timeout: Timeout
+

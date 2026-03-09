@@ -1,0 +1,63 @@
+en:
+  wizard_start: Start
+  select_backup_sources: Select backup sources
+  backup_source: Files & folders
+  backup_location: Backup location
+  backend: Backup backend
+  backup_options: Backup options
+  summary: Summary
+  welcome: Wizard setup
+  welcome_description: This setup will guide you through the initial configuration
+
+  thank_you: Thank you for using
+
+  step_1: Select backup sources
+  step_1_description: Choose the objects you want to back up
+  step_2: Select backup location
+  step_2_description: Choose where you want to store your backups
+  select_backend: Select backend
+  step_3: Schedule
+  step_3_description: Configure backup scheduling options
+  step_4: Retention
+  step_4_description: Configure backup retention options
+  step_5: Superivsion / notification
+  step_5_description: Configure supervision and notification options
+  step_6: Options
+  step_6_description: Configure additional backup options
+  step_7: Summary
+  step_7_description: Backup configuration is now complete
+
+  add_system: Add Windows system
+  add_hyper_v: Add Hyper-V virtual machines
+  add_kvm: Add KVM virtual machines
+
+  gfs: GFS backup retention (30 days, 4 weeks, 12 months and 2 years)
+  90d: Keep last 90 Days of backups
+  30d: Keep last 30 Days of backups
+  14d: Keep last 14 Days of backups
+  keep_all: Keep All Backups
+
+  # STEP 2
+  remote_username: Remote username
+  remote_password: Remote password
+  s3_accesskey_id: S3 AccessKey ID
+  s3_secret_access_key: S3 Secret Access Key
+  azure_account_key: Azure Account Key
+  azure_account_sas: Azure Account SAS
+  azure_account_name: Azure Account Name
+  b2_account_id: B2 Account ID
+  b2_account_key: B2 Account Key
+  google_project_id: Google Project ID
+  google_application_credentials: Google Application Credentials
+
+  # STEP 3
+  first_backup_date:  First backup date
+  backup_frequency: Backup frequency
+  only_if_no_recent_backup_exists: Only if no backup has been done in the last
+  authorized_days: Authorized days of week
+
+  # STEP 5
+  monitoring_identity_description: Configure the identity of this backup instance
+
+  # STEP 7
+  wizard_ending_text: Your backup configuration is now complete and will be saved as %{config_file}. You can edit this configuration file or add some specific settings in the main configuration settings.
