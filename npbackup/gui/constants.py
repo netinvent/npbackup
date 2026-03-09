@@ -5,7 +5,7 @@
 
 __intname__ = "npbackup.gui.constants"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2023-2025 NetInvent"
+__copyright__ = "Copyright (C) 2023-2026 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2025102101"
 
@@ -36,12 +36,6 @@ combo_boxes = {
         "restore_only": _t("config_gui.restore_only_perms"),
         "full": _t("config_gui.full_perms"),
     },
-    "retention_options": {
-        "GFS": _t("wizard_gui.retention_gfs"),
-        "14days": _t("wizard_gui.retention_14_days"),
-        "30days": _t("wizard_gui.retention_30_days"),
-        "keep_all": _t("wizard_gui.retention_keep_all"),
-    },
     "backends": {
         "local": _t("config_gui.backend_local"),
         "sftp": _t("config_gui.backend_sftp"),
@@ -52,6 +46,55 @@ combo_boxes = {
         "gcs": _t("config_gui.backend_gcs"),
         "rest": _t("config_gui.backend_rest"),
     },
+    "backup_frequency_unit": {
+        "minutes": _t("generic.minutes"),
+        "hours": _t("generic.hours"),
+        "days": _t("generic.days"),
+        "weeks": _t("generic.weeks"),
+        "months": _t("generic.months"),
+    },
 }
 
 byte_units = ["B", "KB", "KiB", "MB", "MiB", "GB", "GiB", "TB", "TiB", "PB", "PiB"]
+
+presets = {
+    "retention_policy": {
+        "14d": {
+            "last": 3,
+            "hourly": 72,
+            "daily": 14,
+            "weekly": 0,
+            "monthly": 0,
+            "yearly": 0,
+            "keep_within": True,
+            "group_by_host": True,
+            "group_by_tags": True,
+            "group_by_paths": False,
+        },
+        "30d": {
+            "last": 3,
+            "hourly": 72,
+            "daily": 30,
+            "weekly": 0,
+            "monthly": 0,
+            "yearly": 0,
+            "keep_within": True,
+            "group_by_host": True,
+            "group_by_tags": True,
+            "group_by_paths": False,
+        },
+        "gfs": {
+            "last": 3,
+            "hourly": 72,
+            "daily": 30,
+            "weekly": 4,
+            "monthly": 12,
+            "yearly": 3,
+            "keep_within": True,
+            "group_by_host": True,
+            "group_by_tags": True,
+            "group_by_paths": False,
+        },
+        "keep_all": {},
+    }
+}

@@ -5,36 +5,49 @@
 
 __intname__ = "npbackup.gui.operations"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2023-2025 NetInvent"
+__copyright__ = "Copyright (C) 2023-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2024093001"
+__build__ = "2026030101"
 
 
 import os
 from typing import List
-from logging import getLogger
+import logging
 from collections import namedtuple
+from datetime import datetime
 from ofunctions.misc import BytesConverter
 import FreeSimpleGUI as sg
+from ofunctions.threading import threaded
 from npbackup.configuration import (
     get_repo_config,
     get_repo_list,
     get_group_list,
     get_repos_by_group,
     get_manager_password,
+    save_config,
+    get_monitoring_config,
 )
+from npbackup.gui.constants import combo_boxes
 from npbackup.core.i18n_helper import _t
-from npbackup.gui.helpers import get_anon_repo_uri, gui_thread_runner
+from npbackup.gui.helpers import (
+    get_anon_repo_uri,
+    gui_thread_runner,
+    popup_error,
+    WaitWindow,
+    HideWindow,
+)
 from resources.customization import (
     OEM_STRING,
     OEM_LOGO,
 )
-from npbackup.gui.config import ENCRYPTED_DATA_PLACEHOLDER, ask_manager_password
+import npbackup.gui.common_gui_logic
+import npbackup.gui.common_gui
+import npbackup.task
 
-logger = getLogger(__intname__)
+logger = logging.getLogger(__intname__)
 
 
-gui_object = namedtuple("GuiOjbect", ["type", "name", "group", "backend", "uri"])
+gui_object = namedtuple("GuiObject", ["type", "name", "group", "backend", "uri"])
 
 
 def gui_update_state(window, full_config: dict, unencrypted: str = None) -> list:
@@ -48,8 +61,8 @@ def gui_update_state(window, full_config: dict, unencrypted: str = None) -> list
             ):
                 repo_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
                 repo_group = repo_config.g("repo_group")
-                if not unencrypted and unencrypted != repo_name:
-                    repo_uri = ENCRYPTED_DATA_PLACEHOLDER
+                if unencrypted != repo_name:
+                    repo_uri = npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
                 repo_and_group_list.append(
                     gui_object("repo", repo_name, repo_group, repo_type, repo_uri)
                 )
@@ -63,83 +76,120 @@ def gui_update_state(window, full_config: dict, unencrypted: str = None) -> list
     return repo_and_group_list
 
 
-'''
-def task_scheduler(repos: list):
+def task_scheduler(config_file: str, full_config: dict) -> None:
     """
-    Create tasks for given repo list
+    Handle tasks for given repos / groups
+    read_existing_scheduled_tasks return something like
 
-    WIP: This is a mock GUI, nothing works yet
-
+    windows:
+    [{'task_type': 'backup', 'object_type': 'repos', object_name: 'default', 'frequency_minutes': 15, 'start_date': datetime.datetime(2026, 3, 9, 17, 30, 23), 'days_of_week': []}]
     """
-    task = namedtuple("Tasks", ["task", "hour", "minute", "day", "month", "weekday"])
 
-    def _get_current_tasks():
-        """
-        mock tasks
-        """
-        return [
-            task("housekeeping", 0, 0, "*", "*", "*"),
-            task("check", 0, 0, "*", "*", "*"),
-        ]
+    @threaded
+    def read_existing_scheduled_tasks_threaded(config_file, full_config):
+        return npbackup.task.read_existing_scheduled_tasks(config_file, full_config)
 
     def _update_task_list(window):
-        tasks = _get_current_tasks()
+        thread = read_existing_scheduled_tasks_threaded(config_file, full_config)
+        tasks = WaitWindow(thread).wait_for_thread_result()
         task_list = []
         for task in tasks:
-            task_list.append(task)
-        window["-TASKS-"].update(values=task_list)
-
-    actions = [
-        "backup",
-        "housekeeping",
-        "quick_check",
-        "full_check" "unlock",
-        "forget",
-        "prune",
-        "prune_max",
-    ]
+            task_line = [
+                task["task_type"],
+                task["object_type"],
+                task["object_name"],
+                task["frequency_minutes"],
+            ]
+            task_list.append(task_line)
+        window["-EXISTING-TASKS-"].update(values=task_list)
+        return task_list
 
     layout = [
         [
             sg.Text(_t("operations_gui.currently_configured_tasks")),
         ],
         [
+            sg.Push(),
+            sg.Button(
+                _t("generic.remove_selected"), key="--REMOVE-TASK--", size=(18, 1)
+            ),
+        ],
+        [
             sg.Table(
                 values=[[]],
-                headings=["Task type", "Minute", "Hour", "Day", "Month", "Weekday"],
-                key="-TASKS-",
+                headings=[
+                    "Task type",
+                    "object_type",
+                    "object_name",
+                    "Freq (min)",
+                    "Hour",
+                    "Day",
+                    "Month",
+                    "Weekday",
+                ],
+                key="-EXISTING-TASKS-",
                 auto_size_columns=True,
                 justification="left",
+                expand_x=True,
             ),
         ],
+    ]
+    layout += npbackup.gui.common_gui.scheduling_col(
+        task_types=list(npbackup.task.SCHEDULER_TASKS.keys())
+    )
+    layout += [
         [
-            sg.Button("Add", key="--ADD-TASK--", size=(10, 1)),
-            sg.Button("Remove", key="--REMOVE-TASK--", size=(10, 1)),
-        ],
-        [
-            sg.Text(_t("operations_gui.select_task_type")),
-        ],
-        [
-            sg.Combo(
-                values=actions,
-                default_value="housekeeping",
-                key="-ACTION-",
-                size=(20, 1),
-            ),
-            sg.Button(_t("operations_gui.add_task"), key="-ADD-TASK-", size=(20, 1)),
+            sg.Push(),
+            sg.Button(_t("generic.add") + " ▾", key="--ADD-TASK--", size=(18, 1)),
+            sg.Button(_t("generic.quit"), key="--EXIT--", size=(18, 1)),
         ],
     ]
 
     window = sg.Window(
         layout=layout, title=_t("operations_gui.task_scheduler"), finalize=True
     )
-    _update_task_list(window)
+    task_list = _update_task_list(window)
+    objects = npbackup.gui.common_gui_logic.get_objects(full_config)
+    window["-OBJECT-SELECT-TASKS-"].update(objects[0], values=objects)
     while True:
         event, values = window.read()
+        if event == "--ADD-TASK--":
+            result, full_config = npbackup.gui.common_gui_logic.create_scheduled_task(
+                values, full_config, config_file
+            )
+            if not result:
+                popup_error(_t("config_gui.scheduled_task_creation_failure"))
+                continue
 
+            result = save_config(config_file, full_config)
+            if not result:
+                popup_error(
+                    _t(
+                        "config_gui.scheduled_task_creation_failure"
+                        + " cannot save config file"
+                    )
+                )
+                continue
+
+            sg.popup(_t("config_gui.scheduled_task_creation_success"), keep_on_top=True)
+            task_list = _update_task_list(window)
+        if event == "--REMOVE-TASK--":
+            if not values["-EXISTING-TASKS-"]:
+                popup_error(_t("config_gui.no_task_selected"))
+                continue
+            if len(values["-EXISTING-TASKS-"]) > 1:
+                popup_error(_t("config_gui.select_only_one_task"))
+                continue
+            index = values["-EXISTING-TASKS-"][0]
+            task_type = task_list[index][0]
+            object_type = task_list[index][1]
+            object_name = task_list[index][2]
+            result = npbackup.task.delete_scheduled_task(
+                config_file, task_type, object_type, object_name
+            )
+            task_list = _update_task_list(window)
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--EXIT--"):
             break
-'''
 
 
 def show_stats(statistics: List[dict]) -> None:
@@ -253,19 +303,18 @@ def show_stats(statistics: List[dict]) -> None:
     window.close()
 
 
-def operations_gui(full_config: dict) -> dict:
+def operations_gui(full_config: dict, config_file: str) -> dict:
     """
     Operate on one or multiple repositories, or groups
     """
 
     def _get_repo_list(selected_rows):
         if not selected_rows:
-            if (
-                sg.popup_yes_no(
-                    _t("operations_gui.no_repo_selected_apply_all"), keep_on_top=True
-                )
-                == "No"
-            ):
+            if sg.popup(
+                _t("operations_gui.no_repo_selected_apply_all"),
+                keep_on_top=True,
+                custom_text=(_t("generic.no"), _t("generic.yes")),
+            ) == _t("generic.no"):
                 return False
             repos = get_repo_list(full_config)
         else:
@@ -465,19 +514,17 @@ def operations_gui(full_config: dict) -> dict:
                 logger.debug("Trace:", exc_info=True)
                 object_name = None
             if not object_name:
-                sg.PopupError(_t("operations_gui.no_repo_selected"), keep_on_top=True)
+                popup_error(_t("operations_gui.no_repo_selected"))
                 continue
             manager_password = get_manager_password(full_config, object_name)
             # NPF-SEC-00009
             env_manager_password = os.environ.get("NPBACKUP_MANAGER_PASSWORD", None)
             if not manager_password:
-                sg.PopupError(
-                    _t("config_gui.no_manager_password_defined"), keep_on_top=True
-                )
+                popup_error(_t("config_gui.no_manager_password_defined"))
                 continue
             if (
                 env_manager_password and env_manager_password == manager_password
-            ) or ask_manager_password(manager_password):
+            ) or npbackup.gui.common_gui_logic.ask_manager_password(manager_password):
                 complete_repo_list = gui_update_state(
                     window, full_config, unencrypted=object_name
                 )
@@ -589,6 +636,7 @@ def operations_gui(full_config: dict) -> dict:
                     "group_runner",
                     operation=operation,
                     repo_config_list=repo_config_list,
+                    __monitoring_config=get_monitoring_config(full_config),
                     __autoclose=False if operation != "stats" else True,
                     __compact=False,
                     __gui_msg=gui_msg,
@@ -604,25 +652,29 @@ def operations_gui(full_config: dict) -> dict:
                             except KeyError:
                                 error = ""
                             error += f"\n{data['additional_error_info']}\n{data['additional_warning_info']}"
-                            sg.PopupError(data["reason"])
+                            popup_error(data["reason"])
                     except Exception as exc:
-                        sg.PopupError(_t("generic.failure") + f": {exc}")
+                        popup_error(_t("generic.failure") + f": {exc}")
             else:
                 logger.error(f"Bogus operation: {operation}")
-                sg.popup_error(f"Bogus operation: {operation}", keep_on_top=True)
+                popup_error(f"Bogus operation: {operation}")
 
             event = "---STATE-UPDATE---"
         if event == "--TASK-SCHEDULER--":
-            repos = _get_repo_list(values["repo-and-group-list"])
-            if not repos:
-                continue
-            sg.Popup(
-                "Currently not implemented. Please use the task creation GUI in config section, or use cron / windows task scheduler"
-            )
-            # task_scheduler(repos)
+            with HideWindow(window):
+                task_scheduler(config_file, full_config)
             continue
         if event == "---STATE-UPDATE---":
             complete_repo_list = gui_update_state(window, full_config)
     window.close()
 
     return full_config
+
+
+if __name__ == "__main__":
+    logger.setLevel("INFO")
+    logger.addHandler(logging.StreamHandler())
+    from npbackup.configuration import get_default_config
+
+    full_config = get_default_config()
+    operations_gui(full_config, "config.yaml")

@@ -5,7 +5,7 @@
 
 __intname__ = "npbackup.gui.helpers"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2023-2025 NetInvent"
+__copyright__ = "Copyright (C) 2023-2026 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2025070302"
 
@@ -27,7 +27,7 @@ from resources.customization import (
 from npbackup.core.runner import NPBackupRunner
 from npbackup.__debug__ import _DEBUG
 from npbackup.__env__ import GUI_CHECK_INTERVAL
-from resources.customization import SIMPLEGUI_THEME, OEM_ICON
+from resources.customization import PROGRAM_NAME, OEM_ICON, SUBTITLE_FONT
 
 logger = getLogger()
 
@@ -91,6 +91,7 @@ def gui_thread_runner(
     __no_lock: bool = False,
     __full_concurrency: bool = False,
     __repo_aware_concurrency: bool = False,
+    __monitoring_config: dict = None,
     *args,
     **kwargs,
 ) -> Union[dict, str]:
@@ -148,6 +149,9 @@ def gui_thread_runner(
     # So we don't always init repo_config, since runner.group_runner would do that itself
     if __repo_config:
         runner.repo_config = __repo_config
+
+    if __monitoring_config:
+        runner.monitoring_config = __monitoring_config
 
     fn = getattr(runner, __fn_name)
     logger.debug(
@@ -223,11 +227,13 @@ def gui_thread_runner(
                 _t("generic.cancel"),
                 key="--CANCEL--",
                 disabled=False,
+                font=SUBTITLE_FONT,
             ),
             sg.Button(
                 _t("generic.close"),
                 key="--EXIT--",
                 disabled=True,
+                font=SUBTITLE_FONT,
             ),
         ],
     ]
@@ -287,8 +293,12 @@ def gui_thread_runner(
         if event == "--EXPAND--":
             _upgrade_from_compact_view()
         if event == "--CANCEL--":
-            result = sg.popup_yes_no(_t("main_gui.cancel_operation"), keep_on_top=True)
-            if result == "Yes":
+            result = sg.popup(
+                _t("main_gui.cancel_operation"),
+                keep_on_top=True,
+                custom_text=(_t("generic.no"), _t("generic.yes")),
+            )
+            if result == _t("generic.yes"):
                 logger.info("User cancelled operation")
                 runner.cancel()
                 progress_window["--CANCEL--"].Update(disabled=True)
@@ -455,4 +465,71 @@ def quick_close_simplegui_window(window: sg.Window) -> None:
         try:
             window.close()
         except Exception as exc:
-            logger.error(f"Error closing SimpleGUI window: {exc}")
+            logger.debug(f"Error closing SimpleGUI window: {exc}")
+    logger.debug("Quick close finished closing window")
+
+
+popup_error = lambda message: sg.popup(
+    message,
+    title=_t("generic.error").capitalize(),
+    button_color="red",
+    keep_on_top=True,
+    icon=sg.SYSTEM_TRAY_MESSAGE_ICON_CRITICAL,
+    modal=True,
+)
+
+password_complexity = lambda password: re.findall(
+    r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$", password
+)
+
+
+def wait_window() -> sg.Window:
+    # blocking wait window
+    wait_layout = [
+        [sg.Text(f"{PROGRAM_NAME}: {_t("generic.please_wait")}", font=SUBTITLE_FONT)]
+    ]
+    wait_window = sg.Window(
+        title=PROGRAM_NAME,
+        layout=wait_layout,
+        keep_on_top=True,
+        grab_anywhere=True,
+        finalize=True,
+        icon=sg._tray_icon_success,
+    )
+    wait_window.read(timeout=0.01)
+    return wait_window
+
+
+class WaitWindow:
+    def __init__(self, thread, message: str = None):
+        self.thread = thread
+        self.message = message if message else _t("generic.please_wait")
+
+    def wait_for_thread_result(self):
+        wait_layout = [
+            [sg.Text(f"{PROGRAM_NAME}: {self.message}", font=SUBTITLE_FONT)],
+            [
+                sg.Image(
+                    LOADER_ANIMATION,
+                    key="-LOADER-ANIMATION-",
+                )
+            ],
+        ]
+        wait_window = sg.Window(
+            title=PROGRAM_NAME,
+            layout=wait_layout,
+            keep_on_top=True,
+            grab_anywhere=True,
+            finalize=True,
+            icon=sg._tray_icon_success,
+            disable_close=True,
+        )
+
+        while not self.thread.done() and not self.thread.cancelled():
+            wait_window.read(timeout=0.1)
+            wait_window["-LOADER-ANIMATION-"].UpdateAnimation(
+                LOADER_ANIMATION, time_between_frames=75
+            )
+            sleep(0.1)
+        wait_window.close()
+        return self.thread.result()

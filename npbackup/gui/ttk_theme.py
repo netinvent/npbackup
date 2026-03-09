@@ -14,19 +14,37 @@ import FreeSimpleGUI as sg
 import sv_ttk
 from tkinter import ttk
 from reskinner import reskin
-from resources.customization import SIMPLEGUI_THEME, SIMPLEGUI_DARK_THEME
+from resources.customization import (
+    SIMPLEGUI_THEME,
+    SIMPLEGUI_DARK_THEME,
+    STANDARD_FONT,
+    SUBTITLE_FONT,
+    TITLE_FONT,
+)
+
+try:
+    from resources.customization import SG_CUSTOM_THEME, SG_CUSTOM_DARK_THEME
+
+    # Override current theme names with ours
+    sg.theme_add_new(SIMPLEGUI_THEME, SG_CUSTOM_THEME)
+    sg.theme_add_new(SIMPLEGUI_DARK_THEME, SG_CUSTOM_DARK_THEME)
+except ImportError:
+    pass
+
+CURRENT_THEME = SIMPLEGUI_THEME
+sg.DEFAULT_FONT = STANDARD_FONT
 
 # Make app DPI aware on Windows
 # Balantly stolen from https://github.com/PySimpleGUI/PySimpleGUI/issues/3880#issuecomment-775990455
 # WIP: We might want this to be optional
 # WIP: Documentation
 if os.environ.get("NPBACKUP_DPI_AWARENESS", "True").lower() == "true":
-    pass
-sg.set_options(dpi_awareness=True)
+    sg.set_options(dpi_awareness=True)
+
 try:
-    scaling = float(os.environ.get("NPBACKUP_SCALING", "1.0"))
+    scaling = float(os.environ.get("NPBACKUP_SCALING", None))
 except (TypeError, ValueError):
-    scaling = None
+    scaling = 1.0
 if scaling:
     sg.set_options(scaling=scaling)
 theme = os.environ.get("NPBACKUP_THEME", "light").lower()
@@ -37,6 +55,7 @@ else:
     CURRENT_THEME = SIMPLEGUI_THEME
     CURRENT_TTK_THEME = "sun-valley-light"
 
+# Get actual pixel size for scaling
 root = sg.tk.Tk()
 scale = 96 / root.winfo_fpixels("1i")  # Format your layout if when 96 DPI
 root.destroy()
@@ -76,11 +95,11 @@ def reskin_job(window=None, theme=None):
         # We must force SimpleGUI to update it's ttk theme as well
         style = ttk.Style(window.hidden_master_root)
         sg._change_ttk_theme(style, sg.DEFAULT_TTK_THEME)
+        # RESKIN_WINDOW.TKroot.after(10, sv_ttk.use_light_theme) # WIP input element is not styled
         reskin(
             window=RESKIN_WINDOW,
             new_theme=CURRENT_THEME,
             theme_function=sg.theme,
             lf_table=sg.LOOK_AND_FEEL_TABLE,
         )
-
-    RESKIN_WINDOW.TKroot.after(60000, reskin_job)
+        RESKIN_WINDOW.TKroot.after(60000, reskin_job)
