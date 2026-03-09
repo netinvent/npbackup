@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026030601"
+__build__ = "2026031001"
 __version__ = "npbackup 3.1.0+"
 
 
@@ -958,29 +958,44 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
     ) -> dict:
 
         # Change prometheus "metrics" to "enabled" to be consistent with other monitoring entries
-        prometheus_monitoring = full_config.g("global_prometheus.metrics")
-        full_config.d("global_prometheus.metrics")
-        full_config.s("global_prometheus.enabled", prometheus_monitoring)
+        try:
+            prometheus_monitoring = full_config.g("global_prometheus.metrics")
+            full_config.d("global_prometheus.metrics")
+            full_config.s("global_prometheus.enabled", prometheus_monitoring)
+        except KeyError:
+            logger.info("No global_prometheus migration is done")
 
         # Change email "enable" to "enabled" to be consistent with other monitoring entries
-        email_monitoring = full_config.g("global_email.enable")
-        full_config.d("global_email.enable")
-        full_config.s("global_email.enabled", email_monitoring)
+        try:
+            email_monitoring = full_config.g("global_email.enable")
+            full_config.d("global_email.enable")
+            full_config.s("global_email.enabled", email_monitoring)
+        except KeyError:
+            logger.info("No global_email migration is done")
 
         # Add new monitoring sections
-        if not full_config.g("global_zabbix"):
-            full_config.s("global_zabbix", deepcopy(empty_config_dict["global_zabbix"]))
+        try:
+            if not full_config.g("global_zabbix"):
+                full_config.s("global_zabbix", deepcopy(empty_config_dict["global_zabbix"]))
+        except KeyError:
+            logger.info("No global_zabbix migration is done")
 
-        if not full_config.g("global_healthchecksio"):
-            full_config.s(
-                "global_healthchecksio",
-                deepcopy(empty_config_dict["global_healthchecksio"]),
-            )
+        try:
+            if not full_config.g("global_healthchecksio"):
+                full_config.s(
+                    "global_healthchecksio",
+                    deepcopy(empty_config_dict["global_healthchecksio"]),
+                )
+        except KeyError:
+            logger.info("No global_healthchecksio migration is done")
 
-        if not full_config.g("global_webhooks"):
-            full_config.s(
-                "global_webhooks", deepcopy(empty_config_dict["global_webhooks"])
-            )
+        try:
+            if not full_config.g("global_webhooks"):
+                full_config.s(
+                    "global_webhooks", deepcopy(empty_config_dict["global_webhooks"])
+                )
+        except KeyError:
+            logger.info("No global_webhooks migration is done")
 
         monitoring = full_config.g(f"{object_type}.{object_name}.prometheus")
         if monitoring is not None:
