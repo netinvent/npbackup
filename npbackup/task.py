@@ -5,254 +5,746 @@
 
 __intname__ = "npbackup.task"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2022-2025 NetInvent"
+__copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025012401"
+__build__ = "2026020101"
 
 
 import sys
 import os
-from logging import getLogger
+import re
+from typing import List, Optional
+import logging
 import tempfile
 from command_runner import command_runner
 import datetime
+from crontab import CronTab
 from resources.customization import TASK_AUTHOR, TASK_URI, PROGRAM_NAME
 from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
 from npbackup.__version__ import IS_COMPILED
+import npbackup.configuration
+from npbackup.gui.constants import combo_boxes
 
-logger = getLogger()
+if os.name == "nt":
+    import xml.etree.ElementTree as ET
+
+logger = logging.getLogger()
+
+SCHEDULER_TASKS = {
+    "backup": "backup",
+    "housekeeping": "housekeeping",
+    "quick_check": "check --quick",
+    "full_check": "check --full",
+    "forget": "forget",
+    "prune": "prune",
+}
 
 
-def _scheduled_task_exists_unix(
-    config_file: str, task_type: str, object_args: str
-) -> bool:
-    cron_file = "/etc/cron.d/npbackup"
-    try:
-        with open(cron_file, "r", encoding="utf-8") as file_handle:
-            current_crontab = file_handle.readlines()
-            for line in current_crontab:
-                if (
-                    f"--{task_type}" in line
-                    and config_file in line
-                    and object_args in line
-                ):
-                    logger.info(f"Found existing {task_type} task")
-                    return True
-    except OSError as exc:
-        logger.error("Could not read file {}: {}".format(cron_file, exc))
-    return False
+#### OS ABSTRACTION LAYER ####
+def read_existing_scheduled_tasks(
+    config_file: str,
+    full_config: dict,
+) -> List[dict]:
+    """
+    Reads existing scheduled tasks for NPBackup and checks if a task with the same config file, task type and repo/group already exists
+    """
+    # Transform possible PosixPath to string
+    config_file = str(config_file)
+    # Make sure we have a full path to config_file if relative path is given
+    if not os.path.isabs(config_file):
+        config_file = os.path.join(CURRENT_DIR, config_file)
+
+    if os.name == "nt":
+        return _read_existing_scheduled_task_windows(
+            config_file,
+            full_config,
+        )
+    else:
+        return _read_existing_scheduled_task_unix(config_file, full_config)
 
 
 def create_scheduled_task(
     config_file: str,
     task_type: str,
-    repo: str = None,
-    group: str = None,
-    interval_minutes: int = None,
-    hour: int = None,
-    minute: int = None,
+    object_type: str,
+    object_name: str,
+    as_current_user: bool = False,
+    start_date_time: datetime.datetime = None,
+    interval: int = None,
+    interval_unit: str = None,
+    days: List[str] = None,
 ):
     """
     Creates a scheduled task for NPBackup
-    if interval_minutes is given, npbackup will run every interval minutes, but only backup if minimum_backup_age is reached
-    if hour and minute are given, npbackup will run regardless of minimum_backup_age
     """
 
     # Transform possible PosixPath to string
     config_file = str(config_file)
 
     try:
-        if interval_minutes:
-            interval_minutes = int(interval_minutes)
-        if hour:
-            hour = int(hour)
-            minute = int(minute)
+        if interval is not None:
+            interval = int(interval)
     except ValueError:
-        logger.error("Bogus interval given")
+        logger.error(f"Bogus interval given: {interval}")
         return False
 
-    if task_type not in ("backup", "housekeeping"):
+    if task_type not in SCHEDULER_TASKS.keys():
         logger.error(f"Undefined task type: {task_type}")
         return False
 
-    if isinstance(interval_minutes, int) and interval_minutes < 1:
-        logger.error("Bogus interval given")
+    if isinstance(interval, int) and interval < 1:
+        logger.error(f"Too small interval given: {interval}")
         return False
-    if isinstance(hour, int) and isinstance(minute, int):
-        if hour > 24 or minute > 60 or hour < 0 or minute < 0:
-            logger.error("Bogus hour or minute given")
-            return False
-    if interval_minutes is None and (hour is None or minute is None):
-        logger.error("No interval or time given")
+    if interval is None:
+        logger.error("No interval")
         return False
+    if interval_unit not in combo_boxes["backup_frequency_unit"].keys():
+        logger.error(f"Bogus interval unit {interval_unit} given")
+        return False
+
+    if days:
+        for day in days:
+            if day not in [
+                "monday",
+                "tuesday",
+                "wednesday",
+                "thursday",
+                "friday",
+                "saturday",
+                "sunday",
+            ]:
+                logger.error(f"Bogus day {day} given")
+                return False
 
     # Make sure we have a full path to config_file if relative path is given
     if not os.path.isabs(config_file):
         config_file = os.path.join(CURRENT_DIR, config_file)
 
-    if repo:
-        subject = f"repo_name {repo}"
-        object_args = f" --repo-name {repo}"
-    elif group:
-        subject = f"group_name {group}"
-        object_args = f" --repo-group {group}"
-    else:
-        subject = "repo_name default"
-        object_args = ""
-    if interval_minutes:
-        logger.info(
-            f"Creating scheduled task {task_type} for {subject} to run every {interval_minutes} minutes"
-        )
-    elif hour and minute:
-        logger.info(
-            f"Creating scheduled task {task_type} for {subject} to run at everyday at {hour}h{minute}"
-        )
+    logger.info(
+        f"Creating scheduled task {task_type} for {object_type} {object_name} to run every {interval} {interval_unit}"
+    )
 
     if os.name == "nt":
         return create_scheduled_task_windows(
             config_file,
             task_type,
+            object_type,
+            object_name,
+            as_current_user,
             CURRENT_EXECUTABLE,
-            subject,
-            object_args,
-            interval_minutes,
-            hour,
-            minute,
+            start_date_time=start_date_time,
+            interval=interval,
+            interval_unit=interval_unit,
+            days=days,
         )
     else:
         return create_scheduled_task_unix(
             config_file,
             task_type,
+            object_type,
+            object_name,
+            as_current_user,
             CURRENT_EXECUTABLE,
-            subject,
-            object_args,
-            interval_minutes,
-            hour,
-            minute,
+            interval=interval,
+            interval_unit=interval_unit,
+            days=days,
         )
+
+
+def delete_scheduled_task(
+    config_file: str,
+    task_type: str,
+    object_type: str,
+    object_name: str,
+):
+    config_file = str(config_file)
+    if not os.path.isabs(config_file):
+        config_file = os.path.join(CURRENT_DIR, config_file)
+
+    if os.name == "nt":
+        return _delete_scheduled_task_windows(
+            config_file, task_type, object_type, object_name
+        )
+    else:
+        return _delete_scheduled_task_unix(
+            config_file, task_type, object_type, object_name
+        )
+
+
+#### GENERIC FUNCTIONS ####
+def get_object_args(object_type: str, object_name: str) -> str:
+    object_args = " --repo-name default"
+    if object_name:
+        if object_type == "repos":
+            object_args = f" --repo-name {object_name}"
+        elif object_type == "groups":
+            object_args = f" --repo-group {object_name}"
+    return object_args
+
+
+#### UNIX TASK MANAGEMENT ####
+
+# Mapping from lowercase day names to cron 3-letter abbreviations
+_DOW_TO_CRON = {
+    "monday": "MON",
+    "tuesday": "TUE",
+    "wednesday": "WED",
+    "thursday": "THU",
+    "friday": "FRI",
+    "saturday": "SAT",
+    "sunday": "SUN",
+}
+# Reverse mapping: cron DOW integer (0=Sun) to lowercase day name
+_DOW_FROM_INT = {
+    0: "sunday",
+    1: "monday",
+    2: "tuesday",
+    3: "wednesday",
+    4: "thursday",
+    5: "friday",
+    6: "saturday",
+}
+
+
+def _get_cron_comment(
+    config_file: str, task_type: str, object_type: str, object_name: str
+) -> str:
+    """Generate a unique comment identifier for a cron job, mirroring the Windows task name."""
+    config_file = str(config_file)
+    if not object_name:
+        object_name = "default"
+        object_type = "repos"
+    config_file_sanitized = "".join(x if x.isalnum() else "_" for x in config_file)
+    return f"{PROGRAM_NAME} - {task_type} {object_type} {object_name} in {config_file_sanitized}"
+
+
+def _get_crontab(as_current_user: bool) -> CronTab:
+    """Return a CronTab instance for the current user or root."""
+    if as_current_user:
+        return CronTab(user=True)
+    return CronTab(user="root")
+
+
+def _read_existing_scheduled_task_unix(
+    config_file: str, full_config: dict
+) -> List[dict]:
+    tasks = []
+    # Check both current user and root crontabs
+    for crontab_user in [True, "root"]:
+        try:
+            cron = CronTab(user=crontab_user)
+        except Exception as exc:
+            logger.debug(f"Could not read crontab for user {crontab_user}: {exc}")
+            continue
+
+        for (
+            object_name,
+            object_type,
+        ) in npbackup.configuration.get_object_names_and_types(full_config).items():
+            for task_type in SCHEDULER_TASKS.keys():
+                comment = _get_cron_comment(
+                    config_file, task_type, object_type, object_name
+                )
+                for job in cron.find_comment(comment):
+                    if not job.is_enabled():
+                        continue
+
+                    task_info = {
+                        "object_type": None,
+                        "object_name": None,
+                        "task_type": task_type,
+                        "frequency_minutes": None,
+                        "start_date": None,  # cron has no start date concept
+                        "days_of_week": [],
+                    }
+
+                    # Extract object info from command
+                    cmd = str(job.command)
+                    repo_match = re.search(r"--repo-name\s+(\S+)", cmd)
+                    if repo_match:
+                        task_info["object_type"] = "repos"
+                        task_info["object_name"] = repo_match.group(1)
+                    else:
+                        group_match = re.search(r"--repo-group\s+(\S+)", cmd)
+                        if group_match:
+                            task_info["object_type"] = "groups"
+                            task_info["object_name"] = group_match.group(1)
+
+                    # Extract frequency from cron schedule fields
+                    minute_str = str(job.minute)
+                    hour_str = str(job.hour)
+                    dom_str = str(job.dom)
+                    month_str = str(job.month)
+
+                    if minute_str.startswith("*/"):
+                        task_info["frequency_minutes"] = int(minute_str[2:])
+                    elif hour_str.startswith("*/"):
+                        task_info["frequency_minutes"] = int(hour_str[2:]) * 60
+                    elif dom_str.startswith("*/"):
+                        task_info["frequency_minutes"] = int(dom_str[2:]) * 1440
+                    elif month_str.startswith("*/"):
+                        task_info["frequency_minutes"] = int(month_str[2:]) * 43200
+                    elif str(job.dow) != "*":
+                        task_info["frequency_minutes"] = 10080  # weekly
+                    else:
+                        task_info["frequency_minutes"] = 1440  # daily
+
+                    # Extract days of week
+                    dow_str = str(job.dow)
+                    if dow_str != "*":
+                        for part in dow_str.split(","):
+                            part = part.strip()
+                            if part.isdigit() and int(part) in _DOW_FROM_INT:
+                                task_info["days_of_week"].append(
+                                    _DOW_FROM_INT[int(part)]
+                                )
+
+                    logger.info(f"Found existing cron job: {comment}")
+                    tasks.append(task_info)
+    return tasks
 
 
 def create_scheduled_task_unix(
     config_file: str,
     task_type: str,
+    object_type: str,
+    object_name: str,
+    as_current_user: bool,
     cli_executable_path: str,
-    subject: str,
-    object_args: str,
-    interval_minutes: int = None,
-    hour: int = None,
-    minute: int = None,
+    start_date_time: datetime.datetime = None,
+    interval: int = None,
+    interval_unit: str = None,
+    days: List[str] = None,
 ):
-    logger.debug(f"Creating task {subject}")
+    logger.debug(f"Creating task {task_type} for {object_type} {object_name}")
     executable_dir = os.path.dirname(cli_executable_path)
     if "python" in sys.executable and not IS_COMPILED:
         cli_executable_path = f'"{sys.executable}" "{cli_executable_path}"'
     else:
         cli_executable_path = f'"{cli_executable_path}"'
-    cron_file = "/etc/cron.d/npbackup"
 
-    if interval_minutes is not None:
-        TASK_ARGS = f'-c "{config_file}" --{task_type} --run-as-cli{object_args}'
-        trigger = f"*/{interval_minutes} * * * * root"
-    elif hour is not None and minute is not None:
-        if task_type == "backup":
-            force_opt = " --force"
-        else:
-            force_opt = ""
-        TASK_ARGS = (
-            f'-c "{config_file}" --{task_type}{force_opt} --run-as-cli{object_args}'
-        )
-        trigger = f"{minute} {hour} * * * root"
-    else:
-        raise ValueError("Bogus trigger given")
+    object_args = get_object_args(object_type, object_name)
+    task_args = f'-c "{config_file}" --{task_type} --run-as-cli{object_args}'
+    command = f'cd "{executable_dir}" && {cli_executable_path} {task_args}'
+    comment = _get_cron_comment(config_file, task_type, object_type, object_name)
 
-    crontab_entry = (
-        f'{trigger} cd "{executable_dir}" && {cli_executable_path} {TASK_ARGS}\n'
-    )
-
-    crontab_file = []
+    # Reference time for hour/minute in cron schedule
+    ref_time = start_date_time if start_date_time else datetime.datetime.now()
 
     try:
-        replaced = False
-        with open(cron_file, "r", encoding="utf-8") as file_handle:
-            current_crontab = file_handle.readlines()
-            for line in current_crontab:
-                if (
-                    f"--{task_type}" in line
-                    and config_file in line
-                    and object_args in line
-                ):
-                    logger.info(f"Replacing existing {task_type} task")
-                    if replaced:
-                        logger.info(f"Skipping duplicate {task_type} task")
-                        continue
-                    crontab_file.append(crontab_entry)
-                    replaced = True
-                else:
-                    crontab_file.append(line)
-            if not replaced:
-                logger.info(f"Adding new {task_type} task")
-                crontab_file.append(crontab_entry)
-    except OSError as exc:
-        logger.debug(f"Error reading file {cron_file}: {exc}")
-        crontab_file.append(crontab_entry)
-
-    try:
-        with open(cron_file, "w", encoding="utf-8") as file_handle:
-            file_handle.writelines(crontab_file)
-    except OSError as exc:
-        logger.error("Could not write to file  {}: {}".format(cron_file, exc))
+        cron = _get_crontab(as_current_user)
+    except Exception as exc:
+        logger.error(f"Could not access crontab: {exc}")
         return False
-    logger.info(f"Task created successfully as {cron_file}")
+
+    # Remove existing job with same comment (replace semantics)
+    cron.remove_all(comment=comment)
+
+    job = cron.new(command=command, comment=comment)
+
+    use_repetition = interval is not None and interval_unit in ("minutes", "hours")
+
+    if days and use_repetition:
+        # Weekly + intra-day repetition (e.g. every Sunday every 20 min)
+        dow_values = [_DOW_TO_CRON[d] for d in days]
+        job.dow.on(*dow_values)
+        if interval_unit == "minutes":
+            job.minute.every(interval)
+        else:  # hours
+            job.minute.on(ref_time.minute)
+            job.hour.every(interval)
+    elif days:
+        # Weekly schedule, once per day at specified time
+        dow_values = [_DOW_TO_CRON[d] for d in days]
+        job.dow.on(*dow_values)
+        job.minute.on(ref_time.minute)
+        job.hour.on(ref_time.hour)
+    elif use_repetition:
+        # Repeat every N minutes/hours, all days
+        if interval_unit == "minutes":
+            job.minute.every(interval)
+        else:  # hours
+            job.minute.on(ref_time.minute)
+            job.hour.every(interval)
+    elif interval is not None and interval_unit == "days":
+        # Every N days at specified time
+        job.minute.on(ref_time.minute)
+        job.hour.on(ref_time.hour)
+        job.dom.every(interval)
+    elif interval is not None and interval_unit == "weeks":
+        # Every N weeks — cron cannot express multi-week intervals natively
+        if interval > 1:
+            logger.warning(
+                f"Cron cannot express 'every {interval} weeks' precisely. Using weekly schedule."
+            )
+        # Use the start day's weekday
+        cron_dow = (
+            ref_time.weekday() + 1
+        ) % 7  # Python weekday (Mon=0) → cron DOW (Sun=0)
+        job.minute.on(ref_time.minute)
+        job.hour.on(ref_time.hour)
+        job.dow.on(cron_dow)
+    elif interval is not None and interval_unit == "months":
+        # Every N months on the start day's day-of-month
+        job.minute.on(ref_time.minute)
+        job.hour.on(ref_time.hour)
+        job.dom.on(ref_time.day)
+        job.month.every(interval)
+    else:
+        # Daily at specified time (default fallback)
+        job.minute.on(ref_time.minute)
+        job.hour.on(ref_time.hour)
+
+    if not job.is_valid():
+        logger.error(f"Invalid cron schedule generated: {job}")
+        return False
+
+    try:
+        cron.write()
+    except Exception as exc:
+        logger.error(f"Could not write crontab: {exc}")
+        return False
+
+    logger.info(f"Cron job created: {job}")
     return True
 
 
-def _get_scheduled_task_name_windows(task_type: str, subject: str) -> str:
-    return f"{PROGRAM_NAME} - {task_type.capitalize()} {subject}"
+def _delete_scheduled_task_unix(
+    config_file: str,
+    task_type: str,
+    object_type: str,
+    object_name: str,
+):
+    comment = _get_cron_comment(config_file, task_type, object_type, object_name)
+    deleted = False
+    # Try both current user and root crontabs
+    for crontab_user in [True, "root"]:
+        try:
+            cron = CronTab(user=crontab_user)
+        except Exception as exc:
+            logger.debug(f"Could not access crontab for user {crontab_user}: {exc}")
+            continue
+        jobs = list(cron.find_comment(comment))
+        if jobs:
+            cron.remove_all(comment=comment)
+            try:
+                cron.write()
+                deleted = True
+                logger.info(f"Deleted {len(jobs)} cron job(s) for: {comment}")
+            except Exception as exc:
+                logger.error(f"Could not write crontab for user {crontab_user}: {exc}")
+    if not deleted:
+        logger.info(f"No cron job found for: {comment}")
+    return deleted
+
+
+#### WINDOWS TASK MANAGEMENT ####
+def _parse_iso_duration_to_minutes(duration: str) -> Optional[int]:
+    """Parse ISO 8601 duration (e.g. PT15M, PT1H30M, P1D) to total minutes."""
+    match = re.match(r"P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?", duration)
+    if not match:
+        return None
+    days = int(match.group(1) or 0)
+    hours = int(match.group(2) or 0)
+    minutes = int(match.group(3) or 0)
+    return days * 1440 + hours * 60 + minutes
+
+
+def _get_scheduled_task_name_windows(
+    config_file: str, task_type: str, object_type: str, object_name: str
+) -> str:
+    """
+    We need to have unique identifiers for our tasks depending on their config file, task name and object
+    in order to identify them later
+    """
+    config_file = str(config_file)
+    if not object_name:
+        object_name = "default"
+        object_type = "repos"
+    # Sanitize config_file name but keep path in case we mighe encounter multiple config files with same path
+    config_file = "".join(x if x.isalnum() else "_" for x in config_file)
+    return f"{PROGRAM_NAME} - {task_type.capitalize()} {object_type} {object_name} in {config_file}"
+
+
+def _read_existing_scheduled_task_windows(
+    config_file: str,
+    full_config: dict,
+) -> List[dict]:
+    """
+    Read existing scheduled tasks on Windows.
+    It's not as easy as with cron / unix since there are lots and lots of tasks on windows and we don't
+    want to parse them all.
+    Hence, we limit our scope to tasks generated with a specifc name, given by task_name
+
+    Be aware that querying tasks with schtasks only yields results that we are allowed to read
+    so tasks written for system account won't show up if not running as admin
+    """
+
+    tasks = []
+    for object_name, object_type in npbackup.configuration.get_object_names_and_types(
+        full_config
+    ).items():
+        for task_type in SCHEDULER_TASKS.keys():
+            task_name = _get_scheduled_task_name_windows(
+                config_file, task_type, object_type, object_name
+            )
+            object_args = get_object_args(object_type, object_name)
+
+            logger.debug(f"Querying scheduled task {task_name}")
+            exit_code, output = command_runner(
+                "powershell.exe -NoProfile -Command \"Export-ScheduledTask -TaskName '{}' -ErrorAction Stop\"".format(
+                    task_name
+                ),
+                windows_no_window=True,
+                valid_exit_codes=[0, 1],
+            )
+
+            if exit_code != 0:
+                logger.debug(f"No existing scheduled task '{task_name}' found")
+                continue
+
+            ns = {"t": "http://schemas.microsoft.com/windows/2004/02/mit/task"}
+            try:
+                root = ET.fromstring(output.strip())
+            except ET.ParseError as exc:
+                logger.error(f"Could not parse task XML: {exc}")
+                continue
+
+            # Match task by checking the Arguments element
+            arguments = root.findtext(
+                ".//t:Actions/t:Exec/t:Arguments", default="", namespaces=ns
+            )
+            if (
+                f"--{task_type}" not in arguments
+                or config_file not in arguments
+                or object_args not in arguments
+            ):
+                logger.debug(f"Arguments not matching, skipping task: {arguments}")
+                continue
+            logger.info(f"Found existing task: {task_name}")
+
+            task_info = {
+                "object_type": None,
+                "object_name": None,
+                "task_type": task_type,
+                "frequency_minutes": None,
+                "start_date": None,
+                "days_of_week": [],
+            }
+
+            # Extract repo/group from task arguments
+            repo_match = re.search(r"--repo-name\s+(\S+)", arguments)
+            if repo_match:
+                task_info["object_type"] = "repos"
+                task_info["object_name"] = repo_match.group(1)
+            else:
+                group_match = re.search(r"--repo-group\s+(\S+)", arguments)
+                if group_match:
+                    task_info["object_type"] = "groups"
+                    task_info["object_name"] = group_match.group(1)
+
+            # TimeTrigger (interval-based repetition)
+            for trigger in root.findall(".//t:Triggers/t:TimeTrigger", ns):
+                start = trigger.findtext("t:StartBoundary", default=None, namespaces=ns)
+                if start:
+                    try:
+                        task_info["start_date"] = datetime.datetime.fromisoformat(start)
+                    except ValueError:
+                        task_info["start_date"] = start
+                interval = trigger.findtext(
+                    "t:Repetition/t:Interval", default=None, namespaces=ns
+                )
+                if interval:
+                    task_info["frequency_minutes"] = _parse_iso_duration_to_minutes(
+                        interval
+                    )
+
+            # CalendarTrigger (daily / weekly, optionally with repetition)
+            for trigger in root.findall(".//t:Triggers/t:CalendarTrigger", ns):
+                start = trigger.findtext("t:StartBoundary", default=None, namespaces=ns)
+                if start:
+                    try:
+                        task_info["start_date"] = datetime.datetime.fromisoformat(start)
+                    except ValueError:
+                        task_info["start_date"] = start
+                # Intra-day repetition within a CalendarTrigger
+                interval = trigger.findtext(
+                    "t:Repetition/t:Interval", default=None, namespaces=ns
+                )
+                if interval:
+                    task_info["frequency_minutes"] = _parse_iso_duration_to_minutes(
+                        interval
+                    )
+                # Daily schedule
+                days_interval = trigger.findtext(
+                    "t:ScheduleByDay/t:DaysInterval",
+                    default=None,
+                    namespaces=ns,
+                )
+                if days_interval and not interval:
+                    task_info["frequency_minutes"] = int(days_interval) * 1440
+                # Weekly schedule with specific days
+                days_of_week_el = trigger.find("t:ScheduleByWeek/t:DaysOfWeek", ns)
+                if days_of_week_el is not None:
+                    task_info["days_of_week"] = [
+                        day.tag.replace(f"{{{ns['t']}}}", "") for day in days_of_week_el
+                    ]
+                    if not interval:
+                        weeks_interval = trigger.findtext(
+                            "t:ScheduleByWeek/t:WeeksInterval",
+                            default=None,
+                            namespaces=ns,
+                        )
+                        if weeks_interval:
+                            task_info["frequency_minutes"] = int(weeks_interval) * 10080
+
+            tasks.append(task_info)
+    return tasks
 
 
 def create_scheduled_task_windows(
     config_file: str,
     task_type: str,
+    object_type: str,
+    object_name: str,
+    as_current_user: bool,
     cli_executable_path: str,
-    subject: str,
-    object_args: str,
-    interval_minutes: int = None,
-    hour: int = None,
-    minute: int = None,
+    start_date_time: datetime.datetime = None,
+    interval: int = None,
+    interval_unit: str = None,
+    days: List[str] = None,
 ):
-    logger.debug(f"Creating task {subject}")
+    logger.debug(f"Creating task {task_type} for {object_type} {object_name}")
     executable_dir = os.path.dirname(cli_executable_path)
     if "python" in sys.executable and not IS_COMPILED:
         runner = sys.executable
-        task_args = f'"{cli_executable_path}" '
+        task_args = f'"{ cli_executable_path}" '
     else:
         runner = cli_executable_path
         task_args = ""
     temp_task_file = os.path.join(tempfile.gettempdir(), "npbackup_task.xml")
 
-    task_name = _get_scheduled_task_name_windows(task_type, subject)
+    task_name = _get_scheduled_task_name_windows(
+        config_file, task_type, object_type, object_name
+    )
+    object_args = get_object_args(object_type, object_name)
 
-    if interval_minutes is not None:
-        task_args = (
-            f'{task_args}-c "{config_file}" --{task_type} --run-as-cli{object_args}'
-        )
+    # Compute StartBoundary
+    if start_date_time is not None:
+        start_date = start_date_time.replace(microsecond=0).isoformat()
+    else:
         start_date = datetime.datetime.now().replace(microsecond=0).isoformat()
-        trigger = f"""<TimeTrigger>
-            <Repetition>
-                <Interval>PT{interval_minutes}M</Interval>
+
+    # WIP do we still need --force ?
+    task_args = f'{task_args}-c "{config_file}" --{task_type} --run-as-cli{object_args}'
+
+    # For minutes/hours intervals, use Repetition inside a trigger
+    # For days/weeks/months, use the appropriate CalendarTrigger schedule
+    use_repetition = interval is not None and interval_unit in ("minutes", "hours")
+
+    if use_repetition:
+        iso_interval = (
+            f"PT{interval}M" if interval_unit == "minutes" else f"PT{interval}H"
+        )
+        repetition_xml = f"""<Repetition>
+                <Interval>{iso_interval}</Interval>
+                <Duration>P1D</Duration>
                 <StopAtDurationEnd>false</StopAtDurationEnd>
-            </Repetition>
+            </Repetition>"""
+    else:
+        repetition_xml = ""
+
+    if days and use_repetition:
+        # Weekly schedule with intra-day repetition (e.g. every Sunday every 20 min)
+        days_xml = "\n                ".join(f"<{day.capitalize()} />" for day in days)
+        trigger = f"""<CalendarTrigger>
+            {repetition_xml}
+            <StartBoundary>{start_date}</StartBoundary>
+            <Enabled>true</Enabled>
+            <ScheduleByWeek>
+                <DaysOfWeek>
+                {days_xml}
+                </DaysOfWeek>
+                <WeeksInterval>1</WeeksInterval>
+            </ScheduleByWeek>
+            </CalendarTrigger>"""
+    elif days:
+        # Weekly schedule, run once per trigger day
+        days_xml = "\n                ".join(f"<{day.capitalize()} />" for day in days)
+        trigger = f"""<CalendarTrigger>
+            <StartBoundary>{start_date}</StartBoundary>
+            <Enabled>true</Enabled>
+            <ScheduleByWeek>
+                <DaysOfWeek>
+                {days_xml}
+                </DaysOfWeek>
+                <WeeksInterval>1</WeeksInterval>
+            </ScheduleByWeek>
+            </CalendarTrigger>"""
+    elif use_repetition:
+        # Repeat every N minutes/hours regardless of day
+        trigger = f"""<TimeTrigger>
+            {repetition_xml}
             <StartBoundary>{start_date}</StartBoundary>
             <ExecutionTimeLimit>P1D</ExecutionTimeLimit>
             <Enabled>true</Enabled>
             </TimeTrigger>"""
-    elif hour is not None and minute is not None:
-        task_args = f'{task_args}-c "{config_file}" --{task_type} --force --run-as-cli{object_args}'
-        start_date = (
-            datetime.datetime.now()
-            .replace(microsecond=0, hour=hour, minute=minute, second=0)
-            .isoformat()
-        )
+    elif interval is not None and interval_unit == "days":
+        # Every N days
+        trigger = f"""<CalendarTrigger>
+            <StartBoundary>{start_date}</StartBoundary>
+            <Enabled>true</Enabled>
+            <ScheduleByDay>
+                <DaysInterval>{interval}</DaysInterval>
+            </ScheduleByDay>
+            </CalendarTrigger>"""
+    elif interval is not None and interval_unit == "weeks":
+        # Every N weeks on the start day's weekday
+        ref_date = start_date_time if start_date_time else datetime.datetime.now()
+        start_day = ref_date.strftime("%A")
+        trigger = f"""<CalendarTrigger>
+            <StartBoundary>{start_date}</StartBoundary>
+            <Enabled>true</Enabled>
+            <ScheduleByWeek>
+                <DaysOfWeek>
+                <{start_day} />
+                </DaysOfWeek>
+                <WeeksInterval>{interval}</WeeksInterval>
+            </ScheduleByWeek>
+            </CalendarTrigger>"""
+    elif interval is not None and interval_unit == "months":
+        # Every N months on the start day's day-of-month
+        all_months = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+        ]
+        selected_months = [all_months[i] for i in range(0, 12, interval)]
+        months_xml = "".join(f"<{m} />" for m in selected_months)
+        ref_date = start_date_time if start_date_time else datetime.datetime.now()
+        trigger = f"""<CalendarTrigger>
+            <StartBoundary>{start_date}</StartBoundary>
+            <Enabled>true</Enabled>
+            <ScheduleByMonth>
+                <DaysOfMonth>
+                    <Day>{ref_date.day}</Day>
+                </DaysOfMonth>
+                <Months>
+                    {months_xml}
+                </Months>
+            </ScheduleByMonth>
+            </CalendarTrigger>"""
+    else:
+        # Daily schedule (default fallback)
         trigger = f"""<CalendarTrigger>
             <StartBoundary>{start_date}</StartBoundary>
             <Enabled>true</Enabled>
@@ -260,8 +752,6 @@ def create_scheduled_task_windows(
                 <DaysInterval>1</DaysInterval>
             </ScheduleByDay>
             </CalendarTrigger>"""
-    else:
-        raise ValueError("Bogus trigger given")
 
     SCHEDULED_TASK_FILE_CONTENT = f"""<?xml version="1.0" encoding="UTF-16"?>
     <Task version="1.3" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
@@ -308,11 +798,9 @@ def create_scheduled_task_windows(
         </Exec>
     </Actions>
     </Task>"""
-    # Create task file, without specific encoding in order to use platform preferred encoding
-    # platform preferred encoding is locale.getpreferredencoding() (cp1252 on windows, utf-8 on linux)
+    # Create task XML file with UTF-8 encoding to match XML declaration
     try:
-        # pylint: disable=W1514 (unspecified-encoding)
-        with open(temp_task_file, "w") as file_handle:
+        with open(temp_task_file, "w", encoding="utf-8") as file_handle:
             file_handle.write(SCHEDULED_TASK_FILE_CONTENT)
     except OSError as exc:
         logger.error(
@@ -320,23 +808,28 @@ def create_scheduled_task_windows(
         )
         return False
 
-    # Setup task
-    command_runner(
-        'schtasks /DELETE /TN "{}" /F'.format(task_name),
-        valid_exit_codes=[0, 1],
-        windows_no_window=True,
-        encoding="cp437",
+    _delete_scheduled_task_windows(
+        config_file,
+        task_type,
+        object_type,
+        object_name,
     )
+
+    # Register task from XML
     logger.info("Creating scheduled task {}".format(task_name))
+    user_arg = "-User 'SYSTEM'" if not as_current_user else ""
+    ps_cmd = (
+        "Register-ScheduledTask -TaskName '{}' "
+        "-Xml (Get-Content -LiteralPath '{}' -Raw) {}"
+    ).format(task_name, temp_task_file, user_arg)
     exit_code, output = command_runner(
-        'schtasks /CREATE /TN "{}" /XML "{}" /RU System /F'.format(
-            task_name, temp_task_file
-        ),
+        'powershell.exe -NoProfile -Command "{}"'.format(ps_cmd),
         windows_no_window=True,
-        encoding="cp437",
     )
     if exit_code != 0:
-        logger.error("Could not create new task: {}".format(output))
+        logger.error(
+            f"Could not create new task: cmd {ps_cmd}\nexit_code {exit_code}: {output}"
+        )
         return False
 
     try:
@@ -348,3 +841,51 @@ def create_scheduled_task_windows(
         return False
     logger.info("Scheduled task created.")
     return True
+
+
+def _delete_scheduled_task_windows(
+    config_file: str,
+    task_type: str,
+    object_type: str,
+    object_name: str,
+):
+    task_name = _get_scheduled_task_name_windows(
+        config_file, task_type, object_type, object_name
+    )
+
+    # Delete existing task if any
+    exit_code, output = command_runner(
+        "powershell.exe -NoProfile -Command \"Unregister-ScheduledTask -TaskName '{}' -Confirm:$false -ErrorAction SilentlyContinue\"".format(
+            task_name
+        ),
+        valid_exit_codes=[0, 1],
+        windows_no_window=True,
+    )
+    if not exit_code in [0, 1]:
+        logger.error(f"Cannot delete scheduled task {task_name}: {output}")
+        return False
+    return True
+
+
+if __name__ == "__main__":
+    logger.setLevel("INFO")
+    logger.addHandler(logging.StreamHandler())
+    # Example usage
+    config_file = "npbackup-test.conf"
+    full_config = npbackup.configuration.get_default_config()
+    task_type = "backup"
+    object_type = "repos"
+    object_name = "default"
+    print(read_existing_scheduled_tasks(config_file, full_config))
+    result = create_scheduled_task(
+        config_file,
+        task_type,
+        object_type,
+        object_name,
+        as_current_user=True,
+        interval=60,
+        interval_unit="minutes",
+    )
+    print(f"Task creation result: {result}")
+    result = delete_scheduled_task(config_file, task_type, object_type, object_name)
+    print(f"Delete scheduled task result: {result}")
