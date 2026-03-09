@@ -9,7 +9,7 @@ __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
 
 """
-Note that all layouts are funtions so we don't modify global objects between calls
+Note that all layouts are functions so we don't modify global objects between calls
 This is important because some elements are generated dynamically and we don't want to have duplicate keys in the layout
 """
 
@@ -966,7 +966,7 @@ def scheduling_col(is_wizard: bool = False, task_types: list = None):
         ],
     ]
 
-    # Conststruct object depending on envrionment
+    # Conststruct object depending on environment
     schedule_col = []
     if not is_wizard:
         schedule_col = object_selector + [[sg.HorizontalSeparator()]]

@@ -47,7 +47,7 @@ from resources.customization import (
     INHERITED_MISSING_FILE_ICON,
     SYMLINK_ICON,
     INHERITED_SYMLINK_ICON,
-    TREE_ICON as SYSTEM_ICON,  # WIP featues
+    TREE_ICON as SYSTEM_ICON,  # WIP features
     TREE_ICON as HYPER_V_ICON,  # WIP features
     TREE_ICON as KVM_ICON,  # WIP features
 )
@@ -661,7 +661,7 @@ def update_gui_values(
 
         # Since FreeSimpleGUI does not allow to suppress the debugger anymore in v5.1.0, we need to handle KeyError
         if key not in window.AllKeysDict and not is_wizard:
-            # KeyError is catched below for log purposes
+            # KeyError is caught below for log purposes
             raise KeyError
 
         # NPF-SEC-00009
