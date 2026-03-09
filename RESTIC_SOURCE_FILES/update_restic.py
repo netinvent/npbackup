@@ -4,7 +4,7 @@
 
 __intname__ = "npbackup.restic_update"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2024-2025 NetInvent"
+__copyright__ = "Copyright (C) 2024-2026 NetInvent"
 __license__ = "BSD-3-Clause"
 __build__ = "2025090201"
 
@@ -101,11 +101,11 @@ def download_restic_binaries(arch: str = "amd64") -> bool:
             full_path = dest_dir.joinpath(filename)
             print("PATH TO DOWNLOADED ARCHIVE: ", full_path)
             if arch_suffix == ".bz2":
-                final_executable = str(full_path).rstrip(arch_suffix)
+                final_executable = str(full_path)[:-len(arch_suffix)]
                 with open(final_executable, "wb") as fp:
                     fp.write(bz2.decompress(file_request.content))
                 # We also need to make that file executable
-                os.chmod(str(full_path).rstrip(arch_suffix), 0o775)
+                os.chmod(final_executable, 0o775)
             else:
                 with open(full_path, "wb") as fp:
                     fp.write(file_request.content)
