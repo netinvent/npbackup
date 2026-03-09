@@ -27,7 +27,6 @@ from npbackup.common import execution_logs
 from npbackup.core import upgrade_runner
 from npbackup.core import jobs
 from npbackup import key_management
-from npbackup.task import create_scheduled_task
 
 # Nuitka compat, see https://stackoverflow.com/a/74540217
 try:
@@ -81,7 +80,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Comme separated list of groups to work with. Can accept special name '__all__' to work with all repositories.",
+        help="Comma separated list of groups to work with. Can accept special name '__all__' to work with all repositories.",
     )
     parser.add_argument(
         "--list-selected-repos",
@@ -147,16 +146,6 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Run --check quick, --policy and --prune in one go",
     )
     parser.add_argument(
-        "--quick-check",
-        action="store_true",
-        help="Deprecated in favor of --'check quick'. Quick check repository",
-    )
-    parser.add_argument(
-        "--full-check",
-        action="store_true",
-        help="Deprecated in favor of '--check full'. Full check repository (read all data)",
-    )
-    parser.add_argument(
         "--check",
         type=str,
         default=None,
@@ -169,37 +158,16 @@ This is free software, and you are welcome to redistribute it under certain cond
         default=None,
         const="standard",
         nargs="?",
-        help="Prune data in repository, also accepts max parameter in order prune reclaiming maximum space",
-    )
-    parser.add_argument(
-        "--prune-max",
-        action="store_true",
-        help="Deprecated in favor of --prune max",
+        help="Prune data in repository, also accepts max parameter in order to prune reclaiming maximum space",
     )
     parser.add_argument("--unlock", action="store_true", help="Unlock repository")
-    parser.add_argument(
-        "--repair-index",
-        action="store_true",
-        help="Deprecated in favor of '--repair index'.Repair repo index",
-    )
-    parser.add_argument(
-        "--repair-packs",
-        default=None,
-        required=False,
-        help="Deprecated in favor of '--repair packs'. Repair repo packs ids given by --repair-packs",
-    )
-    parser.add_argument(
-        "--repair-snapshots",
-        action="store_true",
-        help="Deprecated in favor of '--repair snapshots'.Repair repo snapshots",
-    )
     parser.add_argument(
         "--repair",
         type=str,
         default=None,
         required=None,
         help=(
-            "Repair the repository. Valid arguments are 'index', 'snapshots', or 'packs'"
+            "Repair the repository. Valid arguments are 'index', 'snapshots', or 'packs,comma_separaed_pack_ids'"
         ),
     )
     parser.add_argument(
@@ -330,20 +298,6 @@ This is free software, and you are welcome to redistribute it under certain cond
         default=False,
         required=False,
         help="Create a new encryption key, requires a file path",
-    )
-    parser.add_argument(
-        "--create-backup-scheduled-task",
-        type=str,
-        default=None,
-        required=False,
-        help="Create a scheduled backup task, specify an argument interval via interval=minutes, or hour=hour,minute=minute for a daily task",
-    )
-    parser.add_argument(
-        "--create-housekeeping-scheduled-task",
-        type=str,
-        default=None,
-        required=False,
-        help="Create a scheduled housekeeping task, specify hour=hour,minute=minute for a daily task",
     )
     parser.add_argument(
         "--check-config-file",
@@ -508,64 +462,6 @@ This is free software, and you are welcome to redistribute it under certain cond
         print(json.dumps(repos_config, indent=4))
         sys.exit(0)
 
-    if args.create_backup_scheduled_task or args.create_housekeeping_scheduled_task:
-
-        def _create_task(repo=None, group=None):
-            try:
-                if "interval" in args.create_scheduled_task:
-                    interval = args.create_scheduled_task.split("=")[1].strip()
-                    result = create_scheduled_task(
-                        config_file,
-                        task_type="backup",
-                        repo=repo,
-                        group=group,
-                        interval_minutes=int(interval),
-                    )
-                elif (
-                    "hour" in args.create_scheduled_task
-                    and "minute" in args.create_scheduled_task
-                ):
-                    if args.create_backup_scheduled_task:
-                        task_type = "backup"
-                    elif args.create_housekeeping_scheduled_task:
-                        task_type = "housekeeping"
-                    else:
-                        task_type = None
-                    hours, minutes = args.create_scheduled_task.split(",")
-                    hour = hours.split("=")[1].strip()
-                    minute = minutes.split("=")[1].strip()
-                    result = create_scheduled_task(
-                        config_file,
-                        task_type=task_type,
-                        repo=repo,
-                        group=group,
-                        hour=int(hour),
-                        minute=int(minute),
-                    )
-                    if not result:
-                        msg = "Scheduled task creation failed"
-                        json_error_logging(False, msg, "critical")
-                        sys.exit(72)
-                    else:
-                        msg = "Scheduled task created successfully"
-                        json_error_logging(True, msg, "info")
-                        sys.exit(0)
-                else:
-                    msg = "Invalid interval or hour and minute given for scheduled task"
-                    json_error_logging(False, msg, "critical")
-            except (TypeError, ValueError, IndexError) as exc:
-                logger.debug("Trace:", exc_info=True)
-                msg = f"Bogus data given for scheduled task: {exc}"
-                json_error_logging(False, msg, "critical")
-            sys.exit(72)
-
-        if groups:
-            for group in groups:
-                _create_task(repo=None, group=group)
-        if repos:
-            for repo in repos:
-                _create_task(repo=repo, group=None)
-
     # Try to perform an auto upgrade if needed
     try:
         auto_upgrade = full_config["global_options"]["auto_upgrade"]
@@ -622,6 +518,7 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     # Prepare program run
     cli_args = {
+        "monitoring_config": npbackup.configuration.get_monitoring_config(full_config),
         "verbose": args.verbose,
         "dry_run": args.dry_run,
         "json_output": args.json,
@@ -688,12 +585,6 @@ This is free software, and you are welcome to redistribute it under certain cond
     elif args.housekeeping or args.group_operation == "housekeeping":
         cli_args["operation"] = "housekeeping"
         cli_args["op_args"] = {}
-    elif args.quick_check or args.group_operation == "quick_check":
-        cli_args["operation"] = "check"
-        cli_args["op_args"] = {"read_data": False}
-    elif args.full_check or args.group_operation == "full_check":
-        cli_args["operation"] = "check"
-        cli_args["op_args"] = {"read_data": True}
     elif args.check or args.group_operation == "check":
         cli_args["operation"] = "check"
         if args.check not in ("quick", "full"):
@@ -707,29 +598,20 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["operation"] = "prune"
         if args.prune == "max":
             cli_args["op_args"] = {"prune_max": True}
-    elif args.prune_max or args.group_operation == "prune_max":
-        cli_args["operation"] = "prune"
-        cli_args["op_args"] = {"prune_max": True}
     elif args.unlock or args.group_operation == "unlock":
         cli_args["operation"] = "unlock"
-    elif args.repair_index or args.group_operation == "repair_index":
-        cli_args["operation"] = "repair"
-        cli_args["op_args"] = {"subject": "index"}
-    elif args.repair_packs or args.group_operation == "repair_packs":
-        cli_args["operation"] = "repair"
-        cli_args["op_args"] = {
-            "subject": "packs",
-            "pack_ids": args.repair_packs,
-        }
-    elif args.repair_snapshots or args.group_operation == "repair_snapshots":
-        cli_args["operation"] = "repair"
-        cli_args["op_args"] = {"subject": "snapshots"}
     elif args.repair or args.group_operation == "repair":
         cli_args["operation"] = "repair"
-        if args.repair not in ("index", "snapshots", "packs"):
-            json_error_logging(False, "Bogus repair operation given", level="critical")
+        # can be --repair packs,[ids,ids]
+        repair_arg = args.repair.split(",")
+
+        if repair_arg[0] not in ("index", "snapshots", "packs"):
+            json_error_logging(False, f"Bogus repair operation {repair_arg} given", level="critical")
             sys.exit(76)
-        cli_args["op_args"] = {"subject": args.repair}
+        cli_args["op_args"] = {
+            "subject": args.repair,
+            "pack_ids": ",".join(repair_arg[1:])
+            }
     elif args.recover or args.group_operation == "recover":
         cli_args["operation"] = "recover"
     elif args.dump or args.group_operation == "dump":
@@ -761,15 +643,9 @@ This is free software, and you are welcome to redistribute it under certain cond
         "policy",  # policy is actually forget with use_policy=True
         "housekeeping",
         "check",
-        "quick_check",  # TODO: deprecated
-        "full_check",  # TODO: deprecated
         "prune",
-        "prune_max",  # TODO: deprecated
         "unlock",
         "repair",
-        "repair_index",  # TODO: deprecated
-        "repair_packs",  # TODO: deprecated
-        "repair_snapshots",  # TODO: deprecated
         "recover",
         "dump",
         "stats",
