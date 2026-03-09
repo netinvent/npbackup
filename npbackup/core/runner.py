@@ -5,9 +5,9 @@
 
 __intname__ = "npbackup.core.runner"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2022-2025 NetInvent"
+__copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026030301"
+__build__ = "2026030601"
 
 
 from typing import Optional, Callable, Union, List
@@ -114,6 +114,7 @@ class NPBackupRunner:
         self._is_ready = False
 
         self._repo_config = None
+        self._monitoring_config = None
 
         self._dry_run = False
         self._verbose = False
@@ -157,7 +158,18 @@ class NPBackupRunner:
         self.create_restic_runner()
 
     @property
-    def backend_version(self) -> bool:
+    def monitoring_config(self) -> dict:
+        return self._monitoring_config
+
+    @monitoring_config.setter
+    def monitoring_config(self, value: dict):
+        if not isinstance(value, dict):
+            msg = "Bogus monitoring config object given"
+            self.write_logs(msg, level="critical", raise_error="ValueError")
+        self._monitoring_config = deepcopy(value)
+
+    @property
+    def backend_version(self) -> Union[str, bool]:
         if self._is_ready:
             return self.restic_runner.binary_version
         return False
@@ -293,7 +305,7 @@ class NPBackupRunner:
     @produce_metrics.setter
     def produce_metrics(self, value):
         if not isinstance(value, bool):
-            raise ValueError("produce_metrics value {value} is not a boolean")
+            raise ValueError(f"produce_metrics value {value} is not a boolean")
         self._produce_metrics = value
 
     @property
@@ -303,7 +315,7 @@ class NPBackupRunner:
     @full_concurrency.setter
     def full_concurrency(self, value):
         if not isinstance(value, bool):
-            raise ValueError("full_concurrency value {value} is not a boolean")
+            raise ValueError(f"full_concurrency value {value} is not a boolean")
         self._full_concurrency = value
 
     @property
@@ -313,7 +325,7 @@ class NPBackupRunner:
     @repo_aware_concurrency.setter
     def repo_aware_concurrency(self, value):
         if not isinstance(value, bool):
-            raise ValueError("concurrency value {value} is not a boolean")
+            raise ValueError(f"concurrency value {value} is not a boolean")
         self._repo_aware_concurrency = value
 
     @property
@@ -323,7 +335,7 @@ class NPBackupRunner:
     @append_metrics_file.setter
     def append_metrics_file(self, value):
         if not isinstance(value, bool):
-            raise ValueError("append_metrics_file value {value} is not a boolean")
+            raise ValueError(f"append_metrics_file value {value} is not a boolean")
         self._append_metrics_file = value
 
     @property
@@ -542,7 +554,7 @@ class NPBackupRunner:
 
     def check_concurrency(fn: Callable):
         """
-        Make sure there we don't allow concurrent actions
+        Make sure we don't allow concurrent actions
         """
 
         @wraps(fn)
@@ -588,7 +600,7 @@ class NPBackupRunner:
 
         return wrapper
 
-    def no_aquire_lock(fn: Callable):
+    def no_acquire_lock(fn: Callable):
         """
         Don't lock some operations
         """
@@ -614,7 +626,7 @@ class NPBackupRunner:
 
     def catch_exceptions(fn: Callable):
         """
-        Catch any exception and log it so we don't loose exceptions in thread
+        Catch any exception and log it so we don't lose exceptions in thread
         """
 
         @wraps(fn)
@@ -675,6 +687,7 @@ class NPBackupRunner:
             if self.produce_metrics and not METRICS_NOT_NEEDED:
                 metric_analyser(
                     self.repo_config,
+                    self.monitoring_config,
                     result,
                     self.restic_runner.backup_result_content,
                     fn.__name__,
@@ -714,7 +727,7 @@ class NPBackupRunner:
             try:
                 password_command = self.repo_config.g("repo_opts.repo_password_command")
                 if password_command and password_command != "":
-                    # NPF-SEC-00003: Avoid password command divulgation
+                    # NPF-SEC-00003: Avoid password command disclosure
                     cr_logger = logging.getLogger("command_runner")
                     cr_loglevel = cr_logger.getEffectiveLevel()
                     cr_logger.setLevel(logging.ERROR)
@@ -972,7 +985,7 @@ class NPBackupRunner:
         since restic won't do so https://github.com/restic/restic/issues/4467
         """
         paths_must_be_readable = []
-        all_files_are_reabable = True
+        all_files_are_readable = True
 
         if not source_type:
             source_type = "folder_list"
@@ -987,7 +1000,7 @@ class NPBackupRunner:
                     self.write_logs(
                         f"Cannot open file {path} for reading: {exc}", level="error"
                     )
-                    all_files_are_reabable = False
+                    all_files_are_readable = False
         for path in paths_must_be_readable:
             if source_type == "files_from_raw":
                 path = path.strip("\x00")
@@ -997,8 +1010,8 @@ class NPBackupRunner:
                     f"Path {path} does not exist or is not readable",
                     level="error",
                 )
-                all_files_are_reabable = False
-        return all_files_are_reabable
+                all_files_are_readable = False
+        return all_files_are_readable
 
     ###########################
     # ACTUAL RUNNER FUNCTIONS #
@@ -1036,7 +1049,7 @@ class NPBackupRunner:
     @metrics
     @exec_timer
     @check_concurrency
-    @no_aquire_lock
+    @no_acquire_lock
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
@@ -1057,7 +1070,7 @@ class NPBackupRunner:
     @metrics
     @exec_timer
     @check_concurrency
-    @no_aquire_lock
+    @no_acquire_lock
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
@@ -1074,7 +1087,7 @@ class NPBackupRunner:
     @metrics
     @exec_timer
     @check_concurrency
-    @no_aquire_lock
+    @no_acquire_lock
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
@@ -1092,7 +1105,7 @@ class NPBackupRunner:
     @metrics
     @exec_timer
     @check_concurrency
-    @no_aquire_lock
+    @no_acquire_lock
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
@@ -1119,7 +1132,7 @@ class NPBackupRunner:
         Returns None if no information is available
         """
         if self.minimum_backup_age == 0:
-            self.write_logs("No minimal backup age set set.", level="info")
+            self.write_logs("No minimal backup age set.", level="info")
 
         self.write_logs(
             f"Searching for a backup newer than {str(timedelta(minutes=self.minimum_backup_age))} ago",
@@ -1202,7 +1215,7 @@ class NPBackupRunner:
                 self.write_logs(msg, level="critical")
                 return self.convert_to_json_output(False, msg)
 
-            # Make sure we convert paths to list if only one path is give
+            # Make sure we convert paths to list if only one path is given
             # Also make sure we remove trailing and ending spaces
             try:
                 if not isinstance(paths, list):
@@ -1210,7 +1223,7 @@ class NPBackupRunner:
                 paths = [path.strip() for path in paths]
                 for path in paths:
                     if path == self.repo_config.g("repo_uri"):
-                        msg = f"You cannot backup source into it's own path in repo {self.repo_config.g('name')}. No inception allowed !"
+                        msg = f"You cannot backup source into its own path in repo {self.repo_config.g('name')}. No inception allowed !"
                         self.write_logs(msg, level="critical")
                         return self.convert_to_json_output(False, msg)
             except (AttributeError, KeyError):
@@ -1339,27 +1352,20 @@ class NPBackupRunner:
                 return True
 
         # Run backup preps here
-        if source_type in (
-            None,
+        if source_type is None or source_type in (
             "folder_list",
             "files_from",
             "files_from_verbatim",
             "files_from_raw",
         ):
-            if source_type not in ["folder_list", None]:
-                if not source_type or source_type == "folder_list":
-                    pretty_source_type = "files and folders"
-                else:
-                    pretty_source_type = " ".join(source_type.split("_"))
-                self.write_logs(
-                    f"Running backup of {pretty_source_type}: {paths} to repo {self.repo_config.g('name')}",
-                    level="info",
-                )
+            if not source_type or source_type == "folder_list":
+                pretty_source_type = "files and folders"
             else:
-                self.write_logs(
-                    f"Running backup of {paths} to repo {self.repo_config.g('name')}",
-                    level="info",
-                )
+                pretty_source_type = " ".join(source_type.split("_"))
+            self.write_logs(
+                f"Running backup of {pretty_source_type}: {paths} to repo {self.repo_config.g('name')}",
+                level="info",
+            )
         elif source_type == "stdin_from_command" and stdin_from_command:
             self.write_logs(
                 f"Running backup of given command stdout as name {stdin_filename} to repo {self.repo_config.g('name')}",
@@ -1413,7 +1419,7 @@ class NPBackupRunner:
         )
 
         if pre_exec_failure_is_fatal and not pre_exec_commands_success:
-            # This logic is more readable than it's negation, let's just keep it
+            # This logic is more readable than its negation, let's just keep it
             result = False
             post_exec_commands_success = None
         else:
@@ -1558,7 +1564,7 @@ class NPBackupRunner:
                             "After backup housekeeping failed", level="error"
                         )
 
-        # housekeeping has it's own metrics, so we won't include them in the operational result of the backup
+        # housekeeping has its own metrics, so we won't include them in the operational result of the backup
         if not operation_result:
             # patch result if json
             if isinstance(result, dict):
@@ -1596,13 +1602,15 @@ class NPBackupRunner:
                     )
                 except OSError:
                     self.write_logs(
-                        f"Failed expansion for additional backup parameters: {additional_restore_only_parameters}",
+                        f"Failed expansion for additional restore parameters: {additional_restore_only_parameters}",
                         level="error",
                     )
         except KeyError:
             pass
         except ValueError:
-            self.write_logs("Bogus additional backup parameters given", level="warning")
+            self.write_logs(
+                "Bogus additional restore parameters given", level="warning"
+            )
 
         return self.restic_runner.restore(
             snapshot=snapshot,
@@ -1693,7 +1701,7 @@ class NPBackupRunner:
             result = self.restic_runner.forget(policy=policy, group_by=group_by)
         else:
             self.write_logs(
-                "Bogus options given to forget: snapshots={snapshots}, policy={policy}",
+                f"Bogus options given to forget: snapshots={snapshots}, policy={use_policy}",
                 level="critical",
                 raise_error=True,
             )
@@ -1723,7 +1731,7 @@ class NPBackupRunner:
         }
         # pylint: disable=E1123 (unexpected-keyword-arg)
 
-        # We need to construct our own result here since this is a wrapper for 3 different subcommandzsz
+        # We need to construct our own result here since this is a wrapper for 3 different subcommands
         js = {
             "result": True,
             "operation": fn_name(0),
@@ -1734,11 +1742,16 @@ class NPBackupRunner:
         forget_result = None
         prune_result = None
 
+        read_data_subset = self.repo_config.g("repo_opts.read_data_subset")
+        if read_data_subset:
+            check_args = {"read_data": True, "read_data_subset": read_data_subset}
+        else:
+            check_args = {"read_data": False}
         unlock_result = self.unlock(**kwargs)
         if (isinstance(unlock_result, bool) and unlock_result) or (
             isinstance(unlock_result, dict) and unlock_result["result"]
         ):
-            check_result = self.check(**kwargs, read_data=False)
+            check_result = self.check(**kwargs, **check_args)
             if (isinstance(check_result, bool) and check_result) or (
                 isinstance(check_result, dict) and check_result["result"]
             ):
@@ -1788,7 +1801,7 @@ class NPBackupRunner:
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    def check(self, read_data: bool = True) -> bool:
+    def check(self, read_data: bool = True, read_data_subset: str = None) -> bool:
         if read_data:
             self.write_logs(
                 f"Running full data check of repository {self.repo_config.g('name')}",
@@ -1799,7 +1812,7 @@ class NPBackupRunner:
                 f"Running metadata consistency check of repository {self.repo_config.g('name')}",
                 level="info",
             )
-        return self.restic_runner.check(read_data)
+        return self.restic_runner.check(read_data, read_data_subset)
 
     @threaded
     @close_queues
