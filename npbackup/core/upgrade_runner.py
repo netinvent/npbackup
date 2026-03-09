@@ -3,9 +3,9 @@
 #
 # This file is part of npbackup
 
-__intname__ = "npbackup.gui.core.upgrade_runner"
+__intname__ = "npbackup.core.upgrade_runner"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2022-2025 NetInvent"
+__copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2025030701"
 

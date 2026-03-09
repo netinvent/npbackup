@@ -37,7 +37,7 @@ class PIDFile(object):
     @staticmethod
     def sanitize(filename: str) -> str:
         """
-        Sanitizes the filename by replacing slashes and backslashes with dots.
+        Sanitizes the filename by stripping non-alphanumeric characters.
         This is useful to ensure that the filename is valid across different filesystems.
         """
         return "".join(x for x in filename if x.isalnum())
