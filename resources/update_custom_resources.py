@@ -5,12 +5,13 @@
 
 __intname__ = "npbackup.customization_creator"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2024-2025 NetInvent"
+__copyright__ = "Copyright (C) 2024-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025051101"
-__version__ = "1.0.0"
+__build__ = "2026021901"
+__version__ = "1.1.0"
 
 import os
+import sys
 import re
 import base64
 from npbackup.path_helper import BASEDIR
@@ -55,10 +56,17 @@ def update_custom_icons():
         "LOADING_ANIMATION": "loading.gif",
         "OEM_LOGO": "oem_logo.png",
         "OEM_ICON": "oem_icon.png",
+        "INFO_ICON": "info_icon.png",
     }
 
-    resources_dir = os.path.join(BASEDIR, os.path.pardir, "resources")
-    customization_py = os.path.join(resources_dir, "customization.py")
+
+    resources_dir = os.path.join(BASEDIR, os.path.pardir, "PRIVATE", "resources")
+    if not os.path.exists(resources_dir):
+        resources_dir = os.path.join(BASEDIR, os.path.pardir, "resources")
+        if not os.path.exists(resources_dir):
+            print("No resources directory found at {} or {}".format(resources_dir, os.path.join(BASEDIR, os.path.pardir, "resources")))
+            sys.exit(1)
+    customization_py = os.path.join(resources_dir, "_customization.py")
     with open(customization_py, "r", encoding="utf-8") as f:
         customization = f.read()
     for var_name, file in custom_resources.items():
