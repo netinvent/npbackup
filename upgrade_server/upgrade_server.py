@@ -5,7 +5,7 @@
 
 __appname__ = "npbackup_upgrade_server"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2023-2025 NetInvent"
+__copyright__ = "Copyright (C) 2023-2026 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2025012401"
 __version__ = "3.0.0"
@@ -19,6 +19,7 @@ from upgrade_server import configuration
 from ofunctions.logger_utils import logger_get_logger
 import upgrade_server.api
 from upgrade_server.__debug__ import _DEBUG
+
 
 if __name__ == "__main__":
     _DEV = os.environ.get("_DEV", False)

@@ -5,7 +5,7 @@
 
 __intname__ = "npbackup.upgrade_server.configuration"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2023-2025 NetInvent"
+__copyright__ = "Copyright (C) 2023-2026 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2023020601"
 
@@ -13,6 +13,7 @@ __build__ = "2023020601"
 import os
 from ruamel.yaml import YAML
 from logging import getLogger
+
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 config_file = os.path.join(ROOT_DIR, "upgrade_server.conf")

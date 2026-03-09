@@ -5,7 +5,7 @@
 
 __intname__ = "npbackup.upgrade_server.api"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2023-2025 NetInvent"
+__copyright__ = "Copyright (C) 2023-2026 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2025011401"
 __appname__ = "npbackup.upgrader"
@@ -34,6 +34,7 @@ from upgrade_server.models.oper import CurrentVersion
 import upgrade_server.crud as crud
 import upgrade_server.configuration as configuration
 from upgrade_server.__debug__ import _DEBUG
+
 
 # Make sure we load given config files again
 parser = ArgumentParser()
