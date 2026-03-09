@@ -5,7 +5,7 @@
 
 __intname__ = "npbackup-gui"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2022-2025 NetInvent"
+__copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
 
 
@@ -46,11 +46,17 @@ from resources.customization import (
     SIMPLEGUI_DARK_THEME,
     OEM_ICON,
     SHORT_PRODUCT_NAME,
-    # THEME_CHOOSER_ICON
 )
-from npbackup.gui.config import config_gui, ask_manager_password
+from npbackup.gui.common_gui_logic import ask_manager_password
+from npbackup.gui.config import config_gui
 from npbackup.gui.operations import operations_gui
-from npbackup.gui.helpers import get_anon_repo_uri, gui_thread_runner, HideWindow
+from npbackup.gui.helpers import (
+    get_anon_repo_uri,
+    gui_thread_runner,
+    HideWindow,
+    WaitWindow,
+    popup_error,
+)
 from npbackup.gui.handle_window import handle_current_window
 from npbackup.core.i18n_helper import _t
 from npbackup.core import upgrade_runner
@@ -59,7 +65,7 @@ from npbackup.__version__ import version_dict, version_string
 from npbackup.__debug__ import _DEBUG, _NPBACKUP_ALLOW_AUTOUPGRADE_DEBUG
 from npbackup.restic_wrapper import ResticRunner
 from npbackup.restic_wrapper import schema
-from npbackup.gui.ttk_theme import reskin_job
+from npbackup.gui.ttk_theme import reskin_job, TITLE_FONT, SUBTITLE_FONT
 
 logger = getLogger()
 backend_binary = None
@@ -128,7 +134,7 @@ def about_gui(
         if event in [sg.WIN_CLOSED, "exit"]:
             break
         if event == "autoupgrade":
-            result = sg.PopupOKCancel(
+            result = sg.popup_ok_cancel(
                 _t("config_gui.auto_upgrade_will_quit"), keep_on_top=True
             )
             if result == "OK":
@@ -137,7 +143,7 @@ def about_gui(
                 if sub_result:
                     sys.exit(0)
                 else:
-                    sg.Popup(_t("config_gui.auto_upgrade_failed"), keep_on_top=True)
+                    sg.popup(_t("config_gui.auto_upgrade_failed"), keep_on_top=True)
     window.close()
 
 
@@ -189,7 +195,7 @@ def viewer_repo_gui(
         if event == "--ACCEPT--":
             if values["-REPO-URI-"] and values["-REPO-PASSWORD-"]:
                 break
-            sg.Popup(_t("main_gui.repo_and_password_cannot_be_empty"))
+            sg.popup(_t("main_gui.repo_and_password_cannot_be_empty"))
     window.close()
     return values["-REPO-URI-"], values["-REPO-PASSWORD-"]
 
@@ -219,7 +225,7 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
         HAVE_MSGSPEC = True
     if not HAVE_MSGSPEC:
         logger.info(
-            "Using basic json representation for data which is slow and memory hungry. Consider using a newer OS that supports Python 3.8+"
+            "Using basic json representation for data which is slow and memory hungry. Consider using a newer OS that supports Python 3.8+ and msgspec"
         )
 
     # For performance reasons, we don't refactor this code in order to avoid allocating more variables
@@ -331,11 +337,17 @@ def _make_treedata_from_json(ls_result: List[dict]) -> sg.TreeData:
     return treedata
 
 
-def ls_window(parent_window: sg.Window, repo_config: dict, snapshot_id: str) -> bool:
+def ls_window(
+    parent_window: sg.Window,
+    repo_config: dict,
+    monitoring_config: dict,
+    snapshot_id: str,
+) -> bool:
     result = gui_thread_runner(
         repo_config,
         "ls",
         snapshot=snapshot_id,
+        __monitoring_config=monitoring_config,
         __stdout=False,
         __autoclose=True,
         __compact=True,
@@ -343,7 +355,7 @@ def ls_window(parent_window: sg.Window, repo_config: dict, snapshot_id: str) -> 
         __no_lock=__no_lock,
     )
     if not result or not result["result"]:
-        sg.Popup(_t("main_gui.snapshot_is_empty"))
+        sg.popup(_t("main_gui.snapshot_is_empty"))
         return None, None
 
     # result is {"result": True, "output": [{snapshot_description}, {entry}, {entry}]}
@@ -369,7 +381,7 @@ def ls_window(parent_window: sg.Window, repo_config: dict, snapshot_id: str) -> 
 
     backup_id = f"{_t('main_gui.backup_content_from')} {snap_date} {_t('main_gui.run_as')} {username}@{hostname} {_t('main_gui.identified_by')} {short_id}"
     if not backup_id or not snapshot or not short_id:
-        sg.PopupError(_t("main_gui.cannot_get_content"), keep_on_top=True)
+        popup_error(_t("main_gui.cannot_get_content"))
         return False
 
     # The following thread is cpu intensive, so the GUI will update sluggerish
@@ -380,13 +392,9 @@ def ls_window(parent_window: sg.Window, repo_config: dict, snapshot_id: str) -> 
     # pylint: disable=E1101 (no-member)
 
     thread = _make_treedata_from_json(result["output"])
-    while not thread.done() and not thread.cancelled():
-        sg.PopupAnimated(
-            LOADER_ANIMATION,
-            message="{}...".format(_t("main_gui.creating_tree")),
-            time_between_frames=50,
-        )
-    sg.PopupAnimated(None)
+    result = WaitWindow(
+        thread, message=_t("main_gui.creating_tree")
+    ).wait_for_thread_result()
 
     logger.info("Finished creating data tree")
 
@@ -394,7 +402,7 @@ def ls_window(parent_window: sg.Window, repo_config: dict, snapshot_id: str) -> 
         [sg.Text(backup_id)],
         [
             sg.Tree(
-                data=thread.result(),
+                data=result,
                 headings=[_t("generic.size"), _t("generic.modification_date")],
                 auto_size_columns=True,
                 select_mode=sg.TABLE_SELECT_MODE_EXTENDED,
@@ -442,10 +450,12 @@ def ls_window(parent_window: sg.Window, repo_config: dict, snapshot_id: str) -> 
                 break
             if event == "restore_to":
                 if not values["-TREE-"]:
-                    sg.PopupError(_t("main_gui.select_folder"), keep_on_top=True)
+                    popup_error(_t("main_gui.select_folder"))
                     continue
                 with HideWindow(window):
-                    restore_window(repo_config, snapshot_id, values["-TREE-"])
+                    restore_window(
+                        repo_config, monitoring_config, snapshot_id, values["-TREE-"]
+                    )
 
         # Closing a big sg.Tree is really slow
         # We can workaround this by emptying the Tree with a new sg.TreeData() object
@@ -457,7 +467,10 @@ def ls_window(parent_window: sg.Window, repo_config: dict, snapshot_id: str) -> 
 
 
 def restore_window(
-    repo_config: dict, snapshot_id: str, restore_include: List[str]
+    repo_config: dict,
+    monitoring_config: dict,
+    snapshot_id: str,
+    restore_include: List[str],
 ) -> None:
     def _restore_window(
         repo_config: dict, snapshot: str, target: str, restore_includes: Optional[List]
@@ -470,6 +483,7 @@ def restore_window(
             __gui_msg=_t("main_gui.restore_in_progress"),
             __compact=False,
             restore_includes=restore_includes,
+            __monitoring_config=monitoring_config,
             __backend_binary=backend_binary,
             __autoclose=True,
             __no_lock=__no_lock,
@@ -488,8 +502,8 @@ def restore_window(
             sg.FolderBrowse(),
         ],
         [
-            sg.Button(_t("main_gui.restore"), key="restore"),
-            sg.Button(_t("generic.cancel"), key="cancel"),
+            sg.Button(_t("main_gui.restore"), key="restore", font=SUBTITLE_FONT),
+            sg.Button(_t("generic.cancel"), key="cancel", font=SUBTITLE_FONT),
         ],
     ]
 
@@ -523,7 +537,7 @@ def restore_window(
     return result
 
 
-def backup(repo_config: dict) -> bool:
+def backup(repo_config: dict, monitoring_config: dict) -> bool:
     gui_msg = _t("main_gui.gui_activity")
     # on_success = _t("main_gui.backup_done")
     # on_failure = _t("main_gui.backup_failed")
@@ -531,6 +545,7 @@ def backup(repo_config: dict) -> bool:
         repo_config,
         "backup",
         force=True,
+        __monitoring_config=monitoring_config,
         __autoclose=False,
         __compact=False,
         __gui_msg=gui_msg,
@@ -545,7 +560,9 @@ def backup(repo_config: dict) -> bool:
         return result
 
 
-def forget_snapshot(repo_config: dict, snapshot_ids: List[str]) -> bool:
+def forget_snapshot(
+    repo_config: dict, monitoring_config: dict, snapshot_ids: List[str]
+) -> bool:
     gui_msg = f"{_t('generic.forgetting')} {snapshot_ids} {_t('main_gui.this_will_take_a_while')}"
     # on_success = f"{snapshot_ids} {_t('generic.forgotten')} {_t('generic.successfully')}"
     # on_failure = _t("main_gui.forget_failed")
@@ -553,6 +570,7 @@ def forget_snapshot(repo_config: dict, snapshot_ids: List[str]) -> bool:
         repo_config,
         "forget",
         snapshots=snapshot_ids,
+        __monitoring_config=monitoring_config,
         __gui_msg=gui_msg,
         __autoclose=True,
         __backend_binary=backend_binary,
@@ -578,17 +596,17 @@ def _main_gui(viewer_mode: bool):
             auto_upgrade_result = upgrade_runner.check_new_version(full_config)
             upgrade_popup.close()
             if auto_upgrade_result:
-                r = sg.Popup(
+                r = sg.popup(
                     _t("config_gui.auto_upgrade_launch"),
                     custom_text=(_t("generic.yes"), _t("generic.no")),
                 )
                 if r == _t("generic.yes"):
-                    sg.Popup(
+                    sg.popup(
                         _t("main_gui.upgrade_in_progress"),
                     )
                     result = upgrade_runner.run_upgrade(config_file, full_config)
                     if not result:
-                        sg.Popup(_t("config_gui.auto_upgrade_failed"))
+                        sg.popup(_t("config_gui.auto_upgrade_failed"))
             return auto_upgrade_result
         return None
 
@@ -629,16 +647,16 @@ def _main_gui(viewer_mode: bool):
             if event == "--LOAD--":
                 config_file = Path(values["-config_file-"])
                 if not values["-config_file-"] or not config_file.exists():
-                    sg.PopupError(_t("generic.file_does_not_exist"), keep_on_top=True)
+                    popup_error(_t("generic.file_does_not_exist"))
                     continue
                 try:
                     with HideWindow(window):
                         full_config = npbackup.configuration.load_config(config_file)
                 except EnvironmentError as exc:
-                    sg.PopupError(exc, keep_on_top=True)
+                    popup_error(exc)
                     continue
                 if not full_config:
-                    sg.PopupError(_t("generic.bad_file"), keep_on_top=True)
+                    popup_error(_t("generic.bad_file"))
                     continue
                 break
         window.close()
@@ -669,7 +687,9 @@ def _main_gui(viewer_mode: bool):
         window["-repo_type-"].Update(repo_type)
         window["snapshot-list"].Update(snapshot_list)
 
-    def get_gui_data(repo_config: dict) -> Tuple[bool, List[str]]:
+    def get_gui_data(
+        repo_config: dict, monitoring_config: dict
+    ) -> Tuple[bool, List[str]]:
         global GUI_STATUS_IGNORE_ERRORS
 
         window["--STATE-BUTTON--"].Update(
@@ -680,6 +700,7 @@ def _main_gui(viewer_mode: bool):
             repo_config,
             "snapshots",
             __gui_msg=gui_msg,
+            __monitoring_config=monitoring_config,
             __autoclose=True,
             __compact=True,
             __backend_binary=backend_binary,
@@ -697,7 +718,7 @@ def _main_gui(viewer_mode: bool):
                 snapshots = result["output"]
         except TypeError:
             snapshots = None
-            sg.popup_error(_t("main_gui.failed_operation"))
+            popup_error(_t("main_gui.failed_operation"))
         try:
             min_backup_age = repo_config.g("repo_opts.minimum_backup_age")
         except AttributeError:
@@ -758,7 +779,7 @@ def _main_gui(viewer_mode: bool):
                 try:
                     full_config = npbackup.configuration.load_config(config_file)
                 except EnvironmentError as exc:
-                    sg.PopupError(exc, keep_on_top=True)
+                    popup_error(exc)
                     return None, None
                 if full_config:
                     return full_config, config_file
@@ -781,12 +802,11 @@ def _main_gui(viewer_mode: bool):
                     full_config = npbackup.configuration.load_config(config_file)
                     GUI_STATUS_IGNORE_ERRORS = True
                 except EnvironmentError as exc:
-                    sg.PopupError(exc, keep_on_top=True)
+                    popup_error(exc)
                 else:
                     if not full_config:
-                        sg.PopupError(
+                        popup_error(
                             f"{_t('main_gui.config_error')} {config_file}",
-                            keep_on_top=True,
                         )
                         config_exists = False
                     else:
@@ -929,7 +949,7 @@ def _main_gui(viewer_mode: bool):
         if not os.path.isfile(binary):
             msg = f"External backend binary {binary} cannot be found."
             logger.critical(msg)
-            sg.PopupError(msg, keep_on_top=True)
+            popup_error(msg)
             sys.exit(73)
 
     if viewer_mode:
@@ -1010,6 +1030,7 @@ def _main_gui(viewer_mode: bool):
                                         _t("generic.refresh"),
                                         key="--STATE-BUTTON--",
                                         button_color=("white", "grey"),
+                                        font=SUBTITLE_FONT,
                                     ),
                                 ],
                                 (
@@ -1066,6 +1087,9 @@ def _main_gui(viewer_mode: bool):
                             key="snapshot-list",
                             select_mode="extended",
                             size=(None, 10),
+                            expand_x=True,
+                            expand_y=True,
+                            # font="Courier 14", # WIP fixed space for snapshot ids
                         )
                     ],
                     [
@@ -1073,6 +1097,7 @@ def _main_gui(viewer_mode: bool):
                             _t("main_gui.open_repo"),
                             key="--OPEN-REPO--",
                             visible=viewer_mode,
+                            font=SUBTITLE_FONT,
                         ),
                         sg.Button(
                             _t("main_gui.launch_backup"),
@@ -1080,11 +1105,13 @@ def _main_gui(viewer_mode: bool):
                             disabled=viewer_mode
                             or (not viewer_mode and not full_config),
                             visible=not viewer_mode,
+                            font=SUBTITLE_FONT,
                         ),
                         sg.Button(
                             _t("main_gui.see_content"),
                             key="--SEE-CONTENT--",
                             disabled=not viewer_mode and not full_config,
+                            font=SUBTITLE_FONT,
                         ),
                         sg.Button(
                             _t("generic.forget"),
@@ -1092,6 +1119,7 @@ def _main_gui(viewer_mode: bool):
                             disabled=viewer_mode
                             or (not viewer_mode and not full_config),
                             visible=not viewer_mode,
+                            font=SUBTITLE_FONT,
                         ),
                         sg.Button(
                             _t("main_gui.operations"),
@@ -1099,6 +1127,7 @@ def _main_gui(viewer_mode: bool):
                             disabled=viewer_mode
                             or (not viewer_mode and not full_config),
                             visible=not viewer_mode,
+                            font=SUBTITLE_FONT,
                         ),
                         sg.Button(
                             _t("generic.configure"),
@@ -1106,15 +1135,21 @@ def _main_gui(viewer_mode: bool):
                             disabled=viewer_mode
                             or (not viewer_mode and not full_config),
                             visible=not viewer_mode,
+                            font=SUBTITLE_FONT,
                         ),
                         sg.Button(
                             _t("main_gui.load_config"),
                             key="--LOAD-CONF--",
                             disabled=viewer_mode,
                             visible=not viewer_mode,
+                            font=SUBTITLE_FONT,
                         ),
-                        sg.Button(_t("generic.about"), key="--ABOUT--"),
-                        sg.Button(_t("generic.quit"), key="--EXIT--"),
+                        sg.Button(
+                            _t("generic.about"), key="--ABOUT--", font=SUBTITLE_FONT
+                        ),
+                        sg.Button(
+                            _t("generic.quit"), key="--EXIT--", font=SUBTITLE_FONT
+                        ),
                     ],
                 ],
                 element_justification="C",
@@ -1142,16 +1177,16 @@ def _main_gui(viewer_mode: bool):
         finalize=True,
     )
 
-    # Auto reisze table to window size
-    window["snapshot-list"].expand(True, True)
-
     window.read(timeout=0.01)
     if not config_file and not full_config and not viewer_mode:
         window["-NO-CONFIG-"].Update(visible=True)
 
+    monitoring_config = npbackup.configuration.get_monitoring_config(full_config)
     if repo_config:
         try:
-            current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
+            current_state, backup_tz, snapshot_list = get_gui_data(
+                repo_config, monitoring_config
+            )
         except (TypeError, ValueError):
             current_state = None
             backup_tz = None
@@ -1170,56 +1205,73 @@ def _main_gui(viewer_mode: bool):
                     repo_config,
                     _,
                 ) = npbackup.configuration.get_repo_config(full_config, active_repo)
-                current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
+                monitoring_config = npbackup.configuration.get_monitoring_config(
+                    full_config
+                )
+                current_state, backup_tz, snapshot_list = get_gui_data(
+                    repo_config, monitoring_config
+                )
                 repo_type, _ = get_anon_repo_uri(repo_config.g("repo_uri"))
                 gui_update_state(current_state, backup_tz, snapshot_list, repo_type)
             else:
-                sg.PopupError("Repo not existent in config", keep_on_top=True)
+                popup_error("Repo not existent in config")
                 continue
         if event == "--LAUNCH-BACKUP--":
             if not full_config:
-                sg.PopupError(_t("main_gui.no_config"), keep_on_top=True)
+                popup_error(_t("main_gui.no_config"))
                 continue
-            backup(repo_config)
+            monitoring_config = npbackup.configuration.get_monitoring_config(
+                full_config
+            )
+            backup(repo_config, monitoring_config)
             event = "--STATE-BUTTON--"
         if event == "--SEE-CONTENT--":
             if not repo_config:
-                sg.PopupError(_t("main_gui.no_config"), keep_on_top=True)
+                popup_error(_t("main_gui.no_config"))
                 continue
             if not values["snapshot-list"]:
-                sg.Popup(_t("main_gui.select_backup"), keep_on_top=True)
+                sg.popup(_t("main_gui.select_backup"), keep_on_top=True)
                 continue
             if len(values["snapshot-list"]) > 1:
-                sg.Popup(_t("main_gui.select_only_one_snapshot"))
+                sg.popup(_t("main_gui.select_only_one_snapshot"), keep_on_top=True)
                 continue
             snapshot_id = snapshot_list[values["snapshot-list"][0]][0]
+            monitoring_config = npbackup.configuration.get_monitoring_config(
+                full_config
+            )
             ls_window(
-                parent_window=window, repo_config=repo_config, snapshot_id=snapshot_id
+                parent_window=window,
+                repo_config=repo_config,
+                monitoring_config=monitoring_config,
+                snapshot_id=snapshot_id,
             )
             gc.collect()
         if event == "--FORGET--":
             if not full_config:
-                sg.PopupError(_t("main_gui.no_config"), keep_on_top=True)
+                popup_error(_t("main_gui.no_config"))
                 continue
             if not values["snapshot-list"]:
-                sg.Popup(_t("main_gui.select_backup"), keep_on_top=True)
+                sg.popup(_t("main_gui.select_backup"), keep_on_top=True)
                 continue
             snapshots_to_forget = []
             for row in values["snapshot-list"]:
                 snapshots_to_forget.append(snapshot_list[row][0])
-            forget_snapshot(repo_config, snapshots_to_forget)
+            monitoring_config = npbackup.configuration.get_monitoring_config(
+                full_config
+            )
+            forget_snapshot(repo_config, monitoring_config, snapshots_to_forget)
             # Make sure we trigger a GUI refresh after forgetting snapshots
             event = "--STATE-BUTTON--"
         if event == "--OPERATIONS--":
             if not full_config:
-                sg.PopupError(_t("main_gui.no_config"), keep_on_top=True)
+                popup_error(_t("main_gui.no_config"))
                 continue
             with HideWindow(window):
-                full_config = operations_gui(full_config)
+                full_config = operations_gui(full_config, config_file)
             event = "--STATE-BUTTON--"
         if event == "--CONFIGURE--":
             if not full_config:
-                sg.PopupError(_t("main_gui.no_config"), keep_on_top=True)
+                popup_error(_t("main_gui.no_config"))
                 continue
             with HideWindow(window):
                 full_config = config_gui(full_config, config_file)
@@ -1233,7 +1285,7 @@ def _main_gui(viewer_mode: bool):
                     viewer_repo_uri, viewer_repo_password
                 )
             if not viewer_repo_uri or not viewer_repo_password:
-                sg.Popup(
+                sg.popup(
                     _t("main_gui.repo_and_password_cannot_be_empty"), keep_on_top=True
                 )
                 continue
@@ -1262,9 +1314,7 @@ def _main_gui(viewer_mode: bool):
                 _ = _repo_uri
                 repo_list = _repo_list
             else:
-                sg.PopupError(
-                    _t("main_gui.cannot_load_config_keep_current"), keep_on_top=True
-                )
+                popup_error(_t("main_gui.cannot_load_config_keep_current"))
             if not viewer_mode and not config_file and not full_config:
                 window["-NO-CONFIG-"].Update(visible=True)
             elif not viewer_mode:
@@ -1279,15 +1329,13 @@ def _main_gui(viewer_mode: bool):
             # NPF-SEC-00009
             env_manager_password = os.environ.get("NPBACKUP_MANAGER_PASSWORD", None)
             if not manager_password:
-                sg.PopupError(
-                    _t("config_gui.no_manager_password_defined"), keep_on_top=True
-                )
+                popup_error(_t("config_gui.no_manager_password_defined"))
                 continue
             if (
                 env_manager_password and env_manager_password == manager_password
             ) or ask_manager_password(manager_password):
                 destination_string = get_anon_repo_uri(repo_config.g("repo_uri"))
-                sg.PopupNoFrame(destination_string)
+                sg.popup_no_frame(destination_string)
             continue
         if event == "--ABOUT--":
             with HideWindow(window):
@@ -1301,10 +1349,15 @@ def _main_gui(viewer_mode: bool):
             if full_config or (
                 viewer_mode and viewer_repo_uri and viewer_repo_password
             ):
-                current_state, backup_tz, snapshot_list = get_gui_data(repo_config)
+                monitoring_config = npbackup.configuration.get_monitoring_config(
+                    full_config
+                )
+                current_state, backup_tz, snapshot_list = get_gui_data(
+                    repo_config, monitoring_config
+                )
                 gui_update_state(current_state, backup_tz, snapshot_list, repo_type)
                 if current_state is None:
-                    sg.Popup(_t("main_gui.cannot_get_repo_status"))
+                    sg.popup(_t("main_gui.cannot_get_repo_status"))
         if event == "Theme":
             if sg.theme() != SIMPLEGUI_DARK_THEME:
                 CURRENT_THEME = SIMPLEGUI_DARK_THEME
@@ -1345,7 +1398,7 @@ def main_gui(viewer_mode=False):
         # EXIT_CODE 200 = keyboard interrupt
         sys.exit(200)
     except Exception as exc:
-        sg.Popup(_t("config_gui.unknown_error_see_logs") + f": {exc}", keep_on_top=True)
+        sg.popup(_t("config_gui.unknown_error_see_logs") + f": {exc}", keep_on_top=True)
         logger.critical(f"GUI Execution error {exc}")
         logger.info("Trace:", exc_info=True)
         sys.exit(251)

@@ -1,0 +1,64 @@
+fr:
+  wizard_start: Début
+  select_backup_sources: Sélectionner les éléments à sauvegarder
+  backup_source: Fichiers & dossiers
+  backup_location: Emplacement de la sauvegarde
+  backend: Backend de sauvegarde
+  backup_options: Options de sauvegarde
+  summary: Résumé
+  welcome: Configuration initiale
+  welcome_description: Bienvenue, cet assistant vous guidera à travers la configuration initiale.
+
+  thank_you: Merci d'utiliser
+
+  step_1: Eléments à sauvegarder
+  step_1_description: Choisissez les éléments que vous souhaitez sauvegarder
+  step_2: Emplacement de la sauvegarde
+  step_2_description: Choisissez où vous souhaitez stocker vos sauvegardes
+  select_backend: Sélectionner le backend
+  step_3: Planification
+  step_3_description: Configurez les options de planification des sauvegardes
+  step_4: Stratégie de rétention
+  step_4_description: Configurez les options de rétention des sauvegardes
+  step_5: Supervision / notification
+  step_5_description: Configurez les options de supervision et de notification
+  step_6: Options
+  step_6_description: Configurez les options supplémentaires de sauvegarde
+  step_7: Résumé
+  step_7_description: Votre configuration de sauvegarde est maintenant terminée
+
+
+  add_system: Ajouter un système Windows
+  add_hyper_v: Ajouter des machines virtuelles Hyper-V
+  add_kvm: Ajouter des machines virtuelles KVM
+
+  gfs: Garder selon la stratégie GFS (30 jours, 4 semaines, 12 mois et 2 ans)
+  90d: Garder les derniers 90 jours
+  30d: Garder les derniers 30 jours
+  14d: Garder les derniers 14 jours
+  keep_all: Conserver toutes les sauvegardes
+
+  # STEP 2
+  remote_username: Nom d'utilisateur distant
+  remote_password: Mot de passe distant
+  s3_accesskey_id: S3 AccessKey ID
+  s3_secret_access_key: Clé secrete S3
+  azure_account_key: Clé compte Azure
+  azure_account_sas: SAS compte Azure
+  azure_account_name: Nom compte Azure
+  b2_account_id: ID compte B2
+  b2_account_key: Clé compte B2
+  google_project_id: Google Projet ID
+  google_application_credentials: Identifiants d'application Google
+
+  # STEP 3
+  first_backup_date: Date de la première sauvegarde
+  backup_frequency: Fréquence des sauvegardes
+  only_if_no_recent_backup_exists: Seulement si aucune sauvegarde n'a été faite dans les dernières
+  authorized_days: Jours de la semaine autorisés
+
+  # STEP 5
+  monitoring_identity_description: Configurez l'identité de cette instance de sauvegarde
+
+  # STEP 7
+  wizard_ending_text: Votre configuration de sauvegarde est maintenant terminée et sera enregistrée dans %{config_file}. Vous pouvez éditer ce fichier de configuration ou ajouter des paramètres spécifiques dans les paramètres de configuration principaux.

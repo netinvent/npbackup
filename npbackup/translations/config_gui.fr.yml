@@ -1,6 +1,7 @@
 fr:
   # tabs
   backup: Sauvegarde
+  operations: Opérations
   backup_destination: Destination
   exclusions: Exclusions
   pre_post: Pré/Post exec
@@ -8,7 +9,7 @@ fr:
 
   encrypted_data: Donnée_Chiffrée
   compression: Compression
-  backup_paths: Chemins à sauvegarder
+  backup_objects: Objets à sauvegarder
   backup_sources: Éléments à sauvegarder
   use_fs_snapshot: Utiliser les instantanés VSS
   ignore_cloud_files: Exclure le fichiers dans le cloud
@@ -26,7 +27,8 @@ fr:
   exec_failure_is_fatal: L'échec d'execution est fatal
   post_exec_commands: Commandes post-sauvegarde
   execute_even_on_backup_error: Executer même si la sauvegarde a échouée
-  tags: Tags
+  tags: Étiquettes
+  backup_tags_explanation: Les étiquettes sont un excellent moyen de marquer vos sauvegardes afin d'appliquer des politiques de rétention sélectives
   one_per_line: un par ligne
   backup_priority: Priorité de sauvegarde
   pack_size: Taille des packs (MB)
@@ -43,18 +45,6 @@ fr:
   download_speed: Vitesse limite de téléchargement (KB/s)
   backend_connections: Connexions simultanées au dépot
 
-  prometheus_config: Configuration prometheus
-  available_variables: Variables disponibles ${HOSTNAME}, ${BACKUP_JOB}, ${MACHINE_ID}, ${MACHINE_GROUP}, ${RANDOM}[n]
-  available_variables_id: Variables disponibles ${HOSTNAME}, ${RANDOM}[n] où n est le nombre de caractères aléatoires
-  enable_prometheus: Activer les métriques prometheus
-  job_name: Nom du travail (backup_job)
-  metrics_destination: Destination métriques (URI Push / fichier)
-  no_cert_verify: Ne pas vérifier le certificat SSL
-  metrics_username: Nom d'utilisateur métriques HTTP
-  metrics_password: Mot de passe métriques HTTP
-  prometheus_instance: Instance Prometheus
-  additional_labels: Etiquettes supplémentaires
-
   no_config_available: Aucun fichier de configuration trouvé. Merci d'utiliser --config-file "chemin" pour spécifier un fichier, ou copier un fichier de configuration a côté du binaire NPBackup.
   create_new_config: Souhaitez-vous créer une nouvelle configuration ?
   saved_initial_config: Si vous avez enregistré une configuration, vous pouvez à présent recharger le programme.
@@ -66,12 +56,16 @@ fr:
   no_runner: Impossible de se connecter au backend. Verifier les logs
   runner_not_configured: Backend non configuré proprement. Verifier les logs
   no_binary: Impossible de trouver le coeur de sauvegarde. Merci d'installer le binaire restic depuis restic.net
-  key_error: Un entrée de la configuration n'a pas d'équivalent dans l'interface
+  key_error: Une entrée de la configuration n'a pas d'équivalent dans l'interface
   delete_bad_keys: Souhaitez-vous supprimer les entrées non conformes ? Notez que seul l'objet courant sera affecté. Si l'entrée est un héritage, il faudra charger le groupe correspondant. Entrées concernées dans l'objet courant
 
   configuration_saved: Configuration sauvegardée
   cannot_save_configuration: Impossible d'enregistrer la configuration. Veuillez consulter les journaux pour plus de détails
   repo_uri_should_not_be_empty: L'URI / chemin local dépot de sauvegarde ne devrait pas être vide
+  repo_password_should_not_be_empty: Le mot de passe ou la commande de mot de passe de chiffrement du dépot ne devrait pas être vide
+  backup_source_should_not_be_empty: Les éléments à sauvegarder ne devraient pas être vides
+  there_are_invalid_email_addresses: Il y a des adresses email invalides
+  invalid_email_address: Adresse email érronée
   set_manager_password: Mot de passe gestionnaire
   wrong_password: Mot de passe érroné
   remove_password: Supprimer le mot de passe
@@ -87,12 +81,14 @@ fr:
   auto_upgrade_failed: Procédure de mise à niveau échouée, veuillez consulter les journaux pour plus de détails
   auto_upgrade_disabled: Mise à niveau automatique désactivée ou serveur injoignable
 
+  # Scheduling
   create_backup_scheduled_task_every: Créer une tâche planifiée de sauvegarde toutes les
   create_backup_scheduled_task_at: Créer une tâche planifiée de sauvegarde tous les jours à
   create_housekeeping_scheduled_task_at: Créer une tâche planifiée de maintenance tous les jours à
   scheduled_task_explanation: Les tâches planifiées peuvent être crées à heure fixe pour réaliser des sauvegardes serveur, ou toutes les x minutes, auquel cas la sauvegarde aura lieue uniquement si le temps minimal entre deux sauvegardes est dépassé, ce qui est adapté aux ordinateurs portables qui ont des heures de travail flexibles.
   scheduled_task_creation_success: Tâche planifiée crée avec succès
   scheduled_task_creation_failure: Impossible de créer la tâche planifiée. Veuillez consulter les journaux pour plus de détails
+  task_type: Type de tâche
 
   machine_identification: Identification machine
   machine_id: Identificateur machine
@@ -123,25 +119,29 @@ fr:
   # retention policy
   retention_policy: Politique de rétention
   keep: Garder
-  last: derniers instantanés
-  hourly: instantanés horaires
-  daily: instantanés journalières
-  weekly: instantanés hebdomadaires
-  monthly: instantanés mensuels
-  yearly: instantanés annuelles
+  last: derniers
+  hourly: horaires
+  daily: journalières
+  weekly: hebdomadaires
+  monthly: mensuels
+  yearly: annuelles
   keep_within: Garder les instantanées dans une période relative au dernier instantané
-  keep_tags: Garder les instantanés aux tags suivants
-  apply_on_tags: Appliquer uniquement sur les instantanés aux tags suivants
+  keep_tags: Toujours garder ces étiquettes
+  apply_on_tags: Ne jamais appliquer sur ces étiquettes
+  optional_ntp_server_uri: URI optionnelle serveur NTP
+
+  # housekeeping
+  housekeeping: Maintenance
   post_backup_housekeeping_percent_chance: Chance (%%) de lancer maintenance post-sauvegarde
   post_backup_housekeeping_percent_chance_explanation: Rend aléatoire la maintenance après sauvegarde (0-100%%, 0 = jamais, 100 = toujours)
   post_backup_housekeeping_interval: Intervalle de maintenance post-sauvegarde
   post_backup_housekeeping_interval_explanation: Intervalle de nombre d'exécutions de sauvegarde avant lancement operations de maintenance
-  optional_ntp_server_uri: URI optionnelle serveur NTP
   prune_max_unused: Données inutilisées max lors des purges
   prune_max_unused_explanation: Taille maximale en pourcentage ou octets de données à conserver lors des opérations de purge maximales
   prune_max_repack_size: Taille maximale de repack
   prune_max_repack_size_explanation: Taille maximale de repack en bytes (permet de limiter la taille du stockage nécessaire lors des purges)
-
+  read_data_subset: Vérifier un échantillon de données lors des vérifications de dépot
+  read_data_subset_explanation: Taille en bytes d'un échantillon de données à lire lors des vérifications de dépot (check). Permet de vérifier les données sans lire l'intégralité du dépot, ce qui peut être très long pour les grands dépots. Si 0 ou vide, la vérification lira toutes les données (ce qui est le comportement par défaut de restic)
   # repo management
   repo_group: Groupe de dépots
   group_inherited: Hérité du groupe
@@ -169,7 +169,7 @@ fr:
   restore_only_perms: Restauration uniquement
   full_perms: Accès total
   setting_permissions_requires_manager_password: Un mot de passe gestionnaire est requis pour définir des permissions
-  manager_password_too_simple: Le mot de passe gestionnaire nécessite au moins 8 caractères majuscules, minuscules et chiffres
+  password_too_simple: Le mot de passe nécessite au moins 8 caractères majuscules, minuscules et chiffres
   current_permissions: Permissions actives (non herité)
   manager_password_set: Mot de passe gestionnaire initialisé (non hérité)
 
@@ -189,7 +189,7 @@ fr:
   policiy_group_by: Appliquer la politique de rétention par groupes d'instantanés
   group_by_host: Grouper par nom d'hôte
   group_by_paths: Grouper par chemins sauvegardés
-  group_by_tags: Grouper par tags
+  group_by_tags: Grouper par étiquettes
   policiy_group_by_explanation: Si aucun groupement n'est choisi, le groupement par nom d'hôte et chemin de sauvegarde sera utilisé
 
   add_identity: Ajouter identités Cloud
@@ -199,23 +199,58 @@ fr:
   full_concurrency: Ne pas vérifier la concurrence
   repo_aware_concurrency: Autoriser concurrence sur dépots différents
 
+  prometheus: Prometheus
+  prometheus_config: Configuration prometheus
+  available_variables: Variables disponibles ${HOSTNAME}, ${BACKUP_JOB}, ${REPO_NAME}, ${MACHINE_ID}, ${MACHINE_GROUP}, ${RANDOM}[n]
+  available_variables_id: Variables disponibles ${HOSTNAME}, ${RANDOM}[n] où n est le nombre de caractères aléatoires
+  prometheus_enable: Activer les métriques Prometheus
+  job_name: Nom du travail (backup_job)
+  metrics_destination: Destination métriques (URI Push / fichier)
+  no_cert_verify: Ne pas vérifier le certificat SSL
+  metrics_username: Nom d'utilisateur métriques HTTP
+  metrics_password: Mot de passe métriques HTTP
+
+  zabbix: Zabbix
+  zabbix_config: Configuration Zabbix
+  zabbix_enable: Activer les métriques Zabbix
+  zabbix_server: Serveur Zabbix
+  zabbix_port: Port Zabbix
+
+  healthchecksio: Healthchecks.io
+  healthchecksio_config: Configuration Healthchecks.io
+  healthchecksio_enable: Activer les notifications Healthchecks.io
+  healthchecksio_url: URL Healthchecks.io
+
+  webhooks: Webhooks
+  webhooks_config: Configuration Monitoring Webhooks
+  webhooks_enable: Activer les notifications Webhooks
+  webhooks_url: URL Webhooks
+  webhooks_method: Méthode Webhooks
+
+  repo_monitoring_identity: Identité de supervision du dépôt
+  global_monitoring_identity: Identité de supervision globale
+  instance_name: Nom de l'instance
+  backup_job: Nom du travail de sauvegarde
+  additional_labels: Etiquettes de supervision supplémentaires
+
+  email: Emails
   email_config: Configuration email
-  enable_email_notifications: Activer les notifications email
-  email_instance: Nom d'instance
+  email_enable: Activer les notifications email
   smtp_server: Serveur SMTP
   smtp_port: Port SMTP
   smtp_security: Sécurité
   smtp_username: Nom d'utilisateur SMTP
   smtp_password: Mot de passe SMTP
-  sender: Email expéditeur
-  recipients: Emails destinataires séparés par des virgules
-  email_on_backup_success: Email sur succès de sauvegarde
-  email_on_backup_failure: Email sur échec de sauvegarde
-  email_on_operations_success: Email sur succès des opérations
-  email_on_operations_failure: Email sur échec des opérations
+  email_sender: Email expéditeur
+  email_recipients: Emails destinataires séparés par des virgules
+  email_on_backup_success: Email de succès
+  email_on_backup_failure: Email d'échec
+  email_on_operations_success: Email de succès
+  email_on_operations_failure: Email d'échec
   test_email: Envoyer un email de test
   test_email_success: Email de test envoyé avec succès
   test_email_failure: Échec de l'envoi du test email, veuillez consulter les journaux pour plus de détails
+  add_recipient: Ajouter destinataire
 
   backend_local: Stockage local
   backend_sftp: SFTP
