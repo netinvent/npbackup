@@ -111,6 +111,9 @@ class MonitoringBackend(ABC):
             return default
         except (KeyError, AttributeError):
             return default
+        except AssertionError:
+            logger.debug(f"Key {key} not found in monitoring configuration, returning default.")
+            return default
 
     def get_config_value(self, key: str, default: Any = None) -> Any:
         """
@@ -129,6 +132,9 @@ class MonitoringBackend(ABC):
                 return value
             return default
         except (KeyError, AttributeError):
+            return default
+        except AssertionError:
+            logger.debug(f"Key {key} not found in configuration, returning default.")
             return default
 
 
