@@ -646,13 +646,17 @@ class NPBackupRunner:
                 )
                 logger.error("Trace:", exc_info=True)
 
+                try:
+                    result_string = self.restic_runner.backup_result_content
+                except AttributeError:
+                    result_string = None
                 # In case of error, we really need to write metrics
                 # pylint: disable=E1101 (no-member)
                 metric_analyser(
                     repo_config=self.repo_config,
                     monitoring_config=self.monitoring_config,
                     restic_result=False,
-                    result_string=self.restic_runner.backup_result_content,
+                    result_string=result_string,
                     operation=fn.__name__,
                     dry_run=self.dry_run,
                     append_metrics_file=self.append_metrics_file,
@@ -682,6 +686,12 @@ class NPBackupRunner:
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
             global METRICS_NOT_NEEDED
+
+            try:
+                result_string = self.restic_runner.backup_result_content
+            except AttributeError:
+                result_string = None
+
             # pylint: disable=E1102 (not-callable)
             result = fn(self, *args, **kwargs)
             # pylint: disable=E1101 (no-member)
@@ -690,7 +700,7 @@ class NPBackupRunner:
                     repo_config=self.repo_config,
                     monitoring_config=self.monitoring_config,
                     restic_result=result,
-                    result_string=self.restic_runner.backup_result_content,
+                    result_string=result_string,
                     operation=fn.__name__,
                     dry_run=self.dry_run,
                     append_metrics_file=self.append_metrics_file,
@@ -698,7 +708,10 @@ class NPBackupRunner:
                     analyze_only=False,
                 )
                 # We need to reset backup result content once it's parsed
-                self.restic_runner.backup_result_content = None
+                try:
+                    self.restic_runner.backup_result_content = None
+                except AttributeError:
+                    pass
                 # We need to append to metric file once we begin writing to it
                 self.append_metrics_file = True
             else:
@@ -1487,6 +1500,11 @@ class NPBackupRunner:
                 post_exec_failure_is_fatal,
             )
 
+        try:
+            result_string = self.restic_runner.backup_result_content
+        except AttributeError:
+            result_string = None
+
         # Extract backup size from result_string
         # Metrics will not be in json format, since we need to diag cloud issues until
         # there is a fix for https://github.com/restic/restic/issues/4155
@@ -1494,7 +1512,7 @@ class NPBackupRunner:
             repo_config=self.repo_config,
             monitoring_config=self.monitoring_config,
             restic_result=result,
-            result_string=self.restic_runner.backup_result_content,
+            result_string=result_string,
             operation="backup",
             dry_run=self.restic_runner.dry_run,
             append_metrics_file=self.append_metrics_file,
