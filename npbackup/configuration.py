@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026031001"
+__build__ = "2026030601"
 __version__ = "npbackup 3.1.0+"
 
 
@@ -131,7 +131,12 @@ empty_config_dict = {
                 "tags": [],
             },
             "repo_opts": {},
-            "monitoring": {},
+            "monitoring": {
+                "backup_job": None,
+                "group": None,
+                "instance": None,
+                "additional_labels": {},
+            },
             "env": {
                 "env_variables": {},
                 "encrypted_env_variables": {},
@@ -496,7 +501,7 @@ def evaluate_variables(repo_config: dict, full_config: dict) -> dict:
                 value = value.replace("${BACKUP_JOB}", backup_job if backup_job else "")
 
             if "${REPO_NAME}" in value:
-                repo_name = repo_config.g("repo_name")
+                repo_name = repo_config.g("name")
                 value = value.replace("${REPO_NAME}", repo_name if repo_name else "")
 
             if "${REPO_GROUP}" in value:
