@@ -562,13 +562,15 @@ def update_object_gui(
     return full_config
 
 
-def update_global_gui(window: sg.Window, full_config: dict, unencrypted: bool = False):
+def update_global_gui(window: sg.Window, full_config: dict, unencrypted: bool = False, is_wizard=True):
     global monitoring_additional_labels_tree
 
     global_config = CommentedMap()
 
     # Only update global options gui with identified global keys
     for key in full_config.keys():
+        if is_wizard and key == "global_options":
+            continue
         if (
             key in ("identity", "global_options")
             or key.startswith("global_")
