@@ -684,6 +684,12 @@ def start_wizard():
         unencrypted=False,
         is_wizard=True,  # Since we have less keys than full config interface
     )
+    npbackup.gui.common_gui_logic.update_global_gui(
+        window=wizard,
+        full_config=full_config,
+        unencrypted=False,
+        is_wizard=True,
+    )
 
     set_active_tab(1)
     wizard["-RETENTION-POLICIES-"].update(values=retention_policies_list)
