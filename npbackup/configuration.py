@@ -259,6 +259,7 @@ empty_config_dict = {
         "enabled": False,
         "smtp_server": None,
         "smtp_port": 587,
+        "smtp_security": None,  # can be None, "ssl" or "tls"
         "smtp_username": None,
         "smtp_password": None,
         "sender": None,
