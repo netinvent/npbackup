@@ -2696,7 +2696,7 @@
             "uid": "${DS_MIMIR}"
           },
           "editorMode": "code",
-          "expr": "restic_snasphot_size_bytes{backup_job=~\"$backup_job\",__tenant_id__=~\"$tenant\",action=~\"$action\"}",
+          "expr": "restic_snapshot_size_bytes{backup_job=~\"$backup_job\",__tenant_id__=~\"$tenant\",action=~\"$action\"}",
           "format": "time_series",
           "instant": true,
           "interval": "",

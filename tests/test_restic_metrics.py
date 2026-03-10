@@ -96,7 +96,7 @@ expected_results_V2 = [
     r'restic_dirs{action="backup",backup_job="some_nas",instance="test",state="changed"} (\d+)',
     r'restic_dirs{action="backup",backup_job="some_nas",instance="test",state="unmodified"} (\d+)',
     r'restic_files{action="backup",backup_job="some_nas",instance="test",state="total"} (\d+)',
-    r'restic_snasphot_size_bytes{action="backup",backup_job="some_nas",instance="test",type="processed"} (\d+)',
+    r'restic_snapshot_size_bytes{action="backup",backup_job="some_nas",instance="test",type="processed"} (\d+)',
     r'restic_total_duration_seconds{action="backup",backup_job="some_nas",instance="test"} (\d+)',
 ]
 

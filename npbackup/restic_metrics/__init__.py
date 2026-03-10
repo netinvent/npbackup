@@ -244,7 +244,7 @@ def restic_json_to_prometheus(
         if key == "total_bytes_processed":
             if value is not None:
                 prom_metrics.append(
-                    f'restic_snasphot_size_bytes{{{labels_string},type="processed"}} {value}'
+                    f'restic_snapshot_size_bytes{{{labels_string},type="processed"}} {value}'
                 )
                 continue
         if "duration" in key:
@@ -506,6 +506,7 @@ def upload_metrics(destination: str, authentication, no_cert_verify: bool, metri
         )
         if result.status_code == 200:
             logger.info("Metrics pushed successfully.")
+            return True
         else:
             logger.warning(
                 f"Could not push metrics: {result.status_code}: {result.text}"
@@ -513,6 +514,7 @@ def upload_metrics(destination: str, authentication, no_cert_verify: bool, metri
     except Exception as exc:
         logger.error(f"Cannot upload metrics: {exc}")
         logger.debug("Trace:", exc_info=True)
+    return False
 
 
 def write_metrics_file(filename: str, metrics: List[str], append: bool = False):
@@ -520,9 +522,10 @@ def write_metrics_file(filename: str, metrics: List[str], append: bool = False):
         with open(filename, "a" if append else "w", encoding="utf-8") as file_handle:
             for metric in metrics:
                 file_handle.write(metric + "\n")
+        return True
     except OSError as exc:
         logger.error(f"Cannot write metrics file {filename}: {exc}")
-
+    return False
 
 if __name__ == "__main__":
     parser = ArgumentParser(
