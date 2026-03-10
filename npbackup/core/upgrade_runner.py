@@ -41,7 +41,7 @@ def run_upgrade(
         return False
 
     evaluated_full_config = npbackup.configuration.evaluate_variables(
-        full_config, full_config
+        repo_config=full_config, full_config=full_config
     )
     auto_upgrade_host_identity = evaluated_full_config.g(
         "global_options.auto_upgrade_host_identity"

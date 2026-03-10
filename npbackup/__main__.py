@@ -416,6 +416,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         repos_config = []
         for repo in repos_and_group_repos:
             repo_config, _ = npbackup.configuration.get_repo_config(full_config, repo)
+            monitoring_config = npbackup.configuration.get_monitoring_config(repo_config, full_config)
             if not repo_config:
                 logger.error(f"Missing config for repository {repo}")
             else:
@@ -439,6 +440,10 @@ This is free software, and you are welcome to redistribute it under certain cond
                     repo_config, show_encrypted=show_encrypted
                 )
                 repos_config.append(repo_config)
+                monitoring_config = npbackup.configuration.get_anonymous_repo_config(
+                    monitoring_config, show_encrypted=show_encrypted
+                )
+                repos_config.append(monitoring_config)
         print(json.dumps(repos_config, indent=4))
         sys.exit(0)
 
@@ -518,7 +523,7 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     # Prepare program run
     cli_args = {
-        "monitoring_config": npbackup.configuration.get_monitoring_config(full_config),
+        "monitoring_config": npbackup.configuration.get_monitoring_config(repo_config, full_config),
         "verbose": args.verbose,
         "dry_run": args.dry_run,
         "json_output": args.json,

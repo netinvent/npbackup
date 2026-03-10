@@ -1181,7 +1181,7 @@ def _main_gui(viewer_mode: bool):
     if not config_file and not full_config and not viewer_mode:
         window["-NO-CONFIG-"].Update(visible=True)
 
-    monitoring_config = npbackup.configuration.get_monitoring_config(full_config)
+    monitoring_config = npbackup.configuration.get_monitoring_config(repo_config, full_config)
     if repo_config:
         try:
             current_state, backup_tz, snapshot_list = get_gui_data(
@@ -1206,7 +1206,7 @@ def _main_gui(viewer_mode: bool):
                     _,
                 ) = npbackup.configuration.get_repo_config(full_config, active_repo)
                 monitoring_config = npbackup.configuration.get_monitoring_config(
-                    full_config
+                    repo_config, full_config
                 )
                 current_state, backup_tz, snapshot_list = get_gui_data(
                     repo_config, monitoring_config
@@ -1221,7 +1221,7 @@ def _main_gui(viewer_mode: bool):
                 popup_error(_t("main_gui.no_config"))
                 continue
             monitoring_config = npbackup.configuration.get_monitoring_config(
-                full_config
+                repo_config, full_config
             )
             backup(repo_config, monitoring_config)
             event = "--STATE-BUTTON--"
@@ -1237,7 +1237,7 @@ def _main_gui(viewer_mode: bool):
                 continue
             snapshot_id = snapshot_list[values["snapshot-list"][0]][0]
             monitoring_config = npbackup.configuration.get_monitoring_config(
-                full_config
+                repo_config, full_config
             )
             ls_window(
                 parent_window=window,
@@ -1257,7 +1257,7 @@ def _main_gui(viewer_mode: bool):
             for row in values["snapshot-list"]:
                 snapshots_to_forget.append(snapshot_list[row][0])
             monitoring_config = npbackup.configuration.get_monitoring_config(
-                full_config
+                repo_config, full_config
             )
             forget_snapshot(repo_config, monitoring_config, snapshots_to_forget)
             # Make sure we trigger a GUI refresh after forgetting snapshots
@@ -1350,7 +1350,7 @@ def _main_gui(viewer_mode: bool):
                 viewer_mode and viewer_repo_uri and viewer_repo_password
             ):
                 monitoring_config = npbackup.configuration.get_monitoring_config(
-                    full_config
+                    repo_config, full_config
                 )
                 current_state, backup_tz, snapshot_list = get_gui_data(
                     repo_config, monitoring_config
