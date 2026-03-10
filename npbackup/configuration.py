@@ -108,7 +108,7 @@ ENCRYPTED_OPTIONS = [
     "repo_opts.repo_password_command",
     "global_prometheus.http_password",
     "global_email.smtp_password",
-    "global_zabbix.password",
+    "global_zabbix.psk",
     "global_healthchecksio.password",
     "global_webhooks.password",
     "env.encrypted_env_variables",
@@ -1416,7 +1416,7 @@ def get_monitoring_config(repo_config: dict, full_config: dict):
         except AttributeError:
             pass
         try:
-            global_monitoring.s("global_identity", full_config.g("global_identity"))
+            global_monitoring.s("identity", full_config.g("identity"))
         except AttributeError:
             pass
     global_monitoring = evaluate_variables(repo_config, global_monitoring, full_config)
