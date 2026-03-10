@@ -754,9 +754,9 @@ def start_wizard():
                 is_wizard=True,
             )
 
-            result = npbackup.gui.common_gui_logic.create_scheduled_task(
+            result, full_config = npbackup.gui.common_gui_logic.create_scheduled_task(
                 values, full_config, CONFIG_FILE
-            )  # WIP name
+            )
             if not result:
                 sg.popup(
                     _t("config_gui.scheduled_task_creation_failure"), keep_on_top=True
