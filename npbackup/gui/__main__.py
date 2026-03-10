@@ -1181,7 +1181,9 @@ def _main_gui(viewer_mode: bool):
     if not config_file and not full_config and not viewer_mode:
         window["-NO-CONFIG-"].Update(visible=True)
 
-    monitoring_config = npbackup.configuration.get_monitoring_config(repo_config, full_config)
+    monitoring_config = npbackup.configuration.get_monitoring_config(
+        repo_config, full_config
+    )
     if repo_config:
         try:
             current_state, backup_tz, snapshot_list = get_gui_data(

@@ -34,10 +34,12 @@ class MonitoringBackend(ABC):
         self.monitoring_config = monitoring_config
         self.logger = logger
         self.base_labels = {
-            "instance": self.get_config_value("monitoring.instance", "default_instance"),
+            "instance": self.get_config_value(
+                "monitoring.instance", "default_instance"
+            ),
             "group": self.get_config_value("monitoring.group", "default_group"),
             "backup_job": self.get_config_value(
-            "monitoring.backup_job", "default_backup_job"
+                "monitoring.backup_job", "default_backup_job"
             ),
         }
         # Add additional labels from config

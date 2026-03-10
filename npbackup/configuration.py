@@ -479,7 +479,9 @@ def has_random_variables(full_config: dict) -> Tuple[bool, dict]:
     return is_modified, full_config
 
 
-def evaluate_variables(repo_config: dict, monitoring_config: dict = None, full_config: dict = None) -> dict:
+def evaluate_variables(
+    repo_config: dict, monitoring_config: dict = None, full_config: dict = None
+) -> dict:
     """
     Replace runtime variables with their corresponding value
     Also replaces human bytes notation with ints
@@ -867,7 +869,9 @@ def get_repo_config(
     repo_config, config_inheritance = inherit_group_settings(repo_config, group_config)
 
     if eval_variables:
-        repo_config = evaluate_variables(repo_config=repo_config, full_config=full_config)
+        repo_config = evaluate_variables(
+            repo_config=repo_config, full_config=full_config
+        )
     repo_config = expand_units(repo_config, unexpand=True)
 
     return repo_config, config_inheritance
@@ -883,7 +887,9 @@ def get_group_config(
         return None
 
     if eval_variables:
-        group_config = evaluate_variables(repo_config=group_config, full_config=full_config)
+        group_config = evaluate_variables(
+            repo_config=group_config, full_config=full_config
+        )
     group_config = expand_units(group_config, unexpand=True)
     return group_config
 
@@ -991,7 +997,9 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
         # Add new monitoring sections
         try:
             if not full_config.g("global_zabbix"):
-                full_config.s("global_zabbix", deepcopy(empty_config_dict["global_zabbix"]))
+                full_config.s(
+                    "global_zabbix", deepcopy(empty_config_dict["global_zabbix"])
+                )
         except KeyError:
             logger.info("No global_zabbix migration is done")
 

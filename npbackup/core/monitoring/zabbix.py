@@ -29,14 +29,16 @@ except ImportError:
     HAS_PSK = False
 try:
     import sslpsk3 as sslpsk
-    HAS_PSK = True  
+
+    HAS_PSK = True
 except ImportError:
     # Import sslpsk2 if sslpsk3 is not available
     try:
         import sslpsk2 as sslpsk
-        HAS_PSK = True  
+
+        HAS_PSK = True
     except ImportError:
-        HAS_PSK = False  
+        HAS_PSK = False
 
 
 class ZabbixMonitor(MonitoringBackend):
@@ -110,14 +112,18 @@ class ZabbixMonitor(MonitoringBackend):
         if dry_run:
             logger.info("Dry run mode. Not sending Zabbix metrics.")
             return True
-        
+
         try:
             zabbix_psk = self.get_monitoring_value("global_zabbix.psk")
-            zabbix_psk_identity = self.get_monitoring_value("global_zabbix.psk_identity")
+            zabbix_psk_identity = self.get_monitoring_value(
+                "global_zabbix.psk_identity"
+            )
             if zabbix_psk and zabbix_psk_identity:
                 logger.debug("Using PSK authentication for Zabbix sender.")
                 if not HAS_PSK:
-                    logger.error("PSK authentication configured but sslpsk library not available. Cannot send Zabbix metrics using PSK.")
+                    logger.error(
+                        "PSK authentication configured but sslpsk library not available. Cannot send Zabbix metrics using PSK."
+                    )
         except (KeyError, AttributeError) as exc:
             logger.debug(f"No Zabbix PSK configuration found: {exc}")
 
@@ -130,6 +136,7 @@ class ZabbixMonitor(MonitoringBackend):
 
         # Send metrics to Zabbix
         if HAS_PSK:
+
             def psk_wrapper(sock, *args, **kwargs):
                 # Pre-Shared Key (PSK) and PSK Identity
                 psk = bytes.fromhex(zabbix_psk)
@@ -138,12 +145,15 @@ class ZabbixMonitor(MonitoringBackend):
                 return sslpsk.wrap_socket(
                     sock,
                     ssl_version=ssl.PROTOCOL_TLSv1_2,
-                    ciphers='ECDHE-PSK-AES128-CBC-SHA256',
-                    psk=(psk, psk_identity)
+                    ciphers="ECDHE-PSK-AES128-CBC-SHA256",
+                    psk=(psk, psk_identity),
                 )
+
             return self._send_to_zabbix(zabbix_server, zabbix_port, items, psk_wrapper)
         else:
-            return self._send_to_zabbix(zabbix_server, zabbix_port, items, psk_wrapper=None)
+            return self._send_to_zabbix(
+                zabbix_server, zabbix_port, items, psk_wrapper=None
+            )
 
     def _build_item_values(
         self,
@@ -195,7 +205,10 @@ class ZabbixMonitor(MonitoringBackend):
         logger.debug(
             f"Created {len(items)} Zabbix item values for host {self.base_labels['instance']}"
         )
-        logger.debug("Zabbix items: "+ "\n".join([f"{item.key} = {item.value}" for item in items]))
+        logger.debug(
+            "Zabbix items: "
+            + "\n".join([f"{item.key} = {item.value}" for item in items])
+        )
         return items
 
     def _send_to_zabbix(
@@ -218,7 +231,9 @@ class ZabbixMonitor(MonitoringBackend):
 
         try:
             if psk_wrapper:
-                sender = Sender(server=zabbix_server, port=zabbix_port, socket_wrapper=psk_wrapper)
+                sender = Sender(
+                    server=zabbix_server, port=zabbix_port, socket_wrapper=psk_wrapper
+                )
             else:
                 sender = Sender(server=zabbix_server, port=zabbix_port)
             response = sender.send(items)

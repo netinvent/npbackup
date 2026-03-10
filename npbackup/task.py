@@ -26,8 +26,10 @@ from npbackup.gui.constants import combo_boxes
 
 if os.name == "nt":
     import xml.etree.ElementTree as ET
+
     class CronTab:
         pass
+
 else:
     from crontab import CronTab
 

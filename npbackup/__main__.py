@@ -416,7 +416,9 @@ This is free software, and you are welcome to redistribute it under certain cond
         repos_config = []
         for repo in repos_and_group_repos:
             repo_config, _ = npbackup.configuration.get_repo_config(full_config, repo)
-            monitoring_config = npbackup.configuration.get_monitoring_config(repo_config, full_config)
+            monitoring_config = npbackup.configuration.get_monitoring_config(
+                repo_config, full_config
+            )
             if not repo_config:
                 logger.error(f"Missing config for repository {repo}")
             else:
@@ -523,7 +525,9 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     # Prepare program run
     cli_args = {
-        "monitoring_config": npbackup.configuration.get_monitoring_config(repo_config, full_config),
+        "monitoring_config": npbackup.configuration.get_monitoring_config(
+            repo_config, full_config
+        ),
         "verbose": args.verbose,
         "dry_run": args.dry_run,
         "json_output": args.json,
@@ -611,12 +615,14 @@ This is free software, and you are welcome to redistribute it under certain cond
         repair_arg = args.repair.split(",")
 
         if repair_arg[0] not in ("index", "snapshots", "packs"):
-            json_error_logging(False, f"Bogus repair operation {repair_arg} given", level="critical")
+            json_error_logging(
+                False, f"Bogus repair operation {repair_arg} given", level="critical"
+            )
             sys.exit(76)
         cli_args["op_args"] = {
             "subject": args.repair,
-            "pack_ids": ",".join(repair_arg[1:])
-            }
+            "pack_ids": ",".join(repair_arg[1:]),
+        }
     elif args.recover or args.group_operation == "recover":
         cli_args["operation"] = "recover"
     elif args.dump or args.group_operation == "dump":

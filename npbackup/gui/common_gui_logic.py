@@ -562,7 +562,9 @@ def update_object_gui(
     return full_config
 
 
-def update_global_gui(window: sg.Window, full_config: dict, unencrypted: bool = False, is_wizard=True):
+def update_global_gui(
+    window: sg.Window, full_config: dict, unencrypted: bool = False, is_wizard=True
+):
     global monitoring_additional_labels_tree
 
     global_config = CommentedMap()
@@ -579,7 +581,8 @@ def update_global_gui(window: sg.Window, full_config: dict, unencrypted: bool = 
 
             global_config.s(key, full_config.g(key))
     iter_over_config(window, full_config, global_config, None, "group", unencrypted, "")
-    
+
+
 def update_monitoring_visibility(window: sg.Window, values):
     window["-GLOBAL-PROMETHEUS-SETTINGS-"].update(
         visible=values["global_prometheus.enabled"]
@@ -590,12 +593,9 @@ def update_monitoring_visibility(window: sg.Window, values):
     window["-GLOBAL-WEBHOOKS-SETTINGS-"].update(
         visible=values["global_webhooks.enabled"]
     )
-    window["-GLOBAL-ZABBIX-SETTINGS-"].update(
-        visible=values["global_zabbix.enabled"]
-    )    
-    window["-GLOBAL-EMAIL-SETTINGS-"].update(
-        visible=values["global_email.enabled"]
-    )
+    window["-GLOBAL-ZABBIX-SETTINGS-"].update(visible=values["global_zabbix.enabled"])
+    window["-GLOBAL-EMAIL-SETTINGS-"].update(visible=values["global_email.enabled"])
+
 
 def update_gui_values(
     window: sg.Window,
@@ -1450,7 +1450,9 @@ def handle_gui_events(full_config, window, event, values=None, object_type="repo
         mock_repo_config.s("name", "Test repository")
         if send_metrics_mail(
             repo_config=mock_repo_config,
-            monitoring_config=npbackup.configuration.get_monitoring_config(mock_repo_config, full_config),
+            monitoring_config=npbackup.configuration.get_monitoring_config(
+                mock_repo_config, full_config
+            ),
             operation="test_email",
             restic_result=None,
             operation_success=True,

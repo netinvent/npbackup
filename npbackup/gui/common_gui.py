@@ -455,9 +455,7 @@ def global_healthchecksio_col():
             sg.Col(
                 [
                     [
-                        sg.Text(
-                            _t("config_gui.healthchecksio_url"), size=(40, 1)
-                        ),
+                        sg.Text(_t("config_gui.healthchecksio_url"), size=(40, 1)),
                         sg.Input(key="global_healthchecksio.url", size=(50, 1)),
                     ],
                     [

@@ -71,7 +71,7 @@ class HealthchecksioMonitor(MonitoringBackend):
         if dry_run:
             logger.info("Dry run mode. Not sending Healthchecks.io ping.")
             return True
-        
+
         labels = {**labels, **self.base_labels}
 
         # Determine if operation was successful
