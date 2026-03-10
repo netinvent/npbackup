@@ -1493,7 +1493,7 @@ class NPBackupRunner:
         analyser_result, backup_too_small = metric_analyser(
             repo_config=self.repo_config,
             monitoring_config=self.monitoring_config,
-            result_result=result,
+            restic_result=result,
             result_string=self.restic_runner.backup_result_content,
             operation="backup",
             dry_run=self.restic_runner.dry_run,
