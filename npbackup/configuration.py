@@ -478,7 +478,7 @@ def has_random_variables(full_config: dict) -> Tuple[bool, dict]:
     return is_modified, full_config
 
 
-def evaluate_variables(repo_config: dict, full_config: dict) -> dict:
+def evaluate_variables(repo_config: dict, monitoring_config: dict = None, full_config: dict = None) -> dict:
     """
     Replace runtime variables with their corresponding value
     Also replaces human bytes notation with ints
@@ -519,6 +519,15 @@ def evaluate_variables(repo_config: dict, full_config: dict) -> dict:
     # If each variable has two sub variables, we'd have max 4x2x2 loops
     # While this is not the most efficient way, we still get to catch all nested variables
     # and of course, we don't have thousands of lines to parse, so we're good
+    if monitoring_config:
+        maxcount = 4 * 2 * 2
+        count = 0
+        while count < maxcount:
+            monitoring_config = replace_in_iterable(
+                monitoring_config, _evaluate_variables, callable_wants_key=True
+            )
+            count += 1
+        return monitoring_config
     count = 0
     maxcount = 4 * 2 * 2
     while count < maxcount:
@@ -857,7 +866,7 @@ def get_repo_config(
     repo_config, config_inheritance = inherit_group_settings(repo_config, group_config)
 
     if eval_variables:
-        repo_config = evaluate_variables(repo_config, full_config)
+        repo_config = evaluate_variables(repo_config=repo_config, full_config=full_config)
     repo_config = expand_units(repo_config, unexpand=True)
 
     return repo_config, config_inheritance
@@ -873,7 +882,7 @@ def get_group_config(
         return None
 
     if eval_variables:
-        group_config = evaluate_variables(group_config, full_config)
+        group_config = evaluate_variables(repo_config=group_config, full_config=full_config)
     group_config = expand_units(group_config, unexpand=True)
     return group_config
 
@@ -1372,7 +1381,7 @@ def get_anonymous_repo_config(repo_config: dict, show_encrypted: bool = False) -
     )
 
 
-def get_monitoring_config(full_config: dict):
+def get_monitoring_config(repo_config: dict, full_config: dict):
     global_monitoring = CommentedMap()
     if full_config:
         try:
@@ -1401,4 +1410,5 @@ def get_monitoring_config(full_config: dict):
             global_monitoring.s("global_identity", full_config.g("global_identity"))
         except AttributeError:
             pass
+    global_monitoring = evaluate_variables(repo_config, global_monitoring, full_config)
     return global_monitoring
