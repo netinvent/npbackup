@@ -690,7 +690,12 @@ def start_wizard():
         unencrypted=False,
         is_wizard=True,
     )
-
+    
+    event, values = wizard.read(timeout=.1)
+    npbackup.gui.common_gui_logic.update_monitoring_visibility(
+        window=wizard,
+        values=values
+    )
     set_active_tab(1)
     wizard["-RETENTION-POLICIES-"].update(values=retention_policies_list)
     wizard["-RETENTION-POLICIES-"].update(set_to_index=0)

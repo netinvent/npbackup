@@ -1225,6 +1225,12 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
     window["-RETENTION-POLICIES-"].update(values=retention_policies_list)
     window["-RETENTION-POLICIES-"].update(set_to_index=0)
 
+    event, values = window.read(timeout=.1)
+    npbackup.gui.common_gui_logic.update_monitoring_visibility(
+        window=window,
+        values=values
+    )
+
     while True:
         event, values = window.read()
         # Get object type for various delete operations

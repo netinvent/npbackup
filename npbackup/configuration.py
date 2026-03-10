@@ -236,8 +236,8 @@ empty_config_dict = {
         "enabled": False,
         "server": None,
         "port": 10051,
-        "username": None,
-        "password": None,
+        "psk_identity": None,
+        "psk": None,
     },
     "global_healthchecksio": {
         "enabled": False,

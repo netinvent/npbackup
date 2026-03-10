@@ -569,7 +569,7 @@ def update_global_gui(window: sg.Window, full_config: dict, unencrypted: bool = 
 
     # Only update global options gui with identified global keys
     for key in full_config.keys():
-        if is_wizard and key == "global_options":
+        if is_wizard and key in ("global_options", "identity"):
             continue
         if (
             key in ("identity", "global_options")
@@ -579,7 +579,23 @@ def update_global_gui(window: sg.Window, full_config: dict, unencrypted: bool = 
 
             global_config.s(key, full_config.g(key))
     iter_over_config(window, full_config, global_config, None, "group", unencrypted, "")
-
+    
+def update_monitoring_visibility(window: sg.Window, values):
+    window["-GLOBAL-PROMETHEUS-SETTINGS-"].update(
+        visible=values["global_prometheus.enabled"]
+    )
+    window["-GLOBAL-HEALTHCHECKSIO-SETTINGS-"].update(
+        visible=values["global_healthchecksio.enabled"]
+    )
+    window["-GLOBAL-WEBHOOKS-SETTINGS-"].update(
+        visible=values["global_webhooks.enabled"]
+    )
+    window["-GLOBAL-ZABBIX-SETTINGS-"].update(
+        visible=values["global_zabbix.enabled"]
+    )    
+    window["-GLOBAL-EMAIL-SETTINGS-"].update(
+        visible=values["global_email.enabled"]
+    )
 
 def update_gui_values(
     window: sg.Window,
@@ -1289,28 +1305,14 @@ def handle_gui_events(full_config, window, event, values=None, object_type="repo
         return
 
     # Make monitoring options visible / invisible
-    if event == "global_prometheus.enabled":
-        window["-GLOBAL-PROMETHEUS-SETTINGS-"].update(
-            visible=values["global_prometheus.enabled"]
-        )
-        return
-    if event == "global_email.enabled":
-        window["-GLOBAL-EMAIL-SETTINGS-"].update(visible=values["global_email.enabled"])
-        return
-    if event == "global_zabbix.enabled":
-        window["-GLOBAL-ZABBIX-SETTINGS-"].update(
-            visible=values["global_zabbix.enabled"]
-        )
-        return
-    if event == "global_healthchecksio.enabled":
-        window["-GLOBAL-HEALTHCHECKSIO-SETTINGS-"].update(
-            visible=values["global_healthchecksio.enabled"]
-        )
-        return
-    if event == "global_webhooks.enabled":
-        window["-GLOBAL-WEBHOOKS-SETTINGS-"].update(
-            visible=values["global_webhooks.enabled"]
-        )
+    if event in (
+        "global_prometheus.enabled",
+        "global_email.enabled",
+        "global_healthchecksio.enabled",
+        "global_zabbix.enabled",
+        "global_webhooks.enabled",
+    ):
+        update_monitoring_visibility(window, values)
         return
 
     if event in (
