@@ -565,8 +565,6 @@ def update_object_gui(
 def update_global_gui(
     window: sg.Window, full_config: dict, unencrypted: bool = False, is_wizard=True
 ):
-    global monitoring_additional_labels_tree
-
     global_config = CommentedMap()
 
     # Only update global options gui with identified global keys
@@ -1121,7 +1119,8 @@ def update_source_layout(window: sg.Window, source_type: str):
 def add_email_recipient_row(
     window: sg.Window, recipient: str = None, notification_types: List[str] = None
 ):
-    global COLUMN_LIST_COUNTERS
+    # No need for global variable for dicts
+    # global COLUMN_LIST_COUNTERS
 
     COLUMN_LIST_COUNTERS["EMAIL-RECIPIENTS"] += 1
     window.extend_layout(
@@ -1158,7 +1157,8 @@ def add_email_recipient_row(
 def add_generic_row(
     window: sg.Window, column_key: str, value: str = None, inherited: bool = False
 ):
-    global COLUMN_LIST_COUNTERS
+    # No need for global variable for dicts
+    # global COLUMN_LIST_COUNTERS
 
     COLUMN_LIST_COUNTERS[column_key] += 1
 
@@ -1187,7 +1187,8 @@ def handle_gui_events(full_config, window, event, values=None, object_type="repo
     Handles various GUI events for both config and wizard GUIs
     """
     global CURRENT_THEME
-    global COLUMN_LIST_COUNTERS
+    # No need for global variable for dicts
+    # global COLUMN_LIST_COUNTERS
 
     # Retention policy advanced settings show/hide
     if event == "-RETENTION-POLICY-ADVANCED-":
