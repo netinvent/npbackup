@@ -508,7 +508,9 @@ def _read_existing_scheduled_task_windows(
 
             ns = {"t": "http://schemas.microsoft.com/windows/2004/02/mit/task"}
             try:
+                # pylint: disable=E0606 (possibly-used-before-assignment)
                 root = ET.fromstring(output.strip())
+            # pylint: disable=E0606 (possibly-used-before-assignment)
             except ET.ParseError as exc:
                 logger.error(f"Could not parse task XML: {exc}")
                 continue

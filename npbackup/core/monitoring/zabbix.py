@@ -118,18 +118,6 @@ class ZabbixMonitor(MonitoringBackend):
                 logger.debug("Using PSK authentication for Zabbix sender.")
                 if not HAS_PSK:
                     logger.error("PSK authentication configured but sslpsk library not available. Cannot send Zabbix metrics using PSK.")
-                else:
-                    def psk_wrapper(sock, *args, **kwargs):
-                        # Pre-Shared Key (PSK) and PSK Identity
-                        psk = bytes.fromhex(zabbix_psk)
-                        psk_identity = zabbix_psk_identity.encode()
-
-                        return sslpsk.wrap_socket(
-                            sock,
-                            ssl_version=ssl.PROTOCOL_TLSv1_2,
-                            ciphers='ECDHE-PSK-AES128-CBC-SHA256',
-                            psk=(psk, psk_identity)
-                        )
         except (KeyError, AttributeError) as exc:
             logger.debug(f"No Zabbix PSK configuration found: {exc}")
 
@@ -142,6 +130,17 @@ class ZabbixMonitor(MonitoringBackend):
 
         # Send metrics to Zabbix
         if HAS_PSK:
+            def psk_wrapper(sock, *args, **kwargs):
+                # Pre-Shared Key (PSK) and PSK Identity
+                psk = bytes.fromhex(zabbix_psk)
+                psk_identity = zabbix_psk_identity.encode()
+
+                return sslpsk.wrap_socket(
+                    sock,
+                    ssl_version=ssl.PROTOCOL_TLSv1_2,
+                    ciphers='ECDHE-PSK-AES128-CBC-SHA256',
+                    psk=(psk, psk_identity)
+                )
             return self._send_to_zabbix(zabbix_server, zabbix_port, items, psk_wrapper)
         else:
             return self._send_to_zabbix(zabbix_server, zabbix_port, items, psk_wrapper=None)
