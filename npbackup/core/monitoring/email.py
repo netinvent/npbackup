@@ -284,7 +284,7 @@ class EmailMonitor(MonitoringBackend):
             if len(restic_result) > MAX_EMAIL_DETAIL_LENGTH:
                 body += f"\n\nDetail:\n{restic_result[0:MAX_EMAIL_DETAIL_LENGTH]} [... truncated]"
             else:
-                body += f"\n\nDetail:\n{"Backend success" if restic_result else "Backend failure"}"
+                body += f'\n\nDetail:\n{"Backend success" if restic_result else "Backend failure"}'
 
         body += f"\n\nLabels:"
         for label, value in labels.items():
