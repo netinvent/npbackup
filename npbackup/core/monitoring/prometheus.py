@@ -210,8 +210,8 @@ class PrometheusMonitor(MonitoringBackend):
         # Fix for #150: Make job name unique per repo and operation
         repo_name = self.get_config_value("name")
         destination = f"{destination}___repo_name={repo_name}___action={operation}"
-        upload_metrics(destination, authentication, no_cert_verify, metrics)
-        return True
+        result = upload_metrics(destination, authentication, no_cert_verify, metrics)
+        return result
 
     def _write_to_file(self, destination: str, metrics: List[str]) -> bool:
         """
@@ -224,5 +224,5 @@ class PrometheusMonitor(MonitoringBackend):
         Returns:
             True if successful, False otherwise
         """
-        write_metrics_file(destination, metrics, append=self.append_mode)
+        result = write_metrics_file(destination, metrics, append=self.append_mode)
         return True

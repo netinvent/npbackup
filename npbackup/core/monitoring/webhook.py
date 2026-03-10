@@ -96,7 +96,7 @@ class WebhookMonitor(MonitoringBackend):
             )
 
         except (KeyError, AttributeError) as exc:
-            logger.error(f"Missing JSON configuration: {exc}")
+            logger.error(f"Missing Webhooks configuration: {exc}")
             return False
 
         if not destination:
@@ -119,7 +119,6 @@ class WebhookMonitor(MonitoringBackend):
         if destination and (
             destination.startswith("http://") or destination.startswith("https://")
         ):
-            result = output.get("result", False)
             auth = None
             if upload_username and upload_password:
                 auth = (upload_username, upload_password)

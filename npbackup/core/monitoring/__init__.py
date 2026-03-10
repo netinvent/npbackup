@@ -167,7 +167,7 @@ def calculate_exec_state(
         exec_state = 0
 
     # Override with operation-specific failures
-    if not operation_success or backup_too_small:
+    if (not operation_success or backup_too_small) and exec_state < 3:
         exec_state = 2
 
     return exec_state

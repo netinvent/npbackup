@@ -104,7 +104,6 @@ class EmailMonitor(MonitoringBackend):
                     for recipient in self.get_monitoring_value(
                         "global_email.recipients.on_backup_success", []
                     ):
-                        print("RECIP", recipient)
                         if recipient not in recipients_to_send:
                             recipients_to_send.append(recipient)
                 else:
@@ -149,7 +148,7 @@ class EmailMonitor(MonitoringBackend):
         )
         for recipient in recipients_to_send:
             logger.debug(f"Adding recipient {recipient} for email notification.")
-            return self._send_email(
+            result = self._send_email(
                 smtp_server=smtp_server,
                 smtp_port=smtp_port,
                 smtp_security=smtp_security,
@@ -165,6 +164,10 @@ class EmailMonitor(MonitoringBackend):
                 exec_state=exec_state,
                 backup_too_small=backup_too_small,
             )
+            if not result:
+                logger.error(
+                    f"Failed to send email notification to {recipient} for {operation} {'success' if op_success else 'failure'}."
+                )
 
     def _send_email(
         self,
@@ -270,8 +273,8 @@ class EmailMonitor(MonitoringBackend):
         # Add detailed result if available (for debugging)
         # Note: This is optional and may contain raw restic output
         # We'll look for it in a special key if the caller wants to include it
-        if "restic_result_detail" in metrics:
-            restic_result = metrics["restic_result_detail"]
+        if "result_detail" in metrics:
+            restic_result = metrics["result_detail"]
             if isinstance(restic_result, dict):
                 try:
                     restic_result = fmt_json(restic_result)

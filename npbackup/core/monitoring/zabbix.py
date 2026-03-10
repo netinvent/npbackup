@@ -27,18 +27,17 @@ try:
     import ssl
 except ImportError:
     HAS_PSK = False
-try:
-    import sslpsk3 as sslpsk
-
-    HAS_PSK = True
-except ImportError:
-    # Import sslpsk2 if sslpsk3 is not available
+else:
     try:
-        import sslpsk2 as sslpsk
-
+        import sslpsk3 as sslpsk
         HAS_PSK = True
     except ImportError:
-        HAS_PSK = False
+        # Import sslpsk2 if sslpsk3 is not available
+        try:
+            import sslpsk2 as sslpsk
+            HAS_PSK = True
+        except ImportError:
+            HAS_PSK = False
 
 
 class ZabbixMonitor(MonitoringBackend):
@@ -135,8 +134,7 @@ class ZabbixMonitor(MonitoringBackend):
         )
 
         # Send metrics to Zabbix
-        if HAS_PSK:
-
+        if HAS_PSK and zabbix_psk and zabbix_psk_identity:
             def psk_wrapper(sock, *args, **kwargs):
                 # Pre-Shared Key (PSK) and PSK Identity
                 psk = bytes.fromhex(zabbix_psk)
@@ -174,10 +172,10 @@ class ZabbixMonitor(MonitoringBackend):
             List of ItemValue objects
         """
         items = []
-        repo_name = labels.get("repo_name", "unknown")
+        backup_job = labels.get("backup_job", "unknown")
 
         # Map common metrics to Zabbix item keys
-        # Format: npbackup.metric_name[repo_name,operation]
+        # Format: npbackup.metric_name[instance,operation]
         for metric_name, value in metrics.items():
             if value is None or metric_name == "operation":
                 continue
@@ -190,10 +188,10 @@ class ZabbixMonitor(MonitoringBackend):
                 "operation_success",
                 "backup_too_small",
             ):
-                item_key = f"npbackup.{metric_name}[{repo_name},{operation}]"
+                item_key = f"npbackup.{metric_name}[{backup_job},{operation}]"
             else:
                 # Restic-specific metrics
-                item_key = f"restic.{metric_name}[{repo_name},{operation}]"
+                item_key = f"restic.{metric_name}[{backup_job},{operation}]"
 
             try:
                 items.append(ItemValue(self.base_labels["instance"], item_key, value))
