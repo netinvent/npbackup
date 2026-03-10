@@ -30,11 +30,13 @@ except ImportError:
 else:
     try:
         import sslpsk3 as sslpsk
+
         HAS_PSK = True
     except ImportError:
         # Import sslpsk2 if sslpsk3 is not available
         try:
             import sslpsk2 as sslpsk
+
             HAS_PSK = True
         except ImportError:
             HAS_PSK = False
@@ -135,6 +137,7 @@ class ZabbixMonitor(MonitoringBackend):
 
         # Send metrics to Zabbix
         if HAS_PSK and zabbix_psk and zabbix_psk_identity:
+
             def psk_wrapper(sock, *args, **kwargs):
                 # Pre-Shared Key (PSK) and PSK Identity
                 psk = bytes.fromhex(zabbix_psk)

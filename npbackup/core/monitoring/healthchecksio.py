@@ -71,11 +71,13 @@ class HealthchecksioMonitor(MonitoringBackend):
         if dry_run:
             logger.info("Dry run mode. Not sending Healthchecks.io ping.")
             return True
-        
+
         # Get timeout from config, default to 10 seconds
         self.timeout = self.get_monitoring_value("global_healthchecksio.timeout", 10)
-        
-        self.verify = not self.get_monitoring_value("global_healthchecksio.no_cert_verify", False)
+
+        self.verify = not self.get_monitoring_value(
+            "global_healthchecksio.no_cert_verify", False
+        )
 
         labels = {**labels, **self.base_labels}
 
@@ -165,7 +167,9 @@ class HealthchecksioMonitor(MonitoringBackend):
                     timeout=self.timeout,
                 )
             else:
-                response = requests.get(ping_endpoint, verify=self.verify, timeout=self.timeout)
+                response = requests.get(
+                    ping_endpoint, verify=self.verify, timeout=self.timeout
+                )
 
             if response.status_code == 200:
                 status = "success" if is_success else "failure"
@@ -196,12 +200,13 @@ class HealthchecksioMonitor(MonitoringBackend):
         """
         if not self.is_enabled() or not self.url:
             return False
-    
 
         try:
             start_endpoint = f"{self.url.rstrip('/')}/start"
 
-            response = requests.get(start_endpoint, verify=self.verify, timeout=self.timeout)
+            response = requests.get(
+                start_endpoint, verify=self.verify, timeout=self.timeout
+            )
 
             if response.status_code == 200:
                 logger.debug("Sent Healthchecks.io start ping")

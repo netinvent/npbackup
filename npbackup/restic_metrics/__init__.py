@@ -527,6 +527,7 @@ def write_metrics_file(filename: str, metrics: List[str], append: bool = False):
         logger.error(f"Cannot write metrics file {filename}: {exc}")
     return False
 
+
 if __name__ == "__main__":
     parser = ArgumentParser(
         prog="restic_log_exporter.py", description="Restic instance prometheus exporter"
