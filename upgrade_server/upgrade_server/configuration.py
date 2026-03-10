@@ -14,7 +14,6 @@ import os
 from ruamel.yaml import YAML
 from logging import getLogger
 
-
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 config_file = os.path.join(ROOT_DIR, "upgrade_server.conf")
 

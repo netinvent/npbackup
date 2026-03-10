@@ -18,7 +18,6 @@ from functools import wraps
 from logging import getLogger
 import json
 
-
 logger = getLogger()
 
 
