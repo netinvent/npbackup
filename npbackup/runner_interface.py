@@ -7,7 +7,7 @@ __intname__ = "npbackup.runner_interface"
 __author__ = "Orsiris de Jong"
 __site__ = "https://www.netperfect.fr/npbackup"
 __description__ = "NetPerfect Backup Client"
-__copyright__ = "Copyright (C) 2022-2025 NetInvent"
+__copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2025090901"
 
@@ -41,6 +41,7 @@ def serialize_datetime(obj):
 
 
 def entrypoint(*args, **kwargs):
+    monitoring_config = kwargs.pop("monitoring_config", None)
     repo_config = kwargs.pop("repo_config", None)
     json_output = kwargs.pop("json_output")
     operation = kwargs.pop("operation")
@@ -49,6 +50,8 @@ def entrypoint(*args, **kwargs):
     npbackup_runner = NPBackupRunner()
     if repo_config:
         npbackup_runner.repo_config = repo_config
+    if monitoring_config:
+        npbackup_runner.monitoring_config = monitoring_config
     npbackup_runner.dry_run = kwargs.pop("dry_run")
     npbackup_runner.verbose = kwargs.pop("verbose", False)
     npbackup_runner.live_output = not json_output

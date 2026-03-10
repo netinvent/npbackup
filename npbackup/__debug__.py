@@ -7,7 +7,7 @@ __intname__ = "npbackup.__debug__"
 __author__ = "Orsiris de Jong"
 __site__ = "https://www.netperfect.fr/npbackup"
 __description__ = "NetPerfect Backup Client"
-__copyright__ = "Copyright (C) 2023-2025 NetInvent"
+__copyright__ = "Copyright (C) 2023-2026 NetInvent"
 __build__ = "2025021901"
 
 
@@ -68,7 +68,7 @@ def exception_to_string(exc):
 
 def catch_exceptions(fn: Callable):
     """
-    Catch any exception and log it so we don't loose exceptions in thread
+    Catch any exception and log it so we don't lose exceptions in thread
     """
 
     @wraps(fn)

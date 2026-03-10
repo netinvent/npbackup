@@ -3,11 +3,11 @@
 #
 # This file is part of npbackup
 
-__intname__ = "npbackup.gui.core.jobs"
+__intname__ = "npbackup.core.jobs"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2022-2025 NetInvent"
+__copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025031201"
+__build__ = "2026010801"
 
 # This module helps scheduling jobs without using a daemon
 # We can schedule on a random percentage or a fixed interval
@@ -64,8 +64,8 @@ def schedule_on_interval(job_name: str, interval: int) -> bool:
             # We may not have read privileges
             logger.error(f"Cannot read {job_name} counter file {file}: {exc}")
         except ValueError as exc:
-            logger.error(f"Bogus {job_name} counter in {file}: {exc}")
-        return None
+            logger.error(f"Bogus {job_name} counter in {file}: {exc}. Resetting to 1")
+        return 1
 
     path_list = [
         os.path.join(tempfile.gettempdir(), counter_file),

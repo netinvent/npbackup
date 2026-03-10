@@ -5,10 +5,10 @@
 
 __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2022-2025 NetInvent"
+__copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025100401"
-__version__ = "npbackup 3.0.4+"
+__build__ = "2026031001"
+__version__ = "npbackup 3.1.0+"
 
 
 from typing import Tuple, Optional, List, Any, Union
@@ -21,6 +21,7 @@ import platform
 import zlib
 from logging import getLogger
 from ruamel.yaml import YAML
+from ruamel.yaml.scanner import ScannerError
 from ruamel.yaml.compat import ordereddict
 from ruamel.yaml.comments import CommentedMap
 from packaging.version import parse as version_parse, InvalidVersion
@@ -32,7 +33,9 @@ from npbackup.key_management import AES_KEY, EARLIER_AES_KEY, IS_PRIV_BUILD, get
 from npbackup.__version__ import __version__ as MAX_CONF_VERSION
 
 MIN_MIGRATABLE_CONF_VERSION = "3.0.0"
-MIN_CONF_VERSION = "3.0.4"
+# MIN_CONF_VERSION defines which config version we accept without migration
+# This is also the version we try to migrate to, and should be equivalent to MAX_CONF_VERSION
+MIN_CONF_VERSION = "3.1.0-dev"
 
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
@@ -47,12 +50,12 @@ elif opt_aes_key is False:
     logger.critical(msg)
 
 
-# Monkeypatching ruamel.yaml ordreddict so we get to use pseudo dot notations
+# Monkeypatching ruamel.yaml ordereddict so we get to use pseudo dot notations
 # eg data.g('my.array.keys') == data['my']['array']['keys']
 # and data.s('my.array.keys', 'new_value')
 def g(self, path, sep=".", default=None, list_ok=False):
     """
-    Getter for dot notation in an a dict/OrderedDict
+    Getter for dot notation in a dict/OrderedDict
     print(d.g('my.array.keys'))
     """
     try:
@@ -98,17 +101,17 @@ ordereddict.g = g
 ordereddict.s = s
 ordereddict.d = d
 
-# NPF-SEC-00003: Avoid password command divulgation
+# NPF-SEC-00003: Avoid password command and various passwords disclosure
 ENCRYPTED_OPTIONS = [
     "repo_uri",
     "repo_opts.repo_password",
     "repo_opts.repo_password_command",
-    "global_prometheus.http_username",
     "global_prometheus.http_password",
-    "global_email.smtp_username",
     "global_email.smtp_password",
+    "global_zabbix.password",
+    "global_healthchecksio.password",
+    "global_webhooks.password",
     "env.encrypted_env_variables",
-    "global_options.auto_upgrade_server_username",
     "global_options.auto_upgrade_server_password",
 ]
 
@@ -128,7 +131,7 @@ empty_config_dict = {
                 "tags": [],
             },
             "repo_opts": {},
-            "prometheus": {},
+            "monitoring": {},
             "env": {
                 "env_variables": {},
                 "encrypted_env_variables": {},
@@ -202,10 +205,13 @@ empty_config_dict = {
                 },
                 "prune_max_unused": "0 B",  # allows BytesConverter units, but also allows percents, ie 10%
                 "prune_max_repack_size": None,  # allows BytesConverter units
+                "read_data_subset": None,  # Restic specific string allowing %, byte units or fractions
             },
-            "prometheus": {
-                "backup_job": "${MACHINE_ID}",
+            "monitoring": {
+                "backup_job": "${REPO_NAME}",  # In system/VM scenarios, this will be replaced with VM names or system name
                 "group": "${MACHINE_GROUP}",
+                "instance": "${MACHINE_ID}",
+                "additional_labels": {},
             },
             "env": {"env_variables": {}, "encrypted_env_variables": {}},
         },
@@ -215,27 +221,48 @@ empty_config_dict = {
         "machine_group": None,
     },
     "global_prometheus": {
-        "metrics": False,
-        "instance": "${MACHINE_ID}",
+        "enabled": False,
         "destination": None,
         "http_username": None,
         "http_password": None,
-        "additional_labels": [],
+        "no_cert_verify": False,
+    },
+    "global_zabbix": {
+        "enabled": False,
+        "server": None,
+        "port": 10051,
+        "username": None,
+        "password": None,
+    },
+    "global_healthchecksio": {
+        "enabled": False,
+        "url": None,
+        "username": None,
+        "password": None,
+        "no_cert_verify": False,
+    },
+    "global_webhooks": {
+        "enabled": False,
+        "destination": None,
+        "method": "POST",
+        "username": None,
+        "password": None,
+        "pretty_json": False,
         "no_cert_verify": False,
     },
     "global_email": {
-        "enable": False,
-        "instance": "${MACHINE_ID}",
+        "enabled": False,
         "smtp_server": None,
         "smtp_port": 587,
         "smtp_username": None,
         "smtp_password": None,
         "sender": None,
-        "recipients": None,
-        "on_backup_success": True,
-        "on_backup_failure": True,
-        "on_operations_success": False,
-        "on_operations_failure": True,
+        "recipients": {
+            "on_backup_success": [],
+            "on_backup_failure": [],
+            "on_operations_success": [],
+            "on_operations_failure": [],
+        },
     },
     "global_options": {
         "auto_upgrade": False,
@@ -248,6 +275,60 @@ empty_config_dict = {
         "auto_upgrade_group": "${MACHINE_GROUP}",
         "full_concurrency": False,  # Allow multiple npbackup instances to run at the same time
         "repo_aware_concurrency": False,  # Allow multiple npbackup instances to run at the same time, but only for different repos
+    },
+    "presets": {
+        # Retention settings settings
+        "retention_policy": {
+            "14d": {
+                "last": 3,
+                "hourly": 72,
+                "daily": 14,
+                "weekly": 0,
+                "monthly": 0,
+                "yearly": 0,
+                "keep_within": True,
+                "group_by_host": True,
+                "group_by_tags": True,
+                "group_by_paths": False,
+            },
+            "30d": {
+                "last": 3,
+                "hourly": 72,
+                "daily": 30,
+                "weekly": 0,
+                "monthly": 0,
+                "yearly": 0,
+                "keep_within": True,
+                "group_by_host": True,
+                "group_by_tags": True,
+                "group_by_paths": False,
+            },
+            "90d": {
+                "last": 3,
+                "hourly": 72,
+                "daily": 90,
+                "weekly": 0,
+                "monthly": 0,
+                "yearly": 0,
+                "keep_within": True,
+                "group_by_host": True,
+                "group_by_tags": True,
+                "group_by_paths": False,
+            },
+            "gfs": {
+                "last": 3,
+                "hourly": 72,
+                "daily": 30,
+                "weekly": 4,
+                "monthly": 12,
+                "yearly": 3,
+                "keep_within": True,
+                "group_by_host": True,
+                "group_by_tags": True,
+                "group_by_paths": False,
+            },
+            "keep_all": {},
+        }
     },
 }
 
@@ -411,8 +492,16 @@ def evaluate_variables(repo_config: dict, full_config: dict) -> dict:
                 )
 
             if "${BACKUP_JOB}" in value:
-                backup_job = repo_config.g("prometheus.backup_job")
+                backup_job = repo_config.g("monitoring.backup_job")
                 value = value.replace("${BACKUP_JOB}", backup_job if backup_job else "")
+
+            if "${REPO_NAME}" in value:
+                repo_name = repo_config.g("repo_name")
+                value = value.replace("${REPO_NAME}", repo_name if repo_name else "")
+
+            if "${REPO_GROUP}" in value:
+                repo_group = repo_config.g("repo_group")
+                value = value.replace("${REPO_GROUP}", repo_group if repo_group else "")
 
             if "${HOSTNAME}" in value:
                 value = value.replace("${HOSTNAME}", platform.node())
@@ -746,21 +835,6 @@ def get_repo_config(
         logger.error(f"No repo with name {repo_name} found in configuration file")
         return None, None
 
-    # Merge prometheus global settings with repo settings
-    try:
-        if full_config.g("global_email"):
-            repo_config.s("global_email", deepcopy(full_config.g("global_email")))
-    except KeyError:
-        logger.info("No global email settings found")
-
-    try:
-        if full_config.g("global_prometheus"):
-            repo_config.s(
-                "global_prometheus", deepcopy(full_config.g("global_prometheus"))
-            )
-    except KeyError:
-        logger.info("No global prometheus settings found")
-
     try:
         repo_group = full_config.g(f"repos.{repo_name}.repo_group")
         group_config = full_config.g(f"groups.{repo_group}")
@@ -820,7 +894,7 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
     """
     logger.info(f"Migrating config file from version {old_version} to {new_version}")
 
-    def _migrate_retetion_policy_3_0_0_to_3_0_3(
+    def _migrate_retention_policy_3_0_0_to_3_0_3(
         full_config: dict,
         object_name: str,
         object_type: str,
@@ -858,7 +932,10 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
             if (
                 full_config.g(f"{object_type}.{object_name}.repo_opts.compression")
                 is None
-                and f"{object_type}.{object_name}.backup_opts.compression" is not None
+                and full_config.g(
+                    f"{object_type}.{object_name}.backup_opts.compression"
+                )
+                is not None
             ):
                 full_config.s(
                     f"{object_type}.{object_name}.repo_opts.compression",
@@ -874,25 +951,168 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
             )
         return full_config
 
+    def _migrate_monitoring_3_0_4_to_3_1_0(
+        full_config: dict,
+        object_name: str,
+        object_type: str,
+    ) -> dict:
+
+        # Change prometheus "metrics" to "enabled" to be consistent with other monitoring entries
+        try:
+            prometheus_monitoring = full_config.g("global_prometheus.metrics")
+            full_config.d("global_prometheus.metrics")
+            full_config.s("global_prometheus.enabled", prometheus_monitoring)
+        except KeyError:
+            logger.info("No global_prometheus migration is done")
+
+        # Change email "enable" to "enabled" to be consistent with other monitoring entries
+        try:
+            email_monitoring = full_config.g("global_email.enable")
+            full_config.d("global_email.enable")
+            full_config.s("global_email.enabled", email_monitoring)
+        except KeyError:
+            logger.info("No global_email migration is done")
+
+        # Add new monitoring sections
+        try:
+            if not full_config.g("global_zabbix"):
+                full_config.s("global_zabbix", deepcopy(empty_config_dict["global_zabbix"]))
+        except KeyError:
+            logger.info("No global_zabbix migration is done")
+
+        try:
+            if not full_config.g("global_healthchecksio"):
+                full_config.s(
+                    "global_healthchecksio",
+                    deepcopy(empty_config_dict["global_healthchecksio"]),
+                )
+        except KeyError:
+            logger.info("No global_healthchecksio migration is done")
+
+        try:
+            if not full_config.g("global_webhooks"):
+                full_config.s(
+                    "global_webhooks", deepcopy(empty_config_dict["global_webhooks"])
+                )
+        except KeyError:
+            logger.info("No global_webhooks migration is done")
+
+        monitoring = full_config.g(f"{object_type}.{object_name}.prometheus")
+        if monitoring is not None:
+            full_config.d(f"{object_type}.{object_name}.prometheus")
+            full_config.s(
+                f"{object_type}.{object_name}.monitoring", deepcopy(monitoring)
+            )
+        else:
+            full_config.s(
+                f"{object_type}.{object_name}.monitoring",
+                deepcopy(empty_config_dict["groups"]["default_group"]["monitoring"]),
+            )
+        logger.info(
+            f"Migrated {object_name} prometheus monitoring to monitoring section"
+        )
+        """ WIP REMOVE
+        if not full_config.g(f"{object_type}.{object_name}.monitoring.instance"):
+            full_config.s(f"{object_type}.{object_name}.monitoring.instance", None)
+        if not full_config.g(f"{object_type}.{object_name}.monitoring.backup_job"):
+            full_config.s(f"{object_type}.{object_name}.monitoring.backup_job", None)
+        if not full_config.g(f"{object_type}.{object_name}.monitoring.group"):
+            full_config.s(f"{object_type}.{object_name}.monitoring.group", None)
+        """
+        additional_labels = full_config.g("global_prometheus.additional_labels")
+        if additional_labels is not None and additional_labels:
+            full_config.s(
+                f"{object_type}.{object_name}.monitoring.additional_labels",
+                additional_labels,
+            )
+            logger.info(
+                f"Migration additional_labels to monitoring section for {object_type} {object_name}"
+            )
+
+        return full_config
+
+    def _apply_global_migration_3_0_4_to_3_1_0(full_config: dict) -> dict:
+        # Clean old global settings if present
+        full_config.d("global_prometheus.additional_labels")
+        full_config.d("global_email.additional_labels")
+
+        # Migrate earlier email format:
+        """
+        global_email:
+            recipients: [list of recipients]
+            on_backup_success: true
+            on_backup_failure: true
+            on_operations_success: false
+            on_operations_failure: true
+
+        to:
+        
+        global_email:
+            recipients:
+                on_backup_success: [list of recipients]
+                on_backup_failure: [list of recipients]
+                on_operations_success: [list of recipients]
+                on_operations_failure: [list of recipients]
+        """
+        try:
+            if isinstance(full_config.g("global_email.recipients"), list) or isinstance(
+                full_config.g("global_email.recipients"), str
+            ):
+                recipients = {
+                    "on_backup_success": [],
+                    "on_backup_failure": [],
+                    "on_operations_success": [],
+                    "on_operations_failure": [],
+                }
+                for recipient in full_config.g("global_email.recipients"):
+                    if full_config.g("global_email.on_backup_success"):
+                        recipients["on_backup_success"].append(recipient)
+                    if full_config.g("global_email.on_backup_failure"):
+                        recipients["on_backup_failure"].append(recipient)
+                    if full_config.g("global_email.on_operations_success"):
+                        recipients["on_operations_success"].append(recipient)
+                    if full_config.g("global_email.on_operations_failure"):
+                        recipients["on_operations_failure"].append(recipient)
+                full_config.s("global_email.recipients", recipients)
+                full_config.d("global_email.on_backup_success")
+                full_config.d("global_email.on_backup_failure")
+                full_config.d("global_email.on_operations_success")
+                full_config.d("global_email.on_operations_failure")
+        except KeyError:
+            logger.info("No global_email.recipients key to migrate")
+
+        return full_config
+
     def _apply_migrations(
         full_config: dict,
         object_name: str,
         object_type: str,
     ) -> dict:
         if version_parse(old_version) < version_parse("3.0.3"):
-            full_config = _migrate_retetion_policy_3_0_0_to_3_0_3(
+            full_config = _migrate_retention_policy_3_0_0_to_3_0_3(
                 full_config, object_name, object_type
             )
         if version_parse(old_version) < version_parse("3.0.4"):
             full_config = _migrate_compression_3_0_0_to_3_0_4(
                 full_config, object_name, object_type
             )
+        if version_parse(old_version) < version_parse("3.1.0"):
+            full_config = _migrate_monitoring_3_0_4_to_3_1_0(
+                full_config, object_name, object_type
+            )
+        # no need to return full_config since CommentedMap is a pointer object
+        return full_config
 
+    # Apply per object migrationds
     for repo in get_repo_list(full_config):
-        _apply_migrations(full_config, repo, "repos")
+        full_config = _apply_migrations(full_config, repo, "repos")
 
     for group in get_group_list(full_config):
-        _apply_migrations(full_config, group, "groups")
+        full_config = _apply_migrations(full_config, group, "groups")
+
+    # Apply global migrations
+    if version_parse(old_version) < version_parse("3.1.0"):
+        full_config = _apply_global_migration_3_0_4_to_3_1_0(full_config)
 
     full_config.s("conf_version", new_version)
     return full_config
@@ -924,9 +1144,16 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
                     )
                     return False
                 if conf_version < version_parse(MIN_CONF_VERSION):
-                    full_config = _migrate_config_dict(
-                        full_config, str(conf_version), MIN_CONF_VERSION
-                    )
+                    try:
+                        full_config = _migrate_config_dict(
+                            full_config, str(conf_version), MIN_CONF_VERSION
+                        )
+                    except Exception as exc:
+                        logger.critical(
+                            f"Cannot migrate config file {config_file} from version {str(conf_version)} to version {MIN_CONF_VERSION}: {exc}. Please fix your config file manually."
+                        )
+                        logger.error("Trace:", exc_info=True)
+                        sys.exit(1)
                     logger.info("Writing migrated config file")
                     save_config(config_file, full_config)
             except (AttributeError, TypeError, InvalidVersion) as exc:
@@ -943,6 +1170,10 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
         logger.critical(f"Cannot load configuration file from {config_file}: {exc}")
         logger.debug("Trace:", exc_info=True)
         return False
+    except ScannerError as exc:
+        logger.critical(f"Config file {config_file} is not a valid yaml file: {exc}")
+        logger.debug("Trace:", exc_info=True)
+        sys.exit(1)
 
 
 def load_config(config_file: Path) -> Optional[dict]:
@@ -1066,6 +1297,33 @@ def get_group_list(full_config: dict) -> List[str]:
     return []
 
 
+def get_object_list(full_config: dict) -> List[str]:
+    """
+    Get list of all objects (repos + groups) in config
+    """
+    if full_config:
+        return get_repo_list(full_config) + get_group_list(full_config)
+    return []
+
+
+def get_object_names_and_types(full_config: dict) -> dict:
+    """
+    Get dict of all objects (repos + groups) in config with their type
+    as:
+        {
+            "repo_name": "repos",
+            "group_name": "groups",
+        }
+    """
+    object_type_dict = {}
+    if full_config:
+        for repo in get_repo_list(full_config):
+            object_type_dict[repo] = "repos"
+        for group in get_group_list(full_config):
+            object_type_dict[group] = "groups"
+    return object_type_dict
+
+
 def get_repos_by_group(full_config: dict, group: str) -> List[str]:
     """
     Return repo list by group
@@ -1107,3 +1365,35 @@ def get_anonymous_repo_config(repo_config: dict, show_encrypted: bool = False) -
         callable_wants_key=True,
         callable_wants_root_key=True,
     )
+
+
+def get_monitoring_config(full_config: dict):
+    global_monitoring = CommentedMap()
+    if full_config:
+        try:
+            global_monitoring.s("global_prometheus", full_config.g("global_prometheus"))
+        except AttributeError:
+            pass
+        try:
+            global_monitoring.s("global_zabbix", full_config.g("global_zabbix"))
+        except AttributeError:
+            pass
+        try:
+            global_monitoring.s(
+                "global_healthchecksio", full_config.g("global_healthchecksio")
+            )
+        except AttributeError:
+            pass
+        try:
+            global_monitoring.s("global_webhooks", full_config.g("global_webhooks"))
+        except AttributeError:
+            pass
+        try:
+            global_monitoring.s("global_email", full_config.g("global_email"))
+        except AttributeError:
+            pass
+        try:
+            global_monitoring.s("global_identity", full_config.g("global_identity"))
+        except AttributeError:
+            pass
+    return global_monitoring
