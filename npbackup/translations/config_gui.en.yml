@@ -215,6 +215,8 @@ en:
   zabbix_enable: Enable Zabbix active checks
   zabbix_server: Zabbix server
   zabbix_port: Zabbix port
+  zabbix_psk_identity: Zabbix PSK identity
+  zabbix_psk: Zabbix PSK
 
   healthchecksio: Healthchecks.io
   healthchecksio_config: Healthchecks.io configuration
@@ -226,6 +228,7 @@ en:
   webhooks_enable: Enable Webhooks
   webhooks_url: Webhook URL
   webhooks_method: Webhook method
+  webhooks_pretty_json: Webhook pretty JSON payload
 
   repo_monitoring_identity: Repo monitoring identity
   global_monitoring_identity: Global monitoring identity

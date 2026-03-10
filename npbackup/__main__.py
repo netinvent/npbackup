@@ -412,30 +412,11 @@ This is free software, and you are welcome to redistribute it under certain cond
             logger.info(f"Repository list:\n{repos_and_group_repos}")
         sys.exit(0)
 
-    # Single repo usage
-    if len(repos_and_group_repos) == 1:
-        repo_config, _ = npbackup.configuration.get_repo_config(
-            full_config, repos_and_group_repos[0]
-        )
-        if not repo_config:
-            msg = "Cannot find repo config"
-            json_error_logging(False, msg, "critical")
-            sys.exit(72)
-    else:
-        repo_config = None
-
-    backend_binary = None
-    if args.external_backend_binary:
-        backend_binary = args.external_backend_binary
-        if not os.path.isfile(backend_binary):
-            msg = f"External backend binary {backend_binary} cannot be found."
-            json_error_logging(False, msg, "critical")
-            sys.exit(73)
-
     if args.show_config:
         repos_config = []
         for repo in repos_and_group_repos:
             repo_config, _ = npbackup.configuration.get_repo_config(full_config, repo)
+            monitoring_config = npbackup.configuration.get_monitoring_config(repo_config, full_config)
             if not repo_config:
                 logger.error(f"Missing config for repository {repo}")
             else:
@@ -459,8 +440,32 @@ This is free software, and you are welcome to redistribute it under certain cond
                     repo_config, show_encrypted=show_encrypted
                 )
                 repos_config.append(repo_config)
+                monitoring_config = npbackup.configuration.get_anonymous_repo_config(
+                    monitoring_config, show_encrypted=show_encrypted
+                )
+                repos_config.append(monitoring_config)
         print(json.dumps(repos_config, indent=4))
         sys.exit(0)
+
+    # Single repo usage
+    if len(repos_and_group_repos) == 1:
+        repo_config, _ = npbackup.configuration.get_repo_config(
+            full_config, repos_and_group_repos[0]
+        )
+        if not repo_config:
+            msg = "Cannot find repo config"
+            json_error_logging(False, msg, "critical")
+            sys.exit(72)
+    else:
+        repo_config = None
+
+    backend_binary = None
+    if args.external_backend_binary:
+        backend_binary = args.external_backend_binary
+        if not os.path.isfile(backend_binary):
+            msg = f"External backend binary {backend_binary} cannot be found."
+            json_error_logging(False, msg, "critical")
+            sys.exit(73)
 
     # Try to perform an auto upgrade if needed
     try:
@@ -518,7 +523,7 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     # Prepare program run
     cli_args = {
-        "monitoring_config": npbackup.configuration.get_monitoring_config(full_config),
+        "monitoring_config": npbackup.configuration.get_monitoring_config(repo_config, full_config),
         "verbose": args.verbose,
         "dry_run": args.dry_run,
         "json_output": args.json,

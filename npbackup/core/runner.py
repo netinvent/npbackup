@@ -649,13 +649,14 @@ class NPBackupRunner:
                 # In case of error, we really need to write metrics
                 # pylint: disable=E1101 (no-member)
                 metric_analyser(
-                    self.repo_config,
-                    False,
-                    self.restic_runner.backup_result_content,
-                    fn.__name__,
-                    self.dry_run,
-                    self.append_metrics_file,
-                    self.exec_time,
+                    repo_config=self.repo_config,
+                    monitoring_config=self.monitoring_config,
+                    result=False,
+                    backup_result_content=self.restic_runner.backup_result_content,
+                    operation=fn.__name__,
+                    dry_run=self.dry_run,
+                    append_metrics_file=self.append_metrics_file,
+                    exec_time=self.exec_time,
                     analyze_only=False,
                 )
                 # We need to reset backup result content once it's parsed
@@ -1490,13 +1491,14 @@ class NPBackupRunner:
         # Metrics will not be in json format, since we need to diag cloud issues until
         # there is a fix for https://github.com/restic/restic/issues/4155
         analyser_result, backup_too_small = metric_analyser(
-            self.repo_config,
-            result,
-            self.restic_runner.backup_result_content,
-            "backup",
-            self.restic_runner.dry_run,
-            self.append_metrics_file,
-            self.exec_time,
+            repo_config=self.repo_config,
+            monitoring_config=self.monitoring_config,
+            result=result,
+            backup_result_content=self.restic_runner.backup_result_content,
+            operation="backup",
+            dry_run=self.restic_runner.dry_run,
+            append_metrics_file=self.append_metrics_file,
+            exec_time=self.exec_time,
             analyze_only=True,
         )
 

@@ -636,7 +636,7 @@ def operations_gui(full_config: dict, config_file: str) -> dict:
                     "group_runner",
                     operation=operation,
                     repo_config_list=repo_config_list,
-                    __monitoring_config=get_monitoring_config(full_config),
+                    __monitoring_config=get_monitoring_config(repo_config, full_config),
                     __autoclose=False if operation != "stats" else True,
                     __compact=False,
                     __gui_msg=gui_msg,

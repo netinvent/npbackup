@@ -1225,6 +1225,12 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
     window["-RETENTION-POLICIES-"].update(values=retention_policies_list)
     window["-RETENTION-POLICIES-"].update(set_to_index=0)
 
+    event, values = window.read(timeout=.1)
+    npbackup.gui.common_gui_logic.update_monitoring_visibility(
+        window=window,
+        values=values
+    )
+
     while True:
         event, values = window.read()
         # Get object type for various delete operations
@@ -1433,13 +1439,19 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     window["repo_uri_cloud_hint"].Update(visible=False)
 
         if event == "-CREATE-SCHEDULED-TASK-":
-            result = npbackup.gui.common_gui_logic.create_scheduled_task(
+            result, full_config = npbackup.gui.common_gui_logic.create_scheduled_task(
                 values, full_config, config_file
             )
             if not result:
                 sg.popup(
                     _t("config_gui.scheduled_task_creation_failure"), keep_on_top=True
                 )
+                continue
+            result = configuration.save_config(config_file, full_config)
+            if result:
+                sg.popup(_t("config_gui.configuration_saved"), keep_on_top=True)
+                break
+            popup_error(_t("config_gui.cannot_save_configuration"))
             continue
 
     # Closing this window takes ages, let's defer it into an ugly thread

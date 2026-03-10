@@ -684,7 +684,18 @@ def start_wizard():
         unencrypted=False,
         is_wizard=True,  # Since we have less keys than full config interface
     )
-
+    npbackup.gui.common_gui_logic.update_global_gui(
+        window=wizard,
+        full_config=full_config,
+        unencrypted=False,
+        is_wizard=True,
+    )
+    
+    event, values = wizard.read(timeout=.1)
+    npbackup.gui.common_gui_logic.update_monitoring_visibility(
+        window=wizard,
+        values=values
+    )
     set_active_tab(1)
     wizard["-RETENTION-POLICIES-"].update(values=retention_policies_list)
     wizard["-RETENTION-POLICIES-"].update(set_to_index=0)
@@ -743,9 +754,9 @@ def start_wizard():
                 is_wizard=True,
             )
 
-            result = npbackup.gui.common_gui_logic.create_scheduled_task(
+            result, full_config = npbackup.gui.common_gui_logic.create_scheduled_task(
                 values, full_config, CONFIG_FILE
-            )  # WIP name
+            )
             if not result:
                 sg.popup(
                     _t("config_gui.scheduled_task_creation_failure"), keep_on_top=True

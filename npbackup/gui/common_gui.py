@@ -423,12 +423,12 @@ def global_zabbix_col():
                         sg.Input(key="global_zabbix.port", size=(50, 1)),
                     ],
                     [
-                        sg.Text(_t("generic.username"), size=(40, 1)),
-                        sg.Input(key="global_zabbix.username", size=(50, 1)),
+                        sg.Text(_t("generic.psk_identity"), size=(40, 1)),
+                        sg.Input(key="global_zabbix.psk_identity", size=(50, 1)),
                     ],
                     [
-                        sg.Text(_t("generic.password"), size=(40, 1)),
-                        sg.Input(key="global_zabbix.password", size=(50, 1)),
+                        sg.Text(_t("generic.psk"), size=(40, 1)),
+                        sg.Input(key="global_zabbix.psk", size=(50, 1)),
                     ],
                 ],
                 visible=False,
@@ -456,9 +456,9 @@ def global_healthchecksio_col():
                 [
                     [
                         sg.Text(
-                            _t("config_gui.healthchecksio_destination"), size=(40, 1)
+                            _t("config_gui.healthchecksio_url"), size=(40, 1)
                         ),
-                        sg.Input(key="global_healthchecksio.destination", size=(50, 1)),
+                        sg.Input(key="global_healthchecksio.url", size=(50, 1)),
                     ],
                     [
                         sg.Text(_t("config_gui.no_cert_verify"), size=(40, 1)),
@@ -528,6 +528,10 @@ def global_webhooks_col():
                     [
                         sg.Text(_t("generic.password"), size=(40, 1)),
                         sg.Input(key="global_webhooks.password", size=(50, 1)),
+                    ],
+                    [
+                        sg.Text(_t("config_gui.webhook_spretty_json"), size=(40, 1)),
+                        sg.Input(key="global_webhooks.pretty_json", size=(50, 1)),
                     ],
                 ],
                 visible=False,
@@ -1024,22 +1028,27 @@ def global_monitoring_tab_group():
                 "prometheus": sg.Tab(
                     _t("config_gui.prometheus"),
                     global_prometheus_col(),
+                    k="prometheus_tab",
                 ),
                 "zabbix": sg.Tab(
                     _t("config_gui.zabbix"),
                     global_zabbix_col(),
+                    k="zabbix_tab",
                 ),
                 "email": sg.Tab(
                     _t("config_gui.email"),
                     global_email_col(),
+                    k="email_tab",
                 ),
                 "healthchecksio": sg.Tab(
                     _t("config_gui.healthchecksio"),
                     global_healthchecksio_col(),
+                    k="healthchecksio_tab",
                 ),
                 "webhooks": sg.Tab(
                     _t("config_gui.webhooks"),
                     global_webhooks_col(),
+                    k="webhooks_tab",
                 ),
             }.items()
             if index in MONITORING_ENABLE

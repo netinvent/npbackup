@@ -18,7 +18,6 @@ import logging
 import tempfile
 from command_runner import command_runner
 import datetime
-from crontab import CronTab
 from resources.customization import TASK_AUTHOR, TASK_URI, PROGRAM_NAME
 from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
 from npbackup.__version__ import IS_COMPILED
@@ -27,6 +26,10 @@ from npbackup.gui.constants import combo_boxes
 
 if os.name == "nt":
     import xml.etree.ElementTree as ET
+    class CronTab:
+        pass
+else:
+    from crontab import CronTab
 
 logger = logging.getLogger()
 
