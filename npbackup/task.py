@@ -477,7 +477,7 @@ def _read_existing_scheduled_task_windows(
     Read existing scheduled tasks on Windows.
     It's not as easy as with cron / unix since there are lots and lots of tasks on windows and we don't
     want to parse them all.
-    Hence, we limit our scope to tasks generated with a specifc name, given by task_name
+    Hence, we limit our scope to tasks generated with a specific name, given by task_name
 
     Be aware that querying tasks with schtasks only yields results that we are allowed to read
     so tasks written for system account won't show up if not running as admin
