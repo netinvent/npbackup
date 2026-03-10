@@ -1447,7 +1447,7 @@ def handle_gui_events(full_config, window, event, values=None, object_type="repo
     if event == "-TEST-EMAIL-":
         # Mock repo_config
         mock_repo_config = CommentedMap()
-        mock_repo_config.s("repo_name", "Test repository")
+        mock_repo_config.s("name", "Test repository")
         if send_metrics_mail(
             repo_config=mock_repo_config,
             monitoring_config=npbackup.configuration.get_monitoring_config(full_config),
