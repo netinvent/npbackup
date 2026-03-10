@@ -63,6 +63,8 @@ class WebhookMonitor(MonitoringBackend):
             logger.debug("Webhook monitoring not enabled in configuration.")
             return False
 
+        labels = {**labels, **self.base_labels}
+
         # Get JSON-specific configuration
         try:
             # Try new config structure first, fall back to old

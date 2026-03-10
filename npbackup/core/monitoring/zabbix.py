@@ -17,10 +17,26 @@ logger = getLogger()
 
 try:
     from zabbix_utils import Sender, ItemValue
+    import zabbix_utils.exceptions
 
     ZABBIX_AVAILABLE = True
 except ImportError:
     ZABBIX_AVAILABLE = False
+
+try:
+    import ssl
+except ImportError:
+    HAS_PSK = False
+try:
+    import sslpsk3 as sslpsk
+    HAS_PSK = True  
+except ImportError:
+    # Import sslpsk2 if sslpsk3 is not available
+    try:
+        import sslpsk2 as sslpsk
+        HAS_PSK = True  
+    except ImportError:
+        HAS_PSK = False  
 
 
 class ZabbixMonitor(MonitoringBackend):
@@ -77,6 +93,8 @@ class ZabbixMonitor(MonitoringBackend):
             )
             return False
 
+        labels = {**labels, **self.base_labels}
+
         # Get Zabbix configuration
         try:
             zabbix_server = self.get_monitoring_value("global_zabbix.server")
@@ -92,24 +110,47 @@ class ZabbixMonitor(MonitoringBackend):
         if dry_run:
             logger.info("Dry run mode. Not sending Zabbix metrics.")
             return True
+        
+        try:
+            zabbix_psk = self.get_monitoring_value("global_zabbix.psk")
+            zabbix_psk_identity = self.get_monitoring_value("global_zabbix.psk_identity")
+            if zabbix_psk and zabbix_psk_identity:
+                logger.debug("Using PSK authentication for Zabbix sender.")
+                if not HAS_PSK:
+                    logger.error("PSK authentication configured but sslpsk library not available. Cannot send Zabbix metrics using PSK.")
+                else:
+                    def psk_wrapper(sock, *args, **kwargs):
+                        # Pre-Shared Key (PSK) and PSK Identity
+                        psk = bytes.fromhex(zabbix_psk)
+                        psk_identity = zabbix_psk_identity.encode()
+
+                        return sslpsk.wrap_socket(
+                            sock,
+                            ssl_version=ssl.PROTOCOL_TLSv1_2,
+                            ciphers='ECDHE-PSK-AES128-CBC-SHA256',
+                            psk=(psk, psk_identity)
+                        )
+        except (KeyError, AttributeError) as exc:
+            logger.debug(f"No Zabbix PSK configuration found: {exc}")
 
         # Convert metrics to ItemValue list
         items = self._build_item_values(
             metrics,
             labels,
             operation,
-            self.instance,
         )
 
         # Send metrics to Zabbix
-        return self._send_to_zabbix(zabbix_server, zabbix_port, items)
+        if HAS_PSK:
+            return self._send_to_zabbix(zabbix_server, zabbix_port, items, psk_wrapper)
+        else:
+            return self._send_to_zabbix(zabbix_server, zabbix_port, items, psk_wrapper=None)
 
     def _build_item_values(
         self,
         metrics: Dict[str, Any],
         labels: Dict[str, str],
         operation: str,
-        instance: str,
     ) -> List:
         """
         Convert metrics dictionary to a list of zabbix-utils ItemValue objects
@@ -143,22 +184,23 @@ class ZabbixMonitor(MonitoringBackend):
                 item_key = f"npbackup.{metric_name}[{repo_name},{operation}]"
             else:
                 # Restic-specific metrics
-                item_key = f"npbackup.restic.{metric_name}[{repo_name},{operation}]"
+                item_key = f"restic.{metric_name}[{repo_name},{operation}]"
 
             try:
-                items.append(ItemValue(self.instance, item_key, value))
+                items.append(ItemValue(self.base_labels["instance"], item_key, value))
             except Exception as exc:
                 logger.warning(
                     f"Failed to create Zabbix ItemValue for {metric_name}: {exc}"
                 )
 
         logger.debug(
-            f"Created {len(items)} Zabbix item values for host {self.instance}"
+            f"Created {len(items)} Zabbix item values for host {self.base_labels['instance']}"
         )
+        logger.debug("Zabbix items: "+ "\n".join([f"{item.key} = {item.value}" for item in items]))
         return items
 
     def _send_to_zabbix(
-        self, zabbix_server: str, zabbix_port: int, items: List
+        self, zabbix_server: str, zabbix_port: int, items: List, psk_wrapper=None
     ) -> bool:
         """
         Send metrics to Zabbix server using Zabbix sender protocol
@@ -176,7 +218,10 @@ class ZabbixMonitor(MonitoringBackend):
             return True
 
         try:
-            sender = Sender(server=zabbix_server, port=zabbix_port)
+            if psk_wrapper:
+                sender = Sender(server=zabbix_server, port=zabbix_port, socket_wrapper=psk_wrapper)
+            else:
+                sender = Sender(server=zabbix_server, port=zabbix_port)
             response = sender.send(items)
 
             if response.failed == 0:
@@ -188,7 +233,12 @@ class ZabbixMonitor(MonitoringBackend):
                 logger.error(
                     f"Failed to send {response.failed} out of {response.total} metrics to Zabbix"
                 )
+                logger.debug(f"Zabbix response: {response}")
                 return False
+        except zabbix_utils.exceptions.ProcessingError as exc:
+            logger.error(f"Zabbix server processing error: {exc}")
+            logger.debug("Trace:", exc_info=True)
+            return False
         except Exception as exc:
             logger.error(f"Failed to send metrics to Zabbix: {exc}")
             logger.debug("Trace:", exc_info=True)

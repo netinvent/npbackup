@@ -12,6 +12,7 @@ __build__ = "2025112601"
 from abc import ABC, abstractmethod
 from typing import Optional, Dict, List, Any
 from logging import getLogger
+from npbackup.__version__ import __intname__ as NAME, version_dict
 
 logger = getLogger()
 
@@ -32,11 +33,31 @@ class MonitoringBackend(ABC):
         self.repo_config = repo_config
         self.monitoring_config = monitoring_config
         self.logger = logger
-        self.instance = self.get_config_value("monitoring.instance", "default_instance")
-        self.group = self.get_config_value("monitoring.group", "default_group")
-        self.backup_job = self.get_config_value(
+        self.base_labels = {
+            "instance": self.get_config_value("monitoring.instance", "default_instance"),
+            "group": self.get_config_value("monitoring.group", "default_group"),
+            "backup_job": self.get_config_value(
             "monitoring.backup_job", "default_backup_job"
-        )
+            ),
+        }
+        # Add additional labels from config
+        additional_labels = self.get_config_value("monitoring.additional_labels")
+        if isinstance(additional_labels, dict):
+            for k, v in additional_labels.items():
+                if k not in self.base_labels:
+                    self.base_labels[k] = v
+
+        # Enhance labels with npbackup version info
+        if "npversion" not in self.base_labels:
+            self.base_labels["npversion"] = (
+                f"{NAME}{version_dict['version']}-{version_dict['build_type']}"
+            )
+        if "audience" not in self.base_labels:
+            self.base_labels["audience"] = version_dict.get("audience", "unknown")
+        if "os" not in self.base_labels:
+            self.base_labels["os"] = version_dict.get("os", "unknown")
+        if "arch" not in self.base_labels:
+            self.base_labels["arch"] = version_dict.get("arch", "unknown")
 
     @abstractmethod
     def send_metrics(
@@ -82,7 +103,10 @@ class MonitoringBackend(ABC):
             Configuration value or default
         """
         try:
-            return self.monitoring_config.g(key)
+            value = self.monitoring_config.g(key)
+            if value is not None:
+                return value
+            return default
         except (KeyError, AttributeError):
             return default
 
@@ -98,7 +122,10 @@ class MonitoringBackend(ABC):
             Configuration value or default
         """
         try:
-            return self.repo_config.g(key)
+            value = self.repo_config.g(key)
+            if value is not None:
+                return value
+            return default
         except (KeyError, AttributeError):
             return default
 

@@ -18,7 +18,7 @@ from npbackup.restic_metrics import (
     upload_metrics,
     write_metrics_file,
 )
-from npbackup.__version__ import __intname__ as NAME, version_dict
+from npbackup.__version__ import __intname__
 
 logger = getLogger()
 
@@ -39,8 +39,6 @@ class PrometheusMonitor(MonitoringBackend):
             append_mode: Whether to append to metrics file instead of overwriting, useful for group runner
         """
         super().__init__(repo_config, monitoring_config)
-        print("MON")
-        print(monitoring_config)
         self.append_mode = append_mode
 
     def is_enabled(self) -> bool:
@@ -69,11 +67,12 @@ class PrometheusMonitor(MonitoringBackend):
             logger.debug("Prometheus metrics not enabled in configuration.")
             return False
 
+        labels = {**labels, **self.base_labels}
+
         # Get Prometheus-specific configuration
         try:
             # Try new config structure first, fall back to old
             destination = self.get_monitoring_value("global_prometheus.destination")
-            print("DES", destination)
             no_cert_verify = self.get_monitoring_value(
                 "global_prometheus.no_cert_verify", False
             )
@@ -115,26 +114,8 @@ class PrometheusMonitor(MonitoringBackend):
         Returns:
             List of Prometheus-formatted metric strings
         """
-        # Enhance labels with npbackup version info
-        enhanced_labels = labels.copy()
-        if "npversion" not in enhanced_labels:
-            enhanced_labels["npversion"] = (
-                f"{NAME}{version_dict['version']}-{version_dict['build_type']}"
-            )
-        if "audience" not in enhanced_labels:
-            enhanced_labels["audience"] = version_dict.get("audience", "unknown")
-        if "os" not in enhanced_labels:
-            enhanced_labels["os"] = version_dict.get("os", "unknown")
-        if "arch" not in enhanced_labels:
-            enhanced_labels["arch"] = version_dict.get("arch", "unknown")
 
-        # Add Prometheus-specific labels from config
-        additional_labels = self.get_config_value("monitoring.additional_labels")
-        if isinstance(additional_labels, dict):
-            for k, v in additional_labels.items():
-                enhanced_labels[k] = v
-
-        labels_string = create_labels_string(enhanced_labels)
+        labels_string = create_labels_string(labels)
         timestamp = int(datetime.now(timezone.utc).timestamp())
         prom_metrics = []
 
@@ -185,7 +166,7 @@ class PrometheusMonitor(MonitoringBackend):
                         f"restic_{metric_name}{{{labels_string}}} {value}"
                     )
 
-        logger.debug("Metrics computed:\n{}".format("\n".join(prom_metrics)))
+        logger.debug("Prometheus metrics computed:\n{}".format("\n".join(prom_metrics)))
         return prom_metrics
 
     def _upload_to_pushgateway(
@@ -229,7 +210,6 @@ class PrometheusMonitor(MonitoringBackend):
         # Fix for #150: Make job name unique per repo and operation
         repo_name = self.get_config_value("name")
         destination = f"{destination}___repo_name={repo_name}___action={operation}"
-
         upload_metrics(destination, authentication, no_cert_verify, metrics)
         return True
 

@@ -135,7 +135,7 @@ def metric_analyser(
         if not analyze_only:
             # Add restic result detail for email backend if available
             if restic_result:
-                common_metrics["restic_result_detail"] = restic_result
+                common_metrics["result_detail"] = 0 if restic_result == True or 0 else 1
 
             # Send metrics to all enabled monitoring backends (including email)
             _send_to_monitoring_backends(
@@ -191,8 +191,8 @@ def _send_to_monitoring_backends(
     ]
 
     # Send metrics to all enabled backends
+    has_enabled_backends = False
     for backend in backends:
-        has_enabled_backends = False
         if backend.is_enabled():
             has_enabled_backends = True
             try:

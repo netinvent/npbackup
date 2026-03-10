@@ -9,7 +9,7 @@ __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2025112701"
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from logging import getLogger
 from ofunctions.mailer import Mailer
 from npbackup.core.monitoring import MonitoringBackend
@@ -64,6 +64,8 @@ class EmailMonitor(MonitoringBackend):
             )
             return False
 
+        labels = {**labels, **self.base_labels}
+
         # Determine if operation was successful
         exec_state = metrics.get("exec_state", 0)
         operation_success = metrics.get("operation_success", 1)
@@ -95,64 +97,30 @@ class EmailMonitor(MonitoringBackend):
                 return False
 
             # Determine which recipients list to use based on operation and result
-            recipients = None
-
+            recipients_to_send = []
             if operation == "backup":
-                # WIP
                 if op_success:
                     # Check for specific backup success recipients
-                    recipients = self.get_monitoring_value(
-                        "global_email.recipients_on_backup_success"
-                    )
-                    # Also check if we should send at all
-                    if not self.get_monitoring_value("global_email.on_backup_success"):
-                        if not recipients:
-                            logger.debug("Not sending email for backup success.")
-                            return True
+                    for recipient in self.get_monitoring_value("global_email.recipients.on_backup_success", []):
+                        print("RECIP", recipient)
+                        if recipient not in recipients_to_send:
+                            recipients_to_send.append(recipient)
                 else:
                     # Check for specific backup failure recipients
-                    recipients = self.get_monitoring_value(
-                        "global_email.recipients_on_backup_failure"
-                    )
-                    # Also check if we should send at all
-                    if not self.get_monitoring_value("global_email.on_backup_failure"):
-                        if not recipients:
-                            logger.debug("Not sending email for backup failure.")
-                            return False
-            elif operation != "test_email":
-                if op_success:
-                    # Check for specific operations success recipients
-                    recipients = self.get_monitoring_value(
-                        "global_email.recipients_on_operations_success"
-                    )
-                    # Also check if we should send at all
-                    if not self.get_monitoring_value(
-                        "global_email.on_operations_success"
-                    ):
-                        if not recipients:
-                            logger.debug("Not sending email for operation success.")
-                            return True
-                else:
-                    # Check for specific get_monitoring_value failure recipients
-                    recipients = self.get_monitoring_value(
-                        "global_email.recipients_on_operations_failure"
-                    )
-                    # Also check if we should send at all
-                    if not self.get_monitoring_value(
-                        "global_email.on_operations_failure"
-                    ):
-                        if not recipients:
-                            logger.debug("Not sending email for operation failure.")
-                            return False
+                    for recipient in self.get_monitoring_value("global_email.recipients.on_backup_failure", []):
+                        if recipient not in recipients_to_send:
+                            recipients_to_send.append(recipient)
             else:
-                # For test_email, use the default recipients
-                recipients = self.get_monitoring_value("global_email.recipients")
+                if op_success:
+                    for recipient in self.get_monitoring_value("global_email.recipients.on_operations_success", []):
+                        if recipient not in recipients_to_send:
+                            recipients_to_send.append(recipient)
+                else:
+                    for recipient in self.get_monitoring_value("global_email.recipients.on_operations_failure", []):
+                        if recipient not in recipients_to_send:
+                            recipients_to_send.append(recipient)
 
-            # Fall back to default recipients if no specific list is configured
-            if not recipients:
-                recipients = self.get_monitoring_value("global_email.recipients")
-
-            if not recipients:
+            if not recipients_to_send:
                 logger.warning(
                     f"No recipients configured for {operation} {'success' if op_success else 'failure'}. "
                     "Not sending metrics via email."
@@ -168,22 +136,25 @@ class EmailMonitor(MonitoringBackend):
             return True
 
         # Build and send the email
-        return self._send_email(
-            smtp_server=smtp_server,
-            smtp_port=smtp_port,
-            smtp_security=smtp_security,
-            smtp_username=smtp_username,
-            smtp_password=smtp_password,
-            sender=sender,
-            recipients=recipients,
-            instance=instance,
-            operation=operation,
-            metrics=metrics,
-            labels=labels,
-            op_success=op_success,
-            exec_state=exec_state,
-            backup_too_small=backup_too_small,
-        )
+        logger.debug(f"Sending email notification to {smtp_server}:{smtp_port} with security {smtp_security} using {'authentication' if smtp_username and smtp_password else 'no authentication'}.")
+        for recipient in recipients_to_send:
+            logger.debug(f"Adding recipient {recipient} for email notification.")
+            return self._send_email(
+                smtp_server=smtp_server,
+                smtp_port=smtp_port,
+                smtp_security=smtp_security,
+                smtp_username=smtp_username,
+                smtp_password=smtp_password,
+                sender=sender,
+                recipients=recipients_to_send,
+                instance=instance,
+                operation=operation,
+                metrics=metrics,
+                labels=labels,
+                op_success=op_success,
+                exec_state=exec_state,
+                backup_too_small=backup_too_small,
+            )
 
     def _send_email(
         self,
@@ -193,7 +164,7 @@ class EmailMonitor(MonitoringBackend):
         smtp_username: Optional[str],
         smtp_password: Optional[str],
         sender: str,
-        recipients: str,
+        recipients: List[str],
         instance: str,
         operation: str,
         metrics: Dict[str, Any],
@@ -208,7 +179,7 @@ class EmailMonitor(MonitoringBackend):
         Args:
             smtp_server: SMTP server hostname
             smtp_port: SMTP server port
-            smtp_security: Security mode (tls, starttls, none)
+            smtp_security: Security mode (tls, ssl, none)
             smtp_username: Optional SMTP username
             smtp_password: Optional SMTP password
             sender: Sender email address
@@ -227,7 +198,6 @@ class EmailMonitor(MonitoringBackend):
         repo_name = labels.get("repo_name", "unknown")
 
         logger.info(f"Sending metrics via email to {recipients}.")
-        recipients_list = [recipient.strip() for recipient in recipients.split(",")]
 
         mailer = Mailer(
             smtp_server=smtp_server,
@@ -304,14 +274,18 @@ class EmailMonitor(MonitoringBackend):
             if len(restic_result) > MAX_EMAIL_DETAIL_LENGTH:
                 body += f"\n\nDetail:\n{restic_result[0:MAX_EMAIL_DETAIL_LENGTH]} [... truncated]"
             else:
-                body += f"\n\nDetail:\n{restic_result}"
+                body += f"\n\nDetail:\n{"Backend success" if restic_result else "Backend failure"}"
+
+        body += f"\n\nLabels:"
+        for label, value in labels.items():
+            body += f"\n{label}: {value}"  
 
         body += f"\n\nGenerated by {OEM_STRING} {version_dict['version']}\n"
 
         try:
             result = mailer.send_email(
                 sender_mail=sender,
-                recipient_mails=recipients_list,
+                recipient_mails=recipients,
                 subject=subject,
                 body=body,
             )
