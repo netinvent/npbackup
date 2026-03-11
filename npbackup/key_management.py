@@ -11,43 +11,46 @@ import os
 from logging import getLogger
 from command_runner import command_runner
 from cryptidy.symmetric_encryption import generate_key
-from npbackup.obfuscation import obfuscation
+from resources.audience import CURRENT_AUDIENCE
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
 
 
 logger = getLogger()
 
+if CURRENT_AUDIENCE == "public":
+    # pylint: disable=W0404 (reimported)
+    from npbackup.secret_keys import AES_KEY
+    from npbackup.obfuscation import obfuscation
 
-# Try to import a private key, if not available, fallback to the default key
-try:
-    from PRIVATE._private_secret_keys import AES_KEY
-    from PRIVATE._obfuscation import obfuscation
-
-    AES_KEY = obfuscation(AES_KEY)
-    IS_PRIV_BUILD = True
     try:
-        from PRIVATE._private_secret_keys import EARLIER_AES_KEY
-
-        EARLIER_AES_KEY = obfuscation(EARLIER_AES_KEY)
+        from npbackup.secret_keys import EARLIER_AES_KEY
     except ImportError:
         EARLIER_AES_KEY = None
-except ImportError:
-    # If no private keys are used, then let's use the public ones
+else:
     try:
-        # pylint: disable=W0404 (reimported)
-        from npbackup.secret_keys import AES_KEY
-        from npbackup.obfuscation import obfuscation
+        from PRIVATE.secret_keys import AES_KEY
+        from PRIVATE.obfuscation import obfuscation
 
-        AES_KEY = obfuscation(AES_KEY)
-        IS_PRIV_BUILD = False
         try:
-            from npbackup.secret_keys import EARLIER_AES_KEY
+            from PRIVATE.secret_keys import EARLIER_AES_KEY
         except ImportError:
             EARLIER_AES_KEY = None
-    except ImportError:
-        print("No secret_keys file. Please read documentation.")
+    except ImportError as exc:
+        print(f"{__file__}: No private audience customization found")
+        print(exc)
         sys.exit(1)
+
+
+if not AES_KEY:
+    print(
+        f"{__file__}: No AES_KEY found in secret_keys file. Please read documentation."
+    )
+    sys.exit(1)
+
+
+AES_KEY = obfuscation(AES_KEY)
+EARLIER_AES_KEY = obfuscation(EARLIER_AES_KEY) if EARLIER_AES_KEY else None
 
 
 def get_aes_key():

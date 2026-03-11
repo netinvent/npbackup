@@ -5,10 +5,10 @@
 
 __intname__ = "npbackup.compile"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2023-2024 NetInvent"
+__copyright__ = "Copyright (C) 2023-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025030401"
-__version__ = "2.2.2"
+__build__ = "2026031101"
+__version__ = "2.3.0"
 
 
 """
@@ -32,6 +32,8 @@ import atexit
 from command_runner import command_runner
 from ofunctions.platform import python_arch
 
+sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
+
 if os.name == "nt":
     EXTERNAL_SIGNER = r"C:\ev_signer_npbackup\ev_signer_npbackup.exe"
     if os.path.isfile(EXTERNAL_SIGNER):
@@ -41,7 +43,11 @@ if os.name == "nt":
         from npbackup.windows.sign_windows import sign
 from npbackup.__version__ import IS_LEGACY
 
-AUDIENCES = ["public", "private"]
+try:
+    from resources.audience import CURRENT_AUDIENCE, AUDIENCES
+except ImportError:
+    AUDIENCES = ["public", "private"]
+
 BUILD_TYPES = ["cli", "gui", "viewer"]
 
 # Insert parent dir as path se we get to use npbackup as package
@@ -102,79 +108,6 @@ def get_metadata(package_file):
     return _metadata
 
 
-def check_private_build():
-    if "PRIVATE._private_secret_keys" in sys.modules.keys():
-        sys.modules.pop("PRIVATE._private_secret_keys")
-    if "PRIVATE._obfuscation" in sys.modules.keys():
-        sys.modules.pop("PRIVATE._obfuscation")
-    private = None
-    try:
-        import PRIVATE._private_secret_keys
-        import PRIVATE._obfuscation
-
-        print("INFO: Building with private secret key")
-        private = True
-    except ImportError:
-        try:
-            import npbackup.secret_keys
-            import npbackup.obfuscation
-
-            print("INFO: Building with default secret key")
-            private = False
-        except ImportError:
-            print("ERROR: Cannot find secret keys")
-            sys.exit()
-
-    # Drop private files if exist in memory
-    try:
-        del PRIVATE._private_secret_keys
-    except Exception:
-        if private:
-            print("CANNOT REMOVE PRIVATE SECRET KEYS FROM MEMORY")
-    try:
-        del PRIVATE._obfuscation
-    except Exception:
-        if private:
-            print("CANNOT REMOVE PRIVATE OBFUSCATION FROM MEMORY")
-
-    """
-    dist_conf_file_path = get_conf_dist_file(audience)
-    if dist_conf_file_path and "_private" in dist_conf_file_path:
-        print("INFO: Building with a private conf.dist file")
-        if audience != "private":
-            print("ERROR: public build uses private conf.dist file")
-            sys.exit(6)
-    """
-    return private
-
-
-def move_audience_files(audience):
-    for dir in [os.path.join(BASEDIR, os.pardir, "PRIVATE"), BASEDIR]:
-        if audience == "private":
-            possible_non_used_path = "_NOUSE_private_"
-            guessed_files = glob.glob(
-                os.path.join(dir, "{}*".format(possible_non_used_path))
-            )
-            for file in guessed_files:
-                new_file = file.replace(possible_non_used_path, "_private_")
-                print("Moving {} to {}".format(file, new_file))
-                os.rename(file, new_file)
-        elif audience == "public":
-            possible_non_used_path = "_private_"
-            guessed_files = glob.glob(
-                os.path.join(dir, "{}*".format(possible_non_used_path))
-            )
-            for file in guessed_files:
-                new_file = file.replace(
-                    possible_non_used_path,
-                    "_NOUSE{}".format(possible_non_used_path),
-                )
-                print("Moving {} to {}".format(file, new_file))
-                os.rename(file, new_file)
-        else:
-            raise "Bogus audience"
-
-
 def have_nuitka_commercial():
     try:
         import nuitka.plugins.commercial
@@ -203,10 +136,7 @@ def compile(
     if IS_LEGACY:
         arch = f"{arch}-legacy"
     if onefile:
-        suffix = "-{}-{}".format(build_type, arch)
-
-        if audience == "private":
-            suffix += "-PRIV"
+        suffix = "-{}-{}-{}".format(build_type, arch, audience)
         if os.name == "nt":
             program_executable = "npbackup{}.exe".format(suffix)
             restic_executable = "restic.exe"
@@ -254,7 +184,7 @@ def compile(
         FILE_DESCRIPTION,
         sys.version_info[1],
         arch,
-        "priv" if audience == "private" else "",
+        audience,
     )
 
     restic_source_file = get_restic_internal_binary(arch)
@@ -431,7 +361,7 @@ class AudienceAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if values not in AUDIENCES + ["all"]:
             print("Got value:", values)
-            raise argparse.ArgumentError(self, "Not a valid audience")
+            raise argparse.ArgumentError(self, f"Audiences '{values}' is not a valid audience")
         setattr(namespace, self.dest, values)
 
 
@@ -446,7 +376,7 @@ if __name__ == "__main__":
         dest="audience",
         default="all",
         required=False,
-        help="Target audience, private or public",
+        help="Target audience, public or private builds (default: all)",
     )
 
     parser.add_argument(
@@ -501,12 +431,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # Make sure we get out dev environment back when compilation ends / fails
-    atexit.register(
-        move_audience_files,
-        "private",
-    )
-
     try:
         errors = False
         if args.audience.lower() == "all":
@@ -529,18 +453,6 @@ if __name__ == "__main__":
             npbackup_version = get_metadata(os.path.join(BASEDIR, "__version__.py"))[
                 "version"
             ]
-            if not create_tar_only:
-                move_audience_files(audience)
-
-                private_build = check_private_build()
-                if private_build and audience != "private":
-                    print("ERROR: Requested public build but private data available")
-                    sys.exit(1)
-                elif not private_build and audience != "public":
-                    print(
-                        "ERROR: Requested private build but no private data available"
-                    )
-                    sys.exit(1)
             for build_type in build_types:
                 result = compile(
                     arch=python_arch(),
@@ -552,14 +464,13 @@ if __name__ == "__main__":
                     sign_only=sign_only,
                 )
                 if not create_tar_only and not sign_only:
-                    audience_build = "private" if private_build else "public"
                     if result:
                         print(
-                            f"SUCCESS: MADE {build_type} build for audience {audience_build}"
+                            f"SUCCESS: MADE {build_type} build for audience {audience}"
                         )
                     else:
                         print(
-                            f"ERROR: Failed making {build_type} build for audience {audience_build}"
+                            f"ERROR: Failed making {build_type} build for audience {audience}"
                         )
                         errors = True
         if errors:

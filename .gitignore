@@ -156,11 +156,12 @@ RESTIC_SOURCE_FILES/restic*
 !RESTIC_SOURCE_FILES/restic*darwin*
 !RESTIC_SOURCE_FILES/restic*linux*
 RESTIC_SOURCE_FILES/ARCHIVES
-PRIVATE/_ev_data.py
-PRIVATE/_obfuscation.py
-_private*
-_NOUSE_private*
-NOUSE_private*
+PRIVATE/*
+!PRIVATE/example/*
+!PRIVATE/__no_init__.py
+!PRIVATE/_obfuscation.py
+!PRIVATE/customization.py
+!PRIVATE/_private_secret_keys.py
 BUILDS
 BUILDS-PRIVATE
 *.conf

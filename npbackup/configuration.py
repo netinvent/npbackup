@@ -29,7 +29,8 @@ from cryptidy import symmetric_encryption as enc
 from ofunctions.random import random_string
 from ofunctions.misc import replace_in_iterable, BytesConverter, iter_over_keys
 from resources.customization import ID_STRING
-from npbackup.key_management import AES_KEY, EARLIER_AES_KEY, IS_PRIV_BUILD, get_aes_key
+from resources.audience import CURRENT_AUDIENCE
+from npbackup.key_management import AES_KEY, EARLIER_AES_KEY, get_aes_key
 from npbackup.__version__ import __version__ as MAX_CONF_VERSION
 
 MIN_MIGRATABLE_CONF_VERSION = "3.0.0"
@@ -1281,7 +1282,7 @@ def load_config(config_file: Path) -> Optional[dict]:
 def save_config(config_file: Path, full_config: dict) -> bool:
     try:
         full_config = inject_permissions_into_full_config(full_config)
-        full_config.s("audience", "private" if IS_PRIV_BUILD else "public")
+        full_config.s("audience", CURRENT_AUDIENCE)
         with open(config_file, "w", encoding="utf-8") as file_handle:
             if not is_encrypted(full_config):
                 full_config = crypt_config(

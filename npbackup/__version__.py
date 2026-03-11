@@ -17,7 +17,7 @@ import sys
 import psutil
 from ofunctions.platform import python_arch, get_os
 import npbackup.__env__
-from npbackup.key_management import IS_PRIV_BUILD
+from resources.audience import CURRENT_AUDIENCE
 from npbackup.core.nuitka_helper import IS_COMPILED
 
 # Python 3.7 versions are considered legacy since they don't support msgspec
@@ -34,7 +34,7 @@ version_dict = {
     "name": __intname__,
     "version": __version__,
     "build_type": npbackup.__env__.BUILD_TYPE,
-    "audience": "private" if IS_PRIV_BUILD else "public",
+    "audience": CURRENT_AUDIENCE,
     "os": get_os().lower(),
     "arch": python_arch() + ("-legacy" if IS_LEGACY else ""),
     "pv": sys.version_info,

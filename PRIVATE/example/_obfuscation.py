@@ -8,11 +8,11 @@ __intname__ = "npbackup.obfuscation"
 
 # NPF-SEC-00011: Default AES key obfuscation
 
-# The default keyword should not be changed, as it is used to obfuscate the default AES key.
-# If you change it, create your own in PRIVATE/{audience_name}/_obfuscation.py
+# You can replace the obfuscation function with your own implementation,
+# as long as it is symmetric (i.e. applying it twice returns the original value).
+# You may also kust change the default keywoard
 
-
-KEYWORD = b"/*NPBackup 2024*/"
+KEYWORD = b"/*YOUR FAVORITE STRING*/"
 
 
 def obfuscation(key: bytes) -> bytes:
