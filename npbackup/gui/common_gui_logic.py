@@ -568,7 +568,21 @@ def update_global_gui(
     global_config = CommentedMap()
 
     # Only update global options gui with identified global keys
-    for key in full_config.keys():
+    for key, value in full_config.items():
+        # We need to handle global_email.recipients here since we don't want to iter over it's subkeys
+        if key == "global_email":
+            recipients = {}
+            try:
+                for email_notification_type in value["recipients"].keys():
+                    for recipient in value["recipients"][email_notification_type]:
+                        if recipient not in recipients:
+                            recipients[recipient] = []
+                        recipients[recipient].append(email_notification_type)
+                for recipient, notification_types in recipients.items():
+                    add_email_recipient_row(window, recipient, notification_types)
+            except KeyError:
+                logger.debug("No recipients found in global_email settings, skipping")
+            continue
         if is_wizard and key in ("global_options", "identity"):
             continue
         if (
@@ -576,7 +590,6 @@ def update_global_gui(
             or key.startswith("global_")
             and (key[len("global_") :]) in npbackup.gui.common_gui.MONITORING_ENABLE
         ):
-
             global_config.s(key, full_config.g(key))
     iter_over_config(window, full_config, global_config, None, "group", unencrypted, "")
 
@@ -662,15 +675,6 @@ def update_gui_values(
                 add_generic_row(window, column_key, entry, inherited[entry])
             return
 
-        if key == "global_email.recipients":
-            recipients = {}
-            for email_notification_type in value.keys():
-                for recipient in value[email_notification_type]:
-                    if recipient not in recipients:
-                        recipients[recipient] = []
-                    recipients[recipient].append(email_notification_type)
-            for recipient, notification_types in recipients.items():
-                add_email_recipient_row(window, recipient, notification_types)
         # We need to discard sukeys from recipients in order to avoid searching for subkeys in GUI
         if key.startswith("global_email.recipients."):
             return
