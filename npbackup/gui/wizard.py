@@ -48,21 +48,6 @@ sg.set_options(icon=OEM_ICON)
 
 logger = getLogger()
 
-try: # WI
-    retention_policies = list(full_config.g("presets.retention_policies"))
-except Exception:
-    # We might need to fallback to integrated presets in constants
-    retention_policies = npbackup.configuration.get_default_config().g(
-        "presets.retention_policy"
-    )
-
-# retention_policies = list(combo_boxes["retention_options"].values())
-retention_policies_list = list(retention_policies.keys())
-retention_policies_list = [
-    _t(f"wizard_gui.{policy}") for policy in retention_policies_list
-]
-
-
 def create_step_header(step_num: int, title_key: str, desc_key: str = None) -> list:
     """Create a consistent step header with icon and title"""
     step_icon = (
@@ -459,8 +444,9 @@ def wizard_layouts() -> dict:
                     size=(80, 5),
                 ),
             ],
-            [ 
-                sg.Text("",
+            [
+                sg.Text(
+                    "",
                     key="-WIZARD-CONFIG-FILE-",
                     expand_x=True,
                     font=SUBTITLE_FONT,
@@ -691,6 +677,21 @@ def start_wizard(full_config: dict, config_file: str):
         window=wizard, values=values
     )
     set_active_tab(1)
+
+    try:  # WIP
+        retention_policies = list(full_config.g("presets.retention_policies"))
+    except Exception:
+        # We might need to fallback to integrated presets in constants
+        retention_policies = npbackup.configuration.get_default_config().g(
+            "presets.retention_policy"
+        )
+
+    # retention_policies = list(combo_boxes["retention_options"].values())
+    retention_policies_list = list(retention_policies.keys())
+    retention_policies_list = [
+        _t(f"wizard_gui.{policy}") for policy in retention_policies_list
+    ]
+
     wizard["-RETENTION-POLICIES-"].update(values=retention_policies_list)
     wizard["-RETENTION-POLICIES-"].update(set_to_index=0)
     wizard["-WIZARD-CONFIG-FILE-"].update(str(config_file))
@@ -849,5 +850,8 @@ def start_wizard(full_config: dict, config_file: str):
         ## END NAVIGATION ##
     return full_config, config_file
 
+
 if __name__ == "__main__":
-    start_wizard(npbackup.configuration.get_default_config(), "npbackup-wizard-test.conf")
+    start_wizard(
+        npbackup.configuration.get_default_config(), "npbackup-wizard-test.conf"
+    )
