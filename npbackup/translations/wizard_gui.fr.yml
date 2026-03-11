@@ -61,4 +61,5 @@ fr:
   monitoring_identity_description: Configurez l'identité de cette instance de sauvegarde
 
   # STEP 7
-  wizard_ending_text: Votre configuration de sauvegarde est maintenant terminée et sera enregistrée dans %{config_file}. Vous pouvez éditer ce fichier de configuration ou ajouter des paramètres spécifiques dans les paramètres de configuration principaux.
+  wizard_ending_text: Votre configuration de sauvegarde est maintenant terminée et sera enregistrée. Vous pouvez éditer directement ou utiliser l'interface de configuration pour éditer le fichier de configuration suivant ou ajouter des paramètres spécifiques dans les paramètres de configuration principaux.
+  wizard_ending_text2: Merci d'utiliser

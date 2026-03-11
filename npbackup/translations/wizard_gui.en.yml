@@ -60,4 +60,5 @@ en:
   monitoring_identity_description: Configure the identity of this backup instance
 
   # STEP 7
-  wizard_ending_text: Your backup configuration is now complete and will be saved as %{config_file}. You can edit this configuration file or add some specific settings in the main configuration settings.
+  wizard_ending_text: Your backup configuration is now complete and will be saved. You can directly edit or use the configuration interface to edit the following configuration file or add some specific settings in the main configuration settings.
+  wizard_ending_text2: Thank you for using

@@ -423,11 +423,11 @@ def global_zabbix_col():
                         sg.Input(key="global_zabbix.port", size=(50, 1)),
                     ],
                     [
-                        sg.Text(_t("generic.psk_identity"), size=(40, 1)),
+                        sg.Text(_t("config_gui.psk_identity"), size=(40, 1)),
                         sg.Input(key="global_zabbix.psk_identity", size=(50, 1)),
                     ],
                     [
-                        sg.Text(_t("generic.psk"), size=(40, 1)),
+                        sg.Text(_t("config_gui.psk"), size=(40, 1)),
                         sg.Input(key="global_zabbix.psk", size=(50, 1)),
                     ],
                 ],
@@ -842,7 +842,9 @@ def scheduling_col(is_wizard: bool = False, task_types: list = None):
                         sg.Text(_t("config_gui.select_object")),
                         sg.Combo(
                             [],
-                            default_value="default",
+                            # We need to specify {object_type}: {object_name} as default value
+                            # since we use the standard get_object_from_combo() fn
+                            default_value="Repo: default", 
                             key="-OBJECT-SELECT-TASKS-",
                             enable_events=True,
                         ),
@@ -969,9 +971,9 @@ def scheduling_col(is_wizard: bool = False, task_types: list = None):
     ]
 
     # Conststruct object depending on environment
-    schedule_col = []
+    schedule_col = object_selector
     if not is_wizard:
-        schedule_col = object_selector + [[sg.HorizontalSeparator()]]
+        schedule_col = schedule_col + [[sg.HorizontalSeparator()]]
     if os.name == "nt":
         schedule_col = (
             schedule_col + first_backup_scheduling + [[sg.HorizontalSeparator()]]

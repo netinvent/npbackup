@@ -44,20 +44,11 @@ from npbackup.gui.helpers import popup_error, password_complexity
 import npbackup.gui.common_gui_logic
 import npbackup.configuration as configuration
 
-CONFIG_FILE = Path("npbackup.conf")  # WIP override via --config-file
 sg.set_options(icon=OEM_ICON)
 
 logger = getLogger()
 
-try:
-    full_config = npbackup.configuration.load_config(CONFIG_FILE)
-except EnvironmentError as exc:
-    # popup_error(exc) # wIP
-    print("No full config available, using defaults")
-    full_config = None
-if not full_config:
-    full_config = npbackup.configuration.get_default_config()
-try:
+try: # WI
     retention_policies = list(full_config.g("presets.retention_policies"))
 except Exception:
     # We might need to fallback to integrated presets in constants
@@ -464,14 +455,25 @@ def wizard_layouts() -> dict:
         + [
             [
                 sg.Text(
-                    _t("wizard_gui.wizard_ending_text", config_file=CONFIG_FILE),
+                    _t("wizard_gui.wizard_ending_text"),
                     size=(80, 5),
                 ),
             ],
+            [ 
+                sg.Text("",
+                    key="-WIZARD-CONFIG-FILE-",
+                    expand_x=True,
+                    font=SUBTITLE_FONT,
+                    justification="center",
+                )
+            ],
+            [
+                sg.Push(),
+            ],
             [
                 sg.Text(
-                    "🎉",
-                    font=("Segoe UI Emoji", 32),
+                    _t("wizard_gui.wizard_ending_text2") + f" {SHORT_PRODUCT_NAME}!",
+                    font=SUBTITLE_FONT,
                     justification="center",
                     expand_x=True,
                 ),
@@ -564,19 +566,12 @@ def wizard_layout(wizard_tabs, wizard_breadcrumbs) -> List[list]:
     ]
 
 
-def start_wizard():
+def start_wizard(full_config: dict, config_file: str):
     # wizard tabs count
-    global full_config
 
     wizard_tabs, wizard_breadcrumbs = wizard_tabs_and_breadcrumbs(wizard_layouts())
     NUMBER_OF_TABS = len(wizard_tabs)
     current_tab = 1
-
-    # Optional multi row counters
-    EMAIL_RECIPIENT_COUNT = 0
-    BACKUP_TAG_COUNT = 0
-    RETENTION_KEEP_TAG_COUNT = 0
-    RETENTION_APPLY_ON_TAG_COUNT = 0
 
     wizard = sg.Window(
         f"{SHORT_PRODUCT_NAME} Wizard",
@@ -698,6 +693,8 @@ def start_wizard():
     set_active_tab(1)
     wizard["-RETENTION-POLICIES-"].update(values=retention_policies_list)
     wizard["-RETENTION-POLICIES-"].update(set_to_index=0)
+    wizard["-WIZARD-CONFIG-FILE-"].update(str(config_file))
+
     while True:
         event, values = wizard.read()
         if event == sg.WIN_CLOSED or event == _t("generic.cancel"):
@@ -754,14 +751,14 @@ def start_wizard():
             )
 
             result, full_config = npbackup.gui.common_gui_logic.create_scheduled_task(
-                values, full_config, CONFIG_FILE
+                values, full_config, config_file
             )
             if not result:
                 sg.popup(
                     _t("config_gui.scheduled_task_creation_failure"), keep_on_top=True
                 )
                 continue
-            result = configuration.save_config(CONFIG_FILE, full_config)
+            result = configuration.save_config(config_file, full_config)
             if result:
                 sg.popup(_t("config_gui.configuration_saved"), keep_on_top=True)
                 break
@@ -850,7 +847,7 @@ def start_wizard():
             set_active_tab(current_tab)
 
         ## END NAVIGATION ##
-
+    return full_config, config_file
 
 if __name__ == "__main__":
-    start_wizard()
+    start_wizard(npbackup.configuration.get_default_config(), "npbackup-wizard-test.conf")

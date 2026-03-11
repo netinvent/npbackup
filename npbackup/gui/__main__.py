@@ -66,6 +66,7 @@ from npbackup.__debug__ import _DEBUG, _NPBACKUP_ALLOW_AUTOUPGRADE_DEBUG
 from npbackup.restic_wrapper import ResticRunner
 from npbackup.restic_wrapper import schema
 from npbackup.gui.ttk_theme import reskin_job, TITLE_FONT, SUBTITLE_FONT
+from npbackup.gui.wizard import start_wizard
 
 logger = getLogger()
 backend_binary = None
@@ -623,6 +624,7 @@ def _main_gui(viewer_mode: bool):
             [
                 sg.Push(),
                 sg.Button(_t("generic.cancel"), key="--CANCEL--"),
+                sg.Button(_t("main_gui.run_wizard"), key="--WIZARD--"),
                 sg.Button(_t("main_gui.new_config"), key="--NEW-CONFIG--"),
                 sg.Button(_t("main_gui.open_existing_file"), key="--LOAD--"),
             ],
@@ -640,7 +642,7 @@ def _main_gui(viewer_mode: bool):
             if event in (sg.WIN_X_EVENT, sg.WIN_CLOSED, "--CANCEL--"):
                 action = "--CANCEL--"
                 break
-            if event == "--NEW-CONFIG--":
+            if event in ("--NEW-CONFIG--", "--WIZARD--"):
                 action = event
                 config_file = Path(values["-config_file-"])
                 break
@@ -792,10 +794,13 @@ def _main_gui(viewer_mode: bool):
                 config_file, action = select_config_file(config_file=config_file)
                 if action == "--CANCEL--":
                     break
+                    
                 if action == "--NEW-CONFIG--":
                     full_config = config_gui(
                         npbackup.configuration.get_default_config(), config_file
                     )
+                if action == "--WIZARD--":
+                    full_config, config_file = start_wizard(npbackup.configuration.get_default_config(), config_file)
             if config_file:
                 logger.info(f"Using configuration file {config_file}")
                 try:
@@ -1180,6 +1185,31 @@ def _main_gui(viewer_mode: bool):
     window.read(timeout=0.01)
     if not config_file and not full_config and not viewer_mode:
         window["-NO-CONFIG-"].Update(visible=True)
+        result = sg.popup(
+            _t("main_gui.run_wizard"),
+            custom_text=(_t("generic.no"), _t("generic.yes")),
+            keep_on_top=True,
+            icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
+            title=_t("generic.warning").capitalize(),
+            line_width=100,
+            modal=True,
+        )
+        if result == _t("generic.yes"):
+            """
+            When running the wizard at first run, we'll decide for default values:
+            repo name is always "default"
+            config_file is "npbackup.conf" if not specified in commandline
+            """
+            with HideWindow(window):
+                full_config = npbackup.configuration.get_default_config()
+                if args.config_file:
+                    config_file = Path(args.config_file).absolute()
+                else:
+                    config_file = Path("npbackup.conf").absolute()
+                full_config, config_file = start_wizard(full_config, config_file)
+                repo_config, _ = npbackup.configuration.get_repo_config(
+                    full_config, repo_name="default")
+
 
     monitoring_config = npbackup.configuration.get_monitoring_config(
         repo_config, full_config
@@ -1275,8 +1305,19 @@ def _main_gui(viewer_mode: bool):
             if not full_config:
                 popup_error(_t("main_gui.no_config"))
                 continue
-            with HideWindow(window):
-                full_config = config_gui(full_config, config_file)
+            result = sg.popup(
+                _t("main_gui.run_wizard_or_advanced"),
+                custom_text=(_t("main_gui.wizard"), _t("main_gui.advanced")),
+                keep_on_top=True,
+                icon=sg.SYSTEM_TRAY_MESSAGE_ICON_INFORMATION,
+                title=_t("generic.question").capitalize(),
+            )
+            if result == _t("main_gui.advanced"):
+                with HideWindow(window):
+                    full_config = config_gui(full_config, config_file)
+            if result == _t("main_gui.wizard"):
+                with HideWindow(window):
+                    full_config, config_file = start_wizard(full_config, config_file)
             GUI_STATUS_IGNORE_ERRORS = True
             # Make sure we trigger a GUI refresh when configuration is changed
             # Also make sure we retrigger get_config

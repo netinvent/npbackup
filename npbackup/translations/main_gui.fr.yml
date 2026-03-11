@@ -52,7 +52,13 @@ fr:
   auto_upgrade_checking: Vérification de mise à jour
   upgrade_in_progress: Le processus de mise à jour va fermer ce programme. Veuillez attendre que le processus de mise à jour soit terminé. Le programme se relancera tout seul.
 
-  
   # logs
   last_messages: Last messages
   error_messages: Error messages
+
+  # wizard
+  wizard: Assistant
+  advanced: Avancé
+  run_wizard_or_advanced: Lancer l'assistant ou la configuration avancée ?
+  run_wizard: Lancer l'assistant
+  run_wizard_prompt: Aucune configuration trouvée. Voulez-vous lancer l'assistant de configuration?

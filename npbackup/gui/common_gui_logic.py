@@ -1136,7 +1136,6 @@ def add_email_recipient_row(
         ],
     )
     window.refresh()
-    print("recipient", recipient, "notification_types", notification_types)
     if recipient:
         window[
             ("-EMAIL-RECIPIENT-ADDR-", COLUMN_LIST_COUNTERS["EMAIL-RECIPIENTS"])
@@ -1502,8 +1501,7 @@ def create_scheduled_task(
     interval_unit = get_key_from_value(
         combo_boxes["backup_frequency_unit"], values["-BACKUP-FREQUENCY-UNIT-"]
     )
-    date_string = f'{values["-FIRST-BACKUP-DATE-"]} {values["-FIRST-BACKUP-HOUR-"]}:{values["-FIRST-BACKUP-MINUTE-"]}'
-    start_date_time = datetime.strptime(date_string, "%Y/%m/%d %H:%M")
+
     days = []
     for day in [
         "monday",
@@ -1541,6 +1539,13 @@ def create_scheduled_task(
         except ValueError:
             logger.error("Bogus random delay before backup value, not updating config")
             return False, full_config
+
+    date_string = f'{values["-FIRST-BACKUP-DATE-"]} {str(values["-FIRST-BACKUP-HOUR-"]).zfill(2)}:{str(values["-FIRST-BACKUP-MINUTE-"]).zfill(2)}'
+    try:
+        start_date_time = datetime.strptime(date_string, "%Y-%m-%d %H:%M")
+    except ValueError:
+        logger.error("Invalid date format, not creating scheduled task")
+        return False, full_config
 
     result = npbackup.task.create_scheduled_task(
         config_file,

@@ -51,6 +51,14 @@ en:
   failed_operation: Failed operation, Please check the logs
   auto_upgrade_checking: Checking for upgrade
   upgrade_in_progress: Upgrade process will close this program. Please wait for the upgrade to finish. The program will reload itself.
+  
   # logs
   last_messages: Last messages
   error_messages: Error messages
+
+  # wizard
+  wizard: Wizard
+  advanced: Advanced
+  run_wizard_or_advanced: Run wizard or advanced configuration ?
+  run_wizard: Run wizard
+  run_wizard_prompt: No configuration found. Do you want to run the configuration wizard?
