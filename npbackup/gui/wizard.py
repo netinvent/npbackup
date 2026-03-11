@@ -48,6 +48,7 @@ sg.set_options(icon=OEM_ICON)
 
 logger = getLogger()
 
+
 def create_step_header(step_num: int, title_key: str, desc_key: str = None) -> list:
     """Create a consistent step header with icon and title"""
     step_icon = (

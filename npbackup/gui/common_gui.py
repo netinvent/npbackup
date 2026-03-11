@@ -844,7 +844,7 @@ def scheduling_col(is_wizard: bool = False, task_types: list = None):
                             [],
                             # We need to specify {object_type}: {object_name} as default value
                             # since we use the standard get_object_from_combo() fn
-                            default_value="Repo: default", 
+                            default_value="Repo: default",
                             key="-OBJECT-SELECT-TASKS-",
                             enable_events=True,
                         ),

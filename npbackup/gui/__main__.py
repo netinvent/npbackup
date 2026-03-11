@@ -794,13 +794,14 @@ def _main_gui(viewer_mode: bool):
                 config_file, action = select_config_file(config_file=config_file)
                 if action == "--CANCEL--":
                     break
-                    
                 if action == "--NEW-CONFIG--":
                     full_config = config_gui(
                         npbackup.configuration.get_default_config(), config_file
                     )
                 if action == "--WIZARD--":
-                    full_config, config_file = start_wizard(npbackup.configuration.get_default_config(), config_file)
+                    full_config, config_file = start_wizard(
+                        npbackup.configuration.get_default_config(), config_file
+                    )
             if config_file:
                 logger.info(f"Using configuration file {config_file}")
                 try:
@@ -1208,8 +1209,8 @@ def _main_gui(viewer_mode: bool):
                     config_file = Path("npbackup.conf").absolute()
                 full_config, config_file = start_wizard(full_config, config_file)
                 repo_config, _ = npbackup.configuration.get_repo_config(
-                    full_config, repo_name="default")
-
+                    full_config, repo_name="default"
+                )
 
     monitoring_config = npbackup.configuration.get_monitoring_config(
         repo_config, full_config
