@@ -850,12 +850,18 @@ def start_wizard(full_config: dict, config_file: str):
 
         # Loading scheduled tasks for step 4 need to be done after tab nav
         # TODO: prev and next into 1
-        if (event in ("-NEXT-", "-PREVIOUS-") and current_tab == 3) or event == "-BREADCRUMB-3-":
+        if (
+            event in ("-NEXT-", "-PREVIOUS-") and current_tab == 3
+        ) or event == "-BREADCRUMB-3-":
             # run thread after window is finalized and active tab is set so controls get expanded
-            thread = npbackup.gui.common_gui_logic.read_existing_scheduled_tasks_threaded(
-                config_file, full_config
+            thread = (
+                npbackup.gui.common_gui_logic.read_existing_scheduled_tasks_threaded(
+                    config_file, full_config
+                )
             )
-            tasks = WaitWindow(thread, message=_t("config_gui.reading_tasks")).wait_for_thread_result()
+            tasks = WaitWindow(
+                thread, message=_t("config_gui.reading_tasks")
+            ).wait_for_thread_result()
 
             if tasks:
                 npbackup.gui.common_gui_logic.update_task_ui_for_object(
