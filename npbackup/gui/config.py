@@ -21,9 +21,16 @@ from npbackup.gui.constants import combo_boxes, byte_units
 from ofunctions.misc import get_key_from_value
 from npbackup.gui.ttk_theme import SUBTITLE_FONT
 from resources.customization import NON_INHERITED_ICON
-from npbackup.gui.helpers import quick_close_simplegui_window, popup_error, wait_window
+from npbackup.gui.helpers import (
+    quick_close_simplegui_window,
+    popup_error,
+    wait_window,
+    WaitWindow,
+    HideWindow,
+)
 import npbackup.gui.common_gui
 import npbackup.gui.common_gui_logic
+from npbackup.gui.operations import task_scheduler
 
 logger = getLogger()
 
@@ -1090,7 +1097,17 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             [
                 sg.Tab(
                     _t("generic.scheduled_task"),
-                    npbackup.gui.common_gui.scheduling_col(),
+                    # npbackup.gui.common_gui.scheduling_col(),
+                    # WIP
+                    [
+                        [
+                            sg.Button(
+                                "Open Task Scheduler",
+                                key="-CREATE-SCHEDULED-TASK-",
+                                size=(30, 1),
+                            )
+                        ]
+                    ],
                     font=SUBTITLE_FONT,
                     key="--tab-global-scheduled_task--",
                     expand_x=True,
@@ -1385,20 +1402,8 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     window["repo_uri_cloud_hint"].Update(visible=False)
 
         if event == "-CREATE-SCHEDULED-TASK-":
-            result, full_config = npbackup.gui.common_gui_logic.create_scheduled_task(
-                values, full_config, config_file
-            )
-            if not result:
-                sg.popup(
-                    _t("config_gui.scheduled_task_creation_failure"), keep_on_top=True
-                )
-                continue
-            result = configuration.save_config(config_file, full_config)
-            if result:
-                sg.popup(_t("config_gui.configuration_saved"), keep_on_top=True)
-                break
-            popup_error(_t("config_gui.cannot_save_configuration"))
-            continue
+            with HideWindow(window):
+                task_scheduler(config_file, full_config)
 
     # Closing this window takes ages, let's defer it into an ugly thread
     # quick_close_simplegui_window(window)
