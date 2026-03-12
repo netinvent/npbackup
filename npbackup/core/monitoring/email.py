@@ -42,7 +42,6 @@ class EmailMonitor(MonitoringBackend):
     def send_metrics(
         self,
         metrics: Dict[str, Any],
-        labels: Dict[str, str],
         operation: str,
         dry_run: bool = False,
     ) -> bool:
@@ -63,8 +62,6 @@ class EmailMonitor(MonitoringBackend):
                 "Email not enabled in configuration. Not sending notifications."
             )
             return False
-
-        labels = {**labels, **self.base_labels}
 
         # Determine if operation was successful
         exec_state = metrics.get("exec_state", 0)
@@ -159,7 +156,7 @@ class EmailMonitor(MonitoringBackend):
                 instance=instance,
                 operation=operation,
                 metrics=metrics,
-                labels=labels,
+                labels=self.common_labels,
                 op_success=op_success,
                 exec_state=exec_state,
                 backup_too_small=backup_too_small,
@@ -253,41 +250,10 @@ class EmailMonitor(MonitoringBackend):
 
         # Add detailed metrics for backup operations
         if operation == "backup":
-            if "total_bytes_processed" in metrics:
-                bytes_val = metrics["total_bytes_processed"]
-                if bytes_val:
-                    if bytes_val >= 1024**3:  # GB
-                        body += f"\nData processed: {bytes_val / (1024**3):.2f} GB"
-                    elif bytes_val >= 1024**2:  # MB
-                        body += f"\nData processed: {bytes_val / (1024**2):.2f} MB"
-                    else:  # KB
-                        body += f"\nData processed: {bytes_val / 1024:.2f} KB"
-
-            if "files_new" in metrics:
-                body += f"\nNew files: {metrics['files_new']}"
-            if "files_changed" in metrics:
-                body += f"\nChanged files: {metrics['files_changed']}"
-            if "files_unmodified" in metrics:
-                body += f"\nUnmodified files: {metrics['files_unmodified']}"
-
-        # Add detailed result if available (for debugging)
-        # Note: This is optional and may contain raw restic output
-        # We'll look for it in a special key if the caller wants to include it
-        if "result_detail" in metrics:
-            restic_result = metrics["result_detail"]
-            if isinstance(restic_result, dict):
-                try:
-                    restic_result = fmt_json(restic_result)
-                except TypeError:
-                    # TypeError may happen on ls command which contains a json of LSNodes
-                    pass
-
-            # Convert to string and truncate if needed
-            restic_result = str(restic_result)
-            if len(restic_result) > MAX_EMAIL_DETAIL_LENGTH:
-                body += f"\n\nDetail:\n{restic_result[0:MAX_EMAIL_DETAIL_LENGTH]} [... truncated]"
-            else:
-                body += f'\n\nDetail:\n{"Backend success" if restic_result else "Backend failure"}'
+            try:
+                body += f"\n\nDetailed backup metrics:\n{fmt_json(metrics)}"
+            except TypeError:
+                pass
 
         body += f"\n\nLabels:"
         for label, value in labels.items():

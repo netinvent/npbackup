@@ -43,7 +43,6 @@ class WebhookMonitor(MonitoringBackend):
     def send_metrics(
         self,
         metrics: Dict[str, Any],
-        labels: Dict[str, str],
         operation: str,
         dry_run: bool = False,
     ) -> bool:
@@ -62,8 +61,6 @@ class WebhookMonitor(MonitoringBackend):
         if not self.is_enabled():
             logger.debug("Webhook monitoring not enabled in configuration.")
             return False
-
-        labels = {**labels, **self.base_labels}
 
         # Get JSON-specific configuration
         try:
@@ -108,7 +105,10 @@ class WebhookMonitor(MonitoringBackend):
             return True
 
         # Build the output structure
-        output = self._build_json_output(metrics, labels, operation)
+        output = self.build_json_output(metrics, operation)
+        print("OUTPUT")
+        print(output)
+        exit(1)
 
         # Store the result for potential retrieval
         self.last_result = output
@@ -140,48 +140,6 @@ class WebhookMonitor(MonitoringBackend):
             logger.warning(f"Destination not configured for webhooks")
 
         return success
-
-    def _build_json_output(
-        self,
-        metrics: Dict[str, Any],
-        labels: Dict[str, str],
-        operation: str,
-    ) -> Dict[str, Any]:
-        """
-        Build the JSON output structure
-
-        Args:
-            metrics: Dictionary of metrics
-            labels: Dictionary of labels
-            operation: Operation name
-
-        Returns:
-            Dictionary with result and metrics structure
-        """
-        # Determine if operation was successful
-        exec_state = metrics.get("exec_state", 0)
-        operation_success = metrics.get("operation_success", 1)
-
-        # Consider success if exec_state is 0 or 1 (warning) and operation succeeded
-        result = exec_state in (0, 1) and operation_success == 1
-
-        # Build the output structure
-        output = {"result": result, "metrics": {}}
-
-        # Add all metrics to the metrics dict
-        for key, value in metrics.items():
-            if value is not None:
-                output["metrics"][key] = value
-
-        # Add labels/metadata to metrics for context
-        output["metrics"]["labels"] = labels
-        output["metrics"]["operation"] = operation
-
-        # Add human-readable status
-        state_names = {0: "success", 1: "warning", 2: "error", 3: "critical"}
-        output["metrics"]["status"] = state_names.get(exec_state, "unknown")
-
-        return output
 
     def _write_json_file(
         self,

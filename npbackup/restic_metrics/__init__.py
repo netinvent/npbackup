@@ -30,18 +30,6 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 
-def create_labels_string(labels: dict) -> str:
-    """
-    Create a string with labels for prometheus metrics
-    """
-    _labels = []
-    for key, value in sorted(labels.items()):
-        if value:
-            _labels.append(f'{key.strip()}="{value.strip()}"')
-    labels_string = ",".join(sorted(list(set(_labels))))
-    return labels_string
-
-
 def restic_str_output_to_json(
     restic_exit_status: Union[bool, int], output: str
 ) -> dict:
@@ -58,6 +46,7 @@ def restic_str_output_to_json(
         "files_new": None,
         "files_changed": None,
         "files_unmodified": None,
+        "files_total": None,
         "dirs_new": None,
         "dirs_changed": None,
         "dirs_unmodified": None,
@@ -65,7 +54,6 @@ def restic_str_output_to_json(
         "tree_blobs": None,  # Not present in standard output
         "data_added": None,  # Is "4.425" in  Added to the repository: 4.425 MiB (1.431 MiB stored)
         "data_stored": None,  # Not present in json output, is "1.431" in Added to the repository: 4.425 MiB (1.431 MiB stored)
-        "total_files_processed": None,
         "total_bytes_processed": None,
         "total_duration": None,
         # type bool:
@@ -138,7 +126,7 @@ def restic_str_output_to_json(
         )
         if matches:
             try:
-                metrics["total_files_processed"] = matches.group(1)
+                metrics["files_total"] = matches.group(1)
                 size = matches.group(2)
                 unit = matches.group(3)
                 try:

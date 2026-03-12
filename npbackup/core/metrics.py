@@ -13,11 +13,12 @@ import os
 from typing import Optional, Tuple, List
 from datetime import datetime, timezone
 from logging import getLogger
+from ofunctions.misc import BytesConverter
 from npbackup.restic_metrics import (
     restic_str_output_to_json,
     restic_json_to_prometheus,
 )
-from npbackup.core.monitoring import calculate_exec_state, collect_common_metrics
+from npbackup.core.monitoring import calculate_exec_state
 from npbackup.core.monitoring.prometheus import PrometheusMonitor
 from npbackup.core.monitoring.zabbix import ZabbixMonitor
 from npbackup.core.monitoring.healthchecksio import HealthchecksioMonitor
@@ -37,7 +38,7 @@ def metric_analyser(
     dry_run: bool,
     append_metrics_file: bool,
     exec_time: Optional[float] = None,
-    analyze_only: bool = False,
+    only_check_backup_result_and_size: bool = False,
 ) -> Tuple[bool, bool]:
     """
     Tries to get operation success and backup to small booleans from restic output
@@ -45,61 +46,79 @@ def metric_analyser(
     """
     operation_success = True
     backup_too_small = False
-    timestamp = int(datetime.now(timezone.utc).timestamp())
-    date = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     repo_name = repo_config.g("name")
+    # Build labels for monitoring backends
+    common_labels = {
+        "repo_name": repo_name,
+        "action": operation,
+    }
+
     try:
-        # Build labels for monitoring backends
-        labels = {
-            "repo_name": repo_name,
-            "action": operation,
-        }
 
-        # Add instance and group labels (support both old and new config)
-        instance = repo_config.g("global_monitoring.instance") or repo_config.g(
-            "global_prometheus.instance"
-        )
-        if instance:
-            labels["instance"] = instance
-
-        # Add prometheus-specific labels for backward compatibility
-        try:
-            backup_job = repo_config.g("prometheus.backup_job")
-            if backup_job:
-                labels["backup_job"] = backup_job
-        except (KeyError, AttributeError):
-            pass
-
-        try:
-            group = repo_config.g("prometheus.group")
-            if group:
-                labels["group"] = group
-        except (KeyError, AttributeError):
-            pass
-
-        # Analyze backup output from restic
-        restic_metrics = {}
+        metrics = {}
         if operation == "backup":
             minimum_backup_size_error = repo_config.g(
                 "backup_opts.minimum_backup_size_error"
             )
             # If result was a str, we need to transform it into json first
+            # Currently, @metrics uses str instead of json in order to detect cloud file issues
+            # see @metrics for more
+            if result_string is None:
+                restic_json = {}
             if isinstance(result_string, str):
-                restic_result = restic_str_output_to_json(restic_result, result_string)
+                restic_json = restic_str_output_to_json(restic_result, result_string)
 
-            # Parse restic output to get metrics
-            operation_success, prom_metrics, backup_too_small = (
-                restic_json_to_prometheus(
-                    restic_result=restic_result,
-                    restic_json=restic_result,
-                    labels=labels,
-                    minimum_backup_size_error=minimum_backup_size_error,
-                )
+            backup_too_small = False
+            if restic_json:
+                try:
+                    if restic_json["total_bytes_processed"]:
+                        # We need human iec bytes for normalization across other values
+                        processed_bytes_iec = BytesConverter(
+                            str(restic_json["total_bytes_processed"])
+                        ).human_iec_bytes
+                        logger.info(f"Processed {processed_bytes_iec} of data")
+                        if minimum_backup_size_error:
+                            # We need bytes for literal comparison
+                            processed_bytes = BytesConverter(
+                                str(restic_json["total_bytes_processed"])
+                            ).bytes
+                            if processed_bytes < int(
+                                BytesConverter(
+                                    str(minimum_backup_size_error).replace(" ", "")
+                                ).bytes
+                            ):
+                                backup_too_small = True
+                except Exception as exc:
+                    logger.warning(f"Cannot determine processed bytes: {exc}")
+                    logger.debug("Trace:", exc_info=True)
+                    # We don't care if this exception happens, as error state still will raise from
+                    # other parts of this code
+            else:
+                logger.error("Backup operation did not return valid parseable data")
+
+            if only_check_backup_result_and_size:
+                return restic_result, backup_too_small
+
+            metrics["restic_backup_failure"] = (
+                0 if (restic_result and not backup_too_small) else 1
             )
 
-            # Convert restic result to metrics dict if it's a dict
-            if isinstance(restic_result, dict):
-                restic_metrics = restic_result
+            # Add generic restic metrics
+            metrics["restic_files"] = {}
+            metrics["restic_dirs"] = {}
+            for key, value in restic_json.items():
+                # Compat with v3.0.x versions whre we used to have restic_total_duration_seconds
+                if key == "total_duration":
+                    key = "total_duration_seconds"
+                if key.startswith("files_") or key.startswith("dirs_"):
+                    category = key.split("_")[0]
+                    state = key.split("_")[-1]
+                    metrics[f"restic_{category}"][state] = int(value)
+                else:
+                    try:
+                        metrics[f"restic_{key}"] = int(value)
+                    except (ValueError, TypeError):
+                        metrics[f"restic_{key}"] = value
 
         if not operation_success or not restic_result:
             logger.error("Backend finished with errors.")
@@ -109,42 +128,28 @@ def metric_analyser(
         exec_state = calculate_exec_state(
             operation_success, backup_too_small, worst_exec_level
         )
-
-        if not analyze_only:
-            # reset worst_exec_level after getting it so we don't keep exec level between runs in the same session
-            logger.set_worst_logger_level(0)
-
-        # Collect common metrics
-        common_metrics = collect_common_metrics(
-            operation=operation,
-            operation_success=operation_success,
-            backup_too_small=backup_too_small,
-            exec_state=exec_state,
-            exec_time=exec_time,
-            restic_result=restic_metrics,
-        )
+        metrics["npbackup_exec_state"] = exec_state
+        metrics["npbackup_exec_time"] = exec_time
 
         # Add upgrade state if upgrades activated
         upgrade_state = os.environ.get("NPBACKUP_UPGRADE_STATE", None)
         try:
-            upgrade_state = int(upgrade_state)
-            common_metrics["upgrade_state"] = upgrade_state
+            upgrade_state = int(
+                upgrade_state
+            )  # We cannot double use npbackup_exec_state for upgrade and other actions
+            metrics["npbackup_upgrade_state"] = upgrade_state
         except (ValueError, TypeError):
             pass
 
-        if not analyze_only:
-            # Add restic result detail for email backend if available
-            if restic_result:
-                common_metrics["result_detail"] = (
-                    0 if (restic_result is True or restic_result == 0) else 1
-                )
-
+        if not only_check_backup_result_and_size:
+            # reset worst_exec_level after getting it so we don't keep exec level between runs in the same session
+            logger.set_worst_logger_level(0)
             # Send metrics to all enabled monitoring backends (including email)
             _send_to_monitoring_backends(
                 monitoring_config,
                 repo_config,
-                common_metrics,
-                labels,
+                metrics,
+                common_labels,
                 operation,
                 dry_run,
                 append_metrics_file,
@@ -162,7 +167,7 @@ def _send_to_monitoring_backends(
     monitoring_config: dict,
     repo_config: dict,
     metrics: dict,
-    labels: dict,
+    common_labels: dict,
     operation: str,
     dry_run: bool = False,
     append_metrics_file: bool = False,
@@ -196,9 +201,10 @@ def _send_to_monitoring_backends(
     has_enabled_backends = False
     for backend in backends:
         if backend.is_enabled():
+            backend.common_labels = common_labels
             has_enabled_backends = True
             try:
-                result = backend.send_metrics(metrics, labels, operation, dry_run)
+                result = backend.send_metrics(metrics, operation, dry_run)
                 if result:
                     success = True
             except Exception as exc:
@@ -211,79 +217,3 @@ def _send_to_monitoring_backends(
         logger.debug(f"Monitoring failed, has enabled backends: {has_enabled_backends}")
 
     return success
-
-
-def send_prometheus_metrics(
-    repo_config: dict,
-    monitoring_config: dict,
-    metrics: List[str],
-    dry_run: bool = False,
-    append_metrics_file: bool = False,
-    operation: Optional[str] = None,
-) -> bool:
-    """
-    Legacy function for backward compatibility
-    Converts old prometheus metrics format to new backend system
-
-    DEPRECATED: Use _send_to_monitoring_backends instead
-    """
-    logger.warning(
-        "send_prometheus_metrics is deprecated. Please update to use the new monitoring backend system."
-    )
-
-    # Use Prometheus backend directly for legacy support
-    prometheus = PrometheusMonitor(repo_config, monitoring_config, append_metrics_file)
-
-    if not prometheus.is_enabled():
-        logger.debug("Prometheus metrics not enabled in configuration.")
-        return False
-
-    # This is a simplified compatibility shim - metrics are already in Prometheus format
-    # so we can't easily convert them back. Log a warning.
-    logger.warning(
-        "Called legacy send_prometheus_metrics with pre-formatted metrics. "
-        "Consider updating caller to use new monitoring system."
-    )
-
-    return True
-
-
-def send_metrics_mail(
-    repo_config: dict,
-    monitoring_config: dict,
-    operation: str,
-    restic_result: Optional[dict] = None,
-    operation_success: Optional[bool] = None,
-    backup_too_small: Optional[bool] = None,
-    exec_state: Optional[int] = None,
-    date: Optional[int] = None,
-):
-    """
-    Legacy function for backward compatibility
-
-    DEPRECATED: Email is now handled by the EmailMonitor backend.
-    This function is kept for backward compatibility but delegates to the new system.
-    """
-    logger.warning(
-        "send_metrics_mail is deprecated. Email notifications are now handled "
-        "by the EmailMonitor backend automatically."
-    )
-
-    # Build metrics dict for the email backend
-    metrics = {
-        "exec_state": exec_state,
-        "operation_success": 1 if operation_success else 0,
-        "backup_too_small": 1 if backup_too_small else 0,
-    }
-
-    if restic_result:
-        metrics["restic_result_detail"] = restic_result
-
-    labels = {
-        "repo_name": repo_config.g("name"),
-        "action": operation,
-    }
-
-    # Use the email backend directly
-    email_backend = EmailMonitor(repo_config, monitoring_config)
-    return email_backend.send_metrics(metrics, labels, operation, dry_run=False)

@@ -38,7 +38,6 @@ class HealthchecksioMonitor(MonitoringBackend):
     def send_metrics(
         self,
         metrics: Dict[str, Any],
-        labels: Dict[str, str],
         operation: str,
         dry_run: bool = False,
     ) -> bool:
@@ -79,8 +78,6 @@ class HealthchecksioMonitor(MonitoringBackend):
             "global_healthchecksio.no_cert_verify", False
         )
 
-        labels = {**labels, **self.base_labels}
-
         # Determine if operation was successful
         exec_state = metrics.get("exec_state", 0)
         operation_success = metrics.get("operation_success", 1)
@@ -90,14 +87,12 @@ class HealthchecksioMonitor(MonitoringBackend):
         is_success = exec_state in (0, 1) and operation_success == 1
 
         # Build log data to send with ping
-        log_data = self._build_log_data(metrics, labels, operation)
+        log_data = self._build_log_data(metrics, operation)
 
         # Send the ping
         return self._send_ping(is_success, log_data)
 
-    def _build_log_data(
-        self, metrics: Dict[str, Any], labels: Dict[str, str], operation: str
-    ) -> str:
+    def _build_log_data(self, metrics: Dict[str, Any], operation: str) -> str:
         """
         Build log data to send with the ping
 
@@ -109,6 +104,7 @@ class HealthchecksioMonitor(MonitoringBackend):
         Returns:
             Formatted log data string
         """
+        labels = self.common_labels
         lines = []
         lines.append(f"Operation: {operation}")
         lines.append(f"Repository: {labels.get('repo_name', 'unknown')}")

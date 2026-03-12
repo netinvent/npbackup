@@ -14,7 +14,6 @@ from datetime import datetime, timezone
 from logging import getLogger
 from npbackup.core.monitoring import MonitoringBackend
 from npbackup.restic_metrics import (
-    create_labels_string,
     upload_metrics,
     write_metrics_file,
 )
@@ -47,7 +46,6 @@ class PrometheusMonitor(MonitoringBackend):
     def send_metrics(
         self,
         metrics: Dict[str, Any],
-        labels: Dict[str, str],
         operation: str,
         dry_run: bool = False,
     ) -> bool:
@@ -67,8 +65,6 @@ class PrometheusMonitor(MonitoringBackend):
             logger.debug("Prometheus metrics not enabled in configuration.")
             return False
 
-        labels = {**labels, **self.base_labels}
-
         # Get Prometheus-specific configuration
         try:
             # Try new config structure first, fall back to old
@@ -81,7 +77,7 @@ class PrometheusMonitor(MonitoringBackend):
             return False
 
         # Convert metrics dict to Prometheus format
-        prom_metrics = self._convert_to_prometheus_format(metrics, labels)
+        prom_metrics = self._convert_to_prometheus_format(metrics)
 
         if not destination:
             logger.debug("No Prometheus destination set. Not sending metrics")
@@ -101,70 +97,45 @@ class PrometheusMonitor(MonitoringBackend):
         else:
             return self._write_to_file(destination, prom_metrics)
 
-    def _convert_to_prometheus_format(
-        self, metrics: Dict[str, Any], labels: Dict[str, str]
-    ) -> List[str]:
+    def _convert_to_prometheus_format(self, metrics: Dict[str, Any]) -> List[str]:
         """
         Convert metrics dictionary to Prometheus text format
-
-        Args:
-            metrics: Dictionary of metrics
-            labels: Dictionary of labels
-
-        Returns:
-            List of Prometheus-formatted metric strings
         """
-
-        labels_string = create_labels_string(labels)
-        timestamp = int(datetime.now(timezone.utc).timestamp())
         prom_metrics = []
+        # Add timestamp to npbackup labels only
+        npbackup_labels = {"timestamp": self.metrics_timestamp, **self._common_labels}
 
         # Convert common metrics to Prometheus format
         for metric_name, value in metrics.items():
             if value is None:
                 continue
 
-            # Special handling for certain metrics
-            if metric_name == "operation":
-                continue  # Operation is already in labels
-            elif metric_name == "exec_state":
-                prom_metrics.append(
-                    f'npbackup_exec_state{{{labels_string},timestamp="{timestamp}"}} {value}'
-                )
-            elif metric_name == "exec_time":
-                prom_metrics.append(
-                    f'npbackup_exec_time{{{labels_string},timestamp="{timestamp}"}} {value}'
-                )
-            elif metric_name in ["operation_success", "backup_too_small"]:
-                # These are already captured in exec_state
-                continue
-            else:
-                # Restic-specific metrics
-                if "files" in metric_name or "dirs" in metric_name:
-                    # Extract state from metric name
-                    for state in ["new", "changed", "unmodified"]:
-                        if metric_name.endswith(state):
-                            metric_type = metric_name.replace(f"_{state}", "")
-                            prom_metrics.append(
-                                f'restic_{metric_type}{{{labels_string},state="{state}"}} {value}'
-                            )
-                            break
-                    else:
-                        prom_metrics.append(
-                            f"restic_{metric_name}{{{labels_string}}} {value}"
-                        )
-                elif metric_name == "total_files_processed":
+            if metric_name.startswith("npbackup_"):
+                # Patch upgrade state into npbackup_exec_state{action="upgrade")}
+                if metric_name == "npbackup_upgrade_state":
                     prom_metrics.append(
-                        f'restic_files{{{labels_string},state="total"}} {value}'
-                    )
-                elif metric_name == "total_bytes_processed":
-                    prom_metrics.append(
-                        f'restic_snapshot_size_bytes{{{labels_string},type="processed"}} {value}'
+                        f'npbackup_exec_state{{{self.create_labels_string({**npbackup_labels, "action": "upgrade"})}}} {value}'
                     )
                 else:
                     prom_metrics.append(
-                        f"restic_{metric_name}{{{labels_string}}} {value}"
+                        f"{metric_name}{{{self.create_labels_string(npbackup_labels)}}} {value}"
                     )
+            elif metric_name.startswith("restic_"):
+                if isinstance(value, dict):
+                    for sub_metric, sub_value in value.items():
+                        if sub_value is None:
+                            continue
+                        prom_metrics.append(
+                            f'{metric_name}{{{self.create_labels_string({**self.common_labels, "state": sub_metric})}}} {sub_value}'
+                        )
+                else:
+                    prom_metrics.append(
+                        f"{metric_name}{{{self.create_labels_string(self.common_labels)}}} {value}"
+                    )
+            else:
+                logger.error(
+                    f"Unknown metric {metric_name} with value {value}, skipping."
+                )
 
         logger.debug("Prometheus metrics computed:\n{}".format("\n".join(prom_metrics)))
         return prom_metrics
@@ -225,4 +196,16 @@ class PrometheusMonitor(MonitoringBackend):
             True if successful, False otherwise
         """
         result = write_metrics_file(destination, metrics, append=self.append_mode)
-        return True
+        return result
+
+    @staticmethod
+    def create_labels_string(labels: dict) -> str:
+        """
+        Create a string with labels for prometheus metrics
+        """
+        _labels = []
+        for key, value in sorted(labels.items()):
+            if value:
+                _labels.append(f'{str(key).strip()}="{str(value).strip()}"')
+        labels_string = ",".join(sorted(list(set(_labels))))
+        return labels_string

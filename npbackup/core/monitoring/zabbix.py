@@ -70,7 +70,6 @@ class ZabbixMonitor(MonitoringBackend):
     def send_metrics(
         self,
         metrics: Dict[str, Any],
-        labels: Dict[str, str],
         operation: str,
         dry_run: bool = False,
     ) -> bool:
@@ -95,8 +94,6 @@ class ZabbixMonitor(MonitoringBackend):
                 "Cannot send Zabbix metrics: zabbix-utils library not available."
             )
             return False
-
-        labels = {**labels, **self.base_labels}
 
         # Get Zabbix configuration
         try:
@@ -128,12 +125,17 @@ class ZabbixMonitor(MonitoringBackend):
         except (KeyError, AttributeError) as exc:
             logger.debug(f"No Zabbix PSK configuration found: {exc}")
 
+        # WIP:// happy to json here
         # Convert metrics to ItemValue list
+        items = []
+        """
         items = self._build_item_values(
             metrics,
             labels,
             operation,
         )
+        """
+        items = self.build_json_output(metrics, operation)
 
         # Send metrics to Zabbix
         if HAS_PSK and zabbix_psk and zabbix_psk_identity:
@@ -156,6 +158,7 @@ class ZabbixMonitor(MonitoringBackend):
                 zabbix_server, zabbix_port, items, psk_wrapper=None
             )
 
+    ''' WIP remove
     def _build_item_values(
         self,
         metrics: Dict[str, Any],
@@ -185,16 +188,20 @@ class ZabbixMonitor(MonitoringBackend):
 
             # Create Zabbix item key with proper formatting
             # Using npbackup namespace with parameters for easy templating
+
+            # WIP:// how do we pass various labels like os=windows into zabbix ?
+            label_string = ",".join(f"{key}={value}" for key, value in labels.items())
+
             if metric_name in (
                 "exec_state",
                 "exec_time",
                 "operation_success",
                 "backup_too_small",
             ):
-                item_key = f"npbackup.{metric_name}[{backup_job},{operation}]"
+                item_key = f"npbackup.{metric_name}[{label_string}]"
             else:
                 # Restic-specific metrics
-                item_key = f"restic.{metric_name}[{backup_job},{operation}]"
+                item_key = f"restic.{metric_name}[{label_string}]"
 
             try:
                 items.append(ItemValue(self.base_labels["instance"], item_key, value))
@@ -211,6 +218,7 @@ class ZabbixMonitor(MonitoringBackend):
             + "\n".join([f"{item.key} = {item.value}" for item in items])
         )
         return items
+    '''
 
     def _send_to_zabbix(
         self, zabbix_server: str, zabbix_port: int, items: List, psk_wrapper=None
