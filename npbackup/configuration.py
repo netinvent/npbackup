@@ -1035,14 +1035,7 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
         logger.info(
             f"Migrated {object_name} prometheus monitoring to monitoring section"
         )
-        """ WIP REMOVE
-        if not full_config.g(f"{object_type}.{object_name}.monitoring.instance"):
-            full_config.s(f"{object_type}.{object_name}.monitoring.instance", None)
-        if not full_config.g(f"{object_type}.{object_name}.monitoring.backup_job"):
-            full_config.s(f"{object_type}.{object_name}.monitoring.backup_job", None)
-        if not full_config.g(f"{object_type}.{object_name}.monitoring.group"):
-            full_config.s(f"{object_type}.{object_name}.monitoring.group", None)
-        """
+
         additional_labels = full_config.g("global_prometheus.additional_labels")
         if additional_labels is not None and additional_labels:
             full_config.s(
