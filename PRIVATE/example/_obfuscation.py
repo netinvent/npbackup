@@ -10,7 +10,7 @@ __intname__ = "npbackup.obfuscation"
 
 # You can replace the obfuscation function with your own implementation,
 # as long as it is symmetric (i.e. applying it twice returns the original value).
-# You may also kust change the default keywoard
+# You may also kust change the default keyword
 
 KEYWORD = b"/*YOUR FAVORITE STRING*/"
 
