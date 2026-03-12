@@ -595,18 +595,39 @@ def update_global_gui(
 
 
 def update_monitoring_visibility(window: sg.Window, values):
-    window["-GLOBAL-PROMETHEUS-SETTINGS-"].update(
-        visible=values["global_prometheus.enabled"]
-    )
-    window["-GLOBAL-HEALTHCHECKSIO-SETTINGS-"].update(
-        visible=values["global_healthchecksio.enabled"]
-    )
-    window["-GLOBAL-WEBHOOKS-SETTINGS-"].update(
-        visible=values["global_webhooks.enabled"]
-    )
-    window["-GLOBAL-ZABBIX-SETTINGS-"].update(visible=values["global_zabbix.enabled"])
-    window["-GLOBAL-EMAIL-SETTINGS-"].update(visible=values["global_email.enabled"])
-
+    try:
+        if "-GLOBAL-PROMETHEUS-SETTINGS-" in window.AllKeysDict:
+            window["-GLOBAL-PROMETHEUS-SETTINGS-"].update(
+                visible=values["global_prometheus.enabled"]
+            )
+    except KeyError as exc:
+        logger.debug(f"No prometheus config: {exc}")
+    try:
+        if "-GLOBAL-HEALTHCHECKSIO-SETTINGS-" in window.AllKeysDict:
+            window["-GLOBAL-HEALTHCHECKSIO-SETTINGS-"].update(
+                visible=values["global_healthchecksio.enabled"]
+            )
+    except KeyError as exc:
+        logger.debug(f"No healthchecksio config: {exc}")
+    try:
+        if "-GLOBAL-WEBHOOKS-SETTINGS-" in window.AllKeysDict:
+            window["-GLOBAL-WEBHOOKS-SETTINGS-"].update(
+                visible=values["global_webhooks.enabled"]
+        )
+    except KeyError as exc:
+        logger.debug(f"No webhooks config: {exc}")
+    try:
+        if "-GLOBAL-ZABBIX-SETTINGS-" in window.AllKeysDict:
+            window["-GLOBAL-ZABBIX-SETTINGS-"].update(
+                visible=values["global_zabbix.enabled"]
+            )
+    except KeyError as exc:
+        logger.debug(f"No zabbix config: {exc}")
+    try:
+        if "-GLOBAL-EMAIL-SETTINGS-" in window.AllKeysDict:
+            window["-GLOBAL-EMAIL-SETTINGS-"].update(visible=values["global_email.enabled"])
+    except KeyError as exc:
+        logger.debug(f"No email config: {exc}")
 
 def update_gui_values(
     window: sg.Window,
