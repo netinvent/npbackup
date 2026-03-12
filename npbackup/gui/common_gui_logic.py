@@ -17,8 +17,9 @@ from logging import getLogger
 import FreeSimpleGUI as sg
 from ruamel.yaml.comments import CommentedMap
 from datetime import datetime, timezone
+from ofunctions.threading import threaded
 import npbackup.gui.common_gui
-from npbackup.gui.helpers import popup_error, password_complexity
+from npbackup.gui.helpers import popup_error, password_complexity, WaitWindow
 from npbackup.core.i18n_helper import _t
 import npbackup.configuration
 from npbackup.gui.ttk_theme import (
@@ -314,9 +315,9 @@ def get_objects(full_config) -> List[str]:
     """
     object_list = []
     for repo in npbackup.configuration.get_repo_list(full_config):
-        object_list.append(f"Repo: {repo}")
+        object_list.append(create_object_name_for_combo("repos", repo))
     for group in npbackup.configuration.get_group_list(full_config):
-        object_list.append(f"Group: {group}")
+        object_list.append(create_object_name_for_combo("groups", group))
     return object_list
 
 
@@ -361,6 +362,18 @@ def get_object_from_combo(combo_value: str) -> Tuple[str, str]:
         logger.error(f"Could not obtain object_type and object_name from {combo_value}")
     return object_type, object_name
 
+
+def create_object_name_for_combo(object_type: str, object_name: str) -> str:
+    """
+    Creates a string to be displayed in object selector combobox from object type and name
+    """
+    if object_type == "repos":
+        return f"Repo: {object_name}"
+    elif object_type == "groups":
+        return f"Group: {object_name}"
+    else:
+        logger.error(f"Bogus object type given: {object_type}")
+        return None
 
 def update_object_selector(
     window: sg.Window,
@@ -1518,9 +1531,9 @@ def create_scheduled_task(
     """
     task_type = values["-TASK-TYPE-"]
     object_type, object_name = get_object_from_combo(values["-OBJECT-SELECT-TASKS-"])
-    interval = values["-BACKUP-FREQUENCY-"]
+    interval = values["-BACKUP-INTERVAL-"]
     interval_unit = get_key_from_value(
-        combo_boxes["backup_frequency_unit"], values["-BACKUP-FREQUENCY-UNIT-"]
+        combo_boxes["backup_interval_unit"], values["-BACKUP-INTERVAL-UNIT-"]
     )
 
     days = []
@@ -1578,6 +1591,70 @@ def create_scheduled_task(
         interval=interval,
         interval_unit=interval_unit,
         days=days,
+        force=minimum_backup_age == 0,
     )
 
     return result, full_config
+
+
+@threaded
+def read_existing_scheduled_tasks_threaded(config_file, full_config):
+    """
+    Wrapper to read scheduled tasks in a thread
+    """
+    return npbackup.task.read_existing_scheduled_tasks(config_file, full_config)
+
+
+def update_task_list(config_file: str, full_config: dict, window: sg.Window) -> dict:
+    """
+    Reads current scheduled tasks in a thread and updates scheduled task list
+    """
+    thread = read_existing_scheduled_tasks_threaded(config_file, full_config)
+    tasks = WaitWindow(thread).wait_for_thread_result()
+    # We need to define a special list for sg.Table to use
+    task_list = []
+    for task in tasks:
+        task_line = [
+            task["task_type"],
+            task["object_type"],
+            task["object_name"],
+            task["interval"],
+            task["interval_unit"],
+            task["start_date"],
+            task["days_of_week"],
+        ]
+        task_list.append(task_line)
+    window["-EXISTING-TASKS-"].update(values=task_list)
+    return tasks
+
+def update_task_ui_for_object(full_config: dict, window: sg.Window, task: list):
+    window["-TASK-TYPE-"].update(value=task["task_type"])
+    window["-BACKUP-INTERVAL-"].update(value=task["interval"])
+    window["-BACKUP-INTERVAL-UNIT-"].update(
+        value=combo_boxes["backup_interval_unit"][task["interval_unit"]]
+    )
+    
+    object_type = task["object_type"]
+    object_name = task["object_name"]
+    window["-OBJECT-SELECT-TASKS-"].update(value=create_object_name_for_combo(object_type, object_name))
+
+    window["-FIRST-BACKUP-DATE-"].update(value=task["start_date"].strftime("%Y-%m-%d"))
+    window["-FIRST-BACKUP-HOUR-"].update(value=task["start_date"].strftime("%H"))
+    window["-FIRST-BACKUP-MINUTE-"].update(value=task["start_date"].strftime("%M"))
+
+    try:
+        minimum_backup_age = full_config.g(f"{object_type}.{object_name}.repo_opts.minimum_backup_age")
+    except KeyError:
+        minimum_backup_age = 0
+    try:
+        random_delay_before_backup = full_config.g(f"{object_type}.{object_name}.repo_opts.random_delay_before_backup")
+    except KeyError:
+        random_delay_before_backup = 0
+    window["repo_opts.minimum_backup_age"].update(value=minimum_backup_age)
+    window["repo_opts.random_delay_before_backup"].update(value=random_delay_before_backup)
+
+    for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]:
+        if day in task["days_of_week"]:
+            window[f"-DAY-{day.lower()}-"].update(value=True)
+        else:
+            window[f"-DAY-{day.lower()}-"].update(value=False)

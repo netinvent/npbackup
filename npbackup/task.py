@@ -78,6 +78,7 @@ def create_scheduled_task(
     interval: int = None,
     interval_unit: str = None,
     days: List[str] = None,
+    force: bool = True,
 ):
     """
     Creates a scheduled task for NPBackup
@@ -103,7 +104,7 @@ def create_scheduled_task(
     if interval is None:
         logger.error("No interval")
         return False
-    if interval_unit not in combo_boxes["backup_frequency_unit"].keys():
+    if interval_unit not in combo_boxes["backup_interval_unit"].keys():
         logger.error(f"Bogus interval unit {interval_unit} given")
         return False
 
@@ -141,6 +142,7 @@ def create_scheduled_task(
             interval=interval,
             interval_unit=interval_unit,
             days=days,
+            force=force,
         )
     else:
         return create_scheduled_task_unix(
@@ -153,6 +155,7 @@ def create_scheduled_task(
             interval=interval,
             interval_unit=interval_unit,
             days=days,
+            force=force,
         )
 
 
@@ -258,7 +261,8 @@ def _read_existing_scheduled_task_unix(
                         "object_type": None,
                         "object_name": None,
                         "task_type": task_type,
-                        "frequency_minutes": None,
+                        "interval": None,
+                        "interval_unit": None,
                         "start_date": None,  # cron has no start date concept
                         "days_of_week": [],
                     }
@@ -282,17 +286,23 @@ def _read_existing_scheduled_task_unix(
                     month_str = str(job.month)
 
                     if minute_str.startswith("*/"):
-                        task_info["frequency_minutes"] = int(minute_str[2:])
+                        task_info["interval"] = int(minute_str[2:])
+                        task_info["interval_unit"] = "minutes"
                     elif hour_str.startswith("*/"):
-                        task_info["frequency_minutes"] = int(hour_str[2:]) * 60
+                        task_info["interval"] = int(hour_str[2:])
+                        task_info["interval_unit"] = "hours"
                     elif dom_str.startswith("*/"):
-                        task_info["frequency_minutes"] = int(dom_str[2:]) * 1440
+                        task_info["interval"] = int(dom_str[2:])
+                        task_info["interval_unit"] = "days"
                     elif month_str.startswith("*/"):
-                        task_info["frequency_minutes"] = int(month_str[2:]) * 43200
+                        task_info["interval"] = int(month_str[2:])
+                        task_info["interval_unit"] = "months"
                     elif str(job.dow) != "*":
-                        task_info["frequency_minutes"] = 10080  # weekly
+                        task_info["interval"] = 7  # weekly
+                        task_info["interval_unit"] = "weeks"
                     else:
-                        task_info["frequency_minutes"] = 1440  # daily
+                        task_info["interval"] = 1
+                        task_info["interval_unit"] = "days"
 
                     # Extract days of week
                     dow_str = str(job.dow)
@@ -320,6 +330,7 @@ def create_scheduled_task_unix(
     interval: int = None,
     interval_unit: str = None,
     days: List[str] = None,
+    force: bool = True,
 ):
     logger.debug(f"Creating task {task_type} for {object_type} {object_name}")
     executable_dir = os.path.dirname(cli_executable_path)
@@ -329,7 +340,14 @@ def create_scheduled_task_unix(
         cli_executable_path = f'"{cli_executable_path}"'
 
     object_args = get_object_args(object_type, object_name)
-    task_args = f'-c "{config_file}" --{task_type} --run-as-cli{object_args}'
+    if task_type == "backup":
+        if force:
+            task_arg = "--backup --force"
+        else:
+            task_arg = "--backup"
+    else:
+        task_arg = f"--{task_type}"
+    task_args = f'-c "{config_file}" {task_arg} --run-as-cli{object_args}'
     command = f'cd "{executable_dir}" && {cli_executable_path} {task_args}'
     comment = _get_cron_comment(config_file, task_type, object_type, object_name)
 
@@ -562,9 +580,8 @@ def _read_existing_scheduled_task_windows(
                     "t:Repetition/t:Interval", default=None, namespaces=ns
                 )
                 if interval:
-                    task_info["frequency_minutes"] = _parse_iso_duration_to_minutes(
-                        interval
-                    )
+                    task_info["interval"] = _parse_iso_duration_to_minutes(interval)
+                    task_info["interval_unit"] = "minutes"
 
             # CalendarTrigger (daily / weekly, optionally with repetition)
             for trigger in root.findall(".//t:Triggers/t:CalendarTrigger", ns):
@@ -579,9 +596,10 @@ def _read_existing_scheduled_task_windows(
                     "t:Repetition/t:Interval", default=None, namespaces=ns
                 )
                 if interval:
-                    task_info["frequency_minutes"] = _parse_iso_duration_to_minutes(
-                        interval
+                    task_info["interval"] = int(
+                        _parse_iso_duration_to_minutes(interval)
                     )
+                    task_info["interval_unit"] = "minutes"
                 # Daily schedule
                 days_interval = trigger.findtext(
                     "t:ScheduleByDay/t:DaysInterval",
@@ -589,7 +607,8 @@ def _read_existing_scheduled_task_windows(
                     namespaces=ns,
                 )
                 if days_interval and not interval:
-                    task_info["frequency_minutes"] = int(days_interval) * 1440
+                    task_info["interval"] = int(days_interval)
+                    task_info["interval_unit"] = "days"
                 # Weekly schedule with specific days
                 days_of_week_el = trigger.find("t:ScheduleByWeek/t:DaysOfWeek", ns)
                 if days_of_week_el is not None:
@@ -603,7 +622,8 @@ def _read_existing_scheduled_task_windows(
                             namespaces=ns,
                         )
                         if weeks_interval:
-                            task_info["frequency_minutes"] = int(weeks_interval) * 10080
+                            task_info["interval"] = int(weeks_interval) * 7
+                            task_info["interval_unit"] = "weeks"
 
             tasks.append(task_info)
     return tasks
@@ -620,6 +640,7 @@ def create_scheduled_task_windows(
     interval: int = None,
     interval_unit: str = None,
     days: List[str] = None,
+    force: bool = True,
 ):
     logger.debug(f"Creating task {task_type} for {object_type} {object_name}")
     executable_dir = os.path.dirname(cli_executable_path)
@@ -642,8 +663,14 @@ def create_scheduled_task_windows(
     else:
         start_date = datetime.datetime.now().replace(microsecond=0).isoformat()
 
-    # WIP do we still need --force ?
-    task_args = f'{task_args}-c "{config_file}" --{task_type} --run-as-cli{object_args}'
+    if task_type == "backup":
+        if force:
+            task_arg = "--backup --force"
+        else:
+            task_arg = "--backup"
+    else:
+        task_arg = f"--{task_type}"
+    task_args = f'{task_args}-c "{config_file}" {task_arg} --run-as-cli{object_args}'
 
     # For minutes/hours intervals, use Repetition inside a trigger
     # For days/weeks/months, use the appropriate CalendarTrigger schedule

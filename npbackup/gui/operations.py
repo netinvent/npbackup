@@ -14,10 +14,8 @@ import os
 from typing import List
 import logging
 from collections import namedtuple
-from datetime import datetime
 from ofunctions.misc import BytesConverter
 import FreeSimpleGUI as sg
-from ofunctions.threading import threaded
 from npbackup.configuration import (
     get_repo_config,
     get_repo_list,
@@ -27,13 +25,11 @@ from npbackup.configuration import (
     save_config,
     get_monitoring_config,
 )
-from npbackup.gui.constants import combo_boxes
 from npbackup.core.i18n_helper import _t
 from npbackup.gui.helpers import (
     get_anon_repo_uri,
     gui_thread_runner,
     popup_error,
-    WaitWindow,
     HideWindow,
 )
 from resources.customization import (
@@ -85,25 +81,6 @@ def task_scheduler(config_file: str, full_config: dict) -> None:
     [{'task_type': 'backup', 'object_type': 'repos', object_name: 'default', 'frequency_minutes': 15, 'start_date': datetime.datetime(2026, 3, 9, 17, 30, 23), 'days_of_week': []}]
     """
 
-    @threaded
-    def read_existing_scheduled_tasks_threaded(config_file, full_config):
-        return npbackup.task.read_existing_scheduled_tasks(config_file, full_config)
-
-    def _update_task_list(window):
-        thread = read_existing_scheduled_tasks_threaded(config_file, full_config)
-        tasks = WaitWindow(thread).wait_for_thread_result()
-        task_list = []
-        for task in tasks:
-            task_line = [
-                task["task_type"],
-                task["object_type"],
-                task["object_name"],
-                task["frequency_minutes"],
-            ]
-            task_list.append(task_line)
-        window["-EXISTING-TASKS-"].update(values=task_list)
-        return task_list
-
     layout = [
         [
             sg.Text(_t("operations_gui.currently_configured_tasks")),
@@ -119,15 +96,15 @@ def task_scheduler(config_file: str, full_config: dict) -> None:
                 values=[[]],
                 headings=[
                     "Task type",
-                    "object_type",
-                    "object_name",
-                    "Freq (min)",
-                    "Hour",
-                    "Day",
-                    "Month",
-                    "Weekday",
+                    "Object Type",
+                    "Object Name",
+                    "Freq",
+                    "Unit",
+                    "Start date",
+                    "Weekdays",
                 ],
                 key="-EXISTING-TASKS-",
+                enable_events=True,
                 auto_size_columns=True,
                 justification="left",
                 expand_x=True,
@@ -148,11 +125,13 @@ def task_scheduler(config_file: str, full_config: dict) -> None:
     window = sg.Window(
         layout=layout, title=_t("operations_gui.task_scheduler"), finalize=True
     )
-    task_list = _update_task_list(window)
+    tasks = npbackup.gui.common_gui_logic.update_task_list(config_file, full_config, window)
     objects = npbackup.gui.common_gui_logic.get_objects(full_config)
     window["-OBJECT-SELECT-TASKS-"].update(objects[0], values=objects)
     while True:
         event, values = window.read()
+        if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--EXIT--"):
+            break
         if event == "--ADD-TASK--":
             result, full_config = npbackup.gui.common_gui_logic.create_scheduled_task(
                 values, full_config, config_file
@@ -172,7 +151,7 @@ def task_scheduler(config_file: str, full_config: dict) -> None:
                 continue
 
             sg.popup(_t("config_gui.scheduled_task_creation_success"), keep_on_top=True)
-            task_list = _update_task_list(window)
+            tasks = npbackup.gui.common_gui_logic.update_task_list(config_file, full_config, window)
         if event == "--REMOVE-TASK--":
             if not values["-EXISTING-TASKS-"]:
                 popup_error(_t("config_gui.no_task_selected"))
@@ -181,15 +160,19 @@ def task_scheduler(config_file: str, full_config: dict) -> None:
                 popup_error(_t("config_gui.select_only_one_task"))
                 continue
             index = values["-EXISTING-TASKS-"][0]
-            task_type = task_list[index][0]
-            object_type = task_list[index][1]
-            object_name = task_list[index][2]
+            task_type = tasks[index][0]
+            object_type = tasks[index][1]
+            object_name = tasks[index][2]
             result = npbackup.task.delete_scheduled_task(
                 config_file, task_type, object_type, object_name
             )
-            task_list = _update_task_list(window)
-        if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--EXIT--"):
-            break
+            tasks = npbackup.gui.common_gui_logic.update_task_list(config_file, full_config, window)
+        if event == "-EXISTING-TASKS-":
+            if values["-EXISTING-TASKS-"]:
+                npbackup.gui.common_gui_logic.update_task_ui_for_object(full_config, window, tasks[values["-EXISTING-TASKS-"][0]])
+            elif tasks:
+                npbackup.gui.common_gui_logic.update_task_ui_for_object(full_config, window, tasks[0])
+    window.close()
 
 
 def show_stats(statistics: List[dict]) -> None:

@@ -46,7 +46,7 @@ combo_boxes = {
         "gcs": _t("config_gui.backend_gcs"),
         "rest": _t("config_gui.backend_rest"),
     },
-    "backup_frequency_unit": {
+    "backup_interval_unit": {
         "minutes": _t("generic.minutes"),
         "hours": _t("generic.hours"),
         "days": _t("generic.days"),

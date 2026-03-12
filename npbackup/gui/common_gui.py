@@ -916,14 +916,14 @@ def scheduling_col(is_wizard: bool = False, task_types: list = None):
             ),
             sg.Input(
                 "1",
-                key="-BACKUP-FREQUENCY-",
+                key="-BACKUP-INTERVAL-",
                 size=(5, 1),
                 background_color=sg.theme_background_color(),
             ),
             sg.Combo(
-                values=list(combo_boxes["backup_frequency_unit"].values()),
-                default_value=combo_boxes["backup_frequency_unit"]["days"],
-                key="-BACKUP-FREQUENCY-UNIT-",
+                values=list(combo_boxes["backup_interval_unit"].values()),
+                default_value=combo_boxes["backup_interval_unit"]["days"],
+                key="-BACKUP-INTERVAL-UNIT-",
                 size=(15, 1),
             ),
         ],
