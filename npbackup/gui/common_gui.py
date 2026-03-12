@@ -160,7 +160,7 @@ def generic_row(
                             tooltip=_t("config_gui.group_inherited"),
                             pad=1,
                         ),
-                        sg.In(size=size, k=(f"-{name}-", index)),
+                        sg.In(size=size, k=(f"-{name}-", index), expand_x=True),
                         sg.B(
                             "❌",
                             border_width=0,
@@ -174,7 +174,9 @@ def generic_row(
                     ],
                 ],
                 k=(f"-GENERIC-{name}-COLUMN-", index),
-            )
+                expand_x=True,
+            ),
+            expand_x=True,
         )
     ]
     return row
