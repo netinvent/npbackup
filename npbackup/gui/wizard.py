@@ -673,25 +673,11 @@ def start_wizard(full_config: dict, config_file: str):
         is_wizard=True,
     )
 
-    thread = npbackup.gui.common_gui_logic.read_existing_scheduled_tasks_threaded(
-        config_file, full_config
-    )
-    tasks = WaitWindow(thread).wait_for_thread_result()
-
-    if tasks:
-        npbackup.gui.common_gui_logic.update_task_ui_for_object(
-            window=wizard,
-            full_config=full_config,
-            task=tasks[0],
-            is_wizard=True,
-        )
-
     event, values = wizard.read(timeout=0.1)
+    set_active_tab(1)
     npbackup.gui.common_gui_logic.update_monitoring_visibility(
         window=wizard, values=values
     )
-
-    set_active_tab(1)
 
     try:
         retention_policies = list(full_config.g("presets.retention_policies"))
@@ -861,6 +847,23 @@ def start_wizard(full_config: dict, config_file: str):
         if "-BREADCRUMB-" in event:
             current_tab = int(event.split("-")[-2])
             set_active_tab(current_tab)
+
+        # Loading scheduled tasks for step 4 need to be done after tab nav
+        # TODO: prev and next into 1
+        if (event in ("-NEXT-", "-PREVIOUS-") and current_tab == 3) or event == "-BREADCRUMB-3-":
+            # run thread after window is finalized and active tab is set so controls get expanded
+            thread = npbackup.gui.common_gui_logic.read_existing_scheduled_tasks_threaded(
+                config_file, full_config
+            )
+            tasks = WaitWindow(thread, message=_t("config_gui.reading_tasks")).wait_for_thread_result()
+
+            if tasks:
+                npbackup.gui.common_gui_logic.update_task_ui_for_object(
+                    window=wizard,
+                    full_config=full_config,
+                    task=tasks[0],
+                    is_wizard=True,
+                )
 
         ## END NAVIGATION ##
     return full_config, config_file
