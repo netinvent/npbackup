@@ -11,6 +11,7 @@ __build__ = "2025112601"
 
 from abc import ABC, abstractmethod
 from typing import Optional, Dict, List, Any
+from datetime import datetime, timezone
 from logging import getLogger
 from npbackup.__version__ import __intname__ as NAME, version_dict
 
@@ -30,10 +31,11 @@ class MonitoringBackend(ABC):
             monitoring_config: Monitoring configuration dictionary
             repo_config: Repository configuration dictionary
         """
+        self.metrics_timestamp = int(datetime.now(timezone.utc).timestamp())
         self.repo_config = repo_config
         self.monitoring_config = monitoring_config
         self.logger = logger
-        self.base_labels = {
+        self._common_labels = {
             "instance": self.get_config_value(
                 "monitoring.instance", "default_instance"
             ),
@@ -46,26 +48,33 @@ class MonitoringBackend(ABC):
         additional_labels = self.get_config_value("monitoring.additional_labels")
         if isinstance(additional_labels, dict):
             for k, v in additional_labels.items():
-                if k not in self.base_labels:
-                    self.base_labels[k] = v
+                if k not in self._common_labels:
+                    self._common_labels[k] = v
 
         # Enhance labels with npbackup version info
-        if "npversion" not in self.base_labels:
-            self.base_labels["npversion"] = (
+        if "npversion" not in self._common_labels:
+            self._common_labels["npversion"] = (
                 f"{NAME}{version_dict['version']}-{version_dict['build_type']}"
             )
-        if "audience" not in self.base_labels:
-            self.base_labels["audience"] = version_dict.get("audience", "unknown")
-        if "os" not in self.base_labels:
-            self.base_labels["os"] = version_dict.get("os", "unknown")
-        if "arch" not in self.base_labels:
-            self.base_labels["arch"] = version_dict.get("arch", "unknown")
+        if "audience" not in self._common_labels:
+            self._common_labels["audience"] = version_dict.get("audience", "unknown")
+        if "os" not in self._common_labels:
+            self._common_labels["os"] = version_dict.get("os", "unknown")
+        if "arch" not in self._common_labels:
+            self._common_labels["arch"] = version_dict.get("arch", "unknown")
+
+    @property
+    def common_labels(self) -> Dict[str, str]:
+        return self._common_labels
+
+    @common_labels.setter
+    def common_labels(self, labels: Dict[str, str]):
+        self._common_labels = {**self._common_labels, **labels}
 
     @abstractmethod
     def send_metrics(
         self,
         metrics: Dict[str, Any],
-        labels: Dict[str, str],
         operation: str,
         dry_run: bool = False,
     ) -> bool:
@@ -74,7 +83,7 @@ class MonitoringBackend(ABC):
 
         Args:
             metrics: Dictionary of metric names and values
-            labels: Dictionary of labels/tags for the metrics
+            common_labels: Dictionary of labels/tags for the metrics
             operation: Operation name (backup, restore, etc.)
             dry_run: If True, don't actually send metrics
 
@@ -92,6 +101,40 @@ class MonitoringBackend(ABC):
             True if enabled, False otherwise
         """
         pass
+
+    def build_json_output(
+        self,
+        metrics: Dict[str, Any],
+        operation: str,
+    ) -> Dict[str, Any]:
+
+        output = []
+        if "npbackup_upgrade_state" in metrics.keys():
+            metrics["npbackup_exec_state"] = metrics["npbackup_upgrade_state"]
+            output.append(
+                {
+                    "result": metrics["npbackup_upgrade_state"],
+                    "operation": "upgrade",
+                    "metrics": [
+                        metrics["npbackup_exec_state"],
+                        metrics["npbackup_exec_time"],
+                    ],
+                    "timestamp": self.metrics_timestamp,
+                    "labels": self.common_labels,
+                }
+            )
+            del metrics["npbackup_upgrade_state"]
+
+        output.append(
+            {
+                "result": metrics["npbackup_exec_state"],
+                "operation": operation,
+                "metrics": metrics,
+                "timestamp": self.metrics_timestamp,
+                "labels": self.common_labels,
+            }
+        )
+        return output
 
     def get_monitoring_value(self, key: str, default: Any = None) -> Any:
         """
@@ -154,8 +197,11 @@ def calculate_exec_state(
         worst_logger_level: Worst log level encountered (50=CRITICAL, 40=ERROR, 30=WARNING, 20=INFO)
 
     Returns:
-        exec_state: 0=success, 1=warning, 2=error, 3=critical
+        exec_state: 0=success, 1=warning, 2=error, 3=critical, 4=unknown
+
+        Note: exec_state=4 is not used as of today
     """
+
     # Map logger levels to exec states
     if worst_logger_level == 50:  # CRITICAL
         exec_state = 3
@@ -171,55 +217,3 @@ def calculate_exec_state(
         exec_state = 2
 
     return exec_state
-
-
-def collect_common_metrics(
-    operation: str,
-    operation_success: bool,
-    backup_too_small: bool,
-    exec_state: int,
-    exec_time: Optional[float] = None,
-    restic_result: Optional[dict] = None,
-) -> Dict[str, Any]:
-    """
-    Collect common metrics that apply to all monitoring backends
-
-    Args:
-        operation: Operation name (backup, restore, etc.)
-        operation_success: Whether operation succeeded
-        backup_too_small: Whether backup was too small
-        exec_state: Execution state (0-3)
-        exec_time: Execution time in seconds
-        restic_result: Restic result dictionary (for backup operations)
-
-    Returns:
-        Dictionary of common metrics
-    """
-    metrics = {
-        "operation": operation,
-        "exec_state": exec_state,
-        "operation_success": 1 if operation_success else 0,
-        "backup_too_small": 1 if backup_too_small else 0,
-    }
-
-    if exec_time is not None:
-        metrics["exec_time"] = exec_time
-
-    # Add restic-specific metrics if available
-    if restic_result and isinstance(restic_result, dict):
-        for key in [
-            "files_new",
-            "files_changed",
-            "files_unmodified",
-            "dirs_new",
-            "dirs_changed",
-            "dirs_unmodified",
-            "data_added",
-            "total_files_processed",
-            "total_bytes_processed",
-            "total_duration",
-        ]:
-            if key in restic_result and restic_result[key] is not None:
-                metrics[key] = restic_result[key]
-
-    return metrics
