@@ -90,6 +90,7 @@ fr:
   scheduled_task_creation_failure: Impossible de créer la tâche planifiée. Veuillez consulter les journaux pour plus de détails
   task_type: Type de tâche
   select_task_scope: Sélectionner la portée de la tâche
+  reading_tasks: Lecture des tâches planifiées existantes
 
   machine_identification: Identification machine
   machine_id: Identificateur machine
