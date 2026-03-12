@@ -57,7 +57,7 @@ from npbackup.gui.helpers import (
     WaitWindow,
     popup_error,
 )
-from npbackup.gui.handle_window import handle_current_window
+import npbackup.gui.windows_gui_helper
 from npbackup.core.i18n_helper import _t
 from npbackup.core import upgrade_runner
 from npbackup.path_helper import CURRENT_DIR
@@ -1425,12 +1425,17 @@ def main_gui(viewer_mode=False):
     atexit.register(
         kill_childs, os.getpid(), grace_period=30, process_name=backend_process
     )
+    # We also need to make to revert state of the cmd window when exiting
+    # otherwise there will be a hidden cmd window left after running compiled windows version
+    atexit.register(
+        npbackup.gui.windows_gui_helper.handle_current_window, action="show", use_last=True
+    )
     try:
         # Hide CMD window when Nuitka hide action does not work
         if _DEBUG and version_dict["comp"]:
-            handle_current_window(action="minimize")
-        elif version_dict["comp"]:
-            handle_current_window(action="hide")
+            npbackup.gui.windows_gui_helper.handle_current_window(action="minimize")
+        elif version_dict["comp"] or True:
+            npbackup.gui.windows_gui_helper.handle_current_window(action="hide")
         _main_gui(viewer_mode=viewer_mode)
         sys.exit(logger.get_worst_logger_level(all_time=True))
     except _tkinter.TclError as exc:
