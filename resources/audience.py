@@ -17,9 +17,23 @@ __version__ = "1.0.0"
 
 import os
 
-AUDIENCES = ["public", "private"]
-
-CURRENT_AUDIENCE = "public"
+try:
+    from PRIVATE.audience import AUDIENCES, CURRENT_AUDIENCE
+except ImportError:
+     # If there is no PRIVATE/audiences.py file, we assume there are no private audiences and just use the public audience
+     AUDIENCES = ["public"]
+     CURRENT_AUDIENCE = "public"
 
 # Allow overriding audience via environment variable, for testing purposes. This is not intended for production use.
 CURRENT_AUDIENCE = os.environ.get("_NPBACKUP_AUDIENCE", CURRENT_AUDIENCE)
+
+
+if CURRENT_AUDIENCE == "public":
+    from resources._customization import *
+else:
+    try:
+        from PRIVATE.customization import *
+    except ImportError as exc:
+        print(f"{__file__}: No private audience with name '{CURRENT_AUDIENCE}' customization found")
+        print(exc)
+        sys.exit(1)
