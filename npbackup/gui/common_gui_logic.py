@@ -11,7 +11,7 @@ __build__ = "2026030701"
 
 
 import os
-from typing import List, Tuple, Union
+from typing import List, Tuple
 import re
 from logging import getLogger
 import FreeSimpleGUI as sg
@@ -28,7 +28,7 @@ from npbackup.gui.ttk_theme import (
     SIMPLEGUI_DARK_THEME,
     reskin_job,
 )
-from npbackup.core.metrics import send_metrics_mail
+from npbackup.core.monitoring.email import EmailMonitor
 from npbackup.gui.constants import combo_boxes
 from ofunctions.misc import get_key_from_value, BytesConverter
 from ofunctions.mailer import is_mail_address
@@ -95,7 +95,6 @@ encrypted_env_variables_tree = sg.TreeData()
 
 
 #### FILE ICON RELATED LOGIC ####
-# WIP use this in wizard
 def get_icons_per_file(file_path: str) -> Tuple[str, bytes]:
     """
     Get icons depending on file/folder existing paths
@@ -1490,18 +1489,17 @@ def handle_gui_events(full_config, window, event, values=None, object_type="repo
         # Mock repo_config
         mock_repo_config = CommentedMap()
         mock_repo_config.s("name", "Test repository")
-        if send_metrics_mail(
-            repo_config=mock_repo_config,
-            monitoring_config=npbackup.configuration.get_monitoring_config(
-                mock_repo_config, full_config
-            ),
-            operation="test_email",
-            restic_result=None,
-            operation_success=True,
-            backup_too_small=False,
-            exec_state=0,
-            date=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
-        ):
+        mock_metrics = {"npbackup_exec_state": 0, "operation": "email_test"}
+        # WIP test
+        result = EmailMonitor(
+            mock_repo_config,
+            npbackup.configuration.get_monitoring_config(mock_repo_config, full_config),
+        ).send_metrics(
+            mock_metrics,
+            operation="email_test",
+            dry_run=False,
+        )
+        if result:
             sg.popup(_t("config_gui.test_email_success"), keep_on_top=True)
         else:
             sg.popup(_t("config_gui.test_email_failure"), keep_on_top=True)
@@ -1613,8 +1611,11 @@ def update_task_list(config_file: str, full_config: dict, window: sg.Window) -> 
     """
     Reads current scheduled tasks in a thread and updates scheduled task list
     """
+    logger.debug("Reading existing scheduled tasks")
     thread = read_existing_scheduled_tasks_threaded(config_file, full_config)
-    tasks = WaitWindow(thread).wait_for_thread_result()
+    tasks = WaitWindow(
+        thread, message=_t("config_gui.reading_tasks")
+    ).wait_for_thread_result()
     # We need to define a special list for sg.Table to use
     task_list = []
     for task in tasks:
