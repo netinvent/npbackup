@@ -423,11 +423,11 @@ def global_zabbix_col():
                         sg.Input(key="global_zabbix.port", size=(50, 1)),
                     ],
                     [
-                        sg.Text(_t("config_gui.psk_identity"), size=(40, 1)),
+                        sg.Text(_t("config_gui.zabbix_psk_identity"), size=(40, 1)),
                         sg.Input(key="global_zabbix.psk_identity", size=(50, 1)),
                     ],
                     [
-                        sg.Text(_t("config_gui.psk"), size=(40, 1)),
+                        sg.Text(_t("config_gui.zabbix_psk"), size=(40, 1)),
                         sg.Input(key="global_zabbix.psk", size=(50, 1)),
                     ],
                 ],
