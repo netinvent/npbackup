@@ -1434,7 +1434,7 @@ def main_gui(viewer_mode=False):
         # Hide CMD window when Nuitka hide action does not work
         if _DEBUG and version_dict["comp"]:
             npbackup.gui.windows_gui_helper.handle_current_window(action="minimize")
-        elif version_dict["comp"] or True:
+        elif version_dict["comp"]:
             npbackup.gui.windows_gui_helper.handle_current_window(action="hide")
         _main_gui(viewer_mode=viewer_mode)
         sys.exit(logger.get_worst_logger_level(all_time=True))
