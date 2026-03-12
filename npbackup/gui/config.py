@@ -1066,58 +1066,6 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             ]
         ]
 
-        """ WIP replace with newer task creation ui
-        object_list = npbackup.gui.common_gui_logic.get_objects(full_config)
-        scheduled_task_col = [
-            [
-                sg.Text(
-                    textwrap.fill(
-                        f"{_t('config_gui.scheduled_task_explanation')}", width=120
-                    ),
-                    size=(100, 4),
-                )
-            ],
-            [
-                sg.Text(_t("config_gui.select_object")),
-                sg.Combo(
-                    object_list,
-                    default_value=object_list[0] if object_list else None,
-                    key="-OBJECT-SELECT-TASKS-",
-                    enable_events=True,
-                ),
-            ],
-            [
-                sg.Text(
-                    _t("config_gui.create_backup_scheduled_task_every"), size=(40, 1)
-                ),
-                sg.Input("15", key="scheduled_backup_task_interval", size=(4, 1)),
-                sg.Text(_t("generic.minutes"), size=(10, 1)),
-                sg.Button(_t("generic.create"), key="create_backup_interval_task"),
-            ],
-            [
-                sg.Text(_t("config_gui.create_backup_scheduled_task_at"), size=(40, 1)),
-                sg.Input("22", key="scheduled_backup_task_hour", size=(4, 1)),
-                sg.Text(_t("generic.hours"), size=(10, 1)),
-                sg.Input("00", key="scheduled_backup_task_minute", size=(4, 1)),
-                sg.Text(_t("generic.minutes"), size=(10, 1)),
-                sg.Button(_t("generic.create"), key="create_backup_daily_task"),
-            ],
-            [
-                sg.HorizontalSeparator(),
-            ],
-            [
-                sg.Text(
-                    _t("config_gui.create_housekeeping_scheduled_task_at"), size=(40, 1)
-                ),
-                sg.Input("22", key="scheduled_housekeeping_task_hour", size=(4, 1)),
-                sg.Text(_t("generic.hours"), size=(10, 1)),
-                sg.Input("00", key="scheduled_housekeeping_task_minute", size=(4, 1)),
-                sg.Text(_t("generic.minutes"), size=(10, 1)),
-                sg.Button(_t("generic.create"), key="create_housekeeping_daily_task"),
-            ],
-        ]
-        """
-
         tab_group_layout = [
             [
                 sg.Tab(
@@ -1336,7 +1284,6 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 )
             continue
 
-        # WIP duplicate code with wizard ?
         if event == "--ACCEPT--":
             if object_type != "groups":
                 result = _t("generic.yes")
