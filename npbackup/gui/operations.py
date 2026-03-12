@@ -125,7 +125,9 @@ def task_scheduler(config_file: str, full_config: dict) -> None:
     window = sg.Window(
         layout=layout, title=_t("operations_gui.task_scheduler"), finalize=True
     )
-    tasks = npbackup.gui.common_gui_logic.update_task_list(config_file, full_config, window)
+    tasks = npbackup.gui.common_gui_logic.update_task_list(
+        config_file, full_config, window
+    )
     objects = npbackup.gui.common_gui_logic.get_objects(full_config)
     window["-OBJECT-SELECT-TASKS-"].update(objects[0], values=objects)
     while True:
@@ -151,7 +153,9 @@ def task_scheduler(config_file: str, full_config: dict) -> None:
                 continue
 
             sg.popup(_t("config_gui.scheduled_task_creation_success"), keep_on_top=True)
-            tasks = npbackup.gui.common_gui_logic.update_task_list(config_file, full_config, window)
+            tasks = npbackup.gui.common_gui_logic.update_task_list(
+                config_file, full_config, window
+            )
         if event == "--REMOVE-TASK--":
             if not values["-EXISTING-TASKS-"]:
                 popup_error(_t("config_gui.no_task_selected"))
@@ -166,12 +170,18 @@ def task_scheduler(config_file: str, full_config: dict) -> None:
             result = npbackup.task.delete_scheduled_task(
                 config_file, task_type, object_type, object_name
             )
-            tasks = npbackup.gui.common_gui_logic.update_task_list(config_file, full_config, window)
+            tasks = npbackup.gui.common_gui_logic.update_task_list(
+                config_file, full_config, window
+            )
         if event == "-EXISTING-TASKS-":
             if values["-EXISTING-TASKS-"]:
-                npbackup.gui.common_gui_logic.update_task_ui_for_object(full_config, window, tasks[values["-EXISTING-TASKS-"][0]])
+                npbackup.gui.common_gui_logic.update_task_ui_for_object(
+                    full_config, window, tasks[values["-EXISTING-TASKS-"][0]]
+                )
             elif tasks:
-                npbackup.gui.common_gui_logic.update_task_ui_for_object(full_config, window, tasks[0])
+                npbackup.gui.common_gui_logic.update_task_ui_for_object(
+                    full_config, window, tasks[0]
+                )
     window.close()
 
 

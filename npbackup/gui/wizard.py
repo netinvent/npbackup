@@ -679,7 +679,7 @@ def start_wizard(full_config: dict, config_file: str):
     )
     set_active_tab(1)
 
-    try:  # WIP
+    try:
         retention_policies = list(full_config.g("presets.retention_policies"))
     except Exception:
         # We might need to fallback to integrated presets in constants

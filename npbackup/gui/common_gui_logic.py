@@ -375,6 +375,7 @@ def create_object_name_for_combo(object_type: str, object_name: str) -> str:
         logger.error(f"Bogus object type given: {object_type}")
         return None
 
+
 def update_object_selector(
     window: sg.Window,
     full_config: dict,
@@ -626,7 +627,7 @@ def update_monitoring_visibility(window: sg.Window, values):
         if "-GLOBAL-WEBHOOKS-SETTINGS-" in window.AllKeysDict:
             window["-GLOBAL-WEBHOOKS-SETTINGS-"].update(
                 visible=values["global_webhooks.enabled"]
-        )
+            )
     except KeyError as exc:
         logger.debug(f"No webhooks config: {exc}")
     try:
@@ -638,9 +639,12 @@ def update_monitoring_visibility(window: sg.Window, values):
         logger.debug(f"No zabbix config: {exc}")
     try:
         if "-GLOBAL-EMAIL-SETTINGS-" in window.AllKeysDict:
-            window["-GLOBAL-EMAIL-SETTINGS-"].update(visible=values["global_email.enabled"])
+            window["-GLOBAL-EMAIL-SETTINGS-"].update(
+                visible=values["global_email.enabled"]
+            )
     except KeyError as exc:
         logger.debug(f"No email config: {exc}")
+
 
 def update_gui_values(
     window: sg.Window,
@@ -1627,33 +1631,50 @@ def update_task_list(config_file: str, full_config: dict, window: sg.Window) -> 
     window["-EXISTING-TASKS-"].update(values=task_list)
     return tasks
 
+
 def update_task_ui_for_object(full_config: dict, window: sg.Window, task: list):
     window["-TASK-TYPE-"].update(value=task["task_type"])
     window["-BACKUP-INTERVAL-"].update(value=task["interval"])
     window["-BACKUP-INTERVAL-UNIT-"].update(
         value=combo_boxes["backup_interval_unit"][task["interval_unit"]]
     )
-    
+
     object_type = task["object_type"]
     object_name = task["object_name"]
-    window["-OBJECT-SELECT-TASKS-"].update(value=create_object_name_for_combo(object_type, object_name))
+    window["-OBJECT-SELECT-TASKS-"].update(
+        value=create_object_name_for_combo(object_type, object_name)
+    )
 
     window["-FIRST-BACKUP-DATE-"].update(value=task["start_date"].strftime("%Y-%m-%d"))
     window["-FIRST-BACKUP-HOUR-"].update(value=task["start_date"].strftime("%H"))
     window["-FIRST-BACKUP-MINUTE-"].update(value=task["start_date"].strftime("%M"))
 
     try:
-        minimum_backup_age = full_config.g(f"{object_type}.{object_name}.repo_opts.minimum_backup_age")
+        minimum_backup_age = full_config.g(
+            f"{object_type}.{object_name}.repo_opts.minimum_backup_age"
+        )
     except KeyError:
         minimum_backup_age = 0
     try:
-        random_delay_before_backup = full_config.g(f"{object_type}.{object_name}.repo_opts.random_delay_before_backup")
+        random_delay_before_backup = full_config.g(
+            f"{object_type}.{object_name}.repo_opts.random_delay_before_backup"
+        )
     except KeyError:
         random_delay_before_backup = 0
     window["repo_opts.minimum_backup_age"].update(value=minimum_backup_age)
-    window["repo_opts.random_delay_before_backup"].update(value=random_delay_before_backup)
+    window["repo_opts.random_delay_before_backup"].update(
+        value=random_delay_before_backup
+    )
 
-    for day in ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]:
+    for day in [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+    ]:
         if day in task["days_of_week"]:
             window[f"-DAY-{day.lower()}-"].update(value=True)
         else:
