@@ -36,9 +36,6 @@ from npbackup.__env__ import MAX_ALLOWED_NTP_OFFSET
 
 logger = logging.getLogger()
 
-METRICS_NOT_NEEDED = False
-
-
 required_permissions = {
     "init": ["backup", "restore", "full"],
     "backup": ["backup", "restore", "full"],
@@ -55,6 +52,7 @@ required_permissions = {
     "unlock": ["full", "restore", "backup"],
     "repair": ["full"],
     "forget": ["full"],
+    "policy": ["full"],
     "housekeeping": ["full"],
     "prune": ["full"],
     "raw": ["full"],
@@ -143,6 +141,10 @@ class NPBackupRunner:
         self._full_concurrency = False
         # Allow running multiple npbackup instances if they use different repos
         self._repo_aware_concurrency = False
+
+        # When backup is not necessary, we must avoid needing metrics
+        # This shouldn't interfere with produce_metrics
+        self._backup_needs_metrics = True
 
     @property
     def repo_config(self) -> dict:
@@ -327,6 +329,16 @@ class NPBackupRunner:
         if not isinstance(value, bool):
             raise ValueError(f"concurrency value {value} is not a boolean")
         self._repo_aware_concurrency = value
+
+    @property
+    def backup_needs_metrics(self):
+        return self._backup_needs_metrics
+
+    @backup_needs_metrics.setter
+    def backup_needs_metrics(self, value):
+        if not isinstance(value, bool):
+            raise ValueError(f"backup_needs_metrics value {value} is not a boolean")
+        self._backup_needs_metrics = value
 
     @property
     def append_metrics_file(self):
@@ -650,6 +662,7 @@ class NPBackupRunner:
                     result_string = self.restic_runner.backup_result_content
                 except AttributeError:
                     result_string = None
+
                 # In case of error, we really need to write metrics
                 # pylint: disable=E1101 (no-member)
                 metric_analyser(
@@ -661,10 +674,14 @@ class NPBackupRunner:
                     dry_run=self.dry_run,
                     append_metrics_file=self.append_metrics_file,
                     exec_time=self.exec_time,
-                    analyze_only=False,
+                    only_check_backup_result_and_size=False,
                 )
+
                 # We need to reset backup result content once it's parsed
-                self.restic_runner.backup_result_content = None
+                try:
+                    self.restic_runner.backup_result_content = None
+                except AttributeError:
+                    pass
                 # We need to append to metric file once we begin writing to it
                 self.append_metrics_file = True
                 if self.json_output:
@@ -685,17 +702,17 @@ class NPBackupRunner:
 
         @wraps(fn)
         def wrapper(self, *args, **kwargs):
-            global METRICS_NOT_NEEDED
+            # pylint: disable=E1102 (not-callable)
+            result = fn(self, *args, **kwargs)
 
+            # Now that the function has run, we can try to get restic output
             try:
                 result_string = self.restic_runner.backup_result_content
             except AttributeError:
                 result_string = None
 
-            # pylint: disable=E1102 (not-callable)
-            result = fn(self, *args, **kwargs)
             # pylint: disable=E1101 (no-member)
-            if self.produce_metrics and not METRICS_NOT_NEEDED:
+            if self.produce_metrics and self.backup_needs_metrics:
                 metric_analyser(
                     repo_config=self.repo_config,
                     monitoring_config=self.monitoring_config,
@@ -705,20 +722,23 @@ class NPBackupRunner:
                     dry_run=self.dry_run,
                     append_metrics_file=self.append_metrics_file,
                     exec_time=self.exec_time,
-                    analyze_only=False,
+                    only_check_backup_result_and_size=False,
                 )
                 # We need to reset backup result content once it's parsed
                 try:
                     self.restic_runner.backup_result_content = None
                 except AttributeError:
                     pass
+
                 # We need to append to metric file once we begin writing to it
                 self.append_metrics_file = True
             else:
                 self.write_logs(
-                    f"Metrics disabled for call {fn.__name__}", level="debug"
+                    f"No metrics needed for operation {fn.__name__}", level="debug"
                 )
-            METRICS_NOT_NEEDED = False
+
+            # Make sure on next run we need metrics again
+            self.backup_needs_metrics = True
             return result
 
         return wrapper
@@ -1204,7 +1224,6 @@ class NPBackupRunner:
         """
         Run backup after checking if no recent backup exists, unless force == True
         """
-        global METRICS_NOT_NEEDED
 
         repo_name = self.repo_config.g("name")
         stdin_from_command = self.repo_config.g("backup_opts.stdin_from_command")
@@ -1334,7 +1353,7 @@ class NPBackupRunner:
             self.restic_runner.json_output = json_output
             if has_recent_snapshots:
                 msg = "No backup necessary"
-                METRICS_NOT_NEEDED = True
+                self.backup_needs_metrics = False
                 self.write_logs(msg, level="info")
                 return self.convert_to_json_output(True, msg)
             self.restic_runner.verbose = self.verbose
@@ -1517,7 +1536,7 @@ class NPBackupRunner:
             dry_run=self.restic_runner.dry_run,
             append_metrics_file=self.append_metrics_file,
             exec_time=self.exec_time,
-            analyze_only=True,
+            only_check_backup_result_and_size=True,
         )
 
         if backup_too_small:
