@@ -40,7 +40,7 @@ from FreeSimpleGUI import Button as RoundedButton
 import npbackup.configuration
 from npbackup.gui.ttk_theme import reskin_job, TITLE_FONT, SUBTITLE_FONT
 import npbackup.gui.common_gui
-from npbackup.gui.helpers import popup_error, password_complexity
+from npbackup.gui.helpers import WaitWindow, popup_error, password_complexity
 import npbackup.gui.common_gui_logic
 import npbackup.configuration as configuration
 
@@ -673,10 +673,24 @@ def start_wizard(full_config: dict, config_file: str):
         is_wizard=True,
     )
 
+    thread = npbackup.gui.common_gui_logic.read_existing_scheduled_tasks_threaded(
+        config_file, full_config
+    )
+    tasks = WaitWindow(thread).wait_for_thread_result()
+
+    if tasks:
+        npbackup.gui.common_gui_logic.update_task_ui_for_object(
+            window=wizard,
+            full_config=full_config,
+            task=tasks[0],
+            is_wizard=True,
+        )
+
     event, values = wizard.read(timeout=0.1)
     npbackup.gui.common_gui_logic.update_monitoring_visibility(
         window=wizard, values=values
     )
+
     set_active_tab(1)
 
     try:

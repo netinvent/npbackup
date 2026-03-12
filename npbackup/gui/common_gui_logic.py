@@ -1632,8 +1632,11 @@ def update_task_list(config_file: str, full_config: dict, window: sg.Window) -> 
     return tasks
 
 
-def update_task_ui_for_object(full_config: dict, window: sg.Window, task: list):
-    window["-TASK-TYPE-"].update(value=task["task_type"])
+def update_task_ui_for_object(
+    full_config: dict, window: sg.Window, task: list, is_wizard: bool = False
+):
+    if not is_wizard:
+        window["-TASK-TYPE-"].update(value=task["task_type"])
     window["-BACKUP-INTERVAL-"].update(value=task["interval"])
     window["-BACKUP-INTERVAL-UNIT-"].update(
         value=combo_boxes["backup_interval_unit"][task["interval_unit"]]
@@ -1641,9 +1644,10 @@ def update_task_ui_for_object(full_config: dict, window: sg.Window, task: list):
 
     object_type = task["object_type"]
     object_name = task["object_name"]
-    window["-OBJECT-SELECT-TASKS-"].update(
-        value=create_object_name_for_combo(object_type, object_name)
-    )
+    if not is_wizard:
+        window["-OBJECT-SELECT-TASKS-"].update(
+            value=create_object_name_for_combo(object_type, object_name)
+        )
 
     window["-FIRST-BACKUP-DATE-"].update(value=task["start_date"].strftime("%Y-%m-%d"))
     window["-FIRST-BACKUP-HOUR-"].update(value=task["start_date"].strftime("%H"))
