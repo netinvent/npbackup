@@ -263,7 +263,7 @@ def show_stats(statistics: List[dict]) -> None:
     if stats_type == "raw":
         headings = [
             "Repo",
-            "State state",
+            "Stat state",
             "Total size",
             "Total uncompressed size",
             "Compression progress",
