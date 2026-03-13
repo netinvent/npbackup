@@ -38,7 +38,7 @@ from ofunctions.misc import get_key_from_value
 # from npbackup.gui.buttons import RoundedButton
 from FreeSimpleGUI import Button as RoundedButton
 import npbackup.configuration
-from npbackup.gui.ttk_theme import reskin_job, TITLE_FONT, SUBTITLE_FONT
+from npbackup.gui.ttk_theme import TITLE_FONT, SUBTITLE_FONT
 import npbackup.gui.common_gui
 from npbackup.gui.helpers import WaitWindow, popup_error, password_complexity
 import npbackup.gui.common_gui_logic
@@ -513,10 +513,6 @@ def wizard_layout(wizard_tabs, wizard_breadcrumbs) -> List[list]:
                         sg.Text(_t("wizard_gui.welcome_description")),
                     ],
                 ],
-            ),
-            sg.Push(),
-            sg.Text(
-                "◑", font=("Segoe UI Emoji", 24), key="-THEME-", enable_events=True
             ),
         ],
         [

@@ -1513,14 +1513,6 @@ def handle_gui_events(full_config, window, event, values=None, object_type="repo
         update_source_layout(window, source_type)
         return
 
-    if event in ("-THEME-"):
-        if sg.theme() != SIMPLEGUI_DARK_THEME:
-            CURRENT_THEME = SIMPLEGUI_DARK_THEME
-        else:
-            CURRENT_THEME = SIMPLEGUI_THEME
-        reskin_job(window, CURRENT_THEME)
-        return
-
 
 #### EVENT HANDLING FOR TASK CREATION ####
 

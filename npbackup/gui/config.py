@@ -691,7 +691,7 @@ def config_gui(full_config: dict, config_file: str):
                     size=(20, 1),
                 ),
             ],
-                        [
+            [
                 sg.Text(
                     _t("config_gui.minimum_backup_age"),
                     size=(40, 2),

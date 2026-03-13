@@ -1038,6 +1038,13 @@ def _main_gui(viewer_mode: bool):
                                         button_color=("white", "grey"),
                                         font=SUBTITLE_FONT,
                                     ),
+                                    sg.Push(),
+                                    sg.Text(
+                                        "◑",
+                                        font=("Segoe UI Emoji", 24),
+                                        key="-THEME-",
+                                        enable_events=True,
+                                    ),
                                 ],
                                 (
                                     [
@@ -1069,6 +1076,7 @@ def _main_gui(viewer_mode: bool):
                             justification="L",
                             element_justification="L",
                             vertical_alignment="top",
+                            expand_x=True,
                         ),
                     ],
                     (
@@ -1402,13 +1410,12 @@ def _main_gui(viewer_mode: bool):
                 gui_update_state(current_state, backup_tz, snapshot_list, repo_type)
                 if current_state is None:
                     sg.popup(_t("main_gui.cannot_get_repo_status"))
-        if event == "Theme":
+        if event in ("-THEME-"):
             if sg.theme() != SIMPLEGUI_DARK_THEME:
                 CURRENT_THEME = SIMPLEGUI_DARK_THEME
             else:
                 CURRENT_THEME = SIMPLEGUI_THEME
             reskin_job(window, CURRENT_THEME)
-            continue
 
 
 def main_gui(viewer_mode=False):
