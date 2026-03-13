@@ -131,6 +131,11 @@ fr:
   keep_tags: Toujours garder ces étiquettes
   apply_on_tags: Ne jamais appliquer sur ces étiquettes
   optional_ntp_server_uri: URI optionnelle serveur NTP
+  gfs: Garder selon la stratégie GFS (30 jours, 4 semaines, 12 mois et 2 ans)
+  90d: Garder les derniers 90 jours
+  30d: Garder les derniers 30 jours
+  14d: Garder les derniers 14 jours
+  keep_all: Conserver toutes les sauvegardes
 
   # housekeeping
   housekeeping: Maintenance

@@ -302,7 +302,7 @@ def create_object(window: sg.Window, full_config: dict) -> dict:
     subwindow.close()
     if object_type and object_name:
         full_config = update_object_gui(
-            window, full_config, object_type, object_name, unencrypted=False
+            window, full_config, object_type, object_name, unencrypted=False, is_wizard=False
         )
         update_global_gui(window, full_config, unencrypted=False, is_wizard=False)
     return full_config, object_type, object_name
@@ -332,7 +332,7 @@ def delete_object(window: sg.Window, full_config: dict, full_object_name: str) -
     )
     if result == _t("generic.yes"):
         full_config.d(f"{object_type}.{object_name}")
-        full_config = update_object_gui(window, full_config, None, unencrypted=False)
+        full_config = update_object_gui(window, full_config, None, unencrypted=False, is_wizard=False)
         update_global_gui(window, full_config, unencrypted=False, is_wizard=False)
     return full_config
 
@@ -671,12 +671,6 @@ def update_gui_values(
     # nonlocal env_variables_tree
     # nonlocal encrypted_env_variables_tree
 
-    # Wizard has less keys than full blown config dict
-    if is_wizard:
-        if key not in window.AllKeysDict:
-            logger.debug(f"Wizard has no entry for key {key}")
-            return
-
     try:
         # Don't bother to update repo name
         # Also permissions / manager_password are in a separate gui
@@ -697,6 +691,8 @@ def update_gui_values(
             window["current_permissions"].Update(combo_boxes["permissions"][value])
             return
         if key in ("manager_password", "new_manager_password"):
+            if is_wizard:
+                return
             if value:
                 window["manager_password_set"].Update(_t("generic.yes"))
                 window["--SET-PERMISSIONS--"].Update(button_color="green")
@@ -718,7 +714,10 @@ def update_gui_values(
             return
 
         # Since FreeSimpleGUI does not allow to suppress the debugger anymore in v5.1.0, we need to handle KeyError
-        if key not in window.AllKeysDict and not is_wizard:
+        if key not in window.AllKeysDict:
+            if is_wizard:
+                # logger.debug(f"Key {key} not found in wizard GUI, skipping")
+                return
             # KeyError is caught below for log purposes
             raise KeyError
 
@@ -1201,6 +1200,13 @@ def add_generic_row(
     # No need for global variable for dicts
     # global COLUMN_LIST_COUNTERS
 
+    # Check if value already exists as column
+    for key in window.AllKeysDict:
+        if isinstance(key, tuple) and key[0] == f"-{column_key}-":
+            if window[key].get() == value:
+                # logger.debug(f"Value {value} already exists in column {column_key}, skipping")
+                return
+
     COLUMN_LIST_COUNTERS[column_key] += 1
 
     window.extend_layout(
@@ -1223,7 +1229,7 @@ def add_generic_row(
     window[f"-{column_key}-COLUMN-"].contents_changed()
 
 
-def handle_gui_events(full_config, window, event, values=None, object_type="repos"):
+def handle_gui_events(full_config: dict, window: sg.Window, event, values: dict = None, object_type: str = None, object_name: str = None, unencrypted: bool = False, is_wizard: bool = False):
     """
     Handles various GUI events for both config and wizard GUIs
     """
@@ -1236,6 +1242,22 @@ def handle_gui_events(full_config, window, event, values=None, object_type="repo
         window["-RETENTION-POLICY-ADVANCED-COLUMN-"].update(
             visible=not window["-RETENTION-POLICY-ADVANCED-COLUMN-"].visible
         )
+
+    if event == "-RETENTION-POLICIES-":
+        retention_policies = get_retention_policies(full_config)
+        if values["-RETENTION-POLICIES-"]:
+            new_retention_policy = retention_policies.g(values["-RETENTION-POLICIES-"])
+            full_config.s(f"{object_type}.{object_name}.repo_opts.retention_policy", new_retention_policy)
+            logger.debug(f"Selected retention policy: {new_retention_policy}")
+            update_object_gui(
+                window=window,
+                full_config=full_config,
+                object_type=object_type,
+                object_name=object_name,
+                unencrypted=False, # WIP
+                is_wizard=is_wizard,
+            )
+
 
     # Add / remove elements from column
     # This part adds / removes new input elements into multirow columns
@@ -1593,12 +1615,11 @@ def create_scheduled_task(
 
 
 @threaded
-def read_existing_scheduled_tasks_threaded(config_file, full_config):
+def read_existing_scheduled_tasks_threaded(config_file, full_config, operation: str = None):
     """
     Wrapper to read scheduled tasks in a thread
     """
-    return npbackup.task.read_existing_scheduled_tasks(config_file, full_config)
-
+    return npbackup.task.read_existing_scheduled_tasks(config_file, full_config, operation)
 
 def update_task_list(config_file: str, full_config: dict, window: sg.Window) -> dict:
     """
@@ -1677,3 +1698,15 @@ def update_task_ui_for_object(
             window[f"-DAY-{day.lower()}-"].update(value=True)
         else:
             window[f"-DAY-{day.lower()}-"].update(value=False)
+
+
+#### RETENTION POLICIES PRESETS CODE ####
+def get_retention_policies(full_config: dict) -> dict:
+        try:
+            retention_policies = list(full_config.g("presets.retention_policies"))
+        except Exception:
+            # We might need to fallback to integrated presets in constants
+            retention_policies = npbackup.configuration.get_default_config().g(
+                "presets.retention_policy"
+            )
+        return retention_policies

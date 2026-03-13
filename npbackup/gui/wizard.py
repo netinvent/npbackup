@@ -675,22 +675,11 @@ def start_wizard(full_config: dict, config_file: str):
         window=wizard, values=values
     )
 
-    try:
-        retention_policies = list(full_config.g("presets.retention_policies"))
-    except Exception:
-        # We might need to fallback to integrated presets in constants
-        retention_policies = npbackup.configuration.get_default_config().g(
-            "presets.retention_policy"
-        )
 
-    # retention_policies = list(combo_boxes["retention_options"].values())
-    retention_policies_list = list(retention_policies.keys())
-    retention_policies_list = [
-        _t(f"wizard_gui.{policy}") for policy in retention_policies_list
-    ]
-
-    wizard["-RETENTION-POLICIES-"].update(values=retention_policies_list)
+    retention_policies = npbackup.gui.common_gui_logic.get_retention_policies(full_config)
+    wizard["-RETENTION-POLICIES-"].update(values=list(retention_policies.keys()))
     wizard["-RETENTION-POLICIES-"].update(set_to_index=0)
+
     wizard["-WIZARD-CONFIG-FILE-"].update(str(config_file))
 
     while True:
@@ -704,6 +693,10 @@ def start_wizard(full_config: dict, config_file: str):
             window=wizard,
             event=event,
             values=values,
+            object_type="repos",
+            object_name="default",
+            unencrypted=False,
+            is_wizard=True,
         )
 
         ## WIZARD STEP 1 ##
@@ -850,9 +843,10 @@ def start_wizard(full_config: dict, config_file: str):
             event in ("-NEXT-", "-PREVIOUS-") and current_tab == 3
         ) or event == "-BREADCRUMB-3-":
             # run thread after window is finalized and active tab is set so controls get expanded
+            # Limit scheduled task to backup operation in wizard
             thread = (
                 npbackup.gui.common_gui_logic.read_existing_scheduled_tasks_threaded(
-                    config_file, full_config
+                    config_file, full_config, "backup"
                 )
             )
             tasks = WaitWindow(

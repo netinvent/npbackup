@@ -129,6 +129,11 @@ en:
   keep_tags: Always keep these tags
   apply_on_tags: Never apply on these tags
   optional_ntp_server_uri: Optional NTP server URI
+  gfs: GFS backup retention (30 days, 4 weeks, 12 months and 2 years)
+  90d: Keep last 90 Days of backups
+  30d: Keep last 30 Days of backups
+  14d: Keep last 14 Days of backups
+  keep_all: Keep All Backups
 
   # housekeeping
   housekeeping: Housekeeping

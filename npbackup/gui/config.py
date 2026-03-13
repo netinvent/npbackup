@@ -1199,23 +1199,11 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
         window.set_title(f"Configuration - {config_file}")
 
     # Common config pages with wizard patches
-    try:
-        retention_policies = list(full_config.g("presets.retention_policies"))
-    except Exception:
-        # We might need to fallback to integrated presets in constants
-        retention_policies = configuration.get_default_config().g(
-            "presets.retention_policy"
-        )
-
-    retention_policies_list = list(retention_policies.keys())
-    retention_policies_list = [
-        _t(f"wizard_gui.{policy}") for policy in retention_policies_list  # WIP
-    ]
-
+    retention_policies = npbackup.gui.common_gui_logic.get_retention_policies(full_config)
     window["-RETENTION-POLICY-ADVANCED-COLUMN-"].update(visible=True)
     window["-RETENTION-POLICY-ADVANCED-"].update(visible=False)
 
-    window["-RETENTION-POLICIES-"].update(values=retention_policies_list)
+    window["-RETENTION-POLICIES-"].update(values=list(retention_policies.keys()))
     window["-RETENTION-POLICIES-"].update(set_to_index=0)
 
     event, values = window.read(timeout=0.1)
@@ -1249,6 +1237,9 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             event=event,
             values=values,
             object_type=object_type,
+            object_name=object_name,
+            unencrypted=False, # WIP
+            is_wizard=False,
         )
 
         if event in ("-OBJECT-SELECT-", "repo_group"):

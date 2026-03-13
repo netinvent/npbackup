@@ -49,6 +49,7 @@ SCHEDULER_TASKS = {
 def read_existing_scheduled_tasks(
     config_file: str,
     full_config: dict,
+    operation: str = None,
 ) -> List[dict]:
     """
     Reads existing scheduled tasks for NPBackup and checks if a task with the same config file, task type and repo/group already exists
@@ -63,9 +64,10 @@ def read_existing_scheduled_tasks(
         return _read_existing_scheduled_task_windows(
             config_file,
             full_config,
+            operation,
         )
     else:
-        return _read_existing_scheduled_task_unix(config_file, full_config)
+        return _read_existing_scheduled_task_unix(config_file, full_config, operation)
 
 
 def create_scheduled_task(
@@ -234,7 +236,7 @@ def _get_crontab(as_current_user: bool) -> CronTab:
 
 
 def _read_existing_scheduled_task_unix(
-    config_file: str, full_config: dict
+    config_file: str, full_config: dict, operation: str
 ) -> List[dict]:
     tasks = []
     # Check both current user and root crontabs
@@ -250,6 +252,8 @@ def _read_existing_scheduled_task_unix(
             object_type,
         ) in npbackup.configuration.get_object_names_and_types(full_config).items():
             for task_type in SCHEDULER_TASKS.keys():
+                if operation and task_type != operation:
+                    continue
                 comment = _get_cron_comment(
                     config_file, task_type, object_type, object_name
                 )
@@ -492,6 +496,7 @@ def _get_scheduled_task_name_windows(
 def _read_existing_scheduled_task_windows(
     config_file: str,
     full_config: dict,
+    operation: str,
 ) -> List[dict]:
     """
     Read existing scheduled tasks on Windows.
@@ -508,6 +513,8 @@ def _read_existing_scheduled_task_windows(
         full_config
     ).items():
         for task_type in SCHEDULER_TASKS.keys():
+            if operation and task_type != operation:
+                continue
             task_name = _get_scheduled_task_name_windows(
                 config_file, task_type, object_type, object_name
             )
