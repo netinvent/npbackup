@@ -157,11 +157,13 @@ RESTIC_SOURCE_FILES/restic*
 !RESTIC_SOURCE_FILES/restic*linux*
 RESTIC_SOURCE_FILES/ARCHIVES
 PRIVATE/*
-!PRIVATE/example/*
+!PRIVATE/README.md
+!PRIVATE/example
 !PRIVATE/__no_init__.py
 !PRIVATE/_obfuscation.py
 !PRIVATE/customization.py
 !PRIVATE/_private_secret_keys.py
+!PRIVATE/audience.dist.py
 BUILDS
 BUILDS-PRIVATE
 *.conf
