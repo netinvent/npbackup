@@ -133,8 +133,6 @@ class WebhookMonitor(MonitoringBackend):
             )
             if not file_success:
                 success = False
-        else:
-            logger.warning(f"Destination not configured for webhooks")
 
         return success
 

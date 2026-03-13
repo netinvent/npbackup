@@ -125,6 +125,8 @@ class ZabbixMonitor(MonitoringBackend):
                     return False
         except (KeyError, AttributeError) as exc:
             logger.debug(f"No Zabbix PSK configuration found: {exc}")
+            zabbix_psk = None
+            zabbix_psk_identity = None
 
         # WIP:// happy to json here
         # Convert metrics to ItemValue list

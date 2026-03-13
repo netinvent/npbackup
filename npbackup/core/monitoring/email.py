@@ -147,7 +147,7 @@ class EmailMonitor(MonitoringBackend):
             f"Sending email notification to {smtp_server}:{smtp_port} with security {smtp_security} using {'authentication' if smtp_username and smtp_password else 'no authentication'}."
         )
 
-        logger.debug(f"Adding recipient {recipient} for email notification.")
+        logger.debug(f"Adding recipient {recipients_to_send} for email notification.")
         result = self._send_email(
             smtp_server=smtp_server,
             smtp_port=smtp_port,
@@ -165,7 +165,7 @@ class EmailMonitor(MonitoringBackend):
         )
         if not result:
             logger.error(
-                f"Failed to send email notification to {recipient} for {operation} {'success' if op_success else 'failure'}."
+                f"Failed to send email notification to {recipients_to_send} for {operation} {'success' if op_success else 'failure'}."
             )
         return result
 
@@ -246,7 +246,7 @@ class EmailMonitor(MonitoringBackend):
         body += f"\nDate: {date}"
 
         # Add execution time if available
-        if "exec_time" in metrics:
+        if "npbackup_exec_time" in metrics:
             body += f"\nExecution time: {metrics['exec_time']:.2f} seconds"
 
         # Add detailed metrics for backup operations

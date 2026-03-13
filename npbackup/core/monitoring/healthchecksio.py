@@ -35,7 +35,7 @@ class HealthchecksioMonitor(MonitoringBackend):
     def is_enabled(self) -> bool:
         return self.get_monitoring_value("global_healthchecksio.enabled", False)
 
-    def _get_params(self) -> None:
+    def _get_params(self) -> bool:
         self.url = self.get_monitoring_value("global_healthchecksio.url")
         if not self.url:
             logger.error("Healthchecks.io URL not configured.")
@@ -47,6 +47,7 @@ class HealthchecksioMonitor(MonitoringBackend):
         self.verify = not self.get_monitoring_value(
             "global_healthchecksio.no_cert_verify", False
         )
+        return True
 
     def send_metrics(
         self,
@@ -159,7 +160,8 @@ class HealthchecksioMonitor(MonitoringBackend):
         Returns:
             True if ping was sent successfully, False otherwise
         """
-        self._get_params()
+        if not self._get_params():
+            return False
         try:
             # Build the ping URL
             if is_success:
@@ -208,9 +210,10 @@ class HealthchecksioMonitor(MonitoringBackend):
         Returns:
             True if ping was sent successfully, False otherwise
         """
-        if not self.is_enabled() or not self.url:
+        if not self.is_enabled():
             return False
-        self._get_params()
+        if not self._get_params():
+            return False
         try:
             start_endpoint = f"{self.url.rstrip('/')}/start"
 
