@@ -109,6 +109,11 @@ class EmailMonitor(MonitoringBackend):
                     ):
                         if recipient not in recipients_to_send:
                             recipients_to_send.append(recipient)
+            elif operation == "email_test":
+                for trigger in self.get_monitoring_value("global_email.recipients", []):
+                    for recipient in self.get_monitoring_value(f"global_email.recipients.{trigger}", []):
+                        if recipient not in recipients_to_send:
+                            recipients_to_send.append(recipient)
             else:
                 if op_success:
                     for recipient in self.get_monitoring_value(
@@ -142,30 +147,28 @@ class EmailMonitor(MonitoringBackend):
         logger.debug(
             f"Sending email notification to {smtp_server}:{smtp_port} with security {smtp_security} using {'authentication' if smtp_username and smtp_password else 'no authentication'}."
         )
-        all_recipients_result = True
-        for recipient in recipients_to_send:
-            logger.debug(f"Adding recipient {recipient} for email notification.")
-            result = self._send_email(
-                smtp_server=smtp_server,
-                smtp_port=smtp_port,
-                smtp_security=smtp_security,
-                smtp_username=smtp_username,
-                smtp_password=smtp_password,
-                sender=sender,
-                recipients=recipients_to_send,
-                operation=operation,
-                metrics=metrics,
-                labels=self.common_labels,
-                op_success=op_success,
-                exec_state=exec_state,
-                backup_too_small=backup_too_small,
+
+        logger.debug(f"Adding recipient {recipient} for email notification.")
+        result = self._send_email(
+            smtp_server=smtp_server,
+            smtp_port=smtp_port,
+            smtp_security=smtp_security,
+            smtp_username=smtp_username,
+            smtp_password=smtp_password,
+            sender=sender,
+            recipients=recipients_to_send,
+            operation=operation,
+            metrics=metrics,
+            labels=self.common_labels,
+            op_success=op_success,
+            exec_state=exec_state,
+            backup_too_small=backup_too_small,
+        )
+        if not result:
+            logger.error(
+                f"Failed to send email notification to {recipient} for {operation} {'success' if op_success else 'failure'}."
             )
-            if not result:
-                logger.error(
-                    f"Failed to send email notification to {recipient} for {operation} {'success' if op_success else 'failure'}."
-                )
-                all_recipients_result = False
-        return all_recipients_result
+        return result
 
     def _send_email(
         self,
