@@ -138,10 +138,8 @@ class ZabbixMonitor(MonitoringBackend):
             zabbix_psk = None
             zabbix_psk_identity = None
 
-        # Build PSK wrapper if needed
-        psk_wrapper = None
-        if HAS_PSK and zabbix_psk and zabbix_psk_identity:
 
+        if HAS_PSK and zabbix_psk and zabbix_psk_identity:
             def psk_wrapper(sock, *args, **kwargs):
                 psk = bytes.fromhex(zabbix_psk)
                 psk_identity = zabbix_psk_identity.encode()
@@ -152,6 +150,8 @@ class ZabbixMonitor(MonitoringBackend):
                     ciphers="ECDHE-PSK-AES128-CBC-SHA256",
                     psk=(psk, psk_identity),
                 )
+        else:
+            psk_wrapper = None
 
         # Send LLD discovery data so Zabbix creates items from prototypes
         self._send_discovery(zabbix_server, zabbix_port, psk_wrapper)
