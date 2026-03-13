@@ -72,9 +72,16 @@ def schedule_on_interval(job_name: str, interval: int) -> bool:
         os.path.join(CURRENT_DIR, counter_file),
     ]
     if os.name != "nt":
-        path_list = [os.path.join("/var/log", counter_file)] + path_list + [os.path.join(tempfile.gettempdir(), counter_file)]
+        path_list = (
+            [os.path.join("/var/log", counter_file)]
+            + path_list
+            + [os.path.join(tempfile.gettempdir(), counter_file)]
+        )
     else:
-        path_list = path_list + [os.path.join(tempfile.gettempdir(), counter_file), os.path.join(r"C:\Windows\Temp", counter_file)]
+        path_list = path_list + [
+            os.path.join(tempfile.gettempdir(), counter_file),
+            os.path.join(r"C:\Windows\Temp", counter_file),
+        ]
 
     for file in path_list:
         if not os.path.isfile(file):

@@ -145,9 +145,9 @@ def task_scheduler(config_file: str, full_config: dict) -> None:
             result = save_config(config_file, full_config)
             if not result:
                 popup_error(
-                    _t(
-                        "config_gui.scheduled_task_creation_failure"
-                    ) + "\n" + _t("config_gui.cannot_save_configuration")
+                    _t("config_gui.scheduled_task_creation_failure")
+                    + "\n"
+                    + _t("config_gui.cannot_save_configuration")
                 )
                 continue
 

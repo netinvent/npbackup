@@ -67,9 +67,7 @@ class EmailMonitor(MonitoringBackend):
         exec_state = metrics["npbackup_exec_state"]
         backup_too_small = metrics["internal_backup_too_small"]
 
-        op_success = (
-            exec_state == 0 and not backup_too_small
-        )
+        op_success = exec_state == 0 and not backup_too_small
 
         # Get email configuration
         try:
