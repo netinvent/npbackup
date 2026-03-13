@@ -1732,7 +1732,14 @@ def get_retention_policies_presets(full_config: dict) -> dict:
         retention_policies_presets = npbackup.configuration.get_default_config().g(
             "presets.retention_policy"
         )
-    return retention_policies_presets
+    
+    # Translate retention policy names for display in combo box
+    # Since we don't save the combo box content, we don't need the original naes
+    translated_retention_policies_presets = CommentedMap()
+    for policy_name, policy_values in retention_policies_presets.items():
+        translated_retention_policies_presets[_t(
+            f"config_gui.{policy_name}")] = policy_values
+    return translated_retention_policies_presets
 
 
 def retention_policy_preset_name(
@@ -1750,7 +1757,7 @@ def retention_policy_preset_name(
             full_config, object_name
         )
     else:
-        object_config = npbackup.configuration.get_groupç_config(
+        object_config = npbackup.configuration.get_group_config(
             full_config, object_name
         )
 
@@ -1769,5 +1776,5 @@ def retention_policy_preset_name(
                     policy_matches = False
                     break
             if policy_matches:
-                return policy_name
+                return _t(f"config_gui.{policy_name}")
     return None
