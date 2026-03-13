@@ -7,7 +7,7 @@ __intname__ = "npbackup.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026030601"
+__build__ = "2026031301"
 
 
 from typing import Optional, Callable, Union, List
@@ -1697,7 +1697,7 @@ class NPBackupRunner:
             policy = {}
             for entry in ["last", "hourly", "daily", "weekly", "monthly", "yearly"]:
                 value = self.repo_config.g(f"repo_opts.retention_policy.{entry}")
-                if value:
+                if value and value != "all":
                     if (
                         not self.repo_config.g("repo_opts.retention_policy.keep_within")
                         or entry == "last"

@@ -334,7 +334,18 @@ empty_config_dict = {
                 "group_by_tags": True,
                 "group_by_paths": False,
             },
-            "keep_all": {},
+            "keep_all": {
+                "last": "all",
+                "hourly": "all",
+                "daily": "all",
+                "weekly": "all",
+                "monthly": "all",
+                "yearly": "all",
+                "keep_within": True,
+                "group_by_host": True,
+                "group_by_tags": True,
+                "group_by_paths": False,
+            }
         }
     },
 }
