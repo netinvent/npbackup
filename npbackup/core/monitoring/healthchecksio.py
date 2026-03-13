@@ -31,11 +31,10 @@ class HealthchecksioMonitor(MonitoringBackend):
             repo_config: Repository configuration dictionary
         """
         super().__init__(repo_config, monitoring_config)
-    
 
     def is_enabled(self) -> bool:
         return self.get_monitoring_value("global_healthchecksio.enabled", False)
-    
+
     def _get_params(self) -> None:
         self.url = self.get_monitoring_value("global_healthchecksio.url")
         if not self.url:
@@ -48,7 +47,6 @@ class HealthchecksioMonitor(MonitoringBackend):
         self.verify = not self.get_monitoring_value(
             "global_healthchecksio.no_cert_verify", False
         )
-
 
     def send_metrics(
         self,
@@ -91,7 +89,7 @@ class HealthchecksioMonitor(MonitoringBackend):
         if dry_run:
             logger.info("Dry run mode. Not sending Healthchecks.io ping.")
             return True
-    
+
         # Send the ping
         return self._send_ping(is_success, log_data)
 
@@ -135,12 +133,18 @@ class HealthchecksioMonitor(MonitoringBackend):
             if "restic_files" in metrics:
                 lines.append(f"New files: {metrics['restic_files']['new']}")
                 lines.append(f"Changed files: {metrics['restic_files']['changed']}")
-                lines.append(f"Unmodified files: {metrics['restic_files']['unmodified']}")
+                lines.append(
+                    f"Unmodified files: {metrics['restic_files']['unmodified']}"
+                )
                 lines.append(f"Total files: {metrics['restic_files']['total']}")
             if "restic_dirs" in metrics:
                 lines.append(f"New directories: {metrics['restic_dirs']['new']}")
-                lines.append(f"Changed directories: {metrics['restic_dirs']['changed']}")
-                lines.append(f"Unmodified directories: {metrics['restic_dirs']['unmodified']}")
+                lines.append(
+                    f"Changed directories: {metrics['restic_dirs']['changed']}"
+                )
+                lines.append(
+                    f"Unmodified directories: {metrics['restic_dirs']['unmodified']}"
+                )
 
         return "\n".join(lines)
 
