@@ -38,6 +38,7 @@ sg.DEFAULT_FONT = STANDARD_FONT
 # Balantly stolen from https://github.com/PySimpleGUI/PySimpleGUI/issues/3880#issuecomment-775990455
 # WIP: We might want this to be optional
 # WIP: Documentation
+# WIP: add darkdetect
 if os.environ.get("NPBACKUP_DPI_AWARENESS", "True").lower() == "true":
     sg.set_options(dpi_awareness=True)
 
