@@ -11,7 +11,7 @@ __build__ = "2026030701"
 
 
 import os
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 import re
 from logging import getLogger
 import FreeSimpleGUI as sg
@@ -302,7 +302,12 @@ def create_object(window: sg.Window, full_config: dict) -> dict:
     subwindow.close()
     if object_type and object_name:
         full_config = update_object_gui(
-            window, full_config, object_type, object_name, unencrypted=False, is_wizard=False
+            window,
+            full_config,
+            object_type,
+            object_name,
+            unencrypted=False,
+            is_wizard=False,
         )
         update_global_gui(window, full_config, unencrypted=False, is_wizard=False)
     return full_config, object_type, object_name
@@ -332,7 +337,9 @@ def delete_object(window: sg.Window, full_config: dict, full_object_name: str) -
     )
     if result == _t("generic.yes"):
         full_config.d(f"{object_type}.{object_name}")
-        full_config = update_object_gui(window, full_config, None, unencrypted=False, is_wizard=False)
+        full_config = update_object_gui(
+            window, full_config, None, unencrypted=False, is_wizard=False
+        )
         update_global_gui(window, full_config, unencrypted=False, is_wizard=False)
     return full_config
 
@@ -1229,7 +1236,16 @@ def add_generic_row(
     window[f"-{column_key}-COLUMN-"].contents_changed()
 
 
-def handle_gui_events(full_config: dict, window: sg.Window, event, values: dict = None, object_type: str = None, object_name: str = None, unencrypted: bool = False, is_wizard: bool = False):
+def handle_gui_events(
+    full_config: dict,
+    window: sg.Window,
+    event,
+    values: dict = None,
+    object_type: str = None,
+    object_name: str = None,
+    unencrypted: bool = False,
+    is_wizard: bool = False,
+):
     """
     Handles various GUI events for both config and wizard GUIs
     """
@@ -1244,20 +1260,22 @@ def handle_gui_events(full_config: dict, window: sg.Window, event, values: dict 
         )
 
     if event == "-RETENTION-POLICIES-":
-        retention_policies = get_retention_policies(full_config)
+        retention_policies = get_retention_policies_presets(full_config)
         if values["-RETENTION-POLICIES-"]:
             new_retention_policy = retention_policies.g(values["-RETENTION-POLICIES-"])
-            full_config.s(f"{object_type}.{object_name}.repo_opts.retention_policy", new_retention_policy)
+            full_config.s(
+                f"{object_type}.{object_name}.repo_opts.retention_policy",
+                new_retention_policy,
+            )
             logger.debug(f"Selected retention policy: {new_retention_policy}")
             update_object_gui(
                 window=window,
                 full_config=full_config,
                 object_type=object_type,
                 object_name=object_name,
-                unencrypted=False, # WIP
+                unencrypted=False,  # WIP
                 is_wizard=is_wizard,
             )
-
 
     # Add / remove elements from column
     # This part adds / removes new input elements into multirow columns
@@ -1615,11 +1633,16 @@ def create_scheduled_task(
 
 
 @threaded
-def read_existing_scheduled_tasks_threaded(config_file, full_config, operation: str = None):
+def read_existing_scheduled_tasks_threaded(
+    config_file, full_config, operation: str = None
+):
     """
     Wrapper to read scheduled tasks in a thread
     """
-    return npbackup.task.read_existing_scheduled_tasks(config_file, full_config, operation)
+    return npbackup.task.read_existing_scheduled_tasks(
+        config_file, full_config, operation
+    )
+
 
 def update_task_list(config_file: str, full_config: dict, window: sg.Window) -> dict:
     """
@@ -1701,12 +1724,50 @@ def update_task_ui_for_object(
 
 
 #### RETENTION POLICIES PRESETS CODE ####
-def get_retention_policies(full_config: dict) -> dict:
-        try:
-            retention_policies = list(full_config.g("presets.retention_policies"))
-        except Exception:
-            # We might need to fallback to integrated presets in constants
-            retention_policies = npbackup.configuration.get_default_config().g(
-                "presets.retention_policy"
-            )
-        return retention_policies
+def get_retention_policies_presets(full_config: dict) -> dict:
+    try:
+        retention_policies_presets = list(full_config.g("presets.retention_policies"))
+    except Exception:
+        # We might need to fallback to integrated presets in constants
+        retention_policies_presets = npbackup.configuration.get_default_config().g(
+            "presets.retention_policy"
+        )
+    return retention_policies_presets
+
+
+def retention_policy_preset_name(
+    full_config: dict,
+    object_type: str,
+    object_name: str,
+    retention_policies_presets: dict,
+) -> Optional[str]:
+    """
+    Matches current retention policy against existing presets and returns the prest name if found
+    """
+    # Get current retention policy
+    if object_type == "repos":
+        object_config, _ = npbackup.configuration.get_repo_config(
+            full_config, object_name
+        )
+    else:
+        object_config = npbackup.configuration.get_groupç_config(
+            full_config, object_name
+        )
+
+    current_retention_policy = object_config.g(f"repo_opts.retention_policy")
+    if retention_policies_presets and current_retention_policy:
+        # Let's compare only preset keys to determine if we're using a preset
+        for policy_name, policy_values in (
+            npbackup.configuration.get_default_config()
+            .g("presets.retention_policy")
+            .items()
+        ):
+            # Extract the key names we want to compare from presets
+            policy_matches = True
+            for key in policy_values.keys():
+                if not current_retention_policy[key] == policy_values[key]:
+                    policy_matches = False
+                    break
+            if policy_matches:
+                return policy_name
+    return None

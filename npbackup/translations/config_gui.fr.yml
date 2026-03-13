@@ -136,6 +136,7 @@ fr:
   30d: Garder les derniers 30 jours
   14d: Garder les derniers 14 jours
   keep_all: Conserver toutes les sauvegardes
+  select_a_retention_policy_preset: Utiliser une politique personnalisée ou sélectionner un pré-réglage
 
   # housekeeping
   housekeeping: Maintenance

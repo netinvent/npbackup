@@ -134,6 +134,7 @@ en:
   30d: Keep last 30 Days of backups
   14d: Keep last 14 Days of backups
   keep_all: Keep All Backups
+  select_a_retention_policy_preset: Use a custom retention policy or select a preset
 
   # housekeeping
   housekeeping: Housekeeping

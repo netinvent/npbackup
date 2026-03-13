@@ -50,7 +50,7 @@ fr:
   backup_frequency: Fréquence des sauvegardes
   only_if_no_recent_backup_exists: Seulement si aucune sauvegarde n'a été faite dans les dernières
   authorized_days: Jours de la semaine autorisés
-
+  
   # STEP 5
   monitoring_identity_description: Configurez l'identité de cette instance de sauvegarde
 

@@ -48,6 +48,10 @@ sg.set_options(icon=OEM_ICON)
 
 logger = getLogger()
 
+# Wizard always handles the default repo
+OBJECT_TYPE = "repos"
+OBJECT_NAME = "default"
+
 
 def create_step_header(step_num: int, title_key: str, desc_key: str = None) -> list:
     """Create a consistent step header with icon and title"""
@@ -657,8 +661,8 @@ def start_wizard(full_config: dict, config_file: str):
     npbackup.gui.common_gui_logic.update_object_gui(
         window=wizard,
         full_config=full_config,
-        object_type="repos",
-        object_name="default",
+        object_type=OBJECT_TYPE,
+        object_name=OBJECT_NAME,
         unencrypted=False,
         is_wizard=True,  # Since we have less keys than full config interface
     )
@@ -675,10 +679,25 @@ def start_wizard(full_config: dict, config_file: str):
         window=wizard, values=values
     )
 
-
-    retention_policies = npbackup.gui.common_gui_logic.get_retention_policies(full_config)
-    wizard["-RETENTION-POLICIES-"].update(values=list(retention_policies.keys()))
-    wizard["-RETENTION-POLICIES-"].update(set_to_index=0)
+    retention_policies_presets = (
+        npbackup.gui.common_gui_logic.get_retention_policies_presets(full_config)
+    )
+    current_policy_name = npbackup.gui.common_gui_logic.retention_policy_preset_name(
+        full_config, OBJECT_TYPE, OBJECT_NAME, retention_policies_presets
+    )
+    wizard["-RETENTION-POLICIES-"].update(
+        values=list(retention_policies_presets.keys())
+    )
+    if current_policy_name:
+        wizard["-RETENTION-POLICIES-"].update(
+            set_to_index=list(retention_policies_presets.keys()).index(
+                current_policy_name
+            )
+        )
+    else:
+        wizard["-RETENTION-POLICIES-"].update(
+            _t("config_gui.select_a_retention_policy_preset")
+        )
 
     wizard["-WIZARD-CONFIG-FILE-"].update(str(config_file))
 
@@ -693,8 +712,8 @@ def start_wizard(full_config: dict, config_file: str):
             window=wizard,
             event=event,
             values=values,
-            object_type="repos",
-            object_name="default",
+            object_type=OBJECT_TYPE,
+            object_name=OBJECT_NAME,
             unencrypted=False,
             is_wizard=True,
         )
@@ -735,8 +754,8 @@ def start_wizard(full_config: dict, config_file: str):
             full_config = npbackup.gui.common_gui_logic.update_config_dict(
                 wizard,
                 full_config,
-                object_type="repos",
-                object_name="default",
+                object_type=OBJECT_TYPE,
+                object_name=OBJECT_NAME,
                 values=values,
                 is_wizard=True,
             )

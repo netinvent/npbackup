@@ -591,6 +591,7 @@ def retention_col():
                 values=[],
                 key="-RETENTION-POLICIES-",
                 enable_events=True,
+                expand_x=True,
             )
         ],
         [

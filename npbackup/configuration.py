@@ -345,7 +345,7 @@ empty_config_dict = {
                 "group_by_host": True,
                 "group_by_tags": True,
                 "group_by_paths": False,
-            }
+            },
         }
     },
 }

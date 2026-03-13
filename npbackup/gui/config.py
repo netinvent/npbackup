@@ -1198,14 +1198,6 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
     if config_file:
         window.set_title(f"Configuration - {config_file}")
 
-    # Common config pages with wizard patches
-    retention_policies = npbackup.gui.common_gui_logic.get_retention_policies(full_config)
-    window["-RETENTION-POLICY-ADVANCED-COLUMN-"].update(visible=True)
-    window["-RETENTION-POLICY-ADVANCED-"].update(visible=False)
-
-    window["-RETENTION-POLICIES-"].update(values=list(retention_policies.keys()))
-    window["-RETENTION-POLICIES-"].update(set_to_index=0)
-
     event, values = window.read(timeout=0.1)
     npbackup.gui.common_gui_logic.update_monitoring_visibility(
         window=window, values=values
@@ -1222,6 +1214,33 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             npbackup.gui.common_gui_logic.update_object_selector(
                 window, full_config, current_object_name, current_object_type
             )
+
+        # Common config pages with wizard patches
+        retention_policies_presets = (
+            npbackup.gui.common_gui_logic.get_retention_policies_presets(full_config)
+        )
+        current_policy_name = (
+            npbackup.gui.common_gui_logic.retention_policy_preset_name(
+                full_config, object_type, object_name, retention_policies_presets
+            )
+        )
+        window["-RETENTION-POLICIES-"].update(
+            values=list(retention_policies_presets.keys())
+        )
+        if current_policy_name:
+            window["-RETENTION-POLICIES-"].update(
+                set_to_index=list(retention_policies_presets.keys()).index(
+                    current_policy_name
+                )
+            )
+        else:
+            window["-RETENTION-POLICIES-"].update(
+                _t("config_gui.select_a_retention_policy_preset")
+            )
+
+        window["-RETENTION-POLICY-ADVANCED-COLUMN-"].update(visible=True)
+        window["-RETENTION-POLICY-ADVANCED-"].update(visible=False)
+
         if event in (
             sg.WIN_CLOSED,
             sg.WIN_X_EVENT,
@@ -1238,7 +1257,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             values=values,
             object_type=object_type,
             object_name=object_name,
-            unencrypted=False, # WIP
+            unencrypted=False,  # WIP
             is_wizard=False,
         )
 
