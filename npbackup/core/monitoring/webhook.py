@@ -106,9 +106,6 @@ class WebhookMonitor(MonitoringBackend):
 
         # Build the output structure
         output = self.build_json_output(metrics, operation)
-        print("OUTPUT")
-        print(output)
-        exit(1)
 
         # Store the result for potential retrieval
         self.last_result = output
