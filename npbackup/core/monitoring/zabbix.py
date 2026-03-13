@@ -207,11 +207,13 @@ class ZabbixMonitor(MonitoringBackend):
                 if metric_name == "npbackup_upgrade_state":
                     item_key = f"npbackup.exec_state[{self.repo_name},upgrade]"
                 else:
-                    short_name = metric_name[len("npbackup_"):]
+                    short_name = metric_name[len("npbackup_") :]
                     item_key = f"npbackup.{short_name}[{self.repo_name},{self.action}]"
                 try:
                     items.append(
-                        ItemValue(instance, item_key, value, clock=self.metrics_timestamp)
+                        ItemValue(
+                            instance, item_key, value, clock=self.metrics_timestamp
+                        )
                     )
                 except Exception as exc:
                     logger.warning(
@@ -219,7 +221,7 @@ class ZabbixMonitor(MonitoringBackend):
                     )
 
             elif metric_name.startswith("restic_"):
-                short_name = metric_name[len("restic_"):]
+                short_name = metric_name[len("restic_") :]
                 if isinstance(value, dict):
                     # Flatten dict metrics, e.g. restic_files: {"new": 5, "changed": 3}
                     # becomes restic.files[repo,action,new] = 5
@@ -230,7 +232,10 @@ class ZabbixMonitor(MonitoringBackend):
                         try:
                             items.append(
                                 ItemValue(
-                                    instance, item_key, sub_value, clock=self.metrics_timestamp
+                                    instance,
+                                    item_key,
+                                    sub_value,
+                                    clock=self.metrics_timestamp,
                                 )
                             )
                         except Exception as exc:
@@ -241,20 +246,18 @@ class ZabbixMonitor(MonitoringBackend):
                     item_key = f"restic.{short_name}[{self.repo_name},{self.action}]"
                     try:
                         items.append(
-                            ItemValue(instance, item_key, value, clock=self.metrics_timestamp)
+                            ItemValue(
+                                instance, item_key, value, clock=self.metrics_timestamp
+                            )
                         )
                     except Exception as exc:
                         logger.warning(
                             f"Failed to create Zabbix ItemValue for {metric_name}: {exc}"
                         )
             else:
-                logger.warning(
-                    f"Unknown metric namespace for {metric_name}, skipping."
-                )
+                logger.warning(f"Unknown metric namespace for {metric_name}, skipping.")
 
-        logger.debug(
-            f"Created {len(items)} Zabbix item values for host {instance}"
-        )
+        logger.debug(f"Created {len(items)} Zabbix item values for host {instance}")
         if items:
             logger.debug(
                 "Zabbix items:\n"
