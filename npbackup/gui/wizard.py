@@ -868,6 +868,7 @@ def start_wizard(full_config: dict, config_file: str):
                 )
 
         ## END NAVIGATION ##
+    wizard.close()
     return full_config, config_file
 
 
