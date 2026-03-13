@@ -107,7 +107,7 @@ def metric_analyser(
             metrics["restic_files"] = {}
             metrics["restic_dirs"] = {}
             for key, value in restic_json.items():
-                # Compat with v3.0.x versions whre we used to have restic_total_duration_seconds
+                # Compat with v3.0.x versions where we used to have restic_total_duration_seconds
                 if key == "total_duration":
                     key = "total_duration_seconds"
                 if key.startswith("files_") or key.startswith("dirs_"):
