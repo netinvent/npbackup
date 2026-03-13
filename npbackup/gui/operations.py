@@ -147,8 +147,7 @@ def task_scheduler(config_file: str, full_config: dict) -> None:
                 popup_error(
                     _t(
                         "config_gui.scheduled_task_creation_failure"
-                        + " cannot save config file"
-                    )
+                    ) + "\n" + _t("config_gui.cannot_save_configuration")
                 )
                 continue
 
@@ -257,9 +256,9 @@ def show_stats(statistics: List[dict]) -> None:
             entry_good = True
         except Exception:
             pass
-    if not entry_good:
-        data.append([repo_name, state])
-        logger.debug(f"Failed statistics for entry: {entry}")
+        if not entry_good:
+            data.append([repo_name, state])
+            logger.debug(f"Failed statistics for entry: {entry}")
 
     if stats_type == "raw":
         headings = [
