@@ -22,12 +22,6 @@ import npbackup.gui.common_gui
 from npbackup.gui.helpers import popup_error, password_complexity, WaitWindow
 from npbackup.core.i18n_helper import _t
 import npbackup.configuration
-from npbackup.gui.ttk_theme import (
-    CURRENT_THEME,
-    SIMPLEGUI_THEME,
-    SIMPLEGUI_DARK_THEME,
-    reskin_job,
-)
 from npbackup.core.monitoring.email import EmailMonitor
 from npbackup.gui.constants import combo_boxes
 from ofunctions.misc import get_key_from_value, BytesConverter
@@ -1249,7 +1243,6 @@ def handle_gui_events(
     """
     Handles various GUI events for both config and wizard GUIs
     """
-    global CURRENT_THEME
     # No need for global variable for dicts
     # global COLUMN_LIST_COUNTERS
 

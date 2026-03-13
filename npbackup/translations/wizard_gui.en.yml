@@ -58,4 +58,4 @@ en:
   wizard_ending_text: Your backup configuration is now complete and will be saved. You can directly edit or use the configuration interface to edit the following configuration file or add some specific settings in the main configuration settings.
   wizard_ending_text2: Thank you for using
 
-  do_you_still_want_to_save: Do you still want to save the current configruation ?
+  do_you_still_want_to_save: Do you still want to save the current configuration ?
