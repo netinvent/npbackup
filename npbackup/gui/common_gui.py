@@ -530,7 +530,7 @@ def global_webhooks_col():
                         sg.Input(key="global_webhooks.password", size=(50, 1)),
                     ],
                     [
-                        sg.Text(_t("config_gui.webhook_spretty_json"), size=(40, 1)),
+                        sg.Text(_t("config_gui.webhooks_pretty_json"), size=(40, 1)),
                         sg.Input(key="global_webhooks.pretty_json", size=(50, 1)),
                     ],
                 ],
@@ -973,7 +973,7 @@ def scheduling_col(is_wizard: bool = False, task_types: list = None):
         ],
     ]
 
-    # Conststruct object depending on environment
+    # Construct object depending on environment
     schedule_col = object_selector
     if not is_wizard:
         schedule_col = schedule_col + [[sg.HorizontalSeparator()]]

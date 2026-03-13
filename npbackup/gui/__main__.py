@@ -446,7 +446,7 @@ def ls_window(
                 sg.WIN_CLOSED,
                 sg.WIN_X_EVENT,
                 "quit",
-                "-WINDOW CLOSE ATTEMPED-",
+                "-WINDOW CLOSE ATTEMPTED-",
             ):
                 break
             if event == "restore_to":
@@ -1335,7 +1335,7 @@ def _main_gui(viewer_mode: bool):
                     full_config, config_file = start_wizard(full_config, config_file)
                 if full_config and not viewer_mode:
                     repo_list = enable_gui_options(full_config, config_file, window)
-                event = "-STATE-BUTTON-"
+                event = "--STATE-BUTTON--"
             GUI_STATUS_IGNORE_ERRORS = True
             # Make sure we trigger a GUI refresh when configuration is changed
             # Also make sure we retrigger get_config

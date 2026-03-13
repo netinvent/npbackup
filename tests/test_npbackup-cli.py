@@ -71,7 +71,7 @@ DUMP_FILE_RESTIC_PATH = "/npbackup/npbackup/__version__.py"
 
 class RedirectedStdout:
     """
-    Balantly copied from https://stackoverflow.com/a/45899925/2635443
+    Blatanly copied from https://stackoverflow.com/a/45899925/2635443
     """
 
     def __init__(self):

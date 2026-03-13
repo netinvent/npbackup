@@ -35,7 +35,7 @@ CURRENT_THEME = SIMPLEGUI_THEME
 sg.DEFAULT_FONT = STANDARD_FONT
 
 # Make app DPI aware on Windows
-# Balantly stolen from https://github.com/PySimpleGUI/PySimpleGUI/issues/3880#issuecomment-775990455
+# Blatantly stolen from https://github.com/PySimpleGUI/PySimpleGUI/issues/3880#issuecomment-775990455
 # WIP: We might want this to be optional
 # WIP: Documentation
 # WIP: add darkdetect
@@ -75,7 +75,6 @@ sg.ADDITIONAL_TTK_STYLING_PATHS = os.path.join(
 # sg.ADDITIONAL_TTK_STYLING_PATHS = os.path.join(os.path.dirname(__file__), "azure/azure.tcl")
 sg.USE_TTK_BUTTONS = False
 
-CURRENT_THEME = SIMPLEGUI_THEME
 RESKIN_WINDOW = None
 
 
