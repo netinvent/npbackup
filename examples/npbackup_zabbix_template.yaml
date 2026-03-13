@@ -33,7 +33,7 @@ zabbix_export:
           type: TRAP
           key: npbackup.discovery
           delay: '0'
-          lifetime: 30d
+          lifetime: '30d'
           description: 'Discovers NPBackup repository/action combinations via trapper.'
           item_prototypes:
             # --- NPBackup execution metrics ---
@@ -49,6 +49,20 @@ zabbix_export:
                   value: npbackup
                 - tag: repo
                   value: '{#REPO_NAME}'
+                - tag: action
+                  value: '{#ACTION}'
+                - tag: group
+                  value: '{#GROUP}'
+                - tag: backup_job
+                  value: '{#BACKUP_JOB}'
+                - tag: npversion
+                  value: '{#NPVERSION}'
+                - tag: audience
+                  value: '{#AUDIENCE}'
+                - tag: os
+                  value: '{#OS}'
+                - tag: arch
+                  value: '{#ARCH}'
             - uuid: a26bd0d7385e444aa97ab4494d72cb27
               name: 'NPBackup: Execution time [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
@@ -60,6 +74,20 @@ zabbix_export:
               tags:
                 - tag: component
                   value: npbackup
+                - tag: action
+                  value: '{#ACTION}'
+                - tag: group
+                  value: '{#GROUP}'
+                - tag: backup_job
+                  value: '{#BACKUP_JOB}'
+                - tag: npversion
+                  value: '{#NPVERSION}'
+                - tag: audience
+                  value: '{#AUDIENCE}'
+                - tag: os
+                  value: '{#OS}'
+                - tag: arch
+                  value: '{#ARCH}'
             # --- Restic backup result ---
             - uuid: 306b2954bb5f4617be4f43225a7111ad
               name: 'Restic: Backup failure [{#REPO_NAME}, {#ACTION}]'
@@ -71,6 +99,20 @@ zabbix_export:
               tags:
                 - tag: component
                   value: restic
+                - tag: action
+                  value: '{#ACTION}'
+                - tag: group
+                  value: '{#GROUP}'
+                - tag: backup_job
+                  value: '{#BACKUP_JOB}'
+                - tag: npversion
+                  value: '{#NPVERSION}'
+                - tag: audience
+                  value: '{#AUDIENCE}'
+                - tag: os
+                  value: '{#OS}'
+                - tag: arch
+                  value: '{#ARCH}'
             - uuid: bc1a40bd36d846a6bac1b0fe135f2ed9
               name: 'Restic: Errors [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
@@ -81,6 +123,20 @@ zabbix_export:
               tags:
                 - tag: component
                   value: restic
+                - tag: action
+                  value: '{#ACTION}'
+                - tag: group
+                  value: '{#GROUP}'
+                - tag: backup_job
+                  value: '{#BACKUP_JOB}'
+                - tag: npversion
+                  value: '{#NPVERSION}'
+                - tag: audience
+                  value: '{#AUDIENCE}'
+                - tag: os
+                  value: '{#OS}'
+                - tag: arch
+                  value: '{#ARCH}'
             # --- Restic data metrics ---
             - uuid: 619bf9efb5e74bde9c4e7f595ddaa686
               name: 'Restic: Total bytes processed [{#REPO_NAME}, {#ACTION}]'
@@ -92,7 +148,21 @@ zabbix_export:
               description: 'Total bytes processed during backup'
               tags:
                 - tag: component
-                  value: restic
+                  value: Restic
+                - tag: action
+                  value: '{#ACTION}'
+                - tag: group
+                  value: '{#GROUP}'
+                - tag: backup_job
+                  value: '{#BACKUP_JOB}'
+                - tag: npversion
+                  value: '{#NPVERSION}'
+                - tag: audience
+                  value: '{#AUDIENCE}'
+                - tag: os
+                  value: '{#OS}'
+                - tag: arch
+                  value: '{#ARCH}'
             - uuid: 441a73fb5a1e4e9da8dcaa3139739e8d
               name: 'Restic: Total duration [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
@@ -104,6 +174,20 @@ zabbix_export:
               tags:
                 - tag: component
                   value: restic
+                - tag: action
+                  value: '{#ACTION}'
+                - tag: group
+                  value: '{#GROUP}'
+                - tag: backup_job
+                  value: '{#BACKUP_JOB}'
+                - tag: npversion
+                  value: '{#NPVERSION}'
+                - tag: audience
+                  value: '{#AUDIENCE}'
+                - tag: os
+                  value: '{#OS}'
+                - tag: arch
+                  value: '{#ARCH}'
             - uuid: a44584a45d4c47f1aa1d088f1200df00
               name: 'Restic: Data added [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
@@ -115,6 +199,20 @@ zabbix_export:
               tags:
                 - tag: component
                   value: restic
+                - tag: action
+                  value: '{#ACTION}'
+                - tag: group
+                  value: '{#GROUP}'
+                - tag: backup_job
+                  value: '{#BACKUP_JOB}'
+                - tag: npversion
+                  value: '{#NPVERSION}'
+                - tag: audience
+                  value: '{#AUDIENCE}'
+                - tag: os
+                  value: '{#OS}'
+                - tag: arch
+                  value: '{#ARCH}'
             - uuid: de7a0271721943b68d45d9723a50bf70
               name: 'Restic: Data stored [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
@@ -126,6 +224,20 @@ zabbix_export:
               tags:
                 - tag: component
                   value: restic
+                - tag: action
+                  value: '{#ACTION}'
+                - tag: group
+                  value: '{#GROUP}'
+                - tag: backup_job
+                  value: '{#BACKUP_JOB}'
+                - tag: npversion
+                  value: '{#NPVERSION}'
+                - tag: audience
+                  value: '{#AUDIENCE}'
+                - tag: os
+                  value: '{#OS}'
+                - tag: arch
+                  value: '{#ARCH}'
             # --- Restic files metrics ---
             - uuid: 1385d4370128448ea9a22be75d055e0b
               name: 'Restic: New files [{#REPO_NAME}, {#ACTION}]'
@@ -137,6 +249,20 @@ zabbix_export:
               tags:
                 - tag: component
                   value: restic
+                - tag: action
+                  value: '{#ACTION}'
+                - tag: group
+                  value: '{#GROUP}'
+                - tag: backup_job
+                  value: '{#BACKUP_JOB}'
+                - tag: npversion
+                  value: '{#NPVERSION}'
+                - tag: audience
+                  value: '{#AUDIENCE}'
+                - tag: os
+                  value: '{#OS}'
+                - tag: arch
+                  value: '{#ARCH}'
             - uuid: edcc8f8c86ea478e923a1f04ea77b62d
               name: 'Restic: Changed files [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
@@ -147,6 +273,20 @@ zabbix_export:
               tags:
                 - tag: component
                   value: restic
+                - tag: action
+                  value: '{#ACTION}'
+                - tag: group
+                  value: '{#GROUP}'
+                - tag: backup_job
+                  value: '{#BACKUP_JOB}'
+                - tag: npversion
+                  value: '{#NPVERSION}'
+                - tag: audience
+                  value: '{#AUDIENCE}'
+                - tag: os
+                  value: '{#OS}'
+                - tag: arch
+                  value: '{#ARCH}'
             - uuid: 9ec20103220c48e6b2fb374e47925ddf
               name: 'Restic: Unmodified files [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
@@ -157,6 +297,20 @@ zabbix_export:
               tags:
                 - tag: component
                   value: restic
+                - tag: action
+                  value: '{#ACTION}'
+                - tag: group
+                  value: '{#GROUP}'
+                - tag: backup_job
+                  value: '{#BACKUP_JOB}'
+                - tag: npversion
+                  value: '{#NPVERSION}'
+                - tag: audience
+                  value: '{#AUDIENCE}'
+                - tag: os
+                  value: '{#OS}'
+                - tag: arch
+                  value: '{#ARCH}'
             - uuid: 8ed24d954c70442c9971a62aed664bb7
               name: 'Restic: Total files processed [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
@@ -167,6 +321,20 @@ zabbix_export:
               tags:
                 - tag: component
                   value: restic
+                - tag: action
+                  value: '{#ACTION}'
+                - tag: group
+                  value: '{#GROUP}'
+                - tag: backup_job
+                  value: '{#BACKUP_JOB}'
+                - tag: npversion
+                  value: '{#NPVERSION}'
+                - tag: audience
+                  value: '{#AUDIENCE}'
+                - tag: os
+                  value: '{#OS}'
+                - tag: arch
+                  value: '{#ARCH}'
             # --- Restic dirs metrics ---
             - uuid: 070782814ef74e2093c4f50779b11310
               name: 'Restic: New directories [{#REPO_NAME}, {#ACTION}]'
@@ -178,6 +346,20 @@ zabbix_export:
               tags:
                 - tag: component
                   value: restic
+                - tag: action
+                  value: '{#ACTION}'
+                - tag: group
+                  value: '{#GROUP}'
+                - tag: backup_job
+                  value: '{#BACKUP_JOB}'
+                - tag: npversion
+                  value: '{#NPVERSION}'
+                - tag: audience
+                  value: '{#AUDIENCE}'
+                - tag: os
+                  value: '{#OS}'
+                - tag: arch
+                  value: '{#ARCH}'
             - uuid: 910a6ffbe58f4854b256f394fef8f9e3
               name: 'Restic: Changed directories [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
@@ -188,6 +370,20 @@ zabbix_export:
               tags:
                 - tag: component
                   value: restic
+                - tag: action
+                  value: '{#ACTION}'
+                - tag: group
+                  value: '{#GROUP}'
+                - tag: backup_job
+                  value: '{#BACKUP_JOB}'
+                - tag: npversion
+                  value: '{#NPVERSION}'
+                - tag: audience
+                  value: '{#AUDIENCE}'
+                - tag: os
+                  value: '{#OS}'
+                - tag: arch
+                  value: '{#ARCH}'
             - uuid: a41f962a8bc641dba2326b1ce22b696f
               name: 'Restic: Unmodified directories [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
@@ -198,6 +394,20 @@ zabbix_export:
               tags:
                 - tag: component
                   value: restic
+                - tag: action
+                  value: '{#ACTION}'
+                - tag: group
+                  value: '{#GROUP}'
+                - tag: backup_job
+                  value: '{#BACKUP_JOB}'
+                - tag: npversion
+                  value: '{#NPVERSION}'
+                - tag: audience
+                  value: '{#AUDIENCE}'
+                - tag: os
+                  value: '{#OS}'
+                - tag: arch
+                  value: '{#ARCH}'
           trigger_prototypes:
             - uuid: 4449777f05204dfc834b268c17b5e333
               expression: 'last(/npbackup_trapper/npbackup.exec_state[{#REPO_NAME},{#ACTION}])=3'

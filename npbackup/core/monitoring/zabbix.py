@@ -61,6 +61,8 @@ class ZabbixMonitor(MonitoringBackend):
             repo_config: Repository configuration dictionary
         """
         super().__init__(repo_config, monitoring_config)
+        self.repo_name = repo_config.g("name")
+        self.action = self.common_labels.get("action", "unknown")
 
     def is_enabled(self) -> bool:
         if not ZABBIX_AVAILABLE:
@@ -191,8 +193,6 @@ class ZabbixMonitor(MonitoringBackend):
         """
         items = []
         instance = self.common_labels.get("instance", "default_instance")
-        repo_name = self.common_labels.get("repo_name", "unknown")
-        action = self.common_labels.get("action", operation)
 
         for metric_name, value in metrics.items():
             if value is None:
@@ -205,10 +205,10 @@ class ZabbixMonitor(MonitoringBackend):
             if metric_name.startswith("npbackup_"):
                 # Map upgrade state to npbackup.exec_state with action=upgrade
                 if metric_name == "npbackup_upgrade_state":
-                    item_key = f"npbackup.exec_state[{repo_name},upgrade]"
+                    item_key = f"npbackup.exec_state[{self.repo_name},upgrade]"
                 else:
                     short_name = metric_name[len("npbackup_"):]
-                    item_key = f"npbackup.{short_name}[{repo_name},{action}]"
+                    item_key = f"npbackup.{short_name}[{self.repo_name},{self.action}]"
                 try:
                     items.append(
                         ItemValue(instance, item_key, value, clock=self.metrics_timestamp)
@@ -226,7 +226,7 @@ class ZabbixMonitor(MonitoringBackend):
                     for sub_metric, sub_value in value.items():
                         if sub_value is None:
                             continue
-                        item_key = f"restic.{short_name}[{repo_name},{action},{sub_metric}]"
+                        item_key = f"restic.{short_name}[{self.repo_name},{self.action},{sub_metric}]"
                         try:
                             items.append(
                                 ItemValue(
@@ -238,7 +238,7 @@ class ZabbixMonitor(MonitoringBackend):
                                 f"Failed to create Zabbix ItemValue for {metric_name}.{sub_metric}: {exc}"
                             )
                 else:
-                    item_key = f"restic.{short_name}[{repo_name},{action}]"
+                    item_key = f"restic.{short_name}[{self.repo_name},{self.action}]"
                     try:
                         items.append(
                             ItemValue(instance, item_key, value, clock=self.metrics_timestamp)
@@ -271,17 +271,22 @@ class ZabbixMonitor(MonitoringBackend):
         """
         Send Low-Level Discovery data to Zabbix so trapper item prototypes
         are instantiated for this repo/action combination.
+
+        All common_labels are sent as LLD macros so they can be used as
+        tags on discovered items, mirroring how Prometheus exposes labels.
         """
         instance = self.common_labels.get("instance", "default_instance")
-        repo_name = self.common_labels.get("repo_name", "unknown")
-        action = self.common_labels.get("action", "unknown")
 
-        lld_data = json.dumps([
-            {
-                "{#REPO_NAME}": repo_name,
-                "{#ACTION}": action,
-            }
-        ])
+        # Build LLD entity with all common labels as macros
+        # ("instance" is the Zabbix host, not an LLD macro)
+        lld_entity = {}
+        for label, value in self.common_labels.items():
+            if label == "instance":
+                continue
+            macro_name = "{#" + label.upper() + "}"
+            lld_entity[macro_name] = str(value) if value is not None else ""
+
+        lld_data = json.dumps([lld_entity])
 
         items = [
             ItemValue(
@@ -290,7 +295,7 @@ class ZabbixMonitor(MonitoringBackend):
         ]
 
         logger.debug(
-            f"Sending Zabbix LLD data for host {instance}: repo={repo_name}, action={action}"
+            f"Sending Zabbix LLD data for host {instance}: repo={self.repo_name}, action={self.action}"
         )
         return self._send_to_zabbix(zabbix_server, zabbix_port, items, psk_wrapper)
 
