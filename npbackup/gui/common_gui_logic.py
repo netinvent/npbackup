@@ -304,7 +304,7 @@ def create_object(window: sg.Window, full_config: dict) -> dict:
         full_config = update_object_gui(
             window, full_config, object_type, object_name, unencrypted=False
         )
-        update_global_gui(window, full_config, unencrypted=False)
+        update_global_gui(window, full_config, unencrypted=False, is_wizard=False)
     return full_config, object_type, object_name
 
 
@@ -333,7 +333,7 @@ def delete_object(window: sg.Window, full_config: dict, full_object_name: str) -
     if result == _t("generic.yes"):
         full_config.d(f"{object_type}.{object_name}")
         full_config = update_object_gui(window, full_config, None, unencrypted=False)
-        update_global_gui(window, full_config, unencrypted=False)
+        update_global_gui(window, full_config, unencrypted=False, is_wizard=False)
     return full_config
 
 
@@ -577,7 +577,7 @@ def update_object_gui(
 
 
 def update_global_gui(
-    window: sg.Window, full_config: dict, unencrypted: bool = False, is_wizard=True
+    window: sg.Window, full_config: dict, unencrypted: bool = False, is_wizard=False
 ):
     global_config = CommentedMap()
 
@@ -596,7 +596,7 @@ def update_global_gui(
                     add_email_recipient_row(window, recipient, notification_types)
             except KeyError:
                 logger.debug("No recipients found in global_email settings, skipping")
-            continue
+
         if is_wizard and key in ("global_options", "identity"):
             continue
         if (

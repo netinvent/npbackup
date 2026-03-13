@@ -1188,7 +1188,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
         window, full_config, unencrypted=False
     )
     npbackup.gui.common_gui_logic.update_global_gui(
-        window, full_config, unencrypted=False
+        window, full_config, unencrypted=False, is_wizard=False
     )
 
     # These contain object name/type so on object change we can update the current object before loading new one
@@ -1265,7 +1265,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 unencrypted=False,
             )
             npbackup.gui.common_gui_logic.update_global_gui(
-                window, full_config, unencrypted=False
+                window, full_config, unencrypted=False, is_wizard=False
             )
             continue
         if event == "-OBJECT-DELETE-":
@@ -1325,7 +1325,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     unencrypted=False,
                 )
                 npbackup.gui.common_gui_logic.update_global_gui(
-                    window, full_config, unencrypted=False
+                    window, full_config, unencrypted=False, is_wizard=False
                 )
             continue
 
@@ -1418,7 +1418,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     unencrypted=True,
                 )
                 npbackup.gui.common_gui_logic.update_global_gui(
-                    window, full_config, unencrypted=True
+                    window, full_config, unencrypted=True, is_wizard=False
                 )
             continue
         if event == "repo_uri":
