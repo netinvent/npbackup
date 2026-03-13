@@ -395,8 +395,9 @@ def update_object_selector(
     window["-OBJECT-SELECT-"].Update(value=obj)
 
     # Also update task object selector
-    window["-OBJECT-SELECT-TASKS-"].Update(values=object_list)
-    window["-OBJECT-SELECT-TASKS-"].Update(value=obj)
+    if "-OBJECT-SELECT-TASKS-" in window.AllKeysDict:
+        window["-OBJECT-SELECT-TASKS-"].Update(values=object_list)
+        window["-OBJECT-SELECT-TASKS-"].Update(value=obj)
 
     return get_object_from_combo(obj)
 
