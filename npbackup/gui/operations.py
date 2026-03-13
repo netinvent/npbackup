@@ -265,10 +265,10 @@ def show_stats(statistics: List[dict]) -> None:
             "Repo",
             "Stat state",
             "Total size",
-            "Total uncompressed size",
-            "Compression progress",
-            "Compression space savings",
-            "Compression Ratio",
+            "Total uncompress size",
+            "Compress progress",
+            "Compress space savings",
+            "Compress Ratio",
             "Total Blob Count",
             "Snapshot Count",
         ]
@@ -281,12 +281,20 @@ def show_stats(statistics: List[dict]) -> None:
             "Snapshot Count",
         ]
     layout = [
-        [sg.Table(values=data, headings=headings, justification="right")],
+        [sg.Table(
+            values=data,
+            headings=headings,
+            justification="right",
+            auto_size_columns=True,
+            expand_x=True,
+            expand_y=True,
+        )],
         [sg.Button(_t("generic.close"), key="--EXIT--")],
     ]
 
     window = sg.Window(
-        "Statistics", layout, keep_on_top=True, element_justification="R"
+        "Statistics", layout, keep_on_top=True, element_justification="R",
+        size=(800, 400)
     )
     while True:
         event, _ = window.read()
@@ -355,6 +363,7 @@ def operations_gui(full_config: dict, config_file: str) -> dict:
                             headings=headings,
                             key="repo-and-group-list",
                             auto_size_columns=True,
+                            size=(None, 15),
                             justification="left",
                         ),
                     ],
@@ -365,25 +374,25 @@ def operations_gui(full_config: dict, config_file: str) -> dict:
                         sg.Button(
                             _t("operations_gui.housekeeping"),
                             key="--HOUSEKEEPING--",
-                            size=(45, 1),
+                            size=(50, 1),
                         ),
                         sg.Button(
                             _t("operations_gui.task_scheduler"),
                             key="--TASK-SCHEDULER--",
-                            size=(45, 1),
+                            size=(50, 1),
                         ),
                     ],
                     [
                         sg.Button(
                             _t("operations_gui.quick_check"),
                             key="--QUICK-CHECK--",
-                            size=(45, 1),
+                            size=(50, 1),
                             visible=False,
                         ),
                         sg.Button(
                             _t("operations_gui.full_check"),
                             key="--FULL-CHECK--",
-                            size=(45, 1),
+                            size=(50, 1),
                             visible=False,
                         ),
                     ],
@@ -391,13 +400,13 @@ def operations_gui(full_config: dict, config_file: str) -> dict:
                         sg.Button(
                             _t("operations_gui.repair_index"),
                             key="--REPAIR-INDEX--",
-                            size=(45, 1),
+                            size=(50, 1),
                             visible=False,
                         ),
                         sg.Button(
                             _t("operations_gui.repair_snapshots"),
                             key="--REPAIR-SNAPSHOTS--",
-                            size=(45, 1),
+                            size=(50, 1),
                             visible=False,
                         ),
                     ],
@@ -405,13 +414,13 @@ def operations_gui(full_config: dict, config_file: str) -> dict:
                         sg.Button(
                             _t("operations_gui.repair_packs"),
                             key="--REPAIR-PACKS--",
-                            size=(45, 1),
+                            size=(50, 1),
                             visible=False,
                         ),
                         sg.Button(
                             _t("operations_gui.forget_using_retention_policy"),
                             key="--FORGET--",
-                            size=(45, 1),
+                            size=(50, 1),
                             visible=False,
                         ),
                     ],
@@ -419,13 +428,13 @@ def operations_gui(full_config: dict, config_file: str) -> dict:
                         sg.Button(
                             _t("operations_gui.standard_prune"),
                             key="--STANDARD-PRUNE--",
-                            size=(45, 1),
+                            size=(50, 1),
                             visible=False,
                         ),
                         sg.Button(
                             _t("operations_gui.max_prune"),
                             key="--MAX-PRUNE--",
-                            size=(45, 1),
+                            size=(50, 1),
                             visible=False,
                         ),
                     ],
@@ -433,13 +442,13 @@ def operations_gui(full_config: dict, config_file: str) -> dict:
                         sg.Button(
                             _t("operations_gui.unlock"),
                             key="--UNLOCK--",
-                            size=(45, 1),
+                            size=(50, 1),
                             visible=False,
                         ),
                         sg.Button(
                             _t("operations_gui.recover"),
                             key="--RECOVER--",
-                            size=(45, 1),
+                            size=(50, 1),
                             visible=False,
                         ),
                     ],
@@ -447,18 +456,18 @@ def operations_gui(full_config: dict, config_file: str) -> dict:
                         sg.Button(
                             _t("operations_gui.stats"),
                             key="--STATS--",
-                            size=(45, 1),
+                            size=(50, 1),
                         ),
                         sg.Button(
                             _t("operations_gui.stats_raw"),
                             key="--STATS-RAW--",
-                            size=(45, 1),
+                            size=(50, 1),
                             visible=False,
                         ),
                         sg.Button(
                             _t("operations_gui.show_advanced"),
                             key="--ADVANCED--",
-                            size=(45, 1),
+                            size=(50, 1),
                             visible=True,
                         ),
                     ],
