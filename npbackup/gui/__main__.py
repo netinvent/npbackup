@@ -1434,11 +1434,12 @@ def main_gui(viewer_mode=False):
     )
     # We also need to make to revert state of the cmd window when exiting
     # otherwise there will be a hidden cmd window left after running compiled windows version
-    atexit.register(
-        npbackup.gui.windows_gui_helper.handle_current_window,
-        action="show",
-        use_last=True,
-    )
+    if version_dict["comp"]:
+        atexit.register(
+            npbackup.gui.windows_gui_helper.handle_current_window,
+            action="show",
+            use_last=True,
+        )
     try:
         # Hide CMD window when Nuitka hide action does not work
         if _DEBUG and version_dict["comp"]:
