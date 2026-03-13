@@ -1,0 +1,247 @@
+# NPBackup Zabbix Template
+# Compatible with Zabbix 6.0+
+#
+# This template uses a trapper-based Low-Level Discovery (LLD) rule.
+# NPBackup sends LLD data via npbackup.discovery, which causes Zabbix
+# to instantiate item prototypes for each repo/action combination.
+#
+# Setup:
+#   1. Import this template into Zabbix (Configuration > Templates > Import)
+#   2. Link the template to the host whose name matches the "instance" value
+#      configured in your npbackup monitoring settings (monitoring.instance)
+#   3. Ensure the Zabbix server accepts trapper data on port 10051
+#   4. Run a backup - npbackup will send discovery + metric data automatically
+zabbix_export:
+  version: '6.0'
+  date: '2026-03-13T21:00:00Z'
+  groups:
+    - uuid: 3bc3795c997b49e5a9d5b0775ea6f252
+      name: Templates/Applications
+  templates:
+    - uuid: 251ee3ca48214af490b72e2e4c389372
+      template: npbackup_trapper
+      name: 'NPBackup by Zabbix trapper'
+      description: |
+        Monitors NPBackup operations via Zabbix sender/trapper protocol.
+        Requires npbackup to be configured with Zabbix monitoring enabled.
+        See https://github.com/netinvent/npbackup
+      groups:
+        - name: Templates/Applications
+      discovery_rules:
+        - uuid: ce76ca8e91514194a95145028fa5ef8c
+          name: 'NPBackup repository discovery'
+          type: TRAP
+          key: npbackup.discovery
+          delay: '0'
+          lifetime: 30d
+          description: 'Discovers NPBackup repository/action combinations via trapper.'
+          item_prototypes:
+            # --- NPBackup execution metrics ---
+            - uuid: 65ffbd74588d46fc8f79c79d5f526e8d
+              name: 'NPBackup: Execution state [{#REPO_NAME}, {#ACTION}]'
+              type: TRAP
+              key: 'npbackup.exec_state[{#REPO_NAME},{#ACTION}]'
+              delay: '0'
+              value_type: UNSIGNED
+              description: 'Execution state: 0=success, 1=warning, 2=error, 3=critical'
+              tags:
+                - tag: component
+                  value: npbackup
+                - tag: repo
+                  value: '{#REPO_NAME}'
+            - uuid: a26bd0d7385e444aa97ab4494d72cb27
+              name: 'NPBackup: Execution time [{#REPO_NAME}, {#ACTION}]'
+              type: TRAP
+              key: 'npbackup.exec_time[{#REPO_NAME},{#ACTION}]'
+              delay: '0'
+              value_type: FLOAT
+              units: s
+              description: 'Total execution time in seconds'
+              tags:
+                - tag: component
+                  value: npbackup
+            # --- Restic backup result ---
+            - uuid: 306b2954bb5f4617be4f43225a7111ad
+              name: 'Restic: Backup failure [{#REPO_NAME}, {#ACTION}]'
+              type: TRAP
+              key: 'restic.backup_failure[{#REPO_NAME},{#ACTION}]'
+              delay: '0'
+              value_type: UNSIGNED
+              description: 'Backup failure flag: 0=success, 1=failure'
+              tags:
+                - tag: component
+                  value: restic
+            - uuid: bc1a40bd36d846a6bac1b0fe135f2ed9
+              name: 'Restic: Errors [{#REPO_NAME}, {#ACTION}]'
+              type: TRAP
+              key: 'restic.errors[{#REPO_NAME},{#ACTION}]'
+              delay: '0'
+              value_type: UNSIGNED
+              description: 'Restic error flag: 0=no errors, 1=errors detected'
+              tags:
+                - tag: component
+                  value: restic
+            # --- Restic data metrics ---
+            - uuid: 619bf9efb5e74bde9c4e7f595ddaa686
+              name: 'Restic: Total bytes processed [{#REPO_NAME}, {#ACTION}]'
+              type: TRAP
+              key: 'restic.total_bytes_processed[{#REPO_NAME},{#ACTION}]'
+              delay: '0'
+              value_type: UNSIGNED
+              units: B
+              description: 'Total bytes processed during backup'
+              tags:
+                - tag: component
+                  value: restic
+            - uuid: 441a73fb5a1e4e9da8dcaa3139739e8d
+              name: 'Restic: Total duration [{#REPO_NAME}, {#ACTION}]'
+              type: TRAP
+              key: 'restic.total_duration_seconds[{#REPO_NAME},{#ACTION}]'
+              delay: '0'
+              value_type: FLOAT
+              units: s
+              description: 'Total restic operation duration in seconds'
+              tags:
+                - tag: component
+                  value: restic
+            - uuid: a44584a45d4c47f1aa1d088f1200df00
+              name: 'Restic: Data added [{#REPO_NAME}, {#ACTION}]'
+              type: TRAP
+              key: 'restic.data_added[{#REPO_NAME},{#ACTION}]'
+              delay: '0'
+              value_type: UNSIGNED
+              units: B
+              description: 'Bytes added to the repository'
+              tags:
+                - tag: component
+                  value: restic
+            - uuid: de7a0271721943b68d45d9723a50bf70
+              name: 'Restic: Data stored [{#REPO_NAME}, {#ACTION}]'
+              type: TRAP
+              key: 'restic.data_stored[{#REPO_NAME},{#ACTION}]'
+              delay: '0'
+              value_type: UNSIGNED
+              units: B
+              description: 'Bytes stored in the repository (after dedup/compression)'
+              tags:
+                - tag: component
+                  value: restic
+            # --- Restic files metrics ---
+            - uuid: 1385d4370128448ea9a22be75d055e0b
+              name: 'Restic: New files [{#REPO_NAME}, {#ACTION}]'
+              type: TRAP
+              key: 'restic.files[{#REPO_NAME},{#ACTION},new]'
+              delay: '0'
+              value_type: UNSIGNED
+              description: 'Number of new files in backup'
+              tags:
+                - tag: component
+                  value: restic
+            - uuid: edcc8f8c86ea478e923a1f04ea77b62d
+              name: 'Restic: Changed files [{#REPO_NAME}, {#ACTION}]'
+              type: TRAP
+              key: 'restic.files[{#REPO_NAME},{#ACTION},changed]'
+              delay: '0'
+              value_type: UNSIGNED
+              description: 'Number of changed files in backup'
+              tags:
+                - tag: component
+                  value: restic
+            - uuid: 9ec20103220c48e6b2fb374e47925ddf
+              name: 'Restic: Unmodified files [{#REPO_NAME}, {#ACTION}]'
+              type: TRAP
+              key: 'restic.files[{#REPO_NAME},{#ACTION},unmodified]'
+              delay: '0'
+              value_type: UNSIGNED
+              description: 'Number of unmodified files in backup'
+              tags:
+                - tag: component
+                  value: restic
+            - uuid: 8ed24d954c70442c9971a62aed664bb7
+              name: 'Restic: Total files processed [{#REPO_NAME}, {#ACTION}]'
+              type: TRAP
+              key: 'restic.files[{#REPO_NAME},{#ACTION},total]'
+              delay: '0'
+              value_type: UNSIGNED
+              description: 'Total number of files processed'
+              tags:
+                - tag: component
+                  value: restic
+            # --- Restic dirs metrics ---
+            - uuid: 070782814ef74e2093c4f50779b11310
+              name: 'Restic: New directories [{#REPO_NAME}, {#ACTION}]'
+              type: TRAP
+              key: 'restic.dirs[{#REPO_NAME},{#ACTION},new]'
+              delay: '0'
+              value_type: UNSIGNED
+              description: 'Number of new directories in backup'
+              tags:
+                - tag: component
+                  value: restic
+            - uuid: 910a6ffbe58f4854b256f394fef8f9e3
+              name: 'Restic: Changed directories [{#REPO_NAME}, {#ACTION}]'
+              type: TRAP
+              key: 'restic.dirs[{#REPO_NAME},{#ACTION},changed]'
+              delay: '0'
+              value_type: UNSIGNED
+              description: 'Number of changed directories in backup'
+              tags:
+                - tag: component
+                  value: restic
+            - uuid: a41f962a8bc641dba2326b1ce22b696f
+              name: 'Restic: Unmodified directories [{#REPO_NAME}, {#ACTION}]'
+              type: TRAP
+              key: 'restic.dirs[{#REPO_NAME},{#ACTION},unmodified]'
+              delay: '0'
+              value_type: UNSIGNED
+              description: 'Number of unmodified directories in backup'
+              tags:
+                - tag: component
+                  value: restic
+          trigger_prototypes:
+            - uuid: 4449777f05204dfc834b268c17b5e333
+              expression: 'last(/npbackup_trapper/npbackup.exec_state[{#REPO_NAME},{#ACTION}])=3'
+              name: 'NPBackup: Critical failure on {#REPO_NAME} ({#ACTION})'
+              priority: DISASTER
+              description: 'NPBackup reported a critical failure for repo {#REPO_NAME} operation {#ACTION}'
+              tags:
+                - tag: scope
+                  value: availability
+            - uuid: 7886e11f6593404f90723c29969591dd
+              expression: 'last(/npbackup_trapper/npbackup.exec_state[{#REPO_NAME},{#ACTION}])=2'
+              name: 'NPBackup: Error on {#REPO_NAME} ({#ACTION})'
+              priority: HIGH
+              description: 'NPBackup reported an error for repo {#REPO_NAME} operation {#ACTION}'
+              dependencies:
+                - name: 'NPBackup: Critical failure on {#REPO_NAME} ({#ACTION})'
+                  expression: 'last(/npbackup_trapper/npbackup.exec_state[{#REPO_NAME},{#ACTION}])=3'
+              tags:
+                - tag: scope
+                  value: availability
+            - uuid: 0fe2037add0f4644a2547e9ac0220dca
+              expression: 'last(/npbackup_trapper/npbackup.exec_state[{#REPO_NAME},{#ACTION}])=1'
+              name: 'NPBackup: Warning on {#REPO_NAME} ({#ACTION})'
+              priority: WARNING
+              description: 'NPBackup reported a warning for repo {#REPO_NAME} operation {#ACTION}'
+              dependencies:
+                - name: 'NPBackup: Error on {#REPO_NAME} ({#ACTION})'
+                  expression: 'last(/npbackup_trapper/npbackup.exec_state[{#REPO_NAME},{#ACTION}])=2'
+              tags:
+                - tag: scope
+                  value: availability
+            - uuid: d8f48f9772fe41f7834eb5bdf3b5b4ca
+              expression: 'last(/npbackup_trapper/restic.backup_failure[{#REPO_NAME},{#ACTION}])=1'
+              name: 'Restic: Backup failure on {#REPO_NAME} ({#ACTION})'
+              priority: HIGH
+              description: 'Restic backup failed for repo {#REPO_NAME}'
+              tags:
+                - tag: scope
+                  value: availability
+            - uuid: ba3f63b577c245e6a7df9a690c8605a6
+              expression: 'nodata(/npbackup_trapper/npbackup.exec_state[{#REPO_NAME},{#ACTION}],2d)=1'
+              name: 'NPBackup: No data received for {#REPO_NAME} ({#ACTION}) in 2 days'
+              priority: WARNING
+              description: 'No backup metrics received for repo {#REPO_NAME} in the last 2 days. Check if scheduled backups are running.'
+              tags:
+                - tag: scope
+                  value: availability
