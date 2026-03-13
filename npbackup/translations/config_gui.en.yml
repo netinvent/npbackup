@@ -270,5 +270,5 @@ en:
   backend_s3: Amazon / Compatible S3
   backend_azure: Microsoft Azure Blob Storage
   backend_gcs: Google Cloud Storage
-  backend_rest: Restic HTTP Server
+  backend_rest: Restic HTTPS Server
 

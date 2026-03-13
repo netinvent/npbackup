@@ -820,6 +820,24 @@ def _main_gui(viewer_mode: bool):
                         break
         return full_config, config_file
 
+    def enable_gui_options(
+        full_config: dict, config_file: str, window: sg.Window
+    ) -> None:
+        repo_list = npbackup.configuration.get_repo_list(full_config)
+        if window:
+            if config_file:
+                window.set_title(f"{SHORT_PRODUCT_NAME} - {config_file}")
+            if not viewer_mode and full_config:
+                window["--LAUNCH-BACKUP--"].Update(disabled=False)
+                window["--SEE-CONTENT--"].Update(disabled=False)
+                window["--OPERATIONS--"].Update(disabled=False)
+                window["--FORGET--"].Update(disabled=False)
+                window["--CONFIGURE--"].Update(disabled=False)
+            if repo_list:
+                window["-active_repo-"].Update(values=repo_list, value=repo_list[0])
+            window["-NO-CONFIG-"].update(visible=False)
+        return repo_list
+
     def get_config(
         config_file: str = None, window: sg.Window = None, repo_name: str = None
     ) -> Tuple:
@@ -854,19 +872,7 @@ def _main_gui(viewer_mode: bool):
             backup_destination = "None"
             repo_type = "None"
             repo_uri = "None"
-        repo_list = npbackup.configuration.get_repo_list(full_config)
-
-        if window:
-            if config_file:
-                window.set_title(f"{SHORT_PRODUCT_NAME} - {config_file}")
-            if not viewer_mode and full_config:
-                window["--LAUNCH-BACKUP--"].Update(disabled=False)
-                window["--SEE-CONTENT--"].Update(disabled=False)
-                window["--OPERATIONS--"].Update(disabled=False)
-                window["--FORGET--"].Update(disabled=False)
-                window["--CONFIGURE--"].Update(disabled=False)
-            if repo_list:
-                window["-active_repo-"].Update(values=repo_list, value=repo_list[0])
+        repo_list = enable_gui_options(full_config, config_file, window)
         return (
             full_config,
             config_file,
@@ -1198,8 +1204,8 @@ def _main_gui(viewer_mode: bool):
             _t("main_gui.run_wizard"),
             custom_text=(_t("generic.no"), _t("generic.yes")),
             keep_on_top=True,
-            icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
-            title=_t("generic.warning").capitalize(),
+            icon=sg.SYSTEM_TRAY_MESSAGE_ICON_INFORMATION,
+            title=_t("generic.question").capitalize(),
             line_width=100,
             modal=True,
         )
@@ -1219,6 +1225,7 @@ def _main_gui(viewer_mode: bool):
                 repo_config, _ = npbackup.configuration.get_repo_config(
                     full_config, repo_name="default"
                 )
+                repo_list = enable_gui_options(full_config, config_file, window)
 
     monitoring_config = npbackup.configuration.get_monitoring_config(
         repo_config, full_config
@@ -1233,7 +1240,6 @@ def _main_gui(viewer_mode: bool):
             backup_tz = None
             snapshot_list = []
         gui_update_state(current_state, backup_tz, snapshot_list, repo_type)
-
     while True:
         event, values = window.read(timeout=60000)
 
@@ -1327,6 +1333,9 @@ def _main_gui(viewer_mode: bool):
             if result == _t("main_gui.wizard"):
                 with HideWindow(window):
                     full_config, config_file = start_wizard(full_config, config_file)
+                if full_config and not viewer_mode:
+                    repo_list = enable_gui_options(full_config, config_file, window)
+                event = "-STATE-BUTTON-"
             GUI_STATUS_IGNORE_ERRORS = True
             # Make sure we trigger a GUI refresh when configuration is changed
             # Also make sure we retrigger get_config

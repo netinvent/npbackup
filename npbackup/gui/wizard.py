@@ -9,40 +9,26 @@ __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
 
 
-from typing import List, Optional, Tuple
-import textwrap
-from pathlib import Path
+from typing import List, Tuple
 from logging import getLogger
-import ofunctions.logger_utils
-from ruamel.yaml.comments import CommentedMap
 from ofunctions.process import kill_childs
 from ofunctions.threading import threaded
-from ofunctions.misc import BytesConverter
 import FreeSimpleGUI as sg
-import npbackup.configuration
 from resources.customization import (
     OEM_LOGO,
     OEM_ICON,
-    FILE_ICON,
-    FOLDER_ICON,
     SHORT_PRODUCT_NAME,
-    NON_INHERITED_ICON,
-    INFO_ICON,
     WIZARD_STEP_ICONS,
 )
-
 from npbackup.gui.constants import combo_boxes, byte_units
-from npbackup.core.i18n_helper import _t, _locale
+from npbackup.core.i18n_helper import _t
 from ofunctions.misc import get_key_from_value
-
-# from npbackup.gui.buttons import RoundedButton
 from FreeSimpleGUI import Button as RoundedButton
 import npbackup.configuration
 from npbackup.gui.ttk_theme import TITLE_FONT, SUBTITLE_FONT
 import npbackup.gui.common_gui
 from npbackup.gui.helpers import WaitWindow, popup_error, password_complexity
 import npbackup.gui.common_gui_logic
-import npbackup.configuration as configuration
 
 sg.set_options(icon=OEM_ICON)
 
@@ -51,6 +37,12 @@ logger = getLogger()
 # Wizard always handles the default repo
 OBJECT_TYPE = "repos"
 OBJECT_NAME = "default"
+
+
+def remove_prefix(text, prefix):
+    if text.startswith(prefix):
+        return text[len(prefix) :]
+    return text
 
 
 def create_step_header(step_num: int, title_key: str, desc_key: str = None) -> list:
@@ -207,6 +199,7 @@ def wizard_layouts() -> dict:
                     sg.Input(
                         key="-SFTP-REST-PASSWORD-",
                         size=(45, 1),
+                        password_char="*",
                         visible=False,
                     ),
                     shrink=True,
@@ -245,6 +238,7 @@ def wizard_layouts() -> dict:
                     sg.Input(
                         key="-AWS_SECRET_ACCESS_KEY-",
                         size=(45, 1),
+                        password_char="*",
                         visible=False,
                     ),
                     shrink=True,
@@ -264,6 +258,7 @@ def wizard_layouts() -> dict:
                     sg.Input(
                         key="-AZURE_ACCOUNT_KEY-",
                         size=(45, 1),
+                        password_char="*",
                         visible=False,
                     ),
                     shrink=True,
@@ -340,6 +335,7 @@ def wizard_layouts() -> dict:
                     sg.Input(
                         key="-B2_ACCOUNT_KEY-",
                         size=(45, 1),
+                        password_char="*",
                         visible=False,
                     ),
                     shrink=True,
@@ -378,6 +374,7 @@ def wizard_layouts() -> dict:
                     sg.Input(
                         key="-GOOGLE_APPLICATION_CREDENTIALS-",
                         size=(45, 1),
+                        password_char="*",
                         visible=False,
                     ),
                     shrink=True,
@@ -555,7 +552,6 @@ def wizard_layout(wizard_tabs, wizard_breadcrumbs) -> List[list]:
 
 def start_wizard(full_config: dict, config_file: str):
     # wizard tabs count
-
     wizard_tabs, wizard_breadcrumbs = wizard_tabs_and_breadcrumbs(wizard_layouts())
     NUMBER_OF_TABS = len(wizard_tabs)
     current_tab = 1
@@ -654,6 +650,7 @@ def start_wizard(full_config: dict, config_file: str):
             wizard["-GOOGLE_PROJECT_ID-"].update(visible=True)
             wizard["-GOOGLE_APPLICATION_CREDENTIALS-LABEL-"].update(visible=True)
             wizard["-GOOGLE_APPLICATION_CREDENTIALS-"].update(visible=True)
+        wizard["-BACKEND-TYPE-"].update(value=combo_boxes["backends"][backend_type])
 
     wizard.finalize()
     # Let's load our previous config values for wizard
@@ -666,12 +663,107 @@ def start_wizard(full_config: dict, config_file: str):
         unencrypted=False,
         is_wizard=True,  # Since we have less keys than full config interface
     )
-    npbackup.gui.common_gui_logic.update_global_gui(
-        window=wizard,
-        full_config=full_config,
-        unencrypted=False,
-        is_wizard=True,
-    )
+
+    # We need to manually update backend config fields
+    # This is wizard specific for now
+    try:
+        if full_config.g(
+            f"{OBJECT_TYPE}.{OBJECT_NAME}.repo_opts.repo_password", default=None
+        ):
+            wizard["repo_opts.repo_password"].update(
+                npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+            )
+        repo_uri = full_config.g(f"{OBJECT_TYPE}.{OBJECT_NAME}.repo_uri", default="")
+        sftp_rest_password = ""
+        if repo_uri:
+            repo_uri = repo_uri.rstrip("/")
+            if repo_uri.startswith("sftp"):
+                set_active_backend_type("sftp")
+                repo_uri = remove_prefix(repo_uri, "sftp:")
+                wizard["-SFTP-REST-USERNAME-"].update(repo_uri.split(":")[0])
+                wizard["-SFTP-REST-PASSWORD-"].update(
+                    npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                )
+
+                # We still need to extract the rest password to be able to reconstruct the repo uri later
+                sftp_rest_password = (
+                    repo_uri.split(":")[1].split("@")[0]
+                    if ":" in repo_uri and "@" in repo_uri
+                    else ""
+                )
+                # We need to get rid of the username:password@ part
+                if "@" in repo_uri:
+                    repo_uri = repo_uri.split("@")[1]
+                # We need to get rid of username at the end of repo_uri
+                if "/" in repo_uri:
+                    repo_uri = repo_uri.rsplit("/", 1)[0]
+            elif repo_uri.startswith("rest"):
+                set_active_backend_type("rest")
+                repo_uri = remove_prefix(repo_uri, "rest:")
+                http_prefix = ""
+                if repo_uri.startswith("http://") or repo_uri.startswith("https://"):
+                    http_prefix, no_prefix = repo_uri.split("://", 1)
+                    http_prefix += "://"
+                else:
+                    no_prefix = repo_uri
+                wizard["-SFTP-REST-USERNAME-"].update(no_prefix.split(":")[0])
+                sftp_rest_password = (
+                    no_prefix.split(":")[1].split("@")[0]
+                    if ":" in no_prefix and "@" in no_prefix
+                    else ""
+                )
+                if "@" in repo_uri:
+                    if http_prefix:
+                        repo_uri = http_prefix + repo_uri.split("@")[1]
+                    else:
+                        repo_uri = repo_uri.split("@")[1]
+                if "/" in repo_uri:
+                    repo_uri = repo_uri.rsplit("/", 1)[0]
+
+                wizard["-SFTP-REST-PASSWORD-"].update(
+                    npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                )
+            elif repo_uri.startswith("b2"):
+                set_active_backend_type("b2")
+                wizard["-B2_ACCOUNT_ID-"].update(
+                    npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                )
+                wizard["-B2_ACCOUNT_KEY-"].update(
+                    npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                )
+            elif repo_uri.startswith("azure"):
+                set_active_backend_type("azure")
+                wizard["-AZURE_ACCOUNT_NAME-"].update(
+                    npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                )
+                wizard["-AZURE_ACCOUNT_KEY-"].update(
+                    npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                )
+                wizard["-AZURE_ACCOUNT_SAS-"].update(
+                    npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                )
+            elif repo_uri.startswith("gs"):
+                set_active_backend_type("gcs")
+                wizard["-GOOGLE_PROJECT_ID-"].update(
+                    npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                )
+                wizard["-GOOGLE_APPLICATION_CREDENTIALS-"].update(
+                    npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                )
+            elif repo_uri.startswith("s3"):
+                set_active_backend_type("s3")
+                wizard["-AWS_ACCESS_KEY_ID-"].update(
+                    npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                )
+                wizard["-AWS_SECRET_ACCESS_KEY-"].update(
+                    npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                )
+            else:
+                set_active_backend_type("local")
+        wizard["repo_uri"].update(repo_uri)
+
+    except (AttributeError, IndexError, KeyError) as exc:
+        logger.error(f"Cannot read backend configuration: {exc}")
 
     event, values = wizard.read(timeout=0.1)
     set_active_tab(1)
@@ -719,21 +811,92 @@ def start_wizard(full_config: dict, config_file: str):
         )
 
         ## WIZARD STEP 1 ##
+        if current_tab == 1:
+            if len(wizard["backup_opts.paths"].TreeData.tree_dict.values()) < 2:
+                result = sg.popup(
+                    _t("config_gui.backup_source_should_not_be_empty")
+                    + ". "
+                    + _t("generic.are_you_sure"),
+                    custom_text=(_t("generic.no"), _t("generic.yes")),
+                    keep_on_top=True,
+                    icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
+                    title=_t("generic.warning").capitalize(),
+                    line_width=100,
+                    modal=True,
+                )
+                if result != _t("generic.yes"):
+                    continue
 
         ## WIZARD STEP 2 ##
-
         if event == "-BACKEND-TYPE-":
             backend_type = get_key_from_value(
                 combo_boxes["backends"], values["-BACKEND-TYPE-"]
             )
             set_active_backend_type(backend_type)
+            continue
 
+        if current_tab == 2:
+            current_backend = get_key_from_value(
+                combo_boxes["backends"], values["-BACKEND-TYPE-"]
+            )
+            if current_backend not in combo_boxes["backends"].keys():
+                popup_error(_t("wizard_gui.please_select_a_valid_backend"))
+                continue
+
+            if not values["repo_uri"]:
+                result = sg.popup(
+                    _t("config_gui.repo_uri_should_not_be_empty")
+                    + ". "
+                    + _t("generic.are_you_sure"),
+                    custom_text=(_t("generic.no"), _t("generic.yes")),
+                    keep_on_top=True,
+                    icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
+                    title=_t("generic.warning").capitalize(),
+                    line_width=100,
+                    modal=True,
+                )
+                if result != _t("generic.yes"):
+                    continue
+            if not values["repo_opts.repo_password"]:
+                result = sg.popup(
+                    _t("config_gui.repo_password_should_not_be_empty")
+                    + ". "
+                    + _t("generic.are_you_sure"),
+                    custom_text=(_t("generic.no"), _t("generic.yes")),
+                    keep_on_top=True,
+                    icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
+                    title=_t("generic.warning").capitalize(),
+                    line_width=100,
+                    modal=True,
+                )
+                if result != _t("generic.yes"):
+                    continue
+            # If the password field contains the placeholder, we assume the user wants to keep the
+            # existing password, so we don't check complexity in this case
+            if not values[
+                "repo_opts.repo_password"
+            ] == npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER and not password_complexity(
+                values["repo_opts.repo_password"]
+            ):
+                result = sg.popup(
+                    _t("config_gui.password_too_simple")
+                    + ". "
+                    + _t("generic.are_you_sure"),
+                    custom_text=(_t("generic.no"), _t("generic.yes")),
+                    keep_on_top=True,
+                    icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
+                    title=_t("generic.warning").capitalize(),
+                    line_width=100,
+                    modal=True,
+                )
+                if result != _t("generic.yes"):
+                    continue
         ## WIZARD STEP 3 ##
 
         ## WIZARD STEP 4 ##
 
         ## WIZARD STEP 5 ##
-        if event == "-NEXT-" and current_tab == 5:
+        if current_tab == 5:
             if not npbackup.gui.common_gui_logic.validate_email_addresses(wizard):
                 result = sg.popup(
                     _t("config_gui.there_are_invalid_email_addresses")
@@ -751,6 +914,105 @@ def start_wizard(full_config: dict, config_file: str):
 
         ## WIZARD STEP 7 ##
         if event == "-NEXT-" and current_tab == NUMBER_OF_TABS:
+            # Before actually saving the config dict, we need to retrieve repo_uri, repo_password
+            # and possible backend encrypted environment variables and save them in the config dict
+            current_backend = get_key_from_value(
+                combo_boxes["backends"], values["-BACKEND-TYPE-"]
+            )
+            repo_uri = values["repo_uri"]
+            encrypted_env_variables = full_config.g(
+                f"{OBJECT_TYPE}.{OBJECT_NAME}.env.encrypted_env_variables", default={}
+            )
+            if current_backend == "b2":
+                repo_uri = f"b2:{remove_prefix(repo_uri, 'b2:')}"
+                if (
+                    values["-B2_ACCOUNT_ID-"]
+                    != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                ):
+                    encrypted_env_variables["B2_ACCOUNT_ID"] = values["-B2_ACCOUNT_ID-"]
+                if (
+                    values["-B2_ACCOUNT_KEY-"]
+                    != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                ):
+                    encrypted_env_variables["B2_ACCOUNT_KEY"] = values[
+                        "-B2_ACCOUNT_KEY-"
+                    ]
+            elif current_backend == "azure":
+                repo_uri = f"azure:{remove_prefix(repo_uri, 'azure:')}"
+                if (
+                    values["-AZURE_ACCOUNT_KEY-"]
+                    != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                ):
+                    encrypted_env_variables["AZURE_ACCOUNT_KEY"] = values[
+                        "-AZURE_ACCOUNT_KEY-"
+                    ]
+                if (
+                    values["-AZURE_ACCOUNT_SAS-"]
+                    != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                ):
+                    encrypted_env_variables["AZURE_ACCOUNT_SAS"] = values[
+                        "-AZURE_ACCOUNT_SAS-"
+                    ]
+                if (
+                    values["-AZURE_ACCOUNT_NAME-"]
+                    != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                ):
+                    encrypted_env_variables["AZURE_ACCOUNT_NAME"] = values[
+                        "-AZURE_ACCOUNT_NAME-"
+                    ]
+            elif current_backend == "s3":
+                repo_uri = f"s3:{remove_prefix(repo_uri, 's3:')}"
+                if (
+                    values["-AWS_ACCESS_KEY_ID-"]
+                    != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                ):
+                    encrypted_env_variables["AWS_ACCESS_KEY_ID"] = values[
+                        "-AWS_ACCESS_KEY_ID-"
+                    ]
+                if (
+                    values["-AWS_SECRET_ACCESS_KEY-"]
+                    != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                ):
+                    encrypted_env_variables["AWS_SECRET_ACCESS_KEY"] = values[
+                        "-AWS_SECRET_ACCESS_KEY-"
+                    ]
+            elif current_backend == "gcs":
+                repo_uri = f"gcs:{remove_prefix(repo_uri, 'gcs:')}"
+                if (
+                    values["-GOOGLE_PROJECT_ID-"]
+                    != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                ):
+                    encrypted_env_variables["GOOGLE_PROJECT_ID"] = values[
+                        "-GOOGLE_PROJECT_ID-"
+                    ]
+                if (
+                    values["-GOOGLE_APPLICATION_CREDENTIALS-"]
+                    != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                ):
+                    encrypted_env_variables["GOOGLE_APPLICATION_CREDENTIALS"] = values[
+                        "-GOOGLE_APPLICATION_CREDENTIALS-"
+                    ]
+            elif current_backend == "sftp":
+                repo_uri = remove_prefix(repo_uri, "sftp:")
+                if (
+                    values["-SFTP-REST-PASSWORD-"]
+                    != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                ):
+                    sftp_rest_password = values["-SFTP-REST-PASSWORD-"]
+                repo_uri = f"sftp:{values['-SFTP-REST-USERNAME-']}:{sftp_rest_password}@{repo_uri}/{values['-SFTP-REST-USERNAME-']}"
+            elif current_backend == "rest":
+                if (
+                    values["-SFTP-REST-PASSWORD-"]
+                    != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                ):
+                    sftp_rest_password = values["-SFTP-REST-PASSWORD-"]
+                repo_uri = remove_prefix(repo_uri, "rest:")
+                http_prefix = ""
+                if repo_uri.startswith("http://") or repo_uri.startswith("https://"):
+                    http_prefix, no_prefix = repo_uri.split("://", 1)
+                    http_prefix += "://"
+                repo_uri = f"rest:{http_prefix}{values['-SFTP-REST-USERNAME-']}:{sftp_rest_password}@{no_prefix}/{values['-SFTP-REST-USERNAME-']}"
+
             full_config = npbackup.gui.common_gui_logic.update_config_dict(
                 wizard,
                 full_config,
@@ -758,6 +1020,14 @@ def start_wizard(full_config: dict, config_file: str):
                 object_name=OBJECT_NAME,
                 values=values,
                 is_wizard=True,
+            )
+
+            # Now that we updated the config dict with all values including the
+            # repo_uri which has been anonymized, we need to patch the full_config dict
+            full_config.s(f"{OBJECT_TYPE}.{OBJECT_NAME}.repo_uri", repo_uri)
+            full_config.s(
+                f"{OBJECT_TYPE}.{OBJECT_NAME}.env.encrypted_env_variables",
+                encrypted_env_variables,
             )
 
             result, full_config = npbackup.gui.common_gui_logic.create_scheduled_task(
@@ -775,8 +1045,9 @@ def start_wizard(full_config: dict, config_file: str):
                     line_width=100,
                 )
                 if result == _t("generic.no"):
-                    continue
-            result = configuration.save_config(config_file, full_config)
+                    break
+
+            result = npbackup.configuration.save_config(config_file, full_config)
             if result:
                 sg.popup(_t("config_gui.configuration_saved"), keep_on_top=True)
                 break
@@ -785,66 +1056,6 @@ def start_wizard(full_config: dict, config_file: str):
 
         ## WIZARD NAVIGATION #
         if event == "-NEXT-":
-            # Have preflight checks here
-
-            if current_tab == 1:
-                if len(wizard["backup_opts.paths"].TreeData.tree_dict.values()) < 2:
-                    result = sg.popup(
-                        _t("config_gui.backup_source_should_not_be_empty")
-                        + ". "
-                        + _t("generic.are_you_sure"),
-                        custom_text=(_t("generic.no"), _t("generic.yes")),
-                        keep_on_top=True,
-                        icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
-                        title=_t("generic.warning").capitalize(),
-                        line_width=100,
-                        modal=True,
-                    )
-                    if result != _t("generic.yes"):
-                        continue
-            if current_tab == 2:
-                if not values["repo_uri"]:
-                    result = sg.popup(
-                        _t("config_gui.repo_uri_should_not_be_empty")
-                        + ". "
-                        + _t("generic.are_you_sure"),
-                        custom_text=(_t("generic.no"), _t("generic.yes")),
-                        keep_on_top=True,
-                        icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
-                        title=_t("generic.warning").capitalize(),
-                        line_width=100,
-                        modal=True,
-                    )
-                    if result != _t("generic.yes"):
-                        continue
-                if not values["repo_opts.repo_password"]:
-                    result = sg.popup(
-                        _t("config_gui.repo_password_should_not_be_empty")
-                        + ". "
-                        + _t("generic.are_you_sure"),
-                        custom_text=(_t("generic.no"), _t("generic.yes")),
-                        keep_on_top=True,
-                        icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
-                        title=_t("generic.warning").capitalize(),
-                        line_width=100,
-                        modal=True,
-                    )
-                    if result != _t("generic.yes"):
-                        continue
-                if not password_complexity(values["repo_opts.repo_password"]):
-                    result = sg.popup(
-                        _t("config_gui.password_too_simple")
-                        + ". "
-                        + _t("generic.are_you_sure"),
-                        custom_text=(_t("generic.no"), _t("generic.yes")),
-                        keep_on_top=True,
-                        icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
-                        title=_t("generic.warning").capitalize(),
-                        line_width=100,
-                        modal=True,
-                    )
-                    if result != _t("generic.yes"):
-                        continue
             if current_tab < NUMBER_OF_TABS:
                 current_tab += 1
                 set_active_tab(current_tab)
@@ -865,7 +1076,6 @@ def start_wizard(full_config: dict, config_file: str):
             set_active_tab(current_tab)
 
         # Loading scheduled tasks for step 4 need to be done after tab nav
-        # TODO: prev and next into 1
         if (
             event in ("-NEXT-", "-PREVIOUS-") and current_tab == 3
         ) or event == "-BREADCRUMB-3-":
