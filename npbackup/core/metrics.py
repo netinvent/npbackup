@@ -10,13 +10,11 @@ __license__ = "GPL-3.0-only"
 __build__ = "2026030501"
 
 import os
-from typing import Optional, Tuple, List
-from datetime import datetime, timezone
+from typing import Optional, Tuple
 from logging import getLogger
 from ofunctions.misc import BytesConverter
 from npbackup.restic_metrics import (
     restic_str_output_to_json,
-    restic_json_to_prometheus,
 )
 from npbackup.core.monitoring import calculate_exec_state
 from npbackup.core.monitoring.prometheus import PrometheusMonitor
@@ -24,7 +22,6 @@ from npbackup.core.monitoring.zabbix import ZabbixMonitor
 from npbackup.core.monitoring.healthchecksio import HealthchecksioMonitor
 from npbackup.core.monitoring.webhook import WebhookMonitor
 from npbackup.core.monitoring.email import EmailMonitor
-from npbackup.__version__ import __intname__ as NAME, version_dict
 
 logger = getLogger()
 
@@ -63,10 +60,13 @@ def metric_analyser(
             # If result was a str, we need to transform it into json first
             # Currently, @metrics uses str instead of json in order to detect cloud file issues
             # see @metrics for more
-            if result_string is None:
-                restic_json = {}
             if isinstance(result_string, str):
                 restic_json = restic_str_output_to_json(restic_result, result_string)
+            elif result_string is None:
+                restic_json = {}
+            else:
+                # Future case when we'll use restic --json directly in @metrics
+                restic_json = restic_result
 
             backup_too_small = False
             if restic_json:

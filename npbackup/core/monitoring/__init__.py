@@ -10,6 +10,7 @@ __license__ = "GPL-3.0-only"
 __build__ = "2025112601"
 
 from abc import ABC, abstractmethod
+from copy import deepcopy
 from typing import Optional, Dict, List, Any
 from datetime import datetime, timezone
 from logging import getLogger
@@ -106,8 +107,10 @@ class MonitoringBackend(ABC):
         self,
         metrics: Dict[str, Any],
         operation: str,
-    ) -> Dict[str, Any]:
+    ) -> dict:
 
+        # Avoid mutating original metrics dict
+        metrics = deepcopy(metrics)
         output = []
         if "npbackup_upgrade_state" in metrics.keys():
             metrics["npbackup_exec_state"] = metrics["npbackup_upgrade_state"]

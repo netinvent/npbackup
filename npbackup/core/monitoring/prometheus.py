@@ -7,17 +7,13 @@ __intname__ = "npbackup.core.monitoring.prometheus"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025112601"
+__build__ = "2026031301"
 
-from typing import Dict, List, Any, Optional
-from datetime import datetime, timezone
+from typing import Dict, List, Any
 from logging import getLogger
+import requests
 from npbackup.core.monitoring import MonitoringBackend
-from npbackup.restic_metrics import (
-    upload_metrics,
-    write_metrics_file,
-)
-from npbackup.__version__ import __intname__
+from npbackup.__version__ import __intname__, version_dict
 
 logger = getLogger()
 
@@ -103,7 +99,7 @@ class PrometheusMonitor(MonitoringBackend):
         """
         prom_metrics = []
         # Add timestamp to npbackup labels only
-        npbackup_labels = {"timestamp": self.metrics_timestamp, **self._common_labels}
+        npbackup_labels = {"timestamp": self.metrics_timestamp, **self.common_labels}
 
         # Convert common metrics to Prometheus format
         for metric_name, value in metrics.items():
@@ -181,7 +177,7 @@ class PrometheusMonitor(MonitoringBackend):
         # Fix for #150: Make job name unique per repo and operation
         repo_name = self.get_config_value("name")
         destination = f"{destination}___repo_name={repo_name}___action={operation}"
-        result = upload_metrics(destination, authentication, no_cert_verify, metrics)
+        result = self.upload_metrics(destination, authentication, no_cert_verify, metrics)
         return result
 
     def _write_to_file(self, destination: str, metrics: List[str]) -> bool:
@@ -195,7 +191,7 @@ class PrometheusMonitor(MonitoringBackend):
         Returns:
             True if successful, False otherwise
         """
-        result = write_metrics_file(destination, metrics, append=self.append_mode)
+        result = self.write_metrics_file(destination, metrics, append=self.append_mode)
         return result
 
     @staticmethod
@@ -209,3 +205,46 @@ class PrometheusMonitor(MonitoringBackend):
                 _labels.append(f'{str(key).strip()}="{str(value).strip()}"')
         labels_string = ",".join(sorted(list(set(_labels))))
         return labels_string
+
+    @staticmethod
+    def upload_metrics(destination: str, authentication, no_cert_verify: bool, metrics):
+        """
+        Optional upload of metrics to a pushgateway, when no node_exporter with text_collector is available
+        """
+        try:
+            headers = {
+                "X-Requested-With": f"{__intname__} {version_dict['version']}",
+                "Content-type": "text/html",
+            }
+
+            data = "\n".join(metrics) + "\n"
+            result = requests.post(
+                destination,
+                headers=headers,
+                data=data,
+                auth=authentication,
+                timeout=4,
+                verify=not no_cert_verify,
+            )
+            if result.status_code == 200:
+                logger.info("Metrics pushed successfully.")
+                return True
+            else:
+                logger.warning(
+                    f"Could not push metrics: {result.status_code}: {result.text}"
+                )
+        except Exception as exc:
+            logger.error(f"Cannot upload metrics: {exc}")
+            logger.debug("Trace:", exc_info=True)
+        return False
+
+    @staticmethod
+    def write_metrics_file(filename: str, metrics: List[str], append: bool = False):
+        try:
+            with open(filename, "a" if append else "w", encoding="utf-8") as file_handle:
+                for metric in metrics:
+                    file_handle.write(metric + "\n")
+            return True
+        except OSError as exc:
+            logger.error(f"Cannot write metrics file {filename}: {exc}")
+        return False

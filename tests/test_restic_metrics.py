@@ -28,6 +28,7 @@ except ImportError:  # would be ModuleNotFoundError in Python 3+
     sys.path.insert(0, os.path.abspath(os.path.join(__file__, os.pardir, os.pardir)))
     from npbackup.restic_metrics import *
 from npbackup.core.restic_source_binary import get_restic_internal_binary
+from npbackup.core.monitoring.prometheus import PrometheusMonitor
 from npbackup.path_helper import BASEDIR
 
 restic_json_outputs = {}
@@ -117,6 +118,8 @@ def test_restic_str_output_2_metrics():
 
     for version, output in restic_str_outputs.items():
         print(f"Testing V1 parser restic str output from version {version}")
+        #PrometheusMonitor()._convert_to_prometheus_format
+        # WIP rewrite tests
         errors, prom_metrics = restic_output_2_metrics(True, output, labels_string)
         assert errors is False
         print(f"Parsed result:\n{prom_metrics}")

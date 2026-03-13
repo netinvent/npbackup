@@ -122,6 +122,7 @@ class ZabbixMonitor(MonitoringBackend):
                     logger.error(
                         "PSK authentication configured but sslpsk library not available. Cannot send Zabbix metrics using PSK."
                     )
+                    return False
         except (KeyError, AttributeError) as exc:
             logger.debug(f"No Zabbix PSK configuration found: {exc}")
 

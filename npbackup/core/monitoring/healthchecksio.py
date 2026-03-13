@@ -31,9 +31,24 @@ class HealthchecksioMonitor(MonitoringBackend):
             repo_config: Repository configuration dictionary
         """
         super().__init__(repo_config, monitoring_config)
+    
 
     def is_enabled(self) -> bool:
         return self.get_monitoring_value("global_healthchecksio.enabled", False)
+    
+    def _get_params(self) -> None:
+        self.url = self.get_monitoring_value("global_healthchecksio.url")
+        if not self.url:
+            logger.error("Healthchecks.io URL not configured.")
+            return False
+
+        # Get timeout from config, default to 10 seconds
+        self.timeout = self.get_monitoring_value("global_healthchecksio.timeout", 10)
+
+        self.verify = not self.get_monitoring_value(
+            "global_healthchecksio.no_cert_verify", False
+        )
+
 
     def send_metrics(
         self,
@@ -62,24 +77,8 @@ class HealthchecksioMonitor(MonitoringBackend):
             logger.debug("Healthchecks.io monitoring not enabled in configuration.")
             return False
 
-        self.url = self.get_monitoring_value("global_healthchecksio.url")
-        if not self.url:
-            logger.error("Healthchecks.io URL not configured.")
-            return False
-
-        if dry_run:
-            logger.info("Dry run mode. Not sending Healthchecks.io ping.")
-            return True
-
-        # Get timeout from config, default to 10 seconds
-        self.timeout = self.get_monitoring_value("global_healthchecksio.timeout", 10)
-
-        self.verify = not self.get_monitoring_value(
-            "global_healthchecksio.no_cert_verify", False
-        )
-
         # Determine if operation was successful
-        exec_state = metrics.get("exec_state", 0)
+        exec_state = metrics.get("npbackup_exec_state", 0)
         operation_success = metrics.get("operation_success", 1)
 
         # exec_state: 0=success, 1=warning, 2=error, 3=critical
@@ -89,6 +88,10 @@ class HealthchecksioMonitor(MonitoringBackend):
         # Build log data to send with ping
         log_data = self._build_log_data(metrics, operation)
 
+        if dry_run:
+            logger.info("Dry run mode. Not sending Healthchecks.io ping.")
+            return True
+    
         # Send the ping
         return self._send_ping(is_success, log_data)
 
@@ -109,18 +112,18 @@ class HealthchecksioMonitor(MonitoringBackend):
         lines.append(f"Operation: {operation}")
         lines.append(f"Repository: {labels.get('repo_name', 'unknown')}")
 
-        exec_state = metrics.get("exec_state", 0)
+        exec_state = metrics.get("npbackup_exec_state", 0)
         state_names = {0: "Success", 1: "Warning", 2: "Error", 3: "Critical"}
         lines.append(f"Status: {state_names.get(exec_state, 'Unknown')}")
 
-        if "exec_time" in metrics:
-            lines.append(f"Execution time: {metrics['exec_time']:.2f}s")
+        if "npbackup_exec_time" in metrics:
+            lines.append(f"Execution time: {metrics['npbackup_exec_time']:.2f}s")
 
         # Add backup-specific metrics if available
         if operation == "backup":
-            if "total_bytes_processed" in metrics:
+            if "restic_total_bytes_processed" in metrics:
                 # Convert bytes to human-readable format
-                bytes_val = metrics["total_bytes_processed"]
+                bytes_val = metrics["restic_total_bytes_processed"]
                 if bytes_val:
                     if bytes_val >= 1024**3:  # GB
                         lines.append(f"Data processed: {bytes_val / (1024**3):.2f} GB")
@@ -129,10 +132,15 @@ class HealthchecksioMonitor(MonitoringBackend):
                     else:  # KB
                         lines.append(f"Data processed: {bytes_val / 1024:.2f} KB")
 
-            if "files_new" in metrics:
-                lines.append(f"New files: {metrics['files_new']}")
-            if "files_changed" in metrics:
-                lines.append(f"Changed files: {metrics['files_changed']}")
+            if "restic_files" in metrics:
+                lines.append(f"New files: {metrics['restic_files']['new']}")
+                lines.append(f"Changed files: {metrics['restic_files']['changed']}")
+                lines.append(f"Unmodified files: {metrics['restic_files']['unmodified']}")
+                lines.append(f"Total files: {metrics['restic_files']['total']}")
+            if "restic_dirs" in metrics:
+                lines.append(f"New directories: {metrics['restic_dirs']['new']}")
+                lines.append(f"Changed directories: {metrics['restic_dirs']['changed']}")
+                lines.append(f"Unmodified directories: {metrics['restic_dirs']['unmodified']}")
 
         return "\n".join(lines)
 
@@ -147,6 +155,7 @@ class HealthchecksioMonitor(MonitoringBackend):
         Returns:
             True if ping was sent successfully, False otherwise
         """
+        self._get_params()
         try:
             # Build the ping URL
             if is_success:
@@ -161,6 +170,7 @@ class HealthchecksioMonitor(MonitoringBackend):
                     ping_endpoint,
                     data=log_data.encode("utf-8"),
                     timeout=self.timeout,
+                    verify=self.verify,
                 )
             else:
                 response = requests.get(
@@ -196,7 +206,7 @@ class HealthchecksioMonitor(MonitoringBackend):
         """
         if not self.is_enabled() or not self.url:
             return False
-
+        self._get_params()
         try:
             start_endpoint = f"{self.url.rstrip('/')}/start"
 

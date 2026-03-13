@@ -74,7 +74,6 @@ class EmailMonitor(MonitoringBackend):
 
         # Get email configuration
         try:
-            instance = self.get_monitoring_value("global_email.instance")
             smtp_server = self.get_monitoring_value("global_email.smtp_server")
             smtp_port = self.get_monitoring_value("global_email.smtp_port")
             smtp_security = self.get_monitoring_value("global_email.smtp_security")
@@ -143,6 +142,7 @@ class EmailMonitor(MonitoringBackend):
         logger.debug(
             f"Sending email notification to {smtp_server}:{smtp_port} with security {smtp_security} using {'authentication' if smtp_username and smtp_password else 'no authentication'}."
         )
+        all_recipients_result = True
         for recipient in recipients_to_send:
             logger.debug(f"Adding recipient {recipient} for email notification.")
             result = self._send_email(
@@ -153,7 +153,6 @@ class EmailMonitor(MonitoringBackend):
                 smtp_password=smtp_password,
                 sender=sender,
                 recipients=recipients_to_send,
-                instance=instance,
                 operation=operation,
                 metrics=metrics,
                 labels=self.common_labels,
@@ -165,6 +164,8 @@ class EmailMonitor(MonitoringBackend):
                 logger.error(
                     f"Failed to send email notification to {recipient} for {operation} {'success' if op_success else 'failure'}."
                 )
+                all_recipients_result = False
+        return all_recipients_result
 
     def _send_email(
         self,
@@ -175,7 +176,6 @@ class EmailMonitor(MonitoringBackend):
         smtp_password: Optional[str],
         sender: str,
         recipients: List[str],
-        instance: str,
         operation: str,
         metrics: Dict[str, Any],
         labels: Dict[str, str],
@@ -194,7 +194,6 @@ class EmailMonitor(MonitoringBackend):
             smtp_password: Optional SMTP password
             sender: Sender email address
             recipients: Comma-separated recipient addresses
-            instance: Instance identifier
             operation: Operation name
             metrics: Dictionary of metrics
             labels: Dictionary of labels
@@ -220,9 +219,9 @@ class EmailMonitor(MonitoringBackend):
 
         # Build subject
         if op_success:
-            subject = f"{OEM_STRING} success report for {instance} {operation} on repo {repo_name}"
+            subject = f"{OEM_STRING} success report for {labels.get('instance', 'unknown')} {operation} on repo {repo_name}"
         else:
-            subject = f"{OEM_STRING} failure report for {instance} {operation} on repo {repo_name}"
+            subject = f"{OEM_STRING} failure report for {labels.get('instance', 'unknown')} {operation} on repo {repo_name}"
 
         # Build body
         body = f"Operation: {operation}\nRepo: {repo_name}"
