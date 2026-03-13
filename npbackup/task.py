@@ -488,7 +488,7 @@ def _get_scheduled_task_name_windows(
     if not object_name:
         object_name = "default"
         object_type = "repos"
-    # Sanitize config_file name but keep path in case we mighe encounter multiple config files with same path
+    # Sanitize config_file name but keep path in case we might encounter multiple config files with same path
     config_file = "".join(x if x.isalnum() else "_" for x in config_file)
     return f"{PROGRAM_NAME} - {task_type.capitalize()} {object_type} {object_name} in {config_file}"
 
@@ -840,6 +840,8 @@ def create_scheduled_task_windows(
     </Actions>
     </Task>"""
     # Create task XML file with UTF-8 encoding to match XML declaration
+    # And yes, we know that we need to write an UTF-8 file with UTF-16 encoding
+    # thanks windows
     try:
         with open(temp_task_file, "w", encoding="utf-8") as file_handle:
             file_handle.write(SCHEDULED_TASK_FILE_CONTENT)
@@ -879,7 +881,6 @@ def create_scheduled_task_windows(
         logger.warning(
             "Could not remove temporary task file {}: {}".format(temp_task_file, exc)
         )
-        return False
     logger.info("Scheduled task created.")
     return True
 

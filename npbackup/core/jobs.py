@@ -68,8 +68,8 @@ def schedule_on_interval(job_name: str, interval: int) -> bool:
         return 1
 
     path_list = [
-        os.path.join(tempfile.gettempdir(), counter_file),
         os.path.join(CURRENT_DIR, counter_file),
+        os.path.join(tempfile.gettempdir(), counter_file),
     ]
     if os.name != "nt":
         path_list = [os.path.join("/var/log", counter_file)] + path_list

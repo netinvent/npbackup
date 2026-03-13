@@ -1684,14 +1684,13 @@ class NPBackupRunner:
                     f"Checking time against ntp server {ntp_server}", level="info"
                 )
                 offset = get_ntp_offset(ntp_server)
-                if not offset or offset > float(MAX_ALLOWED_NTP_OFFSET):
-                    if not offset:
-                        msg = f"Offset cannot be obtained from NTP server {ntp_server}"
-                        self.write_logs(msg, level="error")
-                    elif offset > float(MAX_ALLOWED_NTP_OFFSET):
-                        msg = f"Offset from NTP server {ntp_server} is too high: {offset} seconds. Won't apply policy"
-                        self.write_logs(msg, level="critical")
-                        return self.convert_to_json_output(False, msg)
+                if not isinstance(offset, (int, float)):
+                    msg = f"Offset cannot be obtained from NTP server {ntp_server}"
+                    self.write_logs(msg, level="error")
+                elif abs(offset) > float(MAX_ALLOWED_NTP_OFFSET):
+                    msg = f"Offset from NTP server {ntp_server} is too high: {offset} seconds. Won't apply policy"
+                    self.write_logs(msg, level="critical")
+                    return self.convert_to_json_output(False, msg)
 
             # Build policy from config
             policy = {}

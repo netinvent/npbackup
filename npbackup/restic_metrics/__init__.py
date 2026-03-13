@@ -21,7 +21,6 @@ import logging
 from ofunctions.misc import BytesConverter, convert_time_to_seconds
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 def restic_str_output_to_json(
@@ -141,7 +140,7 @@ def restic_str_output_to_json(
                 logger.warning("Cannot parse restic log for repo size: {}".format(exc))
                 errors = True
         matches = re.match(
-            r"Failure|Fatal|Unauthorized|no such host|s there a repository at the following location\?",
+            r"Failure|Fatal|Unauthorized|no such host|i?s there a repository at the following location\?",
             line,
             re.IGNORECASE,
         )

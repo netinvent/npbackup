@@ -621,16 +621,19 @@ def extract_permissions_from_full_config(full_config: dict) -> dict:
                 if "," in repo_uri:
                     repo_uri = [item.strip() for item in repo_uri.split(",")]
                 if isinstance(repo_uri, tuple) or isinstance(repo_uri, list):
-                    repo_uri, permissions, manager_password = repo_uri
-                    # Overwrite existing permissions / password if it was set in repo_uri
-                    full_config.s(f"{object_type}.{object_name}.repo_uri", repo_uri)
-                    full_config.s(
-                        f"{object_type}.{object_name}.permissions", permissions
-                    )
-                    full_config.s(
-                        f"{object_type}.{object_name}.manager_password",
-                        manager_password,
-                    )
+                    if len(repo_uri) == 3:
+                        repo_uri, permissions, manager_password = repo_uri
+                        # Overwrite existing permissions / password if it was set in repo_uri
+                        full_config.s(f"{object_type}.{object_name}.repo_uri", repo_uri)
+                        full_config.s(
+                            f"{object_type}.{object_name}.permissions", permissions
+                        )
+                        full_config.s(
+                            f"{object_type}.{object_name}.manager_password",
+                            manager_password,
+                        )
+                    else:
+                        logger.error("Bogus extra information given in repo_uri")
                 else:
                     logger.debug(
                         f"No extra information for {object_type} {object_name} found"
@@ -644,7 +647,7 @@ def extract_permissions_from_full_config(full_config: dict) -> dict:
     return full_config
 
 
-def inject_permissions_into_full_config(full_config: dict) -> Tuple[bool, dict]:
+def inject_permissions_into_full_config(full_config: dict) -> dict:
     """
     Make sure repo_uri is a tuple containing permissions and manager password
     This function is used before saving config
@@ -1131,7 +1134,7 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
         # no need to return full_config since CommentedMap is a pointer object
         return full_config
 
-    # Apply per object migrationds
+    # Apply per object migrations
     for repo in get_repo_list(full_config):
         full_config = _apply_migrations(full_config, repo, "repos")
 
@@ -1246,10 +1249,10 @@ def load_config(config_file: Path) -> Optional[dict]:
         logger.info("Encrypting non encrypted data in configuration file")
         config_file_is_updated = True
     # Decrypt variables
-    full_config = crypt_config(
+    _full_config = crypt_config(
         full_config, AES_KEY, ENCRYPTED_OPTIONS, operation="decrypt"
     )
-    if full_config is False:
+    if _full_config is False:
         if EARLIER_AES_KEY:
             logger.warning("Trying to migrate encryption key")
             full_config = crypt_config(
@@ -1266,6 +1269,8 @@ def load_config(config_file: Path) -> Optional[dict]:
             msg = "Cannot decrypt config file"
             logger.critical(msg)
             raise EnvironmentError(msg)
+    else:
+        full_config = _full_config
 
     # Check if we need to expand random vars
     is_modified, full_config = has_random_variables(full_config)

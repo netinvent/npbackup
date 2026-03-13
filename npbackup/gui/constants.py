@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.constants"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025102101"
+__build__ = "2026031301"
 
 
 from npbackup.core.i18n_helper import _t
@@ -56,45 +56,3 @@ combo_boxes = {
 }
 
 byte_units = ["B", "KB", "KiB", "MB", "MiB", "GB", "GiB", "TB", "TiB", "PB", "PiB"]
-
-presets = {
-    "retention_policy": {
-        "14d": {
-            "last": 3,
-            "hourly": 72,
-            "daily": 14,
-            "weekly": 0,
-            "monthly": 0,
-            "yearly": 0,
-            "keep_within": True,
-            "group_by_host": True,
-            "group_by_tags": True,
-            "group_by_paths": False,
-        },
-        "30d": {
-            "last": 3,
-            "hourly": 72,
-            "daily": 30,
-            "weekly": 0,
-            "monthly": 0,
-            "yearly": 0,
-            "keep_within": True,
-            "group_by_host": True,
-            "group_by_tags": True,
-            "group_by_paths": False,
-        },
-        "gfs": {
-            "last": 3,
-            "hourly": 72,
-            "daily": 30,
-            "weekly": 4,
-            "monthly": 12,
-            "yearly": 3,
-            "keep_within": True,
-            "group_by_host": True,
-            "group_by_tags": True,
-            "group_by_paths": False,
-        },
-        "keep_all": {},
-    }
-}

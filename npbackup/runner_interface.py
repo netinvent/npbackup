@@ -72,14 +72,14 @@ def entrypoint(*args, **kwargs):
             # Unless operation is "ls", because it's too slow for command_runner poller method that allows live_output
             # Unless operation is "dump", because it outputs binary data
             # But we still need to log the result to our logfile
-            if not operation in ("ls", "dump"):
+            if operation not in ("ls", "dump"):
                 handler = None
                 for handler in logger.handlers:
                     if handler.stream == sys.stdout:
                         logger.removeHandler(handler)
                         break
             logger.info(f"\n{result}")
-            if not operation in ("ls", "dump") and handler:
+            if operation not in ("ls", "dump") and handler:
                 logger.addHandler(handler)
         if result:
             logger.info("Operation finished")

@@ -60,7 +60,7 @@ class PIDFile(object):
             cmd1 = psutil.Process(pid).cmdline()
             if not self._check_full_commandline:
                 cmd1 = self.sanitize(cmd1[0])
-            return cmd1 == self.sanitize("-".join(self._process_name))
+            return cmd1 == self.sanitize(self._process_name)
         except psutil.AccessDenied:
             return False
 

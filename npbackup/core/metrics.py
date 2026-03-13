@@ -130,6 +130,7 @@ def metric_analyser(
         )
         metrics["npbackup_exec_state"] = exec_state
         metrics["npbackup_exec_time"] = exec_time
+        metrics["internal_backup_too_small"] = backup_too_small
 
         # Add upgrade state if upgrades activated
         upgrade_state = os.environ.get("NPBACKUP_UPGRADE_STATE", None)

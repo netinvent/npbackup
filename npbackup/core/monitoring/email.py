@@ -64,12 +64,11 @@ class EmailMonitor(MonitoringBackend):
             return False
 
         # Determine if operation was successful
-        exec_state = metrics.get("exec_state", 0)
-        operation_success = metrics.get("operation_success", 1)
-        backup_too_small = metrics.get("backup_too_small", 0)
+        exec_state = metrics["npbackup_exec_state"]
+        backup_too_small = metrics["internal_backup_too_small"]
 
         op_success = (
-            operation_success == 1 and backup_too_small == 0 and exec_state == 0
+            exec_state == 0 and not backup_too_small
         )
 
         # Get email configuration

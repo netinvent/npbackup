@@ -51,7 +51,7 @@ no_output_filter_operations = ["dump"]
 dry_mode_operations = ["backup", "forget", "prune", "restore", "rewrite"]
 
 restic_output_filters = [
-    # we need to remove rclone debug log lines so restic output becomes pareseable
+    # we need to remove rclone debug log lines so restic output becomes parseable
     re.compile(
         r"^rclone:\s+[0-9]{4}\/[0-1][0-9]\/[0-3][0-9]\s+[0-2][0-9]:[0-5][0-9]:[0-5][0-9]\s+DEBUG.*\n?",
         re.IGNORECASE | re.MULTILINE,
@@ -373,7 +373,7 @@ class ResticRunner:
         elif level == "debug":
             logger.debug(msg)
         else:
-            raise ValueError("Bogus log level given {level}")
+            raise ValueError(f"Bogus log level given {level}")
 
         if self.stdout and (level == "info" or (level == "debug" and _DEBUG)):
             # pylint: disable=E1101 (no-member)
@@ -491,7 +491,7 @@ class ResticRunner:
 
         # _executor_running = False is also set via on_exit function call
         self._executor_running = False
-        self.exec_time = (datetime.now(timezone.utc) - start_time).total_seconds
+        self.exec_time = (datetime.now(timezone.utc) - start_time).total_seconds()
 
         if exit_code == 0:
             self.last_command_status = True

@@ -165,9 +165,9 @@ This is free software, and you are welcome to redistribute it under certain cond
         "--repair",
         type=str,
         default=None,
-        required=None,
+        required=False,
         help=(
-            "Repair the repository. Valid arguments are 'index', 'snapshots', or 'packs,comma_separaed_pack_ids'"
+            "Repair the repository. Valid arguments are 'index', 'snapshots', or 'packs,comma_separated_pack_ids'"
         ),
     )
     parser.add_argument(
@@ -545,10 +545,6 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["repo_config"] = repo_config
 
     # On group operations, we also need to set op_args
-
-    if args.verbose:
-        cli_args["verbose"] = True
-
     if args.stdin:
         cli_args["operation"] = "backup"
         cli_args["op_args"] = {
@@ -673,6 +669,7 @@ This is free software, and you are welcome to redistribute it under certain cond
             sys.exit(74)
         repo_config_list = []
 
+        repo_remove_list = []
         for repo in repos_and_group_repos:
             repo_config, _ = npbackup.configuration.get_repo_config(full_config, repo)
             if repo_config is None:
@@ -681,9 +678,11 @@ This is free software, and you are welcome to redistribute it under certain cond
                     f"Repo {repo} does not exist in this configuration",
                     level="error",
                 )
-                repos_and_group_repos.remove(repo)
+                repo_remove_list.append(repo)
             else:
                 repo_config_list.append(repo_config)
+        for repo in repo_remove_list:
+            repos_and_group_repos.remove(repo)
 
         if repos_and_group_repos is None or repos_and_group_repos == []:
             json_error_logging(False, "No valid repos selected", level="error")
