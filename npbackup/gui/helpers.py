@@ -462,10 +462,7 @@ def quick_close_simplegui_window(window: sg.Window) -> None:
     This is useful for closing windows that are not needed anymore
     """
     if window:
-        try:
-            window.close()
-        except Exception as exc:
-            logger.debug(f"Error closing SimpleGUI window: {exc}")
+        window.close()
     logger.debug("Quick close finished closing window")
 
 
