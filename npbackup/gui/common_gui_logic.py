@@ -1334,7 +1334,7 @@ def handle_gui_events(full_config, window, event, values=None, object_type="repo
                 tree.insert("", node, node, node, icon=icon)
             window[key].update(values=tree)
         else:
-            logger.error(f"Error adding node {node} to tree {tree} for key {key}")
+            logger.error(f"Error adding node '{node}' to tree '{tree}' for key '{key}'")
         return
 
     if event == "-REMOVE-SOURCE-":
