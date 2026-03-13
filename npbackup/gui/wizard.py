@@ -764,10 +764,18 @@ def start_wizard(full_config: dict, config_file: str):
                 values, full_config, config_file
             )
             if not result:
-                sg.popup(
-                    _t("config_gui.scheduled_task_creation_failure"), keep_on_top=True
+                result = sg.popup(
+                    _t("config_gui.scheduled_task_creation_failure")
+                    + "\n"
+                    + _t("wizard_gui.do_you_still_want_to_save"),
+                    custom_text=(_t("generic.no"), _t("generic.yes")),
+                    keep_on_top=True,
+                    icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
+                    title=_t("generic.warning").capitalize(),
+                    line_width=100,
                 )
-                continue
+                if result == _t("generic.no"):
+                    continue
             result = configuration.save_config(config_file, full_config)
             if result:
                 sg.popup(_t("config_gui.configuration_saved"), keep_on_top=True)

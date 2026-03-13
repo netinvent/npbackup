@@ -50,10 +50,12 @@ fr:
   backup_frequency: Fréquence des sauvegardes
   only_if_no_recent_backup_exists: Seulement si aucune sauvegarde n'a été faite dans les dernières
   authorized_days: Jours de la semaine autorisés
-  
+
   # STEP 5
   monitoring_identity_description: Configurez l'identité de cette instance de sauvegarde
 
   # STEP 7
   wizard_ending_text: Votre configuration de sauvegarde est maintenant terminée et sera enregistrée. Vous pouvez éditer directement ou utiliser l'interface de configuration pour éditer le fichier de configuration suivant ou ajouter des paramètres spécifiques dans les paramètres de configuration principaux.
   wizard_ending_text2: Merci d'utiliser
+
+  do_you_still_want_to_save: Voulez-vous toujours enregistrer la configuration actuelle ?

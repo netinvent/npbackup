@@ -87,7 +87,7 @@ fr:
   create_housekeeping_scheduled_task_at: Créer une tâche planifiée de maintenance tous les jours à
   scheduled_task_explanation: Les tâches planifiées peuvent être crées à heure fixe pour réaliser des sauvegardes serveur, ou toutes les x minutes, auquel cas la sauvegarde aura lieue uniquement si le temps minimal entre deux sauvegardes est dépassé, ce qui est adapté aux ordinateurs portables qui ont des heures de travail flexibles.
   scheduled_task_creation_success: Tâche planifiée crée avec succès
-  scheduled_task_creation_failure: Impossible de créer la tâche planifiée. Veuillez consulter les journaux pour plus de détails
+  scheduled_task_creation_failure: Impossible de créer la tâche planifiée. Vous devez exécuter ce programme en tant qu'administrateur pour créer des tâches planifiées
   task_type: Type de tâche
   select_task_scope: Sélectionner la portée de la tâche
   reading_tasks: Lecture des tâches planifiées existantes

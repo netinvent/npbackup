@@ -86,7 +86,7 @@ en:
   create_housekeeping_scheduled_task_at: Create housekeeping scheduled every day at
   scheduled_task_explanation: Task can run at a given time to run a backup which is great to make server backups, or run every x minutes, but only run actual backup when more than maximum_backup_age minutes was reached, which is the best way to backup laptops which have flexible power on hours.
   scheduled_task_creation_success: Scheduled task created successfully
-  scheduled_task_creation_failure: Scheduled task could not be created. See logs for further info
+  scheduled_task_creation_failure: Scheduled task could not be created. You must run as administrator to create scheduled tasks
   task_type: Task type
   select_task_scope: Select task scope
   reading_tasks: Reading existing scheduled tasks
