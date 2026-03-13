@@ -111,7 +111,9 @@ class EmailMonitor(MonitoringBackend):
                             recipients_to_send.append(recipient)
             elif operation == "email_test":
                 for trigger in self.get_monitoring_value("global_email.recipients", []):
-                    for recipient in self.get_monitoring_value(f"global_email.recipients.{trigger}", []):
+                    for recipient in self.get_monitoring_value(
+                        f"global_email.recipients.{trigger}", []
+                    ):
                         if recipient not in recipients_to_send:
                             recipients_to_send.append(recipient)
             else:
