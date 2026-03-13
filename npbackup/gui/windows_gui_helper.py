@@ -85,5 +85,5 @@ def handle_current_window(action: str = "minimize", use_last: bool = True) -> No
                     f"Bad action parameter for handling current window: {action}"
                 )
     except Exception as exc:
-        logger.info(f"Error handling current window: {exc}")
+        logger.debug(f"Error handling current window: {exc}")
         logger.debug(exc, exc_info=True)
