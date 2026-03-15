@@ -41,7 +41,7 @@ def get_default_storage_config() -> CommentedMap:
 
 def get_storage_path(config_uuid: str) -> Optional[str]:
     """
-    Get a writeable storage parth for a given config_uuid
+    Get a writeable storage path for a given config_uuid
     """
     storage_file = sanitize_filename(f"npbackup_{config_uuid}") + ".dat"
 
