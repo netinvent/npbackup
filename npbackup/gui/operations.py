@@ -281,20 +281,25 @@ def show_stats(statistics: List[dict]) -> None:
             "Snapshot Count",
         ]
     layout = [
-        [sg.Table(
-            values=data,
-            headings=headings,
-            justification="right",
-            auto_size_columns=True,
-            expand_x=True,
-            expand_y=True,
-        )],
+        [
+            sg.Table(
+                values=data,
+                headings=headings,
+                justification="right",
+                auto_size_columns=True,
+                expand_x=True,
+                expand_y=True,
+            )
+        ],
         [sg.Button(_t("generic.close"), key="--EXIT--")],
     ]
 
     window = sg.Window(
-        "Statistics", layout, keep_on_top=True, element_justification="R",
-        size=(800, 400)
+        "Statistics",
+        layout,
+        keep_on_top=True,
+        element_justification="R",
+        size=(800, 400),
     )
     while True:
         event, _ = window.read()
