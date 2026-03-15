@@ -488,7 +488,7 @@ This is free software, and you are welcome to redistribute it under certain cond
     if (
         auto_upgrade
         and jobs.schedule_on_chance_or_interval(
-            "auto_upgrade", auto_upgrade_percent_chance, auto_upgrade_interval
+            "auto_upgrade_counter", full_config.g("uuid"), full_config.g("uuid"), auto_upgrade_percent_chance, auto_upgrade_interval
         )
     ) or args.auto_upgrade:
         if args.auto_upgrade:

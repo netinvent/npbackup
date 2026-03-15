@@ -7,23 +7,20 @@ __intname__ = "npbackup.core.jobs"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026010801"
+__build__ = "2026031501"
 
 # This module helps scheduling jobs without using a daemon
 # We can schedule on a random percentage or a fixed interval
 
 
-import os
-from typing import Optional
-import tempfile
 from logging import getLogger
 from random import randint
-from npbackup.path_helper import CURRENT_DIR
+from npbackup.local_storage import load_storage, save_storage
 
 logger = getLogger()
 
 
-def schedule_on_interval(job_name: str, interval: int) -> bool:
+def schedule_on_interval(job_name: str, config_uuid: str, repo_uuid: str, interval: int) -> bool:
     """
     Basic counter that returns true only every X times this is called
 
@@ -43,69 +40,28 @@ def schedule_on_interval(job_name: str, interval: int) -> bool:
         logger.error(f"No valid interval given for job {job_name}: {interval}")
         return False
 
-    # file counter, local, home, or temp if not available
-    counter_file = f"{__intname__}.{job_name}.log"
-
-    def _write_count(file: str, count: int) -> bool:
+    storage = load_storage(config_uuid)
+    try:
+        count = storage.g(f"{job_name}.{repo_uuid}", default=1)
+    except AssertionError:
+        count = 0
         try:
-            with open(file, "w", encoding="utf-8") as fpw:
-                fpw.write(str(count))
-                return True
-        except OSError:
-            # We may not have write privileges, hence we need a backup plan
-            return False
-
-    def _get_count(file: str) -> Optional[int]:
-        try:
-            with open(file, "r", encoding="utf-8") as fp:
-                count = int(fp.read())
-                return count
-        except OSError as exc:
-            # We may not have read privileges
-            logger.error(f"Cannot read {job_name} counter file {file}: {exc}")
-        except ValueError as exc:
-            logger.error(f"Bogus {job_name} counter in {file}: {exc}. Resetting to 1")
-        return 1
-
-    # Prefer a non temporary path if possible
-    path_list = [
-        os.path.join(CURRENT_DIR, counter_file),
-    ]
-    if os.name != "nt":
-        path_list = (
-            [os.path.join("/var/log", counter_file)]
-            + path_list
-            + [os.path.join(tempfile.gettempdir(), counter_file)]
-        )
+            storage.s(f"{job_name}.{repo_uuid}", count)
+        except TypeError:
+            storage.s(f"{job_name}", {})
+            storage.s(f"{job_name}.{repo_uuid}", count)
+    if count >= interval:
+        storage.s(f"{job_name}.{repo_uuid}", 1)
+        schedule_required = True
+        logger.info(f"schedule on interval has decided {job_name} is required")
     else:
-        path_list = path_list + [
-            os.path.join(tempfile.gettempdir(), counter_file),
-            os.path.join(r"C:\Windows\Temp", counter_file),
-        ]
-
-    for file in path_list:
-        if not os.path.isfile(file):
-            if _write_count(file, 1):
-                logger.debug(f"Initial job {job_name} counter written to {file}")
-            else:
-                logger.debug(f"Cannot write {job_name} counter file {file}")
-                continue
-        count = _get_count(file)
-        # Make sure we can write to the file before we make any assumptions
-        result = _write_count(file, count + 1)
-        if result:
-            if count >= interval:
-                # Reinitialize counter before we actually approve job run
-                if _write_count(file, 1):
-                    logger.info(
-                        f"schedule on interval has decided {job_name} is required"
-                    )
-                    return True
-            break
-        else:
-            logger.debug(f"Cannot write {job_name} counter to {file}")
-            continue
-    return False
+        storage.s(f"{job_name}.{repo_uuid}", count + 1)
+        schedule_required = False
+    result = save_storage(config_uuid, storage)
+    if not result:
+        logger.error(f"Failed to save storage for job {job_name} with config_uuid {config_uuid}")
+        return False
+    return schedule_required
 
 
 def schedule_on_chance(job_name: str, chance_percent: int) -> bool:
@@ -129,13 +85,13 @@ def schedule_on_chance(job_name: str, chance_percent: int) -> bool:
 
 
 def schedule_on_chance_or_interval(
-    job_name: str, chance_percent: int, interval: int
+    job_name: str, config_uuid: str, repo_uuid: str, chance_percent: int, interval: int
 ) -> bool:
     """
     Decide if we will run a job according to chance_percent or interval
     """
     if schedule_on_chance(job_name, chance_percent) or schedule_on_interval(
-        job_name, interval
+        job_name, config_uuid, repo_uuid, interval
     ):
         return True
     return False
