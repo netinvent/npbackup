@@ -18,6 +18,8 @@ from resources.customization import (
     SIMPLEGUI_THEME,
     SIMPLEGUI_DARK_THEME,
     STANDARD_FONT,
+    SUBTITLE_FONT,  # Is needed for imports by other gui files
+    TITLE_FONT,  # Is needed for imports by other gui files
 )
 
 try:
