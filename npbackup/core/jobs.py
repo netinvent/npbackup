@@ -20,7 +20,9 @@ from npbackup.local_storage import load_storage, save_storage
 logger = getLogger()
 
 
-def schedule_on_interval(job_name: str, config_uuid: str, repo_uuid: str, interval: int) -> bool:
+def schedule_on_interval(
+    job_name: str, config_uuid: str, repo_uuid: str, interval: int
+) -> bool:
     """
     Basic counter that returns true only every X times this is called
 
@@ -59,7 +61,9 @@ def schedule_on_interval(job_name: str, config_uuid: str, repo_uuid: str, interv
         schedule_required = False
     result = save_storage(config_uuid, storage)
     if not result:
-        logger.error(f"Failed to save storage for job {job_name} with config_uuid {config_uuid}")
+        logger.error(
+            f"Failed to save storage for job {job_name} with config_uuid {config_uuid}"
+        )
         return False
     return schedule_required
 

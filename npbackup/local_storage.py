@@ -24,7 +24,6 @@ from npbackup.path_helper import CURRENT_DIR, NPBACKUP_ROOT_DIR, sanitize_filena
 from npbackup.__version__ import __version__
 from npbackup.configuration import convert_to_commented_map
 
-
 logger = logging.getLogger()
 
 
@@ -34,6 +33,7 @@ default_storage_config = {
     "auto_upgrade_counter": {},
     "housekeeping_after_backup_counter": {},
 }
+
 
 def get_default_storage_config() -> CommentedMap:
     return convert_to_commented_map(default_storage_config)
@@ -54,14 +54,14 @@ def get_storage_path(config_uuid: str) -> Optional[str]:
     if os.name != "nt":
         path_list = path_list + [
             os.path.join("/var/log", storage_file),
-            os.path.join(tempfile.gettempdir(), storage_file)
+            os.path.join(tempfile.gettempdir(), storage_file),
         ]
     else:
         path_list = path_list + [
             os.path.join(tempfile.gettempdir(), storage_file),
             os.path.join(r"C:\Windows\Temp", storage_file),
         ]
-    
+
     for path in path_list:
         try:
             # We need to really try to write to file since os.access(path, os.W_OK) doesn't always work
@@ -71,7 +71,7 @@ def get_storage_path(config_uuid: str) -> Optional[str]:
             return path
         except (PermissionError, OSError) as exc:
             logger.debug(f"Cannot write to {path}, trying next option: {exc}")
-      
+
     logger.error(f"No writable local storage found for {storage_file}")
     return None
 
@@ -82,7 +82,9 @@ def load_storage(config_uuid: str) -> dict:
     """
     storage_file = get_storage_path(config_uuid)
     if not storage_file:
-        logger.warning("Loading default storage config, this will prevent autoupgrade / housekeeping / storage analysis to work")
+        logger.warning(
+            "Loading default storage config, this will prevent autoupgrade / housekeeping / storage analysis to work"
+        )
         return get_default_storage_config()
     try:
         with open(storage_file, "r", encoding="utf-8") as file_handle:
@@ -97,7 +99,6 @@ def load_storage(config_uuid: str) -> dict:
         logger.error(f"Storage file {storage_file} is not a valid yaml file: {exc}")
         logger.debug("Trace:", exc_info=True)
     return get_default_storage_config()
-
 
 
 def save_storage(config_uuid: str, storage_config: dict) -> bool:

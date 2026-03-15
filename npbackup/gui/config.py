@@ -184,7 +184,7 @@ def config_gui(full_config: dict, config_file: str):
                             ),
                         ],
                         [
-                             sg.Text(
+                            sg.Text(
                                 _t("config_gui.minimum_backup_size_error"), size=(50, 2)
                             ),
                             sg.Image(
@@ -203,8 +203,11 @@ def config_gui(full_config: dict, config_file: str):
                             ),
                         ],
                         [
-                             sg.Text(
-                                _t("config_gui.storage_heuristics_allowed_lower_standard_deviation"), size=(50, 2)
+                            sg.Text(
+                                _t(
+                                    "config_gui.storage_heuristics_allowed_lower_standard_deviation"
+                                ),
+                                size=(50, 2),
                             ),
                             sg.Image(
                                 NON_INHERITED_ICON,
@@ -213,12 +216,16 @@ def config_gui(full_config: dict, config_file: str):
                                 pad=1,
                             ),
                             sg.Input(
-                                key="backup_opts.storage_heuristics_allowed_lower_standard_deviation", size=(8, 1)
+                                key="backup_opts.storage_heuristics_allowed_lower_standard_deviation",
+                                size=(8, 1),
                             ),
                         ],
                         [
-                             sg.Text(
-                                _t("config_gui.storage_heuristics_allowed_higher_standard_deviation"), size=(50, 2)
+                            sg.Text(
+                                _t(
+                                    "config_gui.storage_heuristics_allowed_higher_standard_deviation"
+                                ),
+                                size=(50, 2),
                             ),
                             sg.Image(
                                 NON_INHERITED_ICON,
@@ -227,7 +234,8 @@ def config_gui(full_config: dict, config_file: str):
                                 pad=1,
                             ),
                             sg.Input(
-                                key="backup_opts.storage_heuristics_allowed_higher_standard_deviation", size=(8, 1)
+                                key="backup_opts.storage_heuristics_allowed_higher_standard_deviation",
+                                size=(8, 1),
                             ),
                         ],
                         [

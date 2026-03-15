@@ -1527,7 +1527,12 @@ class NPBackupRunner:
         # Extract backup size from result_string
         # Metrics will not be in json format, since we need to diag cloud issues until
         # there is a fix for https://github.com/restic/restic/issues/4155
-        analyser_result, backup_sub_min_size, backup_heuristics_sub_min_size, backup_heuristics_over_size = metric_analyser(
+        (
+            analyser_result,
+            backup_sub_min_size,
+            backup_heuristics_sub_min_size,
+            backup_heuristics_over_size,
+        ) = metric_analyser(
             repo_config=self.repo_config,
             monitoring_config=self.monitoring_config,
             restic_result=result,

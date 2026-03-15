@@ -222,7 +222,7 @@ class EmailMonitor(MonitoringBackend):
             metrics["npbackup_storage_heuristics_too_low"] = False
         if not "npbackup_storage_heuristics_too_high" in metrics:
             metrics["npbackup_storage_heuristics_too_high"] = False
-        
+
         if metrics["npbackup_exec_state"] == 3:
             body += "\nStatus: Critical error"
         elif metrics["npbackup_exec_state"] == 2:
@@ -232,12 +232,13 @@ class EmailMonitor(MonitoringBackend):
         elif metrics["npbackup_backup_sub_min_size"]:
             body += "\nStatus: Backup smaller than minimum configured size"
         elif metrics["npbackup_storage_heuristics_too_low"]:
-            body += "\nStatus: Backup smaller than expected compared to previous backups"
+            body += (
+                "\nStatus: Backup smaller than expected compared to previous backups"
+            )
         elif metrics["npbackup_storage_heuristics_too_high"]:
             body += "\nStatus: Backup larger than expected compared to previous backups"
         elif metrics["npbackup_exec_state"] == 1:
             body += "\nStatus: Warning"
-
 
         # Add timestamp
         from datetime import datetime, timezone

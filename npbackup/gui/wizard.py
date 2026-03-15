@@ -437,12 +437,28 @@ def wizard_layouts() -> dict:
                 ),
             ],
             [
-                sg.Text(_t("config_gui.storage_heuristics_allowed_lower_standard_deviation"), size=(50, 1)),
-                sg.Input(key="backup_opts.storage_heuristics_allowed_lower_standard_deviation", size=(8, 1)),
+                sg.Text(
+                    _t(
+                        "config_gui.storage_heuristics_allowed_lower_standard_deviation"
+                    ),
+                    size=(50, 1),
+                ),
+                sg.Input(
+                    key="backup_opts.storage_heuristics_allowed_lower_standard_deviation",
+                    size=(8, 1),
+                ),
             ],
             [
-                sg.Text(_t("config_gui.storage_heuristics_allowed_higher_standard_deviation"), size=(50, 1)),
-                sg.Input(key="backup_opts.storage_heuristics_allowed_higher_standard_deviation", size=(8, 1)),
+                sg.Text(
+                    _t(
+                        "config_gui.storage_heuristics_allowed_higher_standard_deviation"
+                    ),
+                    size=(50, 1),
+                ),
+                sg.Input(
+                    key="backup_opts.storage_heuristics_allowed_higher_standard_deviation",
+                    size=(8, 1),
+                ),
             ],
         ],
         "wizard_layout_7": create_step_header(
