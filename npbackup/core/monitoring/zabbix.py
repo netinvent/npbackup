@@ -156,7 +156,7 @@ class ZabbixMonitor(MonitoringBackend):
 
         # Send LLD discovery data so Zabbix creates items from prototypes
         self._send_discovery(zabbix_server, zabbix_port, psk_wrapper)
-        # Now let's sleep aribtrary 10 seconds to give zabbix server time to process the discovery
+        # Now let's sleep arbitrary 10 seconds to give zabbix server time to process the discovery
         # WIP: This could perhaps be improved by checking the Zabbix server for the existence of
         # the discovered items before sending metrics (requires API client)
         # As for now, let's just be full stupid cand keep a global variable around
