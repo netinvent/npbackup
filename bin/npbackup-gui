@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), ".."
 
 import npbackup.__env__
 npbackup.__env__.BUILD_TYPE = "gui"
+import npbackup.__debug__
 from npbackup.gui.__main__ import main_gui
 from npbackup.__main__ import main
 
