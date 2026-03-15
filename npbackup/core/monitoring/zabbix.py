@@ -7,9 +7,11 @@ __intname__ = "npbackup.core.monitoring.zabbix"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026030501"
+__build__ = "2026031301"
 
+import json
 from typing import Dict, Any, List
+from time import sleep
 from logging import getLogger
 from npbackup.core.monitoring import MonitoringBackend
 
@@ -22,6 +24,8 @@ try:
     ZABBIX_AVAILABLE = True
 except ImportError:
     ZABBIX_AVAILABLE = False
+
+ZABBIX_DISCOVERY_SENT = False
 
 try:
     import ssl
@@ -57,6 +61,8 @@ class ZabbixMonitor(MonitoringBackend):
             repo_config: Repository configuration dictionary
         """
         super().__init__(repo_config, monitoring_config)
+        self.repo_name = repo_config.g("name")
+        self.action = self.common_labels.get("action", "unknown")
 
     def is_enabled(self) -> bool:
         if not ZABBIX_AVAILABLE:
@@ -85,6 +91,8 @@ class ZabbixMonitor(MonitoringBackend):
         Returns:
             True if successful, False otherwise
         """
+        global ZABBIX_DISCOVERY_SENT
+
         if not self.is_enabled():
             logger.debug("Zabbix monitoring not enabled in configuration.")
             return False
@@ -111,6 +119,8 @@ class ZabbixMonitor(MonitoringBackend):
             logger.info("Dry run mode. Not sending Zabbix metrics.")
             return True
 
+        zabbix_psk = None
+        zabbix_psk_identity = None
         try:
             zabbix_psk = self.get_monitoring_value("global_zabbix.psk")
             zabbix_psk_identity = self.get_monitoring_value(
@@ -128,23 +138,9 @@ class ZabbixMonitor(MonitoringBackend):
             zabbix_psk = None
             zabbix_psk_identity = None
 
-        # WIP:// happy to json here
-        # Convert metrics to ItemValue list
-        items = []
-        """
-        items = self._build_item_values(
-            metrics,
-            labels,
-            operation,
-        )
-        """
-        items = self.build_json_output(metrics, operation)
 
-        # Send metrics to Zabbix
         if HAS_PSK and zabbix_psk and zabbix_psk_identity:
-
             def psk_wrapper(sock, *args, **kwargs):
-                # Pre-Shared Key (PSK) and PSK Identity
                 psk = bytes.fromhex(zabbix_psk)
                 psk_identity = zabbix_psk_identity.encode()
 
@@ -154,74 +150,157 @@ class ZabbixMonitor(MonitoringBackend):
                     ciphers="ECDHE-PSK-AES128-CBC-SHA256",
                     psk=(psk, psk_identity),
                 )
-
-            return self._send_to_zabbix(zabbix_server, zabbix_port, items, psk_wrapper)
         else:
-            return self._send_to_zabbix(
-                zabbix_server, zabbix_port, items, psk_wrapper=None
-            )
+            psk_wrapper = None
 
-    ''' WIP remove
+        # Send LLD discovery data so Zabbix creates items from prototypes
+        self._send_discovery(zabbix_server, zabbix_port, psk_wrapper)
+        # Now let's sleep aribtrary 10 seconds to give zabbix server time to process the discovery
+        # WIP: This could perhaps be improved by checking the Zabbix server for the existence of
+        # the discovered items before sending metrics (requires API client)
+        # As for now, let's just be full stupid cand keep a global variable around
+
+        # Plain stupid global variable here...
+        # We would need to keep track of discovery sent per target somehow
+        if not ZABBIX_DISCOVERY_SENT:
+            ZABBIX_DISCOVERY_SENT = True
+            logger.info(
+                "Sent Zabbix discovery data. Sleeping 10 seconds to allow Zabbix server to process data before sending metrics"
+            )
+            sleep(10)
+
+        # Convert metrics to ItemValue list and send
+        items = self._build_item_values(metrics, operation)
+        return self._send_to_zabbix(zabbix_server, zabbix_port, items, psk_wrapper)
+
     def _build_item_values(
         self,
         metrics: Dict[str, Any],
-        labels: Dict[str, str],
         operation: str,
     ) -> List:
         """
-        Convert metrics dictionary to a list of zabbix-utils ItemValue objects
+        Convert metrics dictionary to a list of zabbix-utils ItemValue objects.
+
+        Uses positional key parameters [repo_name,action] to match Zabbix LLD
+        item prototypes. The "instance" label is used as the Zabbix host.
 
         Args:
             metrics: Dictionary of metrics
-            labels: Dictionary of labels
             operation: Operation name
-            instance: Zabbix host identifier
 
         Returns:
             List of ItemValue objects
         """
         items = []
-        backup_job = labels.get("backup_job", "unknown")
+        instance = self.common_labels.get("instance", "default_instance")
 
-        # Map common metrics to Zabbix item keys
-        # Format: npbackup.metric_name[instance,operation]
         for metric_name, value in metrics.items():
-            if value is None or metric_name == "operation":
+            if value is None:
                 continue
 
-            # Create Zabbix item key with proper formatting
-            # Using npbackup namespace with parameters for easy templating
+            # Skip internal metrics not meant for external monitoring
+            if metric_name.startswith("internal_"):
+                continue
 
-            # WIP:// how do we pass various labels like os=windows into zabbix ?
-            label_string = ",".join(f"{key}={value}" for key, value in labels.items())
+            if metric_name.startswith("npbackup_"):
+                # Map upgrade state to npbackup.exec_state with action=upgrade
+                if metric_name == "npbackup_upgrade_state":
+                    item_key = f"npbackup.exec_state[{self.repo_name},upgrade]"
+                else:
+                    short_name = metric_name[len("npbackup_") :]
+                    item_key = f"npbackup.{short_name}[{self.repo_name},{self.action}]"
+                try:
+                    items.append(
+                        ItemValue(
+                            instance, item_key, value, clock=self.metrics_timestamp
+                        )
+                    )
+                except Exception as exc:
+                    logger.warning(
+                        f"Failed to create Zabbix ItemValue for {metric_name}: {exc}"
+                    )
 
-            if metric_name in (
-                "exec_state",
-                "exec_time",
-                "operation_success",
-                "backup_too_small",
-            ):
-                item_key = f"npbackup.{metric_name}[{label_string}]"
+            elif metric_name.startswith("restic_"):
+                short_name = metric_name[len("restic_") :]
+                if isinstance(value, dict):
+                    # Flatten dict metrics, e.g. restic_files: {"new": 5, "changed": 3}
+                    # becomes restic.files[repo,action,new] = 5
+                    for sub_metric, sub_value in value.items():
+                        if sub_value is None:
+                            continue
+                        item_key = f"restic.{short_name}[{self.repo_name},{self.action},{sub_metric}]"
+                        try:
+                            items.append(
+                                ItemValue(
+                                    instance,
+                                    item_key,
+                                    sub_value,
+                                    clock=self.metrics_timestamp,
+                                )
+                            )
+                        except Exception as exc:
+                            logger.warning(
+                                f"Failed to create Zabbix ItemValue for {metric_name}.{sub_metric}: {exc}"
+                            )
+                else:
+                    item_key = f"restic.{short_name}[{self.repo_name},{self.action}]"
+                    try:
+                        items.append(
+                            ItemValue(
+                                instance, item_key, value, clock=self.metrics_timestamp
+                            )
+                        )
+                    except Exception as exc:
+                        logger.warning(
+                            f"Failed to create Zabbix ItemValue for {metric_name}: {exc}"
+                        )
             else:
-                # Restic-specific metrics
-                item_key = f"restic.{metric_name}[{label_string}]"
+                logger.warning(f"Unknown metric namespace for {metric_name}, skipping.")
 
-            try:
-                items.append(ItemValue(self.base_labels["instance"], item_key, value))
-            except Exception as exc:
-                logger.warning(
-                    f"Failed to create Zabbix ItemValue for {metric_name}: {exc}"
-                )
-
-        logger.debug(
-            f"Created {len(items)} Zabbix item values for host {self.base_labels['instance']}"
-        )
-        logger.debug(
-            "Zabbix items: "
-            + "\n".join([f"{item.key} = {item.value}" for item in items])
-        )
+        logger.debug(f"Created {len(items)} Zabbix item values for host {instance}")
+        if items:
+            logger.debug(
+                "Zabbix items:\n"
+                + "\n".join(f"  {item.key} = {item.value}" for item in items)
+            )
         return items
-    '''
+
+    def _send_discovery(
+        self,
+        zabbix_server: str,
+        zabbix_port: int,
+        psk_wrapper=None,
+    ) -> bool:
+        """
+        Send Low-Level Discovery data to Zabbix so trapper item prototypes
+        are instantiated for this repo/action combination.
+
+        All common_labels are sent as LLD macros so they can be used as
+        tags on discovered items, mirroring how Prometheus exposes labels.
+        """
+        instance = self.common_labels.get("instance", "default_instance")
+
+        # Build LLD entity with all common labels as macros
+        # ("instance" is the Zabbix host, not an LLD macro)
+        lld_entity = {}
+        for label, value in self.common_labels.items():
+            if label == "instance":
+                continue
+            macro_name = "{#" + label.upper() + "}"
+            lld_entity[macro_name] = str(value) if value is not None else ""
+
+        lld_data = json.dumps([lld_entity])
+
+        items = [
+            ItemValue(
+                instance, "npbackup.discovery", lld_data, clock=self.metrics_timestamp
+            )
+        ]
+
+        logger.debug(
+            f"Sending Zabbix LLD data for host {instance}: repo={self.repo_name}, action={self.action}"
+        )
+        return self._send_to_zabbix(zabbix_server, zabbix_port, items, psk_wrapper)
 
     def _send_to_zabbix(
         self, zabbix_server: str, zabbix_port: int, items: List, psk_wrapper=None
