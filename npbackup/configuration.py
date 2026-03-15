@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026030601"
+__build__ = "2026031501"
 __version__ = "npbackup 3.1.0+"
 
 
@@ -19,6 +19,7 @@ from pathlib import Path
 import re
 import platform
 import zlib
+import uuid
 from logging import getLogger
 from ruamel.yaml import YAML
 from ruamel.yaml.scanner import ScannerError
@@ -119,6 +120,7 @@ ENCRYPTED_OPTIONS = [
 # This is what a config file looks like
 empty_config_dict = {
     "conf_version": MAX_CONF_VERSION,
+    "uuid": None,
     "audience": None,
     "repos": {
         # Don't allow repo names to contain dots
@@ -349,6 +351,10 @@ empty_config_dict = {
         }
     },
 }
+
+
+def gen_uuid_from_path(file: str) -> str:
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, str(file)))
 
 
 def convert_to_commented_map(
@@ -881,6 +887,8 @@ def get_repo_config(
             group_config = {}
 
     repo_config.s("name", repo_name)
+    repo_config.s("uuid", gen_uuid_from_path(repo_name))
+    repo_config.s("config_uuid", full_config.g("uuid"))
     repo_config, config_inheritance = inherit_group_settings(repo_config, group_config)
 
     if eval_variables:
@@ -1280,6 +1288,9 @@ def load_config(config_file: Path) -> Optional[dict]:
 
     # Extract permissions / password from repo if set
     full_config = extract_permissions_from_full_config(full_config)
+
+    # Inject config UUID for local storage tracking
+    full_config.s("uuid", gen_uuid_from_path(config_file))
 
     # save config file if needed
     if config_file_is_updated:
