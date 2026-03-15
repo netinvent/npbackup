@@ -114,15 +114,15 @@ def storage_heuristics(
         except TypeError:
             storage.s("modified_files_history", {})
             storage.s(f"modified_files_history.{repo_uuid}", modified_files_history)
+    else:
+        logger.warning(
+            "Storage modified files heuristics received non int modified files count, skipping heuristics"
+        )
 
     result = save_storage(config_uuid, storage)
     if not result:
         logger.warning(
             f"Failed to save storage statistics for config_uuid {config_uuid}"
-        )
-    else:
-        logger.warning(
-            "Storage modified files heuristics received non int modified files count, skipping heuristics"
         )
 
     return too_small, too_big, too_many_modified_files
