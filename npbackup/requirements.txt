@@ -32,7 +32,7 @@ ntplib>=0.4.0
 # msgspec needs python 3.8+ and is not compatible with win 32-bit
 msgspec; python_version > '3.8'
 sv_ttk
-reskinner>=4.3.0
+reskinner>=4.4.0
 zabbix-utils>=2.0.4
 # We don't get to install sslpsk3 nor sslpsk2 currently on MacOS python 3.13
 sslpsk3>=2.0.0; platform_system != "Darwin"

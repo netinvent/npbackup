@@ -65,7 +65,7 @@ from npbackup.__version__ import version_dict, version_string
 from npbackup.__debug__ import _DEBUG, _NPBACKUP_ALLOW_AUTOUPGRADE_DEBUG
 from npbackup.restic_wrapper import ResticRunner
 from npbackup.restic_wrapper import schema
-from npbackup.gui.ttk_theme import reskin_job, TITLE_FONT, SUBTITLE_FONT
+from npbackup.gui.ttk_theme import TITLE_FONT, SUBTITLE_FONT, change_sg_theme
 from npbackup.gui.wizard import start_wizard
 
 logger = getLogger()
@@ -1420,11 +1420,7 @@ def _main_gui(viewer_mode: bool):
                 if current_state is None:
                     sg.popup(_t("main_gui.cannot_get_repo_status"))
         if event in ("-THEME-"):
-            if sg.theme() != SIMPLEGUI_DARK_THEME:
-                CURRENT_THEME = SIMPLEGUI_DARK_THEME
-            else:
-                CURRENT_THEME = SIMPLEGUI_THEME
-            reskin_job(window, CURRENT_THEME)
+            change_sg_theme(window)
 
 
 def main_gui(viewer_mode=False):

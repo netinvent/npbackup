@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.ttk_theme"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2025-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025112101"
+__build__ = "2026031501"
 
 import os
 import FreeSimpleGUI as sg
@@ -18,8 +18,6 @@ from resources.customization import (
     SIMPLEGUI_THEME,
     SIMPLEGUI_DARK_THEME,
     STANDARD_FONT,
-    SUBTITLE_FONT,
-    TITLE_FONT,
 )
 
 try:
@@ -78,28 +76,19 @@ sg.USE_TTK_BUTTONS = False
 RESKIN_WINDOW = None
 
 
-def reskin_job(window=None, theme=None):
+def change_sg_theme(window=None):
     global CURRENT_THEME
-    global RESKIN_WINDOW
-
-    RESKIN_WINDOW = window
-    CURRENT_THEME = theme
-    if RESKIN_WINDOW:
-        sg.DEFAULT_TTK_THEME = (
-            "sun-valley-dark"
-            if CURRENT_THEME == SIMPLEGUI_DARK_THEME
-            else "sun-valley-light"
-        )
-        # sg.DEFAULT_TTK_THEME = "azure-dark" if CURRENT_THEME == SIMPLEGUI_DARK_THEME else "azure-light"
-
-        # We must force SimpleGUI to update it's ttk theme as well
-        style = ttk.Style(window.hidden_master_root)
-        sg._change_ttk_theme(style, sg.DEFAULT_TTK_THEME)
-        # RESKIN_WINDOW.TKroot.after(10, sv_ttk.use_light_theme) # WIP input element is not styled
-        reskin(
-            window=RESKIN_WINDOW,
-            new_theme=CURRENT_THEME,
-            theme_function=sg.theme,
-            lf_table=sg.LOOK_AND_FEEL_TABLE,
-        )
-        RESKIN_WINDOW.TKroot.after(60000, reskin_job)
+    if sg.theme() != SIMPLEGUI_DARK_THEME:
+        CURRENT_THEME = SIMPLEGUI_DARK_THEME
+        sg.DEFAULT_TTK_THEME = "sun-valley-dark"
+    else:
+        CURRENT_THEME = SIMPLEGUI_THEME
+        sg.DEFAULT_TTK_THEME = "sun-valley-light"
+    style = ttk.Style(window.hidden_master_root)
+    sg._chage_ttk_theme(style, sg.DEFAULT_TTK_THEME)
+    reskin(
+        window=window,
+        new_theme=CURRENT_THEME,
+        theme_function=sg.theme,
+        lf_table=sg.LOOK_AND_FEEL_TABLE,
+    )
