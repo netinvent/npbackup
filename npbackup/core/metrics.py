@@ -37,7 +37,7 @@ def metric_analyser(
     append_metrics_file: bool,
     exec_time: Optional[float] = None,
     only_check_backup_result_and_size: bool = False,
-) -> Tuple[bool, bool, bool, bool]:
+) -> Tuple[bool, bool, bool, bool, bool]:
     """
     Tries to get operation success and backup size checks from restic output
     """
@@ -172,12 +172,12 @@ def metric_analyser(
                 backup_heuristics_over_size
             )
 
-        if not operation_success or not restic_result:
+        if not restic_result:
             logger.error("Backend finished with errors.")
 
         # Calculate execution state
         worst_exec_level = logger.get_worst_logger_level()
-        exec_state = calculate_exec_state(operation_success, worst_exec_level)
+        exec_state = calculate_exec_state(restic_result, worst_exec_level)
         metrics["npbackup_exec_state"] = exec_state
         metrics["npbackup_exec_time"] = exec_time
 

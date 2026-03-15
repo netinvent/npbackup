@@ -92,7 +92,7 @@ def restic_str_output_to_json(
                 size = matches.group(1)
                 unit = matches.group(2)
                 try:
-                    value = int(BytesConverter("{} {}".format(size, unit)))
+                    value = int(BytesConverter("{} {}".format(size, unit)).bytes)
                     metrics["data_added"] = value
                 except TypeError:
                     logger.warning(
@@ -101,7 +101,7 @@ def restic_str_output_to_json(
                     errors = True
                 stored_size = matches.group(3)  # TODO: add unit detection in regex
                 try:
-                    stored_size = int(BytesConverter(stored_size))
+                    stored_size = int(BytesConverter(stored_size).bytes)
                     metrics["data_stored"] = stored_size
                 except TypeError:
                     logger.warning(
