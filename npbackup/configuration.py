@@ -175,6 +175,9 @@ empty_config_dict = {
                 "additional_backup_only_parameters": None,
                 "additional_restore_only_parameters": None,
                 "minimum_backup_size_error": "10 MiB",  # allows BytesConverter units
+                "storage_heuristics_allowed_lower_standard_deviation": 10,  # In percent
+                "storage_heuristics_allowed_higher_standard_deviation": 50,  # In percent
+                "storage_heuristics_allowed_modified_files_standard_deviation": 20,  # In percent
                 "pre_exec_commands": [],
                 "pre_exec_per_command_timeout": 3600,
                 "pre_exec_failure_is_fatal": False,
