@@ -160,9 +160,9 @@ PRIVATE/*
 !PRIVATE/README.md
 !PRIVATE/example
 !PRIVATE/__no_init__.py
-!PRIVATE/_obfuscation.py
+!PRIVATE/obfuscation.py
 !PRIVATE/customization.py
-!PRIVATE/_private_secret_keys.py
+!PRIVATE/secret_keys.py
 !PRIVATE/audience.dist.py
 BUILDS
 BUILDS-PRIVATE

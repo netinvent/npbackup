@@ -3,11 +3,11 @@
 #
 # This file is part of npbackup
 
-__intname__ = "npbackup._customization"
+__intname__ = "npbackup._private_secret_keys"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2023-2026 NetInvent"
+__copyright__ = "Copyright (C) 2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026031601"
+__build__ = "2026031001"
 
 from resources.audience import CURRENT_AUDIENCE
 
@@ -15,11 +15,10 @@ import importlib
 import sys
 
 try:
-    _customization = importlib.import_module(f"PRIVATE.{CURRENT_AUDIENCE}._customization", package=None)
+    _private_secret_keys = importlib.import_module(f"PRIVATE.{CURRENT_AUDIENCE}._private_secret_keys", package=None)
 except ModuleNotFoundError:
     print(f"{__file__}: No customization module found for audience '{CURRENT_AUDIENCE}'")
     sys.exit(244)
 
-for attr in dir(_customization):
-    if not attr.startswith("__"):
-        globals()[attr] = getattr(_customization, attr)
+AES_KEY = _private_secret_keys.AES_KEY
+EARLIER_AES_KEY = _private_secret_keys.EARLIER_AES_KEY

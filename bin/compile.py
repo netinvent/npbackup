@@ -180,7 +180,7 @@ def compile(
     PRODUCT_VERSION = _npbackup_version + ".0"
     FILE_VERSION = _npbackup_version + ".0"
 
-    file_description = "{} P{}-{}{}".format(
+    file_description = "{} P{}-{}-{}".format(
         FILE_DESCRIPTION,
         sys.version_info[1],
         arch,
@@ -213,10 +213,20 @@ def compile(
     NUITKA_OPTIONS = " --no-deployment-flag=self-execution"
     NUITKA_OPTIONS += " --enable-plugin=data-hiding" if have_nuitka_commercial() else ""
 
+    # Depending on audience, we will need to include private keys
+    if audience != "public":
+        NUITKA_OPTIONS += f" --include-module=PRIVATE.audience"
+        NUITKA_OPTIONS += f" --include-module=PRIVATE.customization"
+        NUITKA_OPTIONS += f" --include-module=PRIVATE.obfuscation"
+        NUITKA_OPTIONS += f" --include-module=PRIVATE.secret_keys"
+        NUITKA_OPTIONS += f" --include-module=PRIVATE.{audience}._customization"
+        NUITKA_OPTIONS += f" --include-module=PRIVATE.{audience}._obfuscation"
+        NUITKA_OPTIONS += f" --include-module=PRIVATE.{audience}._private_secret_keys"
+
     if build_type in ("gui", "viewer"):
         NUITKA_OPTIONS += " --plugin-enable=tk-inter"
         # So for an unknown reason, some windows builds will not hide the console, see #146
-        # We replaced this option with a python version in gui\__main__.py
+        # We replaced this option with a python version in gui\windiws_gui_helper.py
         NUITKA_OPTIONS += " --windows-console-mode=hide"
     else:
         NUITKA_OPTIONS += " --plugin-disable=tk-inter --nofollow-import-to=FreeSimpleGUI --nofollow-import-to=_tkinter --nofollow-import-to=npbackup.gui"
