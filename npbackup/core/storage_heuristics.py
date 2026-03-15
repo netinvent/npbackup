@@ -84,7 +84,7 @@ def storage_heuristics(
         storage.s("storage_history", {})
         storage.s(f"storage_history.{repo_uuid}", storage_history)
 
-    # Don't actually trigger and ransomware alerts based on too few datas
+    # Don't actually trigger and ransomware alerts based on too few data
     if len(modified_files_history) > MODIFIED_FILES_HISTORY_EVALUATION_HISTORY_COUNT:
         historic_modified_files = mean(
             modified_files_history[-MODIFIED_FILES_HISTORY_EVALUATION_HISTORY_COUNT:]

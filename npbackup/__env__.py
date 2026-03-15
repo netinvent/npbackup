@@ -61,5 +61,5 @@ STORAGE_HISTORY_KEEP = 30
 # How many storage size points do we use for heuristic evaluation
 STORAGE_HISTORY_EVALUATION_HISTORY_COUNT = 5
 
-# How many storage modified file ponits do we use for heuristic ransomware evaluation
+# How many storage modified file points do we use for heuristic ransomware evaluation
 MODIFIED_FILES_HISTORY_EVALUATION_HISTORY_COUNT = 30
