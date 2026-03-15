@@ -138,8 +138,8 @@ class ZabbixMonitor(MonitoringBackend):
             zabbix_psk = None
             zabbix_psk_identity = None
 
-
         if HAS_PSK and zabbix_psk and zabbix_psk_identity:
+
             def psk_wrapper(sock, *args, **kwargs):
                 psk = bytes.fromhex(zabbix_psk)
                 psk_identity = zabbix_psk_identity.encode()
@@ -150,6 +150,7 @@ class ZabbixMonitor(MonitoringBackend):
                     ciphers="ECDHE-PSK-AES128-CBC-SHA256",
                     psk=(psk, psk_identity),
                 )
+
         else:
             psk_wrapper = None
 
