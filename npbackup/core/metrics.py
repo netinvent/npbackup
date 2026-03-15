@@ -16,7 +16,7 @@ from ofunctions.misc import BytesConverter
 from npbackup.restic_metrics import (
     restic_str_output_to_json,
 )
-from npbackup.core.storage_heuristics import storage_size_heuristics
+from npbackup.core.storage_heuristics import storage_heuristics
 from npbackup.core.monitoring import calculate_exec_state
 from npbackup.core.monitoring.prometheus import PrometheusMonitor
 from npbackup.core.monitoring.zabbix import ZabbixMonitor
@@ -53,7 +53,7 @@ def metric_analyser(
     backup_sub_min_size = False
     backup_heuristics_sub_min_size = False
     backup_heuristics_over_size = False
-
+    backup_heuristics_too_many_modified_files = False
     try:
         metrics = {}
         if operation == "backup":
@@ -68,6 +68,12 @@ def metric_analyser(
                 "backup_opts.storage_heuristics_allowed_higher_standard_deviation",
                 default=None,
             )
+
+            storage_heuristics_allowed_modified_files_standard_deviation = repo_config.g(
+                "backup_opts.storage_heuristics_allowed_modified_files_standard_deviation",
+                default=None,
+            )
+
             # If result was a str, we need to transform it into json first
             # Currently, @metrics uses str instead of json in order to detect cloud file issues
             # see @metrics for more
@@ -80,47 +86,48 @@ def metric_analyser(
                 restic_json = restic_result
 
             if restic_json:
+                processed_bytes = None
+                modified_files = None
                 try:
-                    if restic_json["total_bytes_processed"]:
-                        # We need human iec bytes for normalization across other values
-                        processed_human_readable_bytes_iec = BytesConverter(
-                            str(restic_json["total_bytes_processed"])
-                        ).human_iec_bytes
-                        processed_bytes = int(restic_json["total_bytes_processed"])
-                        logger.info(
-                            f"Processed {processed_human_readable_bytes_iec} of data"
-                        )
-                        if (
-                            storage_heuristics_allowed_lower_standard_deviation
-                            or storage_heuristics_allowed_higher_standard_deviation
-                        ):
-                            repo_uuid = repo_config.g("uuid")
-                            config_uuid = repo_config.g("config_uuid")
-                            (
-                                backup_heuristics_sub_min_size,
-                                backup_heuristics_over_size,
-                            ) = storage_size_heuristics(
-                                config_uuid,
-                                repo_uuid,
-                                processed_bytes,
-                                (
-                                    storage_heuristics_allowed_lower_standard_deviation,
-                                    storage_heuristics_allowed_higher_standard_deviation,
-                                ),
-                            )
-                        if minimum_backup_size_error:
-                            # We need bytes for literal comparison
-                            if processed_bytes < int(
-                                BytesConverter(
-                                    str(minimum_backup_size_error).replace(" ", "")
-                                ).bytes
-                            ):
-                                backup_sub_min_size = True
-                except Exception as exc:
-                    logger.warning(f"Cannot determine processed bytes: {exc}")
-                    logger.debug("Trace:", exc_info=True)
-                    # We don't care if this exception happens, as error state still will raise from
-                    # other parts of this code
+                    processed_human_readable_bytes_iec = BytesConverter(
+                        str(restic_json["total_bytes_processed"])
+                    ).human_iec_bytes
+                    processed_bytes = int(restic_json["total_bytes_processed"])
+                    logger.info(
+                        f"Processed {processed_human_readable_bytes_iec} of data"
+                    )
+                except KeyError:
+                    pass
+                try:
+                    modified_files = int(restic_json["files_changed"])
+                except KeyError:
+                    pass
+
+                repo_uuid = repo_config.g("uuid")
+                config_uuid = repo_config.g("config_uuid")
+                (
+                    backup_heuristics_sub_min_size,
+                    backup_heuristics_over_size,
+                    backup_heuristics_too_many_modified_files,
+                ) = storage_heuristics(
+                    config_uuid,
+                    repo_uuid,
+                    processed_bytes,
+                    modified_files,
+                    (
+                        storage_heuristics_allowed_lower_standard_deviation,
+                        storage_heuristics_allowed_higher_standard_deviation,
+                        storage_heuristics_allowed_modified_files_standard_deviation,
+                    ),
+                )
+                if minimum_backup_size_error:
+                    # We need bytes for literal comparison
+                    if processed_bytes < int(
+                        BytesConverter(
+                            str(minimum_backup_size_error).replace(" ", "")
+                        ).bytes
+                    ):
+                        backup_sub_min_size = True
             else:
                 logger.error("Backup operation did not return valid parseable data")
 
@@ -130,6 +137,7 @@ def metric_analyser(
                     backup_sub_min_size,
                     backup_heuristics_sub_min_size,
                     backup_heuristics_over_size,
+                    backup_heuristics_too_many_modified_files,
                 )
 
             metrics["restic_backup_failure"] = 0 if restic_result else 1

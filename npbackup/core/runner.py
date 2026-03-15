@@ -1532,6 +1532,7 @@ class NPBackupRunner:
             backup_sub_min_size,
             backup_heuristics_sub_min_size,
             backup_heuristics_over_size,
+            backup_heuristics_too_many_modified_files,
         ) = metric_analyser(
             repo_config=self.repo_config,
             monitoring_config=self.monitoring_config,
@@ -1558,6 +1559,12 @@ class NPBackupRunner:
         if backup_heuristics_over_size:
             self.write_logs(
                 "Backup is larger than expected compared to previous backups",
+                level="warning",
+            )
+
+        if backup_heuristics_too_many_modified_files:
+            self.write_logs(
+                "Backup has too many modified files compared to previous backup",
                 level="warning",
             )
 

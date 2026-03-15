@@ -460,6 +460,18 @@ def wizard_layouts() -> dict:
                     size=(8, 1),
                 ),
             ],
+            [
+                sg.Text(
+                    _t(
+                        "config_gui.storage_heuristics_allowed_modified_files_standard_deviation"
+                    ),
+                    size=(50, 1),
+                ),
+                sg.Input(
+                    key="backup_opts.storage_heuristics_allowed_modified_files_standard_deviation",
+                    size=(8, 1),
+                ),
+            ],
         ],
         "wizard_layout_7": create_step_header(
             7, "wizard_gui.step_7", "wizard_gui.step_7_description"

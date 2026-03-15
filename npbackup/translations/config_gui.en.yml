@@ -24,6 +24,7 @@ en:
   minimum_backup_size_error: Minimum backup size check
   storage_heuristics_allowed_lower_standard_deviation: Storage allowed lower deviation (percent)
   storage_heuristics_allowed_higher_standard_deviation: Storage allowed higher deviation (percent)
+  storage_heuristics_allowed_modified_files_standard_deviation: Storage modified files allowed deviation (percent)
   pre_exec_commands: Pre-exec commands
   maximum_exec_time: Maximum exec time
   exec_failure_is_fatal: Execution failure is fatal

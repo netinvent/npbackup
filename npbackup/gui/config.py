@@ -239,6 +239,24 @@ def config_gui(full_config: dict, config_file: str):
                             ),
                         ],
                         [
+                            sg.Text(
+                                _t(
+                                    "config_gui.storage_heuristics_allowed_modified_files_standard_deviation"
+                                ),
+                                size=(50, 2),
+                            ),
+                            sg.Image(
+                                NON_INHERITED_ICON,
+                                key="inherited.backup_opts.storage_heuristics_allowed_modified_files_standard_deviation",
+                                tooltip=_t("config_gui.group_inherited"),
+                                pad=1,
+                            ),
+                            sg.Input(
+                                key="backup_opts.storage_heuristics_allowed_modified_files_standard_deviation",
+                                size=(8, 1),
+                            ),
+                        ],
+                        [
                             sg.Text(_t("config_gui.pack_size"), size=(50, 1)),
                             sg.Image(
                                 NON_INHERITED_ICON,

@@ -25,6 +25,7 @@ fr:
   minimum_backup_size_error: Taille minimale de la sauvegarde
   storage_heuristics_allowed_lower_standard_deviation: Pourcentage écart type inférieur autorisé
   storage_heuristics_allowed_higher_standard_deviation: Pourcentage écart type supérieur autorisé
+  storage_heuristics_allowed_modified_files_standard_deviation: Pourcentage écart type de fichiers modifiés autorisé
   pre_exec_commands: Commandes pré-sauvegarde
   maximum_exec_time: Temps maximal d'execution
   exec_failure_is_fatal: L'échec d'execution est fatal

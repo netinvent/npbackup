@@ -16,21 +16,25 @@ from statistics import mean
 from npbackup.__env__ import (
     STORAGE_HISTORY_KEEP,
     STORAGE_HISTORY_EVALUATION_HISTORY_COUNT,
+    MODIFIED_FILES_HISTORY_EVALUATION_HISTORY_COUNT,
 )
 from npbackup.local_storage import load_storage, save_storage
 
 logger = logging.getLogger()
 
 
-def storage_size_heuristics(
+def storage_heuristics(
     config_uuid: str,
     repo_uuid: str,
     storage_size: int,
-    allowed_deviation_percent: Tuple[int, int],
-) -> Tuple[bool, bool]:
+    modified_files: int,
+    allowed_deviation_percent: Tuple[int, int, int],
+) -> Tuple[bool, bool, bool]:
     """
     Takes last storage size results and calculates whether the current storage is too small
     or too big according to two allowed deviancce percentages
+
+    Also checks for too many modified files which could be a sign of ransomware
     """
     if not isinstance(storage_size, int):
         logger.warning(
@@ -44,8 +48,16 @@ def storage_size_heuristics(
     except AssertionError:
         storage_history = []
 
+    try:
+        modified_files_history = storage.g(
+            f"modified_files_history.{repo_uuid}", default=[]
+        )
+    except AssertionError:
+        modified_files_history = []
+
     too_small = False
     too_big = False
+    too_many_modified_files = False
 
     if len(storage_history) > 0:
         # Let's use mean instead of median which could produce unexpected spikes
@@ -71,10 +83,33 @@ def storage_size_heuristics(
     except TypeError:
         storage.s("storage_history", {})
         storage.s(f"storage_history.{repo_uuid}", storage_history)
+
+    # Don't actually trigger and ransomware alerts based on too few datas
+    if len(modified_files_history) > MODIFIED_FILES_HISTORY_EVALUATION_HISTORY_COUNT:
+        historic_modified_files = mean(
+            modified_files_history[-MODIFIED_FILES_HISTORY_EVALUATION_HISTORY_COUNT:]
+        )
+        if allowed_deviation_percent[2] is not None:
+            if modified_files > historic_modified_files * (
+                1 + allowed_deviation_percent[2] / 100
+            ):
+                too_many_modified_files = True
+
+    historic_modified_files.append(modified_files)
+    if len(historic_modified_files) > MODIFIED_FILES_HISTORY_EVALUATION_HISTORY_COUNT:
+        historic_modified_files = historic_modified_files[
+            -MODIFIED_FILES_HISTORY_EVALUATION_HISTORY_COUNT:
+        ]
+    try:
+        storage.s(f"modified_files_history.{repo_uuid}", historic_modified_files)
+    except TypeError:
+        storage.s("modified_files_history", {})
+        storage.s(f"modified_files_history.{repo_uuid}", historic_modified_files)
+
     result = save_storage(config_uuid, storage)
     if not result:
         logger.warning(
             f"Failed to save storage statistics for config_uuid {config_uuid}"
         )
 
-    return too_small, too_big
+    return too_small, too_big, too_many_modified_files
