@@ -1527,7 +1527,7 @@ class NPBackupRunner:
         # Extract backup size from result_string
         # Metrics will not be in json format, since we need to diag cloud issues until
         # there is a fix for https://github.com/restic/restic/issues/4155
-        analyser_result, backup_too_small = metric_analyser(
+        analyser_result, backup_sub_min_size, backup_heuristics_sub_min_size, backup_heuristics_over_size = metric_analyser(
             repo_config=self.repo_config,
             monitoring_config=self.monitoring_config,
             restic_result=result,
@@ -1539,9 +1539,21 @@ class NPBackupRunner:
             only_check_backup_result_and_size=True,
         )
 
-        if backup_too_small:
+        if backup_sub_min_size:
             self.write_logs(
-                "Backup is smaller than configured minimum backup size", level="error"
+                "Backup is smaller than configured minimum backup size", level="warning"
+            )
+
+        if backup_heuristics_sub_min_size:
+            self.write_logs(
+                "Backup is smaller than expected compared to previous backups",
+                level="warning",
+            )
+
+        if backup_heuristics_over_size:
+            self.write_logs(
+                "Backup is larger than expected compared to previous backups",
+                level="warning",
             )
 
         operation_result = (
@@ -1549,7 +1561,6 @@ class NPBackupRunner:
             and analyser_result
             and pre_exec_commands_success
             and post_exec_commands_success
-            and not backup_too_small
         )
         msg = f"Operation finished with {'success' if operation_result else 'failure'}"
         self.write_logs(
@@ -1582,7 +1593,9 @@ class NPBackupRunner:
                     )
                     raise PermissionError
                 elif jobs.schedule_on_chance_or_interval(
-                    "housekeeping-after-backup",
+                    "housekeeping_after_backup_counter",
+                    self.repo_config.g("config_uuid"),
+                    self.repo_config.g("uuid"),
                     post_backup_housekeeping_percent_chance,
                     post_backup_housekeeping_interval,
                 ):

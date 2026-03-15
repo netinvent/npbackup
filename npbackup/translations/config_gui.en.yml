@@ -20,7 +20,10 @@ en:
   windows_no_effect: has no effect on Windows
   exclude_cache_dirs: Exclude cache dirs
   one_file_system: Do not follow mountpoints
-  minimum_backup_size_error: Minimum size under which backup is considered failed
+  backups_size_checks: Backup size checks
+  minimum_backup_size_error: Minimum backup size check
+  storage_heuristics_allowed_lower_standard_deviation: Storage allowed lower deviation (percent)
+  storage_heuristics_allowed_higher_standard_deviation: Storage allowed higher deviation (percent)
   pre_exec_commands: Pre-exec commands
   maximum_exec_time: Maximum exec time
   exec_failure_is_fatal: Execution failure is fatal

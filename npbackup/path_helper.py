@@ -7,7 +7,7 @@ __intname__ = "npbackup.path_helper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2026 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2026031101"
+__build__ = "2026031501"
 
 
 # This file must exist at the root of the package, for basedir to be detected as root
@@ -26,3 +26,7 @@ NPBACKUP_ROOT_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 
 # When run with nuitka onefile, this will be the temp directory, else, this will be the path to current file
 BASEDIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
+
+
+def sanitize_filename(file: str) -> str:
+    return "".join(x if x.isalnum() else "_" for x in file)

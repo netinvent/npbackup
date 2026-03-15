@@ -422,18 +422,27 @@ def wizard_layouts() -> dict:
         + [
             [
                 sg.Text(
-                    f"{_t("generic.minimum_size")} ({_t("generic.optional")})",
+                    f"{_t("config_gui.backup_size_checks")} ({_t("generic.optional")})",
                     font=SUBTITLE_FONT,
                 ),
             ],
             [
                 sg.Text(_t("config_gui.minimum_backup_size_error")),
+                sg.Push(),
                 sg.Input(key="backup_opts.minimum_backup_size_error", size=(8, 1)),
                 sg.Combo(
                     byte_units,
                     default_value=byte_units[5],
                     key="backup_opts.minimum_backup_size_error_unit",
                 ),
+            ],
+            [
+                sg.Text(_t("config_gui.storage_heuristics_allowed_lower_standard_deviation"), size=(50, 1)),
+                sg.Input(key="backup_opts.storage_heuristics_allowed_lower_standard_deviation", size=(8, 1)),
+            ],
+            [
+                sg.Text(_t("config_gui.storage_heuristics_allowed_higher_standard_deviation"), size=(50, 1)),
+                sg.Input(key="backup_opts.storage_heuristics_allowed_higher_standard_deviation", size=(8, 1)),
             ],
         ],
         "wizard_layout_7": create_step_header(

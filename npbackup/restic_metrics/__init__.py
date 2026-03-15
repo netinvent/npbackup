@@ -123,7 +123,7 @@ def restic_str_output_to_json(
                 size = matches.group(2)
                 unit = matches.group(3)
                 try:
-                    value = int(BytesConverter("{} {}".format(size, unit)))
+                    value = int(BytesConverter("{} {}".format(size, unit)).bytes)
                     metrics["total_bytes_processed"] = value
                 except TypeError:
                     logger.warning("Cannot parse restic values for total repo size")

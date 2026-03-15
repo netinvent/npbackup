@@ -40,7 +40,7 @@ class PIDFile(object):
         Sanitizes the filename by stripping non-alphanumeric characters.
         This is useful to ensure that the filename is valid across different filesystems.
         """
-        return "".join(x for x in filename if x.isalnum())
+        return "".join(x if x.isalnum() else "_" for x in filename)
 
     @property
     def is_running(self) -> bool:

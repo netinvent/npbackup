@@ -7,7 +7,7 @@ __intname__ = "npbackup.core.metrics"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026030501"
+__build__ = "2026031501"
 
 import os
 from typing import Optional, Tuple
@@ -16,6 +16,7 @@ from ofunctions.misc import BytesConverter
 from npbackup.restic_metrics import (
     restic_str_output_to_json,
 )
+from npbackup.core.storage_heuristics import storage_size_heuristics
 from npbackup.core.monitoring import calculate_exec_state
 from npbackup.core.monitoring.prometheus import PrometheusMonitor
 from npbackup.core.monitoring.zabbix import ZabbixMonitor
@@ -36,13 +37,12 @@ def metric_analyser(
     append_metrics_file: bool,
     exec_time: Optional[float] = None,
     only_check_backup_result_and_size: bool = False,
-) -> Tuple[bool, bool]:
+) -> Tuple[bool, bool, bool, bool]:
     """
-    Tries to get operation success and backup to small booleans from restic output
-    Returns op success, backup too small
+    Tries to get operation success and backup size checks from restic output
     """
     operation_success = True
-    backup_too_small = False
+    backup_sub_min_size = False
     repo_name = repo_config.g("name")
     # Build labels for monitoring backends
     common_labels = {
@@ -50,12 +50,21 @@ def metric_analyser(
         "action": operation,
     }
 
-    try:
+    backup_sub_min_size = False
+    backup_heuristics_sub_min_size = False
+    backup_heuristics_over_size = False
 
+    try:
         metrics = {}
         if operation == "backup":
             minimum_backup_size_error = repo_config.g(
                 "backup_opts.minimum_backup_size_error"
+            )
+            storage_heuristics_allowed_lower_standard_deviation = repo_config.g(
+                "backup_opts.storage_heuristics_allowed_lower_standard_deviation", default=None
+            )
+            storage_heuristics_allowed_higher_standard_deviation = repo_config.g(
+                "backup_opts.storage_heuristics_allowed_higher_standard_deviation", default=None
             )
             # If result was a str, we need to transform it into json first
             # Currently, @metrics uses str instead of json in order to detect cloud file issues
@@ -68,26 +77,29 @@ def metric_analyser(
                 # Future case when we'll use restic --json directly in @metrics
                 restic_json = restic_result
 
-            backup_too_small = False
             if restic_json:
                 try:
                     if restic_json["total_bytes_processed"]:
                         # We need human iec bytes for normalization across other values
-                        processed_bytes_iec = BytesConverter(
+                        processed_human_readable_bytes_iec = BytesConverter(
                             str(restic_json["total_bytes_processed"])
                         ).human_iec_bytes
-                        logger.info(f"Processed {processed_bytes_iec} of data")
+                        processed_bytes = int(restic_json["total_bytes_processed"])
+                        logger.info(f"Processed {processed_human_readable_bytes_iec} of data")
+                        if storage_heuristics_allowed_lower_standard_deviation or storage_heuristics_allowed_higher_standard_deviation:
+                            repo_uuid = repo_config.g("uuid")
+                            config_uuid = repo_config.g("config_uuid")
+                            backup_heuristics_sub_min_size, backup_heuristics_over_size = storage_size_heuristics(
+                                config_uuid, repo_uuid, processed_bytes, (storage_heuristics_allowed_lower_standard_deviation, storage_heuristics_allowed_higher_standard_deviation)
+                            )
                         if minimum_backup_size_error:
                             # We need bytes for literal comparison
-                            processed_bytes = BytesConverter(
-                                str(restic_json["total_bytes_processed"])
-                            ).bytes
                             if processed_bytes < int(
                                 BytesConverter(
                                     str(minimum_backup_size_error).replace(" ", "")
                                 ).bytes
                             ):
-                                backup_too_small = True
+                                backup_sub_min_size = True
                 except Exception as exc:
                     logger.warning(f"Cannot determine processed bytes: {exc}")
                     logger.debug("Trace:", exc_info=True)
@@ -97,11 +109,9 @@ def metric_analyser(
                 logger.error("Backup operation did not return valid parseable data")
 
             if only_check_backup_result_and_size:
-                return restic_result, backup_too_small
+                return restic_result, backup_sub_min_size, backup_heuristics_sub_min_size, backup_heuristics_over_size
 
-            metrics["restic_backup_failure"] = (
-                0 if (restic_result and not backup_too_small) else 1
-            )
+            metrics["restic_backup_failure"] = 0 if restic_result else 1
 
             # Add generic restic metrics
             metrics["restic_files"] = {}
@@ -120,17 +130,20 @@ def metric_analyser(
                     except (ValueError, TypeError):
                         metrics[f"restic_{key}"] = value
 
+            metrics["npbackup_backup_sub_min_size"] = backup_sub_min_size
+            metrics["npbackup_storage_heuristics_too_low"] = backup_heuristics_sub_min_size
+            metrics["npbackup_storage_heuristics_too_high"] = backup_heuristics_over_size
+
         if not operation_success or not restic_result:
             logger.error("Backend finished with errors.")
 
         # Calculate execution state
         worst_exec_level = logger.get_worst_logger_level()
         exec_state = calculate_exec_state(
-            operation_success, backup_too_small, worst_exec_level
+            operation_success, worst_exec_level
         )
         metrics["npbackup_exec_state"] = exec_state
         metrics["npbackup_exec_time"] = exec_time
-        metrics["internal_backup_too_small"] = backup_too_small
 
         # Add upgrade state if upgrades activated
         upgrade_state = os.environ.get("NPBACKUP_UPGRADE_STATE", None)
@@ -161,7 +174,7 @@ def metric_analyser(
     except OSError as exc:
         logger.error(f"Metrics OS error: {exc}")
         logger.debug("Trace:", exc_info=True)
-    return operation_success, backup_too_small
+    return operation_success, backup_sub_min_size, backup_heuristics_sub_min_size, backup_heuristics_over_size
 
 
 def _send_to_monitoring_backends(

@@ -54,3 +54,9 @@ HIDDEN_BY_NPBACKUP = "_[o_O]_hidden_by_npbackup"
 
 # Maximum number of characters for details content in emails
 MAX_EMAIL_DETAIL_LENGTH = 1000
+
+# How much storage size history do we keep for heuristics
+STORAGE_HISTORY_KEEP = 30
+
+# How many storage size points do we use for heuristic evaluation
+STORAGE_HISTORY_EVALUATION_HISTORY_COUNT = 5

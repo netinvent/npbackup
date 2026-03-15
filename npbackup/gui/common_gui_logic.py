@@ -680,6 +680,8 @@ def update_gui_values(
             "name",
             "is_protected",
             "current_manager_password",
+            "uuid",
+            "config_uuid",
         ):
             return
 

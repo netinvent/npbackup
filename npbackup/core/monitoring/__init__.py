@@ -188,7 +188,6 @@ class MonitoringBackend(ABC):
 
 def calculate_exec_state(
     operation_success: bool,
-    backup_too_small: bool,
     worst_logger_level: int,
 ) -> int:
     """
@@ -196,7 +195,6 @@ def calculate_exec_state(
 
     Args:
         operation_success: Whether the operation succeeded
-        backup_too_small: Whether backup was too small
         worst_logger_level: Worst log level encountered (50=CRITICAL, 40=ERROR, 30=WARNING, 20=INFO)
 
     Returns:
@@ -216,7 +214,7 @@ def calculate_exec_state(
         exec_state = 0
 
     # Override with operation-specific failures
-    if (not operation_success or backup_too_small) and exec_state < 3:
+    if not operation_success and exec_state < 3:
         exec_state = 2
 
     return exec_state

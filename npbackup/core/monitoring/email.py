@@ -15,7 +15,6 @@ from ofunctions.mailer import Mailer
 from npbackup.core.monitoring import MonitoringBackend
 from npbackup.__debug__ import fmt_json
 from resources.customization import OEM_STRING
-from npbackup.__env__ import MAX_EMAIL_DETAIL_LENGTH
 from npbackup.__version__ import version_dict
 
 logger = getLogger()
@@ -65,9 +64,6 @@ class EmailMonitor(MonitoringBackend):
 
         # Determine if operation was successful
         exec_state = metrics["npbackup_exec_state"]
-        backup_too_small = metrics["internal_backup_too_small"]
-
-        op_success = exec_state == 0 and not backup_too_small
 
         # Get email configuration
         try:
@@ -92,7 +88,7 @@ class EmailMonitor(MonitoringBackend):
             # Determine which recipients list to use based on operation and result
             recipients_to_send = []
             if operation == "backup":
-                if op_success:
+                if exec_state == 0:
                     # Check for specific backup success recipients
                     for recipient in self.get_monitoring_value(
                         "global_email.recipients.on_backup_success", []
@@ -114,7 +110,7 @@ class EmailMonitor(MonitoringBackend):
                         if recipient not in recipients_to_send:
                             recipients_to_send.append(recipient)
             else:
-                if op_success:
+                if exec_state == 0:
                     for recipient in self.get_monitoring_value(
                         "global_email.recipients.on_operations_success", []
                     ):
@@ -129,7 +125,7 @@ class EmailMonitor(MonitoringBackend):
 
             if not recipients_to_send:
                 logger.warning(
-                    f"No recipients configured for {operation} {'success' if op_success else 'failure'}. "
+                    f"No recipients configured for {operation} {'success' if exec_state == 0 else 'failure'}. "
                     "Not sending metrics via email."
                 )
                 return False
@@ -159,13 +155,10 @@ class EmailMonitor(MonitoringBackend):
             operation=operation,
             metrics=metrics,
             labels=self.common_labels,
-            op_success=op_success,
-            exec_state=exec_state,
-            backup_too_small=backup_too_small,
         )
         if not result:
             logger.error(
-                f"Failed to send email notification to {recipients_to_send} for {operation} {'success' if op_success else 'failure'}."
+                f"Failed to send email notification to {recipients_to_send} for {operation}."
             )
         return result
 
@@ -181,9 +174,6 @@ class EmailMonitor(MonitoringBackend):
         operation: str,
         metrics: Dict[str, Any],
         labels: Dict[str, str],
-        op_success: bool,
-        exec_state: int,
-        backup_too_small: bool,
     ) -> bool:
         """
         Build and send email notification
@@ -199,9 +189,6 @@ class EmailMonitor(MonitoringBackend):
             operation: Operation name
             metrics: Dictionary of metrics
             labels: Dictionary of labels
-            op_success: Whether operation was successful
-            exec_state: Execution state (0-3)
-            backup_too_small: Whether backup was too small
 
         Returns:
             True if successful, False otherwise
@@ -220,7 +207,7 @@ class EmailMonitor(MonitoringBackend):
         )
 
         # Build subject
-        if op_success:
+        if metrics["npbackup_exec_state"] == 0:
             subject = f"{OEM_STRING} success report for {labels.get('instance', 'unknown')} {operation} on repo {repo_name}"
         else:
             subject = f"{OEM_STRING} failure report for {labels.get('instance', 'unknown')} {operation} on repo {repo_name}"
@@ -228,16 +215,29 @@ class EmailMonitor(MonitoringBackend):
         # Build body
         body = f"Operation: {operation}\nRepo: {repo_name}"
 
-        if op_success:
-            body += "\nStatus: Success"
-        elif backup_too_small:
-            body += "\nStatus: Backup too small"
-        elif exec_state == 1:
-            body += "\nStatus: Warning"
-        elif exec_state == 2:
-            body += "\nStatus: Error"
-        elif exec_state == 3:
+        # Populate optional backup only metrics
+        if not "npbackup_backup_sub_min_size" in metrics:
+            metrics["npbackup_backup_sub_min_size"] = False
+        if not "npbackup_storage_heuristics_too_low" in metrics:
+            metrics["npbackup_storage_heuristics_too_low"] = False
+        if not "npbackup_storage_heuristics_too_high" in metrics:
+            metrics["npbackup_storage_heuristics_too_high"] = False
+        
+        if metrics["npbackup_exec_state"] == 3:
             body += "\nStatus: Critical error"
+        elif metrics["npbackup_exec_state"] == 2:
+            body += "\nStatus: Error"
+        elif metrics["npbackup_exec_state"] == 0:
+            body += "\nStatus: Success"
+        elif metrics["npbackup_backup_sub_min_size"]:
+            body += "\nStatus: Backup smaller than minimum configured size"
+        elif metrics["npbackup_storage_heuristics_too_low"]:
+            body += "\nStatus: Backup smaller than expected compared to previous backups"
+        elif metrics["npbackup_storage_heuristics_too_high"]:
+            body += "\nStatus: Backup larger than expected compared to previous backups"
+        elif metrics["npbackup_exec_state"] == 1:
+            body += "\nStatus: Warning"
+
 
         # Add timestamp
         from datetime import datetime, timezone
@@ -247,7 +247,7 @@ class EmailMonitor(MonitoringBackend):
 
         # Add execution time if available
         if "npbackup_exec_time" in metrics:
-            body += f"\nExecution time: {metrics['exec_time']:.2f} seconds"
+            body += f"\nExecution time: {metrics['npbackup_exec_time']:.2f} seconds"
 
         # Add detailed metrics for backup operations
         if operation == "backup":

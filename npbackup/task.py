@@ -19,7 +19,7 @@ import tempfile
 from command_runner import command_runner
 import datetime
 from resources.customization import TASK_AUTHOR, TASK_URI, PROGRAM_NAME
-from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE
+from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE, sanitize_filename
 from npbackup.__version__ import IS_COMPILED
 import npbackup.configuration
 from npbackup.gui.constants import combo_boxes
@@ -224,7 +224,7 @@ def _get_cron_comment(
     if not object_name:
         object_name = "default"
         object_type = "repos"
-    config_file_sanitized = "".join(x if x.isalnum() else "_" for x in config_file)
+    config_file_sanitized = sanitize_filename(config_file)
     return f"{PROGRAM_NAME} - {task_type} {object_type} {object_name} in {config_file_sanitized}"
 
 
@@ -489,7 +489,7 @@ def _get_scheduled_task_name_windows(
         object_name = "default"
         object_type = "repos"
     # Sanitize config_file name but keep path in case we might encounter multiple config files with same path
-    config_file = "".join(x if x.isalnum() else "_" for x in config_file)
+    config_file = sanitize_filename(config_file)
     return f"{PROGRAM_NAME} - {task_type.capitalize()} {object_type} {object_name} in {config_file}"
 
 
