@@ -32,15 +32,10 @@ def storage_heuristics(
 ) -> Tuple[bool, bool, bool]:
     """
     Takes last storage size results and calculates whether the current storage is too small
-    or too big according to two allowed deviancce percentages
+    or too big according to two allowed deviation percentages
 
     Also checks for too many modified files which could be a sign of ransomware
     """
-    if not isinstance(storage_size, int):
-        logger.warning(
-            "Storage size heuristics received non int storage size, skipping heuristics"
-        )
-        return False, False
 
     storage = load_storage(config_uuid)
     try:
@@ -59,57 +54,75 @@ def storage_heuristics(
     too_big = False
     too_many_modified_files = False
 
-    if len(storage_history) > 0:
-        # Let's use mean instead of median which could produce unexpected spikes
-        historic_storage_size = mean(
-            storage_history[-STORAGE_HISTORY_EVALUATION_HISTORY_COUNT:]
-        )
-        if allowed_deviation_percent[0] is not None:
-            if storage_size < historic_storage_size * (
-                1 - allowed_deviation_percent[0] / 100
-            ):
-                too_small = True
-        if allowed_deviation_percent[1] is not None:
-            if storage_size > historic_storage_size * (
-                1 + allowed_deviation_percent[1] / 100
-            ):
-                too_big = True
+    if isinstance(storage_size, int):
+        if len(storage_history) > 0:
+            # Let's use mean instead of median which could produce unexpected spikes
+            historic_storage_size = mean(
+                storage_history[-STORAGE_HISTORY_EVALUATION_HISTORY_COUNT:]
+            )
+            if allowed_deviation_percent[0] is not None:
+                if storage_size < historic_storage_size * (
+                    1 - allowed_deviation_percent[0] / 100
+                ):
+                    too_small = True
+            if allowed_deviation_percent[1] is not None:
+                if storage_size > historic_storage_size * (
+                    1 + allowed_deviation_percent[1] / 100
+                ):
+                    too_big = True
 
-    storage_history.append(storage_size)
-    if len(storage_history) > STORAGE_HISTORY_KEEP:
-        storage_history = storage_history[-STORAGE_HISTORY_KEEP:]
-    try:
-        storage.s(f"storage_history.{repo_uuid}", storage_history)
-    except TypeError:
-        storage.s("storage_history", {})
-        storage.s(f"storage_history.{repo_uuid}", storage_history)
-
-    # Don't actually trigger and ransomware alerts based on too few data
-    if len(modified_files_history) > MODIFIED_FILES_HISTORY_EVALUATION_HISTORY_COUNT:
-        historic_modified_files = mean(
-            modified_files_history[-MODIFIED_FILES_HISTORY_EVALUATION_HISTORY_COUNT:]
-        )
-        if allowed_deviation_percent[2] is not None:
-            if modified_files > historic_modified_files * (
-                1 + allowed_deviation_percent[2] / 100
-            ):
-                too_many_modified_files = True
-
-    historic_modified_files.append(modified_files)
-    if len(historic_modified_files) > MODIFIED_FILES_HISTORY_EVALUATION_HISTORY_COUNT:
-        historic_modified_files = historic_modified_files[
-            -MODIFIED_FILES_HISTORY_EVALUATION_HISTORY_COUNT:
-        ]
-    try:
-        storage.s(f"modified_files_history.{repo_uuid}", historic_modified_files)
-    except TypeError:
-        storage.s("modified_files_history", {})
-        storage.s(f"modified_files_history.{repo_uuid}", historic_modified_files)
-
-    result = save_storage(config_uuid, storage)
-    if not result:
+        storage_history.append(storage_size)
+        if len(storage_history) > STORAGE_HISTORY_KEEP:
+            storage_history = storage_history[-STORAGE_HISTORY_KEEP:]
+        try:
+            storage.s(f"storage_history.{repo_uuid}", storage_history)
+        except TypeError:
+            storage.s("storage_history", {})
+            storage.s(f"storage_history.{repo_uuid}", storage_history)
+    else:
         logger.warning(
-            f"Failed to save storage statistics for config_uuid {config_uuid}"
+            "Storage size heuristics received non int storage size, skipping heuristics"
+        )
+
+    if isinstance(modified_files, int):
+        # Don't actually trigger any ransomware alerts based on too few data
+        if (
+            len(modified_files_history)
+            > MODIFIED_FILES_HISTORY_EVALUATION_HISTORY_COUNT
+        ):
+            historic_modified_files = mean(
+                modified_files_history[
+                    -MODIFIED_FILES_HISTORY_EVALUATION_HISTORY_COUNT:
+                ]
+            )
+            if allowed_deviation_percent[2] is not None:
+                if modified_files > historic_modified_files * (
+                    1 + allowed_deviation_percent[2] / 100
+                ):
+                    too_many_modified_files = True
+
+        modified_files_history.append(modified_files)
+        if (
+            len(modified_files_history)
+            > MODIFIED_FILES_HISTORY_EVALUATION_HISTORY_COUNT
+        ):
+            modified_files_history = modified_files_history[
+                -MODIFIED_FILES_HISTORY_EVALUATION_HISTORY_COUNT:
+            ]
+        try:
+            storage.s(f"modified_files_history.{repo_uuid}", modified_files_history)
+        except TypeError:
+            storage.s("modified_files_history", {})
+            storage.s(f"modified_files_history.{repo_uuid}", modified_files_history)
+
+        result = save_storage(config_uuid, storage)
+        if not result:
+            logger.warning(
+                f"Failed to save storage statistics for config_uuid {config_uuid}"
+            )
+    else:
+        logger.warning(
+            "Storage modified files heuristics received non int modified files count, skipping heuristics"
         )
 
     return too_small, too_big, too_many_modified_files

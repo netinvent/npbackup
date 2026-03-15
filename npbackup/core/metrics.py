@@ -41,7 +41,6 @@ def metric_analyser(
     """
     Tries to get operation success and backup size checks from restic output
     """
-    operation_success = True
     backup_sub_min_size = False
     repo_name = repo_config.g("name")
     # Build labels for monitoring backends
@@ -103,26 +102,32 @@ def metric_analyser(
                 except KeyError:
                     pass
 
-                repo_uuid = repo_config.g("uuid")
-                config_uuid = repo_config.g("config_uuid")
-                (
-                    backup_heuristics_sub_min_size,
-                    backup_heuristics_over_size,
-                    backup_heuristics_too_many_modified_files,
-                ) = storage_heuristics(
-                    config_uuid,
-                    repo_uuid,
-                    processed_bytes,
-                    modified_files,
+                if (
+                    storage_heuristics_allowed_lower_standard_deviation is not None
+                    or storage_heuristics_allowed_higher_standard_deviation is not None
+                    or storage_heuristics_allowed_modified_files_standard_deviation
+                    is not None
+                ):
+                    repo_uuid = repo_config.g("uuid")
+                    config_uuid = repo_config.g("config_uuid")
                     (
-                        storage_heuristics_allowed_lower_standard_deviation,
-                        storage_heuristics_allowed_higher_standard_deviation,
-                        storage_heuristics_allowed_modified_files_standard_deviation,
-                    ),
-                )
+                        backup_heuristics_sub_min_size,
+                        backup_heuristics_over_size,
+                        backup_heuristics_too_many_modified_files,
+                    ) = storage_heuristics(
+                        config_uuid,
+                        repo_uuid,
+                        processed_bytes,
+                        modified_files,
+                        (
+                            storage_heuristics_allowed_lower_standard_deviation,
+                            storage_heuristics_allowed_higher_standard_deviation,
+                            storage_heuristics_allowed_modified_files_standard_deviation,
+                        ),
+                    )
                 if minimum_backup_size_error:
                     # We need bytes for literal comparison
-                    if processed_bytes < int(
+                    if processed_bytes is not None and processed_bytes < int(
                         BytesConverter(
                             str(minimum_backup_size_error).replace(" ", "")
                         ).bytes
@@ -206,10 +211,11 @@ def metric_analyser(
         logger.error(f"Metrics OS error: {exc}")
         logger.debug("Trace:", exc_info=True)
     return (
-        operation_success,
+        restic_result,
         backup_sub_min_size,
         backup_heuristics_sub_min_size,
         backup_heuristics_over_size,
+        backup_heuristics_too_many_modified_files,
     )
 
 
