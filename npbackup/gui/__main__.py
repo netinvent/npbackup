@@ -960,11 +960,22 @@ def _main_gui(viewer_mode: bool):
             sys.exit(73)
 
     # Let's first initialize the configuration as non working
-    repo_config = None
-    config_file = None
-    full_config = None
-    repo_type = None
-    repo_list = []
+    if config_file:
+        (
+            full_config,
+            config_file,
+            repo_config,
+            _,
+            repo_type,
+            _,
+            repo_list,
+        ) = get_config(config_file=config_file, repo_name=args.repo_name)
+    else:
+        repo_config = None
+        config_file = None
+        full_config = None
+        repo_type = None
+        repo_list = []
 
     if viewer_mode:
         __no_lock = True
@@ -1180,6 +1191,9 @@ def _main_gui(viewer_mode: bool):
         right_click_menu=right_click_menu,
         finalize=True,
     )
+
+    if config_file:
+        repo_list = enable_gui_options(full_config, config_file, window)
 
     window.read(timeout=0.01)
     if not config_file and not full_config and not viewer_mode:
