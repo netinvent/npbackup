@@ -677,7 +677,9 @@ class ResticRunner:
 
     @property
     def binary_version(self) -> Optional[str]:
-        if self._binary and self._binary_version is None:
+        if self._binary:
+            if self._binary_version:
+                return self._binary_version
             _cmd = "{} version".format(self._binary)
             exit_code, output = command_runner(
                 _cmd,
@@ -691,6 +693,7 @@ class ResticRunner:
                     self._binary_version = re.search(
                         r"restic\s+([0-9\.]+).*compiled", output
                     ).group(1)
+                    return self._binary_version
                 except AttributeError:
                     self.write_logs(
                         f"Cannot extract backend version from output: {output}",
