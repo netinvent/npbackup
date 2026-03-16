@@ -7,8 +7,8 @@ __intname__ = "npbackup.compile"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026031101"
-__version__ = "2.3.0"
+__build__ = "2026031601"
+__version__ = "2.3.1"
 
 
 """
@@ -28,11 +28,13 @@ import sys
 import os
 import shutil
 import argparse
-import atexit
+import fileinput
 from command_runner import command_runner
 from ofunctions.platform import python_arch
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
+
+from npbackup.path_helper import BASEDIR
 
 if os.name == "nt":
     EXTERNAL_SIGNER = r"C:\ev_signer_npbackup\ev_signer_npbackup.exe"
@@ -215,6 +217,17 @@ def compile(
 
     # Depending on audience, we will need to include private keys
     if audience != "public":
+        private_audience_file = os.path.abspath(os.path.join(BASEDIR, "..", "PRIVATE", "audience.py"))
+        print("Updating audience file {} with audience {}".format(private_audience_file, audience))
+
+        # And yes, as disturbing as it looks, fileInput expects it's input on stdout, hence the print statements
+        with fileinput.FileInput(private_audience_file, inplace=True) as file:
+            for line in file:
+                if line.startswith("CURRENT_AUDIENCE"):
+                    print(f"CURRENT_AUDIENCE = \"{audience}\"")
+                else:
+                    print(line, end="")
+
         NUITKA_OPTIONS += f" --include-module=PRIVATE.audience"
         NUITKA_OPTIONS += f" --include-module=PRIVATE.customization"
         NUITKA_OPTIONS += f" --include-module=PRIVATE.obfuscation"

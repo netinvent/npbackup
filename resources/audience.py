@@ -25,8 +25,9 @@ except ImportError:
      CURRENT_AUDIENCE = "public"
 
 # Allow overriding audience via environment variable, for testing purposes. This is not intended for production use.
-CURRENT_AUDIENCE = os.environ.get("_NPBACKUP_AUDIENCE", CURRENT_AUDIENCE)
-
+override_audience = os.environ.get("_NPBACKUP_AUDIENCE", None)
+if override_audience:
+    CURRENT_AUDIENCE = override_audience
 
 if CURRENT_AUDIENCE == "public":
     from resources._customization import *
