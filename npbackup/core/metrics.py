@@ -98,11 +98,18 @@ def metric_analyser(
                         )
                     except KeyError:
                         pass
+                    except ValueError:
+                        logger.error(
+                            "Missing processed bytes information from backup"
+                        )
                     try:
                         modified_files = int(restic_json["files_changed"])
                     except KeyError:
                         pass
-
+                    except TypeError:
+                        logger.error(
+                            "Missing number of modified files information from backup"
+                        )
                     if (
                         storage_heuristics_allowed_lower_standard_deviation is not None
                         or storage_heuristics_allowed_higher_standard_deviation
@@ -152,19 +159,21 @@ def metric_analyser(
             # Add generic restic metrics
             metrics["restic_files"] = {}
             metrics["restic_dirs"] = {}
+
             for key, value in restic_json.items():
-                # Compat with v3.0.x versions where we used to have restic_total_duration_seconds
-                if key == "total_duration":
-                    key = "total_duration_seconds"
-                if key.startswith("files_") or key.startswith("dirs_"):
-                    category = key.split("_")[0]
-                    state = key.split("_")[-1]
-                    metrics[f"restic_{category}"][state] = int(value)
-                else:
-                    try:
-                        metrics[f"restic_{key}"] = int(value)
-                    except (ValueError, TypeError):
-                        metrics[f"restic_{key}"] = value
+                if value is not None:
+                    # Compat with v3.0.x versions where we used to have restic_total_duration_seconds
+                    if key == "total_duration":
+                        key = "total_duration_seconds"
+                    if key.startswith("files_") or key.startswith("dirs_"):
+                        category = key.split("_")[0]
+                        state = key.split("_")[-1]
+                        metrics[f"restic_{category}"][state] = int(value)
+                    else:
+                        try:
+                            metrics[f"restic_{key}"] = int(value)
+                        except (ValueError, TypeError):
+                            metrics[f"restic_{key}"] = value
 
             metrics["npbackup_backup_sub_min_size"] = 1 if backup_sub_min_size else 0
             metrics["npbackup_storage_heuristics_too_low"] = (
