@@ -18,7 +18,7 @@ import json
 import ofunctions.logger_utils
 from ofunctions.process import kill_childs
 from npbackup.path_helper import CURRENT_DIR
-from resources.customization import LICENSE_TEXT
+from resources.customization import LICENSE_TEXT, SHORT_PRODUCT_NAME
 import npbackup.configuration
 from npbackup.runner_interface import entrypoint
 from npbackup.__version__ import version_string, version_dict
@@ -311,11 +311,11 @@ This is free software, and you are welcome to redistribute it under certain cond
     if args.log_file:
         log_file = args.log_file
     else:
+        app_log_name = f"{SHORT_PRODUCT_NAME}-{version_dict['build_type']}.log"
         if os.name == "nt":
-            log_file = os.path.join(CURRENT_DIR, "{}.log".format(__intname__))
+            log_file = os.path.join(CURRENT_DIR, app_log_name)
         else:
-            log_file = "/var/log/{}.log".format(__intname__)
-
+            log_file = f"/var/log/{app_log_name}"
     # We also don't log to console in dump mode as we want to keep the output clean
     if args.json or args.dump:
         _JSON = True

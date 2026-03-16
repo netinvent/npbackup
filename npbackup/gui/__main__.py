@@ -932,14 +932,11 @@ def _main_gui(viewer_mode: bool):
     if args.log_file:
         log_file = args.log_file
     else:
-        if viewer_mode:
-            app_log_name = "npbackup-viewer"
-        else:
-            app_log_name = __intname__
+        app_log_name = f"{SHORT_PRODUCT_NAME}-{version_dict['build_type']}.log"
         if os.name == "nt":
-            log_file = os.path.join(CURRENT_DIR, "{}.log".format(app_log_name))
+            log_file = os.path.join(CURRENT_DIR, app_log_name)
         else:
-            log_file = "/var/log/{}.log".format(app_log_name)
+            log_file = f"/var/log/{app_log_name}.log"
     logger = ofunctions.logger_utils.logger_get_logger(log_file, debug=_DEBUG)
     logger.info("GUI: " + version_string)
 
