@@ -87,7 +87,7 @@ def change_sg_theme(window=None):
         CURRENT_THEME = SIMPLEGUI_THEME
         sg.DEFAULT_TTK_THEME = "sun-valley-light"
     style = ttk.Style(window.hidden_master_root)
-    sg._chage_ttk_theme(style, sg.DEFAULT_TTK_THEME)
+    sg._change_ttk_theme(style, sg.DEFAULT_TTK_THEME)
     reskin(
         window=window,
         new_theme=CURRENT_THEME,
