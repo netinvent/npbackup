@@ -1222,11 +1222,11 @@ def _main_gui(viewer_mode: bool):
 
     if repo_config:
         try:
-            current_state, backup_tz, snapshot_list = get_gui_data(
-                repo_config, monitoring_config
-            )
             monitoring_config = npbackup.configuration.get_monitoring_config(
                 repo_config, full_config
+            )
+            current_state, backup_tz, snapshot_list = get_gui_data(
+                repo_config, monitoring_config
             )
         except (TypeError, ValueError):
             current_state = None
