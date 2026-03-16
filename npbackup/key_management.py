@@ -24,18 +24,18 @@ if CURRENT_AUDIENCE == "public":
     from npbackup.obfuscation import obfuscation
 
     try:
-        from npbackup.secret_keys import EARLIER_AES_KEY
+        from npbackup.secret_keys import EARLIER_AES_KEYS
     except ImportError:
-        EARLIER_AES_KEY = None
+        EARLIER_AES_KEYS = None
 else:
     try:
         from PRIVATE.secret_keys import AES_KEY
         from PRIVATE.obfuscation import obfuscation
 
         try:
-            from PRIVATE.secret_keys import EARLIER_AES_KEY
+            from PRIVATE.secret_keys import EARLIER_AES_KEYS
         except ImportError:
-            EARLIER_AES_KEY = None
+            EARLIER_AES_KEYS = None
     except ImportError as exc:
         print(f"{__file__}: No private audience customization found")
         print(exc)
@@ -50,7 +50,9 @@ if not AES_KEY:
 
 
 AES_KEY = obfuscation(AES_KEY)
-EARLIER_AES_KEY = obfuscation(EARLIER_AES_KEY) if EARLIER_AES_KEY else None
+EARLIER_AES_KEYS = (
+    [obfuscation(key) for key in EARLIER_AES_KEYS] if EARLIER_AES_KEYS else None
+)
 
 
 def get_aes_key():

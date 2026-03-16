@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026031501"
+__build__ = "2026031601"
 __version__ = "npbackup 3.1.0+"
 
 
@@ -29,6 +29,7 @@ from packaging.version import parse as version_parse, InvalidVersion
 from cryptidy import symmetric_encryption as enc
 from ofunctions.random import random_string
 from ofunctions.misc import replace_in_iterable, BytesConverter, iter_over_keys
+from npbackup.secret_keys import EARLIER_AES_KEYS
 from resources.customization import ID_STRING
 from resources.audience import CURRENT_AUDIENCE
 from npbackup.key_management import AES_KEY, EARLIER_AES_KEY, get_aes_key
@@ -1264,18 +1265,26 @@ def load_config(config_file: Path) -> Optional[dict]:
         full_config, AES_KEY, ENCRYPTED_OPTIONS, operation="decrypt"
     )
     if _full_config is False:
-        if EARLIER_AES_KEY:
+        if EARLIER_AES_KEYS:
             logger.warning("Trying to migrate encryption key")
-            full_config = crypt_config(
-                full_config, EARLIER_AES_KEY, ENCRYPTED_OPTIONS, operation="decrypt"
-            )
-            if full_config is False:
-                msg = "Cannot decrypt config file. Looks like our keys don't match."
+            earlier_aes_key_works = False
+            for earlier_key in EARLIER_AES_KEYS:
+                full_config = crypt_config(
+                    full_config, earlier_key, ENCRYPTED_OPTIONS, operation="decrypt"
+                )
+                if full_config is False:
+                    msg = "Cannot decrypt config file. Looks like our keys don't match."
+                    logger.critical(msg)
+
+                else:
+                    config_file_is_updated = True
+                    logger.warning("Successfully migrated encryption key")
+                    earlier_aes_key_works = True
+                    break
+            if not earlier_aes_key_works:
+                msg = "None of our earlier encryption keys did work."
                 logger.critical(msg)
                 raise EnvironmentError(msg)
-            else:
-                config_file_is_updated = True
-                logger.warning("Successfully migrated encryption key")
         else:
             msg = "Cannot decrypt config file"
             logger.critical(msg)

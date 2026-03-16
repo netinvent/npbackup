@@ -21,4 +21,4 @@ except ModuleNotFoundError:
     sys.exit(244)
 
 AES_KEY = _private_secret_keys.AES_KEY
-EARLIER_AES_KEY = _private_secret_keys.EARLIER_AES_KEY
+EARLIER_AES_KEYS = _private_secret_keys.EARLIER_AES_KEYS
