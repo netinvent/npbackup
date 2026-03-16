@@ -415,7 +415,7 @@ def wizard_layouts() -> dict:
         + [
             [
                 sg.Text(
-                    f"{_t("config_gui.backups_size_checks")} ({_t("generic.optional")})",
+                    f'{_t("config_gui.backups_size_checks")} ({_t("generic.optional")})',
                     font=SUBTITLE_FONT,
                 ),
             ],
@@ -430,7 +430,7 @@ def wizard_layouts() -> dict:
             ],
             [
                 sg.Text(
-                    f"{_t("config_gui.backups_heuristic_checks")} ({_t("generic.optional")})",
+                    f'{_t("config_gui.backups_heuristic_checks")} ({_t("generic.optional")})',
                     font=SUBTITLE_FONT,
                 ),
             ],
@@ -576,13 +576,13 @@ def wizard_layout(wizard_tabs, wizard_breadcrumbs) -> List[list]:
                 [
                     [
                         RoundedButton(
-                            f"{_t("generic.cancel").capitalize()}",
+                            f'{_t("generic.cancel").capitalize()}',
                             key="-PREVIOUS-",
                             border_width=0,
                             font=TITLE_FONT,
                         ),
                         RoundedButton(
-                            f"{_t("generic.next").capitalize()} ▶",
+                            f'{_t("generic.next").capitalize()} ▶',
                             key="-NEXT-",
                             border_width=0,
                             font=TITLE_FONT,
@@ -626,14 +626,14 @@ def start_wizard(full_config: dict, config_file: str):
         )
 
         wizard["-NEXT-"].update(
-            f"✓ {_t("generic.finish").capitalize()}"
+            f'✓ {_t("generic.finish").capitalize()}'
             if current_tab == NUMBER_OF_TABS
-            else f"{_t("generic.next").capitalize()} ▶"
+            else f'{_t("generic.next").capitalize()} ▶'
         )
         wizard["-PREVIOUS-"].update(
-            f"◀ {_t('generic.cancel').capitalize()}"
+            f'◀ {_t("generic.cancel").capitalize()}'
             if current_tab == 1
-            else f"◀ {_t('generic.previous').capitalize()}"
+            else f'◀ {_t("generic.previous").capitalize()}'
         )
 
     def set_active_backend_type(backend_type):

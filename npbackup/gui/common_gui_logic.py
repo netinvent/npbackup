@@ -558,12 +558,13 @@ def update_object_gui(
         )
         update_source_layout(window, source_type)
 
+    # Not using f-strings since python 3.8 doesn't accept backslashes in f-string expressions
     if BAD_KEYS_FOUND_IN_CONFIG:
         answer = sg.popup(
             _t("config_gui.key_error")
             + "\n"
             + _t("config_gui.delete_bad_keys")
-            + f":\n\n{'\n'.join(BAD_KEYS_FOUND_IN_CONFIG)}",
+            + ":\n\n{}".format("\n".join(BAD_KEYS_FOUND_IN_CONFIG)),
             keep_on_top=True,
             icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
             custom_text=(_t("generic.no"), _t("generic.yes")),

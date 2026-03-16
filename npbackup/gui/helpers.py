@@ -483,7 +483,7 @@ password_complexity = lambda password: re.findall(
 def wait_window() -> sg.Window:
     # blocking wait window
     wait_layout = [
-        [sg.Text(f"{PROGRAM_NAME}: {_t("generic.please_wait")}", font=SUBTITLE_FONT)]
+        [sg.Text(f'{PROGRAM_NAME}: {_t("generic.please_wait")}', font=SUBTITLE_FONT)]
     ]
     wait_window = sg.Window(
         title=PROGRAM_NAME,

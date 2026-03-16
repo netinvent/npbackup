@@ -24,8 +24,6 @@ from resources.customization import NON_INHERITED_ICON
 from npbackup.gui.helpers import (
     quick_close_simplegui_window,
     popup_error,
-    wait_window,
-    WaitWindow,
     HideWindow,
 )
 import npbackup.gui.common_gui

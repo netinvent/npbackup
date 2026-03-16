@@ -32,7 +32,9 @@ ntplib>=0.4.0
 # msgspec needs python 3.8+ and is not compatible with win 32-bit
  #msgspec; python_version > '3.8'
 sv_ttk
-reskinner>=4.4.0
+#reskinner>=4.4.0
+reskinner@https://github.com/netinvent/reskinner/archive/refs/heads/python38-compat.zip
 zabbix-utils>=2.0.4
-sslpsk3>=2.0.0
+# Can't build sslpsk3 on win32
+# sslpsk3>=2.0.0
 python-crontab>=3.3.0; platform_system != "Windows"
