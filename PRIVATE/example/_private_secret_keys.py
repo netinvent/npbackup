@@ -26,7 +26,7 @@ AES_KEY = b"\xd7\x84\xe5\xa9\x82\x8aU\x9b\xf2+\xf9\xf6\x95\xe9\x02\xbf\xce\xb3\x
 """
 If someday we need to change the AES_KEY, copy it's content to EARLIER_AES_KEYS and generate a new one
 Keeping EARLIER_AES_KEYS allows to migrate from old configuration files to new ones
+This is also useful if you want to migrate from public audience to a private one
 """
 EARLIER_AES_KEYS = [
-    b""
 ]
