@@ -42,7 +42,7 @@ def storage_heuristics(
                 allowed_deviation_percent[index] = int(allowed_deviation_percent[index])
         except ValueError:
             logger.error(
-                f"Invalid allowed deviation percent in congfiguration: {allowed_deviation_percent[index]}, skipping"
+                f"Invalid allowed deviation percent in configuration: {allowed_deviation_percent[index]}, skipping"
             )
         allowed_deviation_percent[index] = None
 
