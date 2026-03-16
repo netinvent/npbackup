@@ -1,3 +1,15 @@
+#! /usr/bin/env python
+#  -*- coding: utf-8 -*-
+#
+# This file is part of npbackup
+
+__intname__ = "npbackup.pidfile_ng"
+__author__ = "Orsiris de Jong"
+__copyright__ = "Copyright (C) 2023-2026 NetInvent"
+__license__ = "BSD-3-Clause"
+__build__ = "2026031601"
+
+
 import atexit
 import os
 from typing import Any
@@ -26,8 +38,10 @@ class PIDFile(object):
         self._check_full_commandline = check_full_commandline
         self._file = str(filename)
         if not self._check_full_commandline:
-            self._process_name = self.sanitize(self._process_name[0])
+            # Only get process name (executable) for comparison
+            self._process_name = self._process_name[0]
         else:
+            # Get full commandline for comparison
             self._process_name = "-".join(self._process_name)
 
         self._file = "{}-{}".format(self._file, self.sanitize(self._process_name))
@@ -57,10 +71,12 @@ class PIDFile(object):
             return False
 
         try:
-            cmd1 = psutil.Process(pid).cmdline()
+            current_command = psutil.Process(pid).cmdline()
             if not self._check_full_commandline:
-                cmd1 = self.sanitize(cmd1[0])
-            return cmd1 == self.sanitize(self._process_name)
+                current_command = current_command[0]
+            else:
+                current_command = "-".join(current_command)
+            return current_command == self._process_name
         except psutil.AccessDenied:
             return False
 
