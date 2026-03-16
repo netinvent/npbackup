@@ -12,6 +12,7 @@ __build__ = "2025012401"
 
 import os
 import sys
+from typing import Optional
 import shutil
 from logging import getLogger
 import hashlib
@@ -172,7 +173,7 @@ def auto_upgrader(
     auto_upgrade_host_identity: str = None,
     group: str = None,
     ignore_errors: bool = False,
-) -> bool:
+) -> Optional[bool]:
     """
     Auto upgrade binary NPBackup distributions
 
