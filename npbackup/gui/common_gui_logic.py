@@ -97,6 +97,9 @@ def get_icons_per_file(file_path: str) -> Tuple[str, bytes]:
         if not file_path:
             icon = MISSING_FILE_ICON
             inherited_icon = INHERITED_MISSING_FILE_ICON
+        elif os.path.islink(file_path):
+            icon = SYMLINK_ICON
+            inherited_icon = INHERITED_SYMLINK_ICON
         elif os.path.isdir(file_path):
             if os.access(file_path, os.X_OK):
                 icon = FOLDER_ICON
@@ -107,9 +110,6 @@ def get_icons_per_file(file_path: str) -> Tuple[str, bytes]:
         elif os.path.isfile(file_path):
             icon = FILE_ICON
             inherited_icon = INHERITED_FILE_ICON
-        elif os.path.islink(file_path):
-            icon = SYMLINK_ICON
-            inherited_icon = INHERITED_SYMLINK_ICON
         else:
             icon = MISSING_FILE_ICON
             inherited_icon = INHERITED_MISSING_FILE_ICON
