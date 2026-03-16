@@ -20,6 +20,7 @@ __build__ = "2026031201"
 # npbackup-cli --create-key keyfile.key
 # Given keyfile can then be loaded via environment variables, see documentation for more
 
+# KEY DATE: 2026-03-12
 AES_KEY = b"\xd7\x84\xe5\xa9\x82\x8aU\x9b\xf2+\xf9\xf6\x95\xe9\x02\xbf\xce\xb3\xf9\x06\xdc0s\xa6;9\xa9}K:\xc13"
 
 """
