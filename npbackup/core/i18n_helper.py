@@ -7,7 +7,7 @@ __intname__ = "npbackup.core.i18n_helper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2023032101"
+__build__ = "2026031601"
 
 
 import os
@@ -47,7 +47,7 @@ def _t(*args, **kwargs):
         logger.error("Translation not found in {}: {}".format(TRANSLATIONS_DIR, exc))
     except TypeError as exc:
         logger.error("Translation failed: {}".format(exc))
-        logger.error("Arguments: {}".format(*args))
+        logger.error("Arguments: {}".format(args))
     if len(args) > 0:
         return args[0]
     return args
