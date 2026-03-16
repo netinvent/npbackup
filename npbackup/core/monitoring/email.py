@@ -72,9 +72,7 @@ class EmailMonitor(MonitoringBackend):
             smtp_security = self.get_monitoring_value("global_email.smtp_security")
 
             if not smtp_server or not smtp_port:
-                logger.warning(
-                    "SMTP server/port. Not sending notifications via email."
-                )
+                logger.warning("SMTP server/port. Not sending notifications via email.")
                 return False
 
             smtp_username = self.get_monitoring_value("global_email.smtp_username")
