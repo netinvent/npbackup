@@ -56,23 +56,6 @@ def metric_analyser(
     try:
         metrics = {}
         if operation == "backup":
-            minimum_backup_size_error = repo_config.g(
-                "backup_opts.minimum_backup_size_error"
-            )
-            storage_heuristics_allowed_lower_standard_deviation = repo_config.g(
-                "backup_opts.storage_heuristics_allowed_lower_standard_deviation",
-                default=None,
-            )
-            storage_heuristics_allowed_higher_standard_deviation = repo_config.g(
-                "backup_opts.storage_heuristics_allowed_higher_standard_deviation",
-                default=None,
-            )
-
-            storage_heuristics_allowed_modified_files_standard_deviation = repo_config.g(
-                "backup_opts.storage_heuristics_allowed_modified_files_standard_deviation",
-                default=None,
-            )
-
             # If result was a str, we need to transform it into json first
             # Currently, @metrics uses str instead of json in order to detect cloud file issues
             # see @metrics for more
@@ -85,54 +68,73 @@ def metric_analyser(
                 restic_json = restic_result
 
             if restic_json:
-                processed_bytes = None
-                modified_files = None
-                try:
-                    processed_human_readable_bytes_iec = BytesConverter(
-                        str(restic_json["total_bytes_processed"])
-                    ).human_iec_bytes
-                    processed_bytes = int(restic_json["total_bytes_processed"])
-                    logger.info(
-                        f"Processed {processed_human_readable_bytes_iec} of data"
+                if only_check_backup_result_and_size:
+                    minimum_backup_size_error = repo_config.g(
+                        "backup_opts.minimum_backup_size_error"
                     )
-                except KeyError:
-                    pass
-                try:
-                    modified_files = int(restic_json["files_changed"])
-                except KeyError:
-                    pass
+                    storage_heuristics_allowed_lower_standard_deviation = repo_config.g(
+                        "backup_opts.storage_heuristics_allowed_lower_standard_deviation",
+                        default=None,
+                    )
+                    storage_heuristics_allowed_higher_standard_deviation = repo_config.g(
+                        "backup_opts.storage_heuristics_allowed_higher_standard_deviation",
+                        default=None,
+                    )
 
-                if (
-                    storage_heuristics_allowed_lower_standard_deviation is not None
-                    or storage_heuristics_allowed_higher_standard_deviation is not None
-                    or storage_heuristics_allowed_modified_files_standard_deviation
-                    is not None
-                ):
-                    repo_uuid = repo_config.g("uuid")
-                    config_uuid = repo_config.g("config_uuid")
-                    (
-                        backup_heuristics_sub_min_size,
-                        backup_heuristics_over_size,
-                        backup_heuristics_too_many_modified_files,
-                    ) = storage_heuristics(
-                        config_uuid,
-                        repo_uuid,
-                        processed_bytes,
-                        modified_files,
-                        (
-                            storage_heuristics_allowed_lower_standard_deviation,
-                            storage_heuristics_allowed_higher_standard_deviation,
-                            storage_heuristics_allowed_modified_files_standard_deviation,
-                        ),
+                    storage_heuristics_allowed_modified_files_standard_deviation = repo_config.g(
+                        "backup_opts.storage_heuristics_allowed_modified_files_standard_deviation",
+                        default=None,
                     )
-                if minimum_backup_size_error:
-                    # We need bytes for literal comparison
-                    if processed_bytes is not None and processed_bytes < int(
-                        BytesConverter(
-                            str(minimum_backup_size_error).replace(" ", "")
-                        ).bytes
+
+                    processed_bytes = None
+                    modified_files = None
+                    try:
+                        processed_human_readable_bytes_iec = BytesConverter(
+                            str(restic_json["total_bytes_processed"])
+                        ).human_iec_bytes
+                        processed_bytes = int(restic_json["total_bytes_processed"])
+                        logger.info(
+                            f"Processed {processed_human_readable_bytes_iec} of data"
+                        )
+                    except KeyError:
+                        pass
+                    try:
+                        modified_files = int(restic_json["files_changed"])
+                    except KeyError:
+                        pass
+
+                    if (
+                        storage_heuristics_allowed_lower_standard_deviation is not None
+                        or storage_heuristics_allowed_higher_standard_deviation
+                        is not None
+                        or storage_heuristics_allowed_modified_files_standard_deviation
+                        is not None
                     ):
-                        backup_sub_min_size = True
+                        repo_uuid = repo_config.g("uuid")
+                        config_uuid = repo_config.g("config_uuid")
+                        (
+                            backup_heuristics_sub_min_size,
+                            backup_heuristics_over_size,
+                            backup_heuristics_too_many_modified_files,
+                        ) = storage_heuristics(
+                            config_uuid,
+                            repo_uuid,
+                            processed_bytes,
+                            modified_files,
+                            [
+                                storage_heuristics_allowed_lower_standard_deviation,
+                                storage_heuristics_allowed_higher_standard_deviation,
+                                storage_heuristics_allowed_modified_files_standard_deviation,
+                            ],
+                        )
+                    if minimum_backup_size_error:
+                        # We need bytes for literal comparison
+                        if processed_bytes is not None and processed_bytes < int(
+                            BytesConverter(
+                                str(minimum_backup_size_error).replace(" ", "")
+                            ).bytes
+                        ):
+                            backup_sub_min_size = True
             else:
                 logger.error("Backup operation did not return valid parseable data")
 

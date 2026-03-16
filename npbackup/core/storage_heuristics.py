@@ -10,7 +10,7 @@ __license__ = "GPL-3.0-only"
 __build__ = "2026031501"
 
 
-from typing import Tuple
+from typing import Tuple, List
 import logging
 from statistics import mean
 from npbackup.__env__ import (
@@ -28,7 +28,7 @@ def storage_heuristics(
     repo_uuid: str,
     storage_size: int,
     modified_files: int,
-    allowed_deviation_percent: Tuple[int, int, int],
+    allowed_deviation_percent: List[int],
 ) -> Tuple[bool, bool, bool]:
     """
     Takes last storage size results and calculates whether the current storage is too small
@@ -36,6 +36,15 @@ def storage_heuristics(
 
     Also checks for too many modified files which could be a sign of ransomware
     """
+    for index in range(3):
+        try:
+            if allowed_deviation_percent[index] is not None:
+                allowed_deviation_percent[index] = int(allowed_deviation_percent[index])
+        except ValueError:
+            logger.error(
+                f"Invalid allowed deviation percent in congfiguration: {allowed_deviation_percent[index]}, skipping"
+            )
+        allowed_deviation_percent[index] = None
 
     storage = load_storage(config_uuid)
     try:
@@ -76,7 +85,7 @@ def storage_heuristics(
             storage_history = storage_history[-STORAGE_HISTORY_KEEP:]
         try:
             storage.s(f"storage_history.{repo_uuid}", storage_history)
-        except TypeError:
+        except (KeyError, TypeError):
             storage.s("storage_history", {})
             storage.s(f"storage_history.{repo_uuid}", storage_history)
     else:
@@ -111,7 +120,7 @@ def storage_heuristics(
             ]
         try:
             storage.s(f"modified_files_history.{repo_uuid}", modified_files_history)
-        except TypeError:
+        except (KeyError, TypeError):
             storage.s("modified_files_history", {})
             storage.s(f"modified_files_history.{repo_uuid}", modified_files_history)
     else:
