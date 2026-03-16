@@ -168,3 +168,4 @@ BUILDS
 BUILDS-PRIVATE
 *.conf
 *.log?
+npbackup_*.dat
