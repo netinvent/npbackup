@@ -632,6 +632,7 @@ def _main_gui(viewer_mode: bool):
             keep_on_top=True,
             no_titlebar=False,
             grab_anywhere=True,
+            modal=True,
         )
         while True:
             action = None
