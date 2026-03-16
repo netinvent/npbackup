@@ -990,13 +990,13 @@ class ResticRunner:
         self,
         paths: List[str] = None,
         source_type: str = None,
-        exclude_patterns: List[str] = [],
-        exclude_files: List[str] = [],
+        exclude_patterns: List[str] = None,
+        exclude_files: List[str] = None,
         excludes_case_ignore: bool = False,
         exclude_caches: bool = False,
         exclude_files_larger_than: str = None,
         use_fs_snapshot: bool = False,
-        tags: List[str] = [],
+        tags: List[str] = None,
         one_file_system: bool = False,
         read_from_stdin: bool = False,
         stdin_from_command: str = None,
@@ -1008,6 +1008,13 @@ class ResticRunner:
         """
         kwargs = locals()
         kwargs.pop("self")
+
+        if exclude_patterns is None:
+            exclude_patterns = []
+        if exclude_files is None:
+            exclude_files = []
+        if tags is None:
+            tags = []
 
         cmd = "backup"
 
