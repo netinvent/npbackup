@@ -83,6 +83,7 @@ def _check_new_version(
     else:
         logger.debug("Upgrade server not set")
         return None
+    server_ident = None
     try:
         requestor = Requestor(upgrade_url, username, password)
         requestor.app_name = version_dict["name"] + version_dict["version"]
