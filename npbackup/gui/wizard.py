@@ -11,9 +11,8 @@ __license__ = "GPL-3.0-only"
 
 from typing import List, Tuple
 from logging import getLogger
-from ofunctions.process import kill_childs
-from ofunctions.threading import threaded
 import FreeSimpleGUI as sg
+import textwrap
 from resources.customization import (
     OEM_LOGO,
     OEM_ICON,
@@ -25,7 +24,7 @@ from npbackup.core.i18n_helper import _t
 from ofunctions.misc import get_key_from_value
 from FreeSimpleGUI import Button as RoundedButton
 import npbackup.configuration
-from npbackup.gui.ttk_theme import TITLE_FONT, SUBTITLE_FONT
+from npbackup.gui.ttk_theme import TITLE_FONT, SUBTITLE_FONT, STANDARD_FONT
 import npbackup.gui.common_gui
 from npbackup.gui.helpers import WaitWindow, popup_error, password_complexity
 import npbackup.gui.common_gui_logic
@@ -73,7 +72,7 @@ def create_step_header(step_num: int, title_key: str, desc_key: str = None) -> l
                         [
                             sg.Text(
                                 _t(desc_key),
-                                font=SUBTITLE_FONT,
+                                font=STANDARD_FONT,
                                 text_color="gray",
                             )
                         ]
@@ -415,20 +414,13 @@ def wizard_layouts() -> dict:
         )
         + [
             [
-                sg.Text(_t("config_gui.tags"), font=SUBTITLE_FONT),
-            ],
-        ]
-        + npbackup.gui.common_gui.backup_tags_col()
-        + [
-            [
                 sg.Text(
-                    f"{_t("config_gui.backup_size_checks")} ({_t("generic.optional")})",
+                    f"{_t("config_gui.backups_size_checks")} ({_t("generic.optional")})",
                     font=SUBTITLE_FONT,
                 ),
             ],
             [
-                sg.Text(_t("config_gui.minimum_backup_size_error")),
-                sg.Push(),
+                sg.Text(_t("config_gui.minimum_backup_size_error"), size=(60, 1)),
                 sg.Input(key="backup_opts.minimum_backup_size_error", size=(8, 1)),
                 sg.Combo(
                     byte_units,
@@ -438,10 +430,24 @@ def wizard_layouts() -> dict:
             ],
             [
                 sg.Text(
+                    f"{_t("config_gui.backups_heuristic_checks")} ({_t("generic.optional")})",
+                    font=SUBTITLE_FONT,
+                ),
+            ],
+            [
+                sg.Text(
+                    textwrap.fill(
+                        _t("config_gui.backup_heuristics_checks_description")
+                    ),
+                    size=(100, 2),
+                ),
+            ],
+            [
+                sg.Text(
                     _t(
                         "config_gui.storage_heuristics_allowed_lower_standard_deviation"
                     ),
-                    size=(50, 1),
+                    size=(60, 1),
                 ),
                 sg.Input(
                     key="backup_opts.storage_heuristics_allowed_lower_standard_deviation",
@@ -453,7 +459,7 @@ def wizard_layouts() -> dict:
                     _t(
                         "config_gui.storage_heuristics_allowed_higher_standard_deviation"
                     ),
-                    size=(50, 1),
+                    size=(60, 1),
                 ),
                 sg.Input(
                     key="backup_opts.storage_heuristics_allowed_higher_standard_deviation",
@@ -465,14 +471,18 @@ def wizard_layouts() -> dict:
                     _t(
                         "config_gui.storage_heuristics_allowed_modified_files_standard_deviation"
                     ),
-                    size=(50, 1),
+                    size=(60, 1),
                 ),
                 sg.Input(
                     key="backup_opts.storage_heuristics_allowed_modified_files_standard_deviation",
                     size=(8, 1),
                 ),
             ],
-        ],
+            [
+                sg.Text(_t("config_gui.tags"), font=SUBTITLE_FONT),
+            ],
+        ]
+        + npbackup.gui.common_gui.backup_tags_col(),
         "wizard_layout_7": create_step_header(
             7, "wizard_gui.step_7", "wizard_gui.step_7_description"
         )

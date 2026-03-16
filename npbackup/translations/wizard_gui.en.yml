@@ -3,7 +3,7 @@ en:
   select_backup_sources: Select backup sources
   backup_source: Files & folders
   backup_location: Backup location
-  backend: Backup backend
+  backend: Backup backend storage type
   backup_options: Backup options
   summary: Summary
   welcome: Wizard setup
@@ -12,10 +12,10 @@ en:
   thank_you: Thank you for using
 
   step_1: Select backup sources
-  step_1_description: Choose the objects you want to back up
+  step_1_description: Choose the objects you want to back up. To delete an object, select it and press "Delete".
   step_2: Select backup location
   step_2_description: Choose where you want to store your backups
-  select_backend: Select backend
+  select_backend: Select backend storage
   step_3: Schedule
   step_3_description: Configure backup scheduling options
   step_4: Retention

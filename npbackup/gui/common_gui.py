@@ -349,17 +349,22 @@ def global_email_col():
                         sg.Input(key="global_email.sender", size=(50, 1)),
                     ],
                     [
-                        sg.Col(
-                            [
-                                [
-                                    sg.Text(
-                                        _t("config_gui.email_recipients"), size=(40, 1)
-                                    ),
-                                    sg.Text(_t("config_gui.backup"), size=(16, 1)),
-                                    sg.Text(_t("config_gui.operations"), size=(16, 1)),
-                                ],
-                            ]
-                        )
+                        sg.Text(_t("config_gui.email_recipients"), size=(40, 1)),
+                        sg.Button(
+                            _t("config_gui.add_recipient"),
+                            key="-ADD-EMAIL-RECIPIENT-",
+                            size=(20, 1),
+                        ),
+                        sg.Button(
+                            _t("config_gui.test_email"),
+                            key="-TEST-EMAIL-",
+                            size=(20, 1),
+                        ),
+                    ],
+                    [
+                        sg.Text(_t("config_gui.email_addresses"), size=(40, 1)),
+                        sg.Text(_t("config_gui.backup"), size=(17, 1)),
+                        sg.Text(_t("config_gui.operations"), size=(16, 1)),
                     ],
                     [
                         sg.Col(
@@ -371,26 +376,6 @@ def global_email_col():
                             scrollable=True,
                             vertical_scroll_only=True,
                         )
-                    ],
-                    [
-                        sg.Col(
-                            [
-                                [
-                                    sg.Button(
-                                        _t("config_gui.add_recipient"),
-                                        key="-ADD-EMAIL-RECIPIENT-",
-                                        size=(24, 1),
-                                    ),
-                                    sg.Button(
-                                        _t("config_gui.test_email"),
-                                        key="-TEST-EMAIL-",
-                                        size=(24, 1),
-                                    ),
-                                ]
-                            ],
-                            pad=0,
-                            justification="C",
-                        ),
                     ],
                 ],
                 visible=False,
@@ -993,11 +978,15 @@ def backup_tags_col():
                     [
                         sg.Text(
                             textwrap.fill(
-                                _t("config_gui.backup_tags_explanation"), width=60
-                            )
+                                _t("config_gui.backup_tags_explanation"),
+                            ),
+                            size=(None, 2),
+                            expand_x=True,
+                            expand_y=True,
                         ),
                     ],
-                ]
+                ],
+                expand_x=True,
             )
         ],
         [

@@ -21,6 +21,8 @@ en:
   exclude_cache_dirs: Exclude cache dirs
   one_file_system: Do not follow mountpoints
   backups_size_checks: Backup size checks
+  backups_heuristic_checks: Backup heuristic checks
+  backups_heuristic_checks_description: Heuristic checks are based on previous backup reports to help detect potential issues with backup content.
   minimum_backup_size_error: Minimum backup size check
   storage_heuristics_allowed_lower_standard_deviation: Storage allowed lower deviation (percent)
   storage_heuristics_allowed_higher_standard_deviation: Storage allowed higher deviation (percent)
@@ -31,7 +33,7 @@ en:
   post_exec_commands: Post-exec commands
   execute_even_on_backup_error: Execute even if backup failed
   tags: Tags
-  backup_tags_explanation: Tags are a great way to label your backups in order to apply selective retention policies
+  backup_tags_explanation: Tags help categorize backups in order to apply selective retention policies
   one_per_line: one per line
   backup_priority: Backup priority
   pack_size: Pack size (MB)
@@ -129,7 +131,7 @@ en:
   weekly: weekly
   monthly: monthly
   yearly: yearly
-  keep_within: Keep snapshots within time period relative to current snapshot
+  keep_within: Keep backups within time period relative to current backup
   keep_tags: Always keep these tags
   apply_on_tags: Never apply on these tags
   optional_ntp_server_uri: Optional NTP server URI
@@ -139,6 +141,11 @@ en:
   14d: Keep last 14 Days of backups
   keep_all: Keep All Backups
   select_a_retention_policy_preset: Use a custom retention policy or select a preset
+  policiy_group_by: Apply retention policy by grouping backups
+  group_by_host: Group by host
+  group_by_paths: Group by paths
+  group_by_tags: Group by tags
+  policiy_group_by_explanation: If none are chosen, backups will be grouped by host and paths
 
   # housekeeping
   housekeeping: Housekeeping
@@ -198,12 +205,6 @@ en:
 
   suggested_encrypted_env_variables: Suggested encrypted environment variables
 
-  policiy_group_by: Apply retention policy by grouping snapshots
-  group_by_host: Group by host
-  group_by_paths: Group by paths
-  group_by_tags: Group by tags
-  policiy_group_by_explanation: If none are chosen, snapshots will be grouped by host and paths
-
   add_identity: Add Cloud identities
   value_cannot_be_empty: Value cannot be empty
   repo_uri_cloud_hint: Cloud repo URI requires to set encrypted environment variables (see environment tab)
@@ -257,7 +258,8 @@ en:
   smtp_username: SMTP username
   smtp_password: SMTP password
   email_sender: Sender email address
-  email_recipients: Comma separated recipient addresses
+  email_recipients: Recipient addresses
+  email_addresses: Email addresses
   email_on_backup_success: Email on backup success
   email_on_backup_failure: Email on backup failure
   email_on_operations_success: Email on all operations success

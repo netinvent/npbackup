@@ -3,7 +3,7 @@ fr:
   select_backup_sources: Sélectionner les éléments à sauvegarder
   backup_source: Fichiers & dossiers
   backup_location: Emplacement de la sauvegarde
-  backend: Backend de sauvegarde
+  backend: Type de stockage de sauvegarde
   backup_options: Options de sauvegarde
   summary: Résumé
   welcome: Configuration initiale
@@ -12,10 +12,10 @@ fr:
   thank_you: Merci d'utiliser
 
   step_1: Eléments à sauvegarder
-  step_1_description: Choisissez les éléments que vous souhaitez sauvegarder
+  step_1_description: Sélectionnez les éléments que vous souhaitez sauvegarder. Pour supprimer un élement, selectionnez-le et appuyez sur "Supprimer".
   step_2: Emplacement de la sauvegarde
   step_2_description: Choisissez où vous souhaitez stocker vos sauvegardes
-  select_backend: Sélectionner le backend
+  select_backend: Sélectionner le type de stockage
   step_3: Planification
   step_3_description: Configurez les options de planification des sauvegardes
   step_4: Stratégie de rétention

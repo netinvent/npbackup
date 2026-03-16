@@ -21,7 +21,9 @@ fr:
   windows_no_effect: aucun effet sous Windows
   exclude_cache_dirs: Exclure dossiers cache
   one_file_system: Ne pas suivre les points de montage
-  backup_size_checks: Vérifications de la taille des sauvegardes
+  backups_size_checks: Vérifications de la taille des sauvegardes
+  backups_heuristic_checks: Vérifications heuristiques de sauvegarde
+  backup_heuristics_checks_description: Les vérifications heuristiques se basent sur les rapports de sauvegarde précédents pour aider à détecter des problèmes potentiels avec le contenu de la sauvegarde.
   minimum_backup_size_error: Taille minimale de la sauvegarde
   storage_heuristics_allowed_lower_standard_deviation: Pourcentage écart type inférieur autorisé
   storage_heuristics_allowed_higher_standard_deviation: Pourcentage écart type supérieur autorisé
@@ -32,7 +34,7 @@ fr:
   post_exec_commands: Commandes post-sauvegarde
   execute_even_on_backup_error: Executer même si la sauvegarde a échouée
   tags: Étiquettes
-  backup_tags_explanation: Les étiquettes sont un excellent moyen de marquer vos sauvegardes afin d'appliquer des politiques de rétention sélectives
+  backup_tags_explanation: Les étiquettes permettent de catégoriser les sauvegardes afin d'appliquer des stratégies de rétention spécifiques.
   one_per_line: un par ligne
   backup_priority: Priorité de sauvegarde
   pack_size: Taille des packs (MB)
@@ -131,7 +133,7 @@ fr:
   weekly: hebdomadaires
   monthly: mensuels
   yearly: annuelles
-  keep_within: Garder les instantanées dans une période relative au dernier instantané
+  keep_within: Garder les sauvegardes dans une période relative à la dernière sauvegarde
   keep_tags: Toujours garder ces étiquettes
   apply_on_tags: Ne jamais appliquer sur ces étiquettes
   optional_ntp_server_uri: URI optionnelle serveur NTP
@@ -141,6 +143,11 @@ fr:
   14d: Garder les derniers 14 jours
   keep_all: Conserver toutes les sauvegardes
   select_a_retention_policy_preset: Utiliser une politique personnalisée ou sélectionner un pré-réglage
+  policiy_group_by: Appliquer la politique de rétention par groupes de sauvegardes
+  group_by_host: Grouper par nom d'hôte
+  group_by_paths: Grouper par chemins sauvegardés
+  group_by_tags: Grouper par étiquettes
+  policiy_group_by_explanation: Si aucun groupement n'est choisi, le groupement par nom d'hôte et chemin de sauvegarde sera utilisé
 
   # housekeeping
   housekeeping: Maintenance
@@ -198,12 +205,6 @@ fr:
 
   suggested_encrypted_env_variables: Variables chiffrées suggérées
 
-  policiy_group_by: Appliquer la politique de rétention par groupes d'instantanés
-  group_by_host: Grouper par nom d'hôte
-  group_by_paths: Grouper par chemins sauvegardés
-  group_by_tags: Grouper par étiquettes
-  policiy_group_by_explanation: Si aucun groupement n'est choisi, le groupement par nom d'hôte et chemin de sauvegarde sera utilisé
-
   add_identity: Ajouter identités Cloud
   value_cannot_be_empty: La valeur ne peut être vide
   repo_uri_cloud_hint: L'URI du dépot Cloud nécessite de définir des variables d'environnement chiffrées (voir l'onglet environnement)
@@ -257,7 +258,8 @@ fr:
   smtp_username: Nom d'utilisateur SMTP
   smtp_password: Mot de passe SMTP
   email_sender: Email expéditeur
-  email_recipients: Emails destinataires séparés par des virgules
+  email_recipients: Emails destinataires
+  email_addresses: Adresses email
   email_on_backup_success: Email de succès
   email_on_backup_failure: Email d'échec
   email_on_operations_success: Email de succès
