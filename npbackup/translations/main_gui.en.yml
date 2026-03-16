@@ -61,4 +61,5 @@ en:
   advanced: Advanced
   run_wizard_or_advanced: Run wizard or advanced configuration ?
   run_wizard: Run wizard
+  run_wizard_no_config: No configuration is found. Would you like to run the configuration wizard ?
   run_wizard_prompt: No configuration found. Do you want to run the configuration wizard?

@@ -61,4 +61,5 @@ fr:
   advanced: Avancé
   run_wizard_or_advanced: Lancer l'assistant ou la configuration avancée ?
   run_wizard: Lancer l'assistant
+  run_wizard_no_config: Aucune configuration n'est chargée. Souhaitez-vous lancer l'assistant de configuration ?
   run_wizard_prompt: Aucune configuration trouvée. Voulez-vous lancer l'assistant de configuration?

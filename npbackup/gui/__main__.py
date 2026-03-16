@@ -837,7 +837,7 @@ def _main_gui(viewer_mode: bool):
 
     def get_config(
         config_file: str = None, window: sg.Window = None, repo_name: str = None
-    ) -> Tuple:
+    ) -> Tuple[dict, str, dict, str, str, str, List[str]]:
         global __full_concurrency
         global __repo_aware_concurrency
         full_config, config_file = get_config_file(config_file=config_file)
@@ -958,31 +958,20 @@ def _main_gui(viewer_mode: bool):
             popup_error(msg)
             sys.exit(73)
 
+    # Let's first initialize the configuration as non working
+    repo_config = None
+    config_file = None
+    full_config = None
+    repo_type = None
+    repo_list = []
+
     if viewer_mode:
         __no_lock = True
-
-    # Let's try to read standard restic repository env variables
-    viewer_repo_uri = os.environ.get("RESTIC_REPOSITORY", None)
-    viewer_repo_password = os.environ.get("RESTIC_PASSWORD", None)
-    if viewer_mode and not config_file or (config_file and not config_file.exists()):
-        if viewer_repo_uri and viewer_repo_password:
-            repo_config = viewer_create_repo(viewer_repo_uri, viewer_repo_password)
-        else:
-            repo_config = None
-        config_file = None
-        full_config = None
-        repo_type = None
-        repo_list = []
-    else:
-        (
-            full_config,
-            config_file,
-            repo_config,
-            _,
-            repo_type,
-            _,
-            repo_list,
-        ) = get_config(config_file=config_file, repo_name=args.repo_name)
+        viewer_repo_uri = os.environ.get("RESTIC_REPOSITORY", None)
+        viewer_repo_password = os.environ.get("RESTIC_PASSWORD", None)
+        if not config_file or (config_file and not config_file.exists()):
+            if viewer_repo_uri and viewer_repo_password:
+                repo_config = viewer_create_repo(viewer_repo_uri, viewer_repo_password)
 
     right_click_menu = ["", [_t("generic.destination"), "Theme"]]
     # So I did not find any good way to make sure tables have the right size on Linux
@@ -1176,7 +1165,7 @@ def _main_gui(viewer_mode: bool):
     else:
         auto_upgrade_result = None
     window = sg.Window(
-        f"{SHORT_PRODUCT_NAME} - {config_file}",
+        f"{SHORT_PRODUCT_NAME} - {config_file if not viewer_mode else _t('main_gui.viewer_mode')}",
         layout,
         default_element_size=(12, 1),
         text_justification="r",
@@ -1195,7 +1184,7 @@ def _main_gui(viewer_mode: bool):
     if not config_file and not full_config and not viewer_mode:
         window["-NO-CONFIG-"].Update(visible=True)
         result = sg.popup(
-            _t("main_gui.run_wizard"),
+            _t("main_gui.run_wizard_no_config"),
             custom_text=(_t("generic.no"), _t("generic.yes")),
             keep_on_top=True,
             icon=sg.SYSTEM_TRAY_MESSAGE_ICON_INFORMATION,
@@ -1219,15 +1208,25 @@ def _main_gui(viewer_mode: bool):
                 repo_config, _ = npbackup.configuration.get_repo_config(
                     full_config, repo_name="default"
                 )
-                repo_list = enable_gui_options(full_config, config_file, window)
+        else:
+            (
+                full_config,
+                config_file,
+                repo_config,
+                _,
+                repo_type,
+                _,
+                repo_list,
+            ) = get_config(config_file=config_file, repo_name=args.repo_name)
+        repo_list = enable_gui_options(full_config, config_file, window)
 
-    monitoring_config = npbackup.configuration.get_monitoring_config(
-        repo_config, full_config
-    )
     if repo_config:
         try:
             current_state, backup_tz, snapshot_list = get_gui_data(
                 repo_config, monitoring_config
+            )
+            monitoring_config = npbackup.configuration.get_monitoring_config(
+                repo_config, full_config
             )
         except (TypeError, ValueError):
             current_state = None
