@@ -166,17 +166,16 @@ def metric_analyser(
                     except (ValueError, TypeError):
                         metrics[f"restic_{key}"] = value
 
-            metrics["npbackup_backup_sub_min_size"] = backup_sub_min_size
+            metrics["npbackup_backup_sub_min_size"] = 1 if backup_sub_min_size else 0
             metrics["npbackup_storage_heuristics_too_low"] = (
-                backup_heuristics_sub_min_size
+                1 if backup_heuristics_sub_min_size else 0
             )
             metrics["npbackup_storage_heuristics_too_high"] = (
-                backup_heuristics_over_size
+                1 if backup_heuristics_over_size else 0
             )
             metrics["npbackup_storage_heuristics_too_many_modified_files"] = (
-                backup_heuristics_too_many_modified_files
+                1 if backup_heuristics_too_many_modified_files else 0
             )
-
         if not restic_result:
             logger.error("Backend finished with errors.")
 

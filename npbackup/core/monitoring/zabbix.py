@@ -199,10 +199,6 @@ class ZabbixMonitor(MonitoringBackend):
             if value is None:
                 continue
 
-            # Skip internal metrics not meant for external monitoring
-            if metric_name.startswith("internal_"):
-                continue
-
             if metric_name.startswith("npbackup_"):
                 # Map upgrade state to npbackup.exec_state with action=upgrade
                 if metric_name == "npbackup_upgrade_state":
