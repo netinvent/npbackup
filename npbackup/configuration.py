@@ -29,10 +29,9 @@ from packaging.version import parse as version_parse, InvalidVersion
 from cryptidy import symmetric_encryption as enc
 from ofunctions.random import random_string
 from ofunctions.misc import replace_in_iterable, BytesConverter, iter_over_keys
-from npbackup.secret_keys import EARLIER_AES_KEYS
 from resources.customization import ID_STRING
 from resources.audience import CURRENT_AUDIENCE
-from npbackup.key_management import AES_KEY, EARLIER_AES_KEY, get_aes_key
+from npbackup.key_management import AES_KEY, EARLIER_AES_KEYS, get_aes_key
 from npbackup.__version__ import __version__ as MAX_CONF_VERSION
 
 MIN_MIGRATABLE_CONF_VERSION = "3.0.0"

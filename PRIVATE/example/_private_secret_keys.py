@@ -23,8 +23,8 @@ __build__ = "2026031201"
 AES_KEY = b"\xd7\x84\xe5\xa9\x82\x8aU\x9b\xf2+\xf9\xf6\x95\xe9\x02\xbf\xce\xb3\xf9\x06\xdc0s\xa6;9\xa9}K:\xc13"
 
 """
-If someday we need to change the AES_KEY, copy it's content to EARLIER_AES_KEY and generate a new one
-Keeping EARLIER_AES_KEY allows to migrate from old configuration files to new ones
+If someday we need to change the AES_KEY, copy it's content to EARLIER_AES_KEYS and generate a new one
+Keeping EARLIER_AES_KEYS allows to migrate from old configuration files to new ones
 """
 EARLIER_AES_KEYS = [
     b""
