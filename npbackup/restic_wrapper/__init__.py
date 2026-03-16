@@ -173,15 +173,18 @@ class ResticRunner:
         # Configure default cpu usage when not specifically set
         if "GOMAXPROCS" not in self.environment_variables:
             nb_cores = os.cpu_count()
-            if nb_cores < 2:
-                gomaxprocs = nb_cores
-            elif 2 <= nb_cores <= 4:
-                gomaxprocs = nb_cores - 1
+            if nb_cores:
+                if nb_cores < 2:
+                    gomaxprocs = nb_cores
+                elif 2 <= nb_cores <= 4:
+                    gomaxprocs = nb_cores - 1
+                else:
+                    gomaxprocs = nb_cores - 2
+                # No need to use write_logs here
+                logger.debug("Setting GOMAXPROCS to {}".format(gomaxprocs))
+                os.environ["GOMAXPROCS"] = str(gomaxprocs)
             else:
-                gomaxprocs = nb_cores - 2
-            # No need to use write_logs here
-            logger.debug("Setting GOMAXPROCS to {}".format(gomaxprocs))
-            os.environ["GOMAXPROCS"] = str(gomaxprocs)
+                logger.debug("Cannot get number of CPU cores, not setting GOMAXPROCS")
 
     def _remove_env(self) -> None:
         """
