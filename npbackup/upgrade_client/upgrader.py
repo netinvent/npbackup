@@ -158,7 +158,7 @@ def _check_new_version(
         return None
     except Exception as exc:
         logger.error(
-            f"Cannot determine if online version '{online_version}' is newer than current version {version_dict['verison']}: {exc}"
+            f"Cannot determine if online version '{online_version}' is newer than current version {version_dict['version']}: {exc}"
         )
         return None
 
