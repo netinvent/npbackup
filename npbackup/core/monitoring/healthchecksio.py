@@ -78,12 +78,6 @@ class HealthchecksioMonitor(MonitoringBackend):
 
         # Determine if operation was successful
         exec_state = metrics.get("npbackup_exec_state", 0)
-        operation_success = metrics.get("operation_success", 1)
-
-        # exec_state: 0=success, 1=warning, 2=error, 3=critical
-        # Consider warnings as success for healthchecks.io
-        is_success = exec_state in (0, 1) and operation_success == 1
-
         # Build log data to send with ping
         log_data = self._build_log_data(metrics, operation)
 
@@ -92,7 +86,7 @@ class HealthchecksioMonitor(MonitoringBackend):
             return True
 
         # Send the ping
-        return self._send_ping(is_success, log_data)
+        return self._send_ping(exec_state == 0, log_data)
 
     def _build_log_data(self, metrics: Dict[str, Any], operation: str) -> str:
         """
@@ -111,7 +105,7 @@ class HealthchecksioMonitor(MonitoringBackend):
         lines.append(f"Operation: {operation}")
         lines.append(f"Repository: {labels.get('repo_name', 'unknown')}")
 
-        exec_state = metrics.get("npbackup_exec_state", 0)
+        exec_state = metrics.get("npbackup_exec_state", 4)
         state_names = {0: "Success", 1: "Warning", 2: "Error", 3: "Critical"}
         lines.append(f"Status: {state_names.get(exec_state, 'Unknown')}")
 
