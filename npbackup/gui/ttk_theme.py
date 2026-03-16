@@ -22,7 +22,7 @@ except ImportError:
     HAVE_TTK_THEME = False
 if HAVE_TTK_THEME:
     from tkinter import ttk
-    from reskinner import reskin
+from reskinner import reskin
 from resources.customization import (
     SIMPLEGUI_THEME,
     SIMPLEGUI_DARK_THEME,
