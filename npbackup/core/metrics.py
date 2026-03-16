@@ -173,6 +173,9 @@ def metric_analyser(
             metrics["npbackup_storage_heuristics_too_high"] = (
                 backup_heuristics_over_size
             )
+            metrics["npbackup_storage_heuristics_too_many_modified_files"] = (
+                backup_heuristics_too_many_modified_files
+            )
 
         if not restic_result:
             logger.error("Backend finished with errors.")
