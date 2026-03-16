@@ -44,7 +44,7 @@ def storage_heuristics(
             logger.error(
                 f"Invalid allowed deviation percent in configuration: {allowed_deviation_percent[index]}, skipping"
             )
-        allowed_deviation_percent[index] = None
+            allowed_deviation_percent[index] = None
 
     storage = load_storage(config_uuid)
     try:
