@@ -20,7 +20,7 @@ from ruamel.yaml import YAML
 from ruamel.yaml.scanner import ScannerError
 from ruamel.yaml.compat import ordereddict
 from ruamel.yaml.comments import CommentedMap
-from npbackup.path_helper import CURRENT_DIR, NPBACKUP_ROOT_DIR, sanitize_filename
+from npbackup.path_helper import CURRENT_DIR, BASEDIR, sanitize_filename
 from npbackup.__version__ import __version__
 from npbackup.configuration import convert_to_commented_map
 
@@ -47,7 +47,7 @@ def get_storage_path(config_uuid: str) -> Optional[str]:
 
     # Prefer a non temporary path if possible
     path_list = [
-        os.path.join(NPBACKUP_ROOT_DIR, storage_file),
+        os.path.join(BASEDIR, storage_file),
         os.path.join(CURRENT_DIR, storage_file),
     ]
 

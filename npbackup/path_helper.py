@@ -21,9 +21,7 @@ import os
 CURRENT_EXECUTABLE = os.path.abspath(sys.argv[0])
 CURRENT_DIR = os.path.dirname(CURRENT_EXECUTABLE)
 
-# This is the base dir where NPBackup resides
-NPBACKUP_ROOT_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-
+# Tis is the basedir where NPBackup resides
 # When run with nuitka onefile, this will be the temp directory, else, this will be the path to current file
 BASEDIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 
