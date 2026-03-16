@@ -88,6 +88,110 @@ zabbix_export:
                   value: '{#OS}'
                 - tag: arch
                   value: '{#ARCH}'
+            - uuid: 9d6fd18aa98e49ec9d65b992046a78e1
+              name: 'NPBackup: Minimum Backup Size [{#REPO_NAME}, {#ACTION}]'
+              type: TRAP
+              key: 'npbackup.npbackup_backup_sub_min_size[{#REPO_NAME},{#ACTION}]'
+              delay: '0'
+              value_type: UNSIGNED
+              description: 'Execution state: 0=success, 1=warning'
+              tags:
+                - tag: component
+                  value: npbackup
+                - tag: repo
+                  value: '{#REPO_NAME}'
+                - tag: action
+                  value: '{#ACTION}'
+                - tag: group
+                  value: '{#GROUP}'
+                - tag: backup_job
+                  value: '{#BACKUP_JOB}'
+                - tag: npversion
+                  value: '{#NPVERSION}'
+                - tag: audience
+                  value: '{#AUDIENCE}'
+                - tag: os
+                  value: '{#OS}'
+                - tag: arch
+                  value: '{#ARCH}'
+            - uuid: dc4c7bdde92643d5a625b3a332fd98be
+              name: 'NPBackup: Heuristic Backup size too Small [{#REPO_NAME}, {#ACTION}]'
+              type: TRAP
+              key: 'npbackup.npbackup_storage_heuristics_too_low[{#REPO_NAME},{#ACTION}]'
+              delay: '0'
+              value_type: UNSIGNED
+              description: 'Execution state: 0=success, 1=warning'
+              tags:
+                - tag: component
+                  value: npbackup
+                - tag: repo
+                  value: '{#REPO_NAME}'
+                - tag: action
+                  value: '{#ACTION}'
+                - tag: group
+                  value: '{#GROUP}'
+                - tag: backup_job
+                  value: '{#BACKUP_JOB}'
+                - tag: npversion
+                  value: '{#NPVERSION}'
+                - tag: audience
+                  value: '{#AUDIENCE}'
+                - tag: os
+                  value: '{#OS}'
+                - tag: arch
+                  value: '{#ARCH}'
+            - uuid: ceb5db075e094674b6057e3105c7f23e
+              name: 'NPBackup: Heuristic Backup size too big [{#REPO_NAME}, {#ACTION}]'
+              type: TRAP
+              key: 'npbackup.npbackup_storage_heuristics_too_high[{#REPO_NAME},{#ACTION}]'
+              delay: '0'
+              value_type: UNSIGNED
+              description: 'Execution state: 0=success, 1=warning'
+              tags:
+                - tag: component
+                  value: npbackup
+                - tag: repo
+                  value: '{#REPO_NAME}'
+                - tag: action
+                  value: '{#ACTION}'
+                - tag: group
+                  value: '{#GROUP}'
+                - tag: backup_job
+                  value: '{#BACKUP_JOB}'
+                - tag: npversion
+                  value: '{#NPVERSION}'
+                - tag: audience
+                  value: '{#AUDIENCE}'
+                - tag: os
+                  value: '{#OS}'
+                - tag: arch
+                  value: '{#ARCH}'
+            - uuid: 4bc01b75e1d34b49a95d355813835c25
+              name: 'NPBackup: Heuristic Backup too many modified files [{#REPO_NAME}, {#ACTION}]'
+              type: TRAP
+              key: 'npbackup.npbackup_storage_heuristics_too_many_modified_files[{#REPO_NAME},{#ACTION}]'
+              delay: '0'
+              value_type: UNSIGNED
+              description: 'Execution state: 0=success, 1=warning'
+              tags:
+                - tag: component
+                  value: npbackup
+                - tag: repo
+                  value: '{#REPO_NAME}'
+                - tag: action
+                  value: '{#ACTION}'
+                - tag: group
+                  value: '{#GROUP}'
+                - tag: backup_job
+                  value: '{#BACKUP_JOB}'
+                - tag: npversion
+                  value: '{#NPVERSION}'
+                - tag: audience
+                  value: '{#AUDIENCE}'
+                - tag: os
+                  value: '{#OS}'
+                - tag: arch
+                  value: '{#ARCH}'
             # --- Restic backup result ---
             - uuid: 306b2954bb5f4617be4f43225a7111ad
               name: 'Restic: Backup failure [{#REPO_NAME}, {#ACTION}]'
