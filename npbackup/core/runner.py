@@ -1994,7 +1994,9 @@ class NPBackupRunner:
     @close_queues
     @catch_exceptions
     @exec_timer
-    def group_runner(self, repo_config_list: List, operation: str, **kwargs) -> bool:
+    def group_runner(
+        self, repo_configs: dict, monitoring_configs: dict, operation: str, **kwargs
+    ) -> bool:
         group_result = True
 
         # Make sure we don't close the stdout/stderr queues when running multiple operations
@@ -2009,7 +2011,7 @@ class NPBackupRunner:
 
         js = {"result": None, "group": True, "output": []}
 
-        for repo_config in repo_config_list:
+        for repo_name, repo_config in repo_configs.items():
             if self._canceled:
                 self.write_logs("Operations canceled", level="info")
                 group_result = False
@@ -2017,6 +2019,7 @@ class NPBackupRunner:
             repo_name = repo_config.g("name")
             self.write_logs(f"Running {operation} for repo {repo_name}", level="info")
             self.repo_config = repo_config
+            self.monitoring_config = monitoring_configs[repo_name]
             try:
                 result = self.__getattribute__(operation)(**kwargs)
             except Exception as exc:

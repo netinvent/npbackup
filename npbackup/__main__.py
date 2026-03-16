@@ -529,9 +529,6 @@ This is free software, and you are welcome to redistribute it under certain cond
 
     # Prepare program run
     cli_args = {
-        "monitoring_config": npbackup.configuration.get_monitoring_config(
-            repo_config, full_config
-        ),
         "verbose": args.verbose,
         "dry_run": args.dry_run,
         "json_output": args.json,
@@ -547,6 +544,9 @@ This is free software, and you are welcome to redistribute it under certain cond
     # Single repo run
     if len(repos_and_group_repos) == 1:
         cli_args["repo_config"] = repo_config
+        cli_args["monitoring_config"] = npbackup.configuration.get_monitoring_config(
+            repo_config, full_config
+        )
 
     # On group operations, we also need to set op_args
     if args.stdin:
@@ -671,22 +671,28 @@ This is free software, and you are welcome to redistribute it under certain cond
                 "critical",
             )
             sys.exit(74)
-        repo_config_list = []
+        repo_configs = {}
+        monitoring_configs = {}
 
         repo_remove_list = []
-        for repo in repos_and_group_repos:
+        for repo_name in repos_and_group_repos:
             repo_config, _ = npbackup.configuration.get_repo_config(full_config, repo)
             if repo_config is None:
                 json_error_logging(
                     False,
-                    f"Repo {repo} does not exist in this configuration",
+                    f"Repo {repo_name} does not exist in this configuration",
                     level="error",
                 )
-                repo_remove_list.append(repo)
+                repo_remove_list.append(repo_name)
             else:
-                repo_config_list.append(repo_config)
-        for repo in repo_remove_list:
-            repos_and_group_repos.remove(repo)
+                repo_configs[repo_name] = repo_config
+                monitoring_configs[repo_name] = (
+                    npbackup.configuration.get_monitoring_config(
+                        repo_config, full_config
+                    )
+                )
+        for repo_name in repo_remove_list:
+            repos_and_group_repos.remove(repo_name)
 
         if repos_and_group_repos is None or repos_and_group_repos == []:
             json_error_logging(False, "No valid repos selected", level="error")
@@ -701,7 +707,8 @@ This is free software, and you are welcome to redistribute it under certain cond
         op = cli_args["operation"]
         cli_args["operation"] = "group_runner"
         cli_args["op_args"] = {
-            "repo_config_list": repo_config_list,
+            "repo_configs": repo_configs,
+            "monitoring_configs": monitoring_configs,
             "operation": op,
             **cli_args["op_args"],
         }

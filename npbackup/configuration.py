@@ -1451,5 +1451,12 @@ def get_monitoring_config(repo_config: dict, full_config: dict):
             global_monitoring.s("identity", full_config.g("identity"))
         except AttributeError:
             pass
-    global_monitoring = evaluate_variables(repo_config, global_monitoring, full_config)
+    if repo_config:
+        global_monitoring = evaluate_variables(
+            repo_config, global_monitoring, full_config
+        )
+    else:
+        logger.error(
+            "Missing repo config while trying to get monitoring config. Identity will not be evaluated"
+        )
     return global_monitoring

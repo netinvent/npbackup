@@ -569,12 +569,16 @@ def operations_gui(full_config: dict, config_file: str) -> dict:
         ):
             repos = _get_repo_list(values["repo-and-group-list"])
 
-            repo_config_list = []
+            repo_configs = {}
+            monitoring_configs = {}
             if not repos:
                 continue
             for repo_name in repos:
                 repo_config, _ = get_repo_config(full_config, repo_name)
-                repo_config_list.append(repo_config)
+                repo_configs[repo_name] = repo_config
+                monitoring_configs[repo_name] = get_monitoring_config(
+                    repo_config, full_config
+                )
             operation = None
             op_args = None
             gui_msg = None
@@ -641,8 +645,8 @@ def operations_gui(full_config: dict, config_file: str) -> dict:
                     None,
                     "group_runner",
                     operation=operation,
-                    repo_config_list=repo_config_list,
-                    __monitoring_config=get_monitoring_config(repo_config, full_config),
+                    repo_configs=repo_configs,
+                    monitoring_configs=monitoring_configs,
                     __autoclose=False if operation != "stats" else True,
                     __compact=False,
                     __gui_msg=gui_msg,
