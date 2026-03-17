@@ -54,6 +54,7 @@ except ImportError:
 PRIVATE_AUDIENCE_FILE = os.path.abspath(os.path.join(BASEDIR, "..", "PRIVATE", "audience.py"))
 INITIAL_AUDIENCE = None
 BUILD_TYPES = ["cli", "gui", "viewer"]
+BUILDS_DIR = os.path.abspath(os.path.join(BASEDIR, os.pardir, "BUILDS"))
 
 # Insert parent dir as path se we get to use npbackup as package
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
@@ -181,7 +182,6 @@ def compile(
 
     PACKAGE_DIR = "npbackup"
 
-    BUILDS_DIR = os.path.abspath(os.path.join(BASEDIR, os.pardir, "BUILDS"))
     OUTPUT_DIR = os.path.join(BUILDS_DIR, audience, platform, arch)
 
     if not os.path.isdir(OUTPUT_DIR):
@@ -354,7 +354,7 @@ def create_archive(
     """
 
     compiled_output = os.path.join(
-        output_dir, "npbackup-{}{}".format(build_type, NUITKA_STANDALONE_SUFFIX)
+        BUILDS_DIR, "npbackup-{}{}".format(build_type, NUITKA_STANDALONE_SUFFIX)
     )
     new_compiled_output = compiled_output[: -len(NUITKA_STANDALONE_SUFFIX)]
     if os.path.isdir(new_compiled_output):
