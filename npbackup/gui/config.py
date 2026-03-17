@@ -19,7 +19,7 @@ from npbackup import configuration
 from npbackup.core.i18n_helper import _t
 from npbackup.gui.constants import combo_boxes, byte_units
 from ofunctions.misc import get_key_from_value
-from npbackup.gui.ttk_theme import SUBTITLE_FONT
+from npbackup.gui.ttk_theme import SUBTITLE_FONT, WINDOW_SCALING
 from resources.customization import NON_INHERITED_ICON
 from npbackup.gui.helpers import (
     quick_close_simplegui_window,
@@ -1218,14 +1218,15 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
     window = sg.Window(
         title="Configuration",
         layout=config_layout(),
-        # size=(800, 650),
+        size=(int(1000 * WINDOW_SCALING), int(800 * WINDOW_SCALING)),
         auto_size_text=True,
         auto_size_buttons=False,
+        default_element_size=(12, 1),
+        default_button_element_size=(16, 1),
         no_titlebar=False,
         grab_anywhere=True,
         keep_on_top=False,
         alpha_channel=1.0,
-        default_button_element_size=(16, 1),
         # margins=(0, 0),
         # element_padding=(0, 0),
         right_click_menu=right_click_menu,

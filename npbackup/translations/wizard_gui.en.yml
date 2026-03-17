@@ -43,7 +43,7 @@ en:
   b2_account_key: B2 Account Key
   google_project_id: Google Project ID
   google_application_credentials: Google Application Credentials
-  please_select_a_valid_backend: Please select a valid storage backend
+  please_select_a_valid_backend: No valid backend selected.
 
   # STEP 3
   first_backup_date:  First backup date

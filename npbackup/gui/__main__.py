@@ -62,7 +62,12 @@ from npbackup.__version__ import version_dict, version_string
 from npbackup.__debug__ import _DEBUG, _NPBACKUP_ALLOW_AUTOUPGRADE_DEBUG
 from npbackup.restic_wrapper import ResticRunner
 from npbackup.restic_wrapper import schema
-from npbackup.gui.ttk_theme import TITLE_FONT, SUBTITLE_FONT, change_sg_theme
+from npbackup.gui.ttk_theme import (
+    TITLE_FONT,
+    SUBTITLE_FONT,
+    change_sg_theme,
+    WINDOW_SCALING,
+)
 from npbackup.gui.wizard import start_wizard
 
 logger = getLogger()
@@ -1101,7 +1106,6 @@ def _main_gui(viewer_mode: bool):
                             justification="left",
                             key="snapshot-list",
                             select_mode="extended",
-                            size=(None, 10),
                             expand_x=True,
                             expand_y=True,
                             # font="Courier 14", # WIP fixed space for snapshot ids
@@ -1168,6 +1172,8 @@ def _main_gui(viewer_mode: bool):
                     ],
                 ],
                 element_justification="C",
+                expand_x=True,
+                expand_y=True,
             )
         ]
     ]
@@ -1176,9 +1182,11 @@ def _main_gui(viewer_mode: bool):
         auto_upgrade_result = check_for_auto_upgrade(config_file, full_config)
     else:
         auto_upgrade_result = None
+
     window = sg.Window(
         f"{SHORT_PRODUCT_NAME} - {config_file if not viewer_mode else _t('main_gui.viewer_mode')}",
         layout,
+        size=(int(900 * WINDOW_SCALING), int(400 * WINDOW_SCALING)),
         default_element_size=(12, 1),
         text_justification="r",
         auto_size_text=True,

@@ -52,11 +52,11 @@ if os.environ.get("NPBACKUP_DPI_AWARENESS", "True").lower() == "true":
     sg.set_options(dpi_awareness=True)
 
 try:
-    scaling = float(os.environ.get("NPBACKUP_SCALING", None))
+    WINDOW_SCALING = float(os.environ.get("NPBACKUP_SCALING", None))
 except (TypeError, ValueError):
-    scaling = 1.0
-if scaling:
-    sg.set_options(scaling=scaling)
+    WINDOW_SCALING = 1.0
+if WINDOW_SCALING:
+    sg.set_options(scaling=WINDOW_SCALING)
 theme = os.environ.get("NPBACKUP_THEME", "light").lower()
 if theme == "dark":
     CURRENT_THEME = SIMPLEGUI_DARK_THEME
@@ -107,3 +107,4 @@ def change_sg_theme(window=None):
         theme_function=sg.theme,
         lf_table=sg.LOOK_AND_FEEL_TABLE,
     )
+    window.refresh()

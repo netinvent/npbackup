@@ -184,7 +184,7 @@ def generic_row(
 
 def per_object_monitoring_identity_col():
     return [
-        [sg.Text(_t("config_gui.available_variables"))],
+        [sg.Text(textwrap.fill(_t("config_gui.available_variables")))],
         [
             sg.Text(_t("config_gui.job_name"), size=(40, 1)),
             sg.Image(
@@ -918,17 +918,17 @@ def scheduling_col(is_wizard: bool = False, task_types: list = None):
         [
             sg.Text(
                 _t("wizard_gui.only_if_no_recent_backup_exists"),
-                size=(60, 1),
+                size=(55, 1),
             ),
             sg.Input("", key="repo_opts.minimum_backup_age", size=(4, 1)),
             sg.Text(_t("generic.minutes")),
         ],
         [
-            sg.Text(_t("config_gui.random_delay_before_backup"), size=(60, 1)),
+            sg.Text(_t("config_gui.random_delay_before_backup"), size=(55, 1)),
             sg.Input("", key="repo_opts.random_delay_before_backup", size=(4, 1)),
             sg.Text(_t("generic.minutes")),
         ],
-        [sg.Text(_t("wizard_gui.authorized_days"), size=(80, 2), font=SUBTITLE_FONT)],
+        [sg.Text(_t("wizard_gui.authorized_days"), size=(55, 1), font=SUBTITLE_FONT)],
         [
             sg.Checkbox(
                 _t("generic.monday").capitalize(), key="-DAY-monday-", default=True

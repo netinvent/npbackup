@@ -24,7 +24,12 @@ from npbackup.core.i18n_helper import _t
 from ofunctions.misc import get_key_from_value
 from FreeSimpleGUI import Button as RoundedButton
 import npbackup.configuration
-from npbackup.gui.ttk_theme import TITLE_FONT, SUBTITLE_FONT, STANDARD_FONT
+from npbackup.gui.ttk_theme import (
+    TITLE_FONT,
+    SUBTITLE_FONT,
+    STANDARD_FONT,
+    WINDOW_SCALING,
+)
 import npbackup.gui.common_gui
 from npbackup.gui.helpers import WaitWindow, popup_error, password_complexity
 import npbackup.gui.common_gui_logic
@@ -71,7 +76,7 @@ def create_step_header(step_num: int, title_key: str, desc_key: str = None) -> l
                     (
                         [
                             sg.Text(
-                                _t(desc_key),
+                                textwrap.fill(_t(desc_key), width=80),
                                 font=STANDARD_FONT,
                                 text_color="gray",
                             )
@@ -99,7 +104,6 @@ def wizard_layouts() -> dict:
                 sg.Button(
                     _t("generic.remove_selected"),
                     key="-REMOVE-SOURCE-",
-                    border_width=0,
                     font=SUBTITLE_FONT,
                 ),
                 sg.ButtonMenu(
@@ -606,11 +610,14 @@ def start_wizard(full_config: dict, config_file: str):
     wizard = sg.Window(
         f"{SHORT_PRODUCT_NAME} Wizard",
         layout=wizard_layout(wizard_tabs, wizard_breadcrumbs),
-        size=(900, 600),
         element_justification="L",
+        size=(int(900 * WINDOW_SCALING), int(500 * WINDOW_SCALING)),
         no_titlebar=False,
         grab_anywhere=True,
+        auto_size_text=True,
         auto_size_buttons=True,
+        default_element_size=(12, 1),
+        default_button_element_size=(16, 1),
     )
 
     def set_active_tab(active_number):
@@ -887,8 +894,17 @@ def start_wizard(full_config: dict, config_file: str):
                 combo_boxes["backends"], values["-BACKEND-TYPE-"]
             )
             if current_backend not in combo_boxes["backends"].keys():
-                popup_error(_t("wizard_gui.please_select_a_valid_backend"))
-                continue
+                result = sg.popup(
+                    _t("wizard_gui.please_select_a_valid_backend"),
+                    custom_text=(_t("generic.no"), _t("generic.yes")),
+                    keep_on_top=True,
+                    icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
+                    title=_t("generic.warning").capitalize(),
+                    line_width=100,
+                    modal=True,
+                )
+                if result != _t("generic.yes"):
+                    continue
 
             if not values["repo_uri"]:
                 result = sg.popup(

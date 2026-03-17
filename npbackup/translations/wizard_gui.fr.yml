@@ -44,7 +44,7 @@ fr:
   b2_account_key: Clé compte B2
   google_project_id: Google Projet ID
   google_application_credentials: Identifiants d'application Google
-  please_select_a_valid_backend: Veuillez sélectionner un backend de stockage valide
+  please_select_a_valid_backend: Aucun type de stockage valide sélectionné.
 
   # STEP 3
   first_backup_date: Date de la première sauvegarde
