@@ -1058,6 +1058,8 @@ def start_wizard(full_config: dict, config_file: str):
                 if repo_uri.startswith("http://") or repo_uri.startswith("https://"):
                     http_prefix, no_prefix = repo_uri.split("://", 1)
                     http_prefix += "://"
+                else:
+                    no_prefix = repo_uri
                 repo_uri = f"rest:{http_prefix}{values['-SFTP-REST-USERNAME-']}:{sftp_rest_password}@{no_prefix}/{values['-SFTP-REST-USERNAME-']}"
 
             full_config = npbackup.gui.common_gui_logic.update_config_dict(
