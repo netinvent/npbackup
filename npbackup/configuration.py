@@ -1061,6 +1061,14 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
                 f"{object_type}.{object_name}.monitoring",
                 deepcopy(empty_config_dict["groups"]["default_group"]["monitoring"]),
             )
+        try:
+            full_config.d(f"global_prometheus.instance")
+        except KeyError:
+            pass
+        try:
+            full_config.d(f"global_email.instance")
+        except KeyError:
+            pass
         logger.info(
             f"Migrated {object_name} prometheus monitoring to monitoring section"
         )
@@ -1104,6 +1112,9 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
             if isinstance(full_config.g("global_email.recipients"), list) or isinstance(
                 full_config.g("global_email.recipients"), str
             ):
+                # Convert to list if single address was given
+                if isinstance(full_config.g("global_email.recipients"), str):
+                    full_config.s("global_email.recipients", [full_config.g("global_email.recipients")])    
                 recipients = {
                     "on_backup_success": [],
                     "on_backup_failure": [],
