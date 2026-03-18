@@ -453,8 +453,12 @@ def ls_window(
                 break
             if event == "restore_to":
                 if not values["-TREE-"]:
-                    popup_error(_t("main_gui.select_folder"))
-                    continue
+                    result = sg.popup(
+                        _t("main_gui.no_folder_selected_apply_all"),
+                        custom_text=(_t("generic.yes"), _t("generic.no")),
+                    )
+                    if result == _t("generic.no"):
+                        continue
                 with HideWindow(window):
                     restore_window(
                         repo_config, monitoring_config, snapshot_id, values["-TREE-"]
@@ -609,7 +613,7 @@ def _main_gui(viewer_mode: bool):
                     )
                     result = upgrade_runner.run_upgrade(config_file, full_config)
                     if not result:
-                        sg.popup(_t("config_gui.auto_upgrade_failed"))
+                        sg.popup(_t("config_gui.auto_upgrade_failed"), keep_on_top=True)
             return auto_upgrade_result
         return None
 

@@ -11,6 +11,7 @@ fr:
   restore_in_progress: Restauration en cours
   restore_done: Restauration terminée avec succès
   restore_failed: Restauration échouées. veuillez vérifier les journaux
+  no_folder_selected_apply_all: Aucun dossier sélectionné. Restaurer la sauvegarde complète ?
   select_folder: Veuillez sélectionner un dossier
   only_include: Inclure seulement
   destination_folder: Dossier de destination

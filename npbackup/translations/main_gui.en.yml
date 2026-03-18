@@ -11,6 +11,7 @@ en:
   restore_in_progress: Restore in progress
   restore_done: Restore done successfully
   restore_failed: Restore failed. Please check the logs
+  no_folder_selected_apply_all: No folder selected. Restore full backup ?
   select_folder: Please select a folder
   only_include: Only include
   destination_folder: Destination folder
