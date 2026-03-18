@@ -1172,8 +1172,13 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
         with open(config_file, "r", encoding="utf-8") as file_handle:
             yaml = YAML(typ="rt")
             full_config = yaml.load(file_handle)
-            if not full_config:
-                logger.critical(f"Config file {config_file} seems empty !")
+            if not full_config or not isinstance(full_config, dict):
+                logger.critical(f"Config file {config_file} seems empty or invalid !")
+                return False
+            if full_config.g("audience") and full_config.g("audience") != CURRENT_AUDIENCE:
+                logger.critical(
+                    f"Config file {config_file} is for audience {full_config.g('audience')}, but current audience is {CURRENT_AUDIENCE}. Won't load this."
+                )
                 return False
             try:
                 conf_version = version_parse(str(full_config.g("conf_version")))
