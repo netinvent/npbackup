@@ -49,12 +49,6 @@ if not AES_KEY:
     sys.exit(1)
 
 
-AES_KEY = obfuscation(AES_KEY)
-EARLIER_AES_KEYS = (
-    [obfuscation(key) for key in EARLIER_AES_KEYS] if EARLIER_AES_KEYS else None
-)
-
-
 def get_aes_key():
     """
     Get encryption key from environment variable or file

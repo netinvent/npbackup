@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026031601"
+__build__ = "2026031801"
 __version__ = "npbackup 3.1.0+"
 
 
@@ -20,6 +20,7 @@ import re
 import platform
 import zlib
 import uuid
+import gc
 from logging import getLogger
 from ruamel.yaml import YAML
 from ruamel.yaml.scanner import ScannerError
@@ -31,7 +32,7 @@ from ofunctions.random import random_string
 from ofunctions.misc import replace_in_iterable, BytesConverter, iter_over_keys
 from resources.customization import ID_STRING
 from resources.audience import CURRENT_AUDIENCE
-from npbackup.key_management import AES_KEY, EARLIER_AES_KEYS, get_aes_key
+from npbackup.key_management import AES_KEY, EARLIER_AES_KEYS, get_aes_key, obfuscation
 from npbackup.__version__ import __version__ as MAX_CONF_VERSION
 
 MIN_MIGRATABLE_CONF_VERSION = "3.0.0"
@@ -423,7 +424,7 @@ def crypt_config(
                             )
                         ) or not isinstance(value, str):
                             value = enc.encrypt_message_hf(
-                                value, aes_key, ID_STRING, ID_STRING
+                                value, obfuscation(aes_key), ID_STRING, ID_STRING
                             ).decode("utf-8")
                     elif operation == "decrypt":
                         if (
@@ -433,12 +434,15 @@ def crypt_config(
                         ):
                             _, value = enc.decrypt_message_hf(
                                 value,
-                                aes_key,
+                                obfuscation(aes_key),
                                 ID_STRING,
                                 ID_STRING,
                             )
                     else:
                         raise ValueError(f"Bogus operation {operation} given")
+            # Let's run garbage collection after encryption / decryption operations
+            # so the actual unobfuscated values don't stay in memory longer than needed
+            gc.collect()
             return value
 
         return replace_in_iterable(
