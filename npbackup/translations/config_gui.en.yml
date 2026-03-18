@@ -67,7 +67,7 @@ en:
   configuration_saved: Configuration saved
   cannot_save_configuration: Could not save configuration. See logs for further info
   repo_uri_should_not_be_empty: Repo URI / path should not be empty
-  repo_passwoord_should_not_be_empty: Repo password or password command should not be empty
+  repo_password_should_not_be_empty: Repo password or password command should not be empty
   backup_source_should_not_be_empty: Backup source should not be empty
   there_are_invalid_email_addresses: There are invalid email addresses
   invalid_email_address: Invalid email address
