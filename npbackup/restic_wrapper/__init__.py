@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026030601"
-__version__ = "2.8.0"
+__build__ = "2026031801"
+__version__ = "2.8.1"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -560,14 +560,22 @@ class ResticRunner:
         if os.name == "nt":
             binary = "restic.exe"
             probe_paths = self.binary_search_paths + [
-                "",
                 os.path.join(os.environ.get("windir", ""), "SYSTEM32"),
                 os.environ.get("windir", ""),
                 os.path.join(os.environ.get("ProgramFiles", ""), "restic"),
             ]
+            path_env = os.environ.get("PATH", "")
+            if path_env:
+                path_env_list = path_env.split(";")
+                probe_paths = probe_paths + path_env_list
         else:
             binary = "restic"
             probe_paths = self.binary_search_paths + ["", "/usr/bin", "/usr/local/bin"]
+            path_env = os.environ.get("PATH", "")
+            if path_env:
+                path_env_list = path_env.split(":")
+                probe_paths = probe_paths + path_env_list
+            print(probe_paths)
 
         for path in probe_paths:
             probed_path = os.path.join(path, binary)
