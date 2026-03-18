@@ -248,6 +248,10 @@ class EmailMonitor(MonitoringBackend):
         if "npbackup_exec_time" in metrics:
             body += f"\nExecution time: {metrics['npbackup_exec_time']:.2f} seconds"
 
+        # Add restic backup_failure
+        if "restic_backup_failure" in metrics:
+            body += f'\nOperation {operation} status: {"Success" if metrics["restic_backup_failure"] == 0 else "Failure"}'
+
         # Add detailed metrics for backup operations
         if operation == "backup":
             try:
