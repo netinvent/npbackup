@@ -33,8 +33,7 @@ ntplib>=0.4.0
 msgspec; python_version > '3.8'
 sv_ttk
 # For now we'll use a custom fork
-#reskinner>=4.4.0
-reskinner@https://github.com/netinvent/reskinner/archive/refs/heads/python38-compat.zip
+reskinner>=4.6.0
 zabbix-utils>=2.0.4
 # We don't get to install sslpsk3 nor sslpsk2 currently on MacOS python 3.13
 sslpsk3>=2.0.0; platform_system != "Darwin"
