@@ -188,7 +188,7 @@ en:
   restore_only_perms: Restore only
   full_perms: Full permissions
   setting_permissions_requires_manager_password: Setting permissions requires manager password
-  password_too_simple: Password needs at least 8 uppercase, lowercase and digits characters
+  password_too_simple: Weak password detected, recommend to use at least 8 uppercase, lowercase and digits characters. Are you sure you want to continue ?
   current_permissions: Current permissions (no inheritance)
   manager_password_set: Manager password initialized (no inheritance)
   
