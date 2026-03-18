@@ -75,6 +75,9 @@ en:
   wrong_password: Wrong password
   remove_password: Remove password
 
+  other_settings: Other settings
+  advanced_settings: Advanced settings
+  auto_upgrade_settings: Auto upgrade options
   auto_upgrade: Auto upgrade
   auto_upgrade_server_url: Server URL
   auto_upgrade_server_username: Server username

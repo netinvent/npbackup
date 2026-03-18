@@ -76,7 +76,10 @@ fr:
   wrong_password: Mot de passe érroné
   remove_password: Supprimer le mot de passe
 
-  auto_upgrade: Mise à niveau
+  other_settings: Autres paramètres;
+  advanced_settings: Paramètres avancés
+  auto_upgrade_settings: Options de mise à niveau automatique
+  auto_upgrade: Mise à niveau automatique
   auto_upgrade_server_url: Serveur de mise à niveau
   auto_upgrade_server_username: Nom d'utilisateur serveur
   auto_upgrade_server_password: Mot de passe serveur

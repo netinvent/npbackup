@@ -1032,6 +1032,16 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
         """
 
         global_options_col = [
+            [
+                sg.Text(
+                    _t("config_gui.auto_upgrade_settings"),
+                    font=SUBTITLE_FONT,
+                    size=(40, 1),
+                ),
+            ],
+            [
+                sg.HorizontalSeparator(),
+            ],
             [sg.Text(_t("config_gui.available_variables"))],
             [
                 sg.Text(_t("config_gui.auto_upgrade"), size=(40, 1)),
@@ -1073,6 +1083,11 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             ],
             [sg.HorizontalSeparator()],
             [
+                sg.Text(
+                    _t("config_gui.advanced_settings"), font=SUBTITLE_FONT, size=(40, 1)
+                ),
+            ],
+            [
                 sg.Text(_t("config_gui.full_concurrency"), size=(40, 1)),
                 sg.Checkbox("", key="global_options.full_concurrency", size=(41, 1)),
             ],
@@ -1102,7 +1117,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     + [
                         [
                             sg.Tab(
-                                _t("generic.options"),
+                                _t("config_gui.other_settings"),
                                 global_options_col,
                                 font=SUBTITLE_FONT,
                                 key="--tab-global-options--",
