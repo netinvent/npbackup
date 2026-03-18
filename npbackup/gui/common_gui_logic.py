@@ -1603,11 +1603,11 @@ def create_scheduled_task(
             logger.error("Bogus random delay before backup value, not updating config")
             return False, full_config
 
-    date_string = f'{values["-FIRST-BACKUP-DATE-"]} {str(values["-FIRST-BACKUP-HOUR-"]).zfill(2)}:{str(values["-FIRST-BACKUP-MINUTE-"]).zfill(2)}'
     try:
+        date_string = f'{values["-FIRST-BACKUP-DATE-"]} {str(values["-FIRST-BACKUP-HOUR-"]).zfill(2)}:{str(values["-FIRST-BACKUP-MINUTE-"]).zfill(2)}'
         start_date_time = datetime.strptime(date_string, "%Y-%m-%d %H:%M")
-    except ValueError:
-        logger.error("Invalid date format, not creating scheduled task")
+    except (ValueError, TypeError, IndexError, KeyError) as exc:
+        logger.error(f"Invalid date format, not creating scheduled task: {exc}")
         return False, full_config
 
     result = npbackup.task.create_scheduled_task(
