@@ -1265,7 +1265,7 @@ def load_config(config_file: Path) -> Optional[dict]:
     )
     if _full_config is False:
         if EARLIER_AES_KEYS:
-            logger.warning("Trying to migrate encryption key")
+            logger.info("Trying to migrate encryption key")
             earlier_aes_key_works = False
             for earlier_key in EARLIER_AES_KEYS:
                 full_config = crypt_config(
@@ -1273,11 +1273,11 @@ def load_config(config_file: Path) -> Optional[dict]:
                 )
                 if full_config is False:
                     msg = "Cannot decrypt config file. Looks like our keys don't match."
-                    logger.critical(msg)
+                    logger.info(msg)
 
                 else:
                     config_file_is_updated = True
-                    logger.warning("Successfully migrated encryption key")
+                    logger.info("Successfully migrated encryption key")
                     earlier_aes_key_works = True
                     break
             if not earlier_aes_key_works:
