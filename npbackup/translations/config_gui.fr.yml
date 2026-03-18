@@ -22,8 +22,8 @@ fr:
   exclude_cache_dirs: Exclure dossiers cache
   one_file_system: Ne pas suivre les points de montage
   backups_size_checks: Vérifications de la taille des sauvegardes
-  backups_heuristic_checks: Vérifications heuristiques de sauvegarde
-  backup_heuristics_checks_description: Les vérifications heuristiques se basent sur les rapports de sauvegarde précédents pour aider à détecter des problèmes potentiels avec le contenu de la sauvegarde.
+  backups_heuristics_checks: Vérifications heuristiques de sauvegarde
+  backups_heuristics_checks_description: Les vérifications heuristiques se basent sur les rapports de sauvegarde précédents pour aider à détecter des problèmes potentiels avec le contenu de la sauvegarde.
   minimum_backup_size_error: Taille minimale de la sauvegarde
   storage_heuristics_allowed_lower_standard_deviation: Pourcentage écart type inférieur autorisé
   storage_heuristics_allowed_higher_standard_deviation: Pourcentage écart type supérieur autorisé

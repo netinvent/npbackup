@@ -434,14 +434,14 @@ def wizard_layouts() -> dict:
             ],
             [
                 sg.Text(
-                    f'{_t("config_gui.backups_heuristic_checks")} ({_t("generic.optional")})',
+                    f'{_t("config_gui.backups_heuristics_checks")} ({_t("generic.optional")})',
                     font=SUBTITLE_FONT,
                 ),
             ],
             [
                 sg.Text(
                     textwrap.fill(
-                        _t("config_gui.backup_heuristics_checks_description")
+                        _t("config_gui.backups_heuristics_checks_description")
                     ),
                     size=(100, 2),
                 ),

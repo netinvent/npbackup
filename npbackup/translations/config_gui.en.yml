@@ -21,8 +21,8 @@ en:
   exclude_cache_dirs: Exclude cache dirs
   one_file_system: Do not follow mountpoints
   backups_size_checks: Backup size checks
-  backups_heuristic_checks: Backup heuristic checks
-  backups_heuristic_checks_description: Heuristic checks are based on previous backup reports to help detect potential issues with backup content.
+  backups_heuristics_checks: Backup heuristic checks
+  backups_heuristics_checks_description: Heuristic checks are based on previous backup reports to help detect potential issues with backup content.
   minimum_backup_size_error: Minimum backup size check
   storage_heuristics_allowed_lower_standard_deviation: Storage allowed lower deviation (percent)
   storage_heuristics_allowed_higher_standard_deviation: Storage allowed higher deviation (percent)
