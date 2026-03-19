@@ -1114,7 +1114,10 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
             ):
                 # Convert to list if single address was given
                 if isinstance(full_config.g("global_email.recipients"), str):
-                    full_config.s("global_email.recipients", [full_config.g("global_email.recipients")])    
+                    full_config.s(
+                        "global_email.recipients",
+                        [full_config.g("global_email.recipients")],
+                    )
                 recipients = {
                     "on_backup_success": [],
                     "on_backup_failure": [],
