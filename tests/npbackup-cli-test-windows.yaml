@@ -99,4 +99,4 @@ global_options:
   auto_upgrade_server_password:
   auto_upgrade_host_identity: ${MACHINE_ID}
   auto_upgrade_group: ${MACHINE_GROUP}
-audience: private
+audience: public
