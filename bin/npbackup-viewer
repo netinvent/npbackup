@@ -16,4 +16,5 @@ from npbackup.gui.__main__ import main_gui
 del sys.path[0]
 
 if __name__ == "__main__":
-    main_gui(viewer_mode=True)
+    os.environ["NPBACKUP_VIEWER_MODE"] = "True"
+    main_gui()

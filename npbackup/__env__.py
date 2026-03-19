@@ -10,6 +10,13 @@ __description__ = "NetPerfect Backup Client"
 __copyright__ = "Copyright (C) 2023-2026 NetInvent"
 
 
+import os
+import sys
+from base64 import b64encode, b64decode
+from binascii import Error as binascii_Error
+import pickle
+
+
 ##################
 # CONSTANTS FILE #
 ##################
@@ -63,3 +70,45 @@ STORAGE_HISTORY_EVALUATION_HISTORY_COUNT = 5
 
 # How many storage modified file points do we use for heuristic ransomware evaluation
 MODIFIED_FILES_HISTORY_EVALUATION_HISTORY_COUNT = 30
+
+######################################################################
+# ALLOWED ENVIRONMENT VARIABLES WE'LL PORT TO UAC ELEVATED PROCESSES #
+######################################################################
+
+def create_env_argument():
+        try:
+            env = {
+                "_DEBUG":  os.environ.get("_NPBACKUP_AUDIENCE", None),
+                "_NPBACKUP_AUDIENCE": os.environ.get("_NPBACKUP_AUDIENCE", None)
+            }
+
+            env_bytes = b64encode(pickle.dumps(env)).decode()
+            sys.argv.append("--NPBACKUP_ENV")
+            sys.argv.append(env_bytes)
+        except Exception as exc:
+            print(f"Error creating environment argument for elevated process: {exc}")
+
+def restore_env_from_argument():
+    """
+    Since we cannot keep environment variables when elevating a process on windows,
+    we need a way to port (only some for security reasons) environment variables to the elevated process. 
+    """
+    if sys.argv and "--NPBACKUP_ENV" in sys.argv:
+        env = sys.argv[sys.argv.index("--NPBACKUP_ENV") + 1]
+        sys.argv.pop(sys.argv.index("--NPBACKUP_ENV"))
+        sys.argv.pop(sys.argv.index(env))
+        try:
+            env_bytes = b64decode(env)
+        except (TypeError, binascii_Error):
+            print("Invalid environment variables passed to elevated process. Ignoring.")
+        else:
+            try:
+                env = pickle.loads(env_bytes)
+            # May happen on unpickled data when pickling failed on encryption and fallback was used
+            # ModuleNotFoundError may happen if we unpickle a class which was not loaded
+            except (pickle.UnpicklingError, TypeError, OverflowError, KeyError, ModuleNotFoundError):
+                print("Invalid environment variables objects to elevated process. Ignoring.")
+            else:
+                for key, value in env.items():
+                    if key is not None and value is not None:
+                        os.environ[key] = value

@@ -9,6 +9,8 @@ __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
 
 
+# Early import for environment variables
+import npbackup.__env__
 from typing import List, Optional, Tuple
 import sys
 import os
@@ -23,6 +25,7 @@ import dateutil
 from time import sleep
 from ruamel.yaml.comments import CommentedMap
 import atexit
+from command_runner.elevate import elevate
 from ofunctions.process import kill_childs
 from ofunctions.threading import threaded
 from ofunctions.misc import BytesConverter
@@ -591,11 +594,14 @@ def forget_snapshot(
         return result
 
 
-def _main_gui(viewer_mode: bool):
+def _main_gui():
     global logger
     global backend_binary
     global __no_lock
     global GUI_STATUS_IGNORE_ERRORS
+
+    npbackup.__env__.restore_env_from_argument()
+    viewer_mode = os.getenv("NPBACKUP_VIEWER_MODE", "False") == "True"
 
     def check_for_auto_upgrade(config_file: str, full_config: dict) -> bool:
         if full_config and full_config.g("global_options.auto_upgrade_server_url"):
@@ -1443,7 +1449,7 @@ def _main_gui(viewer_mode: bool):
             change_sg_theme(window)
 
 
-def main_gui(viewer_mode=False):
+def main_gui():
     atexit.register(
         npbackup.common.execution_logs,
         datetime.now(timezone.utc),
@@ -1471,7 +1477,9 @@ def main_gui(viewer_mode=False):
             npbackup.gui.windows_gui_helper.handle_current_window(action="minimize")
         elif version_dict["comp"]:
             npbackup.gui.windows_gui_helper.handle_current_window(action="hide")
-        _main_gui(viewer_mode=viewer_mode)
+
+        npbackup.__env__.create_env_argument()
+        elevate(_main_gui, continue_on_elevation_failure=True) # WIP: needs newer command_runner, continue_on_elevation_failure=True)
         sys.exit(logger.get_worst_logger_level(all_time=True))
     except _tkinter.TclError as exc:
         logger.critical(f'Tkinter error: "{exc}". Is this a headless server ?')
