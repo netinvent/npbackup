@@ -122,7 +122,9 @@ class EmailMonitor(MonitoringBackend):
                             recipients_to_send.append(recipient)
 
             if not recipients_to_send:
-                logger.warning(
+                # Do not actually make this a warning since not sending email notifications is
+                # a potential valid configuration choice
+                logger.info(
                     f"No recipients configured for {operation} {'success' if exec_state == 0 else 'failure'}. "
                     "Not sending metrics via email."
                 )
