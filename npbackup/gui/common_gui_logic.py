@@ -1589,7 +1589,8 @@ def create_scheduled_task(
         except ValueError:
             logger.error("Bogus minimum backup age value, not updating config")
             return False, full_config
-
+    else:
+        minimum_backup_age = 0
     if values["repo_opts.random_delay_before_backup"]:
         try:
             random_delay_before_backup = int(
