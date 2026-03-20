@@ -4,9 +4,9 @@
 
 __intname__ = "npbackup_cli_tests"
 __author__ = "Orsiris de Jong"
-__copyright__ = "Copyright (C) 2022-2025 NetInvent"
+__copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2025090401"
+__build__ = "2026032001"
 
 
 """
@@ -50,6 +50,8 @@ ORIGINAL_CONF_FILE_PATH = (
 CONF_FILE = Path(tempfile.gettempdir()).absolute().joinpath(ORIGINAL_CONF_FILE)
 # Now that we got the path to the config file, we need to replace repo_uri with a temporary directory
 # Danger: THIS WILL NEED SOME ADJUSTMENT FOR multi repo tests
+
+BAD_AUDIENCE_CONFIG_FILE = Path(BASEDIR).absolute().parent.joinpath("tests").joinpath("npbackup-cli-bad_audience.yaml")
 
 temp_repo_dir = Path(tempfile.mkdtemp(prefix="npbackup_test_repo_"))
 restore_dir = Path(tempfile.mkdtemp(prefix="npbackup_test_restore_"))
@@ -177,6 +179,20 @@ def test_npbackup_cli_wrong_config_path():
             in str(logs)
         ), "There should be a critical error when config file is not given"
 
+
+def test_npbackup_cli_wrong_audience_config():
+    sys.argv = ["", "-c", str(BAD_AUDIENCE_CONFIG_FILE)]
+    try:
+        with RedirectedStdout() as logs:
+            __main__.main()
+    except SystemExit:
+        print(str(logs))
+        assert f"Config file {BAD_AUDIENCE_CONFIG_FILE} is for audience" in str(
+            logs
+        ), "There should be a critical error when config file audience is not corresponding to current build (one)"
+        assert "but current audience is" in str(
+            logs
+        ), "There should be a critical error when config file audience is not corresponding to current build (two)"
 
 def test_npbackup_cli_show_config():
     sys.argv = ["", "-c", str(CONF_FILE), "--show-config"]
