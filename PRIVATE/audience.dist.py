@@ -18,7 +18,7 @@ __version__ = "1.0.0"
 import os
 
 AUDIENCES = ["public", "example"]
-CURRENT_AUDIENCE = "example"
+CURRENT_AUDIENCE = "public"
 
 # Allow overriding audience via environment variable, for testing purposes. This is not intended for production use.
 override_audience = os.environ.get("_NPBACKUP_AUDIENCE", None)
