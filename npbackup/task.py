@@ -7,16 +7,16 @@ __intname__ = "npbackup.task"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026020101"
+__build__ = "2026032001"
 
 
 import sys
 import os
 import re
+import json
 from typing import List, Optional
 import logging
 import tempfile
-from command_runner import command_runner
 import datetime
 from resources.customization import TASK_AUTHOR, TASK_URI, PROGRAM_NAME
 from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE, sanitize_filename
@@ -25,13 +25,17 @@ import npbackup.configuration
 from npbackup.gui.constants import combo_boxes
 
 if os.name == "nt":
-    import xml.etree.ElementTree as ET
+    from windows_tools.powershell import PowerShellRunner
 
     class CronTab:
         pass
 
 else:
     from crontab import CronTab
+
+    class PowerShellRunner:
+        pass
+
 
 logger = logging.getLogger()
 
@@ -500,15 +504,14 @@ def _read_existing_scheduled_task_windows(
 ) -> List[dict]:
     """
     Read existing scheduled tasks on Windows.
-    It's not as easy as with cron / unix since there are lots and lots of tasks on windows and we don't
-    want to parse them all.
-    Hence, we limit our scope to tasks generated with a specific name, given by task_name
 
-    Be aware that querying tasks with schtasks only yields results that we are allowed to read
-    so tasks written for system account won't show up if not running as admin
+    We'll use a single script to query all expected task names at once and return a structured JSON
+    We'll try to elevate in order to get system tasks as well
     """
-
     tasks = []
+
+    # Build a lookup of expected task names -> metadata
+    task_lookup = {}
     for object_name, object_type in npbackup.configuration.get_object_names_and_types(
         full_config
     ).items():
@@ -518,121 +521,176 @@ def _read_existing_scheduled_task_windows(
             task_name = _get_scheduled_task_name_windows(
                 config_file, task_type, object_type, object_name
             )
-            object_args = get_object_args(object_type, object_name)
-
-            logger.debug(f"Querying scheduled task {task_name}")
-            exit_code, output = command_runner(
-                "powershell.exe -NoProfile -Command \"Export-ScheduledTask -TaskName '{}' -ErrorAction Stop\"".format(
-                    task_name
-                ),
-                windows_no_window=True,
-                valid_exit_codes=[0, 1],
-            )
-
-            if exit_code != 0:
-                logger.debug(f"No existing scheduled task '{task_name}' found")
-                continue
-
-            ns = {"t": "http://schemas.microsoft.com/windows/2004/02/mit/task"}
-            try:
-                # pylint: disable=E0606 (possibly-used-before-assignment)
-                root = ET.fromstring(output.strip())
-            # pylint: disable=E0606 (possibly-used-before-assignment)
-            except ET.ParseError as exc:
-                logger.error(f"Could not parse task XML: {exc}")
-                continue
-
-            # Match task by checking the Arguments element
-            arguments = root.findtext(
-                ".//t:Actions/t:Exec/t:Arguments", default="", namespaces=ns
-            )
-            if (
-                f"--{task_type}" not in arguments
-                or config_file not in arguments
-                or object_args not in arguments
-            ):
-                logger.debug(f"Arguments not matching, skipping task: {arguments}")
-                continue
-            logger.info(f"Found existing task: {task_name}")
-
-            task_info = {
-                "object_type": None,
-                "object_name": None,
+            task_lookup[task_name] = {
                 "task_type": task_type,
-                "frequency_minutes": None,
-                "start_date": None,
-                "days_of_week": [],
+                "object_type": object_type,
+                "object_name": object_name,
+                "object_args": get_object_args(object_type, object_name),
             }
 
-            # Extract repo/group from task arguments
-            repo_match = re.search(r"--repo-name\s+(\S+)", arguments)
-            if repo_match:
-                task_info["object_type"] = "repos"
-                task_info["object_name"] = repo_match.group(1)
-            else:
-                group_match = re.search(r"--repo-group\s+(\S+)", arguments)
-                if group_match:
-                    task_info["object_type"] = "groups"
-                    task_info["object_name"] = group_match.group(1)
+    if not task_lookup:
+        return tasks
 
-            # TimeTrigger (interval-based repetition)
-            for trigger in root.findall(".//t:Triggers/t:TimeTrigger", ns):
-                start = trigger.findtext("t:StartBoundary", default=None, namespaces=ns)
-                if start:
-                    try:
-                        task_info["start_date"] = datetime.datetime.fromisoformat(start)
-                    except ValueError:
-                        task_info["start_date"] = start
-                interval = trigger.findtext(
-                    "t:Repetition/t:Interval", default=None, namespaces=ns
-                )
-                if interval:
-                    task_info["interval"] = _parse_iso_duration_to_minutes(interval)
+    # Build a single PowerShell script that queries all tasks at once.
+    # Escape single quotes for PowerShell string literals.
+    ps_task_names = ",".join(
+        "'{}'".format(name.replace("'", "''")) for name in task_lookup
+    )
+
+    # DaysOfWeek in CIM is a UInt16 flags enum:
+    #   Sunday=1, Monday=2, Tuesday=4, Wednesday=8,
+    #   Thursday=16, Friday=32, Saturday=64
+    ps_script = f"""$ErrorActionPreference = 'SilentlyContinue'
+$results = @()
+$taskNames = @({ps_task_names})
+$dayNames = @('Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday')
+$dayBits  = @(1,2,4,8,16,32,64)
+foreach ($name in $taskNames) {{
+    $task = Get-ScheduledTask -TaskName $name -ErrorAction SilentlyContinue
+    if ($null -eq $task) {{ continue }}
+    $arguments = ''
+    foreach ($action in $task.Actions) {{
+        if ($action.Arguments) {{ $arguments = $action.Arguments; break }}
+    }}
+    $triggerList = @()
+    foreach ($trigger in $task.Triggers) {{
+        $tType = $trigger.CimClass.CimClassName
+        $tObj = @{{
+            type                = $tType
+            start_boundary      = $trigger.StartBoundary
+            repetition_interval = $null
+            days_interval       = $null
+            weeks_interval      = $null
+            days_of_week        = @()
+        }}
+        if ($trigger.Repetition -and $trigger.Repetition.Interval) {{
+            $tObj['repetition_interval'] = [string]$trigger.Repetition.Interval
+        }}
+        if ($tType -eq 'MSFT_TaskDailyTrigger') {{
+            $tObj['days_interval'] = $trigger.DaysInterval
+        }} elseif ($tType -eq 'MSFT_TaskWeeklyTrigger') {{
+            $tObj['weeks_interval'] = $trigger.WeeksInterval
+            $dowFlags = [int]$trigger.DaysOfWeek
+            for ($i = 0; $i -lt 7; $i++) {{
+                if ($dowFlags -band $dayBits[$i]) {{
+                    $tObj['days_of_week'] += $dayNames[$i]
+                }}
+            }}
+        }}
+        $triggerList += [PSCustomObject]$tObj
+    }}
+    $results += [PSCustomObject]@{{
+        task_name = $name
+        arguments = $arguments
+        triggers  = $triggerList
+    }}
+}}
+if ($results.Count -gt 0) {{
+    ConvertTo-Json -InputObject @($results) -Depth 5 -Compress
+}} else {{
+    Write-Output '[]'
+}}
+"""
+    try:
+        runner = PowerShellRunner()
+        exit_code, output = runner.run_script(ps_script, elevated=True)
+        if exit_code != 0 or not output or not output.strip():
+            logger.debug(f"No scheduled tasks found or PowerShell error: {output}")
+            return tasks
+    except OSError as exc:
+        logger.error(f"Could not run PowerShell script: {exc}")
+        return tasks
+
+    try:
+        raw_tasks = json.loads(output.strip())
+    except (json.JSONDecodeError, ValueError) as exc:
+        logger.error(f"Could not parse PowerShell JSON output: {exc}")
+        logger.debug(f"Raw output: {output}")
+        return tasks
+
+    if not isinstance(raw_tasks, list):
+        raw_tasks = [raw_tasks]
+
+    for raw_task in raw_tasks:
+        task_name = raw_task.get("task_name", "")
+        if task_name not in task_lookup:
+            continue
+
+        meta = task_lookup[task_name]
+        arguments = raw_task.get("arguments", "")
+
+        # Verify tfhe task arguments actually match what we expect
+        if (
+            f"--{meta['task_type']}" not in arguments
+            or config_file not in arguments
+            or meta["object_args"] not in arguments
+        ):
+            logger.debug(f"Arguments not matching, skipping task: {arguments}")
+            continue
+
+        logger.info(f"Found existing task: {task_name}")
+
+        task_info = {
+            "object_type": None,
+            "object_name": None,
+            "task_type": meta["task_type"],
+            "interval": None,
+            "interval_unit": None,
+            "start_date": None,
+            "days_of_week": [],
+        }
+
+        # Extract repo/group from task arguments
+        repo_match = re.search(r"--repo-name\s+(\S+)", arguments)
+        if repo_match:
+            task_info["object_type"] = "repos"
+            task_info["object_name"] = repo_match.group(1)
+        else:
+            group_match = re.search(r"--repo-group\s+(\S+)", arguments)
+            if group_match:
+                task_info["object_type"] = "groups"
+                task_info["object_name"] = group_match.group(1)
+
+        # Process triggers returned by PowerShell
+        for trigger in raw_task.get("triggers", []):
+            trigger_type = trigger.get("type", "")
+
+            # StartBoundary
+            start = trigger.get("start_boundary")
+            if start:
+                try:
+                    task_info["start_date"] = datetime.datetime.fromisoformat(start)
+                except ValueError:
+                    task_info["start_date"] = start
+
+            # Intra-day repetition interval (applies to any trigger type)
+            rep_interval = trigger.get("repetition_interval")
+            if rep_interval:
+                minutes = _parse_iso_duration_to_minutes(rep_interval)
+                if minutes:
+                    task_info["interval"] = minutes
                     task_info["interval_unit"] = "minutes"
 
-            # CalendarTrigger (daily / weekly, optionally with repetition)
-            for trigger in root.findall(".//t:Triggers/t:CalendarTrigger", ns):
-                start = trigger.findtext("t:StartBoundary", default=None, namespaces=ns)
-                if start:
-                    try:
-                        task_info["start_date"] = datetime.datetime.fromisoformat(start)
-                    except ValueError:
-                        task_info["start_date"] = start
-                # Intra-day repetition within a CalendarTrigger
-                interval = trigger.findtext(
-                    "t:Repetition/t:Interval", default=None, namespaces=ns
-                )
-                if interval:
-                    task_info["interval"] = int(
-                        _parse_iso_duration_to_minutes(interval)
-                    )
-                    task_info["interval_unit"] = "minutes"
-                # Daily schedule
-                days_interval = trigger.findtext(
-                    "t:ScheduleByDay/t:DaysInterval",
-                    default=None,
-                    namespaces=ns,
-                )
-                if days_interval and not interval:
+            # MSFT_TaskTimeTrigger: interval already handled above via repetition
+
+            # MSFT_TaskDailyTrigger
+            if trigger_type == "MSFT_TaskDailyTrigger":
+                days_interval = trigger.get("days_interval")
+                if days_interval and not rep_interval:
                     task_info["interval"] = int(days_interval)
                     task_info["interval_unit"] = "days"
-                # Weekly schedule with specific days
-                days_of_week_el = trigger.find("t:ScheduleByWeek/t:DaysOfWeek", ns)
-                if days_of_week_el is not None:
-                    task_info["days_of_week"] = [
-                        day.tag.replace(f"{{{ns['t']}}}", "") for day in days_of_week_el
-                    ]
-                    if not interval:
-                        weeks_interval = trigger.findtext(
-                            "t:ScheduleByWeek/t:WeeksInterval",
-                            default=None,
-                            namespaces=ns,
-                        )
-                        if weeks_interval:
-                            task_info["interval"] = int(weeks_interval) * 7
-                            task_info["interval_unit"] = "weeks"
 
-            tasks.append(task_info)
+            # MSFT_TaskWeeklyTrigger
+            elif trigger_type == "MSFT_TaskWeeklyTrigger":
+                task_info["days_of_week"] = trigger.get("days_of_week", [])
+                if not rep_interval:
+                    weeks_interval = trigger.get("weeks_interval")
+                    if weeks_interval:
+                        task_info["interval"] = int(weeks_interval) * 7
+                        task_info["interval_unit"] = "weeks"
+
+        tasks.append(task_info)
+        logger.debug(f"Parsed task info: {task_info}")
     return tasks
 
 
@@ -860,27 +918,32 @@ def create_scheduled_task_windows(
 
     # Register task from XML
     logger.info("Creating scheduled task {}".format(task_name))
+
     user_arg = "-User 'SYSTEM'" if not as_current_user else ""
     ps_cmd = (
         "Register-ScheduledTask -TaskName '{}' "
         "-Xml (Get-Content -LiteralPath '{}' -Raw) {}"
     ).format(task_name, temp_task_file, user_arg)
-    exit_code, output = command_runner(
-        'powershell.exe -NoProfile -Command "{}"'.format(ps_cmd),
-        windows_no_window=True,
-    )
-    if exit_code != 0:
-        logger.error(
-            f"Could not create new task: cmd {ps_cmd}\nexit_code {exit_code}: {output}"
-        )
-        return False
 
     try:
-        os.remove(temp_task_file)
+        runner = PowerShellRunner()
+        exit_code, output = runner.run_script(ps_cmd, elevated=True)
+        if exit_code != 0:
+            logger.error(
+                f"Could not create new task: cmd {ps_cmd}\nexit_code {exit_code}: {output}"
+            )
+            return False
     except OSError as exc:
-        logger.warning(
-            "Could not remove temporary task file {}: {}".format(temp_task_file, exc)
-        )
+        logger.error(f"Could not create new task: {exc}")
+        return False
+
+    for temp_file in [temp_task_file]:
+        try:
+            os.remove(temp_file)
+        except OSError as exc:
+            logger.warning(
+                "Could not remove temporary task file {}: {}".format(temp_file, exc)
+            )
     logger.info("Scheduled task created.")
     return True
 
@@ -895,16 +958,19 @@ def _delete_scheduled_task_windows(
         config_file, task_type, object_type, object_name
     )
 
-    # Delete existing task if any
-    exit_code, output = command_runner(
-        "powershell.exe -NoProfile -Command \"Unregister-ScheduledTask -TaskName '{}' -Confirm:$false -ErrorAction SilentlyContinue\"".format(
-            task_name
-        ),
-        valid_exit_codes=[0, 1],
-        windows_no_window=True,
+    ps_cmd = "powershell.exe -NoProfile -Command \"Unregister-ScheduledTask -TaskName '{}' -Confirm:$false -ErrorAction SilentlyContinue\"".format(
+        task_name
     )
-    if not exit_code in [0, 1]:
-        logger.error(f"Cannot delete scheduled task {task_name}: {output}")
+    try:
+        runner = PowerShellRunner()
+        exit_code, output = runner.run_script(
+            ps_cmd, elevated=True, valid_exit_codes=[0, 1]
+        )
+        if not exit_code in [0, 1]:
+            logger.error(f"Cannot delete scheduled task {task_name}: {output}")
+            return False
+    except OSError as exc:
+        logger.error(f"Could not run PowerShell script: {exc}")
         return False
     return True
 
