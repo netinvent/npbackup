@@ -7,7 +7,7 @@ __intname__ = "npbackup.compile"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026031601"
+__build__ = "2026032001"
 __version__ = "2.3.2"
 
 
@@ -84,6 +84,8 @@ def _set_audience(audience: str):
                 if line.startswith("CURRENT_AUDIENCE"):
                     if not INITIAL_AUDIENCE:
                         INITIAL_AUDIENCE = line.split("=")[1].strip().strip("'\"")
+                        if INITIAL_AUDIENCE is None:
+                            INITIAL_AUDIENCE = "public"
                     print(f"CURRENT_AUDIENCE = \"{audience}\"")
                 else:
                     print(line, end="")
@@ -230,7 +232,7 @@ def compile(
     NUITKA_OPTIONS += " --enable-plugin=data-hiding" if have_nuitka_commercial() else ""
 
     # Depending on audience, we will need to include private keys
-    if audience != "public":
+    if audience != "public" and audience in AUDIENCES:
         print("Updating audience file {} with audience {}".format(PRIVATE_AUDIENCE_FILE, audience))
         _set_audience(audience)
 
