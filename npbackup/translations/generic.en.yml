@@ -94,6 +94,7 @@ en:
   thursday: thursday
   friday: friday
   saturday: saturday
+  sunday: sunday
 
   prometheus: Prometheus
   zabbix: Zabbix
