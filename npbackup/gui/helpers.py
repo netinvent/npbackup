@@ -517,6 +517,8 @@ class WaitWindow:
             layout=wait_layout,
             keep_on_top=True,
             grab_anywhere=True,
+            element_justification="C",
+            text_justification="C",
             finalize=True,
             icon=sg._tray_icon_success,
             disable_close=True,
