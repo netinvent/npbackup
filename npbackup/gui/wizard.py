@@ -611,7 +611,7 @@ def start_wizard(full_config: dict, config_file: str):
         f"{SHORT_PRODUCT_NAME} Wizard",
         layout=wizard_layout(wizard_tabs, wizard_breadcrumbs),
         element_justification="L",
-        size=(int(900 * WINDOW_SCALING), int(500 * WINDOW_SCALING)),
+        size=(int(1000 * WINDOW_SCALING), int(620 * WINDOW_SCALING)),
         no_titlebar=False,
         grab_anywhere=True,
         auto_size_text=True,
