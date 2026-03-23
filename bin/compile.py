@@ -52,7 +52,7 @@ except ImportError:
     AUDIENCES = ["public", "private"]
 
 PRIVATE_AUDIENCE_FILE = os.path.abspath(os.path.join(BASEDIR, "..", "PRIVATE", "audience.py"))
-INITIAL_AUDIENCE = None
+INITIAL_AUDIENCE = "public"
 BUILD_TYPES = ["cli", "gui", "viewer"]
 BUILDS_DIR = os.path.abspath(os.path.join(BASEDIR, os.pardir, "BUILDS"))
 
