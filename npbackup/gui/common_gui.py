@@ -420,6 +420,32 @@ def global_zabbix_col():
                         sg.Input(key="global_zabbix.port", size=(50, 1)),
                     ],
                     [
+                        sg.Text(_t("config_gui.zabbix_authentication"), size=(40, 1)),
+                        sg.Combo(
+                            ["none", "tls", "psk"],
+                            key="global_zabbix.authentication",
+                            size=(50, 1),
+                        ),
+                    ],
+                    [
+                        sg.Text(_t("config_gui.no_cert_verify"), size=(40, 1)),
+                        sg.Checkbox(
+                            "", key="global_zabbix.no_cert_verify", size=(41, 1)
+                        ),
+                    ],
+                    [
+                        sg.Text(_t("config_gui.zabbix_tls_cert"), size=(40, 1)),
+                        sg.Input(key="global_zabbix.tls_cert", size=(50, 1)),
+                    ],
+                    [
+                        sg.Text(_t("config_gui.zabbix_tls_key"), size=(40, 1)),
+                        sg.Input(key="global_zabbix.tls_key", size=(50, 1)),
+                    ],
+                    [
+                        sg.Text(_t("config_gui.zabbix_tls_cacert"), size=(40, 1)),
+                        sg.Input(key="global_zabbix.tls_cacert", size=(50, 1)),
+                    ],
+                    [
                         sg.Text(_t("config_gui.zabbix_psk_identity"), size=(40, 1)),
                         sg.Input(key="global_zabbix.psk_identity", size=(50, 1)),
                     ],

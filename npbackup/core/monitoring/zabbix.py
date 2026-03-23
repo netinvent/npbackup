@@ -7,8 +7,9 @@ __intname__ = "npbackup.core.monitoring.zabbix"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026031301"
+__build__ = "2026032301"
 
+import sys
 import json
 from typing import Dict, Any, List
 from time import sleep
@@ -30,20 +31,25 @@ ZABBIX_DISCOVERY_SENT = False
 try:
     import ssl
 except ImportError:
-    HAS_PSK = False
+    HAVE_SSL = False
 else:
-    try:
-        import sslpsk3 as sslpsk
-
-        HAS_PSK = True
-    except ImportError:
-        # Import sslpsk2 if sslpsk3 is not available
+    HAVE_SSL = True
+    if sys.version_info[0] >= 3 and sys.version_info[1] <= 12:
+        NEED_PSK_MODULE = True
         try:
-            import sslpsk2 as sslpsk
+            import sslpsk3 as sslpsk
 
-            HAS_PSK = True
+            HAVE_PSK_MODULE = True
         except ImportError:
-            HAS_PSK = False
+            # Import sslpsk2 if sslpsk3 is not available
+            try:
+                import sslpsk2 as sslpsk
+
+                HAVE_PSK_MODULE = True
+            except ImportError:
+                HAVE_PSK_MODULE = False
+    else:
+        NEED_PSK_MODULE = False
 
 
 class ZabbixMonitor(MonitoringBackend):
@@ -115,6 +121,15 @@ class ZabbixMonitor(MonitoringBackend):
             logger.error("Zabbix server not configured.")
             return False
 
+        zabbix_authentication = self.get_monitoring_value(
+            "global_zabbix.authentication", "none"
+        ).lower()
+        if zabbix_authentication not in ["none", "tls", "psk"]:
+            logger.error(
+                f"Invalid Zabbix authentication method: {zabbix_authentication}. Must be 'none', 'tls' or 'psk'."
+            )
+            return False
+
         if dry_run:
             logger.info("Dry run mode. Not sending Zabbix metrics.")
             return True
@@ -138,24 +153,58 @@ class ZabbixMonitor(MonitoringBackend):
             zabbix_psk = None
             zabbix_psk_identity = None
 
-        if HAS_PSK and zabbix_psk and zabbix_psk_identity:
+        if zabbix_auth == "psk":
+            if (
+                NEED_PSK_MODULE
+                and HAVE_PSK_MODULE
+                and zabbix_psk
+                and zabbix_psk_identity
+            ):
 
-            def psk_wrapper(sock, *args, **kwargs):
-                psk = bytes.fromhex(zabbix_psk)
-                psk_identity = zabbix_psk_identity.encode()
+                def socket_wrapper(sock, *args, **kwargs):
+                    psk = bytes.fromhex(zabbix_psk)
+                    psk_identity = zabbix_psk_identity.encode()
 
-                return sslpsk.wrap_socket(
-                    sock,
-                    ssl_version=ssl.PROTOCOL_TLSv1_2,
-                    ciphers="ECDHE-PSK-AES128-CBC-SHA256",
-                    psk=(psk, psk_identity),
-                )
+                    return sslpsk.wrap_socket(
+                        sock,
+                        ssl_version=ssl.PROTOCOL_TLSv1_2,
+                        ciphers="ECDHE-PSK-AES128-CBC-SHA256",
+                        psk=(psk, psk_identity),
+                    )
+
+            elif zabbix_psk and zabbix_psk_identity:
+
+                def socket_wrapper(sock, *args, **kwargs):
+                    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+                    context.check_hostname = False
+                    context.verify_mode = ssl.CERT_NONE
+                    context.maximum_version = ssl.TLSVersion.TLSv1_2
+                    context.set_ciphers("PSK")
+                    context.set_psk_client_callback(
+                        lambda hint: (
+                            zabbix_psk_identity.encode(),
+                            bytes.fromhex(zabbix_psk),
+                        )
+                    )
+                    return context.wrap_socket(sock)
+
+        elif zabbix_auth == "tls":
+
+            def socket_wrapper(sock, *args, **kwargs):
+                context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+                context.load_cert_chain(CERT_PATH, keyfile=KEY_PATH)
+                context.load_verify_locations(cafile=CA_PATH)
+                context.check_hostname = False
+                context.verify_mode = ssl.VerifyMode.CERT_REQUIRED
+                return context.wrap_socket(sock, server_hostname=ZABBIX_SERVER)
 
         else:
-            psk_wrapper = None
+            logger.info(
+                "No Zabbix authentication method configured, using plain TCP connection."
+            )
 
         # Send LLD discovery data so Zabbix creates items from prototypes
-        self._send_discovery(zabbix_server, zabbix_port, psk_wrapper)
+        self._send_discovery(zabbix_server, zabbix_port, socket_wrapper)
         # Now let's sleep arbitrary 10 seconds to give zabbix server time to process the discovery
         # WIP: This could perhaps be improved by checking the Zabbix server for the existence of
         # the discovered items before sending metrics (requires API client)
@@ -172,7 +221,7 @@ class ZabbixMonitor(MonitoringBackend):
 
         # Convert metrics to ItemValue list and send
         items = self._build_item_values(metrics, operation)
-        return self._send_to_zabbix(zabbix_server, zabbix_port, items, psk_wrapper)
+        return self._send_to_zabbix(zabbix_server, zabbix_port, items, socket_wrapper)
 
     def _build_item_values(
         self,
@@ -266,7 +315,7 @@ class ZabbixMonitor(MonitoringBackend):
         self,
         zabbix_server: str,
         zabbix_port: int,
-        psk_wrapper=None,
+        socket_wrapper=None,
     ) -> bool:
         """
         Send Low-Level Discovery data to Zabbix so trapper item prototypes
@@ -297,10 +346,10 @@ class ZabbixMonitor(MonitoringBackend):
         logger.debug(
             f"Sending Zabbix LLD data for host {instance}: repo={self.repo_name}, action={self.action}"
         )
-        return self._send_to_zabbix(zabbix_server, zabbix_port, items, psk_wrapper)
+        return self._send_to_zabbix(zabbix_server, zabbix_port, items, socket_wrapper)
 
     def _send_to_zabbix(
-        self, zabbix_server: str, zabbix_port: int, items: List, psk_wrapper=None
+        self, zabbix_server: str, zabbix_port: int, items: List, socket_wrapper=None
     ) -> bool:
         """
         Send metrics to Zabbix server using Zabbix sender protocol
@@ -309,6 +358,7 @@ class ZabbixMonitor(MonitoringBackend):
             zabbix_server: Zabbix server hostname or IP
             zabbix_port: Zabbix server port (default 10051)
             items: List of ItemValue objects
+            socket_wrapper: optional function to use tls / tls-psk or psk
 
         Returns:
             True if successful, False otherwise
@@ -318,7 +368,7 @@ class ZabbixMonitor(MonitoringBackend):
             return True
 
         try:
-            if psk_wrapper:
+            if socket_wrapper:
                 sender = Sender(
                     server=zabbix_server, port=zabbix_port, socket_wrapper=psk_wrapper
                 )
