@@ -121,19 +121,12 @@ class ZabbixMonitor(MonitoringBackend):
             logger.error("Zabbix server not configured.")
             return False
 
-        zabbix_authentication = self.get_monitoring_value(
-            "global_zabbix.authentication", "none"
-        ).lower()
-        if zabbix_authentication not in ["none", "tls", "psk"]:
-            logger.error(
-                f"Invalid Zabbix authentication method: {zabbix_authentication}. Must be 'none', 'tls' or 'psk'."
-            )
-            return False
-
         if dry_run:
             logger.info("Dry run mode. Not sending Zabbix metrics.")
             return True
 
+        no_cert_verify = self.get_monitoring_value("global_zabbix.no_cert_verify", False)
+        zabbix_auth = self.get_monitoring_value("global_zabbix.authentication", "none").lower()
         zabbix_psk = None
         zabbix_psk_identity = None
         try:
@@ -141,18 +134,43 @@ class ZabbixMonitor(MonitoringBackend):
             zabbix_psk_identity = self.get_monitoring_value(
                 "global_zabbix.psk_identity"
             )
-            if zabbix_psk and zabbix_psk_identity:
-                logger.debug("Using PSK authentication for Zabbix sender.")
-                if not HAS_PSK:
-                    logger.error(
-                        "PSK authentication configured but sslpsk library not available. Cannot send Zabbix metrics using PSK."
-                    )
-                    return False
         except (KeyError, AttributeError) as exc:
             logger.debug(f"No Zabbix PSK configuration found: {exc}")
             zabbix_psk = None
             zabbix_psk_identity = None
 
+        try:
+            tls_cert = self.get_monitoring_value("global_zabbix.tls_cert")
+            tls_key = self.get_monitoring_value("global_zabbix.tls_key")
+            tls_cacert = self.get_monitoring_value("global_zabbix.tls_cacert")
+        except (KeyError, AttributeError) as exc:
+            logger.debug(f"No Zabbix TLS certificate configuration found: {exc}")
+            tls_cert = None
+            tls_key = None
+            tls_cacert = None
+
+        if zabbix_auth in ["tls", "psk"]:
+            if not HAVE_SSL:
+                logger.error(
+                    f"Zabbix authentication method '{zabbix_auth}' requires SSL support, but ssl module is not available."
+                )
+                return False
+            if zabbix_auth == "psk" and NEED_PSK_MODULE and not HAVE_PSK_MODULE:
+                logger.error(
+                    "Zabbix PSK authentication requires sslpsk module, but it is not available."
+                )
+                return False
+            if zabbix_auth == "psk" and (not zabbix_psk or not zabbix_psk_identity):
+                logger.error(
+                    "Zabbix PSK authentication requires both PSK key and identity to be configured."
+                )
+                return False
+            if zabbix_auth == "tls" and (not tls_cert or not tls_key or not tls_cacert):
+                logger.error(
+                    "Zabbix TLS authentication requires certificate, key and CA certificate to be configured."
+                )
+                return False
+            
         if zabbix_auth == "psk":
             if (
                 NEED_PSK_MODULE
@@ -192,9 +210,9 @@ class ZabbixMonitor(MonitoringBackend):
 
             def socket_wrapper(sock, *args, **kwargs):
                 context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-                context.load_cert_chain(CERT_PATH, keyfile=KEY_PATH)
-                context.load_verify_locations(cafile=CA_PATH)
-                context.check_hostname = False
+                context.load_cert_chain(tls_cert, keyfile=tls_key)
+                context.load_verify_locations(cafile=tls_cacert)
+                context.check_hostname = not no_cert_verify
                 context.verify_mode = ssl.VerifyMode.CERT_REQUIRED
                 return context.wrap_socket(sock, server_hostname=ZABBIX_SERVER)
 
