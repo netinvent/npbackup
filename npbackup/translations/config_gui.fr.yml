@@ -34,6 +34,7 @@ fr:
   post_exec_commands: Commandes post-sauvegarde
   execute_even_on_backup_error: Executer même si la sauvegarde a échouée
   tags: Étiquettes
+  optional_tag: Étiquette optionnelle
   backup_tags_explanation: Les étiquettes permettent de catégoriser les sauvegardes afin d'appliquer des stratégies de rétention spécifiques.
   one_per_line: un par ligne
   backup_priority: Priorité de sauvegarde

@@ -44,6 +44,10 @@ class MonitoringBackend(ABC):
             "backup_job": self.get_config_value(
                 "monitoring.backup_job", "default_backup_job"
             ),
+            "tenant_name": self.get_config_value(
+                "monitoring.tenant_name", "default_tenant"
+            ),
+            "optional_tag": self.get_config_value("monitoring.optional_tag", None),
         }
         # Add additional labels from config
         additional_labels = self.get_config_value("monitoring.additional_labels")

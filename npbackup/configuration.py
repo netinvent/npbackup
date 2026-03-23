@@ -224,7 +224,8 @@ empty_config_dict = {
                 "backup_job": "${REPO_NAME}",  # In system/VM scenarios, this will be replaced with VM names or system name
                 "group": "${MACHINE_GROUP}",
                 "instance": "${MACHINE_ID}",
-                "tenant": "${MACHINE_TENANT}",
+                "tenant_name": "${MACHINE_TENANT}",
+                "optional_tag": None,
                 "additional_labels": {},
             },
             "env": {"env_variables": {}, "encrypted_env_variables": {}},
@@ -233,7 +234,7 @@ empty_config_dict = {
     "identity": {
         "machine_id": "${HOSTNAME}__${RANDOM}[4]",
         "machine_group": None,
-        "machine_tenant": None,
+        "machine_tenant_name": None,
     },
     "global_prometheus": {
         "enabled": False,

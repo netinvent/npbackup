@@ -33,6 +33,7 @@ en:
   post_exec_commands: Post-exec commands
   execute_even_on_backup_error: Execute even if backup failed
   tags: Tags
+  optional_tag: Optional tag
   backup_tags_explanation: Tags help categorize backups in order to apply selective retention policies
   one_per_line: one per line
   backup_priority: Backup priority
