@@ -63,6 +63,10 @@ zabbix_export:
                   value: '{#OS}'
                 - tag: arch
                   value: '{#ARCH}'
+                - tag: tenant
+                  value: '{#TENANT_NAME}'
+                - tag: optional_tag
+                  value: '{#OPTIONAL_TAG}'
             - uuid: a26bd0d7385e444aa97ab4494d72cb27
               name: 'NPBackup: Execution time [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
@@ -88,10 +92,14 @@ zabbix_export:
                   value: '{#OS}'
                 - tag: arch
                   value: '{#ARCH}'
+                - tag: tenant
+                  value: '{#TENANT_NAME}'
+                - tag: optional_tag
+                  value: '{#OPTIONAL_TAG}'
             - uuid: 9d6fd18aa98e49ec9d65b992046a78e1
               name: 'NPBackup: Minimum Backup Size [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
-              key: 'npbackup.npbackup_backup_sub_min_size[{#REPO_NAME},{#ACTION}]'
+              key: 'npbackup.backup_sub_min_size[{#REPO_NAME},{#ACTION}]'
               delay: '0'
               value_type: UNSIGNED
               description: 'Execution state: 0=success, 1=warning'
@@ -114,10 +122,14 @@ zabbix_export:
                   value: '{#OS}'
                 - tag: arch
                   value: '{#ARCH}'
+                - tag: tenant
+                  value: '{#TENANT_NAME}'
+                - tag: optional_tag
+                  value: '{#OPTIONAL_TAG}'
             - uuid: dc4c7bdde92643d5a625b3a332fd98be
               name: 'NPBackup: Heuristic Backup size too Small [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
-              key: 'npbackup.npbackup_storage_heuristics_too_low[{#REPO_NAME},{#ACTION}]'
+              key: 'npbackup.storage_heuristics_too_low[{#REPO_NAME},{#ACTION}]'
               delay: '0'
               value_type: UNSIGNED
               description: 'Execution state: 0=success, 1=warning'
@@ -140,10 +152,14 @@ zabbix_export:
                   value: '{#OS}'
                 - tag: arch
                   value: '{#ARCH}'
+                - tag: tenant
+                  value: '{#TENANT_NAME}'
+                - tag: optional_tag
+                  value: '{#OPTIONAL_TAG}'
             - uuid: ceb5db075e094674b6057e3105c7f23e
               name: 'NPBackup: Heuristic Backup size too big [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
-              key: 'npbackup.npbackup_storage_heuristics_too_high[{#REPO_NAME},{#ACTION}]'
+              key: 'npbackup.storage_heuristics_too_high[{#REPO_NAME},{#ACTION}]'
               delay: '0'
               value_type: UNSIGNED
               description: 'Execution state: 0=success, 1=warning'
@@ -166,10 +182,14 @@ zabbix_export:
                   value: '{#OS}'
                 - tag: arch
                   value: '{#ARCH}'
+                - tag: tenant
+                  value: '{#TENANT_NAME}'
+                - tag: optional_tag
+                  value: '{#OPTIONAL_TAG}'
             - uuid: 4bc01b75e1d34b49a95d355813835c25
               name: 'NPBackup: Heuristic Backup too many modified files [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
-              key: 'npbackup.npbackup_storage_heuristics_too_many_modified_files[{#REPO_NAME},{#ACTION}]'
+              key: 'npbackup.storage_heuristics_too_many_modified_files[{#REPO_NAME},{#ACTION}]'
               delay: '0'
               value_type: UNSIGNED
               description: 'Execution state: 0=success, 1=warning'
@@ -192,6 +212,10 @@ zabbix_export:
                   value: '{#OS}'
                 - tag: arch
                   value: '{#ARCH}'
+                - tag: tenant
+                  value: '{#TENANT_NAME}'
+                - tag: optional_tag
+                  value: '{#OPTIONAL_TAG}'
             # --- Restic backup result ---
             - uuid: 306b2954bb5f4617be4f43225a7111ad
               name: 'Restic: Backup failure [{#REPO_NAME}, {#ACTION}]'
@@ -217,6 +241,10 @@ zabbix_export:
                   value: '{#OS}'
                 - tag: arch
                   value: '{#ARCH}'
+                - tag: tenant
+                  value: '{#TENANT_NAME}'
+                - tag: optional_tag
+                  value: '{#OPTIONAL_TAG}'
             - uuid: bc1a40bd36d846a6bac1b0fe135f2ed9
               name: 'Restic: Errors [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
@@ -241,6 +269,10 @@ zabbix_export:
                   value: '{#OS}'
                 - tag: arch
                   value: '{#ARCH}'
+                - tag: tenant
+                  value: '{#TENANT_NAME}'
+                - tag: optional_tag
+                  value: '{#OPTIONAL_TAG}'
             # --- Restic data metrics ---
             - uuid: 619bf9efb5e74bde9c4e7f595ddaa686
               name: 'Restic: Total bytes processed [{#REPO_NAME}, {#ACTION}]'
@@ -267,6 +299,10 @@ zabbix_export:
                   value: '{#OS}'
                 - tag: arch
                   value: '{#ARCH}'
+                - tag: tenant
+                  value: '{#TENANT_NAME}'
+                - tag: optional_tag
+                  value: '{#OPTIONAL_TAG}'
             - uuid: 441a73fb5a1e4e9da8dcaa3139739e8d
               name: 'Restic: Total duration [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
@@ -292,6 +328,10 @@ zabbix_export:
                   value: '{#OS}'
                 - tag: arch
                   value: '{#ARCH}'
+                - tag: tenant
+                  value: '{#TENANT_NAME}'
+                - tag: optional_tag
+                  value: '{#OPTIONAL_TAG}'
             - uuid: a44584a45d4c47f1aa1d088f1200df00
               name: 'Restic: Data added [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
@@ -317,6 +357,10 @@ zabbix_export:
                   value: '{#OS}'
                 - tag: arch
                   value: '{#ARCH}'
+                - tag: tenant
+                  value: '{#TENANT_NAME}'
+                - tag: optional_tag
+                  value: '{#OPTIONAL_TAG}'
             - uuid: de7a0271721943b68d45d9723a50bf70
               name: 'Restic: Data stored [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
@@ -342,6 +386,10 @@ zabbix_export:
                   value: '{#OS}'
                 - tag: arch
                   value: '{#ARCH}'
+                - tag: tenant
+                  value: '{#TENANT_NAME}'
+                - tag: optional_tag
+                  value: '{#OPTIONAL_TAG}'
             # --- Restic files metrics ---
             - uuid: 1385d4370128448ea9a22be75d055e0b
               name: 'Restic: New files [{#REPO_NAME}, {#ACTION}]'
@@ -367,6 +415,10 @@ zabbix_export:
                   value: '{#OS}'
                 - tag: arch
                   value: '{#ARCH}'
+                - tag: tenant
+                  value: '{#TENANT_NAME}'
+                - tag: optional_tag
+                  value: '{#OPTIONAL_TAG}'
             - uuid: edcc8f8c86ea478e923a1f04ea77b62d
               name: 'Restic: Changed files [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
@@ -391,6 +443,10 @@ zabbix_export:
                   value: '{#OS}'
                 - tag: arch
                   value: '{#ARCH}'
+                - tag: tenant
+                  value: '{#TENANT_NAME}'
+                - tag: optional_tag
+                  value: '{#OPTIONAL_TAG}'
             - uuid: 9ec20103220c48e6b2fb374e47925ddf
               name: 'Restic: Unmodified files [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
@@ -415,6 +471,10 @@ zabbix_export:
                   value: '{#OS}'
                 - tag: arch
                   value: '{#ARCH}'
+                - tag: tenant
+                  value: '{#TENANT_NAME}'
+                - tag: optional_tag
+                  value: '{#OPTIONAL_TAG}'
             - uuid: 8ed24d954c70442c9971a62aed664bb7
               name: 'Restic: Total files processed [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
@@ -439,6 +499,10 @@ zabbix_export:
                   value: '{#OS}'
                 - tag: arch
                   value: '{#ARCH}'
+                - tag: tenant
+                  value: '{#TENANT_NAME}'
+                - tag: optional_tag
+                  value: '{#OPTIONAL_TAG}'
             # --- Restic dirs metrics ---
             - uuid: 070782814ef74e2093c4f50779b11310
               name: 'Restic: New directories [{#REPO_NAME}, {#ACTION}]'
@@ -464,6 +528,10 @@ zabbix_export:
                   value: '{#OS}'
                 - tag: arch
                   value: '{#ARCH}'
+                - tag: tenant
+                  value: '{#TENANT_NAME}'
+                - tag: optional_tag
+                  value: '{#OPTIONAL_TAG}'
             - uuid: 910a6ffbe58f4854b256f394fef8f9e3
               name: 'Restic: Changed directories [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
@@ -488,6 +556,10 @@ zabbix_export:
                   value: '{#OS}'
                 - tag: arch
                   value: '{#ARCH}'
+                - tag: tenant
+                  value: '{#TENANT_NAME}'
+                - tag: optional_tag
+                  value: '{#OPTIONAL_TAG}'
             - uuid: a41f962a8bc641dba2326b1ce22b696f
               name: 'Restic: Unmodified directories [{#REPO_NAME}, {#ACTION}]'
               type: TRAP
@@ -512,6 +584,10 @@ zabbix_export:
                   value: '{#OS}'
                 - tag: arch
                   value: '{#ARCH}'
+                - tag: tenant
+                  value: '{#TENANT_NAME}'
+                - tag: optional_tag
+                  value: '{#OPTIONAL_TAG}'
           trigger_prototypes:
             - uuid: 4449777f05204dfc834b268c17b5e333
               expression: 'last(/npbackup_trapper/npbackup.exec_state[{#REPO_NAME},{#ACTION}])=3'

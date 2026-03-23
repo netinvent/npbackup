@@ -234,10 +234,11 @@ class ZabbixMonitor(MonitoringBackend):
 
         # Send LLD discovery data so Zabbix creates items from prototypes
         self._send_discovery(zabbix_server, zabbix_port, socket_wrapper)
-        # Now let's sleep arbitrary 10 seconds to give zabbix server time to process the discovery
+        # Now let's sleep arbitrary 20 seconds to give zabbix server time to process the discovery
         # WIP: This could perhaps be improved by checking the Zabbix server for the existence of
         # the discovered items before sending metrics (requires API client)
         # As for now, let's just be full stupid cand keep a global variable around
+        # Btw, 10 seconds isn't sufficient on our test server
 
         # Plain stupid global variable here...
         # We would need to keep track of discovery sent per target somehow
@@ -246,7 +247,7 @@ class ZabbixMonitor(MonitoringBackend):
             logger.info(
                 "Sent Zabbix discovery data. Sleeping 10 seconds to allow Zabbix server to process data before sending metrics"
             )
-            sleep(10)
+            sleep(20)
 
         # Convert metrics to ItemValue list and send
         items = self._build_item_values(metrics, operation)
@@ -318,7 +319,7 @@ class ZabbixMonitor(MonitoringBackend):
                                 f"Failed to create Zabbix ItemValue for {metric_name}.{sub_metric}: {exc}"
                             )
                 else:
-                    item_key = f"restic.{short_name}[{self.repo_name},{self.action}]"
+                    item_key = f"restic.{short_name}[{self.repo_name},{operation}]"
                     try:
                         items.append(
                             ItemValue(
