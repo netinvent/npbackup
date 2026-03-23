@@ -12,7 +12,7 @@ ofunctions.mailer>=1.3.0
 #python-pidfile>=3.0.0
 # pysimplegui 5 has gone commercial, let's switch to freesimplegui
 # keep in mind that freesimplegui might higher required python version in the future
-freesimplegui @ git+https://github.com/netinvent/FreeSimpleGUI.git@npb-fixes#27f139e7aec74e0c350c96ed39232be24c7fa2c4
+freesimplegui @ git+https://github.com/netinvent/FreeSimpleGUI.git@npb-fixes#c7b0027f2ec369b77f8df9c1d0438f2701057bbe
 requests
 ruamel.yaml
 psutil
