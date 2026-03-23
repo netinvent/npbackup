@@ -28,6 +28,7 @@ import sys
 import os
 import shutil
 import atexit
+import re
 import argparse
 import fileinput
 from command_runner import command_runner
@@ -127,6 +128,13 @@ def get_metadata(package_file):
     return _metadata
 
 
+def extract_executable_name(executable_path):
+    for line in _read_file(executable_path).splitlines():
+        if line.startswith("EXECUTABLE"):
+            delim = "="
+            return line.split(delim)[1].strip().strip("'\"")
+    return None
+
 def have_nuitka_commercial():
     try:
         import nuitka.plugins.commercial
@@ -150,6 +158,16 @@ def compile(
     if build_type not in BUILD_TYPES:
         print("CANNOT BUILD BOGUS BUILD TYPE")
         sys.exit(1)
+
+    # Try to get alternative executable name
+    audience_customization = os.path.join(BASEDIR, "..", "PRIVATE", audience, "_customization.py")
+    if os.path.isfile(audience_customization):
+        executable_name = extract_executable_name(audience_customization)
+        if executable_name:
+            print(f"Found audience specific executable name {executable_name} for audience {audience}")
+        else:
+            executable_name = "npbackup"
+
     source_program = "bin/npbackup-{}".format(build_type)
 
     if IS_LEGACY:
@@ -157,29 +175,29 @@ def compile(
     if onefile:
         suffix = "-{}-{}-{}".format(build_type, arch, audience)
         if os.name == "nt":
-            program_executable = "npbackup{}.exe".format(suffix)
+            program_executable = "{}{}.exe".format(executable_name, suffix)
             restic_executable = "restic.exe"
             platform = "windows"
         elif sys.platform.lower() == "darwin":
             platform = "darwin"
-            program_executable = "npbackup-{}{}".format(platform, suffix)
+            program_executable = "{}-{}{}".format(executable_name, platform, suffix)
             restic_executable = "restic"
         else:
             platform = "linux"
-            program_executable = "npbackup-{}{}".format(platform, suffix)
+            program_executable = "{}-{}{}".format(executable_name, platform, suffix)
             restic_executable = "restic"
     else:
         if os.name == "nt":
-            program_executable = "npbackup-{}.exe".format(build_type)
+            program_executable = "{}-{}.exe".format(executable_name, build_type)
             restic_executable = "restic.exe"
             platform = "windows"
         elif sys.platform.lower() == "darwin":
             platform = "darwin"
-            program_executable = "npbackup-{}".format(build_type)
+            program_executable = "{}-{}".format(executable_name, build_type)
             restic_executable = "restic"
         else:
             platform = "linux"
-            program_executable = "npbackup-{}".format(build_type)
+            program_executable = "{}-{}".format(executable_name, build_type)
             restic_executable = "restic"
 
     PACKAGE_DIR = "npbackup"
@@ -356,7 +374,7 @@ def create_archive(
     """
 
     compiled_output = os.path.join(
-        BUILDS_DIR, "npbackup-{}{}".format(build_type, NUITKA_STANDALONE_SUFFIX)
+        output_dir, "npbackup-{}{}".format(build_type, NUITKA_STANDALONE_SUFFIX)
     )
     new_compiled_output = compiled_output[: -len(NUITKA_STANDALONE_SUFFIX)]
     if os.path.isdir(new_compiled_output):
@@ -367,7 +385,7 @@ def create_archive(
     else:
         archive_extension = "tar.gz"
 
-    target_archive = f"{output_dir}/npbackup-{platform}-{arch}-{build_type}-{audience}.{archive_extension}"
+    target_archive = os.path.join(BUILDS_DIR, f"npbackup-{platform}-{arch}-{build_type}-{audience}.{archive_extension}")
     if os.path.isfile(target_archive):
         os.remove(target_archive)
     if os.name == "nt":

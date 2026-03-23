@@ -32,6 +32,7 @@ PRODUCT_NAME = "NPBackup Network Backup Client"
 #################################################################################################################
 
 SHORT_PRODUCT_NAME = "NPBackup"
+EXECUTABLE = "npbackup"
 
 LINUX_CRON_FILE = "/etc/cron.d/npbackup"
 
