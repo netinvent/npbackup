@@ -718,6 +718,13 @@ def start_wizard(full_config: dict, config_file: str):
         is_wizard=True,  # Since we have less keys than full config interface
     )
 
+    npbackup.gui.common_gui_logic.update_global_gui(
+        window=wizard,
+        full_config=full_config,
+        unencrypted=False,
+        is_wizard=True,  # Since we have less keys than full config interface
+    )
+
     # We need to manually update backend config fields
     # This is wizard specific for now
     try:
