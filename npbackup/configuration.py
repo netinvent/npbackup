@@ -246,6 +246,7 @@ empty_config_dict = {
         "enabled": False,
         "server": None,
         "port": 10051,
+        "method": "ZabbixProtocol",  # can be ZabbixProtocol or RawJSON
         "authentication": "none",  # can be none, tls or psk
         "no_cert_verify": False,
         "tls_cert": None,

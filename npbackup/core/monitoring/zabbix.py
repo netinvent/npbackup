@@ -48,9 +48,11 @@ else:
                 HAVE_PSK_MODULE = True
             except ImportError:
                 HAVE_PSK_MODULE = False
+                sslpsk = None
     else:
         NEED_PSK_MODULE = False
         HAVE_PSK_MODULE = False
+        sslpsk = None
 
 
 class ZabbixMonitor(MonitoringBackend):
@@ -122,12 +124,20 @@ class ZabbixMonitor(MonitoringBackend):
             logger.error("Zabbix server not configured.")
             return False
 
-        if dry_run:
-            logger.info("Dry run mode. Not sending Zabbix metrics.")
-            return True
+        try:
+            zabbix_send_method = self.get_monitoring_value("global_zabbix.method")
+        except (KeyError, AttributeError) as exc:
+            logger.debug(
+                f"No Zabbix send method configured, defaulting to ZabbixProtocol: {exc}"
+            )
+            zabbix_send_method = "ZabbixProtocol"
 
-        no_cert_verify = self.get_monitoring_value("global_zabbix.no_cert_verify", False)
-        zabbix_auth = self.get_monitoring_value("global_zabbix.authentication", "none").lower()
+        no_cert_verify = self.get_monitoring_value(
+            "global_zabbix.no_cert_verify", False
+        )
+        zabbix_auth = self.get_monitoring_value(
+            "global_zabbix.authentication", "none"
+        ).lower()
         zabbix_psk = None
         zabbix_psk_identity = None
         try:
@@ -171,14 +181,9 @@ class ZabbixMonitor(MonitoringBackend):
                     "Zabbix TLS authentication requires certificate, key and CA certificate to be configured."
                 )
                 return False
-            
+
         if zabbix_auth == "psk":
-            if (
-                NEED_PSK_MODULE
-                and HAVE_PSK_MODULE
-                and zabbix_psk
-                and zabbix_psk_identity
-            ):
+            if NEED_PSK_MODULE and HAVE_PSK_MODULE:
 
                 def socket_wrapper(sock, *args, **kwargs):
                     psk = bytes.fromhex(zabbix_psk)
@@ -191,7 +196,7 @@ class ZabbixMonitor(MonitoringBackend):
                         psk=(psk, psk_identity),
                     )
 
-            elif zabbix_psk and zabbix_psk_identity:
+            else:
 
                 def socket_wrapper(sock, *args, **kwargs):
                     context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
@@ -208,7 +213,7 @@ class ZabbixMonitor(MonitoringBackend):
                     return context.wrap_socket(sock)
 
         elif zabbix_auth == "tls":
-            
+
             def socket_wrapper(sock, *args, **kwargs):
                 context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
                 context.load_cert_chain(tls_cert, keyfile=tls_key)
@@ -218,11 +223,13 @@ class ZabbixMonitor(MonitoringBackend):
                 return context.wrap_socket(sock, server_hostname=zabbix_server)
 
         else:
-            logger.info(
-                "No Zabbix authentication method configured, using plain TCP connection."
-            )
+
             def socket_wrapper(sock, *args, **kwargs):
                 return sock
+
+        if dry_run:
+            logger.info("Dry run mode. Not sending Zabbix metrics.")
+            return True
 
         # Send LLD discovery data so Zabbix creates items from prototypes
         self._send_discovery(zabbix_server, zabbix_port, socket_wrapper)
@@ -391,7 +398,9 @@ class ZabbixMonitor(MonitoringBackend):
         try:
             if socket_wrapper:
                 sender = Sender(
-                    server=zabbix_server, port=zabbix_port, socket_wrapper=psk_wrapper
+                    server=zabbix_server,
+                    port=zabbix_port,
+                    socket_wrapper=socket_wrapper,
                 )
             else:
                 sender = Sender(server=zabbix_server, port=zabbix_port)

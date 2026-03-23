@@ -68,6 +68,8 @@ en:
   are_you_sure: Are you sure ?
 
   select_file: Select file
+  select: Select
+  
   name: Name
   type: Type
   value: Value

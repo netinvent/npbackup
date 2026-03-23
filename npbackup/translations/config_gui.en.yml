@@ -231,6 +231,11 @@ en:
   zabbix_enable: Enable Zabbix active checks
   zabbix_server: Zabbix server
   zabbix_port: Zabbix port
+  zabbix_send_method: Zabbix send method
+  zabbix_authentication_method: Authentication method
+  zabbix_tls_cert: Zabbix TLS cert file
+  zabbix_tls_key: Zabbix TLS key
+  zabbix_tls_cacert: Zabbix TLS CA file
   zabbix_psk_identity: Zabbix PSK identity
   zabbix_psk: Zabbix PSK
 

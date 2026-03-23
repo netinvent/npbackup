@@ -68,6 +68,7 @@ fr:
   are_you_sure: Etes-vous sûr ?
 
   select_file: Selection fichier
+  select: Sélectionner
   name: Nom
   type: Type
   value: Valeur

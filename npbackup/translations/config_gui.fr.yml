@@ -231,6 +231,11 @@ fr:
   zabbix_enable: Activer les métriques Zabbix
   zabbix_server: Serveur Zabbix
   zabbix_port: Port Zabbix
+  zabbix_send_method: Méthode d'envoi Zabbix
+  zabbix_authentication_method: Méthode d'authentification
+  zabbix_tls_cert: Fichier certificat TLS Zabbix
+  zabbix_tls_key: Clé TLS Zabbix
+  zabbix_tls_cacert: Fichier CA TLS Zabbix
   zabbix_psk_identity: Identité PSK Zabbix
   zabbix_psk: PSK Zabbix
 
