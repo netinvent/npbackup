@@ -122,3 +122,5 @@ fr:
   help: Aide
 
   timeout: Délai d'attente
+
+  tenant: Tenant

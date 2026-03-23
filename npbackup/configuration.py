@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026031801"
+__build__ = "2026032301"
 __version__ = "npbackup 3.1.0+"
 
 
@@ -223,6 +223,7 @@ empty_config_dict = {
                 "backup_job": "${REPO_NAME}",  # In system/VM scenarios, this will be replaced with VM names or system name
                 "group": "${MACHINE_GROUP}",
                 "instance": "${MACHINE_ID}",
+                "tenant": "${TENANT}",
                 "additional_labels": {},
             },
             "env": {"env_variables": {}, "encrypted_env_variables": {}},
@@ -231,6 +232,7 @@ empty_config_dict = {
     "identity": {
         "machine_id": "${HOSTNAME}__${RANDOM}[4]",
         "machine_group": None,
+        "tenant": None,
     },
     "global_prometheus": {
         "enabled": False,
@@ -523,6 +525,10 @@ def evaluate_variables(
                 value = value.replace(
                     "${MACHINE_GROUP}", machine_group if machine_group else ""
                 )
+
+            if "${TENANT}" in value:
+                tenant = full_config.g("identity.tenant")
+                value = value.replace("${TENANT}", tenant if tenant else "")
 
             if "${BACKUP_JOB}" in value:
                 backup_job = repo_config.g("monitoring.backup_job")

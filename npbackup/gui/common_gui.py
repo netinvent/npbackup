@@ -216,6 +216,16 @@ def per_object_monitoring_identity_col():
             sg.Input(key="monitoring.group", size=(50, 1)),
         ],
         [
+            sg.Text(_t("generic.tenant"), size=(40, 1)),
+            sg.Image(
+                NON_INHERITED_ICON,
+                key="inherited.monitoring.tenant",
+                tooltip=_t("config_gui.tenant_inherited"),
+                pad=1,
+            ),
+            sg.Input(key="monitoring.tenant", size=(50, 1)),
+        ],
+        [
             sg.HorizontalSeparator(),
         ],
         [
@@ -546,6 +556,14 @@ def global_monitoring_identity_col():
         [
             sg.Text(_t("config_gui.machine_group"), size=(40, 1)),
             sg.Input(key="identity.machine_group", size=(50, 1)),
+        ],
+        [
+            sg.Text(_t("config_gui.machine_group"), size=(40, 1)),
+            sg.Input(key="identity.machine_group", size=(50, 1)),
+        ],
+        [
+            sg.Text(_t("generic.tenant"), size=(40, 1)),
+            sg.Input(key="identity.tenant", size=(50, 1)),
         ],
         [
             sg.Text(
