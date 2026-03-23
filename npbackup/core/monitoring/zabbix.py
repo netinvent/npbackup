@@ -50,6 +50,7 @@ else:
                 HAVE_PSK_MODULE = False
     else:
         NEED_PSK_MODULE = False
+        HAVE_PSK_MODULE = False
 
 
 class ZabbixMonitor(MonitoringBackend):
@@ -194,7 +195,7 @@ class ZabbixMonitor(MonitoringBackend):
 
                 def socket_wrapper(sock, *args, **kwargs):
                     context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-                    context.check_hostname = False
+                    context.check_hostname = not no_cert_verify
                     context.verify_mode = ssl.CERT_NONE
                     context.maximum_version = ssl.TLSVersion.TLSv1_2
                     context.set_ciphers("PSK")
@@ -207,19 +208,21 @@ class ZabbixMonitor(MonitoringBackend):
                     return context.wrap_socket(sock)
 
         elif zabbix_auth == "tls":
-
+            
             def socket_wrapper(sock, *args, **kwargs):
                 context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
                 context.load_cert_chain(tls_cert, keyfile=tls_key)
                 context.load_verify_locations(cafile=tls_cacert)
                 context.check_hostname = not no_cert_verify
                 context.verify_mode = ssl.VerifyMode.CERT_REQUIRED
-                return context.wrap_socket(sock, server_hostname=ZABBIX_SERVER)
+                return context.wrap_socket(sock, server_hostname=zabbix_server)
 
         else:
             logger.info(
                 "No Zabbix authentication method configured, using plain TCP connection."
             )
+            def socket_wrapper(sock, *args, **kwargs):
+                return sock
 
         # Send LLD discovery data so Zabbix creates items from prototypes
         self._send_discovery(zabbix_server, zabbix_port, socket_wrapper)
