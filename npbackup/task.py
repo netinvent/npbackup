@@ -25,7 +25,8 @@ import npbackup.configuration
 from npbackup.gui.constants import combo_boxes
 
 if os.name == "nt":
-    import windows_tools.powershell
+    # pylint: disable=E0401 (import-error)
+    from windows_tools.powershell import PowerShellRunner
 
     class CronTab:
         pass
@@ -592,7 +593,7 @@ if ($results.Count -gt 0) {{
 }}
 """
     try:
-        runner = windows_tools.powershell.PowerShellRunner()
+        runner = PowerShellRunner()
         exit_code, output = runner.run_script(ps_script, elevated=True)
         if exit_code != 0 or not output or not output.strip():
             logger.debug(f"No scheduled tasks found or PowerShell error: {output}")
@@ -926,7 +927,7 @@ def create_scheduled_task_windows(
     ).format(task_name, temp_task_file, user_arg)
 
     try:
-        runner = windows_tools.powershell.PowerShellRunner()
+        runner = PowerShellRunner()
         exit_code, output = runner.run_script(ps_cmd, elevated=True)
         if exit_code != 0:
             logger.error(
@@ -962,7 +963,7 @@ def _delete_scheduled_task_windows(
         task_name
     )
     try:
-        runner = windows_tools.powershell.PowerShellRunner()
+        runner = PowerShellRunner()
         exit_code, output = runner.run_script(
             ps_cmd, elevated=True, valid_exit_codes=[0, 1]
         )
