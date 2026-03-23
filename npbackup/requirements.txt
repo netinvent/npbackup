@@ -36,6 +36,7 @@ sv_ttk
 reskinner>=4.6.0
 zabbix-utils>=2.0.4
 # sslpsk is not needed with Python 3.13+ since it's included in standard ssl lib
-sslpsk3>=2.0.0; python_version < '3.13'
+# sslpsk has no prebuilt macos binaries for python and I can't get bothered to figure out how to compile it on macos
+sslpsk3>=2.0.0; python_version < '3.13' and platform_system != "Darwin"
 python-crontab>=3.3.0; platform_system != "Windows"
 windows_tools.powershell>=0.5.0; platform_system == "Windows"
