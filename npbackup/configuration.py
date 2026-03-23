@@ -534,7 +534,9 @@ def evaluate_variables(
 
             if "${MACHINE_TENANT}" in value:
                 machine_tenant = full_config.g("identity.machine_tenant")
-                value = value.replace("${MACHINE_TENANT}", machine_tenant if machine_tenant else "")
+                value = value.replace(
+                    "${MACHINE_TENANT}", machine_tenant if machine_tenant else ""
+                )
 
             if "${BACKUP_JOB}" in value:
                 backup_job = repo_config.g("monitoring.backup_job")
