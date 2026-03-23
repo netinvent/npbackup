@@ -35,7 +35,7 @@ sv_ttk
 # For now we'll use a custom fork
 reskinner>=4.6.0
 zabbix-utils>=2.0.4
-# We don't get to install sslpsk3 nor sslpsk2 currently on MacOS python 3.13
-sslpsk3>=2.0.0; platform_system != "Darwin"
+# sslpsk is not needed with Python 3.13+ since it's included in standard ssl lib
+sslpsk3>=2.0.0; python_version < '3.13'
 python-crontab>=3.3.0; platform_system != "Windows"
 windows_tools.powershell>=0.5.0; platform_system == "Windows"
