@@ -224,7 +224,7 @@ empty_config_dict = {
                 "backup_job": "${REPO_NAME}",  # In system/VM scenarios, this will be replaced with VM names or system name
                 "group": "${MACHINE_GROUP}",
                 "instance": "${MACHINE_ID}",
-                "tenant": "${TENANT}",
+                "tenant": "${MACHINE_TENANT}",
                 "additional_labels": {},
             },
             "env": {"env_variables": {}, "encrypted_env_variables": {}},
@@ -233,7 +233,7 @@ empty_config_dict = {
     "identity": {
         "machine_id": "${HOSTNAME}__${RANDOM}[4]",
         "machine_group": None,
-        "tenant": None,
+        "machine_tenant": None,
     },
     "global_prometheus": {
         "enabled": False,
@@ -532,9 +532,9 @@ def evaluate_variables(
                     "${MACHINE_GROUP}", machine_group if machine_group else ""
                 )
 
-            if "${TENANT}" in value:
-                tenant = full_config.g("identity.tenant")
-                value = value.replace("${TENANT}", tenant if tenant else "")
+            if "${MACHINE_TENANT}" in value:
+                machine_tenant = full_config.g("identity.machine_tenant")
+                value = value.replace("${MACHINE_TENANT}", machine_tenant if machine_tenant else "")
 
             if "${BACKUP_JOB}" in value:
                 backup_job = repo_config.g("monitoring.backup_job")

@@ -217,7 +217,7 @@ en:
 
   prometheus: Prometheus
   prometheus_config: Prometheus configuration
-  available_variables: Available variables ${HOSTNAME}, ${BACKUP_JOB}, ${REPO_NAME}, ${REPO_GROUP}, ${MACHINE_ID}, ${MACHINE_GROUP}, ${RANDOM}[n]
+  available_variables: Available variables ${HOSTNAME}, ${BACKUP_JOB}, ${REPO_NAME}, ${REPO_GROUP}, ${MACHINE_ID}, ${MACHINE_GROUP}, ${MACHINE_TENANT}, ${RANDOM}[n]
   available_variables_id: Available variables ${HOSTNAME}, ${RANDOM}[n] where n is the number of random chars
   prometheus_enable: Enable prometheus metrics
   job_name: Job name (backup_job)

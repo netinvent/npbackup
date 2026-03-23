@@ -589,7 +589,7 @@ def global_monitoring_identity_col():
         ],
         [
             sg.Text(_t("generic.tenant"), size=(40, 1)),
-            sg.Input(key="identity.tenant", size=(50, 1)),
+            sg.Input(key="identity.machine_tenant", size=(50, 1)),
         ],
         [
             sg.Text(
