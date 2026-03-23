@@ -124,6 +124,7 @@ class ZabbixMonitor(MonitoringBackend):
             logger.error("Zabbix server not configured.")
             return False
 
+        # WIP: to implement: raw JSON protocol
         try:
             zabbix_send_method = self.get_monitoring_value("global_zabbix.method")
         except (KeyError, AttributeError) as exc:
@@ -282,7 +283,7 @@ class ZabbixMonitor(MonitoringBackend):
                     item_key = f"npbackup.exec_state[{self.repo_name},upgrade]"
                 else:
                     short_name = metric_name[len("npbackup_") :]
-                    item_key = f"npbackup.{short_name}[{self.repo_name},{self.action}]"
+                    item_key = f"npbackup.{short_name}[{self.repo_name},{operation}]"
                 try:
                     items.append(
                         ItemValue(
@@ -302,7 +303,7 @@ class ZabbixMonitor(MonitoringBackend):
                     for sub_metric, sub_value in value.items():
                         if sub_value is None:
                             continue
-                        item_key = f"restic.{short_name}[{self.repo_name},{self.action},{sub_metric}]"
+                        item_key = f"restic.{short_name}[{self.repo_name},{operation},{sub_metric}]"
                         try:
                             items.append(
                                 ItemValue(

@@ -422,7 +422,8 @@ def global_zabbix_col():
                     [
                         sg.Text(_t("config_gui.zabbix_send_method"), size=(40, 1)),
                         sg.Combo(
-                            ["ZabbixProtocol", "RawJSON"],
+                            values=["ZabbixProtocol", "RawJSON"],
+                            default_value="ZabbixProtocol",
                             key="global_zabbix.method",
                             size=(45, 1),
                         ),
@@ -947,7 +948,7 @@ def scheduling_col(is_wizard: bool = False, task_types: list = None):
             ),
             sg.Combo(
                 values=[h for h in range(0, 24)],
-                default_value=0,
+                default_value=9,
                 key="-FIRST-BACKUP-HOUR-",
                 size=(3, 1),
             ),
