@@ -16,7 +16,7 @@ import re
 from logging import getLogger
 import FreeSimpleGUI as sg
 from ruamel.yaml.comments import CommentedMap
-from datetime import datetime, timezone
+from datetime import datetime
 from ofunctions.threading import threaded
 import npbackup.gui.common_gui
 from npbackup.gui.helpers import popup_error, password_complexity, WaitWindow
