@@ -109,7 +109,7 @@ class HealthchecksioMonitor(MonitoringBackend):
         state_names = {0: "Success", 1: "Warning", 2: "Error", 3: "Critical"}
         lines.append(f"Status: {state_names.get(exec_state, 'Unknown')}")
 
-        if "npbackup_exec_time" in metrics:
+        if metrics["npbackup_exec_time"] is not None:
             lines.append(f"Execution time: {metrics['npbackup_exec_time']:.2f}s")
 
         # Add backup-specific metrics if available
