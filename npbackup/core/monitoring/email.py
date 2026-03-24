@@ -252,7 +252,7 @@ class EmailMonitor(MonitoringBackend):
         body += f"\nDate: {date}"
 
         # Add execution time if available
-        if "npbackup_exec_time" in metrics:
+        if metrics["npbackup_exec_time"] is not None:
             body += f"\nExecution time: {metrics['npbackup_exec_time']:.2f} seconds"
 
         # Add restic backup_failure
