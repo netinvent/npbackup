@@ -208,7 +208,7 @@ class EmailMonitor(MonitoringBackend):
         )
 
         # Deepcopy metrics to avoid modifying original
-        
+
         metrics = deepcopy(metrics)
 
         # Build subject

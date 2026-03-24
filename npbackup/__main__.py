@@ -676,7 +676,9 @@ This is free software, and you are welcome to redistribute it under certain cond
 
         repo_remove_list = []
         for repo_name in repos_and_group_repos:
-            repo_config, _ = npbackup.configuration.get_repo_config(full_config, repo_name)
+            repo_config, _ = npbackup.configuration.get_repo_config(
+                full_config, repo_name
+            )
             if repo_config is None:
                 json_error_logging(
                     False,
