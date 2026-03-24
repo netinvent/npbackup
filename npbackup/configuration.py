@@ -1191,7 +1191,7 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
         full_config = _apply_global_migration_3_0_4_to_3_1_0(full_config)
 
     full_config.s("conf_version", new_version)
-    return full_config
+    return convert_to_commented_map(full_config)
 
 
 def _load_config_file(config_file: Path) -> Union[bool, dict]:
@@ -1205,14 +1205,18 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
             if not full_config or not isinstance(full_config, dict):
                 logger.critical(f"Config file {config_file} seems empty or invalid !")
                 return False
-            if (
-                full_config.g("audience")
-                and full_config.g("audience") != CURRENT_AUDIENCE
-            ):
-                logger.critical(
-                    f"Config file {config_file} is for audience {full_config.g('audience')}, but current audience is {CURRENT_AUDIENCE}. Won't load this."
-                )
-                return False
+            current_audience = full_config.g("audience")
+            if current_audience and current_audience != CURRENT_AUDIENCE:
+                # Migration path for old config files
+                if current_audience not in ["private", "public"]:
+                    logger.critical(
+                        f"Config file {config_file} is for audience {current_audience}, but current audience is {CURRENT_AUDIENCE}. Won't load this."
+                    )
+                    return False
+                else:
+                    logger.info(
+                        f"Our current audience {CURRENT_AUDIENCE} is different from config file audience {current_audience}, but since it's a known audience, we'll try to migrate it."
+                    )
             try:
                 conf_version = version_parse(str(full_config.g("conf_version")))
                 if not conf_version:
@@ -1501,4 +1505,4 @@ def get_monitoring_config(repo_config: dict, full_config: dict):
         logger.error(
             "Missing repo config while trying to get monitoring config. Identity will not be evaluated"
         )
-    return global_monitoring
+    return convert_to_commented_map(global_monitoring)
