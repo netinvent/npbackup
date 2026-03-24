@@ -159,6 +159,7 @@ def generic_row(
                             key=(f"inherited-{name}-", index),
                             tooltip=_t("config_gui.group_inherited"),
                             pad=1,
+                            visible=inherited,
                         ),
                         sg.In(size=size, k=(f"-{name}-", index), expand_x=True),
                         sg.B(
