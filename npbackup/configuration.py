@@ -647,7 +647,7 @@ def extract_permissions_from_full_config(full_config: dict) -> dict:
             repo_uri = full_config.g(f"{object_type}.{object_name}.repo_uri")
             if repo_uri:
                 # Extract permissions and manager password from repo_uri if set as string
-                if "," in repo_uri:
+                if isinstance(repo_uri, str) and "," in repo_uri:
                     repo_uri = [item.strip() for item in repo_uri.split(",")]
                 if isinstance(repo_uri, tuple) or isinstance(repo_uri, list):
                     if len(repo_uri) == 3:
