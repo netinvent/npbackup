@@ -7,8 +7,8 @@ __intname__ = "npbackup.compile"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026032001"
-__version__ = "2.3.2"
+__build__ = "2026032401"
+__version__ = "2.4.0"
 
 
 """
@@ -28,16 +28,18 @@ import sys
 import os
 import shutil
 import atexit
-import re
 import argparse
 import fileinput
 from command_runner import command_runner
 from ofunctions.platform import python_arch
+from npbackup.__version__ import IS_LEGACY
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
 
 from npbackup.path_helper import BASEDIR
 
+SIGN_EXTERNALY = False
+sign = None
 if os.name == "nt":
     EXTERNAL_SIGNER = r"C:\ev_signer_npbackup\ev_signer_npbackup.exe"
     if os.path.isfile(EXTERNAL_SIGNER):
@@ -45,7 +47,6 @@ if os.name == "nt":
     else:
         SIGN_EXTERNALY = False
         from npbackup.windows.sign_windows import sign
-from npbackup.__version__ import IS_LEGACY
 
 try:
     from resources.audience import CURRENT_AUDIENCE, AUDIENCES
@@ -53,7 +54,7 @@ except ImportError:
     AUDIENCES = ["public", "private"]
 
 PRIVATE_AUDIENCE_FILE = os.path.abspath(os.path.join(BASEDIR, "..", "PRIVATE", "audience.py"))
-INITIAL_AUDIENCE = "public"
+INITIAL_AUDIENCE = CURRENT_AUDIENCE
 BUILD_TYPES = ["cli", "gui", "viewer"]
 BUILDS_DIR = os.path.abspath(os.path.join(BASEDIR, os.pardir, "BUILDS"))
 
@@ -79,17 +80,13 @@ NUITKA_STANDALONE_SUFFIX = ".dist"
 del sys.path[0]
 
 def _set_audience(audience: str):
-    global INITIAL_AUDIENCE
     with fileinput.FileInput(PRIVATE_AUDIENCE_FILE, inplace=True) as file:
-            for line in file:
-                if line.startswith("CURRENT_AUDIENCE"):
-                    if not INITIAL_AUDIENCE:
-                        INITIAL_AUDIENCE = line.split("=")[1].strip().strip("'\"")
-                        if INITIAL_AUDIENCE is None:
-                            INITIAL_AUDIENCE = "public"
-                    print(f"CURRENT_AUDIENCE = \"{audience}\"")
-                else:
-                    print(line, end="")
+        for line in file:
+            if line.startswith("CURRENT_AUDIENCE"):
+                line.split("=")[1].strip().strip("'\"")
+                print(f"CURRENT_AUDIENCE = \"{audience}\"")
+            else:
+                print(line, end="")
 
 
 def _read_file(filename):
@@ -146,7 +143,7 @@ def have_nuitka_commercial():
         return False
 
 
-def compile(
+def _compile(
     arch: str,
     audience: str,
     build_type: str,
@@ -154,6 +151,7 @@ def compile(
     create_tar_only: bool,
     ev_cert_data: str = None,
     sign_only: bool = False,
+    npbackup_version: str = None,
 ):
     if build_type not in BUILD_TYPES:
         print("CANNOT BUILD BOGUS BUILD TYPE")
@@ -169,7 +167,11 @@ def compile(
             print("Using default executable name")
             executable_name = "npbackup"
 
-    source_program = "bin/npbackup-{}".format(build_type)
+    initial_source_program = "bin/npbackup-{}".format(build_type)
+    audience_source_program = "bin/{}-{}".format(executable_name, build_type)
+    if initial_source_program != audience_source_program:
+        shutil.move(initial_source_program, audience_source_program)
+    
 
     if IS_LEGACY:
         arch = f"{arch}-legacy"
@@ -311,7 +313,7 @@ def compile(
         icon_file,
         OUTPUT_DIR,
         program_executable,
-        source_program,
+        audience_source_program,
     )
 
     errors = False
@@ -328,12 +330,15 @@ def compile(
             fh.write(npbackup_version)
         print(f"COMPILED {'WITH SUCCESS' if not errors else 'WITH ERRORS'}")
 
+    if initial_source_program != audience_source_program:
+        shutil.move(audience_source_program, initial_source_program)
+
     if os.name == "nt" and ev_cert_data:
         compiled_output_dir = os.path.join(
-            OUTPUT_DIR, "npbackup-{}{}".format(build_type, NUITKA_STANDALONE_SUFFIX)
+            OUTPUT_DIR, f"{executable_name}-{build_type}{NUITKA_STANDALONE_SUFFIX}"
         )
         npbackup_executable = os.path.join(
-            compiled_output_dir, "npbackup-{}.exe".format(build_type)
+            compiled_output_dir, f"{executable_name}-{build_type}.exe"
         )
         if SIGN_EXTERNALY:
             print(f"Signing with external signer {EXTERNAL_SIGNER}")
@@ -362,20 +367,21 @@ def compile(
             audience=audience,
             build_type=build_type,
             output_dir=OUTPUT_DIR,
+            executable_name=executable_name,
         ):
             errors = True
     return not errors
 
 
 def create_archive(
-    platform: str, arch: str, audience: str, build_type: str, output_dir: str
+    platform: str, arch: str, audience: str, build_type: str, output_dir: str, executable_name: str
 ):
     """
     Create tar releases for each compiled version
     """
 
     compiled_output = os.path.join(
-        output_dir, "npbackup-{}{}".format(build_type, NUITKA_STANDALONE_SUFFIX)
+        output_dir, "{}-{}{}".format(executable_name, build_type, NUITKA_STANDALONE_SUFFIX)
     )
     new_compiled_output = compiled_output[: -len(NUITKA_STANDALONE_SUFFIX)]
     if os.path.isdir(new_compiled_output):
@@ -386,7 +392,7 @@ def create_archive(
     else:
         archive_extension = "tar.gz"
 
-    target_archive = os.path.join(BUILDS_DIR, f"npbackup-{platform}-{arch}-{build_type}-{audience}.{archive_extension}")
+    target_archive = os.path.join(BUILDS_DIR, f"{executable_name}-{platform}-{arch}-{build_type}-{audience}.{archive_extension}")
     if os.path.isfile(target_archive):
         os.remove(target_archive)
     if os.name == "nt":
@@ -506,7 +512,7 @@ if __name__ == "__main__":
                 "version"
             ]
             for build_type in build_types:
-                result = compile(
+                result = _compile(
                     arch=python_arch(),
                     audience=audience,
                     build_type=build_type,
@@ -514,6 +520,7 @@ if __name__ == "__main__":
                     create_tar_only=create_tar_only,
                     ev_cert_data=args.ev_cert_data,
                     sign_only=sign_only,
+                    npbackup_version=npbackup_version,
                 )
                 if not create_tar_only and not sign_only:
                     if result:
