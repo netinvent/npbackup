@@ -1297,7 +1297,9 @@ def handle_gui_events(
                     popup_error(_t("config_gui.cannot_remove_group_inherited_settings"))
                     return
                 window[(f"-GENERIC-{column_key}-COLUMN-", event[1])].update("")
-                window[(f"-GENERIC-{column_key}-COLUMN-", event[1])].update(visible=False)
+                window[(f"-GENERIC-{column_key}-COLUMN-", event[1])].update(
+                    visible=False
+                )
             window.refresh()
             window[f"-{column_key}-COLUMN-"].contents_changed()
             return
