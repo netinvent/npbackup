@@ -620,7 +620,7 @@ if ($results.Count -gt 0) {{
         meta = task_lookup[task_name]
         arguments = raw_task.get("arguments", "")
 
-        # Verify tfhe task arguments actually match what we expect
+        # Verify the task arguments actually match what we expect
         if (
             f"--{meta['task_type']}" not in arguments
             or config_file not in arguments
@@ -712,7 +712,7 @@ def create_scheduled_task_windows(
     executable_dir = os.path.dirname(cli_executable_path)
     if "python" in sys.executable and not IS_COMPILED:
         runner = sys.executable
-        task_args = f'"{ cli_executable_path}" '
+        task_args = f'"{cli_executable_path}" '
     else:
         runner = cli_executable_path
         task_args = ""
