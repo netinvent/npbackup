@@ -77,7 +77,7 @@ class PIDFile(object):
             else:
                 current_command = "-".join(current_command)
             return current_command == self._process_name
-        except psutil.AccessDenied:
+        except (psutil.AccessDenied, psutil.NoSuchProcess):
             return False
 
     def close(self) -> None:
