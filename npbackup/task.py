@@ -959,7 +959,7 @@ def _delete_scheduled_task_windows(
         config_file, task_type, object_type, object_name
     )
 
-    ps_cmd = "powershell.exe -NoProfile -Command \"Unregister-ScheduledTask -TaskName '{}' -Confirm:$false -ErrorAction SilentlyContinue\"".format(
+    ps_cmd = "Unregister-ScheduledTask -TaskName '{}' -Confirm:$false -ErrorAction SilentlyContinue\"".format(
         task_name
     )
     try:
