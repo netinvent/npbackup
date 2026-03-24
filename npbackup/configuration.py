@@ -1150,10 +1150,10 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
                     if full_config.g("global_email.on_operations_failure"):
                         recipients["on_operations_failure"].append(recipient)
                 full_config.s("global_email.recipients", recipients)
-                full_config.d("global_email.on_backup_success")
-                full_config.d("global_email.on_backup_failure")
-                full_config.d("global_email.on_operations_success")
-                full_config.d("global_email.on_operations_failure")
+            full_config.d("global_email.on_backup_success")
+            full_config.d("global_email.on_backup_failure")
+            full_config.d("global_email.on_operations_success")
+            full_config.d("global_email.on_operations_failure")
         except KeyError:
             logger.info("No global_email.recipients key to migrate")
 
