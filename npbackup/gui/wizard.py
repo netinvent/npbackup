@@ -22,7 +22,7 @@ from resources.customization import (
 from npbackup.gui.constants import combo_boxes, byte_units
 from npbackup.core.i18n_helper import _t
 from ofunctions.misc import get_key_from_value
-from FreeSimpleGUI import Button as RoundedButton
+from npbackup.gui.buttons import RoundedButton
 import npbackup.configuration
 from npbackup.gui.ttk_theme import (
     TITLE_FONT,
@@ -540,7 +540,9 @@ def wizard_tabs_and_breadcrumbs(wizard_layouts) -> Tuple[list, list]:
                     f" {i} ",
                     border_width=0,
                     key=f"-BREADCRUMB-{i}-",
-                    # btn_size=(30, 30),
+                    btn_width=40,
+                    btn_height=40,
+                    radius=20,
                     font=TITLE_FONT,
                 ),
                 sg.Text(_t(f"wizard_gui.step_{i}")),
@@ -579,13 +581,13 @@ def wizard_layout(wizard_tabs, wizard_breadcrumbs) -> List[list]:
             sg.Column(
                 [
                     [
-                        RoundedButton(
+                        sg.Button(
                             f'{_t("generic.cancel").capitalize()}',
                             key="-PREVIOUS-",
                             border_width=0,
                             font=TITLE_FONT,
                         ),
-                        RoundedButton(
+                        sg.Button(
                             f'{_t("generic.next").capitalize()} ▶',
                             key="-NEXT-",
                             border_width=0,
@@ -620,18 +622,25 @@ def start_wizard(full_config: dict, config_file: str):
         default_button_element_size=(16, 1),
     )
 
+    lasttab = 1
+
     def set_active_tab(active_number):
+        nonlocal lasttab
+        lasttab = active_number if active_number > lasttab else lasttab
         for tab_index in range(1, NUMBER_OF_TABS + 1):
             if tab_index != active_number:
                 wizard[f"-TAB{tab_index}-"].Update(visible=False)
                 wizard[f"-BREADCRUMB-{tab_index}-"].Update(
-                    button_color=(sg.theme_button_color())
+                    button_color=(sg.theme_button_color()[0], None)
+                )
+                wizard[f"-BREADCRUMB-{tab_index}-"].update_color(
+                    "#88FF88" if tab_index < active_number else "#AAAAAA"
                 )
         wizard[f"-TAB{active_number}-"].Update(visible=True)
         wizard[f"-BREADCRUMB-{active_number}-"].Update(
-            button_color=(sg.theme_button_color()[1], sg.theme_button_color()[0])
+            button_color=(sg.theme_button_color()[0], None)
         )
-
+        wizard[f"-BREADCRUMB-{active_number}-"].update_color(sg.theme_button_color()[1])
         wizard["-NEXT-"].update(
             f'✓ {_t("generic.finish").capitalize()}'
             if current_tab == NUMBER_OF_TABS
