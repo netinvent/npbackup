@@ -65,7 +65,7 @@ def metric_analyser(
                 restic_json = {}
             else:
                 # Future case when we'll use restic --json directly in @metrics
-                restic_json = restic_result
+                restic_json = result_string
 
             if restic_json:
                 if only_check_backup_result_and_size:
