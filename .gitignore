@@ -169,3 +169,4 @@ BUILDS-PRIVATE
 *.conf
 *.log?
 npbackup_*.dat
+venv3*
