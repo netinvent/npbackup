@@ -663,7 +663,7 @@ def _main_gui(viewer_mode: bool):
                         full_config = npbackup.configuration.load_config(config_file)
                 except EnvironmentError as exc:
                     popup_error(exc)
-                    continue
+                    break
                 if not full_config:
                     popup_error(_t("generic.bad_file"))
                     continue
