@@ -13,6 +13,7 @@ __build__ = "2026032401"
 # This is blatanly stolen from https://github.com/definite-d/reskinner/issues/34?reload=1
 # Thank you https://github.com/definite-d
 
+import FreeSimpleGUI as sg
 from reskinner.colorizer import Colorizer
 
 try:
