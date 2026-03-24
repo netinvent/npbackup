@@ -416,12 +416,12 @@ This is free software, and you are welcome to redistribute it under certain cond
         repos_config = []
         for repo in repos_and_group_repos:
             repo_config, _ = npbackup.configuration.get_repo_config(full_config, repo)
-            monitoring_config = npbackup.configuration.get_monitoring_config(
-                repo_config, full_config
-            )
             if not repo_config:
                 logger.error(f"Missing config for repository {repo}")
             else:
+                monitoring_config = npbackup.configuration.get_monitoring_config(
+                    repo_config, full_config
+                )
                 # NPF-SEC-00009
                 # Load an anonymous version of the repo config
                 show_encrypted = False
