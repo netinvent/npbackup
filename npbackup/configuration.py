@@ -804,7 +804,11 @@ def get_repo_config(
                             merged_lists = merged_items_dict
 
                         # Make sure we avoid duplicates in lists while preserving order (do not use sets here)
-                        merged_lists = list(dict.fromkeys(merged_lists))
+                        try:
+                            merged_lists = list(dict.fromkeys(merged_lists))
+                        except TypeError:
+                            # Handle unhashable types in the list
+                            merged_lists = merged_lists
                         _repo_config.s(key, merged_lists)
                         _config_inheritance.s(key, {})
                         for v in merged_lists:
@@ -853,7 +857,11 @@ def get_repo_config(
                                 merged_lists = merged_items_dict
 
                             # Make sure we avoid duplicates in lists while preserving order (do not use sets here)
-                            merged_lists = list(dict.fromkeys(merged_lists))
+                            try:
+                                merged_lists = list(dict.fromkeys(merged_lists))
+                            except TypeError:
+                                # Handle unhashable types in the list
+                                merged_lists = merged_lists
                             _repo_config.s(key, merged_lists)
 
                             _config_inheritance.s(key, {})
