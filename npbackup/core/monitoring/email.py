@@ -7,11 +7,12 @@ __intname__ = "npbackup.core.monitoring.email"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025112701"
+__build__ = "2026032401"
 
 from typing import Dict, Any, Optional, List
 from logging import getLogger
 from ofunctions.mailer import Mailer
+from copy import deepcopy
 from npbackup.core.monitoring import MonitoringBackend
 from npbackup.__debug__ import fmt_json
 from resources.customization import OEM_STRING
@@ -205,6 +206,10 @@ class EmailMonitor(MonitoringBackend):
             smtp_password=smtp_password,
             debug=False,  # Make sure we don't send debug info so we don't leak passwords
         )
+
+        # Deepcopy metrics to avoid modifying original
+        
+        metrics = deepcopy(metrics)
 
         # Build subject
         if metrics["npbackup_exec_state"] == 0:
