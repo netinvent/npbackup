@@ -14,7 +14,7 @@ import FreeSimpleGUI as sg
 
 # Python 3.8 doesn't have sv_ttk theme
 try:
-    import sv_ttk
+    import npbackup.gui.sv_ttk
 
     HAVE_TTK_THEME = True
 except ImportError:
@@ -81,7 +81,7 @@ sg.theme(CURRENT_THEME)
 if HAVE_TTK_THEME:
     sg.DEFAULT_TTK_THEME = CURRENT_TTK_THEME
     sg.ADDITIONAL_TTK_STYLING_PATHS = os.path.join(
-        os.path.dirname(sv_ttk.__file__), "sv.tcl"
+        os.path.dirname(npbackup.gui.sv_ttk.__file__), "sv.tcl"
     )
 sg.USE_TTK_BUTTONS = False
 
