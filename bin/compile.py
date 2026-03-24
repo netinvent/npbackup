@@ -246,6 +246,10 @@ def _compile(
     excludes_dir_source = os.path.join(BASEDIR, os.pardir, excludes_dir)
     excludes_dir_dest = excludes_dir
 
+    # Include sv_ttk theme since we use an inline version with some fixes
+    sv_ttl_dir_source = os.path.join(BASEDIR, "gui", "sv_ttk")
+    sv_ttl_dir_dest = os.path.join(PACKAGE_DIR, "gui", "sv_ttk")
+
     # NUITKA_OPTIONS = " --clang"
     # As of Nuitka v1.8, `-c` parameter is used to prevent fork bomb self execution
     # We don't need this, so let's disable it so we can use `-c`as `--config-file` shortcut
@@ -266,7 +270,7 @@ def _compile(
         NUITKA_OPTIONS += f" --include-module=PRIVATE.{audience}._private_secret_keys"
 
     if build_type in ("gui", "viewer"):
-        NUITKA_OPTIONS += " --plugin-enable=tk-inter"
+        NUITKA_OPTIONS += f" --plugin-enable=tk-inter --include-data-dir={sv_ttl_dir_source}={sv_ttl_dir_dest}"
         # So for an unknown reason, some windows builds will not hide the console, see #146
         # We replaced this option with a python version in gui\windiws_gui_helper.py
         NUITKA_OPTIONS += " --windows-console-mode=hide"

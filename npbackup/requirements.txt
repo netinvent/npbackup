@@ -31,7 +31,8 @@ imageio; platform_system == "Darwin"
 ntplib>=0.4.0
 # msgspec needs python 3.8+ and is not compatible with win 32-bit
 msgspec; python_version > '3.8'
-sv_ttk
+# sv_ttk is now inline since we have some patches for it
+# sv_ttk
 # For now we'll use a custom fork
 reskinner>=4.6.0
 zabbix-utils>=2.0.4

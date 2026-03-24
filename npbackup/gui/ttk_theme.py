@@ -12,17 +12,8 @@ __build__ = "2026031601"
 import os
 import FreeSimpleGUI as sg
 
-# Python 3.8 doesn't have sv_ttk theme
-try:
-    import npbackup.gui.sv_ttk
-
-    HAVE_TTK_THEME = True
-except ImportError:
-    sv_ttk = None
-    HAVE_TTK_THEME = False
-if HAVE_TTK_THEME:
-    from tkinter import ttk
 from reskinner import reskin, colorizer
+from npbackup.path_helper import BASEDIR
 from npbackup.gui.buttons import _after_element
 from resources.customization import (
     SIMPLEGUI_THEME,
@@ -40,6 +31,15 @@ try:
     sg.theme_add_new(SIMPLEGUI_DARK_THEME, SG_CUSTOM_DARK_THEME)
 except ImportError:
     pass
+
+ttk_theme_path = os.path.join(
+    os.path.dirname(BASEDIR), "npbackup", "gui", "sv_ttk", "sv.tcl"
+)
+if os.path.isfile(ttk_theme_path):
+    HAVE_TTK_THEME = True
+    from tkinter import ttk
+else:
+    HAVE_TTK_THEME = False
 
 CURRENT_THEME = SIMPLEGUI_THEME
 sg.DEFAULT_FONT = STANDARD_FONT
@@ -66,6 +66,11 @@ else:
     CURRENT_THEME = SIMPLEGUI_THEME
     CURRENT_TTK_THEME = "sun-valley-light"
 
+if HAVE_TTK_THEME:
+    sg.DEFAULT_TTK_THEME = CURRENT_TTK_THEME
+    sg.ADDITIONAL_TTK_STYLING_PATHS = ttk_theme_path
+    sg.USE_TTK_BUTTONS = False
+
 # Get actual pixel size for scaling
 root = sg.tk.Tk()
 scale = 96 / root.winfo_fpixels("1i")  # Format your layout if when 96 DPI
@@ -77,12 +82,6 @@ def scaled(pixels):
 
 
 sg.theme(CURRENT_THEME)
-if HAVE_TTK_THEME:
-    sg.DEFAULT_TTK_THEME = CURRENT_TTK_THEME
-    sg.ADDITIONAL_TTK_STYLING_PATHS = os.path.join(
-        os.path.dirname(npbackup.gui.sv_ttk.__file__), "sv.tcl"
-    )
-sg.USE_TTK_BUTTONS = False
 
 RESKIN_WINDOW = None
 
