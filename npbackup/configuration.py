@@ -535,7 +535,7 @@ def evaluate_variables(
                 )
 
             if "${MACHINE_TENANT}" in value:
-                machine_tenant = full_config.g("identity.machine_tenant")
+                machine_tenant = full_config.g("identity.machine_tenant_name")
                 value = value.replace(
                     "${MACHINE_TENANT}", machine_tenant if machine_tenant else ""
                 )
