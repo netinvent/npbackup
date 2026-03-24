@@ -7,7 +7,7 @@ __intname__ = "npbackup.core.monitoring.zabbix"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026032301"
+__build__ = "2026032401"
 
 import sys
 import json
@@ -126,12 +126,12 @@ class ZabbixMonitor(MonitoringBackend):
 
         # WIP: to implement: raw JSON protocol
         try:
-            zabbix_send_method = self.get_monitoring_value("global_zabbix.method")
+            self.zabbix_send_method = self.get_monitoring_value("global_zabbix.method")
         except (KeyError, AttributeError) as exc:
             logger.debug(
                 f"No Zabbix send method configured, defaulting to ZabbixProtocol: {exc}"
             )
-            zabbix_send_method = "ZabbixProtocol"
+            self.zabbix_send_method = "ZabbixProtocol"
 
         no_cert_verify = self.get_monitoring_value(
             "global_zabbix.no_cert_verify", False
@@ -245,7 +245,7 @@ class ZabbixMonitor(MonitoringBackend):
         if not ZABBIX_DISCOVERY_SENT:
             ZABBIX_DISCOVERY_SENT = True
             logger.info(
-                "Sent Zabbix discovery data. Sleeping 10 seconds to allow Zabbix server to process data before sending metrics"
+                "Sent Zabbix discovery data. Sleeping 20 seconds to allow Zabbix server to process data before sending metrics"
             )
             sleep(20)
 
@@ -274,52 +274,24 @@ class ZabbixMonitor(MonitoringBackend):
         items = []
         instance = self.common_labels.get("instance", "default_instance")
 
-        for metric_name, value in metrics.items():
-            if value is None:
-                continue
+        if self.zabbix_send_method != "ZabbixProtocol":
+            logger.info(
+                f"Zabbix send method {self.zabbix_send_method} not implemented, defaulting to ZabbixProtocol"
+            )
+            items.append(ItemValue(instance, "npbackup.metrics_json", json.dumps(metrics), clock=self.metrics_timestamp))
+        else:
 
-            if metric_name.startswith("npbackup_"):
-                # Map upgrade state to npbackup.exec_state with action=upgrade
-                if metric_name == "npbackup_upgrade_state":
-                    item_key = f"npbackup.exec_state[{self.repo_name},upgrade]"
-                else:
-                    short_name = metric_name[len("npbackup_") :]
-                    item_key = f"npbackup.{short_name}[{self.repo_name},{operation}]"
-                try:
-                    items.append(
-                        ItemValue(
-                            instance, item_key, value, clock=self.metrics_timestamp
-                        )
-                    )
-                except Exception as exc:
-                    logger.warning(
-                        f"Failed to create Zabbix ItemValue for {metric_name}: {exc}"
-                    )
+            for metric_name, value in metrics.items():
+                if value is None:
+                    continue
 
-            elif metric_name.startswith("restic_"):
-                short_name = metric_name[len("restic_") :]
-                if isinstance(value, dict):
-                    # Flatten dict metrics, e.g. restic_files: {"new": 5, "changed": 3}
-                    # becomes restic.files[repo,action,new] = 5
-                    for sub_metric, sub_value in value.items():
-                        if sub_value is None:
-                            continue
-                        item_key = f"restic.{short_name}[{self.repo_name},{operation},{sub_metric}]"
-                        try:
-                            items.append(
-                                ItemValue(
-                                    instance,
-                                    item_key,
-                                    sub_value,
-                                    clock=self.metrics_timestamp,
-                                )
-                            )
-                        except Exception as exc:
-                            logger.warning(
-                                f"Failed to create Zabbix ItemValue for {metric_name}.{sub_metric}: {exc}"
-                            )
-                else:
-                    item_key = f"restic.{short_name}[{self.repo_name},{operation}]"
+                if metric_name.startswith("npbackup_"):
+                    # Map upgrade state to npbackup.exec_state with action=upgrade
+                    if metric_name == "npbackup_upgrade_state":
+                        item_key = f"npbackup.exec_state[{self.repo_name},upgrade]"
+                    else:
+                        short_name = metric_name[len("npbackup_") :]
+                        item_key = f"npbackup.{short_name}[{self.repo_name},{operation}]"
                     try:
                         items.append(
                             ItemValue(
@@ -330,15 +302,50 @@ class ZabbixMonitor(MonitoringBackend):
                         logger.warning(
                             f"Failed to create Zabbix ItemValue for {metric_name}: {exc}"
                         )
-            else:
-                logger.warning(f"Unknown metric namespace for {metric_name}, skipping.")
 
-        logger.debug(f"Created {len(items)} Zabbix item values for host {instance}")
-        if items:
-            logger.debug(
-                "Zabbix items:\n"
-                + "\n".join(f"  {item.key} = {item.value}" for item in items)
-            )
+                elif metric_name.startswith("restic_"):
+                    short_name = metric_name[len("restic_") :]
+                    if isinstance(value, dict):
+                        # Flatten dict metrics, e.g. restic_files: {"new": 5, "changed": 3}
+                        # becomes restic.files[repo,action,new] = 5
+                        for sub_metric, sub_value in value.items():
+                            if sub_value is None:
+                                continue
+                            item_key = f"restic.{short_name}[{self.repo_name},{operation},{sub_metric}]"
+                            try:
+                                items.append(
+                                    ItemValue(
+                                        instance,
+                                        item_key,
+                                        sub_value,
+                                        clock=self.metrics_timestamp,
+                                    )
+                                )
+                            except Exception as exc:
+                                logger.warning(
+                                    f"Failed to create Zabbix ItemValue for {metric_name}.{sub_metric}: {exc}"
+                                )
+                    else:
+                        item_key = f"restic.{short_name}[{self.repo_name},{operation}]"
+                        try:
+                            items.append(
+                                ItemValue(
+                                    instance, item_key, value, clock=self.metrics_timestamp
+                                )
+                            )
+                        except Exception as exc:
+                            logger.warning(
+                                f"Failed to create Zabbix ItemValue for {metric_name}: {exc}"
+                            )
+                else:
+                    logger.warning(f"Unknown metric namespace for {metric_name}, skipping.")
+
+            logger.debug(f"Created {len(items)} Zabbix item values for host {instance}")
+            if items:
+                logger.debug(
+                    "Zabbix items:\n"
+                    + "\n".join(f"  {item.key} = {item.value}" for item in items)
+                )
         return items
 
     def _send_discovery(
