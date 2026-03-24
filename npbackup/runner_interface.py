@@ -72,8 +72,8 @@ def entrypoint(*args, **kwargs):
             # Unless operation is "ls", because it's too slow for command_runner poller method that allows live_output
             # Unless operation is "dump", because it outputs binary data
             # But we still need to log the result to our logfile
+            handler = None
             if operation not in ("ls", "dump"):
-                handler = None
                 for handler in logger.handlers:
                     if handler.stream == sys.stdout:
                         logger.removeHandler(handler)
