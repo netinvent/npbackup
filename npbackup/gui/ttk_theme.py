@@ -76,7 +76,6 @@ def scaled(pixels):
     return round(scale * pixels)
 
 
-
 sg.theme(CURRENT_THEME)
 if HAVE_TTK_THEME:
     sg.DEFAULT_TTK_THEME = CURRENT_TTK_THEME

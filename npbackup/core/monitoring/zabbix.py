@@ -278,7 +278,14 @@ class ZabbixMonitor(MonitoringBackend):
             logger.info(
                 f"Zabbix send method {self.zabbix_send_method} not implemented, defaulting to ZabbixProtocol"
             )
-            items.append(ItemValue(instance, "npbackup.metrics_json", json.dumps(metrics), clock=self.metrics_timestamp))
+            items.append(
+                ItemValue(
+                    instance,
+                    "npbackup.metrics_json",
+                    json.dumps(metrics),
+                    clock=self.metrics_timestamp,
+                )
+            )
         else:
 
             for metric_name, value in metrics.items():
@@ -291,7 +298,9 @@ class ZabbixMonitor(MonitoringBackend):
                         item_key = f"npbackup.exec_state[{self.repo_name},upgrade]"
                     else:
                         short_name = metric_name[len("npbackup_") :]
-                        item_key = f"npbackup.{short_name}[{self.repo_name},{operation}]"
+                        item_key = (
+                            f"npbackup.{short_name}[{self.repo_name},{operation}]"
+                        )
                     try:
                         items.append(
                             ItemValue(
@@ -330,7 +339,10 @@ class ZabbixMonitor(MonitoringBackend):
                         try:
                             items.append(
                                 ItemValue(
-                                    instance, item_key, value, clock=self.metrics_timestamp
+                                    instance,
+                                    item_key,
+                                    value,
+                                    clock=self.metrics_timestamp,
                                 )
                             )
                         except Exception as exc:
@@ -338,7 +350,9 @@ class ZabbixMonitor(MonitoringBackend):
                                 f"Failed to create Zabbix ItemValue for {metric_name}: {exc}"
                             )
                 else:
-                    logger.warning(f"Unknown metric namespace for {metric_name}, skipping.")
+                    logger.warning(
+                        f"Unknown metric namespace for {metric_name}, skipping."
+                    )
 
             logger.debug(f"Created {len(items)} Zabbix item values for host {instance}")
             if items:
