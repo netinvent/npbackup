@@ -757,6 +757,7 @@ class NPBackupRunner:
         except (KeyError, AttributeError):
             self.write_logs("Repo password cannot be empty", level="error")
             can_run = False
+            password = None
         if not password or password == "":
             try:
                 password_command = self.repo_config.g("repo_opts.repo_password_command")
@@ -1737,14 +1738,16 @@ class NPBackupRunner:
                         policy[f"keep-within-{entry}"] = f"{value}{unit}"
 
             keep_tags = self.repo_config.g("repo_opts.retention_policy.keep_tags")
-            if not isinstance(keep_tags, list) and keep_tags:
+            if not isinstance(keep_tags, list):
                 keep_tags = [keep_tags]
+            if keep_tags:
                 policy["keep-tags"] = keep_tags
             apply_on_tags = self.repo_config.g(
                 "repo_opts.retention_policy.apply_on_tags"
             )
-            if not isinstance(apply_on_tags, list) and apply_on_tags:
+            if not isinstance(apply_on_tags, list):
                 apply_on_tags = [apply_on_tags]
+            if apply_on_tags:
                 policy["apply-on-tags"] = apply_on_tags
             # Fool proof, don't run without policy, or else we'll get
             if not policy:
