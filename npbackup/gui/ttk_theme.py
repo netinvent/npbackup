@@ -22,7 +22,8 @@ except ImportError:
     HAVE_TTK_THEME = False
 if HAVE_TTK_THEME:
     from tkinter import ttk
-from reskinner import reskin
+from reskinner import reskin, colorizer
+from npbackup.gui.buttons import _after_element
 from resources.customization import (
     SIMPLEGUI_THEME,
     SIMPLEGUI_DARK_THEME,
@@ -75,29 +76,29 @@ def scaled(pixels):
     return round(scale * pixels)
 
 
+
 sg.theme(CURRENT_THEME)
 if HAVE_TTK_THEME:
     sg.DEFAULT_TTK_THEME = CURRENT_TTK_THEME
     sg.ADDITIONAL_TTK_STYLING_PATHS = os.path.join(
         os.path.dirname(sv_ttk.__file__), "sv.tcl"
     )
-# sg.DEFAULT_TTK_THEME = "azure-light"
-# sg.ADDITIONAL_TTK_STYLING_PATHS = os.path.join(os.path.dirname(__file__), "azure/azure.tcl")
 sg.USE_TTK_BUTTONS = False
 
 RESKIN_WINDOW = None
 
 
-def change_sg_theme(window=None):
+def change_sg_theme(window=None, refresh: bool = False):
     global CURRENT_THEME
-    if sg.theme() != SIMPLEGUI_DARK_THEME:
-        CURRENT_THEME = SIMPLEGUI_DARK_THEME
-        if HAVE_TTK_THEME:
-            sg.DEFAULT_TTK_THEME = "sun-valley-dark"
-    else:
-        CURRENT_THEME = SIMPLEGUI_THEME
-        if HAVE_TTK_THEME:
-            sg.DEFAULT_TTK_THEME = "sun-valley-light"
+    if not refresh:
+        if sg.theme() != SIMPLEGUI_DARK_THEME:
+            CURRENT_THEME = SIMPLEGUI_DARK_THEME
+            if HAVE_TTK_THEME:
+                sg.DEFAULT_TTK_THEME = "sun-valley-dark"
+        else:
+            CURRENT_THEME = SIMPLEGUI_THEME
+            if HAVE_TTK_THEME:
+                sg.DEFAULT_TTK_THEME = "sun-valley-light"
     if HAVE_TTK_THEME:
         style = ttk.Style(window.hidden_master_root)
         sg._change_ttk_theme(style, sg.DEFAULT_TTK_THEME)
@@ -106,5 +107,7 @@ def change_sg_theme(window=None):
         new_theme=CURRENT_THEME,
         theme_function=sg.theme,
         lf_table=sg.LOOK_AND_FEEL_TABLE,
+        duration=300,
+        after_element=_after_element,
     )
     window.refresh()
