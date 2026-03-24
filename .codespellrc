@@ -1,6 +1,6 @@
 [codespell]
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file
-skip = .git*,.codespellrc,*.fr.yml,requirements.txt,customization.py,RESTIC_CMDLINE_CONSISTENCY.md
+skip = .git*,.codespellrc,*.fr.yml,requirements.txt,customization.py,RESTIC_CMDLINE_CONSISTENCY.md,dark.tcl,light.tcl
 check-hidden = true
 # ignore-regex = 
 ignore-words-list = requestor,TEY,nd
