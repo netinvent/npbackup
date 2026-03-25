@@ -37,17 +37,11 @@ class MonitoringBackend(ABC):
         self.monitoring_config = monitoring_config
         self.logger = logger
         self._common_labels = {
-            "instance": self.get_config_value(
-                "monitoring.instance", "default_instance"
-            ),
-            "group": self.get_config_value("monitoring.group", "default_group"),
-            "backup_job": self.get_config_value(
-                "monitoring.backup_job", "default_backup_job"
-            ),
-            "tenant_name": self.get_config_value(
-                "monitoring.tenant_name", "default_tenant"
-            ),
-            "optional_tag": self.get_config_value("monitoring.optional_tag", None),
+            "instance": self.get_config_value("monitoring.instance", ""),
+            "group": self.get_config_value("monitoring.group", ""),
+            "backup_job": self.get_config_value("monitoring.backup_job", ""),
+            "tenant_name": self.get_config_value("monitoring.tenant_name", ""),
+            "optional_tag": self.get_config_value("monitoring.optional_tag", ""),
         }
         # Add additional labels from config
         additional_labels = self.get_config_value("monitoring.additional_labels")
@@ -161,9 +155,9 @@ class MonitoringBackend(ABC):
             return default
         except (KeyError, AttributeError):
             return default
-        except AssertionError:
+        except (AssertionError, TypeError) as exc:
             logger.debug(
-                f"Key {key} not found in monitoring configuration, returning default."
+                f"Key {key} not found in monitoring configuration ({exc}), returning default."
             )
             return default
 
@@ -185,8 +179,10 @@ class MonitoringBackend(ABC):
             return default
         except (KeyError, AttributeError):
             return default
-        except AssertionError:
-            logger.debug(f"Key {key} not found in configuration, returning default.")
+        except (AssertionError, TypeError) as exc:
+            logger.debug(
+                f"Key {key} not found in configuration ({exc}), returning default."
+            )
             return default
 
 
