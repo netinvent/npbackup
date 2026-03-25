@@ -7,23 +7,28 @@ __intname__ = "npbackup.gui.buttons"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026032401"
+__build__ = "2026032501"
 
 
 # This is blatanly stolen from https://github.com/definite-d/reskinner/issues/34?reload=1
 # Thank you https://github.com/definite-d
 
+
+from logging import getLogger
 import FreeSimpleGUI as sg
 from reskinner.colorizer import Colorizer
 
+logger = getLogger()
+
 try:
     from PIL import Image, ImageDraw
+
+    HAVE_PILLOW = True
 except ImportError:
-    print(
-        "Error: PIL/Pillow is required for this demo. "
-        "Install with: `uv add --group dev Pillow`"
+    logger.error(
+        "Error: PIL/Pillow is required for round buttons. Falling back to regular buttons"
     )
-    exit(1)
+    HAVE_PILLOW = False
 
 from io import BytesIO
 
@@ -77,73 +82,90 @@ def image_to_data(image):
         return output.getvalue()
 
 
-class RoundedButton(sg.Button):
-    """A rounded button using PIL images with mask-based rendering"""
+if HAVE_PILLOW:
 
-    def __init__(self, text, btn_width=100, btn_height=30, radius=30, **kwargs):
-        # Remove conflicting parameters
-        kwargs.pop("image_data", None)
-        kwargs.pop("border_width", None)
+    class RoundedButton(sg.Button):
+        """A rounded button using PIL images with mask-based rendering"""
 
-        # Store button dimensions and create mask
-        self.btn_width = btn_width
-        self.btn_height = btn_height
-        self.radius = radius
-        self.mask = self._create_mask()
+        def __init__(self, text, btn_width=100, btn_height=30, radius=30, **kwargs):
+            # Remove conflicting parameters
+            kwargs.pop("image_data", None)
+            kwargs.pop("border_width", None)
 
-        # Store the button color for regeneration
-        self.button_color = sg.theme_button_color()[1]
+            # Store button dimensions and create mask
+            self.btn_width = btn_width
+            self.btn_height = btn_height
+            self.radius = radius
+            self.mask = self._create_mask()
 
-        # Generate the initial button image
-        img = self._generate_image_from_mask()
+            # Store the button color for regeneration
+            self.button_color = sg.theme_button_color()[1]
 
-        # Set text colors
-        text_color = (sg.theme_text_color(), sg.theme_background_color())
+            # Generate the initial button image
+            img = self._generate_image_from_mask()
 
-        # Initialize the parent Button class
-        super().__init__(
-            text,
-            button_type=sg.BUTTON_TYPE_READ_FORM,
-            image_data=image_to_data(img),
-            button_color=text_color,
-            mouseover_colors=(None, sg.theme_background_color()),
-            border_width=0,
-            **kwargs,
-        )
+            # Set text colors
+            text_color = (sg.theme_text_color(), sg.theme_background_color())
 
-    def _create_mask(self):
-        """Create a solid color mask of the button's shape"""
-        # Use white as the mask color (can be any solid color)
-        return round_rectangle(
-            (self.btn_width, self.btn_height), self.radius, (255, 255, 255, 255)
-        )
+            # Initialize the parent Button class
+            super().__init__(
+                text,
+                button_type=sg.BUTTON_TYPE_READ_FORM,
+                image_data=image_to_data(img),
+                button_color=text_color,
+                mouseover_colors=(None, sg.theme_background_color()),
+                border_width=0,
+                **kwargs,
+            )
 
-    def _generate_image_from_mask(self, fill_color=None):
-        """Generate a button image from the mask with the specified fill color"""
-        # Use instance button color if none provided
-        if fill_color is None:
-            fill_color = self.button_color
+        def _create_mask(self):
+            """Create a solid color mask of the button's shape"""
+            # Use white as the mask color (can be any solid color)
+            return round_rectangle(
+                (self.btn_width, self.btn_height), self.radius, (255, 255, 255, 255)
+            )
 
-        # If fill_color doesn't include alpha, add full opacity
-        if len(fill_color) == 3:
-            fill_color = (*fill_color, 255)
+        def _generate_image_from_mask(self, fill_color=None):
+            """Generate a button image from the mask with the specified fill color"""
+            # Use instance button color if none provided
+            if fill_color is None:
+                fill_color = self.button_color
 
-        # Create a new image with the fill color
-        img = Image.new("RGBA", (self.btn_width, self.btn_height), fill_color)
+            # If fill_color doesn't include alpha, add full opacity
+            if len(fill_color) == 3:
+                fill_color = (*fill_color, 255)
 
-        # Use the mask as an alpha channel to apply the rounded shape
-        img.putalpha(self.mask.getchannel("A"))
+            # Create a new image with the fill color
+            img = Image.new("RGBA", (self.btn_width, self.btn_height), fill_color)
 
-        return img
+            # Use the mask as an alpha channel to apply the rounded shape
+            img.putalpha(self.mask.getchannel("A"))
 
-    def update_color(self, new_color):
-        """Update the button's appearance with a new color"""
-        # Update the stored button color
-        self.button_color = new_color
+            return img
 
-        # Generate new image with the updated color
-        new_img = self._generate_image_from_mask(new_color)
+        def update_color(self, new_color):
+            """Update the button's appearance with a new color"""
+            # Update the stored button color
+            self.button_color = new_color
 
-        # Update the button's image data and refresh display
-        self.ImageData = image_to_data(new_img)
-        self.update(image_data=self.ImageData)
+            # Generate new image with the updated color
+            new_img = self._generate_image_from_mask(new_color)
+
+            # Update the button's image data and refresh display
+            self.ImageData = image_to_data(new_img)
+            self.update(image_data=self.ImageData)
+
+else:
+
+    class RoundedButton(sg.Button):
+        """Fallback button when PIL/Pillow is not available"""
+
+        def __init__(self, text, **kwargs):
+            kwargs.pop("image_data", None)
+            kwargs.pop("btn_width", None)
+            kwargs.pop("btn_height", None)
+            kwargs.pop("radius", None)
+            super().__init__(text, **kwargs)
+
+        def update_color(self, new_color):
+            pass
