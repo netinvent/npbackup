@@ -98,6 +98,7 @@ def change_sg_theme(window=None, refresh: bool = False):
             if HAVE_TTK_THEME:
                 sg.DEFAULT_TTK_THEME = "sun-valley-light"
     if HAVE_TTK_THEME:
+        # pylint: disable=E0606 (possibly-used-before-assignment)
         style = ttk.Style(window.hidden_master_root)
         sg._change_ttk_theme(style, sg.DEFAULT_TTK_THEME)
     reskin(
