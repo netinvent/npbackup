@@ -158,7 +158,6 @@ def _compile(
         sys.exit(1)
 
     # Try to get alternative executable name
-    executable_name = "npbackup"
     audience_customization = os.path.join(BASEDIR, "..", "PRIVATE", audience, "_customization.py")
     if os.path.isfile(audience_customization):
         executable_name = extract_executable_name(audience_customization)
@@ -166,6 +165,7 @@ def _compile(
             print(f"Found audience specific executable name {executable_name} for audience {audience}")
         else:
             print("Using default executable name")
+            executable_name = "npbackup"
 
     initial_source_program = "bin/npbackup-{}".format(build_type)
     audience_source_program = "bin/{}-{}".format(executable_name, build_type)
