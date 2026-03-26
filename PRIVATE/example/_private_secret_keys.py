@@ -30,3 +30,10 @@ This is also useful if you want to migrate from public audience to a private one
 """
 EARLIER_AES_KEYS = [
 ]
+
+"""
+Public AES Keys can be used to migrate public audience configuration files to private audience ones.
+If you have a public audience and want to migrate to a private one,
+add your public audience AES key here, so that it can be used to decrypt existing configuration files.
+"""
+PUBLIC_AES_KEYS = []

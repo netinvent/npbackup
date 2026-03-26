@@ -22,3 +22,7 @@ except ModuleNotFoundError:
 
 AES_KEY = _private_secret_keys.AES_KEY
 EARLIER_AES_KEYS = _private_secret_keys.EARLIER_AES_KEYS
+try:
+    PUBLIC_AES_KEYS = _private_secret_keys.PUBLIC_AES_KEYS
+except AttributeError:
+    PUBLIC_AES_KEYS = []

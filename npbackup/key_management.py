@@ -36,6 +36,16 @@ else:
             from PRIVATE.secret_keys import EARLIER_AES_KEYS
         except ImportError:
             EARLIER_AES_KEYS = None
+        try:
+            from PRIVATE.secret_keys import PUBLIC_AES_KEYS
+            from npbackup.obfuscation import obfuscation as public_obfuscation
+        except ImportError:
+            PUBLIC_AES_KEYS = None
+
+            def public_obfuscation(key):
+                logger.info("No public audience key function found")
+                return key
+
     except ImportError as exc:
         print(f"{__file__}: No private audience customization found")
         print(exc)

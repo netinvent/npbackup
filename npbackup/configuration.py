@@ -11,7 +11,7 @@ __build__ = "2026032301"
 __version__ = "npbackup 3.1.0+"
 
 
-from typing import Tuple, Optional, List, Any, Union
+from typing import Callable, Tuple, Optional, List, Any, Union
 import sys
 import os
 from copy import deepcopy
@@ -32,7 +32,14 @@ from ofunctions.random import random_string
 from ofunctions.misc import replace_in_iterable, BytesConverter, iter_over_keys
 from resources.customization import ID_STRING
 from resources.audience import CURRENT_AUDIENCE
-from npbackup.key_management import AES_KEY, EARLIER_AES_KEYS, get_aes_key, obfuscation
+from npbackup.key_management import (
+    AES_KEY,
+    EARLIER_AES_KEYS,
+    PUBLIC_AES_KEYS,
+    get_aes_key,
+    obfuscation,
+    public_obfuscation,
+)
 from npbackup.__version__ import __version__ as MAX_CONF_VERSION
 
 MIN_MIGRATABLE_CONF_VERSION = "3.0.0"
@@ -418,8 +425,12 @@ def key_should_be_encrypted(key: str, encrypted_options: List[str]):
 
 
 def crypt_config(
-    full_config: dict, aes_key: str, encrypted_options: List[str], operation: str
-):
+    full_config: dict,
+    aes_key: str,
+    encrypted_options: List[str],
+    operation: str,
+    obfuscation_fn: Callable,
+) -> Any:
     try:
 
         def _crypt_config(key: str, value: Any) -> Any:
@@ -434,7 +445,7 @@ def crypt_config(
                             )
                         ) or not isinstance(value, str):
                             value = enc.encrypt_message_hf(
-                                value, obfuscation(aes_key), ID_STRING, ID_STRING
+                                value, obfuscation_fn(aes_key), ID_STRING, ID_STRING
                             ).decode("utf-8")
                     elif operation == "decrypt":
                         if (
@@ -444,7 +455,7 @@ def crypt_config(
                         ):
                             _, value = enc.decrypt_message_hf(
                                 value,
-                                obfuscation(aes_key),
+                                obfuscation_fn(aes_key),
                                 ID_STRING,
                                 ID_STRING,
                             )
@@ -462,7 +473,7 @@ def crypt_config(
             callable_wants_root_key=True,
         )
     except Exception as exc:
-        logger.error(f"Cannot {operation} configuration: {exc}.")
+        logger.info(f"Cannot {operation} configuration: {exc}.")
         logger.debug("Trace:", exc_info=True)
         return False
 
@@ -1213,51 +1224,6 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
             if not full_config or not isinstance(full_config, dict):
                 logger.critical(f"Config file {config_file} seems empty or invalid !")
                 return False
-            current_audience = full_config.g("audience")
-            if current_audience and current_audience != CURRENT_AUDIENCE:
-                # Migration path for old config files
-                if current_audience not in ["private", "public"]:
-                    logger.critical(
-                        f"Config file {config_file} is for audience {current_audience}, but current audience is {CURRENT_AUDIENCE}. Won't load this."
-                    )
-                    return False
-                else:
-                    logger.info(
-                        f"Our current audience {CURRENT_AUDIENCE} is different from config file audience {current_audience}, but since it's a known audience, we'll try to migrate it."
-                    )
-            try:
-                conf_version = version_parse(str(full_config.g("conf_version")))
-                if not conf_version:
-                    logger.critical(
-                        f"Config file {config_file} has no configuration version. Is this a valid npbackup config file?"
-                    )
-                    return False
-                if conf_version < version_parse(
-                    MIN_MIGRATABLE_CONF_VERSION
-                ) or conf_version > version_parse(MAX_CONF_VERSION):
-                    logger.critical(
-                        f"Config file version {str(conf_version)} is not in required version range min={MIN_MIGRATABLE_CONF_VERSION}, max={MAX_CONF_VERSION}"
-                    )
-                    return False
-                if conf_version < version_parse(MIN_CONF_VERSION):
-                    try:
-                        full_config = _migrate_config_dict(
-                            full_config, str(conf_version), MIN_CONF_VERSION
-                        )
-                    except Exception as exc:
-                        logger.critical(
-                            f"Cannot migrate config file {config_file} from version {str(conf_version)} to version {MIN_CONF_VERSION}: {exc}. Please fix your config file manually."
-                        )
-                        logger.error("Trace:", exc_info=True)
-                        sys.exit(1)
-                    logger.info("Writing migrated config file")
-                    save_config(config_file, full_config)
-            except (AttributeError, TypeError, InvalidVersion) as exc:
-                logger.critical(
-                    f"Cannot read conf version from config file {config_file}, which seems bogus: {exc}"
-                )
-                logger.debug("Trace:", exc_info=True)
-                return False
             logger.info(
                 f"Loaded config {_get_config_file_checksum(config_file)} in {config_file.absolute()}"
             )
@@ -1315,15 +1281,23 @@ def load_config(config_file: Path) -> Optional[dict]:
         config_file_is_updated = True
     # Decrypt variables
     _full_config = crypt_config(
-        full_config, AES_KEY, ENCRYPTED_OPTIONS, operation="decrypt"
+        full_config,
+        AES_KEY,
+        ENCRYPTED_OPTIONS,
+        operation="decrypt",
+        obfuscation_fn=obfuscation,
     )
     if _full_config is False:
         if EARLIER_AES_KEYS:
             logger.info("Trying to migrate encryption key")
-            earlier_aes_key_works = False
+            other_keys_work = False
             for earlier_key in EARLIER_AES_KEYS:
                 full_config = crypt_config(
-                    full_config, earlier_key, ENCRYPTED_OPTIONS, operation="decrypt"
+                    full_config,
+                    earlier_key,
+                    ENCRYPTED_OPTIONS,
+                    operation="decrypt",
+                    obfuscation_fn=obfuscation,
                 )
                 if full_config is False:
                     msg = "Cannot decrypt config file. Looks like our keys don't match."
@@ -1332,9 +1306,27 @@ def load_config(config_file: Path) -> Optional[dict]:
                 else:
                     config_file_is_updated = True
                     logger.info("Successfully migrated encryption key")
-                    earlier_aes_key_works = True
+                    other_keys_work = True
                     break
-            if not earlier_aes_key_works:
+        if PUBLIC_AES_KEYS:
+            for public_key in PUBLIC_AES_KEYS:
+                full_config = crypt_config(
+                    full_config,
+                    public_key,
+                    ENCRYPTED_OPTIONS,
+                    operation="decrypt",
+                    obfuscation_fn=public_obfuscation,
+                )
+                if full_config is False:
+                    msg = "Cannot decrypt config file with public key. Looks like our keys don't match."
+                    logger.info(msg)
+
+                else:
+                    config_file_is_updated = True
+                    logger.info("Successfully migrated encryption key with public key")
+                    other_keys_work = True
+                    break
+            if not other_keys_work:
                 msg = "None of our earlier encryption keys did work."
                 logger.critical(msg)
                 raise EnvironmentError(msg)
@@ -1344,6 +1336,52 @@ def load_config(config_file: Path) -> Optional[dict]:
             raise EnvironmentError(msg)
     else:
         full_config = _full_config
+
+    current_audience = full_config.g("audience")
+    if current_audience and current_audience != CURRENT_AUDIENCE:
+        # Migration path for old config files
+        if current_audience not in ["private", "public"]:
+            logger.critical(
+                f"Config file {config_file} is for audience {current_audience}, but current audience is {CURRENT_AUDIENCE}. Won't load this."
+            )
+            return False
+        else:
+            logger.info(
+                f"Our current audience {CURRENT_AUDIENCE} is different from config file audience {current_audience}, but since it's a known audience, we'll try to migrate it."
+            )
+    try:
+        conf_version = version_parse(str(full_config.g("conf_version")))
+        if not conf_version:
+            logger.critical(
+                f"Config file {config_file} has no configuration version. Is this a valid npbackup config file?"
+            )
+            return False
+        if conf_version < version_parse(
+            MIN_MIGRATABLE_CONF_VERSION
+        ) or conf_version > version_parse(MAX_CONF_VERSION):
+            logger.critical(
+                f"Config file version {str(conf_version)} is not in required version range min={MIN_MIGRATABLE_CONF_VERSION}, max={MAX_CONF_VERSION}"
+            )
+            return False
+        if conf_version < version_parse(MIN_CONF_VERSION):
+            try:
+                full_config = _migrate_config_dict(
+                    full_config, str(conf_version), MIN_CONF_VERSION
+                )
+            except Exception as exc:
+                logger.critical(
+                    f"Cannot migrate config file {config_file} from version {str(conf_version)} to version {MIN_CONF_VERSION}: {exc}. Please fix your config file manually."
+                )
+                logger.error("Trace:", exc_info=True)
+                sys.exit(1)
+            logger.info("Writing migrated config file")
+            save_config(config_file, full_config)
+    except (AttributeError, TypeError, InvalidVersion) as exc:
+        logger.critical(
+            f"Cannot read conf version from config file {config_file}, which seems bogus: {exc}"
+        )
+        logger.debug("Trace:", exc_info=True)
+        return False
 
     # Check if we need to expand random vars
     is_modified, full_config = has_random_variables(full_config)
@@ -1371,13 +1409,21 @@ def save_config(config_file: Path, full_config: dict) -> bool:
         with open(config_file, "w", encoding="utf-8") as file_handle:
             if not is_encrypted(full_config):
                 full_config = crypt_config(
-                    full_config, AES_KEY, ENCRYPTED_OPTIONS, operation="encrypt"
+                    full_config,
+                    AES_KEY,
+                    ENCRYPTED_OPTIONS,
+                    operation="encrypt",
+                    obfuscation_fn=obfuscation,
                 )
             yaml = YAML(typ="rt")
             yaml.dump(full_config, file_handle)
         # Since yaml is a "pointer object", we need to decrypt after saving
         full_config = crypt_config(
-            full_config, AES_KEY, ENCRYPTED_OPTIONS, operation="decrypt"
+            full_config,
+            AES_KEY,
+            ENCRYPTED_OPTIONS,
+            operation="decrypt",
+            obfuscation_fn=obfuscation,
         )
         # We also need to extract permissions again
         full_config = extract_permissions_from_full_config(full_config)

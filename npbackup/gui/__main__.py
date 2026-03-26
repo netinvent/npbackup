@@ -816,6 +816,7 @@ def _main_gui(viewer_mode: bool):
                     GUI_STATUS_IGNORE_ERRORS = True
                 except EnvironmentError as exc:
                     popup_error(exc)
+                    break
                 else:
                     if not full_config:
                         popup_error(
