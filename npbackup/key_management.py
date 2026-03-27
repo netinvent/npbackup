@@ -23,7 +23,9 @@ if CURRENT_AUDIENCE == "public":
     from npbackup.secret_keys import AES_KEY
     from npbackup.obfuscation import obfuscation
 
+    # When running as public, we don't need pubkeys for migration
     PUBLIC_AES_KEYS_FOR_PRIVATE_MIGRATION = None
+    public_obfuscation = obfuscation
     try:
         from npbackup.secret_keys import EARLIER_AES_KEYS
     except ImportError:
