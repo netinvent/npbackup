@@ -53,6 +53,60 @@ def remove_prefix(text, prefix):
     return text
 
 
+def wizard_exclusion_window(full_config: dict):
+    layout = [
+        [npbackup.gui.common_gui.exclusion_col()],
+        [
+            sg.Push(),
+            sg.Button(
+                _t("generic.close"), key="-CLOSE-EXCLUSIONS-", font=SUBTITLE_FONT
+            ),
+        ],
+    ]
+
+    exclusion_window = sg.Window(
+        _t("wizard_gui.handle_exclusions"),
+        layout=layout,
+        size=(int(800 * WINDOW_SCALING), int(600 * WINDOW_SCALING)),
+        modal=True,
+        grab_anywhere=True,
+        resizable=True,
+        finalize=True,
+    )
+
+    npbackup.gui.common_gui_logic.update_object_gui(
+        window=exclusion_window,
+        full_config=full_config,
+        object_type=OBJECT_TYPE,
+        object_name=OBJECT_NAME,
+        unencrypted=False,
+        is_wizard=True,
+    )
+
+    while True:
+        event, values = exclusion_window.read()
+        if event in (sg.WIN_CLOSED, "-CLOSE-EXCLUSIONS-"):
+            break
+        npbackup.gui.common_gui_logic.handle_gui_events(
+            event=event,
+            values=values,
+            window=exclusion_window,
+            full_config=full_config,
+            is_wizard=True,
+        )
+
+    npbackup.gui.common_gui_logic.update_config_dict(
+        window=exclusion_window,
+        full_config=full_config,
+        object_type=OBJECT_TYPE,
+        object_name=OBJECT_NAME,
+        values=values,
+        is_wizard=True,
+    )
+    exclusion_window.close()
+    return full_config
+
+
 def create_step_header(step_num: int, title_key: str, desc_key: str = None) -> list:
     """Create a consistent step header with icon and title"""
     step_icon = (
@@ -67,8 +121,8 @@ def create_step_header(step_num: int, title_key: str, desc_key: str = None) -> l
         else []
     )
     header = [
-        step_icon
-        + [
+        # step_icon +  # Doesn't cope well with Linux, remove it for now
+        [
             sg.Column(
                 [
                     [
@@ -126,6 +180,14 @@ def wizard_layouts() -> dict:
                     expand_x=True,
                     expand_y=True,
                 )
+            ],
+            [
+                sg.Push(),
+                sg.Button(
+                    _t("wizard_gui.handle_exclusions"),
+                    key="-EXCLUSION-LISTS-MENU-",
+                    font=SUBTITLE_FONT,
+                ),
             ],
         ],
         "wizard_layout_2": create_step_header(
@@ -885,6 +947,10 @@ def start_wizard(full_config: dict, config_file: str):
         )
 
         ## WIZARD STEP 1 ##
+
+        if event == "-EXCLUSION-LISTS-MENU-":
+            full_config = wizard_exclusion_window(full_config)
+
         if current_tab == 1:
             if len(wizard["backup_opts.paths"].TreeData.tree_dict.values()) < 2:
                 result = sg.popup(

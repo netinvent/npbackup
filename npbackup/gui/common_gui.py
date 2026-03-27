@@ -19,6 +19,7 @@ from logging import getLogger
 import FreeSimpleGUI as sg
 import textwrap
 from npbackup.core.i18n_helper import _t
+from npbackup.gui.constants import combo_boxes, byte_units
 from npbackup.gui.ttk_theme import TITLE_FONT, SUBTITLE_FONT
 from resources.customization import NON_INHERITED_ICON, INHERITED_ICON
 
@@ -181,6 +182,141 @@ def generic_row(
         )
     ]
     return row
+
+
+def exclusion_col():
+    return [
+        [
+            sg.Push(),
+            sg.Button(
+                _t("generic.remove_selected"),
+                key="--REMOVE-EXCLUDE-PATTERN--",
+                size=(18, 1),
+            ),
+            sg.Button(
+                _t("generic.add") + " ▾",
+                key="--ADD-EXCLUDE-PATTERN--",
+                size=(18, 1),
+            ),
+        ],
+        [
+            sg.Tree(
+                sg.TreeData(),
+                key="backup_opts.exclude_patterns",
+                headings=[],
+                col0_heading=_t("config_gui.exclude_patterns"),
+                num_rows=4,
+                expand_x=True,
+                expand_y=True,
+            )
+        ],
+        [sg.HSeparator()],
+        [
+            sg.Push(),
+            sg.Input(
+                visible=False,
+                key="--ADD-EXCLUDE-FILE--",
+                enable_events=True,
+            ),
+            sg.Button(
+                _t("generic.remove_selected"),
+                key="--REMOVE-EXCLUDE-FILE--",
+                size=(18, 1),
+            ),
+            sg.Button(
+                _t("generic.add_manually"),
+                key="--ADD-EXCLUDE-FILE-MANUALLY--",
+                size=(18, 1),
+            ),
+            sg.FilesBrowse(
+                _t("generic.add") + " ▾",
+                target="--ADD-EXCLUDE-FILE--",
+                size=(18, 1),
+            ),
+        ],
+        [
+            sg.Tree(
+                sg.TreeData(),
+                key="backup_opts.exclude_files",
+                headings=[],
+                col0_heading=_t("config_gui.exclude_files"),
+                num_rows=4,
+                expand_x=True,
+                expand_y=True,
+            )
+        ],
+        [sg.HSeparator()],
+        [
+            sg.Image(
+                NON_INHERITED_ICON,
+                key="inherited.backup_opts.exclude_files_larger_than",
+                tooltip=_t("config_gui.group_inherited"),
+                pad=1,
+            ),
+            sg.Text(
+                _t("config_gui.exclude_files_larger_than"),
+                size=(40, 1),
+            ),
+            sg.Input(key="backup_opts.exclude_files_larger_than", size=(8, 1)),
+            sg.Combo(
+                byte_units,
+                default_value=byte_units[3],
+                key="backup_opts.exclude_files_larger_than_unit",
+            ),
+        ],
+        [
+            sg.Image(
+                NON_INHERITED_ICON,
+                key="inherited.backup_opts.ignore_cloud_files",
+                tooltip=_t("config_gui.group_inherited"),
+                pad=1,
+            ),
+            sg.Checkbox(
+                f'{_t("config_gui.ignore_cloud_files")} ({_t("config_gui.windows_only")})',
+                key="backup_opts.ignore_cloud_files",
+                size=(None, 1),
+            ),
+        ],
+        [
+            sg.Image(
+                NON_INHERITED_ICON,
+                key="inherited.backup_opts.excludes_case_ignore",
+                tooltip=_t("config_gui.group_inherited"),
+                pad=1,
+            ),
+            sg.Checkbox(
+                f'{_t("config_gui.excludes_case_ignore")} ({_t("config_gui.windows_no_effect")})',
+                key="backup_opts.excludes_case_ignore",
+                size=(None, 1),
+            ),
+        ],
+        [
+            sg.Image(
+                NON_INHERITED_ICON,
+                key="inherited.backup_opts.exclude_caches",
+                tooltip=_t("config_gui.group_inherited"),
+                pad=1,
+            ),
+            sg.Checkbox(
+                _t("config_gui.exclude_cache_dirs"),
+                key="backup_opts.exclude_caches",
+                size=(None, 1),
+            ),
+        ],
+        [
+            sg.Image(
+                NON_INHERITED_ICON,
+                key="inherited.backup_opts.one_file_system",
+                tooltip=_t("config_gui.group_inherited"),
+                pad=1,
+            ),
+            sg.Checkbox(
+                _t("config_gui.one_file_system"),
+                key="backup_opts.one_file_system",
+                size=(None, 1),
+            ),
+        ],
+    ]
 
 
 def per_object_monitoring_identity_col():

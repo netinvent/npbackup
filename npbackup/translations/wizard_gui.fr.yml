@@ -27,11 +27,12 @@ fr:
   step_7: Résumé
   step_7_description: Votre configuration de sauvegarde est maintenant terminée
 
-
+  # STEP 1
   add_system: Ajouter un système Windows
   add_hyper_v: Ajouter des machines virtuelles Hyper-V
   add_kvm: Ajouter des machines virtuelles KVM
-
+  handle_exclusions: Gérer les exclusions
+  
   # STEP 2
   remote_username: Nom d'utilisateur distant
   remote_password: Mot de passe distant

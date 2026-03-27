@@ -508,7 +508,8 @@ def update_object_gui(
         )
 
         # Enable settings only valid for repos
-        window["repo_uri"].Update(visible=True)
+        if "repo_uri" in window.AllKeysDict:
+            window["repo_uri"].Update(visible=True)
         if not is_wizard:
             window["--SET-PERMISSIONS--"].Update(visible=True)
             window["current_permissions"].Update(visible=True)
@@ -707,6 +708,7 @@ def update_gui_values(
 
         # Update GUI column rows from list
         # Must be handled before window.AllKeysDict since the window itself won't have a key for those
+
         if key in list(column_list_keys.keys()):
             column_key = column_list_keys[key]
             for entry in value:
@@ -1211,26 +1213,28 @@ def add_generic_row(
                 # logger.debug(f"Value {value} already exists in column {column_key}, skipping")
                 return
 
-    COLUMN_LIST_COUNTERS[column_key] += 1
+    # Check if actual column exists in GUI (wizard exclude sub window doesn't have those columns)
+    if f"-{column_key}-COLUMN-" in window.AllKeysDict:
+        COLUMN_LIST_COUNTERS[column_key] += 1
 
-    window.extend_layout(
-        window[f"-{column_key}-COLUMN-"],
-        [
-            npbackup.gui.common_gui.generic_row(
-                name=column_key,
-                index=COLUMN_LIST_COUNTERS[column_key],
-                size=(20, 1),
-                optional_prefix_object=sg.Text(_t("generic.tag").capitalize()),
-                inherited=inherited,
-            )
-        ],
-    )
-    window.refresh()
-    if value:
-        window[(f"-{column_key}-", COLUMN_LIST_COUNTERS[column_key])].update(
-            value=value
+        window.extend_layout(
+            window[f"-{column_key}-COLUMN-"],
+            [
+                npbackup.gui.common_gui.generic_row(
+                    name=column_key,
+                    index=COLUMN_LIST_COUNTERS[column_key],
+                    size=(20, 1),
+                    optional_prefix_object=sg.Text(_t("generic.tag").capitalize()),
+                    inherited=inherited,
+                )
+            ],
         )
-    window[f"-{column_key}-COLUMN-"].contents_changed()
+        window.refresh()
+        if value:
+            window[(f"-{column_key}-", COLUMN_LIST_COUNTERS[column_key])].update(
+                value=value
+            )
+        window[f"-{column_key}-COLUMN-"].contents_changed()
 
 
 def handle_gui_events(
