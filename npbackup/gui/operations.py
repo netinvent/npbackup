@@ -163,9 +163,9 @@ def task_scheduler(config_file: str, full_config: dict) -> None:
                 popup_error(_t("config_gui.select_only_one_task"))
                 continue
             index = values["-EXISTING-TASKS-"][0]
-            task_type = tasks[index][0]
-            object_type = tasks[index][1]
-            object_name = tasks[index][2]
+            task_type = tasks[index]["task_type"]
+            object_type = tasks[index]["object_type"]
+            object_name = tasks[index]["object_name"]
             result = npbackup.task.delete_scheduled_task(
                 config_file, task_type, object_type, object_name
             )
