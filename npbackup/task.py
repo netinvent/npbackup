@@ -594,6 +594,7 @@ if ($results.Count -gt 0) {{
 """
     try:
         runner = PowerShellRunner()
+        runner._tmp_script_identifier = f"npbackup_read_tasks_"
         exit_code, output = runner.run_script(ps_script, elevated=True)
         if exit_code != 0 or not output or not output.strip():
             logger.debug(f"No scheduled tasks found or PowerShell error: {output}")
@@ -913,7 +914,17 @@ def create_scheduled_task_windows(
     # Register task from XML
     logger.info("Creating scheduled task {}".format(task_name))
 
-    user_arg = "-User 'SYSTEM'" if not as_current_user else ""
+    if not as_current_user:
+        logger.info("Registering task to run as SYSTEM user")
+        user_arg = "-User 'SYSTEM'"
+        ps_user_script = ""
+    else:
+        user_arg = "-User $username -Password $password"
+        ps_user_script = """
+$credential = Get-Credential
+$username = $Credential.Username
+$password = $Credential.GetNetworkCredential().Password
+"""
 
     task_name = _get_scheduled_task_name_windows(
         config_file, task_type, object_type, object_name
@@ -921,11 +932,15 @@ def create_scheduled_task_windows(
 
     ps_script = """
 Unregister-ScheduledTask -TaskName '{}' -Confirm:$false -ErrorAction SilentlyContinue
+{}
 Register-ScheduledTask -TaskName '{}' -Xml (Get-Content -LiteralPath '{}' -Raw) {}
-""".format(task_name, task_name, temp_task_file, user_arg)
+""".format(task_name, ps_user_script, task_name, temp_task_file, user_arg)
 
     try:
         runner = PowerShellRunner()
+        runner._tmp_script_identifier = f"npbackup_register_task_"
+        if ps_user_script:
+            runner.interactive = True
         exit_code, output = runner.run_script(ps_script, elevated=True)
         if exit_code != 0:
             logger.error(
@@ -962,6 +977,7 @@ def _delete_scheduled_task_windows(
     )
     try:
         runner = PowerShellRunner()
+        runner._tmp_script_identifier = f"npbackup_delete_task_"
         exit_code, output = runner.run_script(
             ps_cmd, elevated=True, valid_exit_codes=[0, 1]
         )

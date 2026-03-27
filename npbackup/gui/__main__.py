@@ -1044,7 +1044,7 @@ def _main_gui(viewer_mode: bool):
                                 [
                                     sg.Text(_t("main_gui.backup_state"), size=(28, 1)),
                                     sg.Button(
-                                        _t("generic.refresh"),
+                                        _t("generic.refresh_repo"),
                                         key="--STATE-BUTTON--",
                                         button_color=("white", "grey"),
                                         font=SUBTITLE_FONT,

@@ -87,7 +87,8 @@ en:
   add_manually: Add manually
   remove_selected: Remove selected
 
-  refresh: Refresh repo info
+  refresh_repo: Refresh repo info
+  refresh: Refresh
   load: Load
 
   monday: monday

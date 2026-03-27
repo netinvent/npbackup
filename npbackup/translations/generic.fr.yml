@@ -86,7 +86,8 @@ fr:
   add_manually: Ajouter manuellement
   remove_selected: Enlever la sélection
 
-  refresh: Recharger les informations du dépot
+  refresh_repo: Recharger les informations du dépot
+  refresh: Recharger
   load: Charger
 
   monday: lundi

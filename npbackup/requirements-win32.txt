@@ -38,5 +38,5 @@ zabbix-utils>=2.0.4
 # sslpsk is not needed with Python 3.13+ since it's included in standard ssl lib but is not compatibl with win32 bit, let's exclude it
 #sslpsk3>=2.0.0 ; python_version < '3.13'
 python-crontab>=3.3.0; platform_system != "Windows"
-windows_tools.powershell>=0.5.0; platform_system == "Windows"
+windows_tools.powershell>=0.6.0; platform_system == "Windows"
 pillow

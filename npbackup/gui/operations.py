@@ -87,6 +87,7 @@ def task_scheduler(config_file: str, full_config: dict) -> None:
         ],
         [
             sg.Push(),
+            sg.Button(_t("generic.refresh"), key="--REFRESH-TASKS--", size=(18, 1)),
             sg.Button(
                 _t("generic.remove_selected"), key="--REMOVE-TASK--", size=(18, 1)
             ),
@@ -169,6 +170,10 @@ def task_scheduler(config_file: str, full_config: dict) -> None:
             result = npbackup.task.delete_scheduled_task(
                 config_file, task_type, object_type, object_name
             )
+            tasks = npbackup.gui.common_gui_logic.update_task_list(
+                config_file, full_config, window
+            )
+        if event == "--REFRESH-TASKS--":
             tasks = npbackup.gui.common_gui_logic.update_task_list(
                 config_file, full_config, window
             )

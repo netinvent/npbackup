@@ -1665,16 +1665,16 @@ def create_scheduled_task(
 
     run_as = values["-SCHEDULE-RUN-AS-"]
     if run_as in ["SYSTEM", "root"]:
-        run_as_user = None
+        as_current_user = False
     else:
-        run_as_user, password = get_user_and_password_for_run_as()
+        as_current_user = True
 
     result = npbackup.task.create_scheduled_task(
         config_file,
         task_type=task_type,
         object_type=object_type,
         object_name=object_name,
-        as_current_user=True,
+        as_current_user=as_current_user,
         start_date_time=start_date_time,
         interval=interval,
         interval_unit=interval_unit,
