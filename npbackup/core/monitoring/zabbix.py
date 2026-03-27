@@ -254,7 +254,6 @@ class ZabbixMonitor(MonitoringBackend):
 
         if self.zabbix_send_method != "RawJSON":
             # Send LLD discovery data so Zabbix creates items from prototypes
-            self._send_discovery(zabbix_server, zabbix_port, socket_wrapper)
             # Now let's sleep arbitrary time in seconds to give zabbix server time to process the discovery
             # WIP: This could perhaps be improved by checking the Zabbix server for the existence of
             # the discovered items before sending metrics (requires API client)
@@ -268,6 +267,7 @@ class ZabbixMonitor(MonitoringBackend):
                 logger.info(
                     f"Sent Zabbix discovery data. Sleeping {self.zabbix_discovery_wait_time} seconds to allow Zabbix server to process data before sending metrics"
                 )
+                self._send_discovery(zabbix_server, zabbix_port, socket_wrapper)
                 sleep(self.zabbix_discovery_wait_time)
 
         # Convert metrics to ItemValue list and send
@@ -275,16 +275,18 @@ class ZabbixMonitor(MonitoringBackend):
 
         # When using RawJSON, we need to send data twice for a collector to create the corresponding host
         if self.zabbix_send_method == "RawJSON" and self.zabbix_raw_json_collector_host:
-            collector_items = self._build_item_values(
-                metrics, operation, collector=self.zabbix_raw_json_collector_host
-            )
-            self._send_to_zabbix(
-                zabbix_server, zabbix_port, collector_items, socket_wrapper
-            )
-            logger.info(
-                f"Sending to Zabbix as {self.zabbix_send_method} with raw json collector host {self.zabbix_raw_json_collector_host}. Now waiting {self.zabbix_discovery_wait_time} seconds for Zabbix server to be able to process our data."
-            )
-            sleep(self.zabbix_discovery_wait_time)
+            if not ZABBIX_DISCOVERY_SENT:
+                ZABBIX_DISCOVERY_SENT = True
+                logger.info(
+                    f"Sending to Zabbix as {self.zabbix_send_method} with raw json collector host {self.zabbix_raw_json_collector_host}. Now waiting {self.zabbix_discovery_wait_time} seconds for Zabbix server to be able to process our data."
+                )
+                collector_items = self._build_item_values(
+                    metrics, operation, collector=self.zabbix_raw_json_collector_host
+                )
+                self._send_to_zabbix(
+                    zabbix_server, zabbix_port, collector_items, socket_wrapper
+                )
+                sleep(self.zabbix_discovery_wait_time)
         return self._send_to_zabbix(zabbix_server, zabbix_port, items, socket_wrapper)
 
     def _build_item_values(
