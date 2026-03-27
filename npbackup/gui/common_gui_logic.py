@@ -232,6 +232,53 @@ def set_permissions(full_config: dict, object_type: str, object_name: str) -> di
     return full_config
 
 
+#### GET TASK USER AND PASSWORD ####
+
+
+def get_user_and_password_for_run_as() -> Tuple[Optional[str], Optional[str]]:
+    layout = [
+        [
+            sg.Text(_t("config_gui.run_task_as"), size=(40, 1)),
+            sg.Input(key="-RUN-AS-USER-", size=(50, 1)),
+        ],
+        [
+            sg.Text(_t("generic.password").capitalize(), size=(40, 1)),
+            sg.Input(
+                key="-RUN-AS-PASSWORD-",
+                size=(50, 1),
+                password_char="*",
+            ),
+        ],
+        [
+            sg.Push(),
+            sg.Button(_t("generic.cancel"), key="--CANCEL--"),
+            sg.Button(_t("generic.accept"), key="--ACCEPT--"),
+        ],
+    ]
+    window = sg.Window(
+        _t("config_gui.run_task_as"),
+        layout,
+        keep_on_top=True,
+        no_titlebar=False,
+        grab_anywhere=True,
+    )
+    while True:
+        event, values = window.read()
+        if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--CANCEL--"):
+            run_as_user = None
+            password = None
+            break
+        if event == "--ACCEPT--":
+            run_as_user = values["-RUN-AS-USER-"]
+            password = values["-RUN-AS-PASSWORD-"]
+            if not run_as_user or not password:
+                popup_error(_t("config_gui.run_task_as_requires_user_and_password"))
+                continue
+            break
+    window.close()
+    return run_as_user, password
+
+
 #### OBJECT RELATED LOGIC ###
 
 
@@ -1615,6 +1662,12 @@ def create_scheduled_task(
     except (ValueError, TypeError, IndexError, KeyError) as exc:
         logger.error(f"Invalid date format, not creating scheduled task: {exc}")
         return False, full_config
+
+    run_as = values["-SCHEDULE-RUN-AS-"]
+    if run_as in ["SYSTEM", "root"]:
+        run_as_user = None
+    else:
+        run_as_user, password = get_user_and_password_for_run_as()
 
     result = npbackup.task.create_scheduled_task(
         config_file,

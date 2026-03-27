@@ -1170,6 +1170,16 @@ def scheduling_col(is_wizard: bool = False, task_types: list = None):
                 _t("generic.sunday").capitalize(), key="-DAY-sunday-", default=True
             ),
         ],
+        [
+            sg.Text(_t("config_gui.run_task_as"), size=(55, 1)),
+            sg.Combo(
+                values=(
+                    ["SYSTEM", "USER"] if os.name == "nt" else ["root", "current user"]
+                ),
+                default_value="SYSTEM" if os.name == "nt" else "root",
+                key="-SCHEDULE-RUN-AS-",
+            ),
+        ],
     ]
 
     # Construct object depending on environment
