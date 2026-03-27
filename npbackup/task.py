@@ -910,28 +910,26 @@ def create_scheduled_task_windows(
         )
         return False
 
-    _delete_scheduled_task_windows(
-        config_file,
-        task_type,
-        object_type,
-        object_name,
-    )
-
     # Register task from XML
     logger.info("Creating scheduled task {}".format(task_name))
 
     user_arg = "-User 'SYSTEM'" if not as_current_user else ""
-    ps_cmd = (
-        "Register-ScheduledTask -TaskName '{}' "
-        "-Xml (Get-Content -LiteralPath '{}' -Raw) {}"
-    ).format(task_name, temp_task_file, user_arg)
+
+    task_name = _get_scheduled_task_name_windows(
+        config_file, task_type, object_type, object_name
+    )
+
+    ps_script = """
+Unregister-ScheduledTask -TaskName '{}' -Confirm:$false -ErrorAction SilentlyContinue
+Register-ScheduledTask -TaskName '{}' -Xml (Get-Content -LiteralPath '{}' -Raw) {}
+""".format(task_name, task_name, temp_task_file, user_arg)
 
     try:
         runner = PowerShellRunner()
-        exit_code, output = runner.run_script(ps_cmd, elevated=True)
+        exit_code, output = runner.run_script(ps_script, elevated=True)
         if exit_code != 0:
             logger.error(
-                f"Could not create new task: cmd {ps_cmd}\nexit_code {exit_code}: {output}"
+                f"Could not create new task: cmd {ps_script}\nexit_code {exit_code}: {output}"
             )
             return False
     except OSError as exc:
