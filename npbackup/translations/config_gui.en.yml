@@ -100,6 +100,7 @@ en:
   task_type: Task type
   select_task_scope: Select task scope
   reading_tasks: Reading existing scheduled tasks
+  elevate_uac_tasks: In order to handle windows tasks, UAC elevation is required. Please allow UAC prompt if you want to see existing tasks or create new ones
 
   machine_identification: Machine identification
   machine_id: Machine identifier

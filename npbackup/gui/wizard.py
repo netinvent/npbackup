@@ -9,10 +9,14 @@ __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
 
 
+import os
 from typing import List, Tuple
 from logging import getLogger
 import FreeSimpleGUI as sg
 import textwrap
+
+if os.name == "nt":
+    from command_runner.elevate import is_admin
 from resources.customization import (
     OEM_LOGO,
     OEM_ICON,
@@ -1111,22 +1115,39 @@ def start_wizard(full_config: dict, config_file: str):
                 encrypted_env_variables,
             )
 
-            result, full_config = npbackup.gui.common_gui_logic.create_scheduled_task(
-                values, full_config, config_file
-            )
-            if not result:
-                result = sg.popup(
-                    _t("config_gui.scheduled_task_creation_failure")
-                    + "\n"
-                    + _t("wizard_gui.do_you_still_want_to_save"),
-                    custom_text=(_t("generic.no"), _t("generic.yes")),
-                    keep_on_top=True,
-                    icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
-                    title=_t("generic.warning").capitalize(),
-                    line_width=100,
+            create_task = True
+            if os.name == "nt":
+                if not is_admin():
+                    result = sg.popup(
+                        _t("config_gui.elevate_uac_tasks"),
+                        custom_text=(_t("generic.no"), _t("generic.yes")),
+                        keep_on_top=True,
+                        icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
+                        title=_t("generic.information").capitalize(),
+                        line_width=100,
+                    )
+                    if result != _t("generic.yes"):
+                        create_task = False
+
+            if create_task:
+                result, full_config = (
+                    npbackup.gui.common_gui_logic.create_scheduled_task(
+                        values, full_config, config_file
+                    )
                 )
-                if result == _t("generic.no"):
-                    break
+                if not result:
+                    result = sg.popup(
+                        _t("config_gui.scheduled_task_creation_failure")
+                        + "\n"
+                        + _t("wizard_gui.do_you_still_want_to_save"),
+                        custom_text=(_t("generic.no"), _t("generic.yes")),
+                        keep_on_top=True,
+                        icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
+                        title=_t("generic.warning").capitalize(),
+                        line_width=100,
+                    )
+                    if result == _t("generic.no"):
+                        break
 
             result = npbackup.configuration.save_config(config_file, full_config)
             if result:
@@ -1160,6 +1181,18 @@ def start_wizard(full_config: dict, config_file: str):
         if (
             event in ("-NEXT-", "-PREVIOUS-") and current_tab == 3
         ) or event == "-BREADCRUMB-3-":
+            if os.name == "nt":
+                if not is_admin():
+                    result = sg.popup(
+                        _t("config_gui.elevate_uac_tasks"),
+                        custom_text=(_t("generic.no"), _t("generic.yes")),
+                        keep_on_top=True,
+                        icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
+                        title=_t("generic.information").capitalize(),
+                        line_width=100,
+                    )
+                    if result != _t("generic.yes"):
+                        continue
             # run thread after window is finalized and active tab is set so controls get expanded
             # Limit scheduled task to backup operation in wizard
             thread = (

@@ -101,6 +101,7 @@ fr:
   task_type: Type de tâche
   select_task_scope: Sélectionner la portée de la tâche
   reading_tasks: Lecture des tâches planifiées existantes
+  elevate_uac_tasks: Pour gérer les tâches planifiées Windows, une élévation UAC est requise. Veuillez autoriser l'invite UAC si vous souhaitez voir les tâches existantes ou en créer de nouvelles
 
   machine_identification: Identification machine
   machine_id: Identificateur machine
