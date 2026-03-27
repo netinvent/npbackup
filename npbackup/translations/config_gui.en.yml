@@ -235,6 +235,8 @@ en:
   zabbix_server: Zabbix server
   zabbix_port: Zabbix port
   zabbix_send_method: Zabbix send method
+  zabbix_raw_json_collector_host: Zabbix raw json collector host
+  zabbix_discovery_wait_time: Zabbix discovery wait time (seconds)
   zabbix_authentication_method: Authentication method
   zabbix_tls_cert: Zabbix TLS cert file
   zabbix_tls_key: Zabbix TLS key

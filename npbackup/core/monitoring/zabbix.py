@@ -124,7 +124,6 @@ class ZabbixMonitor(MonitoringBackend):
             logger.error("Zabbix server not configured.")
             return False
 
-        # WIP: to implement: raw JSON protocol
         try:
             self.zabbix_send_method = self.get_monitoring_value("global_zabbix.method")
         except (KeyError, AttributeError) as exc:
@@ -132,6 +131,27 @@ class ZabbixMonitor(MonitoringBackend):
                 f"No Zabbix send method configured, defaulting to ZabbixProtocol: {exc}"
             )
             self.zabbix_send_method = "ZabbixProtocol"
+
+        if self.zabbix_send_method == "RawJSON":
+            try:
+                self.zabbix_raw_json_collector_host = self.get_monitoring_value(
+                    "global_zabbix.raw_json_collector_host"
+                )
+            except (KeyError, AttributeError) as exc:
+                logger.debug(
+                    f"No Zabbix raw json collector host configured, defaulting to None: {exc}"
+                )
+                self.zabbix_raw_json_collector_host = None
+
+        try:
+            self.zabbix_discovery_wait_time = self.get_monitoring_value(
+                "global_zabbix.discovery_wait_time"
+            )
+        except (KeyError, AttributeError) as exc:
+            logger.debug(
+                f"No Zabbix discovery wait time configured, defaulting to 10: {exc}"
+            )
+            self.zabbix_discovery_wait_time = 10
 
         no_cert_verify = self.get_monitoring_value(
             "global_zabbix.no_cert_verify", False
@@ -232,31 +252,46 @@ class ZabbixMonitor(MonitoringBackend):
             logger.info("Dry run mode. Not sending Zabbix metrics.")
             return True
 
-        # Send LLD discovery data so Zabbix creates items from prototypes
-        self._send_discovery(zabbix_server, zabbix_port, socket_wrapper)
-        # Now let's sleep arbitrary 20 seconds to give zabbix server time to process the discovery
-        # WIP: This could perhaps be improved by checking the Zabbix server for the existence of
-        # the discovered items before sending metrics (requires API client)
-        # As for now, let's just be full stupid cand keep a global variable around
-        # Btw, 10 seconds isn't sufficient on our test server
+        if self.zabbix_send_method != "RawJSON":
+            # Send LLD discovery data so Zabbix creates items from prototypes
+            self._send_discovery(zabbix_server, zabbix_port, socket_wrapper)
+            # Now let's sleep arbitrary time in seconds to give zabbix server time to process the discovery
+            # WIP: This could perhaps be improved by checking the Zabbix server for the existence of
+            # the discovered items before sending metrics (requires API client)
+            # As for now, let's just be full stupid cand keep a global variable around
+            # Btw, 10 seconds isn't sufficient on our test server
 
-        # Plain stupid global variable here...
-        # We would need to keep track of discovery sent per target somehow
-        if not ZABBIX_DISCOVERY_SENT:
-            ZABBIX_DISCOVERY_SENT = True
-            logger.info(
-                "Sent Zabbix discovery data. Sleeping 20 seconds to allow Zabbix server to process data before sending metrics"
-            )
-            sleep(20)
+            # Plain stupid global variable here...
+            # We would need to keep track of discovery sent per target somehow
+            if not ZABBIX_DISCOVERY_SENT:
+                ZABBIX_DISCOVERY_SENT = True
+                logger.info(
+                    f"Sent Zabbix discovery data. Sleeping {self.zabbix_discovery_wait_time} seconds to allow Zabbix server to process data before sending metrics"
+                )
+                sleep(self.zabbix_discovery_wait_time)
 
         # Convert metrics to ItemValue list and send
         items = self._build_item_values(metrics, operation)
+
+        # When using RawJSON, we need to send data twice for a collector to create the corresponding host
+        if self.zabbix_send_method == "RawJSON" and self.zabbix_raw_json_collector_host:
+            collector_items = self._build_item_values(
+                metrics, operation, collector=self.zabbix_raw_json_collector_host
+            )
+            self._send_to_zabbix(
+                zabbix_server, zabbix_port, collector_items, socket_wrapper
+            )
+            logger.info(
+                f"Sending to Zabbix as {self.zabbix_send_method} with raw json collector host {self.zabbix_raw_json_collector_host}. Now waiting {self.zabbix_discovery_wait_time} seconds for Zabbix server to be able to process our data."
+            )
+            sleep(self.zabbix_discovery_wait_time)
         return self._send_to_zabbix(zabbix_server, zabbix_port, items, socket_wrapper)
 
     def _build_item_values(
         self,
         metrics: Dict[str, Any],
         operation: str,
+        collector: str = None,
     ) -> List:
         """
         Convert metrics dictionary to a list of zabbix-utils ItemValue objects.
@@ -272,22 +307,25 @@ class ZabbixMonitor(MonitoringBackend):
             List of ItemValue objects
         """
         items = []
-        instance = self.common_labels.get("instance", "default_instance")
+        if not collector:
+            instance = self.common_labels.get("instance", "default_instance")
+        else:
+            instance = collector
 
+        # When sending Raw JSON, we need to send all metrics as single JSON blob in a key like "npbackup.metrics_json" so the collector can pick it up and parse it, instead of relying on LLD discovery and item prototypes as with ZabbixProtocol method
+        # The key must be defined on the Zabbix  server side
+        # See examples for usage
+        json_blob = json.dumps(self.build_json_output(metrics, operation))
         if self.zabbix_send_method != "ZabbixProtocol":
-            logger.info(
-                f"Zabbix send method {self.zabbix_send_method} not implemented, defaulting to ZabbixProtocol"
-            )
             items.append(
                 ItemValue(
                     instance,
                     "npbackup.metrics_json",
-                    json.dumps(metrics),
+                    json_blob,
                     clock=self.metrics_timestamp,
                 )
             )
         else:
-
             for metric_name, value in metrics.items():
                 if value is None:
                     continue
@@ -375,6 +413,11 @@ class ZabbixMonitor(MonitoringBackend):
         All common_labels are sent as LLD macros so they can be used as
         tags on discovered items, mirroring how Prometheus exposes labels.
         """
+        if self.zabbix_send_method == "RawJSON":
+            logger.info(
+                f"Zabbix send method {self.zabbix_send_method} does not rely on LLD discovery but on Collector Data, skipping LLD discovery step"
+            )
+            return True
         instance = self.common_labels.get("instance", "default_instance")
 
         # Build LLD entity with all common labels as macros

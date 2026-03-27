@@ -146,7 +146,7 @@ def create_step_header(step_num: int, title_key: str, desc_key: str = None) -> l
                 pad=0,
             ),
         ],
-        [sg.HorizontalSeparator(pad=((0, 0), (5, 5)))],
+        [sg.HorizontalSeparator(pad=((0, 0), (0, 0)))],
     ]
     return header
 
@@ -684,6 +684,7 @@ def start_wizard(full_config: dict, config_file: str):
         grab_anywhere=True,
         auto_size_text=True,
         auto_size_buttons=True,
+        resizable=True,
         default_element_size=(12, 1),
         default_button_element_size=(16, 1),
     )
@@ -700,7 +701,7 @@ def start_wizard(full_config: dict, config_file: str):
                     button_color=(sg.theme_button_color()[0], None)
                 )
                 wizard[f"-BREADCRUMB-{tab_index}-"].update_color(
-                    "#88FF88" if tab_index < active_number else "#AAAAAA"
+                    "#212AA7" if tab_index < active_number else "#84AAFF"
                 )
         wizard[f"-TAB{active_number}-"].Update(visible=True)
         wizard[f"-BREADCRUMB-{active_number}-"].Update(
@@ -904,6 +905,10 @@ def start_wizard(full_config: dict, config_file: str):
     event, values = wizard.read(timeout=0.1)
     set_active_tab(1)
     npbackup.gui.common_gui_logic.update_monitoring_visibility(
+        window=wizard, values=values
+    )
+
+    npbackup.gui.common_gui_logic.update_zabbix_option_visibility(
         window=wizard, values=values
     )
 

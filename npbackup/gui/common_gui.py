@@ -567,13 +567,49 @@ def global_zabbix_col():
                         sg.Input(key="global_zabbix.port", size=(50, 1)),
                     ],
                     [
+                        sg.Text(_t("config_gui.no_cert_verify"), size=(40, 1)),
+                        sg.Checkbox(
+                            "", key="global_zabbix.no_cert_verify", size=(41, 1)
+                        ),
+                    ],
+                    [
+                        sg.Text(
+                            _t("config_gui.zabbix_discovery_wait_time"), size=(40, 1)
+                        ),
+                        sg.Input(key="global_zabbix.discovery_wait_time", size=(50, 1)),
+                    ],
+                    [
                         sg.Text(_t("config_gui.zabbix_send_method"), size=(40, 1)),
                         sg.Combo(
                             values=["ZabbixProtocol", "RawJSON"],
                             default_value="ZabbixProtocol",
                             key="global_zabbix.method",
+                            enable_events=True,
                             size=(45, 1),
                         ),
+                    ],
+                    [
+                        sg.pin(
+                            sg.Col(
+                                [
+                                    [
+                                        sg.Text(
+                                            _t(
+                                                "config_gui.zabbix_raw_json_collector_host"
+                                            ),
+                                            size=(40, 1),
+                                        ),
+                                        sg.Input(
+                                            key="global_zabbix.raw_json_collector_host",
+                                            size=(50, 1),
+                                        ),
+                                    ]
+                                ],
+                                key="-ZABBIX-RAW-JSON-OPTIONS-",
+                                visible=False,
+                                pad=(0, 0),
+                            )
+                        )
                     ],
                     [
                         sg.Text(
@@ -583,45 +619,85 @@ def global_zabbix_col():
                             ["none", "tls", "psk"],
                             key="global_zabbix.authentication",
                             size=(45, 1),
+                            enable_events=True,
                         ),
                     ],
                     [
-                        sg.Text(_t("config_gui.no_cert_verify"), size=(40, 1)),
-                        sg.Checkbox(
-                            "", key="global_zabbix.no_cert_verify", size=(41, 1)
-                        ),
+                        sg.pin(
+                            sg.Col(
+                                [
+                                    [
+                                        sg.Text(
+                                            _t("config_gui.zabbix_tls_cert"),
+                                            size=(40, 1),
+                                        ),
+                                        sg.Input(
+                                            key="global_zabbix.tls_cert", size=(38, 1)
+                                        ),
+                                        sg.FileBrowse(
+                                            button_text=_t("generic.select"),
+                                            key="-ZABBIX-TLS-CERT-FILE-",
+                                            target="global_zabbix.tls_cert",
+                                            size=(10, 1),
+                                        ),
+                                    ],
+                                    [
+                                        sg.Text(
+                                            _t("config_gui.zabbix_tls_key"),
+                                            size=(40, 1),
+                                        ),
+                                        sg.Multiline(
+                                            key="global_zabbix.tls_key", size=(50, 4)
+                                        ),
+                                    ],
+                                    [
+                                        sg.Text(
+                                            _t("config_gui.zabbix_tls_cacert"),
+                                            size=(40, 1),
+                                        ),
+                                        sg.Input(
+                                            key="global_zabbix.tls_cacert", size=(38, 1)
+                                        ),
+                                        sg.FileBrowse(
+                                            button_text=_t("generic.select"),
+                                            key="-ZABBIX-CACERT-FILE-",
+                                            target="global_zabbix.tls_cacert",
+                                            size=(10, 1),
+                                        ),
+                                    ],
+                                ],
+                                key="-ZABBIX-TLS-OPTIONS-",
+                                visible=False,
+                                pad=(0, 0),
+                            )
+                        )
                     ],
                     [
-                        sg.Text(_t("config_gui.zabbix_tls_cert"), size=(40, 1)),
-                        sg.Input(key="global_zabbix.tls_cert", size=(38, 1)),
-                        sg.FileBrowse(
-                            button_text=_t("generic.select"),
-                            key="-ZABBIX-TLS-CERT-FILE-",
-                            target="global_zabbix.tls_cert",
-                            size=(10, 1),
-                        ),
-                    ],
-                    [
-                        sg.Text(_t("config_gui.zabbix_tls_key"), size=(40, 1)),
-                        sg.Multiline(key="global_zabbix.tls_key", size=(50, 4)),
-                    ],
-                    [
-                        sg.Text(_t("config_gui.zabbix_tls_cacert"), size=(40, 1)),
-                        sg.Input(key="global_zabbix.tls_cacert", size=(38, 1)),
-                        sg.FileBrowse(
-                            button_text=_t("generic.select"),
-                            key="-ZABBIX-CACERT-FILE-",
-                            target="global_zabbix.tls_cacert",
-                            size=(10, 1),
-                        ),
-                    ],
-                    [
-                        sg.Text(_t("config_gui.zabbix_psk_identity"), size=(40, 1)),
-                        sg.Input(key="global_zabbix.psk_identity", size=(50, 1)),
-                    ],
-                    [
-                        sg.Text(_t("config_gui.zabbix_psk"), size=(40, 1)),
-                        sg.Input(key="global_zabbix.psk", size=(50, 1)),
+                        sg.pin(
+                            sg.Col(
+                                [
+                                    [
+                                        sg.Text(
+                                            _t("config_gui.zabbix_psk_identity"),
+                                            size=(40, 1),
+                                        ),
+                                        sg.Input(
+                                            key="global_zabbix.psk_identity",
+                                            size=(50, 1),
+                                        ),
+                                    ],
+                                    [
+                                        sg.Text(
+                                            _t("config_gui.zabbix_psk"), size=(40, 1)
+                                        ),
+                                        sg.Input(key="global_zabbix.psk", size=(50, 1)),
+                                    ],
+                                ],
+                                key="-ZABBIX-PSK-OPTIONS-",
+                                visible=False,
+                                pad=(0, 0),
+                            )
+                        )
                     ],
                 ],
                 visible=False,
@@ -721,8 +797,11 @@ def global_webhooks_col():
                         sg.Input(key="global_webhooks.password", size=(50, 1)),
                     ],
                     [
-                        sg.Text(_t("config_gui.webhooks_pretty_json"), size=(40, 1)),
-                        sg.Input(key="global_webhooks.pretty_json", size=(50, 1)),
+                        sg.Checkbox(
+                            _t("config_gui.webhooks_pretty_json"),
+                            key="global_webhooks.pretty_json",
+                            size=(100, 1),
+                        ),
                     ],
                 ],
                 visible=False,

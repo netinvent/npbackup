@@ -1136,6 +1136,10 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
         window=window, values=values
     )
 
+    npbackup.gui.common_gui_logic.update_zabbix_option_visibility(
+        window=window, values=values
+    )
+
     while True:
         event, values = window.read()
         # Get object type for various delete operations

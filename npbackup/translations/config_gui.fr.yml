@@ -103,7 +103,7 @@ fr:
   reading_tasks: Lecture des tâches planifiées existantes
   elevate_uac_tasks: Pour gérer les tâches planifiées Windows, une élévation UAC est requise. Veuillez autoriser l'invite UAC si vous souhaitez voir les tâches existantes ou en créer de nouvelles
   run_task_as: Exécuter la tâche en tant que
-  
+
   machine_identification: Identification machine
   machine_id: Identificateur machine
   machine_group: Groupe machine
@@ -235,6 +235,8 @@ fr:
   zabbix_server: Serveur Zabbix
   zabbix_port: Port Zabbix
   zabbix_send_method: Méthode d'envoi Zabbix
+  zabbix_raw_json_collector_host: Hôte du collecteur JSON brut Zabbix
+  zabbix_discovery_wait_time: Temps d'attente post découverte Zabbix (secondes)
   zabbix_authentication_method: Méthode d'authentification
   zabbix_tls_cert: Fichier certificat TLS Zabbix
   zabbix_tls_key: Clé TLS Zabbix

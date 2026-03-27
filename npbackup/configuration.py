@@ -255,6 +255,8 @@ empty_config_dict = {
         "server": None,
         "port": 10051,
         "method": "ZabbixProtocol",  # can be ZabbixProtocol or RawJSON
+        "raw_json_collector_host": None,  # If method is RawJSON, this is the host name of the collector to which we send data for discovery and item creation. If not set, discovery won't work with RawJSON method
+        "discovery_wait_time": 10,  # Time to wait for Zabbix server to parse discovery, in seconds
         "authentication": "none",  # can be none, tls or psk
         "no_cert_verify": False,
         "tls_cert": None,

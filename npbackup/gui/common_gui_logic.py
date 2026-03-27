@@ -696,6 +696,18 @@ def update_monitoring_visibility(window: sg.Window, values):
         logger.debug(f"No email config: {exc}")
 
 
+def update_zabbix_option_visibility(window: sg.Window, values):
+    window["-ZABBIX-RAW-JSON-OPTIONS-"].update(
+        visible=values["global_zabbix.method"] == "RawJSON"
+    )
+    window["-ZABBIX-TLS-OPTIONS-"].update(
+        visible=values["global_zabbix.authentication"] == "tls"
+    )
+    window["-ZABBIX-PSK-OPTIONS-"].update(
+        visible=values["global_zabbix.authentication"] == "psk"
+    )
+
+
 def update_gui_values(
     window: sg.Window,
     full_config: dict,
@@ -1441,6 +1453,11 @@ def handle_gui_events(
         "global_webhooks.enabled",
     ):
         update_monitoring_visibility(window, values)
+        return
+
+    # Only show zabbix needed options
+    if event in ("global_zabbix.method", "global_zabbix.authentication"):
+        update_zabbix_option_visibility(window, values)
         return
 
     if event in (
