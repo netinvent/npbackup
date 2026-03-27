@@ -35,7 +35,7 @@ from resources.audience import CURRENT_AUDIENCE
 from npbackup.key_management import (
     AES_KEY,
     EARLIER_AES_KEYS,
-    PUBLIC_AES_KEYS,
+    PUBLIC_AES_KEYS_FOR_PRIVATE_MIGRATION,
     get_aes_key,
     obfuscation,
     public_obfuscation,
@@ -1308,8 +1308,8 @@ def load_config(config_file: Path) -> Optional[dict]:
                     logger.info("Successfully migrated encryption key")
                     other_keys_work = True
                     break
-        if PUBLIC_AES_KEYS:
-            for public_key in PUBLIC_AES_KEYS:
+        if PUBLIC_AES_KEYS_FOR_PRIVATE_MIGRATION:
+            for public_key in PUBLIC_AES_KEYS_FOR_PRIVATE_MIGRATION:
                 full_config = crypt_config(
                     full_config,
                     public_key,

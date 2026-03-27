@@ -36,4 +36,4 @@ Public AES Keys can be used to migrate public audience configuration files to pr
 If you have a public audience and want to migrate to a private one,
 add your public audience AES key here, so that it can be used to decrypt existing configuration files.
 """
-PUBLIC_AES_KEYS = []
+PUBLIC_AES_KEYS_FOR_PRIVATE_MIGRATION = []
