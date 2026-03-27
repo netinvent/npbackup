@@ -1288,9 +1288,9 @@ def load_config(config_file: Path) -> Optional[dict]:
         obfuscation_fn=obfuscation,
     )
     if _full_config is False:
+        other_keys_work = False
         if EARLIER_AES_KEYS:
             logger.info("Trying to migrate encryption key")
-            other_keys_work = False
             for earlier_key in EARLIER_AES_KEYS:
                 full_config = crypt_config(
                     full_config,
