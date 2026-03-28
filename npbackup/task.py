@@ -7,7 +7,7 @@ __intname__ = "npbackup.task"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026032001"
+__build__ = "2026032801"
 
 
 import sys
@@ -18,7 +18,13 @@ from typing import List, Optional
 import logging
 import tempfile
 import datetime
-from resources.customization import TASK_AUTHOR, TASK_URI, PROGRAM_NAME
+from resources.customization import (
+    TASK_AUTHOR,
+    TASK_URI,
+    PROGRAM_NAME,
+    SHORT_PRODUCT_NAME,
+)
+from npbackup.__debug__ import _DEBUG
 from npbackup.path_helper import CURRENT_DIR, CURRENT_EXECUTABLE, sanitize_filename
 from npbackup.__version__ import IS_COMPILED
 import npbackup.configuration
@@ -48,6 +54,26 @@ SCHEDULER_TASKS = {
     "forget": "forget",
     "prune": "prune",
 }
+
+#### JSON extractor from string ####
+#### Blatantly stolen from https://stackoverflow.com/a/55525704/2635443
+
+def RawJSONDecoder(index):
+    class _RawJSONDecoder(json.JSONDecoder):
+        end = None
+
+        def decode(self, s, *_):
+            data, self.__class__.end = self.raw_decode(s, index)
+            return data
+    return _RawJSONDecoder
+
+def extract_json(s, index=0):
+    while (index := s.find('{', index)) != -1:
+        try:
+            yield json.loads(s, cls=(decoder := RawJSONDecoder(index)))
+            index = decoder.end
+        except json.JSONDecodeError:
+            index += 1
 
 
 #### OS ABSTRACTION LAYER ####
@@ -594,7 +620,10 @@ if ($results.Count -gt 0) {{
 """
     try:
         runner = PowerShellRunner()
-        runner._tmp_script_identifier = f"npbackup_read_tasks_"
+        runner.identifier_string = f"npbackup_read_tasks"
+        runner.elevate_message = (
+            f"Running elevated {SHORT_PRODUCT_NAME} task processing"
+        )
         exit_code, output = runner.run_script(ps_script, elevated=True)
         if exit_code != 0 or not output or not output.strip():
             logger.debug(f"No scheduled tasks found or PowerShell error: {output}")
@@ -603,9 +632,12 @@ if ($results.Count -gt 0) {{
         logger.error(f"Could not run PowerShell script: {exc}")
         return tasks
 
+    # When already elevated, the elevator script will prepent an optional elevate message which we need
+    # to remove in order to properly parse the JSON without a header.
+
     try:
-        raw_tasks = json.loads(output.strip())
-    except (json.JSONDecodeError, ValueError) as exc:
+        raw_tasks = next(extract_json(output))
+    except (json.JSONDecodeError, ValueError, StopIteration) as exc:
         logger.error(f"Could not parse PowerShell JSON output: {exc}")
         logger.debug(f"Raw output: {output}")
         return tasks
@@ -942,8 +974,11 @@ Register-ScheduledTask -TaskName '{}' -Xml (Get-Content -LiteralPath '{}' -Raw) 
 
     try:
         runner = PowerShellRunner()
-        runner._tmp_script_identifier = f"npbackup_register_task_"
-        if ps_user_script:
+        runner.identifier_string = f"npbackup_register_task"
+        runner.elevate_message = (
+            f"Running elevated {SHORT_PRODUCT_NAME} task registration"
+        )
+        if ps_user_script or _DEBUG == True:
             runner.interactive = True
         exit_code, output = runner.run_script(ps_script, elevated=True)
         if exit_code != 0:
@@ -981,7 +1016,8 @@ def _delete_scheduled_task_windows(
     )
     try:
         runner = PowerShellRunner()
-        runner._tmp_script_identifier = f"npbackup_delete_task_"
+        runner.identifier_string = f"npbackup_delete_task"
+        runner.elevate_message = f"Running elevated {SHORT_PRODUCT_NAME} task deletion"
         exit_code, output = runner.run_script(
             ps_cmd, elevated=True, valid_exit_codes=[0, 1]
         )
