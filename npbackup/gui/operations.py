@@ -354,8 +354,10 @@ def operations_gui(full_config: dict, config_file: str) -> dict:
                 [
                     [
                         sg.Column(
-                            [[sg.Image(data=OEM_LOGO)]],
+                            [[sg.Image(data=OEM_LOGO, subsample=4)]],
                             vertical_alignment="top",
+                            justification="L",
+                            element_justification="L",
                         ),
                         sg.Column(
                             [
@@ -363,7 +365,7 @@ def operations_gui(full_config: dict, config_file: str) -> dict:
                             ],
                             justification="C",
                             element_justification="C",
-                            vertical_alignment="top",
+                            vertical_alignment="C",
                         ),
                     ],
                     [sg.Text(_t("operations_gui.configured_repositories"))],
