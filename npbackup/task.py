@@ -71,7 +71,18 @@ def RawJSONDecoder(index):
 
 
 def extract_json(s, index=0):
-    while (index := s.find("{", index)) != -1:
+    while index < len(s):
+        # Find the next JSON start delimiter (object or array)
+        next_brace = s.find("{", index)
+        next_bracket = s.find("[", index)
+        if next_brace == -1 and next_bracket == -1:
+            break
+        elif next_brace == -1:
+            index = next_bracket
+        elif next_bracket == -1:
+            index = next_brace
+        else:
+            index = min(next_brace, next_bracket)
         try:
             yield json.loads(s, cls=(decoder := RawJSONDecoder(index)))
             index = decoder.end
