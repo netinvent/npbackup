@@ -670,8 +670,12 @@ if ($results.Count -gt 0) {{
             if rep_interval:
                 minutes = _parse_iso_duration_to_minutes(rep_interval)
                 if minutes:
-                    task_info["interval"] = minutes
-                    task_info["interval_unit"] = "minutes"
+                    if minutes >= 60 and minutes % 60 == 0:
+                        task_info["interval"] = minutes // 60
+                        task_info["interval_unit"] = "hours"
+                    else:
+                        task_info["interval"] = minutes
+                        task_info["interval_unit"] = "minutes"
 
             # MSFT_TaskTimeTrigger: interval already handled above via repetition
 
@@ -688,7 +692,7 @@ if ($results.Count -gt 0) {{
                 if not rep_interval:
                     weeks_interval = trigger.get("weeks_interval")
                     if weeks_interval:
-                        task_info["interval"] = int(weeks_interval) * 7
+                        task_info["interval"] = int(weeks_interval)
                         task_info["interval_unit"] = "weeks"
 
         tasks.append(task_info)
