@@ -30,6 +30,7 @@ import shutil
 import atexit
 import argparse
 import fileinput
+from ofunctions.logger_utils import logger_get_logger
 from command_runner import command_runner
 from ofunctions.platform import python_arch
 from npbackup.__version__ import IS_LEGACY
@@ -79,6 +80,9 @@ NUITKA_STANDALONE_SUFFIX = ".dist"
 
 del sys.path[0]
 
+
+logger = logger_get_logger("compile.log")
+
 def _set_audience(audience: str):
     with fileinput.FileInput(PRIVATE_AUDIENCE_FILE, inplace=True) as file:
         for line in file:
@@ -87,6 +91,7 @@ def _set_audience(audience: str):
                 print(f"CURRENT_AUDIENCE = \"{audience}\"")
             else:
                 print(line, end="")
+    os.environ["_NPBACKUP_AUDIENCE"] = audience
 
 
 def _read_file(filename):
@@ -136,10 +141,10 @@ def have_nuitka_commercial():
     try:
         import nuitka.plugins.commercial
 
-        print("Running with nuitka commercial")
+        logger.info("Running with nuitka commercial")
         return True
     except ImportError:
-        print("Running with nuitka open source")
+        logger.info("Running with nuitka open source")
         return False
 
 
@@ -154,7 +159,7 @@ def _compile(
     npbackup_version: str = None,
 ):
     if build_type not in BUILD_TYPES:
-        print("CANNOT BUILD BOGUS BUILD TYPE")
+        logger.error("CANNOT BUILD BOGUS BUILD TYPE")
         sys.exit(1)
 
     # Try to get alternative executable name
@@ -164,9 +169,9 @@ def _compile(
     if os.path.isfile(audience_customization):
         executable_name = extract_executable_name(audience_customization)
         if isinstance(executable_name, str):
-            print(f"Found audience specific executable name {executable_name} for audience {audience}")
+            logger.info(f"Found audience specific executable name {executable_name} for audience {audience}")
         else:
-            print("Using default executable name")
+            logger.info("Using default executable name")
             executable_name = "npbackup"
 
     initial_source_program = "bin/npbackup-{}".format(build_type)
@@ -216,7 +221,7 @@ def _compile(
 
     # npbackup compilation
     # Strip possible version suffixes '-dev'
-    print(f"Compiling version {npbackup_version} for {audience} {platform} {arch}")
+    logger.info(f"Compiling version {npbackup_version} for {audience} {platform} {arch}")
     _npbackup_version = npbackup_version.split("-")[0]
     PRODUCT_VERSION = _npbackup_version + ".0"
     FILE_VERSION = _npbackup_version + ".0"
@@ -230,7 +235,7 @@ def _compile(
 
     restic_source_file = get_restic_internal_binary(arch)
     if not restic_source_file:
-        print(f"Cannot find restic source file for arch {arch}.")
+        logger.error(f"Cannot find restic source file for arch {arch}.")
         return False
     else:
         os.chmod(restic_source_file, 0o775)
@@ -260,7 +265,7 @@ def _compile(
 
     # Depending on audience, we will need to include private keys
     if audience != "public" and audience in AUDIENCES:
-        print("Updating audience file {} with audience {}".format(PRIVATE_AUDIENCE_FILE, audience))
+        logger.info("Updating audience file {} with audience {}".format(PRIVATE_AUDIENCE_FILE, audience))
         _set_audience(audience)
 
         NUITKA_OPTIONS += f" --include-module=PRIVATE.audience"
@@ -270,6 +275,9 @@ def _compile(
         NUITKA_OPTIONS += f" --include-module=PRIVATE.{audience}._customization"
         NUITKA_OPTIONS += f" --include-module=PRIVATE.{audience}._obfuscation"
         NUITKA_OPTIONS += f" --include-module=PRIVATE.{audience}._private_secret_keys"
+    else:
+        logger.info("Updating audience file {} with audience public".format(PRIVATE_AUDIENCE_FILE))
+        _set_audience("public")
 
     if build_type in ("gui", "viewer"):
         NUITKA_OPTIONS += f" --plugin-enable=tk-inter --include-data-dir={sv_ttl_dir_source}={sv_ttl_dir_dest}"
@@ -324,7 +332,7 @@ def _compile(
 
     errors = False
     if not create_tar_only and not sign_only:
-        print(CMD)
+        logger.debug(CMD)
         exit_code, output = command_runner(CMD, timeout=0, live_output=True)
         if exit_code != 0:
             errors = True
@@ -334,7 +342,10 @@ def _compile(
             os.path.join(BUILDS_DIR, audience, "VERSION"), "w", encoding="utf-8"
         ) as fh:
             fh.write(npbackup_version)
-        print(f"COMPILED {'WITH SUCCESS' if not errors else 'WITH ERRORS'}")
+        if not errors:
+            logger.info("COMPILED {} {} {} {} {} WITH SUCCESS".format(executable_name, build_type, audience, platform, arch))
+        else:
+            logger.error("COMPILED {} {} {} {} {} WITH ERRORS".format(executable_name, build_type, audience, platform, arch))
 
     if initial_source_program != audience_source_program:
         shutil.move(audience_source_program, initial_source_program)
@@ -347,15 +358,15 @@ def _compile(
             compiled_output_dir, f"{executable_name}-{build_type}.exe"
         )
         if SIGN_EXTERNALY:
-            print(f"Signing with external signer {EXTERNAL_SIGNER}")
+            logger.info(f"Signing with external signer {EXTERNAL_SIGNER}")
             cmd = f"{EXTERNAL_SIGNER} --executable {npbackup_executable}"
-            print(cmd)
+            logger.debug(cmd)
             exit_code, output = command_runner(cmd, shell=True)
             if exit_code != 0:
-                print(f"ERROR: Could not sign: {output}")
+                logger.error(f"Could not sign: {output}")
                 errors = True
         elif os.path.isfile(ev_cert_data):
-            print(f"Signing with internal signer {ev_cert_data}")
+            logger.info(f"Signing with internal signer {ev_cert_data}")
             sign(
                 executable=npbackup_executable,
                 arch=arch,
@@ -363,7 +374,7 @@ def _compile(
                 dry_run=args.dry_run,
             )
         else:
-            print(f"ERROR: Cannot sign windows executable: {SIGN_EXTERNALY} {ev_cert_data}")
+            logger.error(f"Cannot sign windows executable: {SIGN_EXTERNALY} {ev_cert_data}")
             errors = True
 
     if not onefile:
@@ -407,14 +418,12 @@ def create_archive(
         cmd = f"tar -a -c -f {target_archive} -C {output_dir} {os.path.basename(new_compiled_output)}"
     else:
         cmd = f"tar -czf {target_archive} -C {output_dir} ./{os.path.basename(new_compiled_output)}"
-    print(f"Creating archive {target_archive}")
+    logger.info(f"Creating archive {target_archive}")
     exit_code, output = command_runner(cmd, timeout=0, live_output=True, shell=True)
     shutil.move(new_compiled_output, compiled_output)
     if exit_code != 0:
-        print(
-            f"ERROR: Cannot create archive file for {platform} {arch} {audience} {build_type}:"
-        )
-        print(output)
+        logger.error(f"Cannot create archive file for {platform} {arch} {audience} {build_type}:")
+        logger.error(output)
         return False
     return True
 
@@ -422,7 +431,7 @@ def create_archive(
 class AudienceAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if values not in AUDIENCES + ["all"]:
-            print("Got value:", values)
+            logger.info("Got value:", values)
             raise argparse.ArgumentError(self, f"Audiences '{values}' is not a valid audience")
         setattr(namespace, self.dest, values)
 
@@ -530,18 +539,18 @@ if __name__ == "__main__":
                 )
                 if not create_tar_only and not sign_only:
                     if result:
-                        print(
+                        logger.info(
                             f"SUCCESS: MADE {build_type} build for audience {audience}"
                         )
                     else:
-                        print(
-                            f"ERROR: Failed making {build_type} build for audience {audience}"
+                        logger.error(
+                            f"Failed making {build_type} build for audience {audience}"
                         )
                         errors = True
         if errors:
-            print("ERRORS IN BUILD PROCESS")
+            logger.error("ERRORS IN BUILD PROCESS")
         else:
-            print("SUCCESS BUILDING")
+            logger.info("SUCCESS BUILDING")
     except Exception:
-        print("COMPILATION FAILED")
+        logger.error("COMPILATION FAILED")
         raise
