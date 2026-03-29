@@ -970,8 +970,8 @@ def create_scheduled_task_windows(
         ps_user_script = ""
     else:
         user_arg = "-User $username -Password $password"
-        ps_user_script = """
-$credential = Get-Credential
+        ps_user_script = f"""
+$credential = Get-Credential -Message "{SHORT_PRODUCT_NAME} Task creation  credentials" -UserName $env:USERNAME
 $username = $Credential.Username
 $password = $Credential.GetNetworkCredential().Password
 """
