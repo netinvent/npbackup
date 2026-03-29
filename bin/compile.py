@@ -52,7 +52,7 @@ if os.name == "nt":
 try:
     from resources.audience import CURRENT_AUDIENCE, AUDIENCES
 except ImportError:
-    AUDIENCES = ["public", "private"]
+    AUDIENCES = ["public"]
 
 PRIVATE_AUDIENCE_FILE = os.path.abspath(os.path.join(BASEDIR, "..", "PRIVATE", "audience.py"))
 INITIAL_AUDIENCE = CURRENT_AUDIENCE
