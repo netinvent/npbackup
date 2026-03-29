@@ -19,7 +19,7 @@ import time
 import json
 import FreeSimpleGUI as sg
 from ofunctions.threading import threaded
-from concurrent.futures._base import CancelledError
+from concurrent.futures._base import CancelledError, InvalidStateError
 from ofunctions.misc import BytesConverter
 from npbackup.core.i18n_helper import _t
 from resources.customization import (
@@ -515,7 +515,7 @@ class WaitWindow:
             [
                 sg.Push(),
                 sg.Button(_t("generic.cancel"), key="--CANCEL--"),
-            ]
+            ],
         ]
         wait_window = sg.Window(
             title=PROGRAM_NAME,
@@ -535,7 +535,7 @@ class WaitWindow:
                 LOADER_ANIMATION, time_between_frames=75
             )
             sleep(0.1)
-            event, _ = wait_window.read(timeout=.1)
+            event, _ = wait_window.read(timeout=0.1)
             if event == "--CANCEL--":
                 result = sg.popup(
                     _t("main_gui.cancel_operation"),
@@ -549,6 +549,6 @@ class WaitWindow:
         wait_window.close()
         try:
             return self.thread.result()
-        except CancelledError:
+        except (CancelledError, InvalidStateError):
             logger.info(f"Thread with {self.message} was manually cancelled")
             return None
