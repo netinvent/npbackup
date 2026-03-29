@@ -50,7 +50,7 @@ if os.name == "nt":
         from npbackup.windows.sign_windows import sign
 
 try:
-    from resources.audience import CURRENT_AUDIENCE, AUDIENCES
+    from npbackup.audience import CURRENT_AUDIENCE, AUDIENCES
 except ImportError:
     AUDIENCES = ["public"]
 

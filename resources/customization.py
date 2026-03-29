@@ -14,7 +14,7 @@ __version__ = "1.0.0"
 ## This file switches customization depending on audience
 
 import sys
-from resources.audience import CURRENT_AUDIENCE
+from npbackup.audience import CURRENT_AUDIENCE
 
 if CURRENT_AUDIENCE == "public":
     from resources._customization import *

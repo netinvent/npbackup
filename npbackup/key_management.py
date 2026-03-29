@@ -11,7 +11,7 @@ import os
 from logging import getLogger
 from command_runner import command_runner
 from cryptidy.symmetric_encryption import generate_key
-from resources.audience import CURRENT_AUDIENCE
+from npbackup.audience import CURRENT_AUDIENCE
 
 sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
 

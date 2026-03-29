@@ -9,7 +9,7 @@ __copyright__ = "Copyright (C) 2023-2026 NetInvent"
 __license__ = "GPL-3.0-only"
 __build__ = "2026031601"
 
-from resources.audience import CURRENT_AUDIENCE
+from npbackup.audience import CURRENT_AUDIENCE
 
 import importlib
 import sys

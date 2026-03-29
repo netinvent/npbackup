@@ -17,7 +17,7 @@ import sys
 import psutil
 from ofunctions.platform import python_arch, get_os
 import npbackup.__env__
-from resources.audience import CURRENT_AUDIENCE
+from npbackup.audience import CURRENT_AUDIENCE
 from npbackup.core.nuitka_helper import IS_COMPILED
 
 # Python 3.7 versions are considered legacy since they don't support msgspec

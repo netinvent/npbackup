@@ -31,7 +31,7 @@ from cryptidy import symmetric_encryption as enc
 from ofunctions.random import random_string
 from ofunctions.misc import replace_in_iterable, BytesConverter, iter_over_keys
 from resources.customization import ID_STRING
-from resources.audience import CURRENT_AUDIENCE
+from npbackup.audience import CURRENT_AUDIENCE
 from npbackup.key_management import (
     AES_KEY,
     EARLIER_AES_KEYS,

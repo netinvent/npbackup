@@ -7,8 +7,8 @@ __intname__ = "npbackup.audiences"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026031101"
-__version__ = "1.0.0"
+__build__ = "2026032901"
+__version__ = "1.1.0"
 
 # This file decides what kind of build we are running
 # Public builds exist on github
@@ -16,10 +16,14 @@ __version__ = "1.0.0"
 # and can be used to include customizations and secrets for specific audiences, without risking them being leaked in public builds
 
 import os
+import sys
+import importlib
 
 try:
-    from PRIVATE.audience import AUDIENCES, CURRENT_AUDIENCE
-except ImportError:
+    audience = importlib.import_module(f"PRIVATE.audience", package=None)
+    AUDIENCES = audience.AUDIENCES
+    CURRENT_AUDIENCE = audience.CURRENT_AUDIENCE
+except (ModuleNotFoundError, AttributeError):
      # If there is no PRIVATE/audiences.py file, we assume there are no private audiences and just use the public audience
      AUDIENCES = ["public"]
      CURRENT_AUDIENCE = "public"
