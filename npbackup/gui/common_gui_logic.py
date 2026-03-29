@@ -1725,18 +1725,21 @@ def update_task_list(config_file: str, full_config: dict, window: sg.Window) -> 
     ).wait_for_thread_result()
     # We need to define a special list for sg.Table to use
     task_list = []
-    for task in tasks:
-        task_line = [
-            task["task_type"],
-            task["object_type"],
-            task["object_name"],
-            task["interval"],
-            task["interval_unit"],
-            task["start_date"],
-            task["days_of_week"],
-        ]
-        task_list.append(task_line)
-    window["-EXISTING-TASKS-"].update(values=task_list)
+    if tasks:
+        for task in tasks:
+            task_line = [
+                task["task_type"],
+                task["object_type"],
+                task["object_name"],
+                task["interval"],
+                task["interval_unit"],
+                task["start_date"],
+                task["days_of_week"],
+            ]
+            task_list.append(task_line)
+        window["-EXISTING-TASKS-"].update(values=task_list)
+    else:
+        tasks = []
     return tasks
 
 

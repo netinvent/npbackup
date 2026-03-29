@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.helpers"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025070302"
+__build__ = "2026032901"
 
 
 from typing import Tuple, Union
@@ -19,6 +19,7 @@ import time
 import json
 import FreeSimpleGUI as sg
 from ofunctions.threading import threaded
+from concurrent.futures._base import CancelledError
 from ofunctions.misc import BytesConverter
 from npbackup.core.i18n_helper import _t
 from resources.customization import (
@@ -511,6 +512,10 @@ class WaitWindow:
                     key="-LOADER-ANIMATION-",
                 )
             ],
+            [
+                sg.Push(),
+                sg.Button(_t("generic.cancel"), key="--CANCEL--"),
+            ]
         ]
         wait_window = sg.Window(
             title=PROGRAM_NAME,
@@ -530,5 +535,20 @@ class WaitWindow:
                 LOADER_ANIMATION, time_between_frames=75
             )
             sleep(0.1)
+            event, _ = wait_window.read(timeout=.1)
+            if event == "--CANCEL--":
+                result = sg.popup(
+                    _t("main_gui.cancel_operation"),
+                    keep_on_top=True,
+                    custom_text=(_t("generic.no"), _t("generic.yes")),
+                )
+                if result == _t("generic.yes"):
+                    logger.info("User cancelled operation")
+                    self.thread.cancel()
+                    wait_window["--CANCEL--"].Update(disabled=True)
         wait_window.close()
-        return self.thread.result()
+        try:
+            return self.thread.result()
+        except CancelledError:
+            logger.info(f"Thread with {self.message} was manually cancelled")
+            return None
