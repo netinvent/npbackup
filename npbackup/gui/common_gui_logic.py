@@ -238,6 +238,11 @@ def set_permissions(full_config: dict, object_type: str, object_name: str) -> di
 def get_user_and_password_for_run_as() -> Tuple[Optional[str], Optional[str]]:
     layout = [
         [
+            sg.Text(
+                _t("config_gui.run_task_as_explanation"), size=(90, 4), expand_x=True
+            ),
+        ],
+        [
             sg.Text(_t("config_gui.run_task_as"), size=(40, 1)),
             sg.Input(key="-RUN-AS-USER-", size=(50, 1)),
         ],
@@ -262,11 +267,11 @@ def get_user_and_password_for_run_as() -> Tuple[Optional[str], Optional[str]]:
         no_titlebar=False,
         grab_anywhere=True,
     )
+    run_as_user = None
+    password = None
     while True:
         event, values = window.read()
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--CANCEL--"):
-            run_as_user = None
-            password = None
             break
         if event == "--ACCEPT--":
             run_as_user = values["-RUN-AS-USER-"]
@@ -1682,16 +1687,16 @@ def create_scheduled_task(
 
     run_as = values["-SCHEDULE-RUN-AS-"]
     if run_as in ["SYSTEM", "root"]:
-        as_current_user = False
+        user_credentials = False
     else:
-        as_current_user = True
+        user_credentials = get_user_and_password_for_run_as()
 
     result = npbackup.task.create_scheduled_task(
         config_file,
         task_type=task_type,
         object_type=object_type,
         object_name=object_name,
-        as_current_user=as_current_user,
+        user_credentials=user_credentials,
         start_date_time=start_date_time,
         interval=interval,
         interval_unit=interval_unit,

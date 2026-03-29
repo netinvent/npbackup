@@ -7,14 +7,14 @@ __intname__ = "npbackup.task"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026032801"
+__build__ = "2026032901"
 
 
 import sys
 import os
 import re
 import json
-from typing import List, Optional
+from typing import List, Optional, Union, Tuple
 import logging
 import tempfile
 import datetime
@@ -120,7 +120,7 @@ def create_scheduled_task(
     task_type: str,
     object_type: str,
     object_name: str,
-    as_current_user: bool = False,
+    user_credentials: Union[Tuple[str, str], bool] = False,
     start_date_time: datetime.datetime = None,
     interval: int = None,
     interval_unit: str = None,
@@ -183,7 +183,7 @@ def create_scheduled_task(
             task_type,
             object_type,
             object_name,
-            as_current_user,
+            user_credentials,
             CURRENT_EXECUTABLE,
             start_date_time=start_date_time,
             interval=interval,
@@ -197,7 +197,7 @@ def create_scheduled_task(
             task_type,
             object_type,
             object_name,
-            as_current_user,
+            user_credentials,
             CURRENT_EXECUTABLE,
             interval=interval,
             interval_unit=interval_unit,
@@ -273,10 +273,10 @@ def _get_cron_comment(
     return f"{PROGRAM_NAME} - {task_type} {object_type} {object_name} in {config_file_sanitized}"
 
 
-def _get_crontab(as_current_user: bool) -> CronTab:
+def _get_crontab(user_credentials: Union[Tuple[str, str], bool]) -> CronTab:
     """Return a CronTab instance for the current user or root."""
-    if as_current_user:
-        return CronTab(user=True)
+    if user_credentials:
+        return CronTab(user=user_credentials[0])
     return CronTab(user="root")
 
 
@@ -373,7 +373,7 @@ def create_scheduled_task_unix(
     task_type: str,
     object_type: str,
     object_name: str,
-    as_current_user: bool,
+    user_credentials: Union[Tuple[str, str], bool],
     cli_executable_path: str,
     start_date_time: datetime.datetime = None,
     interval: int = None,
@@ -404,7 +404,7 @@ def create_scheduled_task_unix(
     ref_time = start_date_time if start_date_time else datetime.datetime.now()
 
     try:
-        cron = _get_crontab(as_current_user)
+        cron = _get_crontab(user_credentials)
     except Exception as exc:
         logger.error(f"Could not access crontab: {exc}")
         return False
@@ -751,7 +751,7 @@ def create_scheduled_task_windows(
     task_type: str,
     object_type: str,
     object_name: str,
-    as_current_user: bool,
+    user_credentials: Union[Tuple[str, str], bool],
     cli_executable_path: str,
     start_date_time: datetime.datetime = None,
     interval: int = None,
@@ -964,17 +964,11 @@ def create_scheduled_task_windows(
     # Register task from XML
     logger.info("Creating scheduled task {}".format(task_name))
 
-    if not as_current_user:
+    if not user_credentials:
         logger.info("Registering task to run as SYSTEM user")
         user_arg = "-User 'SYSTEM'"
-        ps_user_script = ""
     else:
-        user_arg = "-User $username -Password $password"
-        ps_user_script = f"""
-$credential = Get-Credential -Message "{SHORT_PRODUCT_NAME} Task creation  credentials" -UserName $env:USERNAME
-$username = $Credential.Username
-$password = $Credential.GetNetworkCredential().Password
-"""
+        user_arg = f"-User {user_credentials[0]} -Password {user_credentials[1]}"
 
     task_name = _get_scheduled_task_name_windows(
         config_file, task_type, object_type, object_name
@@ -982,9 +976,8 @@ $password = $Credential.GetNetworkCredential().Password
 
     ps_script = """
 Unregister-ScheduledTask -TaskName '{}' -Confirm:$false -ErrorAction SilentlyContinue
-{}
 Register-ScheduledTask -TaskName '{}' -Xml (Get-Content -LiteralPath '{}' -Raw) {}
-""".format(task_name, ps_user_script, task_name, temp_task_file, user_arg)
+""".format(task_name, task_name, temp_task_file, user_arg)
 
     try:
         runner = PowerShellRunner()
@@ -992,7 +985,7 @@ Register-ScheduledTask -TaskName '{}' -Xml (Get-Content -LiteralPath '{}' -Raw) 
         runner.elevate_message = (
             f"Running elevated {SHORT_PRODUCT_NAME} task registration"
         )
-        if ps_user_script or _DEBUG == True:
+        if _DEBUG == True:
             runner.interactive = True
         exit_code, output = runner.run_script(ps_script, elevated=True)
         if exit_code != 0:
@@ -1059,7 +1052,7 @@ if __name__ == "__main__":
         task_type,
         object_type,
         object_name,
-        as_current_user=True,
+        user_credentials=False,
         interval=60,
         interval_unit="minutes",
     )
