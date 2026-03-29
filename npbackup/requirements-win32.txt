@@ -36,7 +36,7 @@ ntplib>=0.4.0
 reskinner>=4.6.0
 zabbix-utils>=2.0.4
 # sslpsk is not needed with Python 3.13+ since it's included in standard ssl lib but is not compatibl with win32 bit, let's exclude it
-#sslpsk3>=2.0.0 ; python_version < '3.13'
+sslpsk3>=2.0.0 ; python_version < '3.13' and platform_system != "Darwin"
 python-crontab>=3.3.0; platform_system != "Windows"
 windows_tools.powershell>=0.7.1; platform_system == "Windows"
 pillow
