@@ -24,9 +24,9 @@ try:
     AUDIENCES = audience.AUDIENCES
     CURRENT_AUDIENCE = audience.CURRENT_AUDIENCE
 except (ModuleNotFoundError, AttributeError):
-     # If there is no PRIVATE/audiences.py file, we assume there are no private audiences and just use the public audience
-     AUDIENCES = ["public"]
-     CURRENT_AUDIENCE = "public"
+    # If there is no PRIVATE/audiences.py file, we assume there are no private audiences and just use the public audience
+    AUDIENCES = ["public"]
+    CURRENT_AUDIENCE = "public"
 
 # Allow overriding audience via environment variable, for testing purposes. This is not intended for production use.
 override_audience = os.environ.get("_NPBACKUP_AUDIENCE", None)
@@ -39,6 +39,8 @@ else:
     try:
         from PRIVATE.customization import *
     except ImportError as exc:
-        print(f"{__file__}: No private audience with name '{CURRENT_AUDIENCE}' customization found")
+        print(
+            f"{__file__}: No private audience with name '{CURRENT_AUDIENCE}' customization found"
+        )
         print(exc)
         sys.exit(1)
