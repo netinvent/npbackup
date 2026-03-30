@@ -311,7 +311,7 @@ This is free software, and you are welcome to redistribute it under certain cond
     if args.log_file:
         log_file = args.log_file
     else:
-        app_log_name = f"{SHORT_PRODUCT_NAME}-{version_dict['build_type']}.log"
+        app_log_name = f"{SHORT_PRODUCT_NAME}-{version_dict['build_type']}.log".lower()
         if os.name == "nt":
             log_file = os.path.join(CURRENT_DIR, app_log_name)
         else:
