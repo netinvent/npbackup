@@ -436,6 +436,7 @@ def crypt_config(
     try:
 
         def _crypt_config(key: str, value: Any) -> Any:
+            # We must look in encrypted key list but also already encrypted values which may not appear in encrypted key list
             if (
                 key_should_be_encrypted(key, encrypted_options)
                 or isinstance(value, str)
