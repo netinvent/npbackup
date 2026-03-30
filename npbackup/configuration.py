@@ -436,7 +436,7 @@ def crypt_config(
     try:
 
         def _crypt_config(key: str, value: Any) -> Any:
-            if key_should_be_encrypted(key, encrypted_options):
+            if key_should_be_encrypted(key, encrypted_options) or isinstance(value, str) and value.startswith(ID_STRING) and value.endswith(ID_STRING):
                 if value is not None:
                     if operation == "encrypt":
                         if (
