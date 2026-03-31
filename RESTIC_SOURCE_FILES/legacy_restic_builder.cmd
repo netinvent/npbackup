@@ -1,8 +1,9 @@
 @echo off
 
+:: Runs on Win10+ and provides restic binaries for Win7 without the need to rampup all intermediate go compilers
+
 :: Blatantly copied from https://gist.github.com/DRON-666/6e29eb6a8635fae9ab822782f34d8fd6
 :: with some mods to specify restic versions and produce both 32 and 64 bit executables
-:: Runs on Win10+ and provides restic binaries for Win7 without the need to rampup all intermediate go compilers
 
 SET RESTIC_VERSION=0.18.1
 SET GO_BINARIES_VERSION=1.25.6
