@@ -425,7 +425,9 @@ def ls_window(
             sg.Button(_t("generic.quit"), key="quit"),
         ],
     ]
-    layout = [[sg.Column(left_col, element_justification="C", expand_x=True, expand_y=True)]]
+    layout = [
+        [sg.Column(left_col, element_justification="C", expand_x=True, expand_y=True)]
+    ]
     window = sg.Window(
         _t("generic.content"),
         layout=layout,

@@ -23,7 +23,6 @@ from resources.customization import (
     TITLE_FONT,  # Is needed for imports by other gui files
 )
 
-
 try:
     from resources.customization import SG_CUSTOM_THEME, SG_CUSTOM_DARK_THEME
 
@@ -58,24 +57,30 @@ try:
 except (TypeError, ValueError):
     WINDOW_SCALING = None
 
+
 # Let's decide our own scaling
 # Get actual pixel size for scaling
 def get_scaling():
     # called before window created
     root = sg.tk.Tk()
-    scaling = root.winfo_fpixels('1i')/92
+    scaling = root.winfo_fpixels("1i") / 92
     root.destroy()
     return scaling
 
+
 width, height = sg.Window.get_screen_size()
-if width <= 800 or height <=600:
+if width <= 800 or height <= 600:
     scaling_factor = 0.6
     HAVE_TTK_THEME = False
-    print(f"Too small screen size detected {width}x{height}, this will create UI glitches we cannot fix")
+    print(
+        f"Too small screen size detected {width}x{height}, this will create UI glitches we cannot fix"
+    )
 elif width <= 1366 or height <= 768:
     scaling_factor = 0.85
     HAVE_TTK_THEME = False
-    print(f"Small screen size detected {width}x{height}, this will create UI. We'll disable TTK themes to avoid some of them")
+    print(
+        f"Small screen size detected {width}x{height}, this will create UI. We'll disable TTK themes to avoid some of them"
+    )
 else:
     scaling_factor = 1.0
 WINDOW_SCALING = round(1.0 * get_scaling() * scaling_factor, 2)
