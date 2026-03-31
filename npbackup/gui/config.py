@@ -1100,7 +1100,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
     window = sg.Window(
         title="Configuration",
         layout=config_layout(),
-        size=(int(1000 * WINDOW_SCALING), int(800 * WINDOW_SCALING)),
+        size=(int(1500 * WINDOW_SCALING), int(900 * WINDOW_SCALING)),
         auto_size_text=True,
         auto_size_buttons=False,
         default_element_size=(12, 1),

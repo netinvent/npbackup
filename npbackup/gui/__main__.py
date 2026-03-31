@@ -413,7 +413,7 @@ def ls_window(
                 col0_heading=_t("generic.path"),
                 col0_width=80,
                 key="-TREE-",
-                show_expanded=False,
+                show_expanded=True,
                 enable_events=False,
                 expand_x=True,
                 expand_y=True,
@@ -425,15 +425,16 @@ def ls_window(
             sg.Button(_t("generic.quit"), key="quit"),
         ],
     ]
-    layout = [[sg.Column(left_col, element_justification="C")]]
+    layout = [[sg.Column(left_col, element_justification="C", expand_x=True, expand_y=True)]]
     window = sg.Window(
         _t("generic.content"),
         layout=layout,
         grab_anywhere=True,
         no_titlebar=False,
         keep_on_top=False,
-        size=(int(WINDOW_SCALING * 1024), int(WINDOW_SCALING * 650)),
+        size=(int(1500 * WINDOW_SCALING), int(900 * WINDOW_SCALING)),
         enable_close_attempted_event=True,
+        resizable=True,
     )
 
     # Reclaim memory from thread result
