@@ -432,7 +432,7 @@ def ls_window(
         grab_anywhere=True,
         no_titlebar=False,
         keep_on_top=False,
-        size=sg.Window.get_screen_size(),
+        size=(int(1500 * WINDOW_SCALING), int(900 * WINDOW_SCALING)),
         enable_close_attempted_event=True,
         resizable=True,
     )
