@@ -432,6 +432,7 @@ def ls_window(
         grab_anywhere=True,
         no_titlebar=False,
         keep_on_top=False,
+        size=(int(WINDOW_SCALING * 1024), int(WINDOW_SCALING * 650)),
         enable_close_attempted_event=True,
     )
 
