@@ -55,7 +55,20 @@ if os.environ.get("NPBACKUP_DPI_AWARENESS", "True").lower() == "true":
 try:
     WINDOW_SCALING = float(os.environ.get("NPBACKUP_SCALING", None))
 except (TypeError, ValueError):
-    WINDOW_SCALING = 1.0
+    WINDOW_SCALING = None
+
+# Let's decide our own scaling
+# Get actual pixel size for scaling
+def get_scaling():
+    # called before window created
+    root = sg.tk.Tk()
+    scaling = root.winfo_fpixels('1i')/92
+    root.destroy()
+    return scaling
+width, height = sg.Window.get_screen_size()
+WINDOW_SCALING = round(1.0 * get_scaling(), 2)
+print(WINDOW_SCALING)
+
 if WINDOW_SCALING:
     sg.set_options(scaling=WINDOW_SCALING)
 theme = os.environ.get("NPBACKUP_THEME", "light").lower()
@@ -70,15 +83,6 @@ if HAVE_TTK_THEME:
     sg.DEFAULT_TTK_THEME = CURRENT_TTK_THEME
     sg.ADDITIONAL_TTK_STYLING_PATHS = ttk_theme_path
     sg.USE_TTK_BUTTONS = False
-
-# Get actual pixel size for scaling
-root = sg.tk.Tk()
-scale = 96 / root.winfo_fpixels("1i")  # Format your layout if when 96 DPI
-root.destroy()
-
-
-def scaled(pixels):
-    return round(scale * pixels)
 
 
 sg.theme(CURRENT_THEME)
