@@ -522,11 +522,15 @@ if __name__ == "__main__":
 
         atexit.register(_set_audience, audience=INITIAL_AUDIENCE)
 
+        build_count = 0
+        to_build = len(audiences) * len(build_types)
         for audience in audiences:
             npbackup_version = get_metadata(os.path.join(BASEDIR, "__version__.py"))[
                 "version"
             ]
             for build_type in build_types:
+                build_count += 1
+                logger.info("Building {}/{} items".format(build_count, to_build))
                 result = _compile(
                     arch=python_arch(),
                     audience=audience,
