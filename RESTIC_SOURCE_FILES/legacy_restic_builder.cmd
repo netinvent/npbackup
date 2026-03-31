@@ -2,12 +2,10 @@
 
 :: Blatantly copied from https://gist.github.com/DRON-666/6e29eb6a8635fae9ab822782f34d8fd6
 :: with some mods to specify restic versions and produce both 32 and 64 bit executables
+:: Runs on Win10+ and provides restic binaries for Win7 without the need to rampup all intermediate go compilers
 
-8
-SET RESTIC_VERSION=0.18.0
-SET GO_BINARIES_VERSION=1.21.3
-SET GO23_VERSION=1.23.8
-SET GO24_VERSION=1.24.2
+SET RESTIC_VERSION=0.18.1
+SET GO_BINARIES_VERSION=1.25.6
 
 SET LOG_FILE=%~n0.log
 SET BUILD_DIR=%~dp0BUILD
@@ -15,11 +13,9 @@ IF NOT EXIST "%BUILD_DIR%" MKDIR "%BUILD_DIR%" || GOTO ERROR
 PUSHD BUILD
 
 set RESTIC_URL=https://github.com/restic/restic/releases/download/v%RESTIC_VERSION%/restic-%RESTIC_VERSION%.tar.gz
-set GO21_BIN_URL=https://go.dev/dl/go%GO_BINARIES_VERSION%.windows-amd64.zip
-set GO23_SRC_URL=https://go.dev/dl/go%GO23_VERSION%.src.tar.gz
-set GO24_SRC_URL=https://go.dev/dl/go%GO24_VERSION%.src.tar.gz
-set PATCH_URL=https://gist.github.com/DRON-666/6e29eb6a8635fae9ab822782f34d8fd6/raw/win7sup.diff
-set BUSYBOX_URL=https://web.archive.org/web/20250314144220id_/https://frippery.org/files/busybox/busybox64.exe
+set GO_BINARIES_VERSION=https://go.dev/dl/go%GO_BINARIES_VERSION%.windows-amd64.zip
+set PATCH_URL=https://gist.github.com/DRON-666/6e29eb6a8635fae9ab822782f34d8fd6/raw/win7sup25.diff
+set BUSYBOX_URL=https://frippery.org/files/busybox/busybox64.exe
 set BUSYBOX="%BUILD_DIR%\busybox64.exe"
 set GOTOOLCHAIN=local
 
@@ -27,13 +23,9 @@ call:Log "Running legacy restic builder"
 
 call:Log "Fetching busybox"
 if not exist %BUSYBOX% (powershell -Command (New-Object System.Net.WebClient^).DownloadFile('"%BUSYBOX_URL%"','%BUSYBOX%'^) || GOTO ERROR)
-call:Log "Fetching GO %GO_BINARIES_VERSION% binaries which are Window 7 compatible"
-call:process %GO21_BIN_URL% %BUILD_DIR%\go
-call:Log "Building Go %GO23_VERSION% with Windows 7 support patch"
-call:process %GO23_SRC_URL% %BUILD_DIR%\go23 %PATCH_URL% %BUILD_DIR%\go
-call:Log "Building Go %GO24_VERSION% with Windows 7 support patch"
-call:process %GO24_SRC_URL% %BUILD_DIR%\go24 %PATCH_URL% %BUILD_DIR%\go23
-call:Log "Downloading restic %RESTIC_VERSION% source code"
+call:Log "Fetching GO %GO_BINARIES_VERSION% compiler"
+call:process %GO_BINARIES_VERSION% %BUILD_DIR%\go %PATCH_URL%
+call:Log "Fetching restic %RESTIC_VERSION% sources"
 call:process %RESTIC_URL% restic-%RESTIC_VERSION%
 
 call:build_restic 386
@@ -69,10 +61,11 @@ if not exist %~2\bin\go.exe (pushd %~2\src && set GOROOT_BOOTSTRAP=%4&& call mak
 GOTO:EOF
 
 :build_restic
+set GOOS=windows
 if NOT "%~1"=="" SET GOARCH=%~1
 call:Log "Building restic %RESTIC_VERSION% %GOARCH% with Windows 7 Support"
 :: Setting path without previous paths prevents further runs and calling binaries like powershell
-set PATH=%BUILD_DIR%\go24\bin;%PATH%
+set PATH=%BUILD_DIR%\go\bin;%PATH%
 if not exist restic_%RESTIC_VERSION%_windows_legacy_%GOARCH%.exe (PUSHD %BUILD_DIR%\restic-%RESTIC_VERSION% && go.exe run build.go && move /y restic.exe ../restic_%RESTIC_VERSION%_windows_legacy_%GOARCH%.exe && popd || GOTO ERROR)
 restic_%RESTIC_VERSION%_windows_legacy_%GOARCH%.exe version
 GOTO:EOF
