@@ -1378,7 +1378,8 @@ def handle_gui_events(
         return
     if isinstance(event, tuple) and event[0] == "-REMOVE-EMAIL-RECIPIENT-":
         if COLUMN_LIST_COUNTERS["EMAIL-RECIPIENTS"] > 0:
-            window[("-EMAIL-RECIPIENT-", event[1])].update("", visible=False)
+            window[("-EMAIL-RECIPIENT-", event[1])].update("")
+            window[("-EMAIL-RECIPIENT-", event[1])].update(visible=False)
         window.refresh()
         window["-EMAIL-RECIPIENT-COLUMN-"].contents_changed()
         return
