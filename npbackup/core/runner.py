@@ -7,7 +7,7 @@ __intname__ = "npbackup.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026031301"
+__build__ = "2026040201"
 
 
 from typing import Optional, Callable, Union, List
@@ -1584,6 +1584,9 @@ class NPBackupRunner:
         )
 
         if operation_result:
+            # We need to backup the restic backup result here since it will be changed by housekeeping
+            backup_result = self.restic_runner.backup_result_content
+
             post_backup_housekeeping_percent_chance = self.repo_config.g(
                 "backup_opts.post_backup_housekeeping_percent_chance"
             )
@@ -1629,6 +1632,8 @@ class NPBackupRunner:
                         self.write_logs(
                             "After backup housekeeping failed", level="error"
                         )
+            # Reinsert previous backup result
+            self.restic_runner.backup_result_content = backup_result
 
         # housekeeping has its own metrics, so we won't include them in the operational result of the backup
         if not operation_result:
