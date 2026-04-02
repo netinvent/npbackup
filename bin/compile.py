@@ -530,7 +530,7 @@ if __name__ == "__main__":
             ]
             for build_type in build_types:
                 build_count += 1
-                logger.info("Building {}/{} items".format(build_count, to_build))
+                logger.info("Building {}/{} items ({} {})".format(build_count, to_build, audience, build_type))
                 result = _compile(
                     arch=python_arch(),
                     audience=audience,
