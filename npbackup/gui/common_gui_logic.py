@@ -1599,7 +1599,7 @@ def handle_gui_events(
         # Mock repo_config
         mock_repo_config = CommentedMap()
         mock_repo_config.s("name", "Test repository")
-        mock_metrics = {"npbackup_exec_state": 0, "operation": "email_test"}
+        mock_metrics = {"npbackup_exec_state": 0, "npbackup_exec_time": 0, "operation": "email_test"}
         # WIP test
         result = EmailMonitor(
             mock_repo_config,
