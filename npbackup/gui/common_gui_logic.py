@@ -1616,7 +1616,6 @@ def handle_gui_events(
         if not good_emails:
             sg.popup(_t("config_gui.no_valid_email_addresses"), keep_on_top=True)
             return
-        print(f"Good emails: {good_emails}")
 
         mock_full_config = deepcopy(full_config)
         mock_full_config.d("global_email.recipients.on_backup_success")
