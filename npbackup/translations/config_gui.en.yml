@@ -282,6 +282,7 @@ en:
   test_email_success: Test email sent successfully
   test_email_failure: Test email failed, see logs for details
   add_recipient: Add recipient
+  no_valid_email_addresses: No valid email addresses set
 
   backend_local: Local Storage
   backend_sftp: SFTP

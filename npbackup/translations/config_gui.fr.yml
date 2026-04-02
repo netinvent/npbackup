@@ -282,6 +282,7 @@ fr:
   test_email_success: Email de test envoyé avec succès
   test_email_failure: Échec de l'envoi du test email, veuillez consulter les journaux pour plus de détails
   add_recipient: Ajouter destinataire
+  no_valid_email_addresses: Aucune adresse email valide définie
 
   backend_local: Stockage local
   backend_sftp: SFTP

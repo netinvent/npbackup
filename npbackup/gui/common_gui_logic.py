@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.common_gui_logic"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026030701"
+__build__ = "2026040201"
 
 
 import os
@@ -17,6 +17,7 @@ from logging import getLogger
 import FreeSimpleGUI as sg
 from ruamel.yaml.comments import CommentedMap
 from datetime import datetime
+from copy import deepcopy
 from ofunctions.threading import threaded
 import npbackup.gui.common_gui
 from npbackup.gui.helpers import popup_error, password_complexity, WaitWindow
@@ -952,18 +953,22 @@ def update_gui_values(
 
 def validate_email_addresses(window: sg.Window) -> bool:
     bad_emails = []
+    good_emails = []
     for value in window.AllKeysDict:
         if isinstance(value, tuple) and value[0] == "-EMAIL-RECIPIENT-":
             index = value[1]
             recipient_email = window[("-EMAIL-RECIPIENT-ADDR-", index)].get()
-            if recipient_email and not is_mail_address(recipient_email):
-                bad_emails.append(recipient_email)
+            if recipient_email:
+                if is_mail_address(recipient_email):
+                    good_emails.append(recipient_email)
+                else:
+                    bad_emails.append(recipient_email)
     if bad_emails:
         popup_error(
             _t("config_gui.invalid_email_address") + f": {', '.join(bad_emails)}"
         )
         return False
-    return True
+    return good_emails
 
 
 def update_config_dict(
@@ -1364,7 +1369,8 @@ def handle_gui_events(
                 if window[(f"inherited-{column_key}-", event[1])].visible:
                     popup_error(_t("config_gui.cannot_remove_group_inherited_settings"))
                     return
-                window[(f"-GENERIC-{column_key}-COLUMN-", event[1])].update("")
+                # Empty the value before making it's surrounding column invisible
+                window[(f"-{column_key}-", event[1])].update("")
                 window[(f"-GENERIC-{column_key}-COLUMN-", event[1])].update(
                     visible=False
                 )
@@ -1378,7 +1384,7 @@ def handle_gui_events(
         return
     if isinstance(event, tuple) and event[0] == "-REMOVE-EMAIL-RECIPIENT-":
         if COLUMN_LIST_COUNTERS["EMAIL-RECIPIENTS"] > 0:
-            window[("-EMAIL-RECIPIENT-", event[1])].update("")
+            window[("-EMAIL-RECIPIENT-ADDR-", event[1])].update("")
             window[("-EMAIL-RECIPIENT-", event[1])].update(visible=False)
         window.refresh()
         window["-EMAIL-RECIPIENT-COLUMN-"].contents_changed()
@@ -1599,11 +1605,29 @@ def handle_gui_events(
         # Mock repo_config
         mock_repo_config = CommentedMap()
         mock_repo_config.s("name", "Test repository")
-        mock_metrics = {"npbackup_exec_state": 0, "npbackup_exec_time": 0, "operation": "email_test"}
-        # WIP test
+        mock_metrics = {
+            "npbackup_exec_state": 0,
+            "npbackup_exec_time": 0,
+            "operation": "email_test",
+        }
+
+        # Extract emails from current dir but do not inject them into full config since we're only testing
+        good_emails = validate_email_addresses(window)
+        if not good_emails:
+            sg.popup(_t("config_gui.no_valid_email_addresses"), keep_on_top=True)
+            return
+        print(f"Good emails: {good_emails}")
+
+        mock_full_config = deepcopy(full_config)
+        mock_full_config.d("global_email.recipients.on_backup_success")
+        mock_full_config.d("global_email.recipients.on_backup_failure")
+        mock_full_config.d("global_email.recipients.on_operations_failure")
+        mock_full_config.s("global_email.recipients.on_operations_success", good_emails)
         result = EmailMonitor(
             mock_repo_config,
-            npbackup.configuration.get_monitoring_config(mock_repo_config, full_config),
+            npbackup.configuration.get_monitoring_config(
+                mock_repo_config, mock_full_config
+            ),
         ).send_metrics(
             mock_metrics,
             operation="email_test",
