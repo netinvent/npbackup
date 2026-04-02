@@ -18,7 +18,7 @@ import json
 import ofunctions.logger_utils
 from ofunctions.process import kill_childs
 from npbackup.path_helper import CURRENT_DIR
-from resources.customization import LICENSE_TEXT, SHORT_PRODUCT_NAME
+from resources.customization import LICENSE_TEXT, SHORT_PRODUCT_NAME, PRODUCT_NAME
 import npbackup.configuration
 from npbackup.runner_interface import entrypoint
 from npbackup.__version__ import version_string, version_dict
@@ -53,7 +53,7 @@ def cli_interface():
 
     parser = ArgumentParser(
         prog=f"{__intname__}",
-        description="""Portable Network Backup Client\n
+        description=f"""{PRODUCT_NAME}\n
 This program is distributed under the GNU General Public License and comes with ABSOLUTELY NO WARRANTY.\n
 This is free software, and you are welcome to redistribute it under certain conditions; Please type --license for more info.""",
     )
@@ -65,7 +65,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         type=str,
         default=None,
         required=False,
-        help="Path to alternative configuration file (defaults to current dir/npbackup.conf)",
+        help=f"Path to alternative configuration file (defaults to current dir/{SHORT_PRODUCT_NAME.lower()}.conf)",
     )
     parser.add_argument(
         "--repo-name",
@@ -263,7 +263,7 @@ This is free software, and you are welcome to redistribute it under certain cond
     )
     parser.add_argument("--license", action="store_true", help="Show license")
     parser.add_argument(
-        "--auto-upgrade", action="store_true", help="Auto upgrade NPBackup"
+        "--auto-upgrade", action="store_true", help=f"Auto upgrade {SHORT_PRODUCT_NAME}"
     )
     parser.add_argument(
         "--log-file",
@@ -354,7 +354,9 @@ This is free software, and you are welcome to redistribute it under certain cond
             sys.exit(70)
         config_file = Path(args.config_file).absolute()
     else:
-        config_file = Path(f"{CURRENT_DIR}/npbackup.conf").absolute()
+        config_file = Path(
+            f"{CURRENT_DIR}/{SHORT_PRODUCT_NAME.lower()}.conf"
+        ).absolute()
         if config_file.exists():
             logger.info(f"Loading default configuration file {config_file}")
         else:

@@ -43,6 +43,7 @@ from resources.customization import (
     LICENSE_TEXT,
     OEM_ICON,
     SHORT_PRODUCT_NAME,
+    PRODUCT_NAME,
 )
 from npbackup.gui.common_gui_logic import ask_manager_password
 from npbackup.gui.config import config_gui
@@ -797,7 +798,7 @@ def _main_gui(viewer_mode: bool):
                 if full_config:
                     return full_config, config_file
         else:
-            config_file = "npbackup.conf"
+            config_file = f"{SHORT_PRODUCT_NAME.lower()}.conf"
             config_exists = False
 
         while True:
@@ -899,10 +900,10 @@ def _main_gui(viewer_mode: bool):
     # FN ENTRY POINT
     parser = ArgumentParser(
         prog=f"{__intname__}",
-        description="""Portable Network Backup Client\n
+        description=f"""{PRODUCT_NAME}\n
         This program is distributed under the GNU General Public License and comes with ABSOLUTELY NO WARRANTY.\n
         This is free software, and you are welcome to redistribute it under certain conditions; See about button for more.""",
-        epilog="You may also run this program with --run-as-cli, in which case, it will behave like npbackup-cli. See '--run-as-cli --help' for specific parameters",
+        epilog=f"You may also run this program with --run-as-cli, in which case, it will behave like {SHORT_PRODUCT_NAME}-cli. See '--run-as-cli --help' for specific parameters",
     )
 
     parser.add_argument(
@@ -912,7 +913,7 @@ def _main_gui(viewer_mode: bool):
         type=str,
         default=None,
         required=False,
-        help="Path to alternative configuration file (defaults to current dir/npbackup.conf)",
+        help=f"Path to alternative configuration file (defaults to current dir/{SHORT_PRODUCT_NAME.lower()}.conf)",
     )
     parser.add_argument(
         "--repo-name",
@@ -959,9 +960,11 @@ def _main_gui(viewer_mode: bool):
     if args.config_file:
         config_file = Path(args.config_file).absolute()
     else:
-        config_file = Path(f"{CURRENT_DIR}/npbackup.conf").absolute()
+        config_file = Path(
+            f"{CURRENT_DIR}/{SHORT_PRODUCT_NAME.lower()}.conf"
+        ).absolute()
         if not config_file.is_file():
-            config_file = Path("./npbackup.conf").absolute()
+            config_file = Path(f"./{SHORT_PRODUCT_NAME.lower()}.conf").absolute()
             if not config_file.is_file():
                 config_file = None
 
@@ -1229,14 +1232,14 @@ def _main_gui(viewer_mode: bool):
             """
             When running the wizard at first run, we'll decide for default values:
             repo name is always "default"
-            config_file is "npbackup.conf" if not specified in commandline
+            config_file is "{SHORT_PRODUCT_NAME.lower()}.conf" if not specified in commandline
             """
             with HideWindow(window):
                 full_config = npbackup.configuration.get_default_config()
                 if args.config_file:
                     config_file = Path(args.config_file).absolute()
                 else:
-                    config_file = Path("npbackup.conf").absolute()
+                    config_file = Path(f"{SHORT_PRODUCT_NAME.lower()}.conf").absolute()
                 full_config, config_file = start_wizard(full_config, config_file)
                 repo_config, _ = npbackup.configuration.get_repo_config(
                     full_config, repo_name="default"
