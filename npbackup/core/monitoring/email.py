@@ -159,7 +159,7 @@ class EmailMonitor(MonitoringBackend):
         )
         if not result:
             logger.error(
-                f"Failed to send email notification to {recipients_to_send} for {operation}."
+                f"Failed to send email notification to {recipients_to_send} for operation {operation}."
             )
         return result
 

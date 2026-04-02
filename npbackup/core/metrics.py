@@ -53,6 +53,7 @@ def metric_analyser(
     backup_heuristics_sub_min_size = False
     backup_heuristics_over_size = False
     backup_heuristics_too_many_modified_files = False
+
     try:
         metrics = {}
         if operation == "backup":
