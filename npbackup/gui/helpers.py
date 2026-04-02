@@ -53,6 +53,7 @@ TOTAL_AVERAGE_INTERVAL = 5
 def get_anon_repo_uri(repository: str) -> Tuple[str, str]:
     """
     Remove user / password part from repository uri
+    NPF-SEC-00014: Don't leak repository url including passwords in logs/ui
     """
     if not repository:
         return "UNDEFINED", None

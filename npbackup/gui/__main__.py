@@ -873,6 +873,7 @@ def _main_gui(viewer_mode: bool):
                     full_config, repo_name=repo_name
                 )
                 backup_destination = _t("main_gui.local_folder")
+                # NPF-SEC-00014: Don't leak repository url including passwords in logs/ui
                 repo_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
             except IndexError:
                 repo_config = None
@@ -1283,6 +1284,7 @@ def _main_gui(viewer_mode: bool):
                 current_state, backup_tz, snapshot_list = get_gui_data(
                     repo_config, monitoring_config
                 )
+                # NPF-SEC-00014: Don't leak repository url including passwords in logs/ui
                 repo_type, _ = get_anon_repo_uri(repo_config.g("repo_uri"))
                 gui_update_state(current_state, backup_tz, snapshot_list, repo_type)
             else:
@@ -1420,6 +1422,7 @@ def _main_gui(viewer_mode: bool):
             if (
                 env_manager_password and env_manager_password == manager_password
             ) or ask_manager_password(manager_password):
+                # NPF-SEC-00014: Don't leak repository url including passwords in logs/ui
                 destination_string = get_anon_repo_uri(repo_config.g("repo_uri"))
                 sg.popup_no_frame(destination_string)
             continue

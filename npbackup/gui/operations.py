@@ -55,6 +55,7 @@ def gui_update_state(window, full_config: dict, unencrypted: str = None) -> list
                 repo_config.g("repo_opts.repo_password")
                 or repo_config.g("repo_opts.repo_password_command")
             ):
+                # NPF-SEC-00014: Don't leak repository url including passwords in logs/ui
                 repo_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
                 repo_group = repo_config.g("repo_group")
                 if unencrypted != repo_name:

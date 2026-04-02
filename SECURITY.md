@@ -65,3 +65,7 @@ The PRIVATE directory might contain alternative AES keys and obfuscation functio
 # NPF-SEC-00013: Don't leave encrypted environment variables for script usage
 
 Sensitive environment variables aren't available for scripts / additional parameters and will be replaced by a given string from __env__.py
+
+# NPF-SEC-00014: Don't leak repository url including passwords in logs
+
+We need to replace REST / SFTP repository URIs with anonymous data for user/passwords

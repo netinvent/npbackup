@@ -348,6 +348,10 @@ class ResticRunner:
 
     @property
     def repository_anonymous(self):
+        """
+        Make repository URI anonymous
+        NPF-SEC-00014: Don't leak repository url including passwords in logs/ui
+        """
         if self.repository:
             return self.repository.split(":")[0] + ":" + HIDDEN_BY_NPBACKUP
         return None
@@ -779,6 +783,8 @@ class ResticRunner:
                 self.is_init = True
                 return True
             if not errors_allowed:
+                # NPF-SEC-00014: Don't leak repository url including passwords in logs/ui
+                output = output.replace(self.repository, self.repository_anonymous)
                 self.write_logs(f"Cannot contact repo: {output}", level="error")
             self.is_init = False
             return False
