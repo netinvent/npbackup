@@ -99,7 +99,7 @@ def restic_str_output_to_json(
                         "Cannot parse restic values from added to repo size log line"
                     )
                     errors = True
-                stored_size = matches.group(3)  # TODO: add unit detection in regex
+                stored_size = matches.group(3)
                 try:
                     stored_size = int(BytesConverter(stored_size).bytes)
                     metrics["data_stored"] = stored_size

@@ -992,8 +992,6 @@ def update_config_dict(
     """
     Update full_config with keys from GUI
     keys should always have form section.name or section.subsection.name
-
-    # WIP todo: only update visible items so we don't mess with settings that are not relevant / hidden
     """
     if object_type == "repos":
         object_group = full_config.g(f"{object_type}.{object_name}.repo_group")
