@@ -1057,8 +1057,6 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
             [
                 sg.Tab(
                     _t("generic.scheduled_task"),
-                    # npbackup.gui.common_gui.scheduling_col(),
-                    # WIP
                     [
                         [
                             sg.Button(
