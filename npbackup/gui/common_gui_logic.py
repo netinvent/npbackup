@@ -1549,7 +1549,6 @@ def handle_gui_events(
                     if tree.tree_dict.get(var_name):
                         tree.delete(var_name)
                     tree.insert("", var_name, var_name, [var_value], icon=icon)
-                    # WIP add return here ?
             elif "MONITORING-LABEL" in event:
                 var_name = sg.popup_get_text(_t("config_gui.enter_label_name"))
                 var_value = sg.popup_get_text(_t("config_gui.enter_label_value"))
