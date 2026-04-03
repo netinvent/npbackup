@@ -651,7 +651,9 @@ def update_global_gui(
                 for recipient, notification_types in recipients.items():
                     add_email_recipient_row(window, recipient, notification_types)
             except (KeyError, AttributeError) as exc:
-                logger.debug(f"No recipients found in global_email settings, skipping: {exc}")
+                logger.debug(
+                    f"No recipients found in global_email settings, skipping: {exc}"
+                )
 
         if is_wizard and key in ("global_options", "identity"):
             continue
