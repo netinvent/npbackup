@@ -7,7 +7,7 @@ __intname__ = "npbackup.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026040201"
+__build__ = "2026040301"
 
 
 from typing import Optional, Callable, Union, List
@@ -158,6 +158,12 @@ class NPBackupRunner:
         self._repo_config = deepcopy(value)
         # Create an instance of restic wrapper
         self.create_restic_runner()
+
+    @property
+    def repo_name(self) -> Optional[str]:
+        if self._repo_config:
+            return self._repo_config.g("name")
+        return None
 
     @property
     def monitoring_config(self) -> dict:
@@ -1072,7 +1078,7 @@ class NPBackupRunner:
     @is_ready
     @apply_config_to_restic_runner
     def init(self) -> bool:
-        self.write_logs(f"Initializing repo {self.repo_config.g('name')}", level="info")
+        self.write_logs(f"Initializing repo {self.repo_name}", level="info")
         try:
             self.restic_runner.compression = self.repo_config.g("repo_opts.compression")
         except (KeyError, ValueError):
@@ -1092,9 +1098,7 @@ class NPBackupRunner:
     def snapshots(
         self, snapshot_id: str = None, errors_allowed: bool = False
     ) -> Optional[dict]:
-        self.write_logs(
-            f"Listing snapshots of repo {self.repo_config.g('name')}", level="info"
-        )
+        self.write_logs(f"Listing snapshots of repo {self.repo_name}", level="info")
         snapshots = self.restic_runner.snapshots(
             snapshot_id=snapshot_id, errors_allowed=errors_allowed
         )
@@ -1112,7 +1116,7 @@ class NPBackupRunner:
     @apply_config_to_restic_runner
     def list(self, subject: str) -> Optional[dict]:
         self.write_logs(
-            f"Listing {subject} objects of repo {self.repo_config.g('name')}",
+            f"Listing {subject} objects of repo {self.repo_name}",
             level="info",
         )
         return self.restic_runner.list(subject)
@@ -1129,7 +1133,7 @@ class NPBackupRunner:
     @apply_config_to_restic_runner
     def find(self, path: str) -> bool:
         self.write_logs(
-            f"Searching for path {path} in repo {self.repo_config.g('name')}",
+            f"Searching for path {path} in repo {self.repo_name}",
             level="info",
         )
         result = self.restic_runner.find(path=path)
@@ -1147,7 +1151,7 @@ class NPBackupRunner:
     @apply_config_to_restic_runner
     def ls(self, snapshot: str) -> Optional[dict]:
         self.write_logs(
-            f"Showing content of snapshot {snapshot} in repo {self.repo_config.g('name')}",
+            f"Showing content of snapshot {snapshot} in repo {self.repo_name}",
             level="info",
         )
         result = self.restic_runner.ls(snapshot)
@@ -1189,17 +1193,17 @@ class NPBackupRunner:
         backup_tz = data[1]
         if result:
             self.write_logs(
-                f"Most recent backup in repo {self.repo_config.g('name')} is from {backup_tz}",
+                f"Most recent backup in repo {self.repo_name} is from {backup_tz}",
                 level="info",
             )
         elif result is False and backup_tz == datetime(1, 1, 1, 0, 0):
             self.write_logs(
-                f"No snapshots found in repo {self.repo_config.g('name')}.",
+                f"No snapshots found in repo {self.repo_name}.",
                 level="info",
             )
         elif result is False:
             self.write_logs(
-                f"No recent backup found in repo {self.repo_config.g('name')}. Newest is from {backup_tz}",
+                f"No recent backup found in repo {self.repo_name}. Newest is from {backup_tz}",
                 level="info",
             )
         elif result is None:
@@ -1227,7 +1231,6 @@ class NPBackupRunner:
         Run backup after checking if no recent backup exists, unless force == True
         """
 
-        repo_name = self.repo_config.g("name")
         stdin_from_command = self.repo_config.g("backup_opts.stdin_from_command")
         if not stdin_filename:
             stdin_filename = self.repo_config.g("backup_opts.stdin_filename")
@@ -1244,9 +1247,7 @@ class NPBackupRunner:
             # Preflight checks
             paths = self.repo_config.g("backup_opts.paths")
             if not paths:
-                msg = (
-                    f"No paths to backup defined for repo {self.repo_config.g('name')}"
-                )
+                msg = f"No paths to backup defined for repo {self.repo_name}"
                 self.write_logs(msg, level="critical")
                 return self.convert_to_json_output(False, msg)
 
@@ -1258,11 +1259,11 @@ class NPBackupRunner:
                 paths = [path.strip() for path in paths]
                 for path in paths:
                     if path == self.repo_config.g("repo_uri"):
-                        msg = f"You cannot backup source into its own path in repo {self.repo_config.g('name')}. No inception allowed !"
+                        msg = f"You cannot backup source into its own path in repo {self.repo_name}. No inception allowed !"
                         self.write_logs(msg, level="critical")
                         return self.convert_to_json_output(False, msg)
             except (AttributeError, KeyError):
-                msg = f"No backup source given for repo {self.repo_config.g('name')}"
+                msg = f"No backup source given for repo {self.repo_name}"
                 self.write_logs(msg, level="critical")
                 return self.convert_to_json_output(False, msg)
 
@@ -1372,7 +1373,7 @@ class NPBackupRunner:
             )
             try:
                 with npbackup.pidfile_ng.PIDFile(
-                    delay_file, check_full_commandline=False, identifier=repo_name
+                    delay_file, check_full_commandline=False, identifier=self.repo_name
                 ):
                     self.write_logs(
                         f"Delaying backup for {delay_backup_seconds} seconds",
@@ -1398,17 +1399,17 @@ class NPBackupRunner:
             else:
                 pretty_source_type = " ".join(source_type.split("_"))
             self.write_logs(
-                f"Running backup of {pretty_source_type}: {paths} to repo {self.repo_config.g('name')}",
+                f"Running backup of {pretty_source_type}: {paths} to repo {self.repo_name}",
                 level="info",
             )
         elif source_type == "stdin_from_command" and stdin_from_command:
             self.write_logs(
-                f"Running backup of given command stdout as name {stdin_filename} to repo {self.repo_config.g('name')}",
+                f"Running backup of given command stdout as name {stdin_filename} to repo {self.repo_name}",
                 level="info",
             )
         elif read_from_stdin:
             self.write_logs(
-                f"Running backup of piped stdin data as name {stdin_filename} to repo {self.repo_config.g('name')}",
+                f"Running backup of piped stdin data as name {stdin_filename} to repo {self.repo_name}",
                 level="info",
             )
         else:
@@ -1703,7 +1704,10 @@ class NPBackupRunner:
         self, snapshots: Optional[Union[List[str], str]] = None, use_policy: bool = None
     ) -> bool:
         if snapshots:
-            self.write_logs(f"Forgetting snapshots {snapshots}", level="info")
+            self.write_logs(
+                f"Forgetting snapshots {snapshots} in repo {self.repo_name}",
+                level="info",
+            )
             result = self.restic_runner.forget(snapshots)
         elif use_policy:
             # NPF-SEC-00010
@@ -1768,7 +1772,8 @@ class NPBackupRunner:
                     group_by.append(entry)
 
             self.write_logs(
-                f"Forgetting snapshots using retention policy: {policy}", level="info"
+                f"Forgetting snapshots in repo {self.repo_name} using retention policy: {policy}",
+                level="info",
             )
             result = self.restic_runner.forget(policy=policy, group_by=group_by)
         else:
@@ -1837,19 +1842,19 @@ class NPBackupRunner:
                     result = prune_result
                 else:
                     self.write_logs(
-                        f"Forget failed. Won't continue housekeeping on repo {self.repo_config.g('name')}",
+                        f"Forget failed. Won't continue housekeeping on repo {self.repo_name}",
                         level="error",
                     )
                     result = forget_result
             else:
                 self.write_logs(
-                    f"Check failed. Won't continue housekeeping on repo {self.repo_config.g('name')}",
+                    f"Check failed. Won't continue housekeeping on repo {self.repo_name}",
                     level="error",
                 )
                 result = check_result
         else:
             self.write_logs(
-                f"Unlock failed. Won't continue housekeeping in repo {self.repo_config.g('name')}",
+                f"Unlock failed. Won't continue housekeeping in repo {self.repo_name}",
                 level="error",
             )
             result = unlock_result
@@ -1876,12 +1881,12 @@ class NPBackupRunner:
     def check(self, read_data: bool = True, read_data_subset: str = None) -> bool:
         if read_data:
             self.write_logs(
-                f"Running full data check of repository {self.repo_config.g('name')}",
+                f"Running full data check of repository {self.repo_name}",
                 level="info",
             )
         else:
             self.write_logs(
-                f"Running metadata consistency check of repository {self.repo_config.g('name')}",
+                f"Running metadata consistency check of repository {self.repo_name}",
                 level="info",
             )
         return self.restic_runner.check(read_data, read_data_subset)
@@ -1897,7 +1902,7 @@ class NPBackupRunner:
     @apply_config_to_restic_runner
     def prune(self, prune_max: bool = False) -> bool:
         self.write_logs(
-            f"Pruning snapshots for repo {self.repo_config.g('name')}{' at maximum efficiency' if prune_max else ''}",
+            f"Pruning snapshots for repo {self.repo_name}{' at maximum efficiency' if prune_max else ''}",
             level="info",
         )
         max_repack_size = self.repo_config.g("repo_opts.prune_max_repack_size")
@@ -1920,9 +1925,7 @@ class NPBackupRunner:
     @is_ready
     @apply_config_to_restic_runner
     def repair(self, subject: str, pack_ids: str = None) -> bool:
-        self.write_logs(
-            f"Repairing {subject} in repo {self.repo_config.g('name')}", level="info"
-        )
+        self.write_logs(f"Repairing {subject} in repo {self.repo_name}", level="info")
         return self.restic_runner.repair(subject, pack_ids)
 
     @threaded
@@ -1935,9 +1938,7 @@ class NPBackupRunner:
     @is_ready
     @apply_config_to_restic_runner
     def recover(self) -> bool:
-        self.write_logs(
-            f"Recovering snapshots in repo {self.repo_config.g('name')}", level="info"
-        )
+        self.write_logs(f"Recovering snapshots in repo {self.repo_name}", level="info")
         return self.restic_runner.recover()
 
     @threaded
@@ -1950,7 +1951,7 @@ class NPBackupRunner:
     @is_ready
     @apply_config_to_restic_runner
     def unlock(self) -> bool:
-        self.write_logs(f"Unlocking repo {self.repo_config.g('name')}", level="info")
+        self.write_logs(f"Unlocking repo {self.repo_name}", level="info")
         return self.restic_runner.unlock()
 
     @threaded
@@ -1964,7 +1965,7 @@ class NPBackupRunner:
     @apply_config_to_restic_runner
     def dump(self, snapshot: str, path: str) -> bool:
         self.write_logs(
-            f"Dumping {path} from {self.repo_config.g('name')} snapshot {snapshot}",
+            f"Dumping {path} from {self.repo_name} snapshot {snapshot}",
             level="info",
         )
         result = self.restic_runner.dump(snapshot, path)
@@ -1980,9 +1981,7 @@ class NPBackupRunner:
     @is_ready
     @apply_config_to_restic_runner
     def stats(self, subject: str = None) -> bool:
-        self.write_logs(
-            f"Getting stats of repo {self.repo_config.g('name')}", level="info"
-        )
+        self.write_logs(f"Getting stats of repo {self.repo_name}", level="info")
         result = self.restic_runner.stats(subject)
         return result
 
