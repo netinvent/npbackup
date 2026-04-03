@@ -1324,7 +1324,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                     )
                 if result != _t("generic.yes"):
                     continue
-            if not npbackup.gui.common_gui_logic.validate_email_addresses(window):
+            if npbackup.gui.common_gui_logic.validate_email_addresses(window) is False:
                 result = sg.popup(
                     _t("config_gui.there_are_invalid_email_addresses")
                     + ". "

@@ -7,11 +7,11 @@ __intname__ = "npbackup.gui.common_gui_logic"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026040201"
+__build__ = "2026040301"
 
 
 import os
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Union
 import re
 from logging import getLogger
 import FreeSimpleGUI as sg
@@ -951,7 +951,12 @@ def update_gui_values(
         logger.debug("Trace:", exc_info=True)
 
 
-def validate_email_addresses(window: sg.Window) -> bool:
+def validate_email_addresses(window: sg.Window) -> Optional[Union[List[str], bool]]:
+    """
+    Chefs email against RFC 822 and returns list of good emails
+    or false if bad emails exist, or none if no emails given
+    """
+
     bad_emails = []
     good_emails = []
     for value in window.AllKeysDict:
@@ -968,7 +973,9 @@ def validate_email_addresses(window: sg.Window) -> bool:
             _t("config_gui.invalid_email_address") + f": {', '.join(bad_emails)}"
         )
         return False
-    return good_emails
+    if good_emails:
+        return good_emails
+    return None
 
 
 def update_config_dict(

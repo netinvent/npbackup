@@ -1051,7 +1051,7 @@ def start_wizard(full_config: dict, config_file: str):
 
         ## WIZARD STEP 5 ##
         if current_tab == 5:
-            if not npbackup.gui.common_gui_logic.validate_email_addresses(wizard):
+            if npbackup.gui.common_gui_logic.validate_email_addresses(wizard) is False:
                 result = sg.popup(
                     _t("config_gui.there_are_invalid_email_addresses")
                     + ". "
