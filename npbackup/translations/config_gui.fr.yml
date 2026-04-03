@@ -106,7 +106,8 @@ fr:
   elevate_uac_tasks: Pour gérer les tâches planifiées Windows, une élévation UAC est requise. Veuillez autoriser l'invite UAC si vous souhaitez voir les tâches existantes ou en créer de nouvelles
   run_task_as: Exécuter la tâche en tant que
   run_task_as_explanation: Veuillez garder à l'esprit que laisser une tâche s'exécuter en tant qu'utilisateur spécifié enregistrera le mot de passe de l'utilisateur dans le gestionnaire de tâches Windows. Cela implique des risques potentiels de sécurité ainsi que des problèmes potentiels liés aux changements de mot de passe. Si vous souhaitez éviter cela, vous pouvez
-
+  task_invalid_date_format: Format de date érroné, tâche planifiée non créée
+  
   machine_identification: Identification machine
   machine_id: Identificateur machine
   machine_group: Groupe machine

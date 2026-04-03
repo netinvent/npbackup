@@ -1713,7 +1713,7 @@ def create_scheduled_task(
         date_string = f'{values["-FIRST-BACKUP-DATE-"]} {str(values["-FIRST-BACKUP-HOUR-"]).zfill(2)}:{str(values["-FIRST-BACKUP-MINUTE-"]).zfill(2)}'
         start_date_time = datetime.strptime(date_string, "%Y-%m-%d %H:%M")
     except (ValueError, TypeError, IndexError, KeyError) as exc:
-        popup_error(f"Invalid date format, not creating scheduled task: {exc}")
+        popup_error(_t("config_gui.task_invalid_date_format") + f": {exc}")
         return False, full_config
 
     run_as = values["-SCHEDULE-RUN-AS-"]

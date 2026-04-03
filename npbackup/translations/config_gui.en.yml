@@ -105,6 +105,7 @@ en:
   elevate_uac_tasks: In order to handle windows tasks, UAC elevation is required. Please allow UAC prompt if you want to see existing tasks or create new ones
   run_task_as: Run task as
   run_task_as_explanation: Please bear in mind that letting a task run as specified user will save the user password in windows task manager. This implies potential security risks as well as potential issues with password changes. If you want to avoid this, you can let the task run as SYSTEM user but this may cause permission issues depending on your configuration. If you choose to run as specified user, you will need to enter credentials when creating the task and re-enter them if they change in the future when updating the task.
+  task_invalid_date_format: Invalid date format, not creating scheduled task
 
   machine_identification: Machine identification
   machine_id: Machine identifier
