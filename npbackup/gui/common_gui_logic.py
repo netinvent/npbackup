@@ -783,7 +783,8 @@ def update_gui_values(
             return
 
         # We need to discard sukeys from recipients in order to avoid searching for subkeys in GUI
-        if key.startswith("global_email.recipients."):
+        # Also, recipients key itself is handled in update_global_gui, so we can bypass it too here
+        if key.startswith("global_email.recipients"):
             return
 
         # Since FreeSimpleGUI does not allow to suppress the debugger anymore in v5.1.0, we need to handle KeyError
