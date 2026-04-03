@@ -98,6 +98,8 @@ fr:
   scheduled_task_explanation: Les tâches planifiées peuvent être crées à heure fixe pour réaliser des sauvegardes serveur, ou toutes les x minutes, auquel cas la sauvegarde aura lieue uniquement si le temps minimal entre deux sauvegardes est dépassé, ce qui est adapté aux ordinateurs portables qui ont des heures de travail flexibles.
   scheduled_task_creation_success: Tâche planifiée crée avec succès
   scheduled_task_creation_failure: Impossible de créer la tâche planifiée. Vous devez exécuter ce programme en tant qu'administrateur pour créer des tâches planifiées
+  bogus_minimum_backup_age_value: Valeur érronée pour le délai minimal entre deux sauvegardes, tâche planifiée non créée
+  bogus_random_delay_before_backup_value: Valeur érronée pour le délai alé
   task_type: Type de tâche
   select_task_scope: Sélectionner la portée de la tâche
   reading_tasks: Lecture des tâches planifiées existantes

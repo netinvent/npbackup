@@ -1692,7 +1692,7 @@ def create_scheduled_task(
                 minimum_backup_age,
             )
         except ValueError:
-            logger.error("Bogus minimum backup age value, not updating config")
+            popup_error(_t("config_gui.bogus_minimum_backup_age_value"))
             return False, full_config
     else:
         minimum_backup_age = 0
@@ -1706,14 +1706,14 @@ def create_scheduled_task(
                 random_delay_before_backup,
             )
         except ValueError:
-            logger.error("Bogus random delay before backup value, not updating config")
+            popup_error(_t("config_gui.bogus_random_delay_before_backup_value"))
             return False, full_config
 
     try:
         date_string = f'{values["-FIRST-BACKUP-DATE-"]} {str(values["-FIRST-BACKUP-HOUR-"]).zfill(2)}:{str(values["-FIRST-BACKUP-MINUTE-"]).zfill(2)}'
         start_date_time = datetime.strptime(date_string, "%Y-%m-%d %H:%M")
     except (ValueError, TypeError, IndexError, KeyError) as exc:
-        logger.error(f"Invalid date format, not creating scheduled task: {exc}")
+        popup_error(f"Invalid date format, not creating scheduled task: {exc}")
         return False, full_config
 
     run_as = values["-SCHEDULE-RUN-AS-"]
@@ -1735,6 +1735,8 @@ def create_scheduled_task(
         force=minimum_backup_age == 0,
     )
 
+    if not result:
+        popup_error(_t("config_gui.scheduled_task_creation_failed"))
     return result, full_config
 
 

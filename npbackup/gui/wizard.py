@@ -1208,9 +1208,7 @@ def start_wizard(full_config: dict, config_file: str):
                 )
                 if not result:
                     result = sg.popup(
-                        _t("config_gui.scheduled_task_creation_failure")
-                        + "\n"
-                        + _t("wizard_gui.do_you_still_want_to_save"),
+                        _t("wizard_gui.do_you_still_want_to_save"),
                         custom_text=(_t("generic.no"), _t("generic.yes")),
                         keep_on_top=True,
                         icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
