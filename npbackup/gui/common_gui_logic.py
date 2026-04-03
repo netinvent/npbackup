@@ -1883,12 +1883,15 @@ def retention_policy_preset_name(
             .g("presets.retention_policy")
             .items()
         ):
-            # Extract the key names we want to compare from presets
-            policy_matches = True
-            for key in policy_values.keys():
-                if not current_retention_policy[key] == policy_values[key]:
-                    policy_matches = False
-                    break
-            if policy_matches:
-                return _t(f"config_gui.{policy_name}")
+            try:
+                # Extract the key names we want to compare from presets
+                policy_matches = True
+                for key in policy_values.keys():
+                    if not current_retention_policy[key] == policy_values[key]:
+                        policy_matches = False
+                        break
+                if policy_matches:
+                    return _t(f"config_gui.{policy_name}")
+            except KeyError:
+                break
     return None
