@@ -27,11 +27,11 @@ from npbackup.configuration import (
 )
 from npbackup.core.i18n_helper import _t
 from npbackup.gui.helpers import (
-    get_anon_repo_uri,
     gui_thread_runner,
     popup_error,
     HideWindow,
 )
+from npbackup.restic_wrapper.url_parser import get_anon_repo_uri
 from resources.customization import (
     OEM_STRING,
     OEM_LOGO,

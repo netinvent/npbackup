@@ -49,7 +49,6 @@ from npbackup.gui.common_gui_logic import ask_manager_password
 from npbackup.gui.config import config_gui
 from npbackup.gui.operations import operations_gui
 from npbackup.gui.helpers import (
-    get_anon_repo_uri,
     gui_thread_runner,
     HideWindow,
     WaitWindow,
@@ -61,8 +60,8 @@ from npbackup.core import upgrade_runner
 from npbackup.path_helper import CURRENT_DIR
 from npbackup.__version__ import version_dict, version_string
 from npbackup.__debug__ import _DEBUG, _NPBACKUP_ALLOW_AUTOUPGRADE_DEBUG
-from npbackup.restic_wrapper import ResticRunner
-from npbackup.restic_wrapper import schema
+from npbackup.restic_wrapper import ResticRunner, schema
+from npbackup.restic_wrapper.url_parser import get_anon_repo_uri
 from npbackup.gui.ttk_theme import (
     TITLE_FONT,
     SUBTITLE_FONT,

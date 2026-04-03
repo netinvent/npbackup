@@ -7,10 +7,10 @@ __intname__ = "npbackup.gui.helpers"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026032901"
+__build__ = "2026040301"
 
 
-from typing import Tuple, Union
+from typing import Union
 from logging import getLogger
 from time import sleep
 import re
@@ -48,37 +48,6 @@ else:
 UPDATE_INTERVAL = 1
 # Seconds between total average speed updates
 TOTAL_AVERAGE_INTERVAL = 5
-
-
-def get_anon_repo_uri(repository: str) -> Tuple[str, str]:
-    """
-    Remove user / password part from repository uri
-    NPF-SEC-00014: Don't leak repository url including passwords in logs/ui
-    """
-    if not repository:
-        return "UNDEFINED", None
-    repo_type = repository.split(":")[0].upper()
-    if repo_type.upper() in ["REST", "SFTP"]:
-        res = re.match(
-            r"(sftp|rest)(.*:\/\/)(.*):?(.*)@(.*)", repository, re.IGNORECASE
-        )
-        if res:
-            repo_uri = res.group(1) + res.group(2) + res.group(5)
-        else:
-            repo_uri = repository
-    elif repo_type.upper() in [
-        "S3",
-        "B2",
-        "SWIFT",
-        "AZURE",
-        "GS",
-        "RCLONE",
-    ]:
-        repo_uri = repository
-    else:
-        repo_type = "LOCAL"
-        repo_uri = repository
-    return repo_type, repo_uri
 
 
 def gui_thread_runner(
