@@ -120,8 +120,16 @@ def test_uri_parsing():
         "s3:s3.amazonaws.com/mybucket/myrepo": {
             "backend_type": "s3",
             "endpoint": "s3.amazonaws.com",
+            "port": None,
             "bucket": "mybucket",
             "path": "myrepo",
+        },
+        "s3:somehost.tld:9000/bucket/path": {
+            "backend_type": "s3",
+            "endpoint": "somehost.tld",
+            "port": 9000,
+            "bucket": "bucket",
+            "path": "path",
         },
         "rest:https://user:pass@[::1]:8000/repo": {
             "backend_type": "rest",

@@ -135,6 +135,7 @@ empty_config_dict = {
         # Don't allow repo names to contain dots
         "default": {
             "repo_uri": None,
+            "remote_ssh_key": None,
             "permissions": "full",
             "manager_password": None,
             "repo_group": "default_group",

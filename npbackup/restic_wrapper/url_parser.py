@@ -365,15 +365,17 @@ def parse_restic_repo(repo_uri: str) -> dict:
         else:
             raise ValueError(f"Unknown backend: {backend_type}")
 
-    repo_uri_dict = _parse_restic_repo(repo_uri)
-    _validate_restic_repo(repo_uri_dict)
-    # After validation, we want to me sure we can reconstruct the URI as identical string
-    reconstructed_uri = build_restic_uri(repo_uri_dict)
-    if reconstructed_uri != repo_uri:
-        raise ValueError(
-            f"Parsed URI does not reconstruct to original. Got: {reconstructed_uri}"
-        )
-
+    if isinstance(repo_uri, str):
+        repo_uri_dict = _parse_restic_repo(repo_uri)
+        _validate_restic_repo(repo_uri_dict)
+        # After validation, we want to me sure we can reconstruct the URI as identical string
+        reconstructed_uri = build_restic_uri(repo_uri_dict)
+        if reconstructed_uri != repo_uri:
+            raise ValueError(
+                f"Parsed URI does not reconstruct to original. Got: {reconstructed_uri}"
+            )
+    else:
+        return {}
     return repo_uri_dict
 
 
@@ -470,7 +472,10 @@ def get_anon_repo_uri(repo_uri: str) -> str:
     Wrapper for earlier get_anon_repo_uri implementation
     Get a restic repository URI with credentials removed, for display purposes
     """
-    repo_uri_dict = parse_restic_repo(repo_uri)
-    return repo_uri_dict["backend_type"], build_restic_uri(
-        repo_uri_dict, anonymized=True
-    )
+    try:
+        repo_uri_dict = parse_restic_repo(repo_uri)
+        return repo_uri_dict["backend_type"], build_restic_uri(
+            repo_uri_dict, anonymized=True
+        )
+    except (ValueError, KeyError):
+        return "Unknown", "CannotParseUrl"

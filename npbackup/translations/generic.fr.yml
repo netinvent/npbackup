@@ -126,3 +126,6 @@ fr:
   timeout: Délai d'attente
 
   tenant: Tenant
+
+  port: Port
+  host: Hôte

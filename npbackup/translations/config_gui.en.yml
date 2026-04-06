@@ -293,6 +293,9 @@ en:
   backend_b2: Backblaze B2
   backend_s3: Amazon / Compatible S3
   backend_azure: Microsoft Azure Blob Storage
-  backend_gcs: Google Cloud Storage
+  backend_gs: Google Cloud Storage
   backend_rest: REST Server
 
+  remote_ssh_key: SFTP SSH key
+
+  repo_uri_invalid: Repo URI seems invalid

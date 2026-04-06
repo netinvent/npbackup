@@ -128,3 +128,6 @@ en:
 
   tenant: Tenant
 
+  port: Port
+  host: Host
+

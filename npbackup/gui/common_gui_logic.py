@@ -1490,7 +1490,7 @@ def handle_gui_events(
         "--ADD-S3-IDENTITY--",
         "--ADD-AZURE-IDENTITY--",
         "--ADD-B2-IDENTITY--",
-        "--ADD-GCS-IDENTITY--",
+        "--ADD-GS-IDENTITY--",
         "--REMOVE-PATHS--",
         "--REMOVE-EXCLUDE-PATTERN--",
         "--REMOVE-EXCLUDE-FILE--",
@@ -1530,7 +1530,7 @@ def handle_gui_events(
             or "S3-IDENTITY--" in event
             or "AZURE-IDENTITY--" in event
             or "B2-IDENTITY--" in event
-            or "GCS-IDENTITY--" in event
+            or "GS-IDENTITY--" in event
         ):
             tree = encrypted_env_variables_tree
             option_key = "env.encrypted_env_variables"
@@ -1558,7 +1558,7 @@ def handle_gui_events(
                 "S3-IDENTITY--" in event
                 or "AZURE-IDENTITY--" in event
                 or "B2-IDENTITY--" in event
-                or "GCS-IDENTITY--" in event
+                or "GS-IDENTITY--" in event
             ):
                 if "S3-IDENTITY--" in event:
                     var_names = ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"]
@@ -1570,7 +1570,7 @@ def handle_gui_events(
                     ]
                 elif "B2-IDENTITY--" in event:
                     var_names = ["B2_ACCOUNT_ID", "B2_ACCOUNT_KEY"]
-                elif "GCS-IDENTITY--" in event:
+                elif "GS-IDENTITY--" in event:
                     var_names = [
                         "GOOGLE_PROJECT_ID",
                         "GOOGLE_APPLICATION_CREDENTIALS",

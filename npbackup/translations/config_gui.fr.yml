@@ -293,5 +293,9 @@ fr:
   backend_b2: Backblaze B2
   backend_s3: Amazon / Compatible S3
   backend_azure: Microsoft Azure Blob Storage
-  backend_gcs: Google Cloud Storage
+  backend_gs: Google Cloud Storage
   backend_rest: Serveur REST
+
+  remote_ssh_key: Clé SSH SFTP
+
+  repo_uri_invalid: L'URI du dépot semble invalide

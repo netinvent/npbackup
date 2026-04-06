@@ -43,7 +43,7 @@ combo_boxes = {
         "b2": _t("config_gui.backend_b2"),
         "s3": _t("config_gui.backend_s3"),
         "azure": _t("config_gui.backend_azure"),
-        "gcs": _t("config_gui.backend_gcs"),
+        "gs": _t("config_gui.backend_gs"),
         "rest": _t("config_gui.backend_rest"),
     },
     "backup_interval_unit": {
