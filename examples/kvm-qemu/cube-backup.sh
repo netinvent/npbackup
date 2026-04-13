@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Script ver 2025090601
+# Script ver 2025100601
 
 #TODO: blockcommit removes current snapshots, even if not done by cube
 #      - it's interesting to make housekeeping, let's make this an option
@@ -17,7 +17,6 @@ EXCLUDE_VMS=(some_lab_vm.local some_other_non_to_backup_vm.local)
 DEFAULT_TAG=retention3y
 SPECIAL_TAG=retention30d
 SPECIAL_TAG_VMS=(some.vm.local some.other.vm.local)
-
 
 
 LOG_FILE="/var/log/cube_npv2.log"
@@ -164,6 +163,7 @@ function run_backup {
         cat  "$BACKUP_FILE_LIST"
         # Run backups
         #/usr/local/bin/restic backup --compression=auto --files-from-verbatim "${BACKUP_FILE_LIST}" --tag "${backup_identifier}" -o rest.connections=15 -v >> "$LOG_FILE" 2>&1
+
         # Prepare config file
         rm -f "${NPBACKUP_CONF_FILE}"
         cp "${NPBACKUP_CONF_FILE_TEMPLATE}" "${NPBACKUP_CONF_FILE}"
@@ -192,6 +192,14 @@ function remove_snapshot {
         local backup_identifier="${2}"
 
         can_delete_metadata=false
+
+        if [ "$(virsh domstate $vm)" == "shut off" ]; then
+                is_running=false
+                log "Currently, $vm is offline"
+        else
+                is_running=true
+                log "Currently, $vm is running"
+        fi
 
         log "Trying to properly delete snapshot for $disk_name: $disk_path"
         virsh snapshot-delete $vm --snapshotname "${backup_identifier}" >> "$LOG_FILE" 2>&1
@@ -253,6 +261,12 @@ function remove_snapshot {
                 fi
         else
                 log "Will not delete metadata from snapshot ${backup_identifier} for $vm"
+        fi
+
+        # Fix for VMs that failed to snasphot flatten
+        if [ "$(virsh domstate $vm)" == "shut off" ] && [ "${is_running}" == true ]; then
+                log "Relaunching VM since it aborted badly" "ERROR"
+                virsh start $vm
         fi
 }
 
