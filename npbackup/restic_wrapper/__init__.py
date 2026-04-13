@@ -579,7 +579,6 @@ class ResticRunner:
             if path_env:
                 path_env_list = path_env.split(":")
                 probe_paths = probe_paths + path_env_list
-            print(probe_paths)
 
         for path in probe_paths:
             probed_path = os.path.join(path, binary)
