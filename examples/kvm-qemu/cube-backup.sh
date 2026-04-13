@@ -77,7 +77,8 @@ function create_snapshot {
 
 
         # Don't redirect direct virsh output or SELinux may complain that we cannot write with virsh context
-        xml=$(virsh dumpxml --security-info $vm || log "Failed to create XML file" "ERROR")
+        xml=$(virsh dumpxml $vm || log "Failed to create XML file" "ERROR")
+        xml_migratable=$(virsh dumpxml --migratable $vm || log "Failed to create migratable XML file" "ERROR")
         vm_xml=""
 
         # Get current disk paths to include into snapshot
@@ -89,8 +90,11 @@ function create_snapshot {
                         log "Current disk path: $disk_path"
                         if [ "${vm_xml}" == "" ]; then
                                 vm_xml="$(dirname "${disk_path}")/$vm.xml"
+                                vm_xml_migratable="$(dirname "${disk_path}")/$vm_migratable.xml"
                                 echo "${xml}" > "${vm_xml}" || log "Cannot create XML"
+                                echo "${xml_migratable}" > "${vm_xml_migratable}" ||log "Cannot create migratable XML"
                                 echo "${vm_xml}" >> "${BACKUP_FILE_LIST}" || log "Cannot add xml file to backup file list"
+                                echo "${vm_xml_migratable}" >> "${BACKUP_FILE_LIST}" || log "Cannot add xml file to backup file list"
                         fi
                 else
                         log "$vm has a non existent disk path: $disk_path. Cannot backup this disk"
