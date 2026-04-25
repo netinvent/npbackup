@@ -203,6 +203,8 @@ empty_config_dict = {
             "repo_opts": {
                 "repo_password": None,
                 "repo_password_command": None,
+                "ssh_password": None,
+                "ssh_key_file": None,
                 "compression": "auto",  # Can be auto, max, off
                 # Minimum time between two backups, in minutes
                 # Set to zero in order to disable time checks
@@ -271,6 +273,7 @@ empty_config_dict = {
     "global_healthchecksio": {
         "enabled": False,
         "url": None,
+        "timeout": 10,  # in seconds
         "username": None,
         "password": None,
         "no_cert_verify": False,
@@ -281,6 +284,7 @@ empty_config_dict = {
         "method": "POST",
         "username": None,
         "password": None,
+        "timout": 10,  # in seconds
         "pretty_json": False,
         "no_cert_verify": False,
     },
@@ -313,7 +317,7 @@ empty_config_dict = {
     },
     "presets": {
         # Retention settings settings
-        "retention_policy": {
+        "retention_policies": {
             "14d": {
                 "last": 3,
                 "hourly": 72,
