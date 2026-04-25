@@ -797,6 +797,10 @@ def global_webhooks_col():
                         sg.Input(key="global_webhooks.password", size=(50, 1)),
                     ],
                     [
+                        sg.Text(_t("generic.timeout"), size=(40, 1)),
+                        sg.Input(key="global_webhooks.timeout", size=(50, 1)),
+                    ],
+                    [
                         sg.Checkbox(
                             _t("config_gui.webhooks_pretty_json"),
                             key="global_webhooks.pretty_json",
@@ -827,10 +831,6 @@ def global_monitoring_identity_col():
         [
             sg.Text(_t("config_gui.machine_id"), size=(40, 1)),
             sg.Input(key="identity.machine_id", size=(50, 1)),
-        ],
-        [
-            sg.Text(_t("config_gui.machine_group"), size=(40, 1)),
-            sg.Input(key="identity.machine_group", size=(50, 1)),
         ],
         [
             sg.Text(_t("config_gui.machine_group"), size=(40, 1)),
