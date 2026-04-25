@@ -68,4 +68,3 @@ def fmt_json(js: dict):
     to be loaded
     """
     return json.dumps(js, indent=4)
-
