@@ -1522,7 +1522,6 @@ def handle_gui_events(
             tree = post_exec_commands_tree
             option_key = "backup_opts.post_exec_commands"
         elif "MONITORING-LABEL" in event:
-            popup_text = _t("config_gui.enter_label")
             tree = monitoring_additional_labels_tree
             option_key = "monitoring.additional_labels"
         elif (

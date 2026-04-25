@@ -441,7 +441,7 @@ class ResticRunner:
         errors_allowed: bool = False,
         no_output_queues: bool = False,
         method: str = "poller",
-        timeout: int = None,
+        timeout: Optional[int] = None,
         stdin=None,
         encoding="utf-8",
     ) -> Tuple[bool, str]:

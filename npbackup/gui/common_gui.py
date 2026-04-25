@@ -357,7 +357,7 @@ def per_object_monitoring_identity_col():
             sg.Image(
                 NON_INHERITED_ICON,
                 key="inherited.monitoring.tenant_name",
-                tooltip=_t("config_gui.tenant_inherited"),
+                tooltip=_t("config_gui.group_inherited"),
                 pad=1,
             ),
             sg.Input(key="monitoring.tenant_name", size=(50, 1)),
@@ -367,7 +367,7 @@ def per_object_monitoring_identity_col():
             sg.Image(
                 NON_INHERITED_ICON,
                 key="inherited.monitoring.optional_tag",
-                tooltip=_t("config_gui.optional_tag_inherited"),
+                tooltip=_t("config_gui.group_inherited"),
                 pad=1,
             ),
             sg.Input(key="monitoring.optional_tag", size=(50, 1)),
