@@ -1059,7 +1059,7 @@ def _main_gui(viewer_mode: bool):
                                     sg.Push(),
                                     sg.Text(
                                         "◑",
-                                        font=("Segoe UI Emoji", 24),
+                                        font=(None, 36),
                                         key="-THEME-",
                                         enable_events=True,
                                     ),

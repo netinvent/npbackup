@@ -111,13 +111,13 @@ def wizard_exclusion_window(full_config: dict):
     return full_config
 
 
-def create_step_header(step_num: int, title_key: str, desc_key: str = None) -> list:
+def create_step_header(step_num: int, title_key: str, desc_key: str = "") -> list:
     """Create a consistent step header with icon and title"""
     step_icon = (
         [
             sg.Text(
                 WIZARD_STEP_ICONS.get(step_num, "•"),
-                font=("Segoe UI Emoji", 24),
+                font=(None, 36),
                 pad=((0, 10), (0, 5)),
             ),
         ]
@@ -861,9 +861,7 @@ def start_wizard(full_config: dict, config_file: str):
                 npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
             )
         repo_uri = full_config.g(f"{OBJECT_TYPE}.{OBJECT_NAME}.repo_uri", default="")
-        if full_config.g(
-            f"{OBJECT_TYPE}.{OBJECT_NAME}.remote_ssh_key", default=None
-        ):
+        if full_config.g(f"{OBJECT_TYPE}.{OBJECT_NAME}.remote_ssh_key", default=None):
             wizard["-SFTP-SSH-KEY-"].update(
                 npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
             )
