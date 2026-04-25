@@ -105,7 +105,10 @@ en:
   elevate_uac_tasks: In order to handle windows tasks, UAC elevation is required. Please allow UAC prompt if you want to see existing tasks or create new ones
   run_task_as: Run task as
   run_task_as_explanation: Please bear in mind that letting a task run as specified user will save the user password in windows task manager. This implies potential security risks as well as potential issues with password changes. If you want to avoid this, you can let the task run as SYSTEM user but this may cause permission issues depending on your configuration. If you choose to run as specified user, you will need to enter credentials when creating the task and re-enter them if they change in the future when updating the task.
+  run_task_as_requires_user_and_password: Running task as specified user requires both username and password
   task_invalid_date_format: Invalid date format, not creating scheduled task
+  no_task_selected: No task selected
+  select_only_one_task: Please select only one task
 
   machine_identification: Machine identification
   machine_id: Machine identifier
@@ -177,6 +180,7 @@ en:
   group_inherited: Group inherited
   repo_group_config: Repos and groups configuration
   global_config: Global config
+  create_object: Create new repo or group
   select_object: Select configuration object
   add_object: Add another repo or group
   delete_object: Delete selected repo or group
@@ -306,4 +310,4 @@ en:
   ssh_key_file: Remote SFTP SSH key
 
 
-  repo_uri_invalid: Repo URI seems invalid
+  repo_uri_invalid: Repo URI configuration seems invalid

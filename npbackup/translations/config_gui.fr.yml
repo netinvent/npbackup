@@ -98,15 +98,18 @@ fr:
   scheduled_task_explanation: Les tâches planifiées peuvent être crées à heure fixe pour réaliser des sauvegardes serveur, ou toutes les x minutes, auquel cas la sauvegarde aura lieue uniquement si le temps minimal entre deux sauvegardes est dépassé, ce qui est adapté aux ordinateurs portables qui ont des heures de travail flexibles.
   scheduled_task_creation_success: Tâche planifiée crée avec succès
   scheduled_task_creation_failure: Impossible de créer la tâche planifiée. Vous devez exécuter ce programme en tant qu'administrateur pour créer des tâches planifiées
-  bogus_minimum_backup_age_value: Valeur érronée pour le délai minimal entre deux sauvegardes, tâche planifiée non créée
-  bogus_random_delay_before_backup_value: Valeur érronée pour le délai alé
+  bogus_minimum_backup_age_value: Valeur érronée pour le délai minimal entre deux sauvegardes, tâche planifiée non crée
+  bogus_random_delay_before_backup_value: Valeur érronée pour le délai aléatoire avant sauvegarde, tâche planifiée non crée
   task_type: Type de tâche
   select_task_scope: Sélectionner la portée de la tâche
   reading_tasks: Lecture des tâches planifiées existantes
   elevate_uac_tasks: Pour gérer les tâches planifiées Windows, une élévation UAC est requise. Veuillez autoriser l'invite UAC si vous souhaitez voir les tâches existantes ou en créer de nouvelles
   run_task_as: Exécuter la tâche en tant que
   run_task_as_explanation: Veuillez garder à l'esprit que laisser une tâche s'exécuter en tant qu'utilisateur spécifié enregistrera le mot de passe de l'utilisateur dans le gestionnaire de tâches Windows. Cela implique des risques potentiels de sécurité ainsi que des problèmes potentiels liés aux changements de mot de passe. Si vous souhaitez éviter cela, vous pouvez
-  task_invalid_date_format: Format de date érroné, tâche planifiée non créée
+  run_task_as_requires_user_and_password: L'exécution de la tâche en tant qu'utilisateur spécifié nécessite à la fois un nom d'utilisateur et un mot de passe
+  task_invalid_date_format: Format de date érroné, tâche planifiée non crée
+  no_task_selected: Aucune tâche sélectionnée
+  select_only_one_task: Veuillez sélectionner une seule tâche
   
   machine_identification: Identification machine
   machine_id: Identificateur machine
@@ -176,6 +179,7 @@ fr:
   group_inherited: Hérité du groupe
   repo_group_config: Configuration des dépots et groupes
   global_config: Configuration globale
+  create_object: Créer un nouveau dépot ou groupe
   select_object: Selectionner l'objet à configurer
   add_object: Ajouter un autre dépot ou groupe
   delete_object: Supprimer le dépot ou groupe actuel
@@ -303,4 +307,4 @@ fr:
   ssh_password: Mot de passe SSH/SFTP
   ssh_key_file: Fichier clé SSH/SFTP
 
-  repo_uri_invalid: L'URI du dépot semble invalide
+  repo_uri_invalid: La configuration de l'URI du dépôt semble invalide

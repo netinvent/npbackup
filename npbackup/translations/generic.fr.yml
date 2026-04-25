@@ -7,6 +7,7 @@ fr:
   about: A propos
   options: Options
   create: Créer
+  delete: Supprimer
   change: Changer
   close: Fermer
   finished: Terminé
@@ -52,10 +53,6 @@ fr:
   encrypt: Chiffrer
 
   is_uptodate: Logiciel à jour
-
-  success: Succès
-  successfully: avec succès
-  failure: Echec
 
   scheduled_task: Tâche planifiée
 
@@ -104,10 +101,12 @@ fr:
   webhooks: Webhooks
   healthchecksio: Healthchecks.io
 
+  information: Information
   error: erreur
   warning: avertissement
   success: succès
   failure: échec
+  successfully: avec succès
 
   date: date
   time: heure
@@ -126,6 +125,7 @@ fr:
   timeout: Délai d'attente
 
   tenant: Tenant
+  tenant_name: Nom du tenant
 
   port: Port
   host: Hôte
