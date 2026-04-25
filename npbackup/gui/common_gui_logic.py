@@ -944,7 +944,7 @@ def update_gui_values(
 
     except KeyError as exc:
         if not is_wizard:
-            logger.error(f"{_t('config_gui.key_error')}: {key}")
+            logger.error(f"{_t('config_gui.key_error')}: {exc} {key}")
             logger.debug("Trace:", exc_info=True)
             BAD_KEYS_FOUND_IN_CONFIG.add(key)
     except TypeError as exc:
