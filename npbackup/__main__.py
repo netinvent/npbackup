@@ -134,6 +134,13 @@ This is free software, and you are welcome to redistribute it under certain cond
         help="Forget given snapshot (accepts comma separated list of snapshots)",
     )
     parser.add_argument(
+        "--forget-snapshots-with-tags",
+        type=str,
+        default=None,
+        required=False,
+        help="Forget all snapshots that correspond to given tags (accepts comma separated list of tags)",
+    )
+    parser.add_argument(
         "--policy",
         action="store_true",
         default=False,
@@ -590,6 +597,9 @@ This is free software, and you are welcome to redistribute it under certain cond
         cli_args["op_args"] = {
             "snapshots": [snapshot.strip() for snapshot in args.forget.split(",")]
         }
+    elif args.forget_snapshots_with_tags:
+        cli_args["operation"] = "forget"
+        cli_args["op_args"] = {"tags": args.forget_snapshots_with_tags}
     elif args.policy or args.group_operation == "policy":
         cli_args["operation"] = "forget"
         cli_args["op_args"] = {"use_policy": True}

@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026031801"
-__version__ = "2.8.1"
+__build__ = "2026042501"
+__version__ = "2.9.0"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -1235,6 +1235,7 @@ class ResticRunner:
     def forget(
         self,
         snapshots: Optional[Union[List[str], Optional[str]]] = None,
+        tags: Optional[str] = None,
         policy: Optional[dict] = None,
         group_by: Optional[List[str]] = None,
     ) -> Union[bool, str, dict]:
@@ -1244,7 +1245,7 @@ class ResticRunner:
         kwargs = locals()
         kwargs.pop("self")
 
-        if not snapshots and not policy:
+        if not snapshots and not tags and not policy:
             self.write_logs(
                 "No valid snapshot or policy defined for pruning", level="error"
             )
@@ -1257,6 +1258,8 @@ class ResticRunner:
                     cmds.append(f"forget {snapshot}")
             else:
                 cmds = [f"forget {snapshots}"]
+        if tags:
+            cmds = [f"forget --tag {tags} --unsafe-allow-remove-all"]
         if policy:
             cmd = "forget"
             for key, value in policy.items():
