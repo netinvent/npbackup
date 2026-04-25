@@ -147,19 +147,27 @@ def test_uri_parsing():
             "port": None,
             "path": "/path/to/repo",
         },
-        "sftp:user@[::1]:2222//srv/restic-repo": {
+        "sftp:restic@192.168.254.254:/repo": {
+            "backend_type": "sftp",
+            "username": "restic",
+            "host": "192.168.254.254",
+            "port": None,
+            "path": "/repo",
+        },
+        # When using custom ports, we need sftp:// url syntax and :port// format
+        "sftp://user@[::1]:2222//srv/restic-repo": {
             "backend_type": "sftp",
             "username": "user",
             "host": "::1",
             "port": 2222,
             "path": "//srv/restic-repo",
         },
-        "sftp:user@sftp.example.tld:12345/myrepo": {
+        "sftp://user@sftp.example.tld:12345//myrepo": {
             "backend_type": "sftp",
             "username": "user",
             "host": "sftp.example.tld",
             "port": 12345,
-            "path": "/myrepo",
+            "path": "//myrepo",
         },
         "sftp:restic-backup-host:/srv/restic-repo": {
             "backend_type": "sftp",
@@ -200,8 +208,8 @@ def test_uri_parsing():
     for repo in repos:
         repo_info = parse_restic_repo(repo)
         expected_info = repos[repo]
-        print(repo_info)
-        print(expected_info)
+        print("REPO    ", repo_info)
+        print("EXPECTED", expected_info)
         assert repo_info == expected_info
 
 

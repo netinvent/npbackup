@@ -937,6 +937,26 @@ class NPBackupRunner:
             )
 
         try:
+            if self.repo_config.g("repo_opts.ssh_password"):
+                self.restic_runner.ssh_password = self.repo_config.g(
+                    "repo_opts.ssh_password"
+                )
+        except KeyError:
+            pass
+        except ValueError:
+            self.write_logs("Bogus SSH password given", level="error")
+
+        try:
+            if self.repo_config.g("repo_opts.ssh_key_file"):
+                self.restic_runner.ssh_key_file = self.repo_config.g(
+                    "repo_opts.ssh_key_file"
+                )
+        except KeyError:
+            pass
+        except ValueError:
+            self.write_logs("Bogus SSH key file given", level="error")
+
+        try:
             self.minimum_backup_age = int(
                 self.repo_config.g("repo_opts.minimum_backup_age")
             )

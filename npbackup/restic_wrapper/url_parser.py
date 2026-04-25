@@ -70,6 +70,10 @@ def parse_restic_repo(repo_uri: str) -> dict:
             user@[ipv6]:port:path
             """
 
+            # Step 0: restic can do sftp://user@host:port//path or sftp:user@host:/path but only the url syntax allows custom ports
+            if rest.startswith("//"):
+                rest = rest[2:]
+
             # Step 1: optional user@
             if "@" in rest:
                 user, rest2 = rest.split("@", 1)
@@ -155,9 +159,28 @@ def parse_restic_repo(repo_uri: str) -> dict:
 
             # heuristic: first part contains dot or colon → endpoint
             if "." in parts[0] or ":" in parts[0]:
-                endpoint = parts[0]
+                raw_endpoint = parts[0]
+                # Split host:port when an explicit port is present
+                if ":" in raw_endpoint:
+                    ep_host, ep_port_str = raw_endpoint.rsplit(":", 1)
+                    if ep_port_str.isdigit():
+                        endpoint = ep_host
+                        port: int | None = int(ep_port_str)
+                    else:
+                        endpoint = raw_endpoint
+                        port = None
+                else:
+                    endpoint = raw_endpoint
+                    port = None
                 bucket = parts[1] if len(parts) > 1 else None
                 path = parts[2] if len(parts) > 2 else None
+                return {
+                    "backend_type": "s3",
+                    "endpoint": endpoint,
+                    "port": port,
+                    "bucket": bucket,
+                    "path": path,
+                }
             else:
                 endpoint = None
                 bucket = parts[0]
@@ -319,8 +342,6 @@ def parse_restic_repo(repo_uri: str) -> dict:
                 raise ValueError("Missing host")
             validate_port(parsed.get("port"))
             validate_path(parsed.get("path"))
-            validate_port(parsed.get("port"))
-            validate_path(parsed.get("path"))
 
         elif backend_type == "sftp":
             validate_hostname(parsed.get("host"))
@@ -328,22 +349,16 @@ def parse_restic_repo(repo_uri: str) -> dict:
             path = parsed.get("path")
             if not path:
                 raise ValueError("Missing path")
-            # SFTP paths don't have to start with /
-            if "://" in path:
-                raise ValueError("Invalid SFTP path")
+
 
         elif backend_type == "s3":
             validate_bucket(parsed.get("bucket"))
 
             endpoint = parsed.get("endpoint")
             if endpoint:
-                # endpoint may include port
-                if ":" in endpoint:
-                    host, port = endpoint.rsplit(":", 1)
-                    validate_hostname(host)
-                    validate_port(int(port))
-                else:
-                    validate_hostname(endpoint)
+                # port is now stored as a separate field
+                validate_hostname(endpoint)
+                validate_port(parsed.get("port"))
 
         elif backend_type in ("b2", "gs"):
             validate_bucket(parsed.get("bucket"))
@@ -371,8 +386,13 @@ def parse_restic_repo(repo_uri: str) -> dict:
         # After validation, we want to me sure we can reconstruct the URI as identical string
         reconstructed_uri = build_restic_uri(repo_uri_dict)
         if reconstructed_uri != repo_uri:
+            if repo_uri.startswith("sftp:") and reconstructed_uri.startswith("sftp://"):
+                # Special case: restic accepts both sftp:user@host:/path and sftp://user@host//path
+                # If ports are present we'll normalize it
+                if reconstructed_uri[7:] == repo_uri[5:]:
+                    return repo_uri_dict
             raise ValueError(
-                f"Parsed URI does not reconstruct to original. Got: {reconstructed_uri}"
+                f"Parsed URI does not reconstruct to original. Got: {reconstructed_uri}, expected: {repo_uri}"
             )
     else:
         return {}
@@ -386,8 +406,9 @@ def build_restic_uri(parsed: dict, anonymized: bool = False) -> str:
     host = parsed.get("host")
     if host:
         try:
-            ipaddress.ip_address(host)
-            parsed["host"] = f"[{host}]"
+            # Only IPv6 addresses need brackets in URIs; IPv4 must not be bracketed.
+            if isinstance(ipaddress.ip_address(host), ipaddress.IPv6Address):
+                parsed["host"] = f"[{host}]"
         except (ValueError, TypeError):
             pass
 
@@ -406,6 +427,8 @@ def build_restic_uri(parsed: dict, anonymized: bool = False) -> str:
         host = parsed.get("host") or ""  # None for http+unix with empty netloc
         port = f":{parsed['port']}" if parsed.get("port") else ""
         path = parsed.get("path") or ""
+        if path and not path.startswith("/"):
+            path = "/" + path  # ensure path starts with slash for correct round-tripping        
         return f"{backend_type}:{scheme}://{auth}{host}{port}{path}"
 
     elif backend_type == "sftp":
@@ -416,7 +439,13 @@ def build_restic_uri(parsed: dict, anonymized: bool = False) -> str:
         # must emit a bare ":" so that host:/path round-trips correctly.
         port = f":{parsed['port']}" if parsed.get("port") else ":"
         path = parsed["path"]
-        return f"{backend_type}:{user}{host}{port}{path}"
+        if path and not path.startswith("/"):
+            path = "/" + path  # ensure path starts with slash for correct round-tripping
+        # restic can use either sftp:user@host:/path or sftp://user@host:port//path syntax, only the latter supports custom ports
+        if port != ":":
+            return f"{backend_type}://{user}{host}{port}{path}"
+        else:
+            return f"{backend_type}:{user}{host}{port}{path}"
 
     elif backend_type == "s3":
         endpoint = parsed.get("endpoint")
@@ -425,8 +454,14 @@ def build_restic_uri(parsed: dict, anonymized: bool = False) -> str:
         if endpoint:
             secure = parsed.get("secure")
             if secure is not None:
+                # URL-style endpoint (s3:https://...): port is already in netloc
                 scheme = "https" if secure else "http"
                 endpoint = f"{scheme}://{endpoint}"
+            else:
+                # Plain endpoint: reattach port when present
+                port = parsed.get("port")
+                if port is not None:
+                    endpoint = f"{endpoint}:{port}"
             return (
                 f"{backend_type}:{endpoint}/{bucket}/{path}"
                 if path

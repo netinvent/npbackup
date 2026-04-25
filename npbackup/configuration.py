@@ -116,6 +116,7 @@ ENCRYPTED_OPTIONS = [
     "repo_uri",
     "repo_opts.repo_password",
     "repo_opts.repo_password_command",
+    "repo_opts.ssh_password",
     "global_prometheus.http_password",
     "global_email.smtp_password",
     "global_zabbix.tls_key",
@@ -135,7 +136,8 @@ empty_config_dict = {
         # Don't allow repo names to contain dots
         "default": {
             "repo_uri": None,
-            "remote_ssh_key": None,
+            "ssh_password": None,
+            "ssh_key_file": None,
             "permissions": "full",
             "manager_password": None,
             "repo_group": "default_group",

@@ -31,8 +31,10 @@ from npbackup.__env__ import (
     BUILD_TYPE,
     HIDDEN_BY_NPBACKUP,
 )
+from npbackup.__version__ import CURRENT_USER
 from npbackup.path_helper import CURRENT_DIR
 from npbackup.restic_wrapper import schema
+from npbackup.restic_wrapper.url_parser import parse_restic_repo
 
 try:
     import msgspec
@@ -71,6 +73,8 @@ class ResticRunner:
 
         self.repository = str(repository).strip()
         self.password = str(password).strip()
+        self._ssh_password = None
+        self._ssh_key_file = None
         self._verbose = False
         self._live_output = False
         self._dry_run = False
@@ -97,23 +101,13 @@ class ResticRunner:
         self._limit_download = None
         self._backend_connections = None
         self._priority = None
+
         try:
-            backend = self.repository.split(":")[0].upper()
-            if backend in [
-                "REST",
-                "S3",
-                "B2",
-                "SFTP",
-                "SWIFT",
-                "AZURE",
-                "GZ",
-                "RCLONE",
-            ]:
-                self._repo_type = backend.lower()
-            else:
-                self._repo_type = "local"
+            self._repo_uri_dict = parse_restic_repo(self.repository)
+            self._repo_type = self._repo_uri_dict.get("backend_type")
         except AttributeError:
-            self._repo_type = None
+            self._repo_uri_dict = {}
+            self._repo_type = "local"
         self._ignore_cloud_files = False
         self._additional_parameters = None
         self._environment_variables = {}
@@ -222,7 +216,7 @@ class ResticRunner:
         if isinstance(value, bool):
             self._verbose = value
         else:
-            raise ValueError("Bogus verbose value given")
+            raise ValueError(f"Bogus verbose value given: {value}")
 
     @property
     def is_init(self) -> bool:
@@ -233,7 +227,7 @@ class ResticRunner:
         if isinstance(value, bool):
             self._is_init = value
         else:
-            raise ValueError("Bogus is_init value given")
+            raise ValueError(f"Bogus is_init value given: {value}")
 
     @property
     def live_output(self) -> bool:
@@ -244,7 +238,7 @@ class ResticRunner:
         if isinstance(value, bool):
             self._live_output = value
         else:
-            raise ValueError("Bogus live_output value given")
+            raise ValueError(f"Bogus live_output value given: {value}")
 
     @property
     def dry_run(self) -> bool:
@@ -255,7 +249,7 @@ class ResticRunner:
         if isinstance(value, bool):
             self._dry_run = value
         else:
-            raise ValueError("Bogus dry_run value given")
+            raise ValueError(f"Bogus dry_run value given: {value}")
 
     @property
     def no_cache(self) -> bool:
@@ -266,7 +260,7 @@ class ResticRunner:
         if isinstance(value, bool):
             self._no_cache = value
         else:
-            raise ValueError("Bogus no_cache value given")
+            raise ValueError(f"Bogus no_cache value given: {value}")
 
     @property
     def no_lock(self) -> bool:
@@ -277,7 +271,7 @@ class ResticRunner:
         if isinstance(value, bool):
             self._no_lock = value
         else:
-            raise ValueError("Bogus no_lock value given")
+            raise ValueError(f"Bogus no_lock value given: {value}")
 
     @property
     def compression(self) -> str:
@@ -288,7 +282,7 @@ class ResticRunner:
         if value in ("auto", "off", "max"):
             self._compression = value
         else:
-            raise ValueError("Bogus compression value given")
+            raise ValueError(f"Bogus compression value given: {value}")
 
     @property
     def pack_size(self) -> int:
@@ -299,7 +293,7 @@ class ResticRunner:
         if isinstance(value, int):
             self._pack_size = value
         else:
-            raise ValueError("Bogus pack_size value given")
+            raise ValueError(f"Bogus pack_size value given: {value}")
 
     @property
     def json_output(self) -> bool:
@@ -310,7 +304,7 @@ class ResticRunner:
         if isinstance(value, bool):
             self._json_output = value
         else:
-            raise ValueError("Bogus json_output value given")
+            raise ValueError(f"Bogus json_output value given: {value}")
 
     @property
     def struct_output(self) -> bool:
@@ -321,7 +315,7 @@ class ResticRunner:
         if isinstance(value, bool):
             self._struct_output = value
         else:
-            raise ValueError("Bogus struct_output value given")
+            raise ValueError(f"Bogus struct_output value given: {value}")
 
     @property
     def ignore_cloud_files(self) -> bool:
@@ -332,15 +326,40 @@ class ResticRunner:
         if isinstance(value, bool):
             self._ignore_cloud_files = value
         else:
-            raise ValueError("Bogus ignore_cloud_files value given")
+            raise ValueError(f"Bogus ignore_cloud_files value given: {value}")
 
     @property
-    def exec_time(self) -> Optional[int]:
+    def exec_time(self) -> Optional[float]:
         return self._exec_time
 
     @exec_time.setter
-    def exec_time(self, value: int):
-        self._exec_time = value
+    def exec_time(self, value: float):
+        if isinstance(value, (int, float)):
+            self._exec_time = value
+        else:
+            raise ValueError(f"Bogus exec_time given: {value}")
+
+    @property
+    def ssh_password(self) -> Optional[str]:
+        return self._ssh_password
+
+    @ssh_password.setter
+    def ssh_password(self, value: str):
+        if isinstance(value, str):
+            self._ssh_password = value
+        else:
+            raise ValueError(f"Bogus ssh_password value given: {value}")
+
+    @property
+    def ssh_key_file(self) -> Optional[str]:
+        return self._ssh_key_file
+
+    @ssh_key_file.setter
+    def ssh_key_file(self, value: str):
+        if isinstance(value, str):
+            self._ssh_key_file = value
+        else:
+            raise ValueError(f"Bogus ssh_key_file value given: {value}")
 
     @property
     def executor_running(self) -> bool:
@@ -433,7 +452,45 @@ class ResticRunner:
         """
         start_time = datetime.now(timezone.utc)
         # pylint: disable=E1101 (no-member)
-        additional_parameters = (
+
+        additional_parameters = ""
+
+        # Specific Windows SFTP hacks since legacy windows 7 needs external plink binary
+        # Also, since we want password usage with windows (yeah, ask me why...)
+        # we'll definitly need plink
+        # Yet better we need klink in order not to be "bitten" by "first time" contact
+
+        # plink / klink usage
+        # Attention: plink.exe executable is relative to restic executable, and needs to be called like in linux, eg ./plink.exe
+        # Attention: Paths in -o sftp.command needs to be in linux format, even on windows
+        # Attention: path to ssh key should be absolute
+        # Attention: with plink, ssh keys need to be in ppk format
+        # plink --batch -l <user> -pw <password> -P <port> <host> -s <subsystem>
+        # pw example)
+        # restic_0.18.1_windows_amd64.exe -o sftp.command="./plink64.exe -l restic -pw restic -P 22 192.168.81.204 -s sftp" snapshots
+        # restic_0.18.1_windows_amd64.exe -o sftp.command="./plink64.exe -l restic -i c:/git/npbackup/ssh_key.ppk -P 22 192.168.81.204 -s sftp" snapshots
+
+        if self._repo_type == "sftp":
+            if os.name == "nt":
+                plink_binary = os.path.abspath(
+                    os.path.join(os.path.dirname(self.binary), "klink.exe")
+                ).replace(os.sep, "/")
+                additional_parameters += (
+                    f' -o sftp.command="{plink_binary} -auto-store-sshkey -batch'
+                )
+                if self._repo_uri_dict.get("username"):
+                    additional_parameters += (
+                        f" -l {self._repo_uri_dict.get('username')}"
+                    )
+                if self.ssh_password:
+                    additional_parameters += f" -pw {self.ssh_password}"
+                elif self.ssh_key_file:
+                    additional_parameters += f" -i {self.ssh_key_file}"
+                if self._repo_uri_dict.get("port"):
+                    additional_parameters += f" -P {self._repo_uri_dict.get('port')}"
+                additional_parameters += f" {self._repo_uri_dict.get('host')} -s sftp\""
+
+        additional_parameters += (
             f" {self.additional_parameters.strip()} "
             if self.additional_parameters
             else ""
@@ -469,7 +526,6 @@ class ResticRunner:
         if self._executor_operation == "backup" and not self.is_init:
             self.init(errors_allowed=True)
             self._make_env()
-
         exit_code, output = command_runner(
             _cmd,
             timeout=timeout,

@@ -211,17 +211,34 @@ def wizard_layouts() -> dict:
             [
                 sg.pin(
                     sg.Text(
-                        _t("config_gui.backup_repo_uri"),
+                        _t("config_gui.host"),
                         size=(30, 1),
-                        key="-REPO-URI-LABEL-",
+                        key="-HOST-LABEL-",
+                        visible=False,
+                    ),
+                ),
+                sg.pin(
+                    sg.Input(
+                        key="-HOST-",
+                        size=(45, 1),
+                        visible=False,
+                    ),
+                ),
+            ],
+            [
+                sg.pin(
+                    sg.Text(
+                        _t("config_gui.path"),
+                        size=(30, 1),
+                        key="-PATH-LABEL-",
                     )
                 ),
                 sg.pin(
                     sg.Input(
-                        key="repo_uri",
+                        key="-PATH-",
                         size=(45, 1),
                     )
-                ),
+                )
             ],
             [
                 sg.pin(
@@ -298,16 +315,47 @@ def wizard_layouts() -> dict:
             [
                 sg.pin(
                     sg.Text(
-                        _t("config_gui.remote_ssh_key"),
+                        _t("config_gui.sftp_windows_only_options"),
+                        size=(80, 1),
+                        key="-SFTP-AUTH-OPTIONS-LABEL-",
+                        visible=False,
+                    ),
+                    shrink=True,
+                ),
+            ],
+            [
+                sg.pin(
+                    sg.Text(
+                        _t("config_gui.ssh_password"),
+                        key="-SSH-PASSWORD-LABEL-",
                         size=(30, 1),
-                        key="-SFTP-SSH-KEY-LABEL-",
                         visible=False,
                     ),
                     shrink=True,
                 ),
                 sg.pin(
                     sg.Input(
-                        key="-SFTP-SSH-KEY-",
+                        key="repo_opts.ssh_password",
+                        size=(45, 1),
+                        password_char="*",
+                        visible=False,
+                    ),
+                    shrink=True,
+                ),
+            ],
+            [
+                sg.pin(
+                    sg.Text(
+                        _t("config_gui.ssh_key_file"),
+                        size=(30, 1),
+                        key="-SSH-KEY-FILE-LABEL-",
+                        visible=False,
+                    ),
+                    shrink=True,
+                ),
+                sg.pin(
+                    sg.Input(
+                        key="repo_opts.ssh_key_file",
                         size=(45, 4),
                         visible=False,
                     ),
@@ -764,12 +812,17 @@ def start_wizard(full_config: dict, config_file: str):
         Show backends inputs depending on what backend type is selected
         """
         existing_keys = [
+            "-HOST-LABEL-",
+            "-HOST-",
             "-HOST-PORT-LABEL-",
             "-HOST-PORT-",
             "-SFTP-REST-USERNAME-LABEL-",
-            "-SFTP-SSH-KEY-LABEL-",
-            "-SFTP-SSH-KEY-",
             "-SFTP-REST-USERNAME-",
+            "-SFTP-AUTH-OPTIONS-LABEL-",
+            "-SSH-PASSWORD-LABEL-",
+            "repo_opts.ssh_password",
+            "-SSH-KEY-FILE-LABEL-",
+            "repo_opts.ssh_key_file",
             "-REST-PASSWORD-LABEL-",
             "-REST-PASSWORD-",
             "-AWS_ACCESS_KEY_ID-LABEL-",
@@ -801,8 +854,11 @@ def start_wizard(full_config: dict, config_file: str):
             wizard["-SFTP-REST-USERNAME-LABEL-"].update(visible=True)
             wizard["-SFTP-REST-USERNAME-"].update(visible=True)
         if backend_type == "sftp":
-            wizard["-SFTP-SSH-KEY-LABEL-"].update(visible=True)
-            wizard["-SFTP-SSH-KEY-"].update(visible=True)
+            wizard["-SFTP-AUTH-OPTIONS-LABEL-"].update(visible=True)
+            wizard["-SSH-PASSWORD-LABEL-"].update(visible=True)
+            wizard["repo_opts.ssh_password"].update(visible=True)
+            wizard["-SSH-KEY-FILE-LABEL-"].update(visible=True)
+            wizard["repo_opts.ssh_key_file"].update(visible=True)
         if backend_type == "rest":
             wizard["-REST-PASSWORD-LABEL-"].update(visible=True)
             wizard["-REST-PASSWORD-"].update(visible=True)
@@ -829,6 +885,8 @@ def start_wizard(full_config: dict, config_file: str):
             wizard["-GOOGLE_APPLICATION_CREDENTIALS-LABEL-"].update(visible=True)
             wizard["-GOOGLE_APPLICATION_CREDENTIALS-"].update(visible=True)
         if backend_type != "local":
+            wizard["-HOST-LABEL-"].update(visible=True)
+            wizard["-HOST-"].update(visible=True)
             wizard["-HOST-PORT-LABEL-"].update(visible=True)
             wizard["-HOST-PORT-"].update(visible=True)
         wizard["-BACKEND-TYPE-"].update(value=combo_boxes["backends"][backend_type])
@@ -860,12 +918,14 @@ def start_wizard(full_config: dict, config_file: str):
             wizard["repo_opts.repo_password"].update(
                 npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
             )
-        repo_uri = full_config.g(f"{OBJECT_TYPE}.{OBJECT_NAME}.repo_uri", default="")
-        if full_config.g(f"{OBJECT_TYPE}.{OBJECT_NAME}.remote_ssh_key", default=None):
-            wizard["-SFTP-SSH-KEY-"].update(
+        if full_config.g(
+            f"{OBJECT_TYPE}.{OBJECT_NAME}.repo_opts.ssh_password", default=None
+        ):
+            wizard["repo_opts.ssh_password"].update(
                 npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
             )
 
+        repo_uri = full_config.g(f"{OBJECT_TYPE}.{OBJECT_NAME}.repo_uri", default="")
         if repo_uri:
             repo_uri_dict = parse_restic_repo(repo_uri)
             backend_type = repo_uri_dict.get("backend_type")
@@ -873,7 +933,9 @@ def start_wizard(full_config: dict, config_file: str):
 
             # Show the full URI in the repo_uri field so the user sees exactly
             # what is stored in the config.
-            wizard["repo_uri"].update(repo_uri)
+            wizard["-PATH-"].update(repo_uri_dict.get("path") or "")
+            wizard["-HOST-"].update(repo_uri_dict.get("host") or "")
+
             # Port field (relevant for REST and SFTP)
             wizard["-HOST-PORT-"].update(str(repo_uri_dict.get("port") or ""))
 
@@ -881,7 +943,7 @@ def start_wizard(full_config: dict, config_file: str):
                 wizard["-SFTP-REST-USERNAME-"].update(
                     repo_uri_dict.get("username") or ""
                 )
-                wizard["-SFTP-SSH-KEY-"].update(
+                wizard["repo_opts.ssh_password"].update(
                     npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
                 )
             elif backend_type == "rest":
@@ -1022,7 +1084,7 @@ def start_wizard(full_config: dict, config_file: str):
                 if result != _t("generic.yes"):
                     continue
 
-            if not values["repo_uri"]:
+            if (not values["-HOST-"] and current_backend != "local") or (values["-PATH-"] == "" and current_backend == "local"):
                 result = sg.popup(
                     _t("config_gui.repo_uri_should_not_be_empty")
                     + ". "
@@ -1097,63 +1159,40 @@ def start_wizard(full_config: dict, config_file: str):
             current_backend = get_key_from_value(
                 combo_boxes["backends"], values["-BACKEND-TYPE-"]
             )
-            repo_uri = values["repo_uri"]
             encrypted_env_variables = full_config.g(
                 f"{OBJECT_TYPE}.{OBJECT_NAME}.env.encrypted_env_variables", default={}
             )
 
-            # For SFTP and REST the credentials (username / password) live inside
-            # the URI itself.  Parse the current URI, patch in whatever the user
+            repo_uri_dict = {
+                "backend_type": current_backend,
+                "path": values.get("-PATH-", "").strip(),
+            }
+            if values.get("-HOST-", "").strip():
+                repo_uri_dict["host"] = values.get("-HOST-", "").strip()
+            port_str = values.get("-HOST-PORT-", "").strip()
+            if port_str.isdigit():
+                repo_uri_dict["port"] = int(port_str)
+
+            # For SFTP and REST the username lives inside the URI itself
+            # for REST, the passwword lives inside the URI too.
+            # Parse the current URI, patch in whatever the user
             # has typed in the dedicated credential fields, then rebuild a
             # well-formed URI via build_restic_uri so we never save a malformed
             # or credential-less URI.
             if current_backend in ("sftp", "rest"):
-                try:
-                    repo_uri_dict = parse_restic_repo(repo_uri)
-                except ValueError:
-                    # Unrecognised / partial URI (e.g. bare host entered for a new
-                    # repo).  Seed a minimal dict and let build_restic_uri handle it.
-                    repo_uri_dict = {
-                        "backend_type": current_backend,
-                        "host": repo_uri,
-                        "path": "/",
-                        "port": None,
-                    }
-
                 # Apply username from the dedicated GUI field
                 username = values.get("-SFTP-REST-USERNAME-", "").strip()
                 repo_uri_dict["username"] = username or None
-
-                # Apply port from the dedicated GUI field (empty string → no port)
-                port_str = values.get("-HOST-PORT-", "").strip()
-                repo_uri_dict["port"] = int(port_str) if port_str.isdigit() else None
-
-                if current_backend == "rest":
-                    password = values.get("-REST-PASSWORD-", "")
-                    if (
-                        password
-                        and password
-                        != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
-                    ):
-                        repo_uri_dict["password"] = password
-
-                elif current_backend == "sftp":
-                    ssh_key = values.get("-SFTP-SSH-KEY-", "")
-                    if (
-                        ssh_key
-                        and ssh_key
-                        != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
-                    ):
-                        full_config.s(
-                            f"{OBJECT_TYPE}.{OBJECT_NAME}.remote_ssh_key", ssh_key
-                        )
-
-                try:
-                    repo_uri = build_restic_uri(repo_uri_dict)
-                except (KeyError, ValueError) as exc:
-                    logger.warning(
-                        f"Could not rebuild repo URI from components: {exc}. Saving raw value."
-                    )
+            # SFTP password lives outside of the repo uri, so we need to put it in config file
+            if current_backend == "rest":
+                password = values.get("-REST-PASSWORD-", "")
+                if (
+                    password
+                    and password
+                    != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                ):
+                    # Reconstruct repo uri dict
+                    repo_uri_dict["password"] = password
 
             elif current_backend == "b2":
                 if (
@@ -1223,6 +1262,14 @@ def start_wizard(full_config: dict, config_file: str):
                     encrypted_env_variables["GOOGLE_APPLICATION_CREDENTIALS"] = values[
                         "-GOOGLE_APPLICATION_CREDENTIALS-"
                     ]
+
+            # Now reassemble repo_uri from it's parts
+            try:
+                repo_uri = build_restic_uri(repo_uri_dict)
+            except (KeyError, ValueError) as exc:
+                logger.warning(
+                    f"Could not rebuild repo URI from components: {exc}. Saving raw value."
+                )
 
             full_config = npbackup.gui.common_gui_logic.update_config_dict(
                 wizard,
