@@ -1110,7 +1110,8 @@ def start_wizard(full_config: dict, config_file: str):
                     repo_uri = build_restic_uri(repo_uri_dict)
                 except (KeyError, ValueError) as exc:
                     result = sg.popup(
-                        _t("config_gui.repo_uri_invalid") + f":\n{exc}"
+                        _t("config_gui.repo_uri_invalid")
+                        + f":\n{exc}"
                         + ". "
                         + _t("generic.are_you_sure"),
                         custom_text=(_t("generic.no"), _t("generic.yes")),
@@ -1291,7 +1292,10 @@ def start_wizard(full_config: dict, config_file: str):
             try:
                 repo_uri = build_restic_uri(repo_uri_dict)
             except (KeyError, ValueError) as exc:
-                logger.debug("Could not build repo URI from user input, not saving repo URI in config", exc_info=exc)
+                logger.debug(
+                    "Could not build repo URI from user input, not saving repo URI in config",
+                    exc_info=exc,
+                )
                 repo_uri = None
 
             full_config = npbackup.gui.common_gui_logic.update_config_dict(
