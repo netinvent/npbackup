@@ -395,7 +395,7 @@ def create_scheduled_task_unix(
         else:
             task_arg = "--backup"
     else:
-        task_arg = f"--{task_type}"
+        task_arg = f"--{SCHEDULER_TASKS[task_type]}"
     task_args = f'-c "{config_file}" {task_arg} --run-as-cli{object_args}'
     command = f'cd "{executable_dir}" && {cli_executable_path} {task_args}'
     comment = _get_cron_comment(config_file, task_type, object_type, object_name)
@@ -786,7 +786,7 @@ def create_scheduled_task_windows(
         else:
             task_arg = "--backup"
     else:
-        task_arg = f"--{task_type}"
+        task_arg = f"--{SCHEDULER_TASKS[task_type]}"
     task_args = f'{task_args}-c "{config_file}" {task_arg} --run-as-cli{object_args}'
 
     # For minutes/hours intervals, use Repetition inside a trigger
