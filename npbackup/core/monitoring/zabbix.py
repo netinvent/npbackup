@@ -143,7 +143,6 @@ class ZabbixMonitor(MonitoringBackend):
                 )
                 self.zabbix_raw_json_collector_host = None
 
-
         try:
             self.zabbix_discovery_wait_time = self.get_monitoring_value(
                 "global_zabbix.discovery_wait_time"

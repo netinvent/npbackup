@@ -238,7 +238,7 @@ def wizard_layouts() -> dict:
                         key="-PATH-",
                         size=(45, 1),
                     )
-                )
+                ),
             ],
             [
                 sg.pin(
@@ -1084,7 +1084,9 @@ def start_wizard(full_config: dict, config_file: str):
                 if result != _t("generic.yes"):
                     continue
 
-            if (not values["-HOST-"] and current_backend != "local") or (values["-PATH-"] == "" and current_backend == "local"):
+            if (not values["-HOST-"] and current_backend != "local") or (
+                values["-PATH-"] == "" and current_backend == "local"
+            ):
                 result = sg.popup(
                     _t("config_gui.repo_uri_should_not_be_empty")
                     + ". "

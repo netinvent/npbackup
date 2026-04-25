@@ -350,7 +350,6 @@ def parse_restic_repo(repo_uri: str) -> dict:
             if not path:
                 raise ValueError("Missing path")
 
-
         elif backend_type == "s3":
             validate_bucket(parsed.get("bucket"))
 
@@ -428,7 +427,9 @@ def build_restic_uri(parsed: dict, anonymized: bool = False) -> str:
         port = f":{parsed['port']}" if parsed.get("port") else ""
         path = parsed.get("path") or ""
         if path and not path.startswith("/"):
-            path = "/" + path  # ensure path starts with slash for correct round-tripping        
+            path = (
+                "/" + path
+            )  # ensure path starts with slash for correct round-tripping
         return f"{backend_type}:{scheme}://{auth}{host}{port}{path}"
 
     elif backend_type == "sftp":
@@ -440,7 +441,9 @@ def build_restic_uri(parsed: dict, anonymized: bool = False) -> str:
         port = f":{parsed['port']}" if parsed.get("port") else ":"
         path = parsed["path"]
         if path and not path.startswith("/"):
-            path = "/" + path  # ensure path starts with slash for correct round-tripping
+            path = (
+                "/" + path
+            )  # ensure path starts with slash for correct round-tripping
         # restic can use either sftp:user@host:/path or sftp://user@host:port//path syntax, only the latter supports custom ports
         if port != ":":
             return f"{backend_type}://{user}{host}{port}{path}"
