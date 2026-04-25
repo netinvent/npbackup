@@ -616,7 +616,7 @@ def global_zabbix_col():
                             _t("config_gui.zabbix_authentication_method"), size=(40, 1)
                         ),
                         sg.Combo(
-                            ["none", "tls", "psk"],
+                            ["None", "tls", "psk"],
                             key="global_zabbix.authentication",
                             size=(45, 1),
                             enable_events=True,
