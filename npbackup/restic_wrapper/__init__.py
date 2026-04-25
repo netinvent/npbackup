@@ -457,7 +457,7 @@ class ResticRunner:
 
         # Specific Windows SFTP hacks since legacy windows 7 needs external plink binary
         # Also, since we want password usage with windows (yeah, ask me why...)
-        # we'll definitly need plink
+        # we'll definitely need plink
         # Yet better we need klink in order not to be "bitten" by "first time" contact
 
         # plink / klink usage

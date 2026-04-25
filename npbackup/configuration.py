@@ -284,7 +284,7 @@ empty_config_dict = {
         "method": "POST",
         "username": None,
         "password": None,
-        "timout": 10,  # in seconds
+        "timeout": 10,  # in seconds
         "pretty_json": False,
         "no_cert_verify": False,
     },
