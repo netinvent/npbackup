@@ -40,7 +40,7 @@ i18n.set("locale", _locale)
 i18n.set("fallback", "en")
 
 
-def _t(*args, **kwargs):
+def _t(*args, **kwargs) -> str:
     try:
         return i18n.t(*args, **kwargs)
     except OSError as exc:
@@ -50,4 +50,4 @@ def _t(*args, **kwargs):
         logger.error("Arguments: {}".format(args))
     if len(args) > 0:
         return args[0]
-    return args
+    return str(args)

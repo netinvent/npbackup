@@ -293,5 +293,14 @@ fr:
   backend_b2: Backblaze B2
   backend_s3: Amazon / Compatible S3
   backend_azure: Microsoft Azure Blob Storage
-  backend_gcs: Google Cloud Storage
+  backend_gs: Google Cloud Storage
   backend_rest: Serveur REST
+
+  path: Chemin
+  host: Hôte
+
+  sftp_windows_only_options: Options d'authentification SFTP (Windows seulement)
+  ssh_password: Mot de passe SSH/SFTP
+  ssh_key_file: Fichier clé SSH/SFTP
+
+  repo_uri_invalid: L'URI du dépot semble invalide

@@ -116,6 +116,7 @@ ENCRYPTED_OPTIONS = [
     "repo_uri",
     "repo_opts.repo_password",
     "repo_opts.repo_password_command",
+    "repo_opts.ssh_password",
     "global_prometheus.http_password",
     "global_email.smtp_password",
     "global_zabbix.tls_key",
@@ -135,6 +136,8 @@ empty_config_dict = {
         # Don't allow repo names to contain dots
         "default": {
             "repo_uri": None,
+            "ssh_password": None,
+            "ssh_key_file": None,
             "permissions": "full",
             "manager_password": None,
             "repo_group": "default_group",
@@ -257,7 +260,7 @@ empty_config_dict = {
         "method": "ZabbixProtocol",  # can be ZabbixProtocol or RawJSON
         "raw_json_collector_host": None,  # If method is RawJSON, this is the host name of the collector to which we send data for discovery and item creation. If not set, discovery won't work with RawJSON method
         "discovery_wait_time": 10,  # Time to wait for Zabbix server to parse discovery, in seconds
-        "authentication": "none",  # can be none, tls or psk
+        "authentication": None,  # can be none, "tls" or "psk"
         "no_cert_verify": False,
         "tls_cert": None,
         "tls_key": None,

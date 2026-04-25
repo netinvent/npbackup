@@ -136,6 +136,7 @@ en:
   # retention policy
   retention_policy: Retention policy
   keep: Keep
+  last: last
   hourly: hourly
   daily: daily
   weekly: weekly
@@ -293,6 +294,16 @@ en:
   backend_b2: Backblaze B2
   backend_s3: Amazon / Compatible S3
   backend_azure: Microsoft Azure Blob Storage
-  backend_gcs: Google Cloud Storage
+  backend_gs: Google Cloud Storage
   backend_rest: REST Server
 
+  path: Path
+  host: Host
+
+
+  sftp_windows_only_options: SFTP authentication options (Windows only)
+  ssh_password: SSH/SFTP password
+  ssh_key_file: Remote SFTP SSH key
+
+
+  repo_uri_invalid: Repo URI seems invalid

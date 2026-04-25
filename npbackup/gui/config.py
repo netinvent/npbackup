@@ -16,6 +16,7 @@ from logging import getLogger
 import FreeSimpleGUI as sg
 import textwrap
 from npbackup import configuration
+from npbackup.restic_wrapper.url_parser import parse_restic_repo, build_restic_uri
 from npbackup.core.i18n_helper import _t
 from npbackup.gui.constants import combo_boxes, byte_units
 from ofunctions.misc import get_key_from_value
@@ -739,7 +740,7 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Button("Azure", key="--ADD-AZURE-IDENTITY--", size=(18, 1)),
                 sg.Button("B2", key="--ADD-B2-IDENTITY--", size=(18, 1)),
                 sg.Button(
-                    "Google Cloud Storage", key="--ADD-GCS-IDENTITY--", size=(18, 1)
+                    "Google Cloud Storage", key="--ADD-GS-IDENTITY--", size=(18, 1)
                 ),
             ],
             [
@@ -1287,6 +1288,36 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                         custom_text=(_t("generic.no"), _t("generic.yes")),
                         title=_t("generic.warning").capitalize(),
                     )
+                else:
+                    try:
+                        repo_uri = values["repo_uri"]
+                        parsed_repo_dict = parse_restic_repo(repo_uri)
+                        rebuilt_uri = build_restic_uri(parsed_repo_dict)
+                        if repo_uri != rebuilt_uri:
+                            subresult = sg.popup(
+                                _t("config_gui.repo_uri_invalid")
+                                + f" {repo_uri} != {rebuilt_uri}"
+                                + ". "
+                                + _t("generic.are_you_sure"),
+                                keep_on_top=True,
+                                icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
+                                custom_text=(_t("generic.no"), _t("generic.yes")),
+                                title=_t("generic.warning").capitalize(),
+                            )
+                            if subresult != _t("generic.yes"):
+                                continue
+                    except ValueError as exc:
+                        subresult = sg.popup(
+                            _t("config_gui.repo_uri_invalid")
+                            + f" {repo_uri}: {str(exc)}. "
+                            + _t("generic.are_you_sure"),
+                            keep_on_top=True,
+                            icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
+                            custom_text=(_t("generic.no"), _t("generic.yes")),
+                            title=_t("generic.warning").capitalize(),
+                        )
+                        if subresult != _t("generic.yes"):
+                            continue
                 if (
                     not values["repo_opts.repo_password"]
                     and not values["repo_opts.repo_password_command"]

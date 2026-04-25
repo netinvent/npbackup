@@ -67,5 +67,4 @@ def fmt_json(js: dict):
     Just a quick and dirty shorthand for pretty print which doesn't require pprint
     to be loaded
     """
-    js = json.dumps(js, indent=4)
-    return js
+    return json.dumps(js, indent=4)

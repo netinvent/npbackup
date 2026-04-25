@@ -143,10 +143,13 @@ class ZabbixMonitor(MonitoringBackend):
                 )
                 self.zabbix_raw_json_collector_host = None
 
+
         try:
             self.zabbix_discovery_wait_time = self.get_monitoring_value(
                 "global_zabbix.discovery_wait_time"
             )
+            if not self.zabbix_discovery_wait_time:
+                self.zabbix_discovery_wait_time = 10
         except (KeyError, AttributeError) as exc:
             logger.debug(
                 f"No Zabbix discovery wait time configured, defaulting to 10: {exc}"

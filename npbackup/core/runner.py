@@ -7,7 +7,7 @@ __intname__ = "npbackup.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026040301"
+__build__ = "2026042501"
 
 
 from typing import Optional, Callable, Union, List
@@ -937,6 +937,26 @@ class NPBackupRunner:
             )
 
         try:
+            if self.repo_config.g("repo_opts.ssh_password"):
+                self.restic_runner.ssh_password = self.repo_config.g(
+                    "repo_opts.ssh_password"
+                )
+        except KeyError:
+            pass
+        except ValueError:
+            self.write_logs("Bogus SSH password given", level="error")
+
+        try:
+            if self.repo_config.g("repo_opts.ssh_key_file"):
+                self.restic_runner.ssh_key_file = self.repo_config.g(
+                    "repo_opts.ssh_key_file"
+                )
+        except KeyError:
+            pass
+        except ValueError:
+            self.write_logs("Bogus SSH key file given", level="error")
+
+        try:
             self.minimum_backup_age = int(
                 self.repo_config.g("repo_opts.minimum_backup_age")
             )
@@ -1701,14 +1721,23 @@ class NPBackupRunner:
     @is_ready
     @apply_config_to_restic_runner
     def forget(
-        self, snapshots: Optional[Union[List[str], str]] = None, use_policy: bool = None
+        self,
+        snapshots: Optional[Union[List[str], str]] = None,
+        tags: Optional[str] = None,
+        use_policy: Optional[bool] = None,
     ) -> bool:
         if snapshots:
             self.write_logs(
                 f"Forgetting snapshots {snapshots} in repo {self.repo_name}",
                 level="info",
             )
-            result = self.restic_runner.forget(snapshots)
+            result = self.restic_runner.forget(snapshots=snapshots)
+        elif tags:
+            self.write_logs(
+                f"Forgetting all snapshots with tags {tags} in repo {self.repo_name}",
+                level="info",
+            )
+            result = self.restic_runner.forget(tags=tags)
         elif use_policy:
             # NPF-SEC-00010
             # Let's check if we can get a valid NTP server offset
