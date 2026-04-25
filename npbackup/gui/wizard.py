@@ -935,7 +935,9 @@ def start_wizard(full_config: dict, config_file: str):
             # what is stored in the config.
             wizard["-PATH-"].update(repo_uri_dict.get("path") or "")
             if repo_uri_dict.get("scheme", None) is not None:
-                wizard["-HOST-"].update(repo_uri_dict.get("scheme") + "://" + repo_uri_dict.get("host", ""))
+                wizard["-HOST-"].update(
+                    repo_uri_dict.get("scheme") + "://" + repo_uri_dict.get("host", "")
+                )
             else:
                 wizard["-HOST-"].update(repo_uri_dict.get("host") or "")
 
@@ -1103,6 +1105,23 @@ def start_wizard(full_config: dict, config_file: str):
                 )
                 if result != _t("generic.yes"):
                     continue
+            else:
+                try:
+                    repo_uri = build_restic_uri(repo_uri_dict)
+                except (KeyError, ValueError) as exc:
+                    result = sg.popup(
+                        _t("config_gui.repo_uri_invalid") + f":\n{exc}"
+                        + ". "
+                        + _t("generic.are_you_sure"),
+                        custom_text=(_t("generic.no"), _t("generic.yes")),
+                        keep_on_top=True,
+                        icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
+                        title=_t("generic.error").capitalize(),
+                        line_width=100,
+                        modal=True,
+                    )
+                    if result != _t("generic.yes"):
+                        continue
             if not values["repo_opts.repo_password"]:
                 result = sg.popup(
                     _t("config_gui.repo_password_should_not_be_empty")
@@ -1272,10 +1291,8 @@ def start_wizard(full_config: dict, config_file: str):
             try:
                 repo_uri = build_restic_uri(repo_uri_dict)
             except (KeyError, ValueError) as exc:
-                logger.warning(
-                    f"Could not rebuild repo URI from components: {exc}. Saving raw value."
-                )
-            print(repo_uri, repo_uri_dict) # WIP
+                logger.debug("Could not build repo URI from user input, not saving repo URI in config", exc_info=exc)
+                repo_uri = None
 
             full_config = npbackup.gui.common_gui_logic.update_config_dict(
                 wizard,

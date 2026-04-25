@@ -48,7 +48,7 @@ def parse_restic_repo(repo_uri: str) -> dict:
             parsed = urlparse(rest)
             if parsed.scheme not in ("http", "http+unix", "https", "https+unix"):
                 raise ValueError(
-                    "rest backend requires http or https, http+unix, or https+unix scheme"
+                    f"rest backend requires http or https, http+unix, or https+unix scheme, got: {rest}"
                 )
 
             return {
@@ -331,7 +331,7 @@ def parse_restic_repo(repo_uri: str) -> dict:
         if backend_type == "rest":
             if parsed.get("scheme") not in ("http", "https", "http+unix", "https+unix"):
                 raise ValueError(
-                    "REST backend requires http/https, http+unix, or https+unix scheme"
+                    f"REST backend validator requires http/https, http+unix, or https+unix scheme, got: {parsed}"
                 )
 
             # http+unix / https+unix URIs with a triple-slash (e.g.
@@ -399,11 +399,17 @@ def parse_restic_repo(repo_uri: str) -> dict:
     return repo_uri_dict
 
 
-def build_restic_uri(repo_uri_dict: dict, anonymized: bool = False) -> str:
-    repo_uri_dict = copy.deepcopy(repo_uri_dict)
+def build_restic_uri(_repo_uri_dict: dict, anonymized: bool = False) -> str:
+    repo_uri_dict = copy.deepcopy(_repo_uri_dict)
     backend_type = repo_uri_dict.get("backend_type")
 
     host = repo_uri_dict.get("host")
+    scheme = repo_uri_dict.get("scheme")
+    if not scheme:
+        try:
+            scheme = urlparse(host).scheme
+        except Exception:
+            scheme = None
     if host:
         try:
             # Only IPv6 addresses need brackets in URIs; IPv4 must not be bracketed.
@@ -411,12 +417,10 @@ def build_restic_uri(repo_uri_dict: dict, anonymized: bool = False) -> str:
                 repo_uri_dict["host"] = f"[{host}]"
         except (ValueError, TypeError):
             pass
-
     if backend_type == "rest":
-        parsed = urlparse(repo_uri_dict.get("rest"))
-        if parsed.scheme not in ("http", "http+unix", "https", "https+unix"):
+        if scheme not in ("http", "http+unix", "https", "https+unix"):
             raise ValueError(
-                "rest backend requires http or https, http+unix, or https+unix scheme"
+                f"rest backend builder requires http or https, http+unix, or https+unix scheme, got: {scheme}"
             )
 
         auth = ""
@@ -436,11 +440,13 @@ def build_restic_uri(repo_uri_dict: dict, anonymized: bool = False) -> str:
             path = (
                 "/" + path
             )  # ensure path starts with slash for correct round-tripping
-        return f"{backend_type}:{parsed.scheme}://{auth}{host}{port}{path}"
+        return f"{backend_type}:{scheme}://{auth}{host}{port}{path}"
 
     elif backend_type == "sftp":
         user = f"{repo_uri_dict['username']}@" if repo_uri_dict.get("username") else ""
-        host = repo_uri_dict["host"]  # already bracketed by top-level IPv6 check if needed
+        host = repo_uri_dict[
+            "host"
+        ]  # already bracketed by top-level IPv6 check if needed
         # The colon is always required as host/path separator in SCP-style SFTP URIs.
         # When a port is present it contributes the colon (e.g. ":22"), otherwise we
         # must emit a bare ":" so that host:/path round-trips correctly.
