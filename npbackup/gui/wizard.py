@@ -934,7 +934,10 @@ def start_wizard(full_config: dict, config_file: str):
             # Show the full URI in the repo_uri field so the user sees exactly
             # what is stored in the config.
             wizard["-PATH-"].update(repo_uri_dict.get("path") or "")
-            wizard["-HOST-"].update(repo_uri_dict.get("host") or "")
+            if repo_uri_dict.get("scheme", None) is not None:
+                wizard["-HOST-"].update(repo_uri_dict.get("scheme") + "://" + repo_uri_dict.get("host", ""))
+            else:
+                wizard["-HOST-"].update(repo_uri_dict.get("host") or "")
 
             # Port field (relevant for REST and SFTP)
             wizard["-HOST-PORT-"].update(str(repo_uri_dict.get("port") or ""))
@@ -1272,6 +1275,7 @@ def start_wizard(full_config: dict, config_file: str):
                 logger.warning(
                     f"Could not rebuild repo URI from components: {exc}. Saving raw value."
                 )
+            print(repo_uri, repo_uri_dict) # WIP
 
             full_config = npbackup.gui.common_gui_logic.update_config_dict(
                 wizard,

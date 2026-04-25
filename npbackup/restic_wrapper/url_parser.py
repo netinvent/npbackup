@@ -10,6 +10,7 @@ __license__ = "GPL-3.0-only"
 __description__ = "Restic url parser and rebuilder"
 
 
+from typing import Tuple
 import copy
 import re
 from urllib.parse import urlparse, unquote, uses_netloc as _urllib_uses_netloc
@@ -277,13 +278,13 @@ def parse_restic_repo(repo_uri: str) -> dict:
 
         backend_type = parsed.get("backend_type")
 
-        def validate_port(port):
+        def validate_port(port) -> None:
             if port is None:
                 return
             if not (1 <= port <= 65535):
                 raise ValueError(f"Invalid port: {port}")
 
-        def validate_hostname(host):
+        def validate_hostname(host) -> None:
             if not host:
                 raise ValueError("Missing host")
 
@@ -306,7 +307,7 @@ def parse_restic_repo(repo_uri: str) -> dict:
                 if label.startswith("-") or label.endswith("-"):
                     raise ValueError(f"Invalid hostname label: {label}")
 
-        def validate_path(path):
+        def validate_path(path) -> None:
             if path is None:
                 raise ValueError("Missing path")
             if not path.startswith("/"):
@@ -317,7 +318,7 @@ def parse_restic_repo(repo_uri: str) -> dict:
         # AWS-style bucket rules (simplified but strict enough)
         bucket_re = re.compile(r"^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$")
 
-        def validate_bucket(name):
+        def validate_bucket(name) -> None:
             if not name:
                 raise ValueError("Missing bucket/container name")
 
@@ -335,7 +336,7 @@ def parse_restic_repo(repo_uri: str) -> dict:
 
             # http+unix / https+unix URIs with a triple-slash (e.g.
             # http+unix:///tmp/sock:/repo) have an empty netloc, so host is
-            # legitimately None.  Only validate the hostname when it is present.
+            # legitimately None. Only validate the hostname when it is present.
             if parsed.get("host") is not None:
                 validate_hostname(parsed.get("host"))
             elif parsed.get("scheme") not in ("http+unix", "https+unix"):
@@ -398,48 +399,53 @@ def parse_restic_repo(repo_uri: str) -> dict:
     return repo_uri_dict
 
 
-def build_restic_uri(parsed: dict, anonymized: bool = False) -> str:
-    parsed = copy.deepcopy(parsed)
-    backend_type = parsed.get("backend_type")
+def build_restic_uri(repo_uri_dict: dict, anonymized: bool = False) -> str:
+    repo_uri_dict = copy.deepcopy(repo_uri_dict)
+    backend_type = repo_uri_dict.get("backend_type")
 
-    host = parsed.get("host")
+    host = repo_uri_dict.get("host")
     if host:
         try:
             # Only IPv6 addresses need brackets in URIs; IPv4 must not be bracketed.
             if isinstance(ipaddress.ip_address(host), ipaddress.IPv6Address):
-                parsed["host"] = f"[{host}]"
+                repo_uri_dict["host"] = f"[{host}]"
         except (ValueError, TypeError):
             pass
 
     if backend_type == "rest":
-        scheme = parsed["scheme"]
+        parsed = urlparse(repo_uri_dict.get("rest"))
+        if parsed.scheme not in ("http", "http+unix", "https", "https+unix"):
+            raise ValueError(
+                "rest backend requires http or https, http+unix, or https+unix scheme"
+            )
+
         auth = ""
-        if parsed.get("username"):
-            auth += parsed["username"]
-            if parsed.get("password"):
+        if repo_uri_dict.get("username"):
+            auth += repo_uri_dict["username"]
+            if repo_uri_dict.get("password"):
                 # NPF-SEC-00014
                 if anonymized:
                     auth += ":___[o_0]___"
                 else:
-                    auth += f":{parsed['password']}"
+                    auth += f":{repo_uri_dict['password']}"
             auth += "@"
-        host = parsed.get("host") or ""  # None for http+unix with empty netloc
-        port = f":{parsed['port']}" if parsed.get("port") else ""
-        path = parsed.get("path") or ""
+        host = repo_uri_dict.get("host") or ""  # None for http+unix with empty netloc
+        port = f":{repo_uri_dict['port']}" if repo_uri_dict.get("port") else ""
+        path = repo_uri_dict.get("path") or ""
         if path and not path.startswith("/"):
             path = (
                 "/" + path
             )  # ensure path starts with slash for correct round-tripping
-        return f"{backend_type}:{scheme}://{auth}{host}{port}{path}"
+        return f"{backend_type}:{parsed.scheme}://{auth}{host}{port}{path}"
 
     elif backend_type == "sftp":
-        user = f"{parsed['username']}@" if parsed.get("username") else ""
-        host = parsed["host"]  # already bracketed by top-level IPv6 check if needed
+        user = f"{repo_uri_dict['username']}@" if repo_uri_dict.get("username") else ""
+        host = repo_uri_dict["host"]  # already bracketed by top-level IPv6 check if needed
         # The colon is always required as host/path separator in SCP-style SFTP URIs.
         # When a port is present it contributes the colon (e.g. ":22"), otherwise we
         # must emit a bare ":" so that host:/path round-trips correctly.
-        port = f":{parsed['port']}" if parsed.get("port") else ":"
-        path = parsed["path"]
+        port = f":{repo_uri_dict['port']}" if repo_uri_dict.get("port") else ":"
+        path = repo_uri_dict["path"]
         if path and not path.startswith("/"):
             path = (
                 "/" + path
@@ -451,18 +457,18 @@ def build_restic_uri(parsed: dict, anonymized: bool = False) -> str:
             return f"{backend_type}:{user}{host}{port}{path}"
 
     elif backend_type == "s3":
-        endpoint = parsed.get("endpoint")
-        bucket = parsed["bucket"]
-        path = parsed.get("path")
+        endpoint = repo_uri_dict.get("endpoint")
+        bucket = repo_uri_dict["bucket"]
+        path = repo_uri_dict.get("path")
         if endpoint:
-            secure = parsed.get("secure")
+            secure = repo_uri_dict.get("secure")
             if secure is not None:
                 # URL-style endpoint (s3:https://...): port is already in netloc
                 scheme = "https" if secure else "http"
                 endpoint = f"{scheme}://{endpoint}"
             else:
                 # Plain endpoint: reattach port when present
-                port = parsed.get("port")
+                port = repo_uri_dict.get("port")
                 if port is not None:
                     endpoint = f"{endpoint}:{port}"
             return (
@@ -478,13 +484,13 @@ def build_restic_uri(parsed: dict, anonymized: bool = False) -> str:
             )
 
     elif backend_type in ("b2", "gs"):
-        bucket = parsed["bucket"]
-        path = parsed.get("path")
+        bucket = repo_uri_dict["bucket"]
+        path = repo_uri_dict.get("path")
         return f"{backend_type}:{bucket}/{path}" if path else f"{backend_type}:{bucket}"
 
     elif backend_type in ("azure", "swift"):
-        container = parsed["container"]
-        path = parsed.get("path")
+        container = repo_uri_dict["container"]
+        path = repo_uri_dict.get("path")
         return (
             f"{backend_type}:{container}/{path}"
             if path
@@ -492,20 +498,20 @@ def build_restic_uri(parsed: dict, anonymized: bool = False) -> str:
         )
 
     elif backend_type == "rclone":
-        remote = parsed["remote"]
-        path = parsed.get("path")
+        remote = repo_uri_dict["remote"]
+        path = repo_uri_dict.get("path")
         return (
             f"{backend_type}:{remote}:{path}" if path else f"{backend_type}:{remote}:"
         )
 
     elif backend_type == "local":
-        return parsed["path"]
+        return repo_uri_dict["path"]
 
     else:
         raise ValueError(f"Unknown backend: {backend_type}")
 
 
-def get_anon_repo_uri(repo_uri: str) -> str:
+def get_anon_repo_uri(repo_uri: str) -> Tuple[str, str]:
     """
     Wrapper for earlier get_anon_repo_uri implementation
     Get a restic repository URI with credentials removed, for display purposes
