@@ -1253,6 +1253,13 @@ def load_config(config_file: Path) -> Optional[dict]:
     full_config = _load_config_file(config_file)
     if not full_config:
         return None
+    current_audience = full_config.g("audience")
+    if current_audience and current_audience != CURRENT_AUDIENCE:
+        if current_audience not in ["private", "public"]:
+            logger.critical(
+                f"Config file {config_file} is for audience {current_audience}, but current audience is {CURRENT_AUDIENCE}."
+            )
+        return None
     config_file_is_updated = False
 
     # Make sure we expand every key that should be a list into a list
@@ -1353,7 +1360,7 @@ def load_config(config_file: Path) -> Optional[dict]:
         # Migration path for old config files
         if current_audience not in ["private", "public"]:
             logger.critical(
-                f"Config file {config_file} is for audience {current_audience}, but current audience is {CURRENT_AUDIENCE}. Won't load this."
+                f"Config file {config_file} is for audience {current_audience}, but current audience is {CURRENT_AUDIENCE}. Won't try upgrade."
             )
             return False
         else:
