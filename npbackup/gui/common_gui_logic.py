@@ -1736,7 +1736,7 @@ def create_scheduled_task(
     )
 
     if not result:
-        popup_error(_t("config_gui.scheduled_task_creation_failed"))
+        popup_error(_t("config_gui.scheduled_task_creation_failure"))
     return result, full_config
 
 
@@ -1837,11 +1837,11 @@ def update_task_ui_for_object(
 #### RETENTION POLICIES PRESETS CODE ####
 def get_retention_policies_presets(full_config: dict) -> dict:
     try:
-        retention_policies_presets = list(full_config.g("presets.retention_policies"))
+        retention_policies_presets = dict(full_config.g("presets.retention_policies"))
     except Exception:
         # We might need to fallback to integrated presets in constants
         retention_policies_presets = npbackup.configuration.get_default_config().g(
-            "presets.retention_policy"
+            "presets.retention_policies"
         )
 
     # Translate retention policy names for display in combo box
@@ -1878,7 +1878,7 @@ def retention_policy_preset_name(
         # Let's compare only preset keys to determine if we're using a preset
         for policy_name, policy_values in (
             npbackup.configuration.get_default_config()
-            .g("presets.retention_policy")
+            .g("presets.retention_policies")
             .items()
         ):
             try:
