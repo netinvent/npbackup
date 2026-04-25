@@ -562,6 +562,36 @@ def config_gui(full_config: dict, config_file: str):
                 sg.Input(key="repo_opts.repo_password_command", size=(95, 1)),
             ],
             [
+                sg.Text(
+                    _t("config_gui.ssh_password") + " " + _t("config_gui.windows_only"),
+                    size=(95, 1),
+                ),
+            ],
+            [
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.repo_opts.ssh_password",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
+                sg.Input(key="repo_opts.ssh_password", size=(95, 1)),
+            ],
+            [
+                sg.Text(
+                    _t("config_gui.ssh_key_file") + " " + _t("config_gui.windows_only"),
+                    size=(95, 1),
+                ),
+            ],
+            [
+                sg.Image(
+                    NON_INHERITED_ICON,
+                    key="inherited.repo_opts.ssh_key_file",
+                    tooltip=_t("config_gui.group_inherited"),
+                    pad=1,
+                ),
+                sg.Input(key="repo_opts.ssh_key_file", size=(95, 1)),
+            ],
+            [
                 sg.Text(_t("config_gui.current_permissions"), size=(40, 1)),
                 sg.Image(NON_INHERITED_ICON, pad=1),
                 sg.Text("Default", key="current_permissions", size=(25, 1)),
@@ -1291,13 +1321,12 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 else:
                     try:
                         repo_uri = values["repo_uri"]
-                        parsed_repo_dict = parse_restic_repo(repo_uri)
-                        rebuilt_uri = build_restic_uri(parsed_repo_dict)
-                        if repo_uri != rebuilt_uri:
+                        try:
+                            parse_restic_repo(repo_uri)
+                        except ValueError as exc:
                             subresult = sg.popup(
                                 _t("config_gui.repo_uri_invalid")
-                                + f" {repo_uri} != {rebuilt_uri}"
-                                + ". "
+                                + f":\n{repo_uri}: {str(exc)}\n"
                                 + _t("generic.are_you_sure"),
                                 keep_on_top=True,
                                 icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
