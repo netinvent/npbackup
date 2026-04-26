@@ -925,7 +925,7 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
         return _layout
 
     def global_options_layout():
-        """ "
+        """
         Returns layout for global options that can't be overridden by group / repo settings
         """
 
