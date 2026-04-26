@@ -807,7 +807,78 @@ def start_wizard(full_config: dict, config_file: str):
             else f'◀ {_t("generic.previous").capitalize()}'
         )
 
-    def set_active_backend_type(backend_type):
+    def build_repo_uri_dict_from_values(repo_uri: str, values: dict) -> dict:
+        """
+        Parses original repo_uri (including rest password) into a dict, and updates values according to new GUI settings
+        """
+        try:
+            repo_uri_dict = parse_restic_repo(repo_uri)
+        except ValueError:
+            logger.debug(
+                "Could not parse existing repo_uri, starting with an empty dict",
+                exc_info=True,
+            )
+            repo_uri_dict = {}
+        # Retrieve the current backend selection and the URI the user has entered.
+        current_backend = get_key_from_value(
+            combo_boxes["backends"], values["-BACKEND-TYPE-"]
+        )
+
+        repo_uri_dict["backend_type"] = current_backend
+        repo_uri_dict["path"] = values.get("-PATH-", "").strip()
+        host_value = values.get("-HOST-", "").strip()
+        if host_value:
+            if current_backend == "rest":
+                # The -HOST- field is pre-filled with "scheme://host" for REST.
+                # Split those back out so build_restic_uri doesn't double the scheme.
+                from urllib.parse import urlparse as _urlparse
+
+                _parsed = _urlparse(host_value)
+                if _parsed.scheme in ("http", "https"):
+                    repo_uri_dict["scheme"] = _parsed.scheme
+                    # Use hostname (not netloc) to strip any embedded port
+                    repo_uri_dict["host"] = _parsed.hostname
+                    # Carry forward an embedded port only when PORT field is empty
+                    if _parsed.port:
+                        port_str = values.get("-HOST-PORT-", "").strip()
+                        if not port_str.isdigit():
+                            repo_uri_dict["port"] = _parsed.port
+                elif _parsed.scheme in ("http+unix", "https+unix"):
+                    # Unix-socket URIs have no hostname; entire path is the socket spec
+                    repo_uri_dict["scheme"] = _parsed.scheme
+                    repo_uri_dict["host"] = None
+                    # path field already set from -PATH- above; override with socket path
+                    repo_uri_dict["path"] = _parsed.path or repo_uri_dict.get("path")
+                else:
+                    repo_uri_dict["host"] = host_value
+            else:
+                repo_uri_dict["host"] = host_value
+        port_str = values.get("-HOST-PORT-", "").strip()
+        if port_str.isdigit():
+            repo_uri_dict["port"] = int(port_str)
+
+        # For SFTP and REST the username lives inside the URI itself
+        # for REST, the passwword lives inside the URI too.
+        # Parse the current URI, patch in whatever the user
+        # has typed in the dedicated credential fields, then rebuild a
+        # well-formed URI via build_restic_uri so we never save a malformed
+        # or credential-less URI.
+        if current_backend in ("sftp", "rest"):
+            # Apply username from the dedicated GUI field
+            username = values.get("-SFTP-REST-USERNAME-", "").strip()
+            repo_uri_dict["username"] = username or None
+        # SFTP password lives outside of the repo uri, so we need to put it in config file
+        if current_backend == "rest":
+            password = values.get("-REST-PASSWORD-", "")
+            if (
+                password
+                and password != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+            ):
+                # Reconstruct repo uri dict
+                repo_uri_dict["password"] = password
+        return repo_uri_dict
+
+    def set_active_backend_type(backend_type) -> None:
         """
         Show backends inputs depending on what backend type is selected
         """
@@ -910,6 +981,7 @@ def start_wizard(full_config: dict, config_file: str):
         is_wizard=True,  # Since we have less keys than full config interface
     )
 
+    repo_uri = full_config.g(f"{OBJECT_TYPE}.{OBJECT_NAME}.repo_uri", default="")
     # We need to manually update backend config fields
     try:
         if full_config.g(
@@ -925,7 +997,6 @@ def start_wizard(full_config: dict, config_file: str):
                 npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
             )
 
-        repo_uri = full_config.g(f"{OBJECT_TYPE}.{OBJECT_NAME}.repo_uri", default="")
         if repo_uri:
             repo_uri_dict = parse_restic_repo(repo_uri)
             backend_type = repo_uri_dict.get("backend_type")
@@ -1107,7 +1178,8 @@ def start_wizard(full_config: dict, config_file: str):
                     continue
             else:
                 try:
-                    repo_uri = build_restic_uri(repo_uri_dict)
+                    repo_uri_dict = build_repo_uri_dict_from_values(repo_uri, values)
+                    _repo_uri = build_restic_uri(repo_uri_dict)
                 except (KeyError, ValueError) as exc:
                     result = sg.popup(
                         _t("config_gui.repo_uri_invalid")
@@ -1123,6 +1195,8 @@ def start_wizard(full_config: dict, config_file: str):
                     )
                     if result != _t("generic.yes"):
                         continue
+                else:
+                    repo_uri = _repo_uri
             if not values["repo_opts.repo_password"]:
                 result = sg.popup(
                     _t("config_gui.repo_password_should_not_be_empty")
@@ -1180,46 +1254,12 @@ def start_wizard(full_config: dict, config_file: str):
 
         ## WIZARD STEP 7 ##
         if event == "-NEXT-" and current_tab == NUMBER_OF_TABS:
-            # Retrieve the current backend selection and the URI the user has entered.
-            current_backend = get_key_from_value(
-                combo_boxes["backends"], values["-BACKEND-TYPE-"]
-            )
+            repo_uri_dict = build_repo_uri_dict_from_values(repo_uri, values)
+
             encrypted_env_variables = full_config.g(
                 f"{OBJECT_TYPE}.{OBJECT_NAME}.env.encrypted_env_variables", default={}
             )
-
-            repo_uri_dict = {
-                "backend_type": current_backend,
-                "path": values.get("-PATH-", "").strip(),
-            }
-            if values.get("-HOST-", "").strip():
-                repo_uri_dict["host"] = values.get("-HOST-", "").strip()
-            port_str = values.get("-HOST-PORT-", "").strip()
-            if port_str.isdigit():
-                repo_uri_dict["port"] = int(port_str)
-
-            # For SFTP and REST the username lives inside the URI itself
-            # for REST, the passwword lives inside the URI too.
-            # Parse the current URI, patch in whatever the user
-            # has typed in the dedicated credential fields, then rebuild a
-            # well-formed URI via build_restic_uri so we never save a malformed
-            # or credential-less URI.
-            if current_backend in ("sftp", "rest"):
-                # Apply username from the dedicated GUI field
-                username = values.get("-SFTP-REST-USERNAME-", "").strip()
-                repo_uri_dict["username"] = username or None
-            # SFTP password lives outside of the repo uri, so we need to put it in config file
-            if current_backend == "rest":
-                password = values.get("-REST-PASSWORD-", "")
-                if (
-                    password
-                    and password
-                    != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
-                ):
-                    # Reconstruct repo uri dict
-                    repo_uri_dict["password"] = password
-
-            elif current_backend == "b2":
+            if current_backend == "b2":
                 if (
                     values["-B2_ACCOUNT_ID-"]
                     != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
