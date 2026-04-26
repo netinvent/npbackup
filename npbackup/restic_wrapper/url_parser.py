@@ -10,7 +10,7 @@ __license__ = "GPL-3.0-only"
 __description__ = "Restic url parser and rebuilder"
 
 
-from typing import Tuple
+from typing import Tuple, Optional
 import copy
 import re
 from urllib.parse import urlparse, unquote, uses_netloc as _urllib_uses_netloc
@@ -39,7 +39,7 @@ def parse_restic_repo(repo_uri: str) -> dict:
         - backend-specific fields
         """
 
-        def strip_ipv6_brackets(host: str | None) -> str | None:
+        def strip_ipv6_brackets(host: Optional[str]) -> Optional[str]:
             if host and host.startswith("[") and host.endswith("]"):
                 return host[1:-1]
             return host
@@ -166,7 +166,7 @@ def parse_restic_repo(repo_uri: str) -> dict:
                     ep_host, ep_port_str = raw_endpoint.rsplit(":", 1)
                     if ep_port_str.isdigit():
                         endpoint = ep_host
-                        port: int | None = int(ep_port_str)
+                        port = int(ep_port_str)
                     else:
                         endpoint = raw_endpoint
                         port = None
