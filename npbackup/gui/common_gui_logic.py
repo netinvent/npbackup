@@ -1847,9 +1847,14 @@ def get_retention_policies_presets(full_config: dict) -> dict:
     # Since we don't save the combo box content, we don't need the original naes
     translated_retention_policies_presets = CommentedMap()
     for policy_name, policy_values in retention_policies_presets.items():
-        translated_retention_policies_presets[_t(f"config_gui.{policy_name}")] = (
-            policy_values
-        )
+        translated_name = _t(f"config_gui.{policy_name}")
+        if translated_name == f"config_gui.{policy_name}":
+            logger.debug(
+                f"Translation for retention policy preset {policy_name} not found, using original name"
+            )
+            translated_retention_policies_presets[policy_name] = policy_values
+        else:
+            translated_retention_policies_presets[translated_name] = policy_values
     return translated_retention_policies_presets
 
 
@@ -1871,15 +1876,10 @@ def retention_policy_preset_name(
         object_config = npbackup.configuration.get_group_config(
             full_config, object_name
         )
-
     current_retention_policy = object_config.g(f"repo_opts.retention_policy")
     if retention_policies_presets and current_retention_policy:
         # Let's compare only preset keys to determine if we're using a preset
-        for policy_name, policy_values in (
-            npbackup.configuration.get_default_config()
-            .g("presets.retention_policies")
-            .items()
-        ):
+        for policy_name, policy_values in retention_policies_presets.items():
             try:
                 # Extract the key names we want to compare from presets
                 policy_matches = True
@@ -1888,7 +1888,7 @@ def retention_policy_preset_name(
                         policy_matches = False
                         break
                 if policy_matches:
-                    return _t(f"config_gui.{policy_name}")
+                    return policy_name
             except KeyError:
                 break
     return None

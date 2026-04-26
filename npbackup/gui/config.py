@@ -1181,7 +1181,29 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
                 window, full_config, current_object_name, current_object_type
             )
 
-        # Common config pages with wizard patches
+        if event in (
+            sg.WIN_CLOSED,
+            sg.WIN_X_EVENT,
+            "--CANCEL--",
+            "-WINDOW CLOSE ATTEMPTED-",
+        ):
+            break
+
+        ## Handle most lists add/remove objects
+        npbackup.gui.common_gui_logic.handle_gui_events(
+            full_config=full_config,
+            window=window,
+            event=event,
+            values=values,
+            object_type=object_type,
+            object_name=object_name,
+            unencrypted=False,  # WIP
+            is_wizard=False,
+        )
+
+        # Update the retention policy preset combo AFTER handle_gui_events has
+        # applied any preset selection, so the combo immediately reflects the
+        # new config state rather than the pre-event state.
         retention_policies_presets = (
             npbackup.gui.common_gui_logic.get_retention_policies_presets(full_config)
         )
@@ -1206,26 +1228,6 @@ Google Cloud storage: GOOGLE_PROJECT_ID  GOOGLE_APPLICATION_CREDENTIALS\n\
 
         window["-RETENTION-POLICY-ADVANCED-COLUMN-"].update(visible=True)
         window["-RETENTION-POLICY-ADVANCED-"].update(visible=False)
-
-        if event in (
-            sg.WIN_CLOSED,
-            sg.WIN_X_EVENT,
-            "--CANCEL--",
-            "-WINDOW CLOSE ATTEMPTED-",
-        ):
-            break
-
-        ## Handle most lists add/remove objects
-        npbackup.gui.common_gui_logic.handle_gui_events(
-            full_config=full_config,
-            window=window,
-            event=event,
-            values=values,
-            object_type=object_type,
-            object_name=object_name,
-            unencrypted=False,  # WIP
-            is_wizard=False,
-        )
 
         if event in ("-OBJECT-SELECT-", "repo_group"):
             # Update full_config with current object before updating
