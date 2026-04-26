@@ -841,7 +841,7 @@ def start_wizard(full_config: dict, config_file: str):
                     # Carry forward an embedded port only when PORT field is empty
                     if _parsed.port:
                         port_str = values.get("-HOST-PORT-", "").strip()
-                        if not port_str.isdigit():
+                        if port_str.isdigit():
                             repo_uri_dict["port"] = _parsed.port
                 elif _parsed.scheme in ("http+unix", "https+unix"):
                     # Unix-socket URIs have no hostname; entire path is the socket spec
@@ -856,6 +856,8 @@ def start_wizard(full_config: dict, config_file: str):
         port_str = values.get("-HOST-PORT-", "").strip()
         if port_str.isdigit():
             repo_uri_dict["port"] = int(port_str)
+        else:
+            repo_uri_dict["port"] = None
 
         # For SFTP and REST the username lives inside the URI itself
         # for REST, the passwword lives inside the URI too.
