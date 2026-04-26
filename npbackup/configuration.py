@@ -439,7 +439,7 @@ def crypt_config(
     encrypted_options: List[str],
     operation: str,
     obfuscation_fn: Callable,
-) -> Any:
+) -> Union[dict, bool]:
     try:
 
         def _crypt_config(key: str, value: Any) -> Any:
@@ -476,20 +476,22 @@ def crypt_config(
                             )
                     else:
                         raise ValueError(f"Bogus operation {operation} given")
-            # Let's run garbage collection after encryption / decryption operations
-            # so the actual unobfuscated values don't stay in memory longer than needed
-            gc.collect()
             return value
 
-        return replace_in_iterable(
+        _full_config = replace_in_iterable(
             full_config,
             _crypt_config,
             callable_wants_key=True,
             callable_wants_root_key=True,
         )
+        # Let's run garbage collection after encryption / decryption operations
+        # so the actual unobfuscated values don't stay in memory longer than needed
+        gc.collect()
+        return _full_config
     except Exception as exc:
         logger.info(f"Cannot {operation} configuration: {exc}.")
         logger.debug("Trace:", exc_info=True)
+        gc.collect()
         return False
 
 
@@ -1263,7 +1265,11 @@ def load_config(config_file: Path) -> Optional[dict]:
             logger.critical(
                 f"Config file {config_file} is for audience {current_audience}, but current audience is {CURRENT_AUDIENCE}."
             )
-        return None
+            return False
+        else:
+            logger.info(
+                f"Our current audience {CURRENT_AUDIENCE} is different from config file audience {current_audience}, but since it's a known audience, we'll try to migrate it."
+            )
     config_file_is_updated = False
 
     # Make sure we expand every key that should be a list into a list
@@ -1360,17 +1366,6 @@ def load_config(config_file: Path) -> Optional[dict]:
         full_config = _full_config
 
     current_audience = full_config.g("audience")
-    if current_audience and current_audience != CURRENT_AUDIENCE:
-        # Migration path for old config files
-        if current_audience not in ["private", "public"]:
-            logger.critical(
-                f"Config file {config_file} is for audience {current_audience}, but current audience is {CURRENT_AUDIENCE}. Won't try upgrade."
-            )
-            return False
-        else:
-            logger.info(
-                f"Our current audience {CURRENT_AUDIENCE} is different from config file audience {current_audience}, but since it's a known audience, we'll try to migrate it."
-            )
     try:
         conf_version = version_parse(str(full_config.g("conf_version")))
         if not conf_version:
