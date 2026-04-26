@@ -1232,6 +1232,41 @@ def start_wizard(full_config: dict, config_file: str):
                 if result != _t("generic.yes"):
                     continue
         ## WIZARD STEP 3 ##
+        if (
+            event == "-NEXT-"
+            or (event.startswith("-BREADCRUMB-") and event != "-BREADCRUMB-3-")
+        ) and current_tab == 3:
+            if os.name == "nt":
+                button_text = (
+                    _t("wizard_gui.do_you_want_to_create_task")
+                    + "\n\n"
+                    + _t("config_gui.elevate_uac_tasks")
+                )
+            else:
+                button_text = _t("wizard_gui.do_you_want_to_create_task")
+            result = sg.popup(
+                button_text,
+                keep_on_top=True,
+                icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
+                title=_t("generic.warning").capitalize(),
+                line_width=100,
+                modal=True,
+                custom_text=(_t("generic.no"), _t("generic.yes")),
+            )
+            if result == _t("generic.yes"):
+                result, full_config = (
+                    npbackup.gui.common_gui_logic.create_scheduled_task(
+                        values, full_config, config_file
+                    )
+                )
+                if not result:
+                    sg.popup(
+                        _t("wizard_gui.task_creation_failed"),
+                        keep_on_top=True,
+                        icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
+                        title=_t("generic.warning").capitalize(),
+                        line_width=100,
+                    )
 
         ## WIZARD STEP 4 ##
 
@@ -1354,38 +1389,6 @@ def start_wizard(full_config: dict, config_file: str):
                 f"{OBJECT_TYPE}.{OBJECT_NAME}.env.encrypted_env_variables",
                 encrypted_env_variables,
             )
-
-            create_task = True
-            if os.name == "nt":
-                if not is_admin():
-                    result = sg.popup(
-                        _t("config_gui.elevate_uac_tasks"),
-                        custom_text=(_t("generic.no"), _t("generic.yes")),
-                        keep_on_top=True,
-                        icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
-                        title=_t("generic.information").capitalize(),
-                        line_width=100,
-                    )
-                    if result != _t("generic.yes"):
-                        create_task = False
-
-            if create_task:
-                result, full_config = (
-                    npbackup.gui.common_gui_logic.create_scheduled_task(
-                        values, full_config, config_file
-                    )
-                )
-                if not result:
-                    result = sg.popup(
-                        _t("wizard_gui.do_you_still_want_to_save"),
-                        custom_text=(_t("generic.no"), _t("generic.yes")),
-                        keep_on_top=True,
-                        icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
-                        title=_t("generic.warning").capitalize(),
-                        line_width=100,
-                    )
-                    if result == _t("generic.no"):
-                        break
 
             result = npbackup.configuration.save_config(config_file, full_config)
             if result:

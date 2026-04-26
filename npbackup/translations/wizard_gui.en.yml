@@ -53,11 +53,13 @@ en:
   only_if_no_recent_backup_exists: Only if no backup has been done in the last
   authorized_days: Authorized days of week
 
+  # STEP 4
+  do_you_want_to_create_task: Do you want to create a scheduled task for automatic backups ?
+  task_creation_failed: Task creation failed. You can consult the log for more details.
+
   # STEP 5
   monitoring_identity_description: Configure the identity of this backup instance
 
   # STEP 7
   wizard_ending_text: Your backup configuration is now complete and will be saved. You can directly edit or use the configuration interface to edit the following configuration file or add some specific settings in the main configuration settings.
   wizard_ending_text2: Thank you for using
-
-  do_you_still_want_to_save: Do you still want to save the current configuration ?
