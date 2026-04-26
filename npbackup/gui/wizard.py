@@ -1291,12 +1291,11 @@ def start_wizard(full_config: dict, config_file: str):
 
         ## WIZARD STEP 7 ##
         if event == "-NEXT-" and current_tab == NUMBER_OF_TABS:
-            repo_uri_dict = build_repo_uri_dict_from_values(repo_uri, values)
-
+            repo_uri_dict = build_repo_uri_dict_from_values(repo_uri, values)    
             encrypted_env_variables = full_config.g(
                 f"{OBJECT_TYPE}.{OBJECT_NAME}.env.encrypted_env_variables", default={}
             )
-            if current_backend == "b2":
+            if repo_uri_dict["backend_type"] == "b2":
                 if (
                     values["-B2_ACCOUNT_ID-"]
                     != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
@@ -1310,7 +1309,7 @@ def start_wizard(full_config: dict, config_file: str):
                         "-B2_ACCOUNT_KEY-"
                     ]
 
-            elif current_backend == "azure":
+            elif repo_uri_dict["backend_type"] == "azure":
                 if (
                     values["-AZURE_ACCOUNT_KEY-"]
                     != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
@@ -1333,7 +1332,7 @@ def start_wizard(full_config: dict, config_file: str):
                         "-AZURE_ACCOUNT_NAME-"
                     ]
 
-            elif current_backend == "s3":
+            elif repo_uri_dict["backend_type"] == "s3":
                 if (
                     values["-AWS_ACCESS_KEY_ID-"]
                     != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
@@ -1349,7 +1348,7 @@ def start_wizard(full_config: dict, config_file: str):
                         "-AWS_SECRET_ACCESS_KEY-"
                     ]
 
-            elif current_backend == "gs":
+            elif repo_uri_dict["backend_type"] == "gs":
                 if (
                     values["-GOOGLE_PROJECT_ID-"]
                     != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
