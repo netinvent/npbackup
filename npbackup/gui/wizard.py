@@ -1291,7 +1291,7 @@ def start_wizard(full_config: dict, config_file: str):
 
         ## WIZARD STEP 7 ##
         if event == "-NEXT-" and current_tab == NUMBER_OF_TABS:
-            repo_uri_dict = build_repo_uri_dict_from_values(repo_uri, values)    
+            repo_uri_dict = build_repo_uri_dict_from_values(repo_uri, values)
             encrypted_env_variables = full_config.g(
                 f"{OBJECT_TYPE}.{OBJECT_NAME}.env.encrypted_env_variables", default={}
             )
