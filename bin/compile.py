@@ -7,8 +7,8 @@ __intname__ = "npbackup.compile"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026032401"
-__version__ = "2.4.0"
+__build__ = "2026042701"
+__version__ = "2.4.1"
 
 
 """
@@ -24,6 +24,7 @@ Nuitka compilation script tested for
 """
 
 
+from typing import Optional
 import sys
 import os
 import shutil
@@ -94,7 +95,7 @@ def _set_audience(audience: str):
     os.environ["_NPBACKUP_AUDIENCE"] = audience
 
 
-def _read_file(filename):
+def _read_file(filename: str) -> str:
     here = os.path.abspath(os.path.dirname(__file__))
     if sys.version_info[0] < 3:
         # With python 2.7, open has no encoding parameter, resulting in TypeError
@@ -114,7 +115,7 @@ def _read_file(filename):
             return file_handle.read()
 
 
-def get_metadata(package_file):
+def get_metadata(package_file: str) -> dict:
     """
     Read metadata from package file
     """
@@ -130,14 +131,14 @@ def get_metadata(package_file):
     return _metadata
 
 
-def extract_executable_name(executable_path):
+def extract_executable_name(executable_path: str) -> Optional[str]:
     for line in _read_file(executable_path).splitlines():
         if line.startswith("EXECUTABLE"):
             delim = "="
             return line.split(delim)[1].strip().strip("'\"")
     return None
 
-def have_nuitka_commercial():
+def have_nuitka_commercial() -> bool:
     try:
         import nuitka.plugins.commercial
 
@@ -154,9 +155,9 @@ def _compile(
     build_type: str,
     onefile: bool,
     create_tar_only: bool,
-    ev_cert_data: str = None,
+    ev_cert_data: Optional[str] = None,
     sign_only: bool = False,
-    npbackup_version: str = None,
+    npbackup_version: Optional[str] = None,
 ):
     if build_type not in BUILD_TYPES:
         logger.error("CANNOT BUILD BOGUS BUILD TYPE")
@@ -187,28 +188,34 @@ def _compile(
         if os.name == "nt":
             program_executable = "{}{}.exe".format(executable_name, suffix)
             restic_executable = "restic.exe"
+            other_executables = ["klink.exe"]
             platform = "windows"
         elif sys.platform.lower() == "darwin":
             platform = "darwin"
             program_executable = "{}-{}{}".format(executable_name, platform, suffix)
             restic_executable = "restic"
+            other_executables = []
         else:
             platform = "linux"
             program_executable = "{}-{}{}".format(executable_name, platform, suffix)
             restic_executable = "restic"
+            other_executables = []
     else:
         if os.name == "nt":
             program_executable = "{}-{}.exe".format(executable_name, build_type)
             restic_executable = "restic.exe"
             platform = "windows"
+            other_executables = ["klink.exe"]
         elif sys.platform.lower() == "darwin":
             platform = "darwin"
             program_executable = "{}-{}".format(executable_name, build_type)
             restic_executable = "restic"
+            other_executables = []
         else:
             platform = "linux"
             program_executable = "{}-{}".format(executable_name, build_type)
             restic_executable = "restic"
+            other_executables = []
 
     PACKAGE_DIR = "npbackup"
 
@@ -285,7 +292,10 @@ def _compile(
         # We replaced this option with a python version in gui\windiws_gui_helper.py
         NUITKA_OPTIONS += " --windows-console-mode=hide"
     else:
-        NUITKA_OPTIONS += " --plugin-disable=tk-inter --nofollow-import-to=FreeSimpleGUI --nofollow-import-to=_tkinter --nofollow-import-to=npbackup.gui"
+        NUITKA_OPTIONS += " --plugin-disable=tk-inter "
+        NUITKA_OPTIONS += " --nofollow-import-to=FreeSimpleGUI"
+        NUITKA_OPTIONS += " --nofollow-import-to=_tkinter"
+        NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui"
     if onefile:
         NUITKA_OPTIONS += " --onefile"
         # Stupid fix for synology RS816 where /tmp is mounted with `noexec`.
@@ -295,45 +305,32 @@ def _compile(
         NUITKA_OPTIONS += " --standalone"
 
     if build_type == "gui":
-        (
-            NUITKA_OPTIONS
-            + " --nofollow-import-to=npbackup.gui.config --nofollow-import-to=npbackup.__main__"
-        )
+        NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui.config --nofollow-import-to=npbackup.__main__"
+
     if os.name != "nt":
         NUITKA_OPTIONS += " --nofollow-import-to=npbackup.windows"
 
-    EXE_OPTIONS = '--company-name="{}" --product-name="{}" --file-version="{}" --product-version="{}" --copyright="{}" --file-description="{}" --trademarks="{}"'.format(
-        COMPANY_NAME,
-        PRODUCT_NAME,
-        FILE_VERSION,
-        PRODUCT_VERSION,
-        COPYRIGHT,
-        file_description,
-        TRADEMARKS,
-    )
+    EXE_OPTIONS = f'--company-name="{COMPANY_NAME}" --product-name="{PRODUCT_NAME}" --file-version="{FILE_VERSION}"'
+    EXE_OPTIONS += f' --product-version="{PRODUCT_VERSION}" --copyright="{COPYRIGHT}"'
+    EXE_OPTIONS += f' --file-description="{file_description}" --trademarks="{TRADEMARKS}"'
 
-    CMD = '{} -m nuitka --python-flag=no_docstrings --python-flag=-O {} {} --include-data-dir="{}"="{}" --include-data-dir="{}"="{}" --include-data-file="{}"="{}" --include-data-file="{}"="{}" --windows-icon-from-ico="{}" --output-dir="{}" --output-filename="{}" {}'.format(
-        PYTHON_EXECUTABLE,
-        NUITKA_OPTIONS,
-        EXE_OPTIONS,
-        excludes_dir_source,
-        excludes_dir_dest,
-        translations_dir_source,
-        translations_dir_dest,
-        LICENSE_FILE,
-        license_dest_file,
-        restic_source_file,
-        restic_dest_file,
-        icon_file,
-        OUTPUT_DIR,
-        program_executable,
-        audience_source_program,
-    )
+    cmd = f'{PYTHON_EXECUTABLE} -m nuitka --python-flag=no_docstrings --python-flag=-O'
+    cmd += f' {NUITKA_OPTIONS} {EXE_OPTIONS}'
+    cmd += f' --include-data-dir="{excludes_dir_source}"="{excludes_dir_dest}"'
+    cmd += f' --include-data-dir="{translations_dir_source}"="{translations_dir_dest}"'
+    cmd += f' --include-data-file="{LICENSE_FILE}"="{license_dest_file}"'
+    cmd += f' --include-data-file="{restic_source_file}"="{restic_dest_file}"'
+    for other_executable in other_executables or []:
+        src_file = os.path.join(os.path.dirname(restic_source_file), other_executable)
+        dest_file = os.path.join(os.path.dirname(restic_dest_file), other_executable)
+        cmd += f' --include-data-file="{src_file}"="{dest_file}"'
+    cmd += f' --windows-icon-from-ico="{icon_file}"'
+    cmd += f' --output-dir="{OUTPUT_DIR}" --output-filename="{program_executable}" {audience_source_program}'
 
     errors = False
     if not create_tar_only and not sign_only:
-        logger.debug(CMD)
-        exit_code, output = command_runner(CMD, timeout=0, live_output=True)
+        logger.debug(cmd)
+        exit_code, output = command_runner(cmd, timeout=0, live_output=True)
         if exit_code != 0:
             errors = True
 
