@@ -1207,10 +1207,12 @@ def update_config_dict(
                     except ValueError as exc:
                         logger.debug(f"BytesConverter could not convert value: {exc}")
 
+        # This is tricky, we need to be able to remove config entries, that will be replaced by inherited values
+
         # Don't bother to update empty strings, empty lists and None
         # unless we have False, or 0, which or course need to be updated
-        if not current_value and value in (None, "", []):
-            continue
+        #if not current_value and value in (None, "", []):
+        #    continue
         # Don't bother to update values which haven't changed
         if current_value == value:
             continue
@@ -1221,7 +1223,20 @@ def update_config_dict(
             parent_key = ".".join(active_object_key.split(".")[:-1])
             full_config.s(parent_key, CommentedMap())
             full_config.s(active_object_key, value)
-    return full_config
+
+    # Remove empty vvales from config dict to allow for group inheritance to work on empty repo settings
+    def _drop_falsey_from_dict(d: dict):
+        new_d = CommentedMap()
+        for k, v in d.items():
+            if isinstance(v, dict):
+                v = _drop_falsey_from_dict(v)
+            if not v in ("", None):
+                # Remove empty (but not False or 0 values)
+                # We also want to keep empty dicts since we need to keep access to nested objects
+                new_d[k] = v
+        return new_d
+
+    return _drop_falsey_from_dict(full_config)
 
 
 def update_source_layout(window: sg.Window, source_type: str):
