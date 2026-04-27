@@ -291,11 +291,12 @@ def _compile(
         # So for an unknown reason, some windows builds will not hide the console, see #146
         # We replaced this option with a python version in gui\windiws_gui_helper.py
         NUITKA_OPTIONS += " --windows-console-mode=hide"
-        NUITKA_OPTIONS += " --nofollow-import-to=npbackup.__main__"
+        # Since GUI can run as CLI, we need to include all cli modules
         if build_type == "viewer":
             NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui.config"
             NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui.wizard"
             NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui.operations"
+            NUITKA_OPTIONS += " --nofollow-import-to=npbackup.__main__"
     else:
         NUITKA_OPTIONS += " --plugin-disable=tk-inter"
         NUITKA_OPTIONS += " --nofollow-import-to=FreeSimpleGUI"
