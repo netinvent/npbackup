@@ -202,7 +202,7 @@ fr:
   restore_only_perms: Restauration uniquement
   full_perms: Accès total
   setting_permissions_requires_manager_password: Un mot de passe gestionnaire est requis pour définir des permissions
-  password_too_simple: Mot de passe faible détecté. Les recommandations sont au moins 8 caractères majuscules, minuscules et chiffres. Êtes-vous sûr de vouloir continuer ? 
+  password_too_simple: Mot de passe faible détecté. Les recommandations sont au moins 8 caractères majuscules, minuscules et chiffres
   current_permissions: Permissions actives (non herité)
   manager_password_set: Mot de passe gestionnaire initialisé (non hérité)
 
