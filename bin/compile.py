@@ -291,11 +291,21 @@ def _compile(
         # So for an unknown reason, some windows builds will not hide the console, see #146
         # We replaced this option with a python version in gui\windiws_gui_helper.py
         NUITKA_OPTIONS += " --windows-console-mode=hide"
+        NUITKA_OPTIONS += " --nofollow-import-to=npbackup.__main__"
+        if build_type == "viewer":
+            NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui.config"
+            NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui.wizard"
+            NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui.operations"
     else:
-        NUITKA_OPTIONS += " --plugin-disable=tk-inter "
+        NUITKA_OPTIONS += " --plugin-disable=tk-inter"
         NUITKA_OPTIONS += " --nofollow-import-to=FreeSimpleGUI"
         NUITKA_OPTIONS += " --nofollow-import-to=_tkinter"
         NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui"
+        NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui.ttk_theme"
+        NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui.config"
+        NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui.wizard"
+        NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui.operations"
+
     if onefile:
         NUITKA_OPTIONS += " --onefile"
         # Stupid fix for synology RS816 where /tmp is mounted with `noexec`.
@@ -303,9 +313,6 @@ def _compile(
             NUITKA_OPTIONS += " --onefile-tempdir-spec=/var/tmp"
     else:
         NUITKA_OPTIONS += " --standalone"
-
-    if build_type == "gui":
-        NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui.config --nofollow-import-to=npbackup.__main__"
 
     if os.name != "nt":
         NUITKA_OPTIONS += " --nofollow-import-to=npbackup.windows"
