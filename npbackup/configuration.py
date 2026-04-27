@@ -63,7 +63,7 @@ elif opt_aes_key is False:
 # Monkeypatching ruamel.yaml ordereddict so we get to use pseudo dot notations
 # eg data.g('my.array.keys') == data['my']['array']['keys']
 # and data.s('my.array.keys', 'new_value')
-def g(self, path, sep=".", default=None, list_ok=False):
+def g(self, path, sep=".", default=None, list_ok=False) -> Any:
     """
     Getter for dot notation in a dict/OrderedDict
     print(d.g('my.array.keys'))
@@ -77,7 +77,7 @@ def g(self, path, sep=".", default=None, list_ok=False):
         raise AssertionError from exc
 
 
-def s(self, path, value, sep="."):
+def s(self, path, value, sep=".") -> None:
     """
     Setter for dot notation in a dict/OrderedDict
     d.s('my.array.keys', 'new_value')
@@ -90,7 +90,7 @@ def s(self, path, value, sep="."):
     data[lastkey] = value
 
 
-def d(self, path, sep="."):
+def d(self, path, sep=".") -> None:
     """
     Deletion for dot notation in a dict/OrderedDict
     d.d('my.array.keys')
@@ -383,13 +383,13 @@ empty_config_dict = {
 }
 
 
-def gen_uuid_from_path(file: str) -> str:
+def gen_uuid_from_path(file: Union[str, Path]) -> str:
     return str(uuid.uuid5(uuid.NAMESPACE_URL, str(file)))
 
 
 def convert_to_commented_map(
-    source_dict,
-):
+    source_dict: dict,
+) -> CommentedMap:
     if isinstance(source_dict, dict):
         return CommentedMap(
             {k: convert_to_commented_map(v) for k, v in source_dict.items()}
@@ -397,7 +397,7 @@ def convert_to_commented_map(
     return source_dict
 
 
-def get_default_config() -> dict:
+def get_default_config() -> CommentedMap:
     """
     Returns a config dict as nested CommentedMaps (used by ruamel.yaml to keep comments intact)
     """
@@ -406,7 +406,7 @@ def get_default_config() -> dict:
     return convert_to_commented_map(full_config)
 
 
-def get_default_repo_config() -> dict:
+def get_default_repo_config() -> CommentedMap:
     """
     Returns a repo config dict as nested CommentedMaps (used by ruamel.yaml to keep comments intact)
     """
@@ -414,7 +414,7 @@ def get_default_repo_config() -> dict:
     return convert_to_commented_map(repo_config)
 
 
-def get_default_group_config() -> dict:
+def get_default_group_config() -> CommentedMap:
     """
     Returns a group config dict as nested CommentedMaps (used by ruamel.yaml to keep comments intact)
     """
@@ -422,7 +422,7 @@ def get_default_group_config() -> dict:
     return convert_to_commented_map(group_config)
 
 
-def key_should_be_encrypted(key: str, encrypted_options: List[str]):
+def key_should_be_encrypted(key: str, encrypted_options: List[str]) -> bool:
     """
     Checks whether key should be encrypted
     """
@@ -434,12 +434,12 @@ def key_should_be_encrypted(key: str, encrypted_options: List[str]):
 
 
 def crypt_config(
-    full_config: dict,
+    full_config: CommentedMap,
     aes_key: str,
     encrypted_options: List[str],
     operation: str,
     obfuscation_fn: Callable,
-) -> Union[dict, bool]:
+) -> Union[CommentedMap, bool]:
     try:
 
         def _crypt_config(key: str, value: Any) -> Any:
@@ -495,7 +495,7 @@ def crypt_config(
         return False
 
 
-def is_encrypted(full_config: dict) -> bool:
+def is_encrypted(full_config: CommentedMap) -> bool:
     is_encrypted = True
 
     def _is_encrypted(key, value) -> Any:
@@ -518,7 +518,7 @@ def is_encrypted(full_config: dict) -> bool:
     return is_encrypted
 
 
-def has_random_variables(full_config: dict) -> Tuple[bool, dict]:
+def has_random_variables(full_config: CommentedMap) -> Tuple[bool, CommentedMap]:
     """
     Replaces ${RANDOM}[n] with n random alphanumeric chars, directly in config dict
     """
@@ -543,14 +543,16 @@ def has_random_variables(full_config: dict) -> Tuple[bool, dict]:
 
 
 def evaluate_variables(
-    repo_config: dict, monitoring_config: dict = None, full_config: dict = None
-) -> dict:
+    repo_config: CommentedMap,
+    full_config: CommentedMap,
+    monitoring_config: Optional[CommentedMap] = None,
+) -> CommentedMap:
     """
     Replace runtime variables with their corresponding value
     Also replaces human bytes notation with ints
     """
 
-    def _evaluate_variables(_, value):
+    def _evaluate_variables(_, value: str) -> Optional[str]:
         if isinstance(value, str):
             if "${MACHINE_ID}" in value:
                 machine_id = full_config.g("identity.machine_id")
@@ -583,7 +585,7 @@ def evaluate_variables(
             if "${HOSTNAME}" in value:
                 value = value.replace("${HOSTNAME}", platform.node())
         if value == "":
-            value = None
+            return None
         return value
 
     # We need to make a loop to catch all nested variables (ie variable in a variable)
@@ -610,7 +612,7 @@ def evaluate_variables(
     return repo_config
 
 
-def expand_units(object_config: dict, unexpand: bool = False) -> dict:
+def expand_units(object_config: CommentedMap, unexpand: bool = False) -> CommentedMap:
     """
     Evaluate human bytes notation
     eg 50 KB to  50000 bytes
@@ -618,7 +620,7 @@ def expand_units(object_config: dict, unexpand: bool = False) -> dict:
     and 50000 to 50 KB in unexpand mode
     """
 
-    def _expand_units(key, value):
+    def _expand_units(key: str, value: Any) -> Any:
         if key in (
             "minimum_backup_size_error",  # Bytes default
             "exclude_files_larger_than",  # Bytes default
@@ -661,7 +663,7 @@ def expand_units(object_config: dict, unexpand: bool = False) -> dict:
     return replace_in_iterable(object_config, _expand_units, callable_wants_key=True)
 
 
-def extract_permissions_from_full_config(full_config: dict) -> dict:
+def extract_permissions_from_full_config(full_config: CommentedMap) -> CommentedMap:
     """
     Extract permissions and manager password from repo_uri tuple
     repo_config objects in memory are always "expanded"
@@ -704,7 +706,7 @@ def extract_permissions_from_full_config(full_config: dict) -> dict:
     return full_config
 
 
-def inject_permissions_into_full_config(full_config: dict) -> dict:
+def inject_permissions_into_full_config(full_config: CommentedMap) -> CommentedMap:
     """
     Make sure repo_uri is a tuple containing permissions and manager password
     This function is used before saving config
@@ -765,13 +767,13 @@ def inject_permissions_into_full_config(full_config: dict) -> dict:
     return full_config
 
 
-def get_manager_password(full_config: dict, repo_name: str) -> str:
+def get_manager_password(full_config: CommentedMap, repo_name: str) -> str:
     return full_config.g(f"repos.{repo_name}.manager_password")
 
 
 def get_repo_config(
-    full_config: dict, repo_name: str = "default", eval_variables: bool = True
-) -> Tuple[dict, dict]:
+    full_config: CommentedMap, repo_name: str = "default", eval_variables: bool = True
+) -> Union[Tuple[None, None], Tuple[CommentedMap, CommentedMap]]:
     """
     Create inherited repo config
     Returns a dict containing the repo config, with expanded variables
@@ -779,8 +781,8 @@ def get_repo_config(
     """
 
     def inherit_group_settings(
-        repo_config: dict, group_config: dict
-    ) -> Tuple[dict, dict]:
+        repo_config: CommentedMap, group_config: CommentedMap
+    ) -> Tuple[CommentedMap, CommentedMap]:
         """
         iter over group settings, update repo_config, and produce an identical version of repo_config
         called config_inheritance, where every value is replaced with a boolean which states inheritance status
@@ -794,15 +796,17 @@ def get_repo_config(
         _config_inheritance = replace_in_iterable(_config_inheritance, lambda _: False)
 
         def _inherit_group_settings(
-            _repo_config: dict, _group_config: dict, _config_inheritance: dict
-        ) -> Tuple[dict, dict]:
-            if isinstance(_group_config, dict):
+            _repo_config: CommentedMap,
+            _group_config: CommentedMap,
+            _config_inheritance: CommentedMap,
+        ) -> Tuple[CommentedMap, CommentedMap]:
+            if isinstance(_group_config, (dict, CommentedMap)):
                 if _repo_config is None:
                     # Initialize blank if not set
                     _repo_config = CommentedMap()
                     _config_inheritance = CommentedMap()
                 for key, value in _group_config.items():
-                    if isinstance(value, dict):
+                    if isinstance(value, (dict, CommentedMap)):
                         __repo_config, __config_inheritance = _inherit_group_settings(
                             _repo_config.g(key),
                             value,
@@ -943,7 +947,7 @@ def get_repo_config(
             group_config = full_config.g(f"groups.{first_group}")
         except IndexError:
             logger.error("No group found in config")
-            group_config = {}
+            group_config = CommentedMap()
 
     repo_config.s("name", repo_name)
     repo_config.s("uuid", gen_uuid_from_path(repo_name))
@@ -960,13 +964,13 @@ def get_repo_config(
 
 
 def get_group_config(
-    full_config: dict, group_name: str, eval_variables: bool = True
-) -> dict:
+    full_config: CommentedMap, group_name: str, eval_variables: bool = True
+) -> CommentedMap:
     try:
         group_config = deepcopy(full_config.g(f"groups.{group_name}"))
     except KeyError:
         logger.error(f"No group with name {group_name} found in config")
-        return None
+        return CommentedMap()
 
     if eval_variables:
         group_config = evaluate_variables(
@@ -990,7 +994,9 @@ def _get_config_file_checksum(config_file: Path) -> str:
         return "%08X" % (cur_hash & 0xFFFFFFFF)
 
 
-def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) -> dict:
+def _migrate_config_dict(
+    full_config: CommentedMap, old_version: str, new_version: str
+) -> CommentedMap:
     """
     Migrate config dict from old version to new version
     This is used when config file version is not the same as current version
@@ -998,10 +1004,10 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
     logger.info(f"Migrating config file from version {old_version} to {new_version}")
 
     def _migrate_retention_policy_3_0_0_to_3_0_3(
-        full_config: dict,
+        full_config: CommentedMap,
         object_name: str,
         object_type: str,
-    ) -> dict:
+    ) -> CommentedMap:
         try:
             if full_config.g(
                 f"{object_type}.{object_name}.repo_opts.retention_policy.tags"
@@ -1027,10 +1033,10 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
         return full_config
 
     def _migrate_compression_3_0_0_to_3_0_4(
-        full_config: dict,
+        full_config: CommentedMap,
         object_name: str,
         object_type: str,
-    ) -> dict:
+    ) -> CommentedMap:
         try:
             if (
                 full_config.g(f"{object_type}.{object_name}.repo_opts.compression")
@@ -1055,10 +1061,10 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
         return full_config
 
     def _migrate_monitoring_3_0_4_to_3_1_0(
-        full_config: dict,
+        full_config: CommentedMap,
         object_name: str,
         object_type: str,
-    ) -> dict:
+    ) -> CommentedMap:
 
         monitoring = full_config.g(f"{object_type}.{object_name}.prometheus")
         if monitoring is not None:
@@ -1095,7 +1101,9 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
 
         return full_config
 
-    def _apply_global_migration_3_0_4_to_3_1_0(full_config: dict) -> dict:
+    def _apply_global_migration_3_0_4_to_3_1_0(
+        full_config: CommentedMap,
+    ) -> CommentedMap:
         # Clean old global settings if present
         full_config.d("global_prometheus.additional_labels")
         full_config.d("global_email.additional_labels")
@@ -1196,10 +1204,10 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
         return full_config
 
     def _apply_migrations(
-        full_config: dict,
+        full_config: CommentedMap,
         object_name: str,
         object_type: str,
-    ) -> dict:
+    ) -> CommentedMap:
         if version_parse(old_version) < version_parse("3.0.3"):
             full_config = _migrate_retention_policy_3_0_0_to_3_0_3(
                 full_config, object_name, object_type
@@ -1230,7 +1238,7 @@ def _migrate_config_dict(full_config: dict, old_version: str, new_version: str) 
     return convert_to_commented_map(full_config)
 
 
-def _load_config_file(config_file: Path) -> Union[bool, dict]:
+def _load_config_file(config_file: Path) -> Union[bool, CommentedMap]:
     """
     Checks whether config file is valid
     """
@@ -1238,7 +1246,7 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
         with open(config_file, "r", encoding="utf-8") as file_handle:
             yaml = YAML(typ="rt")
             full_config = yaml.load(file_handle)
-            if not full_config or not isinstance(full_config, dict):
+            if not full_config or not isinstance(full_config, CommentedMap):
                 logger.critical(f"Config file {config_file} seems empty or invalid !")
                 return False
             logger.info(
@@ -1255,11 +1263,11 @@ def _load_config_file(config_file: Path) -> Union[bool, dict]:
         sys.exit(1)
 
 
-def load_config(config_file: Path) -> Optional[dict]:
+def load_config(config_file: Path) -> Union[CommentedMap, bool, None]:
     full_config = _load_config_file(config_file)
     if not full_config:
         return None
-    current_audience = full_config.g("audience")
+    current_audience = full_config.g("audience")  # type: ignore
     if current_audience and current_audience != CURRENT_AUDIENCE:
         if current_audience not in ["private", "public"]:
             logger.critical(
@@ -1296,7 +1304,7 @@ def load_config(config_file: Path) -> Optional[dict]:
             "env_variables",
             "encrypted_env_variables",
         ):
-            if not isinstance(value, dict):
+            if not isinstance(value, (dict, CommentedMap)):
                 if value is None:
                     value = CommentedMap()
         return value
@@ -1365,9 +1373,9 @@ def load_config(config_file: Path) -> Optional[dict]:
     else:
         full_config = _full_config
 
-    current_audience = full_config.g("audience")
+    current_audience = full_config.g("audience")  # type: ignore
     try:
-        conf_version = version_parse(str(full_config.g("conf_version")))
+        conf_version = version_parse(str(full_config.g("conf_version")))  # type: ignore
         if not conf_version:
             logger.critical(
                 f"Config file {config_file} has no configuration version. Is this a valid npbackup config file?"
@@ -1419,7 +1427,7 @@ def load_config(config_file: Path) -> Optional[dict]:
     return full_config
 
 
-def save_config(config_file: Path, full_config: dict) -> bool:
+def save_config(config_file: Path, full_config: CommentedMap) -> bool:
     try:
         full_config = inject_permissions_into_full_config(full_config)
         full_config.s("audience", CURRENT_AUDIENCE)
@@ -1451,7 +1459,7 @@ def save_config(config_file: Path, full_config: dict) -> bool:
         return False
 
 
-def get_repo_list(full_config: dict) -> List[str]:
+def get_repo_list(full_config: CommentedMap) -> List[str]:
     if full_config:
         try:
             return list(full_config.g("repos").keys())
@@ -1460,7 +1468,7 @@ def get_repo_list(full_config: dict) -> List[str]:
     return []
 
 
-def get_group_list(full_config: dict) -> List[str]:
+def get_group_list(full_config: CommentedMap) -> List[str]:
     if full_config:
         try:
             return list(full_config.g("groups").keys())
@@ -1469,7 +1477,7 @@ def get_group_list(full_config: dict) -> List[str]:
     return []
 
 
-def get_object_list(full_config: dict) -> List[str]:
+def get_object_list(full_config: CommentedMap) -> List[str]:
     """
     Get list of all objects (repos + groups) in config
     """
@@ -1478,7 +1486,7 @@ def get_object_list(full_config: dict) -> List[str]:
     return []
 
 
-def get_object_names_and_types(full_config: dict) -> dict:
+def get_object_names_and_types(full_config: CommentedMap) -> dict:
     """
     Get dict of all objects (repos + groups) in config with their type
     as:
@@ -1496,7 +1504,7 @@ def get_object_names_and_types(full_config: dict) -> dict:
     return object_type_dict
 
 
-def get_repos_by_group(full_config: dict, group: str) -> List[str]:
+def get_repos_by_group(full_config: CommentedMap, group: str) -> List[str]:
     """
     Return repo list by group
     If special group __all__ is given, return all repos
@@ -1511,7 +1519,9 @@ def get_repos_by_group(full_config: dict, group: str) -> List[str]:
     return repo_list
 
 
-def get_anonymous_repo_config(repo_config: dict, show_encrypted: bool = False) -> dict:
+def get_anonymous_repo_config(
+    repo_config: CommentedMap, show_encrypted: bool = False
+) -> CommentedMap:
     """
     Replace each encrypted value with
     """
@@ -1539,7 +1549,7 @@ def get_anonymous_repo_config(repo_config: dict, show_encrypted: bool = False) -
     )
 
 
-def get_monitoring_config(repo_config: dict, full_config: dict):
+def get_monitoring_config(repo_config: CommentedMap, full_config: CommentedMap):
     global_monitoring = CommentedMap()
     if full_config:
         try:
@@ -1570,7 +1580,9 @@ def get_monitoring_config(repo_config: dict, full_config: dict):
             pass
     if repo_config:
         global_monitoring = evaluate_variables(
-            repo_config, global_monitoring, full_config
+            repo_config=repo_config,
+            full_config=full_config,
+            monitoring_config=global_monitoring,
         )
     else:
         logger.error(

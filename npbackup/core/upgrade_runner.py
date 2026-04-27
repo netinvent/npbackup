@@ -10,14 +10,16 @@ __license__ = "GPL-3.0-only"
 __build__ = "2025030701"
 
 
+from typing import Optional
 from logging import getLogger
+from ruamel.yaml.comments import CommentedMap
 from npbackup.upgrade_client.upgrader import auto_upgrader, _check_new_version
 import npbackup.configuration
 
 logger = getLogger()
 
 
-def check_new_version(full_config: dict) -> bool:
+def check_new_version(full_config: CommentedMap) -> Optional[bool]:
     upgrade_url = full_config.g("global_options.auto_upgrade_server_url")
     username = full_config.g("global_options.auto_upgrade_server_username")
     password = full_config.g("global_options.auto_upgrade_server_password")
@@ -31,8 +33,8 @@ def check_new_version(full_config: dict) -> bool:
 
 
 def run_upgrade(
-    config_file: str, full_config: dict, ignore_errors: bool = False
-) -> bool:
+    config_file: str, full_config: CommentedMap, ignore_errors: bool = False
+) -> Optional[bool]:
     upgrade_url = full_config.g("global_options.auto_upgrade_server_url")
     username = full_config.g("global_options.auto_upgrade_server_username")
     password = full_config.g("global_options.auto_upgrade_server_password")
