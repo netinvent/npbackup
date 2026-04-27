@@ -293,19 +293,13 @@ def _compile(
         NUITKA_OPTIONS += " --windows-console-mode=hide"
         # Since GUI can run as CLI, we need to include all cli modules
         if build_type == "viewer":
-            NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui.config"
-            NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui.wizard"
-            NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui.operations"
             NUITKA_OPTIONS += " --nofollow-import-to=npbackup.__main__"
     else:
         NUITKA_OPTIONS += " --plugin-disable=tk-inter"
         NUITKA_OPTIONS += " --nofollow-import-to=FreeSimpleGUI"
         NUITKA_OPTIONS += " --nofollow-import-to=_tkinter"
         NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui"
-        NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui.ttk_theme"
-        NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui.config"
-        NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui.wizard"
-        NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui.operations"
+        NUITKA_OPTIONS += " --nofollow-import-to=npbackup.gui.__main__"
 
     if onefile:
         NUITKA_OPTIONS += " --onefile"
