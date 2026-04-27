@@ -11,7 +11,7 @@ __build__ = "2026032401"
 
 import sys
 import json
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from time import sleep
 from logging import getLogger
 from npbackup.core.monitoring import MonitoringBackend
@@ -295,7 +295,7 @@ class ZabbixMonitor(MonitoringBackend):
         self,
         metrics: Dict[str, Any],
         operation: str,
-        collector: str = None,
+        collector: Optional[str] = None,
     ) -> List:
         """
         Convert metrics dictionary to a list of zabbix-utils ItemValue objects.
