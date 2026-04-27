@@ -476,7 +476,7 @@ class ResticRunner:
                     os.path.join(os.path.dirname(self.binary), "klink.exe")
                 ).replace(os.sep, "/")
                 additional_parameters += (
-                    f' -o sftp.command="{plink_binary} -auto-store-sshkey -batch'
+                    f' -o sftp.command="\'{plink_binary}\' -auto-store-sshkey -batch'
                 )
                 if self._repo_uri_dict.get("username"):
                     additional_parameters += (
