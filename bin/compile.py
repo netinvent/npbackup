@@ -178,7 +178,7 @@ def _compile(
     initial_source_program = "bin/npbackup-{}".format(build_type)
     audience_source_program = "bin/{}-{}".format(executable_name, build_type)
     if initial_source_program != audience_source_program:
-        shutil.move(initial_source_program, audience_source_program)
+        shutil.copyfile(initial_source_program, audience_source_program)
     
 
     if IS_LEGACY:
