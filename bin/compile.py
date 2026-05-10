@@ -7,7 +7,7 @@ __intname__ = "npbackup.compile"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026042701"
+__build__ = "2026051001"
 __version__ = "2.4.1"
 
 
@@ -56,6 +56,7 @@ except ImportError:
     AUDIENCES = ["public"]
 
 PRIVATE_AUDIENCE_FILE = os.path.abspath(os.path.join(BASEDIR, "..", "PRIVATE", "audience.py"))
+PRIVATE_AUDIENCE_TEMPLATE_FILE = os.path.abspath(os.path.join(BASEDIR, "..", "PRIVATE", "audience.py"))
 INITIAL_AUDIENCE = CURRENT_AUDIENCE
 BUILD_TYPES = ["cli", "gui", "viewer"]
 BUILDS_DIR = os.path.abspath(os.path.join(BASEDIR, os.pardir, "BUILDS"))
@@ -85,6 +86,9 @@ del sys.path[0]
 logger = logger_get_logger("compile.log")
 
 def _set_audience(audience: str):
+    # Use PRIVATE/audience.dist file if PRIVATE/audience does not exist
+    if not os.path.isfile(PRIVATE_AUDIENCE_FILE):
+        shutil.copyfile(PRIVATE_AUDIENCE_TEMPLATE_FILE, PRIVATE_AUDIENCE_FILE)
     with fileinput.FileInput(PRIVATE_AUDIENCE_FILE, inplace=True) as file:
         for line in file:
             if line.startswith("CURRENT_AUDIENCE"):
