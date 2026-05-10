@@ -7,11 +7,11 @@ __intname__ = "npbackup.gui.ttk_theme"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2025-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026031601"
+__build__ = "2026051001"
 
 import os
 import FreeSimpleGUI as sg
-
+from ofunctions.platform import get_os
 from reskinner import reskin, colorizer
 from npbackup.path_helper import BASEDIR
 from npbackup.gui.buttons import _after_element
@@ -35,7 +35,9 @@ except ImportError:
 ttk_theme_path = os.path.join(
     os.path.dirname(BASEDIR), "npbackup", "gui", "sv_ttk", "sv.tcl"
 )
-if os.path.isfile(ttk_theme_path):
+# TTK themes fail to show properly on MacOS (eg button colors don't show)
+# Disable it for now
+if os.path.isfile(ttk_theme_path) and get_os() != 'Darwin':
     HAVE_TTK_THEME = True
     from tkinter import ttk
 else:
