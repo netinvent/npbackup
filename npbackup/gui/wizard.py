@@ -14,6 +14,7 @@ from typing import List, Tuple
 from logging import getLogger
 import FreeSimpleGUI as sg
 import textwrap
+from urllib.parse import urlparse
 
 if os.name == "nt":
     from command_runner.elevate import is_admin
@@ -206,6 +207,27 @@ def wizard_layouts() -> dict:
                     key="-BACKEND-TYPE-",
                     enable_events=True,
                     size=(40, 1),
+                ),
+            ],
+            [
+                sg.pin(
+                    sg.Text(
+                        _t("config_gui.scheme"),
+                        size=(30, 1),
+                        key="-REST-SCHEME-LABEL-",
+                        visible=False,
+                    ),
+                    shrink=True,
+                ),
+                sg.pin(
+                    sg.Combo(
+                        size=(40, 1),
+                        key="-REST-SCHEME-",
+                        values=["https", "http", "https+unix", "http+unix"],
+                        default_value="https",
+                        visible=False,
+                    ),
+                    shrink=True,
                 ),
             ],
             [
@@ -826,14 +848,12 @@ def start_wizard(full_config: dict, config_file: str):
 
         repo_uri_dict["backend_type"] = current_backend
         repo_uri_dict["path"] = values.get("-PATH-", "").strip()
-        host_value = values.get("-HOST-", "").strip()
+        host_value = values.get("-HOST-", "").strip().rstrip("/")
         if host_value:
             if current_backend == "rest":
                 # The -HOST- field is pre-filled with "scheme://host" for REST.
                 # Split those back out so build_restic_uri doesn't double the scheme.
-                from urllib.parse import urlparse as _urlparse
-
-                _parsed = _urlparse(host_value)
+                _parsed = urlparse(host_value)
                 if _parsed.scheme in ("http", "https"):
                     repo_uri_dict["scheme"] = _parsed.scheme
                     # Use hostname (not netloc) to strip any embedded port
@@ -851,6 +871,7 @@ def start_wizard(full_config: dict, config_file: str):
                     repo_uri_dict["path"] = _parsed.path or repo_uri_dict.get("path")
                 else:
                     repo_uri_dict["host"] = host_value
+                repo_uri_dict["scheme"] = values.get("-REST-SCHEME-")
             else:
                 repo_uri_dict["host"] = host_value
         port_str = values.get("-HOST-PORT-", "").strip()
@@ -878,6 +899,7 @@ def start_wizard(full_config: dict, config_file: str):
             ):
                 # Reconstruct repo uri dict
                 repo_uri_dict["password"] = password
+        print(repo_uri_dict)
         return repo_uri_dict
 
     def set_active_backend_type(backend_type) -> None:
@@ -898,6 +920,8 @@ def start_wizard(full_config: dict, config_file: str):
             "repo_opts.ssh_key_file",
             "-REST-PASSWORD-LABEL-",
             "-REST-PASSWORD-",
+            "-REST-SCHEME-LABEL-",
+            "-REST-SCHEME-",
             "-AWS_ACCESS_KEY_ID-LABEL-",
             "-AWS_SECRET_ACCESS_KEY-LABEL-",
             "-AWS_ACCESS_KEY_ID-",
@@ -933,6 +957,10 @@ def start_wizard(full_config: dict, config_file: str):
             wizard["-SSH-KEY-FILE-LABEL-"].update(visible=True)
             wizard["repo_opts.ssh_key_file"].update(visible=True)
         if backend_type == "rest":
+            wizard["-REST-SCHEME-LABEL-"].update(visible=True)
+            wizard["-REST-SCHEME-"].update(visible=True)
+            # Set default scheme
+            wizard["-REST-SCHEME-"].update(value="https")
             wizard["-REST-PASSWORD-LABEL-"].update(visible=True)
             wizard["-REST-PASSWORD-"].update(visible=True)
         if backend_type == "s3":
@@ -1007,12 +1035,7 @@ def start_wizard(full_config: dict, config_file: str):
             # Show the full URI in the repo_uri field so the user sees exactly
             # what is stored in the config.
             wizard["-PATH-"].update(repo_uri_dict.get("path") or "")
-            if repo_uri_dict.get("scheme", None) is not None:
-                wizard["-HOST-"].update(
-                    repo_uri_dict.get("scheme") + "://" + repo_uri_dict.get("host", "")
-                )
-            else:
-                wizard["-HOST-"].update(repo_uri_dict.get("host") or "")
+            wizard["-HOST-"].update(repo_uri_dict.get("host") or "")
 
             # Port field (relevant for REST and SFTP)
             wizard["-HOST-PORT-"].update(str(repo_uri_dict.get("port") or ""))
@@ -1032,6 +1055,8 @@ def start_wizard(full_config: dict, config_file: str):
                     wizard["-REST-PASSWORD-"].update(
                         npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
                     )
+                if repo_uri_dict.get("scheme", None) is not None:
+                    wizard["-REST-SCHEME-"].update(repo_uri_dict.get("scheme"))
             elif backend_type == "b2":
                 wizard["-B2_ACCOUNT_ID-"].update(
                     npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
@@ -1461,5 +1486,6 @@ def start_wizard(full_config: dict, config_file: str):
 
 if __name__ == "__main__":
     start_wizard(
-        npbackup.configuration.get_default_config(), "npbackup-wizard-test.conf"
+        npbackup.configuration.get_default_config(),
+        "npbackup-wizard-test.conf",
     )

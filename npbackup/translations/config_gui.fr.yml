@@ -302,6 +302,7 @@ fr:
 
   path: Chemin
   host: Hôte
+  scheme: Protocole
 
   sftp_windows_only_options: Options d'authentification SFTP (Windows seulement)
   ssh_password: Mot de passe SSH/SFTP

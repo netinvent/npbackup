@@ -303,6 +303,7 @@ en:
 
   path: Path
   host: Host
+  scheme: Scheme
 
 
   sftp_windows_only_options: SFTP authentication options (Windows only)
