@@ -37,7 +37,7 @@ ttk_theme_path = os.path.join(
 )
 # TTK themes fail to show properly on MacOS (eg button colors don't show)
 # Disable it for now
-if os.path.isfile(ttk_theme_path) and get_os() != 'Darwin':
+if os.path.isfile(ttk_theme_path) and get_os() != "Darwin":
     HAVE_TTK_THEME = True
     from tkinter import ttk
 else:
