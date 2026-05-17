@@ -214,7 +214,7 @@ def wizard_layouts() -> dict:
                     sg.Text(
                         _t("config_gui.scheme"),
                         size=(30, 1),
-                        key="-REST-SCHEME-LABEL-",
+                        key="-SCHEME-LABEL-",
                         visible=False,
                     ),
                     shrink=True,
@@ -222,7 +222,7 @@ def wizard_layouts() -> dict:
                 sg.pin(
                     sg.Combo(
                         size=(40, 1),
-                        key="-REST-SCHEME-",
+                        key="-SCHEME-",
                         values=["https", "http", "https+unix", "http+unix"],
                         default_value="https",
                         visible=False,
@@ -850,7 +850,7 @@ def start_wizard(full_config: dict, config_file: str):
         repo_uri_dict["path"] = values.get("-PATH-", "").strip()
         host_value = values.get("-HOST-", "").strip().rstrip("/")
         if host_value:
-            if current_backend == "rest":
+            if current_backend in ("rest", "s3"):
                 # The -HOST- field is pre-filled with "scheme://host" for REST.
                 # Split those back out so build_restic_uri doesn't double the scheme.
                 _parsed = urlparse(host_value)
@@ -871,7 +871,7 @@ def start_wizard(full_config: dict, config_file: str):
                     repo_uri_dict["path"] = _parsed.path or repo_uri_dict.get("path")
                 else:
                     repo_uri_dict["host"] = host_value
-                repo_uri_dict["scheme"] = values.get("-REST-SCHEME-")
+                repo_uri_dict["scheme"] = values.get("-SCHEME-")
             else:
                 repo_uri_dict["host"] = host_value
         port_str = values.get("-HOST-PORT-", "").strip()
@@ -920,8 +920,8 @@ def start_wizard(full_config: dict, config_file: str):
             "repo_opts.ssh_key_file",
             "-REST-PASSWORD-LABEL-",
             "-REST-PASSWORD-",
-            "-REST-SCHEME-LABEL-",
-            "-REST-SCHEME-",
+            "-SCHEME-LABEL-",
+            "-SCHEME-",
             "-AWS_ACCESS_KEY_ID-LABEL-",
             "-AWS_SECRET_ACCESS_KEY-LABEL-",
             "-AWS_ACCESS_KEY_ID-",
@@ -950,6 +950,9 @@ def start_wizard(full_config: dict, config_file: str):
         if backend_type in ("sftp", "rest"):
             wizard["-SFTP-REST-USERNAME-LABEL-"].update(visible=True)
             wizard["-SFTP-REST-USERNAME-"].update(visible=True)
+        if backend_type in ("rest", "s3"):
+            wizard["-SCHEME-"].update(visible=True)
+            wizard["-SCHEME-"].update(value="https")
         if backend_type == "sftp":
             wizard["-SFTP-AUTH-OPTIONS-LABEL-"].update(visible=True)
             wizard["-SSH-PASSWORD-LABEL-"].update(visible=True)
@@ -957,10 +960,7 @@ def start_wizard(full_config: dict, config_file: str):
             wizard["-SSH-KEY-FILE-LABEL-"].update(visible=True)
             wizard["repo_opts.ssh_key_file"].update(visible=True)
         if backend_type == "rest":
-            wizard["-REST-SCHEME-LABEL-"].update(visible=True)
-            wizard["-REST-SCHEME-"].update(visible=True)
-            # Set default scheme
-            wizard["-REST-SCHEME-"].update(value="https")
+            wizard["-SCHEME-LABEL-"].update(visible=True)
             wizard["-REST-PASSWORD-LABEL-"].update(visible=True)
             wizard["-REST-PASSWORD-"].update(visible=True)
         if backend_type == "s3":
@@ -1040,6 +1040,9 @@ def start_wizard(full_config: dict, config_file: str):
             # Port field (relevant for REST and SFTP)
             wizard["-HOST-PORT-"].update(str(repo_uri_dict.get("port") or ""))
 
+            if repo_uri_dict.get("scheme", None) is not None:
+                wizard["-SCHEME-"].update(repo_uri_dict.get("scheme"))
+
             if backend_type == "sftp":
                 wizard["-SFTP-REST-USERNAME-"].update(
                     repo_uri_dict.get("username") or ""
@@ -1055,8 +1058,6 @@ def start_wizard(full_config: dict, config_file: str):
                     wizard["-REST-PASSWORD-"].update(
                         npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
                     )
-                if repo_uri_dict.get("scheme", None) is not None:
-                    wizard["-REST-SCHEME-"].update(repo_uri_dict.get("scheme"))
             elif backend_type == "b2":
                 wizard["-B2_ACCOUNT_ID-"].update(
                     npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
