@@ -267,23 +267,23 @@ def show_stats(statistics: List[dict]) -> None:
 
     if stats_type == "raw":
         headings = [
-            "Repo",
+            "Repo      ",
             "Stat state",
             "Total size",
             "Total uncompress size",
             "Compress progress",
             "Compress space savings",
             "Compress Ratio",
-            "Total Blob Count",
-            "Snapshot Count",
+            "Total Blobs",
+            "Snapshots",
         ]
     else:
         headings = [
-            "Repo",
+            "Repo      ",
             "Stat state",
             "Total size",
-            "Total File Count",
-            "Snapshot Count",
+            "Total Files",
+            "Snapshots",
         ]
     layout = [
         [
@@ -291,6 +291,7 @@ def show_stats(statistics: List[dict]) -> None:
                 values=data,
                 headings=headings,
                 justification="right",
+                # This auto size stuff works bad, really bad, the only way is to set headings text sizes
                 auto_size_columns=True,
                 expand_x=True,
                 expand_y=True,
