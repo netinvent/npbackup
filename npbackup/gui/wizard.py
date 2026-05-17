@@ -1486,6 +1486,6 @@ def start_wizard(full_config: dict, config_file: str):
 
 if __name__ == "__main__":
     start_wizard(
-        npbackup.configuration.get_default_config(),
+        npbackup.configuration.get_default_config(no_groups=True),
         "npbackup-wizard-test.conf",
     )

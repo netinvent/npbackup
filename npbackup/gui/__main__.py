@@ -811,7 +811,8 @@ def _main_gui(viewer_mode: bool):
                     )
                 if action == "--WIZARD--":
                     full_config, config_file = start_wizard(
-                        npbackup.configuration.get_default_config(), config_file
+                        npbackup.configuration.get_default_config(no_groups=True),
+                        config_file,
                     )
             if config_file:
                 logger.info(f"Using configuration file {config_file}")
@@ -1234,7 +1235,7 @@ def _main_gui(viewer_mode: bool):
             config_file is "{SHORT_PRODUCT_NAME.lower()}.conf" if not specified in commandline
             """
             with HideWindow(window):
-                full_config = npbackup.configuration.get_default_config()
+                full_config = npbackup.configuration.get_default_config(no_groups=True)
                 if args.config_file:
                     config_file = Path(args.config_file).absolute()
                 else:

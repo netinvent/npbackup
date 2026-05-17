@@ -397,13 +397,16 @@ def convert_to_commented_map(
     return source_dict
 
 
-def get_default_config() -> CommentedMap:
+def get_default_config(no_groups: bool = False) -> CommentedMap:
     """
     Returns a config dict as nested CommentedMaps (used by ruamel.yaml to keep comments intact)
     """
-    full_config = deepcopy(empty_config_dict)
-
-    return convert_to_commented_map(full_config)
+    full_config = convert_to_commented_map(deepcopy(empty_config_dict))
+    if no_groups:
+        repo_config, _ = get_repo_config(full_config, "default", eval_variables=False)
+        full_config["repos"]["default"] = repo_config
+        full_config["groups"] = CommentedMap()
+    return full_config
 
 
 def get_default_repo_config() -> CommentedMap:
