@@ -779,7 +779,9 @@ def update_gui_values(
         if key in list(column_list_keys.keys()):
             column_key = column_list_keys[key]
             for entry in value:
-                add_generic_row(window, column_key, entry, inherited[entry])
+                add_generic_row(
+                    window, column_key, entry, inherited[entry] if inherited else False
+                )
             return
 
         # We need to discard sukeys from recipients in order to avoid searching for subkeys in GUI
@@ -836,7 +838,7 @@ def update_gui_values(
                 for val in value:
                     icon, inherited_icon = get_icons_per_file(val)
 
-                    if object_type != "groups" and inherited[val]:
+                    if object_type != "groups" and inherited and inherited[val]:
                         backup_paths_tree.insert("", val, val, val, icon=inherited_icon)
                     else:
                         backup_paths_tree.insert("", val, val, val, icon=icon)
@@ -864,7 +866,7 @@ def update_gui_values(
                     for val in value:
                         if val is None:
                             continue
-                        if object_type != "groups" and inherited[val]:
+                        if object_type != "groups" and inherited and inherited[val]:
                             icon = INHERITED_TREE_ICON
                         else:
                             icon = TREE_ICON
