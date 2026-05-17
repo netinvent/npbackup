@@ -1440,11 +1440,13 @@ class NPBackupRunner:
             command_list: List[str],
             per_command_timeout: int,
             failure_is_fatal: bool,
+            backup_result: bool,
         ):
             commands_success = True
             if command_list:
                 self.write_logs("Running {}-execution commands".format(exec_type))
                 for command in command_list:
+                    command.replace("___BACKUPRESULT___", 0 if backup_result else 1)
                     exit_code, output = command_runner(
                         command, shell=True, timeout=per_command_timeout
                     )
@@ -1540,6 +1542,7 @@ class NPBackupRunner:
                 post_exec_commands,
                 post_exec_per_command_timeout,
                 post_exec_failure_is_fatal,
+                result,
             )
 
         try:

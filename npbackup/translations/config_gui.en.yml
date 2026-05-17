@@ -30,7 +30,7 @@ en:
   pre_exec_commands: Pre-exec commands
   maximum_exec_time: Maximum exec time
   exec_failure_is_fatal: Execution failure is fatal
-  post_exec_commands: Post-exec commands
+  post_exec_commands: Post-exec commands (placeholder ___BACKUPRESULT___ contains backup result)
   execute_even_on_backup_error: Execute even if backup failed
   tags: Tags
   optional_tag: Optional tag
