@@ -899,7 +899,6 @@ def start_wizard(full_config: dict, config_file: str):
             ):
                 # Reconstruct repo uri dict
                 repo_uri_dict["password"] = password
-        print(repo_uri_dict)
         return repo_uri_dict
 
     def set_active_backend_type(backend_type) -> None:
