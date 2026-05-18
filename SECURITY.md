@@ -69,3 +69,5 @@ Sensitive environment variables aren't available for scripts / additional parame
 # NPF-SEC-00014: Don't leak repository url including passwords in logs
 
 We need to replace REST / SFTP repository URIs with anonymous data for user/passwords
+
+# NPF-SEC-00015: Don't leak sftp password into debug logs on Windows using klink.exe

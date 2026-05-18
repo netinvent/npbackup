@@ -523,9 +523,15 @@ class ResticRunner:
         else:
             stderr = None
 
+        # NPF-SEC-00015: Don't leak plink ssh password into debug logs
+        log_replace = {}
+        if self.ssh_password:
+            log_replace[self.ssh_password] = HIDDEN_BY_NPBACKUP
+
         if self._executor_operation == "backup" and not self.is_init:
             self.init(errors_allowed=True)
             self._make_env()
+
         exit_code, output = command_runner(
             _cmd,
             timeout=timeout,
@@ -548,6 +554,7 @@ class ResticRunner:
             io_priority=self._priority if get_os() != "Darwin" else None,
             windows_no_window=True,
             heartbeat=HEARTBEAT_INTERVAL,
+            log_replace=log_replace,
         )
         # Don't keep protected environment variables in memory when not necessary
         self._remove_env()
