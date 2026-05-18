@@ -875,7 +875,7 @@ def start_wizard(full_config: dict, config_file: str):
             else:
                 repo_uri_dict["host"] = host_value
             # On S3, we don't have host but endpoint, and path bucket instead of path
-            if backend_type == "s3":
+            if current_backend == "s3":
                 repo_uri_dict["endpoint"] = repo_uri_dict["host"]
                 del repo_uri_dict["host"]
                 if repo_uri_dict["path"]:
@@ -1281,7 +1281,11 @@ def start_wizard(full_config: dict, config_file: str):
         ## WIZARD STEP 3 ##
         if (
             event == "-NEXT-"
-            or (isinstance(event, str) and event.startswith("-BREADCRUMB-") and event != "-BREADCRUMB-3-")
+            or (
+                isinstance(event, str)
+                and event.startswith("-BREADCRUMB-")
+                and event != "-BREADCRUMB-3-"
+            )
         ) and current_tab == 3:
             if os.name == "nt":
                 button_text = (
