@@ -1922,6 +1922,7 @@ class NPBackupRunner:
                     level="info",
                 )
         else:
+            read_data_subset = False
             self.write_logs(
                 f"Running metadata consistency check of repository {self.repo_name}",
                 level="info",
