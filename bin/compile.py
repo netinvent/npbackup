@@ -86,16 +86,19 @@ def _set_audience(audience: str):
     # Use PRIVATE/audience.dist file if PRIVATE/audience does not exist
     if not os.path.isfile(PRIVATE_AUDIENCE_FILE):
         shutil.copyfile(PRIVATE_AUDIENCE_TEMPLATE_FILE, PRIVATE_AUDIENCE_FILE)
+    bad_audience = False
     with fileinput.FileInput(PRIVATE_AUDIENCE_FILE, inplace=True) as file:
         for line in file:
             if line.startswith("AUDIENCES"):
                 if '"{audience}"' not in line:
-                    raise ValueError("Bogus audience {audience} not in {line}")
+                    bad_audience = True
             if line.startswith("CURRENT_AUDIENCE"):
                 line.split("=")[1].strip().strip("'\"")
                 print(f"CURRENT_AUDIENCE = \"{audience}\"")
             else:
                 print(line, end="")
+    if bad_audience:
+        raise ValueError("Bogus audience {audience} not in {line}")
     os.environ["_NPBACKUP_AUDIENCE"] = audience
 
 
