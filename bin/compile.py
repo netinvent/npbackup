@@ -43,7 +43,7 @@ from npbackup.path_helper import BASEDIR
 SIGN_EXTERNALY = False
 sign = None
 if os.name == "nt":
-    EXTERNAL_SIGNER = r"C:\ev_signer_npbackup\ev_signer_npbackup.exe"
+    EXTERNAL_SIGNER = r"C:\ev_signer_npbackup\ev_signer_npbackup.cmd"
     if os.path.isfile(EXTERNAL_SIGNER):
         SIGN_EXTERNALY = True
     else:
