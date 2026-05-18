@@ -416,7 +416,7 @@ def get_object_from_combo(combo_value: str) -> Tuple[str, str]:
     return object_type, object_name
 
 
-def create_object_name_for_combo(object_type: str, object_name: str) -> str:
+def create_object_name_for_combo(object_type: str, object_name: str) -> Optional[str]:
     """
     Creates a string to be displayed in object selector combobox from object type and name
     """
@@ -432,8 +432,8 @@ def create_object_name_for_combo(object_type: str, object_name: str) -> str:
 def update_object_selector(
     window: sg.Window,
     full_config: dict,
-    object_name: str = None,
-    object_type: str = None,
+    object_name: Optional[str] = None,
+    object_type: Optional[str] = None,
 ) -> Tuple[str, str]:
     object_list = get_objects(full_config)
     if not object_name or not object_type:
@@ -463,8 +463,8 @@ def iter_over_config(
     window: sg.Window,
     full_config: dict,
     object_config: dict,
-    config_inheritance: dict = None,
-    object_type: str = None,
+    config_inheritance: Optional[dict] = None,
+    object_type: Optional[str] = None,
     unencrypted: bool = False,
     is_wizard: bool = False,
     root_key: str = "",
@@ -509,8 +509,8 @@ def iter_over_config(
 def update_object_gui(
     window: sg.Window,
     full_config: dict,
-    object_type: str = None,
-    object_name: str = None,
+    object_type: Optional[str] = None,
+    object_name: Optional[str] = None,
     unencrypted: bool = False,
     is_wizard: bool = False,
 ) -> dict:
@@ -597,7 +597,7 @@ def update_object_gui(
         object_type,
         unencrypted,
         is_wizard,
-        None,
+        "",
     )
 
     # Special case when no source type is set
@@ -722,7 +722,7 @@ def update_gui_values(
     key: str,
     value,
     inherited: bool,
-    object_type: str,
+    object_type: Optional[str],
     unencrypted: bool,
     is_wizard: bool = False,
 ):
@@ -780,7 +780,10 @@ def update_gui_values(
             column_key = column_list_keys[key]
             for entry in value:
                 add_generic_row(
-                    window, column_key, entry, inherited[entry] if inherited else False
+                    window,
+                    column_key,
+                    entry,
+                    inherited[entry] if isinstance(inherited, dict) else False,
                 )
             return
 
@@ -837,8 +840,11 @@ def update_gui_values(
             if value:
                 for val in value:
                     icon, inherited_icon = get_icons_per_file(val)
-
-                    if object_type != "groups" and inherited and inherited[val]:
+                    if (
+                        object_type != "groups"
+                        and isinstance(inherited, dict)
+                        and inherited[val]
+                    ):
                         backup_paths_tree.insert("", val, val, val, icon=inherited_icon)
                     else:
                         backup_paths_tree.insert("", val, val, val, icon=icon)
@@ -866,7 +872,11 @@ def update_gui_values(
                     for val in value:
                         if val is None:
                             continue
-                        if object_type != "groups" and inherited and inherited[val]:
+                        if (
+                            object_type != "groups"
+                            and isinstance(inherited, dict)
+                            and inherited[val]
+                        ):
                             icon = INHERITED_TREE_ICON
                         else:
                             icon = TREE_ICON
@@ -892,7 +902,11 @@ def update_gui_values(
             if value:
                 if isinstance(value, dict):
                     for skey, val in value.items():
-                        if object_type != "groups" and inherited and inherited[skey]:
+                        if (
+                            object_type != "groups"
+                            and isinstance(inherited, dict)
+                            and inherited[val]
+                        ):
                             icon = INHERITED_TREE_ICON
                         else:
                             icon = TREE_ICON
@@ -953,6 +967,7 @@ def update_gui_values(
         logger.error(
             f"Error: Trying to update GUI with key {key} produced error: {exc}"
         )
+        raise
         logger.debug("Trace:", exc_info=True)
 
 
