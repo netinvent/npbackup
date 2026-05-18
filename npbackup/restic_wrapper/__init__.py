@@ -7,8 +7,8 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026042501"
-__version__ = "2.9.0"
+__build__ = "2026051801"
+__version__ = "2.9.1"
 
 
 from typing import Tuple, List, Optional, Callable, Union
@@ -1434,7 +1434,7 @@ class ResticRunner:
         if read_data_subset:
             cmd += f" --read-data-subset {read_data_subset}"
         elif read_data:
-            cmd += f" --rad-data"
+            cmd += f" --read-data"
         result, output = self.executor(cmd)
         if result:
             msg = "Repo checked successfully"
