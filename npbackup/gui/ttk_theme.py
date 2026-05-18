@@ -7,12 +7,13 @@ __intname__ = "npbackup.gui.ttk_theme"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2025-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026051001"
+__build__ = "2026051801"
 
+import sys
 import os
 import FreeSimpleGUI as sg
 from ofunctions.platform import get_os
-from reskinner import reskin, colorizer
+from reskinner import reskin
 from npbackup.path_helper import BASEDIR
 from npbackup.gui.buttons import _after_element
 from resources.customization import (
@@ -38,8 +39,12 @@ ttk_theme_path = os.path.join(
 # TTK themes fail to show properly on MacOS (eg button colors don't show)
 # Disable it for now
 if os.path.isfile(ttk_theme_path) and get_os() != "Darwin":
-    HAVE_TTK_THEME = True
-    from tkinter import ttk
+    if sys.version_info[1] < 12:
+        print("Legacy version. Disabling ttk themes.")
+        HAVE_TTK_THEME = False
+    else:
+        HAVE_TTK_THEME = True
+        from tkinter import ttk
 else:
     HAVE_TTK_THEME = False
 
@@ -62,7 +67,7 @@ except (TypeError, ValueError):
 
 # Let's decide our own scaling
 # Get actual pixel size for scaling
-def get_scaling():
+def get_scaling() -> float:
     # called before window created
     root = sg.tk.Tk()
     scaling = root.winfo_fpixels("1i") / 92
@@ -81,7 +86,7 @@ elif width <= 1366 or height <= 768:
     scaling_factor = 0.85
     HAVE_TTK_THEME = False
     print(
-        f"Small screen size detected {width}x{height}, this will create UI. We'll disable TTK themes to avoid some of them"
+        f"Small screen size detected {width}x{height}, this will create UI glichtes. We'll disable TTK themes to avoid some of them"
     )
 else:
     scaling_factor = 1.0
@@ -108,7 +113,7 @@ sg.theme(CURRENT_THEME)
 RESKIN_WINDOW = None
 
 
-def change_sg_theme(window=None, refresh: bool = False):
+def change_sg_theme(window: sg.Window, refresh: bool = False):
     global CURRENT_THEME
     if not refresh:
         if sg.theme() != SIMPLEGUI_DARK_THEME:
