@@ -89,7 +89,7 @@ def _set_audience(audience: str):
     with fileinput.FileInput(PRIVATE_AUDIENCE_FILE, inplace=True) as file:
         for line in file:
             if line.startswith("AUDIENCES"):
-                if audience not in line:
+                if '"{audience}"' not in line:
                     raise ValueError("Bogus audience {audience} not in {line}")
             if line.startswith("CURRENT_AUDIENCE"):
                 line.split("=")[1].strip().strip("'\"")
