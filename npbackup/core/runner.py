@@ -1854,16 +1854,11 @@ class NPBackupRunner:
         forget_result = None
         prune_result = None
 
-        read_data_subset = self.repo_config.g("repo_opts.read_data_subset")
-        if read_data_subset:
-            check_args = {"read_data": True, "read_data_subset": read_data_subset}
-        else:
-            check_args = {"read_data": False}
         unlock_result = self.unlock(**kwargs)
         if (isinstance(unlock_result, bool) and unlock_result) or (
             isinstance(unlock_result, dict) and unlock_result["result"]
         ):
-            check_result = self.check(**kwargs, **check_args)
+            check_result = self.check(**kwargs)
             if (isinstance(check_result, bool) and check_result) or (
                 isinstance(check_result, dict) and check_result["result"]
             ):
@@ -1913,12 +1908,19 @@ class NPBackupRunner:
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    def check(self, read_data: bool = True, read_data_subset: str = None) -> bool:
+    def check(self, read_data: bool = True) -> bool:
         if read_data:
-            self.write_logs(
-                f"Running full data check of repository {self.repo_name}",
-                level="info",
-            )
+            read_data_subset = self.repo_config.g("repo_opts.read_data_subset")
+            if read_data_subset:
+                self.write_logs(
+                    f"Running partial ({read_data_subset}) data check of repository {self.repo_name}",
+                    level="info",
+                )
+            else:
+                self.write_logs(
+                    f"Running full data check of repository {self.repo_name}",
+                    level="info",
+                )
         else:
             self.write_logs(
                 f"Running metadata consistency check of repository {self.repo_name}",

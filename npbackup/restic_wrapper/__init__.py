@@ -1423,16 +1423,18 @@ class ResticRunner:
         return self.convert_to_json_output(result, output=output, msg=msg, **kwargs)
 
     def check(
-        self, read_data: bool = True, read_data_subset: str = None
+        self, read_data: bool = True, read_data_subset: Optional[str] = None
     ) -> Union[bool, str, dict]:
         """
         Check current repo status
         """
         kwargs = locals()
         kwargs.pop("self")
-
-        cmd = "check{}".format(" --read-data" if read_data else "")
-        cmd += f" --read-data-subset {read_data_subset}" if read_data_subset else ""
+        cmd = "check"
+        if read_data_subset:
+            cmd += f" --read-data-subset {read_data_subset}"
+        elif read_data:
+            cmd += f" --rad-data"
         result, output = self.executor(cmd)
         if result:
             msg = "Repo checked successfully"
