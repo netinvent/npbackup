@@ -98,7 +98,7 @@ def _set_audience(audience: str):
             else:
                 print(line, end="")
     if bad_audience:
-        raise ValueError("Bogus audience {audience} not in {line}")
+        raise ValueError(f"Bogus audience {audience} not in {line}")
     os.environ["_NPBACKUP_AUDIENCE"] = audience
 
 
