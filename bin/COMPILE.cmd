@@ -24,7 +24,7 @@ SET PYTHONPATH=c:\GIT\npbackup
 
 "%PYTHON64%" -m pytest C:\GIT\npbackup\tests || GOTO ERROR
 
-"%PYTHON64%" bin\compile.py --sign "C:\ODJ\KEYS\NetInventEV.dat" %*
+"%PYTHON64%" bin\compile.py --sign %*
 
 :: BUILD 64-BIT LEGACY VERSION
 "%PYTHON64-LEGACY%" -m pip install --upgrade pip || GOTO ERROR
@@ -33,7 +33,7 @@ SET PYTHONPATH=c:\GIT\npbackup
 
 "%PYTHON64-LEGACY%" -m pytest C:\GIT\npbackup\tests || GOTO ERROR
 
-"%PYTHON64-LEGACY%" bin\compile.py --sign "C:\ODJ\KEYS\NetInventEV.dat" %*
+"%PYTHON64-LEGACY%" bin\compile.py --sign %*
 
 :: BUILD 32-BIT VERSION
 "%PYTHON32%" -m pip install --upgrade pip || GOTO ERROR
@@ -42,7 +42,7 @@ SET PYTHONPATH=c:\GIT\npbackup
 
 "%PYTHON32%" -m pytest C:\GIT\npbackup\tests || GOTO ERROR
 
-"%PYTHON32%" bin\compile.py --sign "C:\ODJ\KEYS\NetInventEV.dat" %*
+"%PYTHON32%" bin\compile.py --sign %*
 
 "%PYTHON64%" RESTIC_SOURCE_FILES/update_restic.py || GOTO ERROR
 
@@ -53,7 +53,7 @@ SET PYTHONPATH=c:\GIT\npbackup
 
 "%PYTHON32-LEGACY%" -m pytest C:\GIT\npbackup\tests || GOTO ERROR
 
-"%PYTHON32-LEGACY%" bin\compile.py --sign "C:\ODJ\KEYS\NetInventEV.dat" %*
+"%PYTHON32-LEGACY%" bin\compile.py --sign %*
 GOTO END
 
 :ERROR

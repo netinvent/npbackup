@@ -40,15 +40,12 @@ sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), ".."
 
 from npbackup.path_helper import BASEDIR
 
-SIGN_EXTERNALY = False
-sign = None
 if os.name == "nt":
     EXTERNAL_SIGNER = r"C:\ev_signer_npbackup\ev_signer_npbackup.cmd"
     if os.path.isfile(EXTERNAL_SIGNER):
-        SIGN_EXTERNALY = True
+        CAN_SIGN = True
     else:
-        SIGN_EXTERNALY = False
-        from npbackup.windows.sign_windows import sign
+        CAN_SIGN = False
 
 try:
     from npbackup.audience import CURRENT_AUDIENCE, AUDIENCES
@@ -159,7 +156,7 @@ def _compile(
     build_type: str,
     onefile: bool,
     create_tar_only: bool,
-    ev_cert_data: Optional[str] = None,
+    sign: bool,
     sign_only: bool = False,
     npbackup_version: Optional[str] = None,
 ):
@@ -353,14 +350,14 @@ def _compile(
     if initial_source_program != audience_source_program:
         shutil.move(audience_source_program, initial_source_program)
 
-    if os.name == "nt" and ev_cert_data:
+    if os.name == "nt" and sign:
         compiled_output_dir = os.path.join(
             OUTPUT_DIR, f"{executable_name}-{build_type}{NUITKA_STANDALONE_SUFFIX}"
         )
         npbackup_executable = os.path.join(
             compiled_output_dir, f"{executable_name}-{build_type}.exe"
         )
-        if SIGN_EXTERNALY:
+        if CAN_SIGN:
             logger.info(f"Signing with external signer {EXTERNAL_SIGNER}")
             cmd = f"{EXTERNAL_SIGNER} --executable {npbackup_executable}"
             logger.debug(cmd)
@@ -368,16 +365,8 @@ def _compile(
             if exit_code != 0:
                 logger.error(f"Could not sign: {output}")
                 errors = True
-        elif os.path.isfile(ev_cert_data):
-            logger.info(f"Signing with internal signer {ev_cert_data}")
-            sign(
-                executable=npbackup_executable,
-                arch=arch,
-                ev_cert_data=ev_cert_data,
-                dry_run=args.dry_run,
-            )
         else:
-            logger.error(f"Cannot sign windows executable: {SIGN_EXTERNALY} {ev_cert_data}")
+            logger.error(f"Cannot sign windows executable: {cmd}")
             errors = True
 
     if not onefile:
@@ -472,8 +461,7 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--sign",
-        type=str,
-        dest="ev_cert_data",
+        action="store_true",
         default=False,
         required=False,
         help="Digitally sign windows executables",
@@ -540,7 +528,7 @@ if __name__ == "__main__":
                     build_type=build_type,
                     onefile=args.onefile,
                     create_tar_only=create_tar_only,
-                    ev_cert_data=args.ev_cert_data,
+                    sign=args.sign,
                     sign_only=sign_only,
                     npbackup_version=npbackup_version,
                 )
