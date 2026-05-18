@@ -91,14 +91,14 @@ def _set_audience(audience: str):
         for line in file:
             if line.startswith("AUDIENCES"):
                 if '"{audience}"' not in line:
-                    bad_audience = True
+                    bad_audience = line
             if line.startswith("CURRENT_AUDIENCE"):
                 line.split("=")[1].strip().strip("'\"")
                 print(f"CURRENT_AUDIENCE = \"{audience}\"")
             else:
                 print(line, end="")
     if bad_audience:
-        raise ValueError(f"Bogus audience {audience} not in {line}")
+        raise ValueError(f"Bogus audience {audience} not in {bad_audience}")
     os.environ["_NPBACKUP_AUDIENCE"] = audience
 
 
