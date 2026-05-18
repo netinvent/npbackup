@@ -1447,7 +1447,9 @@ class NPBackupRunner:
                 self.write_logs("Running {}-execution commands".format(exec_type))
                 for command in command_list:
                     if backup_result is not None:
-                        command = command.replace("___BACKUPRESULT___", "0" if backup_result else "1")
+                        command = command.replace(
+                            "___BACKUPRESULT___", "0" if backup_result else "1"
+                        )
                     exit_code, output = command_runner(
                         command, shell=True, timeout=per_command_timeout
                     )
