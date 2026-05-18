@@ -1554,7 +1554,7 @@ def handle_gui_events(
             tree = env_variables_tree
             option_key = "env.env_variables"
 
-        if event.startswith("--ADD-"):
+        if isinstance(event, str) and event.startswith("--ADD-"):
             icon = TREE_ICON
             if "ENV-VARIABLE" in event or "ENCRYPTED-ENV-VARIABLE" in event:
                 var_name = sg.popup_get_text(_t("config_gui.enter_var_name"))
@@ -1609,7 +1609,7 @@ def handle_gui_events(
                     if tree.tree_dict.get(node):
                         tree.delete(node)
                     tree.insert("", node, node, node, icon=icon)
-        if event.startswith("--REMOVE-"):
+        if isinstance(event, str) and event.startswith("--REMOVE-"):
             for key in values[option_key]:
                 if object_type != "groups" and tree.tree_dict[key].icon in (
                     INHERITED_TREE_ICON,
