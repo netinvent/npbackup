@@ -7,6 +7,7 @@ Caveats:
  - We need to use apscheduler (wait for v4)
  - We need a resurrect service config for systemd and windows service
  - Upgrade checks will be done via service
+Note to myself: Have a look at https://github.com/oxylabs/python-script-service-guide?tab=readme-ov-file for implementation
 
 ### Fallback (considered)
  - Repository uri should allow to have a fallback server
@@ -44,19 +45,21 @@ Perhaps, provide an alternative dump | npbackup-cli syntax.
 In the latter case, shell (bash, zsh, ksh) would need `shopt -o pipefail`, and minimum backup size set.
 The pipefail will not be given to npbackup-cli, so we'd need to wrap everything into a script, which defeats the prometheus metrics.
 
-### Key management
+### Key management (done)
 Possibility to add new keys to current repo, and delete old keys if more than one key present
 
 ### Provision server (planned)
 Possibility to auto load repo settings for new instances from central server
 We actually could improve upgrade_server to do so
 
-### Hyper-V Backup plugin
+### Hyper-V Backup plugin (planned)
 That's another story. Creating snapshots and dumping VM is easy
-Shall we go that route since a lot of good commercial products exist ? Probably not
+Shall we go that route since a lot of good commercial products exist ? Yes, because open source !
 
-### Full disk cloning
-Out of scope of NPBackup. There are plenty of good tools out there, designed for that job
+### Full disk cloning (planned)
+Basically out of scope of NPBackup initial plans, but hey, why not ?
+On Windows, this requires leveraging VSS, on Linux, it's thinLVM snapshots or at least freeze/thaw.
+Definitely not an easy part.
 
 ### Rust rewrite
 That would be my "dream" project in order to learn a new language in an existing usecase.
@@ -65,7 +68,7 @@ But this would need massive sponsoring as I couldn't get the non-paid time to do
 ### More backends support
 Rustic is a current alternative backend candidate I tested. Might happen if enough traction.
 
-### Branding manager
+### Branding manager (done)
 We might want to put all files into `resources` directory and have `customization.py` files generated from there.
 
 ### New installer

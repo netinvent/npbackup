@@ -2,6 +2,54 @@
 ## Planned ahead
  ! Operation center must be able to create scheduled tasks for every operation
 
+## 3.1.0
+
+This version is mainly focused around a GUI refactor, including a new easy to use configuration wizard,
+as well as a newer monitoring system 
+
+#### Disruptive changes
+ - Previously deprecrated parameters have been removed, see 3.0.4 for details
+ - Email notification options have been changed
+   - The configuration files will be automatically migrated on first run
+   - The new configuration allows to set different email addresses for different operations and to use a custom
+ - Monitoring settings have been changed
+   - The configuration files will be automatically migrated on first run
+   - The new configuration allows to set different monitoring settings per repository while still inheriting global identity settings
+
+#### Features
+ - Implemented a new monitoring system
+   - Prometheus metrics have been updated to include new labels
+   - Zabbix 6.0+ is now supported
+     - Zabbix monitoring can be setup up via Zabbix trapper using Zabbix protocol, or by sending raw JSON that will be parsed server side
+   - Healthchecks.io is now supported
+   - JSON webhooks are now supported
+   - Email notifications are now supported with more flexible configuration
+ - Storage heuristicis:
+   - New storage heuristics allow to raise possible problems in monitoring and alerting systems
+   - Storage heuristics analyze decreases/increases of backup volume to predict potential missing items
+   - Storage heuristics analyze modified files counts to predict possible ransomware attacks
+ - GUI:
+   - A new configuration wizard has been added to simplify first time setups
+   - Windows are now DPI aware and resizable
+   - Interface can now switch light and dark themes
+   - Overall interface cosmetic improvements
+   - Rescale GUI for screens with 1280x800 size
+ - CLI:
+
+ - SFTP storage backend now works natively on Windows 7+
+ - Building
+   - Multiple private audiences are now accepted
+   - Added migration path from public to private audiences
+   - Add AES key rotation
+   
+#### Fixes
+ - A lot of smaller fixes, especially GUI related, see commit history for more details
+ - Avoid showing repo password on failed init
+
+#### Misc
+ - Legacy 64-bit builds now work with faster and less memory hungry json implementation (msgspec)
+ - Updated Nuitka compiler from 2.7.16 to 4.0.7
+
 ## 3.0.4
 #### Disruptive changes
  - compression option is decided at repo level, so it was moved to repo_opts section
