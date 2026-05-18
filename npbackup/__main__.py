@@ -31,7 +31,7 @@ from npbackup import key_management
 # Nuitka compat, see https://stackoverflow.com/a/74540217
 try:
     # pylint: disable=W0611 (unused-import)
-    from charset_normalizer import md__mypyc  # noqa
+    from charset_normalizer import md__mypyc  # type: ignore # noqa
 except ImportError:
     pass
 
@@ -742,7 +742,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         sys.exit(1)
 
 
-def main():
+def main() -> None:
     # Make sure we log execution time and error state at the end of the program
     atexit.register(
         execution_logs,
@@ -758,7 +758,7 @@ def main():
     )
     try:
         cli_interface()
-        worst_error = logger.get_worst_logger_level(all_time=True)
+        worst_error = logger.get_worst_logger_level(all_time=True)  # type: ignore
         if worst_error >= logging.WARNING:
             sys.exit(worst_error)
         sys.exit()

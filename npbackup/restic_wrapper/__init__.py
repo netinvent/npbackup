@@ -66,7 +66,7 @@ class ResticRunner:
         self,
         repository: str,
         password: str,
-        binary_search_paths: List[str] = None,
+        binary_search_paths: Optional[List[str]] = None,
     ) -> None:
         self._stdout = None
         self._stderr = None
@@ -366,7 +366,7 @@ class ResticRunner:
         return self._executor_running
 
     @property
-    def repository_anonymous(self):
+    def repository_anonymous(self) -> Optional[str]:
         """
         Make repository URI anonymous
         NPF-SEC-00014: Don't leak repository url including passwords in logs/ui
@@ -379,7 +379,7 @@ class ResticRunner:
         self,
         msg: str,
         level: str = "info",
-        raise_error: str = None,
+        raise_error: Optional[str] = None,
         ignore_additional_json: bool = False,
     ):
         """
