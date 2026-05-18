@@ -24,6 +24,115 @@ for _scheme in ("http+unix", "https+unix"):
 import ipaddress
 
 
+def _validate_restic_repo(parsed: dict) -> None:
+    """
+    Raises ValueError if validation fails.
+    Returns None if valid.
+    """
+    backend_type = parsed.get("backend_type")
+
+    def validate_port(port) -> None:
+        if port is None:
+            return
+        if not (1 <= port <= 65535):
+            raise ValueError(f"Invalid port: {port}")
+
+    def validate_hostname(host) -> None:
+        if not host:
+            raise ValueError("Missing host")
+
+        # Try IP (v4/v6)
+        try:
+            ipaddress.ip_address(host)
+            return
+        except ValueError:
+            pass
+
+        if len(host) > 253:  # DNS max length AFAIK
+            raise ValueError("Hostname too long")
+
+        labels = host.split(".")
+        hostname_re = re.compile(r"^[a-zA-Z0-9-]{1,63}$")
+
+        for label in labels:
+            if not hostname_re.match(label):
+                raise ValueError(f"Invalid hostname label: {label}")
+            if label.startswith("-") or label.endswith("-"):
+                raise ValueError(f"Invalid hostname label: {label}")
+
+    def validate_path(path) -> None:
+        if path is None:
+            raise ValueError("Missing path")
+        if not path.startswith("/"):
+            raise ValueError(f"Path must start with '/': {path}")
+        if "//" in path:
+            raise ValueError(f"Invalid path (double slash): {path}")
+
+    # AWS-style bucket rules (simplified but strict enough)
+    bucket_re = re.compile(r"^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$")
+
+    def validate_bucket(name) -> None:
+        if not name:
+            raise ValueError("Missing bucket/container name")
+
+        if not bucket_re.match(name):
+            raise ValueError(f"Invalid bucket name: {name}")
+
+        if ".." in name or ".-" in name or "-." in name:
+            raise ValueError(f"Invalid bucket name: {name}")
+
+    if backend_type == "rest":
+        if parsed.get("scheme") not in ("http", "https", "http+unix", "https+unix"):
+            raise ValueError(
+                f"REST backend validator requires http/https, http+unix, or https+unix scheme, got: {parsed}"
+            )
+
+        # http+unix / https+unix URIs with a triple-slash (e.g.
+        # http+unix:///tmp/sock:/repo) have an empty netloc, so host is
+        # legitimately None. Only validate the hostname when it is present.
+        if parsed.get("host") is not None:
+            validate_hostname(parsed.get("host"))
+        elif parsed.get("scheme") not in ("http+unix", "https+unix"):
+            raise ValueError("Missing host")
+        validate_port(parsed.get("port"))
+        validate_path(parsed.get("path"))
+
+    elif backend_type == "sftp":
+        validate_hostname(parsed.get("host"))
+
+        path = parsed.get("path")
+        if not path:
+            raise ValueError("Missing path")
+
+    elif backend_type == "s3":
+        validate_bucket(parsed.get("bucket"))
+        endpoint = parsed.get("endpoint")
+        if endpoint:
+            # port is now stored as a separate field
+            validate_hostname(endpoint)
+            validate_port(parsed.get("port"))
+
+    elif backend_type in ("b2", "gs"):
+        validate_bucket(parsed.get("bucket"))
+
+    elif backend_type in ("azure", "swift"):
+        validate_bucket(parsed.get("container"))
+
+    elif backend_type == "rclone":
+        if not parsed.get("remote"):
+            raise ValueError("Missing rclone remote")
+
+    elif backend_type == "local":
+        path = parsed.get("path")
+        if not path:
+            raise ValueError("Missing local path")
+        if "\0" in path:
+            raise ValueError("Invalid local path")
+
+    else:
+        raise ValueError(f"Unknown backend: {backend_type}")
+
+
 def parse_restic_repo(repo_uri: str) -> dict:
     """
     Parse a restic repository URI into structured components
@@ -142,10 +251,11 @@ def parse_restic_repo(repo_uri: str) -> dict:
 
                 return {
                     "backend_type": "s3",
-                    "endpoint": parsed.netloc,
+                    "endpoint": parsed.hostname,
                     "bucket": bucket,
                     "path": path,
-                    "secure": parsed.scheme == "https",
+                    "port": parsed.port,
+                    "scheme": parsed.scheme,
                 }
 
             parts = rest.split("/", 2)
@@ -155,7 +265,9 @@ def parse_restic_repo(repo_uri: str) -> dict:
                     "backend_type": "s3",
                     "endpoint": None,
                     "bucket": parts[0],
+                    "port": None,
                     "path": None,
+                    "scheme": None,
                 }
 
             # heuristic: first part contains dot or colon → endpoint
@@ -181,6 +293,7 @@ def parse_restic_repo(repo_uri: str) -> dict:
                     "port": port,
                     "bucket": bucket,
                     "path": path,
+                    "scheme": None,
                 }
             else:
                 endpoint = None
@@ -191,7 +304,9 @@ def parse_restic_repo(repo_uri: str) -> dict:
                 "backend_type": "s3",
                 "endpoint": endpoint,
                 "bucket": bucket,
+                "port": None,
                 "path": path,
+                "scheme": None,
             }
 
         def _parse_b2(rest: str) -> dict:
@@ -270,116 +385,6 @@ def parse_restic_repo(repo_uri: str) -> dict:
         # Unknown backend → restic treats as local path
         return _parse_local(repo_uri)
 
-    def _validate_restic_repo(parsed: dict) -> None:
-        """
-        Raises ValueError if validation fails.
-        Returns None if valid.
-        """
-
-        backend_type = parsed.get("backend_type")
-
-        def validate_port(port) -> None:
-            if port is None:
-                return
-            if not (1 <= port <= 65535):
-                raise ValueError(f"Invalid port: {port}")
-
-        def validate_hostname(host) -> None:
-            if not host:
-                raise ValueError("Missing host")
-
-            # Try IP (v4/v6)
-            try:
-                ipaddress.ip_address(host)
-                return
-            except ValueError:
-                pass
-
-            if len(host) > 253:  # DNS max length AFAIK
-                raise ValueError("Hostname too long")
-
-            labels = host.split(".")
-            hostname_re = re.compile(r"^[a-zA-Z0-9-]{1,63}$")
-
-            for label in labels:
-                if not hostname_re.match(label):
-                    raise ValueError(f"Invalid hostname label: {label}")
-                if label.startswith("-") or label.endswith("-"):
-                    raise ValueError(f"Invalid hostname label: {label}")
-
-        def validate_path(path) -> None:
-            if path is None:
-                raise ValueError("Missing path")
-            if not path.startswith("/"):
-                raise ValueError(f"Path must start with '/': {path}")
-            if "//" in path:
-                raise ValueError(f"Invalid path (double slash): {path}")
-
-        # AWS-style bucket rules (simplified but strict enough)
-        bucket_re = re.compile(r"^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$")
-
-        def validate_bucket(name) -> None:
-            if not name:
-                raise ValueError("Missing bucket/container name")
-
-            if not bucket_re.match(name):
-                raise ValueError(f"Invalid bucket name: {name}")
-
-            if ".." in name or ".-" in name or "-." in name:
-                raise ValueError(f"Invalid bucket name: {name}")
-
-        if backend_type == "rest":
-            if parsed.get("scheme") not in ("http", "https", "http+unix", "https+unix"):
-                raise ValueError(
-                    f"REST backend validator requires http/https, http+unix, or https+unix scheme, got: {parsed}"
-                )
-
-            # http+unix / https+unix URIs with a triple-slash (e.g.
-            # http+unix:///tmp/sock:/repo) have an empty netloc, so host is
-            # legitimately None. Only validate the hostname when it is present.
-            if parsed.get("host") is not None:
-                validate_hostname(parsed.get("host"))
-            elif parsed.get("scheme") not in ("http+unix", "https+unix"):
-                raise ValueError("Missing host")
-            validate_port(parsed.get("port"))
-            validate_path(parsed.get("path"))
-
-        elif backend_type == "sftp":
-            validate_hostname(parsed.get("host"))
-
-            path = parsed.get("path")
-            if not path:
-                raise ValueError("Missing path")
-
-        elif backend_type == "s3":
-            validate_bucket(parsed.get("bucket"))
-
-            endpoint = parsed.get("endpoint")
-            if endpoint:
-                # port is now stored as a separate field
-                validate_hostname(endpoint)
-                validate_port(parsed.get("port"))
-
-        elif backend_type in ("b2", "gs"):
-            validate_bucket(parsed.get("bucket"))
-
-        elif backend_type in ("azure", "swift"):
-            validate_bucket(parsed.get("container"))
-
-        elif backend_type == "rclone":
-            if not parsed.get("remote"):
-                raise ValueError("Missing rclone remote")
-
-        elif backend_type == "local":
-            path = parsed.get("path")
-            if not path:
-                raise ValueError("Missing local path")
-            if "\0" in path:
-                raise ValueError("Invalid local path")
-
-        else:
-            raise ValueError(f"Unknown backend: {backend_type}")
-
     if isinstance(repo_uri, str):
         repo_uri_dict = _parse_restic_repo(repo_uri)
         _validate_restic_repo(repo_uri_dict)
@@ -401,6 +406,7 @@ def parse_restic_repo(repo_uri: str) -> dict:
 
 def build_restic_uri(_repo_uri_dict: dict, anonymized: bool = False) -> str:
     repo_uri_dict = copy.deepcopy(_repo_uri_dict)
+    _validate_restic_repo(repo_uri_dict)
     backend_type = repo_uri_dict.get("backend_type")
 
     host = repo_uri_dict.get("host")
@@ -464,19 +470,16 @@ def build_restic_uri(_repo_uri_dict: dict, anonymized: bool = False) -> str:
 
     elif backend_type == "s3":
         endpoint = repo_uri_dict.get("endpoint")
-        bucket = repo_uri_dict["bucket"]
+        bucket = repo_uri_dict.get("bucket")
         path = repo_uri_dict.get("path")
+        scheme = repo_uri_dict.get("scheme")
+        port = repo_uri_dict.get("port")
         if endpoint:
-            secure = repo_uri_dict.get("secure")
-            if secure is not None:
-                # URL-style endpoint (s3:https://...): port is already in netloc
-                scheme = "https" if secure else "http"
+            if scheme is not None:
                 endpoint = f"{scheme}://{endpoint}"
-            else:
-                # Plain endpoint: reattach port when present
-                port = repo_uri_dict.get("port")
-                if port is not None:
-                    endpoint = f"{endpoint}:{port}"
+
+            if port is not None:
+                endpoint = f"{endpoint}:{port}"
             return (
                 f"{backend_type}:{endpoint}/{bucket}/{path}"
                 if path

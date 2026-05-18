@@ -851,7 +851,7 @@ def start_wizard(full_config: dict, config_file: str):
         host_value = values.get("-HOST-", "").strip().rstrip("/")
         if host_value:
             if current_backend in ("rest", "s3"):
-                # The -HOST- field is pre-filled with "scheme://host" for REST.
+                # The -HOST- field is pre-filled with "scheme://host" for REST or S3.
                 # Split those back out so build_restic_uri doesn't double the scheme.
                 _parsed = urlparse(host_value)
                 if _parsed.scheme in ("http", "https"):
@@ -874,6 +874,18 @@ def start_wizard(full_config: dict, config_file: str):
                 repo_uri_dict["scheme"] = values.get("-SCHEME-")
             else:
                 repo_uri_dict["host"] = host_value
+            # On S3, we don't have host but endpoint, and path bucket instead of path
+            if backend_type == "s3":
+                repo_uri_dict["endpoint"] = repo_uri_dict["host"]
+                del repo_uri_dict["host"]
+                if repo_uri_dict["path"]:
+                    paths = repo_uri_dict["path"].split("/")
+                    if len(paths) > 1:
+                        repo_uri_dict["bucket"] = paths[0]
+                        repo_uri_dict["path"] = "/".join(paths[1:])
+                    else:
+                        repo_uri_dict["bucket"] = paths[0]
+                        del repo_uri_dict["path"]
         port_str = values.get("-HOST-PORT-", "").strip()
         if port_str.isdigit():
             repo_uri_dict["port"] = int(port_str)
@@ -950,6 +962,7 @@ def start_wizard(full_config: dict, config_file: str):
             wizard["-SFTP-REST-USERNAME-LABEL-"].update(visible=True)
             wizard["-SFTP-REST-USERNAME-"].update(visible=True)
         if backend_type in ("rest", "s3"):
+            wizard["-SCHEME-LABEL-"].update(visible=True)
             wizard["-SCHEME-"].update(visible=True)
             wizard["-SCHEME-"].update(value="https")
         if backend_type == "sftp":
@@ -959,7 +972,6 @@ def start_wizard(full_config: dict, config_file: str):
             wizard["-SSH-KEY-FILE-LABEL-"].update(visible=True)
             wizard["repo_opts.ssh_key_file"].update(visible=True)
         if backend_type == "rest":
-            wizard["-SCHEME-LABEL-"].update(visible=True)
             wizard["-REST-PASSWORD-LABEL-"].update(visible=True)
             wizard["-REST-PASSWORD-"].update(visible=True)
         if backend_type == "s3":
@@ -1033,10 +1045,18 @@ def start_wizard(full_config: dict, config_file: str):
 
             # Show the full URI in the repo_uri field so the user sees exactly
             # what is stored in the config.
-            wizard["-PATH-"].update(repo_uri_dict.get("path") or "")
-            wizard["-HOST-"].update(repo_uri_dict.get("host") or "")
+            if backend_type == "s3":
+                _path = repo_uri_dict.get("bucket")
+                if _path and repo_uri_dict.get("path"):
+                    _path += f"/{repo_uri_dict.get('path')}"
+                wizard["-PATH-"].update(_path)
+            else:
+                wizard["-PATH-"].update(repo_uri_dict.get("path") or "")
+            wizard["-HOST-"].update(
+                repo_uri_dict.get("host") or repo_uri_dict.get("endpoint") or ""
+            )
 
-            # Port field (relevant for REST and SFTP)
+            # Port field (relevant for REST, SFTP or s3)
             wizard["-HOST-PORT-"].update(str(repo_uri_dict.get("port") or ""))
 
             if repo_uri_dict.get("scheme", None) is not None:
@@ -1393,11 +1413,12 @@ def start_wizard(full_config: dict, config_file: str):
             try:
                 repo_uri = build_restic_uri(repo_uri_dict)
             except (KeyError, ValueError) as exc:
-                logger.debug(
+                logger.error(
                     "Could not build repo URI from user input, not saving repo URI in config",
                     exc_info=exc,
                 )
-                repo_uri = None
+                popup_error(_t("config_gui.repo_uri_invalid"))
+                continue
 
             full_config = npbackup.gui.common_gui_logic.update_config_dict(
                 wizard,
