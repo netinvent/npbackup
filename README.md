@@ -27,10 +27,7 @@ Still, NPBackup repos are basically managed by restic, and can be viewed / resto
 ## NPBackup Design Philosophy
 
 NPBackup is a multiparadigm backup solution which tries to solve two major backup problems, server and laptop backups!  
-The core design idea is to make backups available (obviously !), even partial, on system / network failures.  
-
->[!TIP]
-> It's always better to have some data than none
+The core design idea is to make backups available (obviously !), even partiallly, on system / network failures.  
 
 The NPBackup design is the result of a multitude of real world experience. Examples include:
 
@@ -232,9 +229,10 @@ You can also use `--log-file` to specify an alternative log file path.
 NPBackup comes with integrated auto upgrade function that will run regardless of program failures, in order to lessen the maintenance burden.  
 The upgrade server runs a python asgi web server with integrated HTTP basic authentication, that can further be put behind an SSL proxy like HaProxy. See the wiki for more.
 
-## Branding
+## Branding / self compilation
 
-NPBackup is fully customizable and branding can be done easily. See the compilation instructions in the wiki for more.
+NPBackup is fully customizable and branding can be done easily. See the compilation instructions in the wiki for more.  
+Compilation requires a valid Python 3.8+ interpreter as well as the excellent Nuitka compiler.  
 
 ## Misc
 
