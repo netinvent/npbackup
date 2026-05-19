@@ -14,6 +14,7 @@ export PYTHONPATH=/opt/npbackup
 /opt/npbackup/venv/bin/python RESTIC_SOURCE_FILES/update_restic.py || exit 1
 
 /opt/npbackup/venv/bin/python -m pip install --upgrade pip || exit 1
+/opt/npbackup/venv/bin/python -m pip install --upgrade setuptools wheel || exit 1
 /opt/npbackup/venv/bin/python -m pip install pytest ||exit 1
 /opt/npbackup/venv/bin/python -m pip install --upgrade -r npbackup/requirements.txt || exit 1
 

@@ -14,6 +14,9 @@ ofunctions.mailer>=1.3.1
 # keep in mind that freesimplegui might higher required python version in the future
 freesimplegui @ git+https://github.com/netinvent/FreeSimpleGUI.git@npb-fixes#c7b0027f2ec369b77f8df9c1d0438f2701057bbe
 requests
+# For ARM builds done on Debian 11 with OpenSSL1.1.0 compat we need urllib lower than v2
+urllib3>=2.0.0; python_version >= '3.9'
+urllib3<2.0.0; python_version <= '3.8'
 ruamel.yaml
 psutil
 pyyaml  # Required for python-i18n / i18nice which does not work with ruamel.yaml
@@ -35,10 +38,11 @@ msgspec; python_version >= '3.8'
 # sv_ttk
 # For now we'll use a custom fork
 reskinner>=4.6.0
-zabbix-utils>=2.0.4
+zabbix-utils>=2.0.4; python_version >= '3.8'
 # sslpsk is not needed with Python 3.13+ since it's included in standard ssl lib
 # sslpsk has no prebuilt macos binaries for python and I can't get bothered to figure out how to compile it on macos
-sslpsk3>=2.0.0; python_version < '3.13' and platform_system != "Darwin"
+sslpsk3>=2.0.0;  python_version >= '3.8' and python_version < '3.13' and platform_system != "Darwin"
 python-crontab>=3.3.0; platform_system != "Windows"
 windows_tools.powershell>=0.7.1; platform_system == "Windows"
-pillow
+# For pillow to be compiled on earlier python, we might need apt install libjpeg-dev zlib1g-dev (or libjpeg62-turbo-dev on Debian 11 or libjpeg8-turbo-dev on more recent ones)
+pillow; python_version >= '3.8'

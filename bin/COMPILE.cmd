@@ -19,6 +19,7 @@ SET PYTHONPATH=c:\GIT\npbackup
 
 :: BUILD 64-BIT VERSION
 "%PYTHON64%" -m pip install --upgrade pip || GOTO ERROR
+"%PYTHON64%" -m pip install --upgrade setuptools wheel || GOTO ERROR
 "%PYTHON64%" -m pip install pytest
 "%PYTHON64%" -m pip install --upgrade -r npbackup/requirements.txt || GOTO ERROR
 
@@ -28,6 +29,7 @@ SET PYTHONPATH=c:\GIT\npbackup
 
 :: BUILD 64-BIT LEGACY VERSION
 "%PYTHON64-LEGACY%" -m pip install --upgrade pip || GOTO ERROR
+"%PYTHON64-LEGACY%" -m pip install --upgrade setuptools wheel || GOTO ERROR
 "%PYTHON64-LEGACY%" -m pip install pytest
 "%PYTHON64-LEGACY%" -m pip install --upgrade -r npbackup/requirements.txt || GOTO ERROR
 
@@ -37,6 +39,7 @@ SET PYTHONPATH=c:\GIT\npbackup
 
 :: BUILD 32-BIT VERSION
 "%PYTHON32%" -m pip install --upgrade pip || GOTO ERROR
+"%PYTHON32%" -m pip install --upgrade setuptools wheel || GOTO ERROR
 "%PYTHON32%" -m pip install pytest
 "%PYTHON32%" -m pip install --upgrade -r npbackup/requirements-win32.txt || GOTO ERROR
 
@@ -48,6 +51,7 @@ SET PYTHONPATH=c:\GIT\npbackup
 
 :: BUILD 32-BIT LEGACY VERSION
 "%PYTHON32-LEGACY%" -m pip install --upgrade pip || GOTO ERROR
+"%PYTHON32-LEGACY%" -m pip install --upgrade setuptools wheel || GOTO ERROR
 "%PYTHON32-LEGACY%" -m pip install pytest
 "%PYTHON32-LEGACY%" -m pip install --upgrade -r npbackup/requirements-win32.txt || GOTO ERROR
 
