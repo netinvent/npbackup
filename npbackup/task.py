@@ -121,11 +121,11 @@ def create_scheduled_task(
     object_type: str,
     object_name: str,
     user_credentials: Union[Tuple[str, str], bool] = False,
-    start_date_time: datetime.datetime = None,
-    interval: int = None,
-    interval_unit: str = None,
-    days: List[str] = None,
-    force: bool = True,
+    start_date_time: Optional[datetime.datetime] = None,
+    interval: Optional[int] = None,
+    interval_unit: Optional[str] = None,
+    days: Optional[List[str]] = None,
+    force: Optional[bool] = True,
 ):
     """
     Creates a scheduled task for NPBackup
