@@ -6,7 +6,7 @@ __intname__ = "npbackup_cli_tests"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2026032001"
+__build__ = "2026051901"
 
 
 """
@@ -139,21 +139,21 @@ def sha256sum(file):
         raise IOError('Cannot create SHA256 sum for file "%s": %s' % (file, exc))
 
 
-def _disabled_test_download_restic_binaries():
+def test_download_restic_binaries():
     """
     We must first download latest restic binaries to make sure we can run all tests
     Currently we only run these on amd64
     """
-    # We'll try to download restic binaries, but it may fail on github actions because of rate limiting
-    # so we allow failure for this test
-    result = download_restic_binaries_for_arch()
+    # We expect to already have downloaded the restic binaries on non github runners so we'll skip
+    # this test to avoid github API rate limiting on downloads
     github_actions = running_on_github_actions()
-    print(f"DOWNLOAD result: {result}, github actions: {github_actions}")
     if github_actions:
-        assert True, "Allow restic download failure on github actions because of rate limiting"
-    else:
+        result = download_restic_binaries_for_arch()
+        print(f"DOWNLOAD result: {result}, github actions: {github_actions}")
         assert result is True, "Could not download restic binaries"
-
+    else:
+        assert True, "Allow restic download failure on github actions because of rate limiting"
+        
 
 def test_npbackup_cli_no_config():
     sys.argv = [""]  # Make sure we don't get any pytest args
