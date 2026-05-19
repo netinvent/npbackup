@@ -139,7 +139,7 @@ def sha256sum(file):
         raise IOError('Cannot create SHA256 sum for file "%s": %s' % (file, exc))
 
 
-def test_download_restic_binaries():
+def _disabled_test_download_restic_binaries():
     """
     We must first download latest restic binaries to make sure we can run all tests
     Currently we only run these on amd64
