@@ -1541,13 +1541,7 @@ def handle_gui_events(
         elif "MONITORING-LABEL" in event:
             tree = monitoring_additional_labels_tree
             option_key = "monitoring.additional_labels"
-        elif (
-            "ENCRYPTED-ENV-VARIABLE" in event
-            or "S3-IDENTITY--" in event
-            or "AZURE-IDENTITY--" in event
-            or "B2-IDENTITY--" in event
-            or "GS-IDENTITY--" in event
-        ):
+        elif "ENCRYPTED-ENV-VARIABLE" in event:
             tree = encrypted_env_variables_tree
             option_key = "env.encrypted_env_variables"
         elif "ENV-VARIABLE" in event:
@@ -1576,30 +1570,47 @@ def handle_gui_events(
                 or "B2-IDENTITY--" in event
                 or "GS-IDENTITY--" in event
             ):
+                tree = {
+                    "env.env_variables": env_variables_tree,
+                    "env.encrypted_env_variables": encrypted_env_variables_tree,
+                }
                 if "S3-IDENTITY--" in event:
-                    var_names = ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"]
+                    var_names = ["AWS_ACCESS_KEY_ID"]
+                    encrypted_var_names = ["AWS_SECRET_ACCESS_KEY"]
                 elif "AZURE-IDENTITY--" in event:
-                    var_names = [
+                    var_names = ["AZURE_ACCOUNT_NAME"]
+                    encrypted_var_names = [
                         "AZURE_ACCOUNT_KEY",
                         "AZURE_ACCOUNT_SAS",
-                        "AZURE_ACCOUNT_NAME",
                     ]
                 elif "B2-IDENTITY--" in event:
-                    var_names = ["B2_ACCOUNT_ID", "B2_ACCOUNT_KEY"]
+                    var_names = ["B2_ACCOUNT_ID"]
+                    encrypted_var_names = ["B2_ACCOUNT_KEY"]
                 elif "GS-IDENTITY--" in event:
-                    var_names = [
-                        "GOOGLE_PROJECT_ID",
-                        "GOOGLE_APPLICATION_CREDENTIALS",
-                    ]
+                    var_names = ["GOOGLE_PROJECT_ID"]
+                    encrypted_var_names = ["GOOGLE_APPLICATION_CREDENTIALS"]
                 else:
                     popup_error("Bad identity given")
                     return
                 for var_name in var_names:
                     var_value = sg.popup_get_text(var_name)
                     if var_value:
-                        if tree.tree_dict.get(var_name):
-                            tree.delete(var_name)
-                        tree.insert("", var_name, var_name, [var_value], icon=icon)
+                        if env_variables_tree.tree_dict.get(var_name):
+                            env_variables_tree.delete(var_name)
+                        env_variables_tree.insert(
+                            "", var_name, var_name, [var_value], icon=icon
+                        )
+                    else:
+                        popup_error(_t("config_gui.value_cannot_be_empty"))
+                        return
+                for var_name in encrypted_var_names:
+                    var_value = sg.popup_get_text(var_name)
+                    if var_value:
+                        if encrypted_env_variables_tree.tree_dict.get(var_name):
+                            encrypted_env_variables_tree.delete(var_name)
+                        encrypted_env_variables_tree.insert(
+                            "", var_name, var_name, [var_value], icon=icon
+                        )
                     else:
                         popup_error(_t("config_gui.value_cannot_be_empty"))
                         return
@@ -1621,7 +1632,11 @@ def handle_gui_events(
                     )
                     continue
                 tree.delete(key)
-        window[option_key].Update(values=tree)
+        if isinstance(tree, dict):
+            for _option_key, _tree in tree.items():
+                window[_option_key].update(values=_tree)
+        else:
+            window[option_key].Update(values=tree)
         return
 
     if event == "-TEST-EMAIL-":

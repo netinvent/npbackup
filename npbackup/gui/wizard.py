@@ -1079,14 +1079,20 @@ def start_wizard(full_config: dict, config_file: str):
                     )
             elif backend_type == "b2":
                 wizard["-B2_ACCOUNT_ID-"].update(
-                    npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                    full_config.g(
+                        f"{OBJECT_TYPE}.{OBJECT_NAME}.env.env_variables.B2_ACCOUNT_ID",
+                        default="",
+                    )
                 )
                 wizard["-B2_ACCOUNT_KEY-"].update(
                     npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
                 )
             elif backend_type == "azure":
                 wizard["-AZURE_ACCOUNT_NAME-"].update(
-                    npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                    full_config.g(
+                        f"{OBJECT_TYPE}.{OBJECT_NAME}.env.env_variables.AZURE_ACCOUNT_NAME",
+                        default="",
+                    )
                 )
                 wizard["-AZURE_ACCOUNT_KEY-"].update(
                     npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
@@ -1096,14 +1102,20 @@ def start_wizard(full_config: dict, config_file: str):
                 )
             elif backend_type == "gs":
                 wizard["-GOOGLE_PROJECT_ID-"].update(
-                    npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                    full_config.g(
+                        f"{OBJECT_TYPE}.{OBJECT_NAME}.env.env_variables.GOOGLE_PROJECT_ID",
+                        default="",
+                    )
                 )
                 wizard["-GOOGLE_APPLICATION_CREDENTIALS-"].update(
                     npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
                 )
             elif backend_type == "s3":
                 wizard["-AWS_ACCESS_KEY_ID-"].update(
-                    npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
+                    full_config.g(
+                        f"{OBJECT_TYPE}.{OBJECT_NAME}.env.env_variables.AWS_ACCESS_KEY_ID",
+                        default="",
+                    )
                 )
                 wizard["-AWS_SECRET_ACCESS_KEY-"].update(
                     npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
@@ -1341,6 +1353,9 @@ def start_wizard(full_config: dict, config_file: str):
         ## WIZARD STEP 7 ##
         if event == "-NEXT-" and current_tab == NUMBER_OF_TABS:
             repo_uri_dict = build_repo_uri_dict_from_values(repo_uri, values)
+            env_variables = full_config.g(
+                f"{OBJECT_TYPE}.{OBJECT_NAME}.env.env_variables", default={}
+            )
             encrypted_env_variables = full_config.g(
                 f"{OBJECT_TYPE}.{OBJECT_NAME}.env.encrypted_env_variables", default={}
             )
@@ -1349,7 +1364,7 @@ def start_wizard(full_config: dict, config_file: str):
                     values["-B2_ACCOUNT_ID-"]
                     != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
                 ):
-                    encrypted_env_variables["B2_ACCOUNT_ID"] = values["-B2_ACCOUNT_ID-"]
+                    env_variables["B2_ACCOUNT_ID"] = values["-B2_ACCOUNT_ID-"]
                 if (
                     values["-B2_ACCOUNT_KEY-"]
                     != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
@@ -1377,18 +1392,14 @@ def start_wizard(full_config: dict, config_file: str):
                     values["-AZURE_ACCOUNT_NAME-"]
                     != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
                 ):
-                    encrypted_env_variables["AZURE_ACCOUNT_NAME"] = values[
-                        "-AZURE_ACCOUNT_NAME-"
-                    ]
+                    env_variables["AZURE_ACCOUNT_NAME"] = values["-AZURE_ACCOUNT_NAME-"]
 
             elif repo_uri_dict["backend_type"] == "s3":
                 if (
                     values["-AWS_ACCESS_KEY_ID-"]
                     != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
                 ):
-                    encrypted_env_variables["AWS_ACCESS_KEY_ID"] = values[
-                        "-AWS_ACCESS_KEY_ID-"
-                    ]
+                    env_variables["AWS_ACCESS_KEY_ID"] = values["-AWS_ACCESS_KEY_ID-"]
                 if (
                     values["-AWS_SECRET_ACCESS_KEY-"]
                     != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
@@ -1402,9 +1413,7 @@ def start_wizard(full_config: dict, config_file: str):
                     values["-GOOGLE_PROJECT_ID-"]
                     != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
                 ):
-                    encrypted_env_variables["GOOGLE_PROJECT_ID"] = values[
-                        "-GOOGLE_PROJECT_ID-"
-                    ]
+                    env_variables["GOOGLE_PROJECT_ID"] = values["-GOOGLE_PROJECT_ID-"]
                 if (
                     values["-GOOGLE_APPLICATION_CREDENTIALS-"]
                     != npbackup.gui.common_gui_logic.ENCRYPTED_DATA_PLACEHOLDER
