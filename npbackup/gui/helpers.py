@@ -27,7 +27,7 @@ from resources.customization import (
 )
 from npbackup.core.runner import NPBackupRunner
 from npbackup.__debug__ import _DEBUG
-from npbackup.__env__ import GUI_CHECK_INTERVAL
+from npbackup.__env__ import GUI_CHECK_INTERVAL, PASSWORD_COMPLEXITY
 from resources.customization import PROGRAM_NAME, OEM_ICON, SUBTITLE_FONT
 
 logger = getLogger()
@@ -446,9 +446,14 @@ popup_error = lambda message: sg.popup(
     modal=True,
 )
 
-password_complexity = lambda password: re.findall(
-    r"^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$", password
-)
+
+def password_complexity(password: str) -> bool:
+    try:
+        return len(password) >= PASSWORD_COMPLEXITY["minlength"] and all(
+            re.search(regex, password) for regex in PASSWORD_COMPLEXITY["regexes"]
+        )
+    except (AttributeError, IndexError, ValueError, TypeError):
+        return False
 
 
 def wait_window() -> sg.Window:

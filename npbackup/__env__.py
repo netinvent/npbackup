@@ -63,3 +63,13 @@ STORAGE_HISTORY_EVALUATION_HISTORY_COUNT = 5
 
 # How many storage modified file points do we use for heuristic ransomware evaluation
 MODIFIED_FILES_HISTORY_EVALUATION_HISTORY_COUNT = 30
+
+# Default password complexity to check
+PASSWORD_COMPLEXITY = {
+    "minlength": 8,
+    "regexes": [
+        r"[a-z]",
+        r"[A-Z]",
+        r"[0-9]",
+    ],
+}
