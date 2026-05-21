@@ -1102,6 +1102,50 @@ def _migrate_config_dict(
 
         return full_config
 
+    def _migrate_encrypted_env_variables_3_0_0_to_3_1_0(
+        full_config: CommentedMap, object_name: str, object_type: str
+    ):
+        try:
+            env_variables = full_config.g(
+                f"{object_type}.{object_name}.env.env_variables", default=None
+            )
+            if not isinstance(env_variables, CommentedMap):
+                env_variables = CommentedMap()
+            encrypted_env_variables = full_config.g(
+                f"{object_type}.{object_name}.env.encrypted_env_variables", default=None
+            )
+            if isinstance(encrypted_env_variables, CommentedMap):
+                deletion_key_list = []
+                for key, value in encrypted_env_variables.items():
+                    if key in [
+                        "B2_ACCOUNT_ID",
+                        "AZURE_ACCOUNT_NAME",
+                        "GOOGLE_PROJECT_ID",
+                        "AWS_ACCESS_KEY_ID",
+                    ]:
+                        env_variables[key] = value
+                        full_config.g(f"{object_type}.{object_name}.env.env_variables")[
+                            key
+                        ] = value
+                        deletion_key_list.append(key)
+                        logger.info(
+                            f"Migrated encrypted env variables {key} to env variable"
+                        )
+                for key in deletion_key_list:
+                    del encrypted_env_variables[key]
+                full_config.s(
+                    f"{object_type}.{object_name}.env.env_variables", env_variables
+                )
+                full_config.s(
+                    f"{object_type}.{object_name}.env.encrypted_env_variables",
+                    encrypted_env_variables,
+                )
+        except KeyError:
+            logger.info(
+                f"{object_type} {object_name} encrypted env variables were not migrated"
+            )
+        return full_config
+
     def _apply_global_migration_3_0_4_to_3_1_0(
         full_config: CommentedMap,
     ) -> CommentedMap:
@@ -1219,6 +1263,9 @@ def _migrate_config_dict(
             )
         if version_parse(old_version) < version_parse("3.1.0"):
             full_config = _migrate_monitoring_3_0_4_to_3_1_0(
+                full_config, object_name, object_type
+            )
+            full_config = _migrate_encrypted_env_variables_3_0_0_to_3_1_0(
                 full_config, object_name, object_type
             )
         # no need to return full_config since CommentedMap is a pointer object
