@@ -905,7 +905,7 @@ def update_gui_values(
                         if (
                             object_type != "groups"
                             and isinstance(inherited, dict)
-                            and inherited[val]
+                            and inherited[skey]
                         ):
                             icon = INHERITED_TREE_ICON
                         else:
@@ -960,14 +960,13 @@ def update_gui_values(
 
     except KeyError as exc:
         if not is_wizard:
-            logger.error(f"{_t('config_gui.key_error')}: {exc} {key}")
+            logger.error(f"{_t('config_gui.key_error')}: key={key}, {exc}")
             logger.debug("Trace:", exc_info=True)
             BAD_KEYS_FOUND_IN_CONFIG.add(key)
     except TypeError as exc:
         logger.error(
             f"Error: Trying to update GUI with key {key} produced error: {exc}"
         )
-        raise
         logger.debug("Trace:", exc_info=True)
 
 
