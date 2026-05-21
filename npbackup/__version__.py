@@ -9,8 +9,8 @@ __site__ = "https://www.netperfect.fr/npbackup"
 __description__ = "NetPerfect Backup Client"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026051801"
-__version__ = "3.1.0-rc1"
+__build__ = "2026052101"
+__version__ = "3.1.0-rc2"
 
 
 import sys
@@ -29,7 +29,7 @@ IS_LEGACY = True if (sys.version_info[1] < 12 or python_arch() == "x86") else Fa
 try:
     CURRENT_USER = psutil.Process().username()
 except Exception:
-    CURRENT_USER = "unknown"
+    CURRENT_USER = None
 version_dict = {
     "name": __intname__,
     "version": __version__,
@@ -42,4 +42,4 @@ version_dict = {
     "build": __build__,
     "copyright": __copyright__,
 }
-version_string = f"{version_dict['name']} {version_dict['version']}-{version_dict['os']}-{version_dict['build_type']}-{version_dict['arch']}-{version_dict['audience']}-{version_dict['pv'][0]}.{version_dict['pv'][1]}-{'c' if IS_COMPILED else 'i'} {version_dict['build']} - {version_dict['copyright']} running as {CURRENT_USER}"
+version_string = f"{version_dict['name']} {version_dict['version']}-{version_dict['os']}-{version_dict['build_type']}-{version_dict['arch']}-{version_dict['audience']}-{version_dict['pv'][0]}.{version_dict['pv'][1]}-{'c' if IS_COMPILED else 'i'} {version_dict['build']} - {version_dict['copyright']} running as {CURRENT_USER if CURRENT_USER else 'UnknownUser'}"
