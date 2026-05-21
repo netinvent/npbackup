@@ -937,7 +937,7 @@ def update_gui_values(
                         value = str(matches.group(1))
                         unit = str(matches.group(2))
                 except (TypeError, IndexError, AttributeError):
-                    logger.error(
+                    logger.info(
                         f"Error decoding value {value} of key {key}. Setting default value"
                     )
                     value = "0"
