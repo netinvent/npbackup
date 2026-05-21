@@ -19,6 +19,7 @@ from ruamel.yaml.comments import CommentedMap
 from datetime import datetime
 from copy import deepcopy
 from ofunctions.threading import threaded
+from npbackup.__version__ import CURRENT_USER
 import npbackup.gui.common_gui
 from npbackup.gui.helpers import popup_error, password_complexity, WaitWindow
 from npbackup.core.i18n_helper import _t
@@ -1754,7 +1755,13 @@ def create_scheduled_task(
     if run_as in ["SYSTEM", "root"]:
         user_credentials = False
     else:
-        user_credentials = get_user_and_password_for_run_as()
+        if os.name == "nt":
+            user_credentials = get_user_and_password_for_run_as()
+        else:
+            if CURRENT_USER:
+                user_credentials = [CURRENT_USER, None]
+            else:
+                user_credentials = [None, None]
 
     result = npbackup.task.create_scheduled_task(
         config_file,
