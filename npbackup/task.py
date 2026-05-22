@@ -669,7 +669,7 @@ if ($results.Count -gt 0) {{
 
         # Verify the task arguments actually match what we expect
         if (
-            f"--{meta['task_type']}" not in arguments
+            f"--{SCHEDULER_TASKS[meta['task_type']]}" not in arguments
             or config_file not in arguments
             or meta["object_args"] not in arguments
         ):
@@ -753,10 +753,10 @@ def create_scheduled_task_windows(
     object_name: str,
     user_credentials: Union[Tuple[str, str], bool],
     cli_executable_path: str,
-    start_date_time: datetime.datetime = None,
-    interval: int = None,
-    interval_unit: str = None,
-    days: List[str] = None,
+    start_date_time: Optional[datetime.datetime] = None,
+    interval: Optional[int] = None,
+    interval_unit: Optional[str] = None,
+    days: Optional[List[str]] = None,
     force: bool = True,
 ):
     logger.debug(f"Creating task {task_type} for {object_type} {object_name}")
