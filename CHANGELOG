@@ -48,7 +48,8 @@ as well as a newer monitoring system
 
 #### Misc
  - Legacy 64-bit builds now work with faster and less memory hungry json implementation (msgspec)
- - Updated Nuitka compiler from 2.7.16 to 4.0.7
+ - Legacy arm and arm64 builds now use Python 3.8, allowing the usage of msgspec too
+ - Updated Nuitka compiler from 2.7.16 to 4.1
 
 ## 3.0.4
 #### Disruptive changes
