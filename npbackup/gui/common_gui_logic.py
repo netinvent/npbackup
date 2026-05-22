@@ -1804,6 +1804,7 @@ def update_task_list(config_file: str, full_config: dict, window: sg.Window) -> 
     ).wait_for_thread_result()
     # We need to define a special list for sg.Table to use
     task_list = []
+    number_of_backup_tasks = 0
     if tasks:
         for task in tasks:
             task_line = [
@@ -1815,8 +1816,13 @@ def update_task_list(config_file: str, full_config: dict, window: sg.Window) -> 
                 task["start_date"],
                 task["days_of_week"],
             ]
+            if task["task_type"] == "backup":
+                number_of_backup_tasks += 1
             task_list.append(task_line)
         window["-EXISTING-TASKS-"].update(values=task_list)
+        window["-NUMBER-OF-EXISTING-BACKUP-TASKS-"].update(
+            value=str(number_of_backup_tasks)
+        )
     else:
         tasks = []
     return tasks

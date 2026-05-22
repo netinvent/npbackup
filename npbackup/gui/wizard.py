@@ -1512,6 +1512,9 @@ def start_wizard(full_config: dict, config_file: str):
                     task=tasks[0],
                     is_wizard=True,
                 )
+                wizard["-NUMBER-OF-EXISTING-BACKUP-TASKS-"].update(
+                    value=str(len(tasks))
+                )
 
         ## END NAVIGATION ##
     wizard.close()

@@ -109,6 +109,7 @@ en:
   task_invalid_date_format: Invalid date format, not creating scheduled task
   no_task_selected: No task selected
   select_only_one_task: Please select only one task
+  number_of_existing_backup_tasks: Number of existing backup tasks
 
   machine_identification: Machine identification
   machine_id: Machine identifier

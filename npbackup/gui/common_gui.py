@@ -13,6 +13,7 @@ Note that all layouts are functions so we don't modify global objects between ca
 This is important because some elements are generated dynamically and we don't want to have duplicate keys in the layout
 """
 
+from typing import Optional
 import os
 from datetime import datetime
 from logging import getLogger
@@ -1107,8 +1108,20 @@ def retention_col():
     ]
 
 
-def scheduling_col(is_wizard: bool = False, task_types: list = None):
+def scheduling_col(is_wizard: bool = False, task_types: Optional[list] = None):
     object_selector = [
+        [
+            sg.Text(
+                _t("config_gui.number_of_existing_backup_tasks") + ": ",
+                font=SUBTITLE_FONT,
+            ),
+            sg.Text(
+                "N/A",
+                key="-NUMBER-OF-EXISTING-BACKUP-TASKS-",
+                size=(5, 1),
+                font=SUBTITLE_FONT,
+            ),
+        ],
         [
             sg.Column(
                 [
@@ -1140,7 +1153,7 @@ def scheduling_col(is_wizard: bool = False, task_types: list = None):
                 ],
                 visible=not is_wizard,
             )
-        ]
+        ],
     ]
 
     first_backup_scheduling = [

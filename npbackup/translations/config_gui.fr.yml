@@ -110,6 +110,7 @@ fr:
   task_invalid_date_format: Format de date érroné, tâche planifiée non crée
   no_task_selected: Aucune tâche sélectionnée
   select_only_one_task: Veuillez sélectionner une seule tâche
+  number_of_existing_backup_tasks: Nombre de tâches de sauvegarde existantes
   
   machine_identification: Identification machine
   machine_id: Identificateur machine
