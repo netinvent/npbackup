@@ -1296,7 +1296,8 @@ def start_wizard(full_config: dict, config_file: str):
             or (
                 isinstance(event, str)
                 and event.startswith("-BREADCRUMB-")
-                and event != "-BREADCRUMB-3-"
+                # Do not include going back into breadcrumbs
+                and int(event.split("-")[-2]) > 3
             )
         ) and current_tab == 3:
             if os.name == "nt":
