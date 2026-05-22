@@ -1446,6 +1446,7 @@ def start_wizard(full_config: dict, config_file: str):
             # Now that we updated the config dict with all values including the
             # repo_uri which has been anonymized, we need to patch the full_config dict
             full_config.s(f"{OBJECT_TYPE}.{OBJECT_NAME}.repo_uri", repo_uri)
+            full_config.s(f"{OBJECT_TYPE}.{OBJECT_NAME}.env.env_variables", env_variables)
             full_config.s(
                 f"{OBJECT_TYPE}.{OBJECT_NAME}.env.encrypted_env_variables",
                 encrypted_env_variables,
