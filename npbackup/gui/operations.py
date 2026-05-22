@@ -178,7 +178,7 @@ def task_scheduler(config_file: str, full_config: dict) -> None:
                 config_file, full_config, window
             )
         if event == "-EXISTING-TASKS-":
-            if values["-EXISTING-TASKS-"]:
+            if values["-EXISTING-TASKS-"] and tasks:
                 npbackup.gui.common_gui_logic.update_task_ui_for_object(
                     full_config, window, tasks[values["-EXISTING-TASKS-"][0]]
                 )
