@@ -7,12 +7,13 @@ __intname__ = "npbackup.upgrade_client.upgrader"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2025 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2025012401"
+__build__ = "2026052201"
 
 
 import os
 import sys
-from typing import Optional
+from typing import Optional, Union
+from pathlib import Path
 import shutil
 from logging import getLogger
 import hashlib
@@ -43,7 +44,9 @@ def sha256sum_data(data):
     return sha256.hexdigest()
 
 
-def _get_target_id(auto_upgrade_host_identity: str, group: str) -> str:
+def _get_target_id(
+    auto_upgrade_host_identity: Optional[str], group: Optional[str]
+) -> str:
     """
     Get current target information string as
 
@@ -70,9 +73,9 @@ def _check_new_version(
     username: str,
     password: str,
     ignore_errors: bool = False,
-    auto_upgrade_host_identity: str = None,
-    group: str = None,
-) -> bool:
+    auto_upgrade_host_identity: Optional[str] = None,
+    group: Optional[str] = None,
+) -> Union[bool, None]:
     """
     Check if we have a newer version of npbackup
 
@@ -103,7 +106,7 @@ def _check_new_version(
         logger.debug("Trace", exc_info=True)
         return None
 
-    try:
+    if isinstance(server_ident, dict):
         if not server_ident["app"] in ALLOWED_UPGRADE_SERVER_IDS:
             msg = "Current server is not a recognized NPBackup update server"
             if ignore_errors:
@@ -111,8 +114,8 @@ def _check_new_version(
             else:
                 logger.error(msg)
             return None
-    except (KeyError, TypeError):
-        msg = "Current server is not a NPBackup update server"
+    else:
+        msg = "Upgrade server response is not a valid JSON object"
         if ignore_errors:
             logger.info(msg)
         else:
@@ -131,9 +134,9 @@ def _check_new_version(
         else:
             logger.error(msg)
         return None
-    try:
+    if isinstance(result, dict):
         online_version = result["version"]
-    except KeyError:
+    else:
         msg = "Upgrade server failed to provide proper version info"
         if ignore_errors:
             logger.info(msg)
@@ -166,12 +169,12 @@ def _check_new_version(
 
 
 def auto_upgrader(
-    config_file: str,
+    config_file: Path,
     upgrade_url: str,
     username: str,
     password: str,
-    auto_upgrade_host_identity: str = None,
-    group: str = None,
+    auto_upgrade_host_identity: Optional[str] = None,
+    group: Optional[str] = None,
     ignore_errors: bool = False,
 ) -> Optional[bool]:
     """

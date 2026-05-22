@@ -21,7 +21,7 @@ try:
 except ImportError:
 
     class Struct:
-        def __init_subclass__(self, *args, **kwargs):
+        def __init_subclass__(cls, *args, **kwargs) -> None:
             pass
 
     class StrEnum:

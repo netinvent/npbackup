@@ -7,10 +7,11 @@ __intname__ = "npbackup.core.upgrade_runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2025030701"
+__build__ = "2026052201"
 
 
 from typing import Optional
+from pathlib import Path
 from logging import getLogger
 from ruamel.yaml.comments import CommentedMap
 from npbackup.upgrade_client.upgrader import auto_upgrader, _check_new_version
@@ -33,8 +34,11 @@ def check_new_version(full_config: CommentedMap) -> Optional[bool]:
 
 
 def run_upgrade(
-    config_file: str, full_config: CommentedMap, ignore_errors: bool = False
+    config_file: Optional[Path], full_config: CommentedMap, ignore_errors: bool = False
 ) -> Optional[bool]:
+    if not config_file:
+        logger.warning("No config file provided, cannot launch auto upgrade")
+        return False
     upgrade_url = full_config.g("global_options.auto_upgrade_server_url")
     username = full_config.g("global_options.auto_upgrade_server_username")
     password = full_config.g("global_options.auto_upgrade_server_password")

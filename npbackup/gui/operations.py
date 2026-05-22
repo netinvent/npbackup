@@ -7,11 +7,13 @@ __intname__ = "npbackup.gui.operations"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2023-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026030101"
+__build__ = "2026052201"
 
 
 import os
-from typing import List
+from typing import List, Union, Optional
+from pathlib import Path
+from ruamel.yaml.comments import CommentedMap
 import logging
 from collections import namedtuple
 from ofunctions.misc import BytesConverter
@@ -46,14 +48,20 @@ logger = logging.getLogger(__intname__)
 gui_object = namedtuple("GuiObject", ["type", "name", "group", "backend", "uri"])
 
 
-def gui_update_state(window, full_config: dict, unencrypted: str = None) -> list:
+def gui_update_state(
+    window, full_config: CommentedMap, unencrypted: Optional[str] = None
+) -> list:
     repo_and_group_list = []
     try:
         for repo_name in full_config.g("repos"):
             repo_config, _ = get_repo_config(full_config, repo_name)
-            if repo_config.g("repo_uri") and (
-                repo_config.g("repo_opts.repo_password")
-                or repo_config.g("repo_opts.repo_password_command")
+            if (
+                isinstance(repo_config, CommentedMap)
+                and repo_config.g("repo_uri")
+                and (
+                    repo_config.g("repo_opts.repo_password")
+                    or repo_config.g("repo_opts.repo_password_command")
+                )
             ):
                 # NPF-SEC-00014: Don't leak repository url including passwords in logs/ui
                 repo_type, repo_uri = get_anon_repo_uri(repo_config.g("repo_uri"))
@@ -73,7 +81,7 @@ def gui_update_state(window, full_config: dict, unencrypted: str = None) -> list
     return repo_and_group_list
 
 
-def task_scheduler(config_file: str, full_config: dict) -> None:
+def task_scheduler(config_file: Path, full_config: CommentedMap) -> None:
     """
     Handle tasks for given repos / groups
     read_existing_scheduled_tasks return something like
@@ -314,12 +322,12 @@ def show_stats(statistics: List[dict]) -> None:
     window.close()
 
 
-def operations_gui(full_config: dict, config_file: str) -> dict:
+def operations_gui(full_config: CommentedMap, config_file: Path) -> CommentedMap:
     """
     Operate on one or multiple repositories, or groups
     """
 
-    def _get_repo_list(selected_rows):
+    def _get_repo_list(selected_rows: list) -> Union[List[str], bool]:
         if not selected_rows:
             if sg.popup(
                 _t("operations_gui.no_repo_selected_apply_all"),
@@ -520,12 +528,12 @@ def operations_gui(full_config: dict, config_file: str) -> dict:
         if event in (sg.WIN_CLOSED, sg.WIN_X_EVENT, "--EXIT--"):
             break
         if event == _t("config_gui.show_decrypted"):
-            try:
-                # Get first selected object
-                object_name = _get_repo_list(values["repo-and-group-list"])[0]
-            except Exception as exc:
-                logger.error(f"Could not get object name: {exc}")
-                logger.debug("Trace:", exc_info=True)
+            # Get first selected object
+            object_names = _get_repo_list(values["repo-and-group-list"])
+            if isinstance(object_names, list) and object_names:
+                object_name = object_names[0]
+            else:
+                logger.error(f"Could not get object name. Got {object_names}")
                 object_name = None
             if not object_name:
                 popup_error(_t("operations_gui.no_repo_selected"))
@@ -579,7 +587,7 @@ def operations_gui(full_config: dict, config_file: str) -> dict:
 
             repo_configs = {}
             monitoring_configs = {}
-            if not repos:
+            if not isinstance(repos, list):
                 continue
             for repo_name in repos:
                 repo_config, _ = get_repo_config(full_config, repo_name)
@@ -588,7 +596,7 @@ def operations_gui(full_config: dict, config_file: str) -> dict:
                     repo_config, full_config
                 )
             operation = None
-            op_args = None
+            op_args: dict[str, object] = {}
             gui_msg = None
             if event == "--HOUSEKEEPING--":
                 operation = "housekeeping"
@@ -695,4 +703,4 @@ if __name__ == "__main__":
     from npbackup.configuration import get_default_config
 
     full_config = get_default_config()
-    operations_gui(full_config, "config.yaml")
+    operations_gui(full_config, Path("config.yaml"))

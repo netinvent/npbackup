@@ -7,14 +7,16 @@ __intname__ = "npbackup.task"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026032901"
+__build__ = "2026052201"
 
 
 import sys
 import os
 import re
 import json
+from pathlib import Path
 from typing import List, Optional, Union, Tuple
+from ruamel.yaml.comments import CommentedMap
 import logging
 import tempfile
 import datetime
@@ -92,18 +94,16 @@ def extract_json(s, index=0):
 
 #### OS ABSTRACTION LAYER ####
 def read_existing_scheduled_tasks(
-    config_file: str,
-    full_config: dict,
-    operation: str = None,
+    config_file: Path,
+    full_config: CommentedMap,
+    operation: Optional[str] = None,
 ) -> List[dict]:
     """
     Reads existing scheduled tasks for NPBackup and checks if a task with the same config file, task type and repo/group already exists
     """
-    # Transform possible PosixPath to string
-    config_file = str(config_file)
     # Make sure we have a full path to config_file if relative path is given
-    if not os.path.isabs(config_file):
-        config_file = os.path.join(CURRENT_DIR, config_file)
+    if not config_file.is_absolute():
+        config_file = Path(CURRENT_DIR) / config_file
 
     if os.name == "nt":
         return _read_existing_scheduled_task_windows(
@@ -116,7 +116,7 @@ def read_existing_scheduled_tasks(
 
 
 def create_scheduled_task(
-    config_file: str,
+    config_file: Path,
     task_type: str,
     object_type: str,
     object_name: str,
@@ -125,15 +125,11 @@ def create_scheduled_task(
     interval: Optional[int] = None,
     interval_unit: Optional[str] = None,
     days: Optional[List[str]] = None,
-    force: Optional[bool] = True,
+    force: bool = True,
 ):
     """
     Creates a scheduled task for NPBackup
     """
-
-    # Transform possible PosixPath to string
-    config_file = str(config_file)
-
     try:
         if interval is not None:
             interval = int(interval)
@@ -170,8 +166,8 @@ def create_scheduled_task(
                 return False
 
     # Make sure we have a full path to config_file if relative path is given
-    if not os.path.isabs(config_file):
-        config_file = os.path.join(CURRENT_DIR, config_file)
+    if not config_file.is_absolute():
+        config_file = Path(CURRENT_DIR) / config_file
 
     logger.info(
         f"Creating scheduled task {task_type} for {object_type} {object_name} to run every {interval} {interval_unit}"
@@ -207,14 +203,13 @@ def create_scheduled_task(
 
 
 def delete_scheduled_task(
-    config_file: str,
+    config_file: Path,
     task_type: str,
     object_type: str,
     object_name: str,
 ):
-    config_file = str(config_file)
-    if not os.path.isabs(config_file):
-        config_file = os.path.join(CURRENT_DIR, config_file)
+    if not config_file.is_absolute():
+        config_file = Path(CURRENT_DIR) / config_file
 
     if os.name == "nt":
         return _delete_scheduled_task_windows(
@@ -262,26 +257,24 @@ _DOW_FROM_INT = {
 
 
 def _get_cron_comment(
-    config_file: str, task_type: str, object_type: str, object_name: str
+    config_file: Path, task_type: str, object_type: str, object_name: str
 ) -> str:
     """Generate a unique comment identifier for a cron job, mirroring the Windows task name."""
-    config_file = str(config_file)
     if not object_name:
         object_name = "default"
         object_type = "repos"
-    config_file_sanitized = sanitize_filename(config_file)
-    return f"{PROGRAM_NAME} - {task_type} {object_type} {object_name} in {config_file_sanitized}"
+    return f"{PROGRAM_NAME} - {task_type} {object_type} {object_name} in {sanitize_filename(str(config_file))}"
 
 
 def _get_crontab(user_credentials: Union[Tuple[str, str], bool]) -> CronTab:
     """Return a CronTab instance for the current user or root."""
-    if user_credentials:
+    if isinstance(user_credentials, tuple) and len(user_credentials) == 2:
         return CronTab(user=user_credentials[0])
     return CronTab(user="root")
 
 
 def _read_existing_scheduled_task_unix(
-    config_file: str, full_config: dict, operation: str
+    config_file: Path, full_config: CommentedMap, operation: Optional[str]
 ) -> List[dict]:
     tasks = []
     # Check both current user and root crontabs
@@ -369,16 +362,16 @@ def _read_existing_scheduled_task_unix(
 
 
 def create_scheduled_task_unix(
-    config_file: str,
+    config_file: Path,
     task_type: str,
     object_type: str,
     object_name: str,
     user_credentials: Union[Tuple[str, str], bool],
     cli_executable_path: str,
-    start_date_time: datetime.datetime = None,
-    interval: int = None,
-    interval_unit: str = None,
-    days: List[str] = None,
+    start_date_time: Optional[datetime.datetime] = None,
+    interval: Optional[int] = None,
+    interval_unit: Optional[str] = None,
+    days: Optional[List[str]] = None,
     force: bool = True,
 ):
     logger.debug(f"Creating task {task_type} for {object_type} {object_name}")
@@ -482,7 +475,7 @@ def create_scheduled_task_unix(
 
 
 def _delete_scheduled_task_unix(
-    config_file: str,
+    config_file: Path,
     task_type: str,
     object_type: str,
     object_name: str,
@@ -523,25 +516,23 @@ def _parse_iso_duration_to_minutes(duration: str) -> Optional[int]:
 
 
 def _get_scheduled_task_name_windows(
-    config_file: str, task_type: str, object_type: str, object_name: str
+    config_file: Path, task_type: str, object_type: str, object_name: str
 ) -> str:
     """
     We need to have unique identifiers for our tasks depending on their config file, task name and object
     in order to identify them later
     """
-    config_file = str(config_file)
     if not object_name:
         object_name = "default"
         object_type = "repos"
     # Sanitize config_file name but keep path in case we might encounter multiple config files with same path
-    config_file = sanitize_filename(config_file)
-    return f"{PROGRAM_NAME} - {task_type.capitalize()} {object_type} {object_name} in {config_file}"
+    return f"{PROGRAM_NAME} - {task_type.capitalize()} {object_type} {object_name} in {sanitize_filename(str(config_file))}"
 
 
 def _read_existing_scheduled_task_windows(
-    config_file: str,
-    full_config: dict,
-    operation: str,
+    config_file: Path,
+    full_config: CommentedMap,
+    operation: Optional[str],
 ) -> List[dict]:
     """
     Read existing scheduled tasks on Windows.
@@ -747,7 +738,7 @@ if ($results.Count -gt 0) {{
 
 
 def create_scheduled_task_windows(
-    config_file: str,
+    config_file: Path,
     task_type: str,
     object_type: str,
     object_name: str,
@@ -964,11 +955,12 @@ def create_scheduled_task_windows(
     # Register task from XML
     logger.info("Creating scheduled task {}".format(task_name))
 
-    if not user_credentials:
+    if isinstance(user_credentials, tuple) and len(user_credentials) == 2:
+        logger.info(f"Registering task as user {user_credentials[0]}")
+        user_arg = f"-User {user_credentials[0]} -Password {user_credentials[1]}"
+    else:
         logger.info("Registering task to run as SYSTEM user")
         user_arg = "-User 'SYSTEM'"
-    else:
-        user_arg = f"-User {user_credentials[0]} -Password {user_credentials[1]}"
 
     task_name = _get_scheduled_task_name_windows(
         config_file, task_type, object_type, object_name
@@ -1009,7 +1001,7 @@ Register-ScheduledTask -TaskName '{}' -Xml (Get-Content -LiteralPath '{}' -Raw) 
 
 
 def _delete_scheduled_task_windows(
-    config_file: str,
+    config_file: Path,
     task_type: str,
     object_type: str,
     object_name: str,
@@ -1041,7 +1033,7 @@ if __name__ == "__main__":
     logger.setLevel("INFO")
     logger.addHandler(logging.StreamHandler())
     # Example usage
-    config_file = "npbackup-test.conf"
+    config_file = Path("npbackup-test.conf")
     full_config = npbackup.configuration.get_default_config()
     task_type = "backup"
     object_type = "repos"

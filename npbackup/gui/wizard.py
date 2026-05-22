@@ -11,6 +11,8 @@ __license__ = "GPL-3.0-only"
 
 import os
 from typing import List, Tuple
+from pathlib import Path
+from ruamel.yaml.comments import CommentedMap
 from logging import getLogger
 import FreeSimpleGUI as sg
 import textwrap
@@ -49,13 +51,13 @@ OBJECT_TYPE = "repos"
 OBJECT_NAME = "default"
 
 
-def remove_prefix(text, prefix):
+def remove_prefix(text: str, prefix: str) -> str:
     if text.startswith(prefix):
         return text[len(prefix) :]
     return text
 
 
-def wizard_exclusion_window(full_config: dict):
+def wizard_exclusion_window(full_config: CommentedMap) -> CommentedMap:
     layout = [
         [npbackup.gui.common_gui.exclusion_col()],
         [
@@ -779,7 +781,9 @@ def wizard_layout(wizard_tabs, wizard_breadcrumbs) -> List[list]:
     ]
 
 
-def start_wizard(full_config: dict, config_file: str):
+def start_wizard(
+    full_config: CommentedMap, config_file: Path
+) -> Tuple[CommentedMap, Path]:
     # wizard tabs count
     wizard_tabs, wizard_breadcrumbs = wizard_tabs_and_breadcrumbs(wizard_layouts())
     NUMBER_OF_TABS = len(wizard_tabs)
@@ -913,7 +917,7 @@ def start_wizard(full_config: dict, config_file: str):
                 repo_uri_dict["password"] = password
         return repo_uri_dict
 
-    def set_active_backend_type(backend_type) -> None:
+    def set_active_backend_type(backend_type: str) -> None:
         """
         Show backends inputs depending on what backend type is selected
         """
@@ -1041,7 +1045,8 @@ def start_wizard(full_config: dict, config_file: str):
         if repo_uri:
             repo_uri_dict = parse_restic_repo(repo_uri)
             backend_type = repo_uri_dict.get("backend_type")
-            set_active_backend_type(backend_type)
+            if backend_type:
+                set_active_backend_type(backend_type)
 
             # Show the full URI in the repo_uri field so the user sees exactly
             # what is stored in the config.
@@ -1446,7 +1451,9 @@ def start_wizard(full_config: dict, config_file: str):
             # Now that we updated the config dict with all values including the
             # repo_uri which has been anonymized, we need to patch the full_config dict
             full_config.s(f"{OBJECT_TYPE}.{OBJECT_NAME}.repo_uri", repo_uri)
-            full_config.s(f"{OBJECT_TYPE}.{OBJECT_NAME}.env.env_variables", env_variables)
+            full_config.s(
+                f"{OBJECT_TYPE}.{OBJECT_NAME}.env.env_variables", env_variables
+            )
             full_config.s(
                 f"{OBJECT_TYPE}.{OBJECT_NAME}.env.encrypted_env_variables",
                 encrypted_env_variables,
@@ -1530,5 +1537,5 @@ def start_wizard(full_config: dict, config_file: str):
 if __name__ == "__main__":
     start_wizard(
         npbackup.configuration.get_default_config(no_groups=True),
-        "npbackup-wizard-test.conf",
+        Path("npbackup-wizard-test.conf"),
     )

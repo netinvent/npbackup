@@ -11,16 +11,17 @@ __build__ = "2023020601"
 
 
 import os
-from ruamel.yaml import YAML
+from pathlib import Path
+from ruamel.yaml import YAML, CommentedMap
 from logging import getLogger
 
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
-config_file = os.path.join(ROOT_DIR, "upgrade_server.conf")
+ROOT_DIR = Path(__file__).resolve().parent.parent
+config_file = ROOT_DIR / "upgrade_server.conf"
 
 logger = getLogger()
 
 
-def load_config(config_file: str = config_file):
+def load_config(config_file: Path = config_file):
     """
     Using ruamel.yaml preserves comments and order of yaml files
     """
@@ -39,7 +40,7 @@ def load_config(config_file: str = config_file):
         return None
 
 
-def save_config(config_file, config_dict):
+def save_config(config_file: Path, config_dict: CommentedMap):
     with open(config_file, "w", encoding="utf-8") as file_handle:
         yaml = YAML(typ="rt")
         yaml.dump(config_dict, file_handle)

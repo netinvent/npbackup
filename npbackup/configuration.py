@@ -768,7 +768,11 @@ def inject_permissions_into_full_config(full_config: CommentedMap) -> CommentedM
     return full_config
 
 
-def get_manager_password(full_config: CommentedMap, repo_name: str) -> str:
+def get_manager_password(
+    full_config: CommentedMap, repo_name: Optional[str]
+) -> Optional[str]:
+    if repo_name is None:
+        return None
     return full_config.g(f"repos.{repo_name}.manager_password")
 
 
@@ -965,7 +969,9 @@ def get_repo_config(
 
 
 def get_group_config(
-    full_config: CommentedMap, group_name: str, eval_variables: bool = True
+    full_config: CommentedMap,
+    group_name: Optional[str] = None,
+    eval_variables: bool = True,
 ) -> CommentedMap:
     try:
         group_config = deepcopy(full_config.g(f"groups.{group_name}"))

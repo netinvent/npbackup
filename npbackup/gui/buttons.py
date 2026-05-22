@@ -33,7 +33,7 @@ except ImportError:
 from io import BytesIO
 
 
-def _is_custom_button(element):
+def _is_custom_button(element) -> bool:
     return (
         hasattr(element, "ButtonColor")
         and element.ButtonColor != (None, None)
@@ -42,7 +42,7 @@ def _is_custom_button(element):
     )
 
 
-def _after_element(element, colorizer: Colorizer):
+def _after_element(element, colorizer: Colorizer) -> None:
     if isinstance(element, RoundedButton):
         theme_bg = colorizer.theme_color("BACKGROUND", lambda: "#000000")
         fg = colorizer.theme_color("TEXT", lambda: "#FFFFFF")
@@ -55,7 +55,7 @@ def _after_element(element, colorizer: Colorizer):
         element.update_color(colorizer.theme_color(("BUTTON", 1), lambda: "#000000"))
 
 
-def round_corner(radius, fill):
+def round_corner(radius, fill) -> Image.Image:
     """Create a rounded corner image"""
     corner = Image.new("RGBA", (radius, radius), (0, 0, 0, 0))
     draw = ImageDraw.Draw(corner)
@@ -63,7 +63,7 @@ def round_corner(radius, fill):
     return corner
 
 
-def round_rectangle(size, radius, fill):
+def round_rectangle(size, radius, fill) -> Image.Image:
     """Create a rounded rectangle image"""
     width, height = size
     rectangle = Image.new("RGBA", size, fill)
@@ -75,7 +75,7 @@ def round_rectangle(size, radius, fill):
     return rectangle
 
 
-def image_to_data(image):
+def image_to_data(image) -> bytes:
     """Convert PIL image to bytes for PySimpleGUI"""
     with BytesIO() as output:
         image.save(output, format="PNG")
@@ -84,10 +84,12 @@ def image_to_data(image):
 
 if HAVE_PILLOW:
 
-    class RoundedButton(sg.Button):
+    class RoundedButton(sg.Button):  # type: ignore
         """A rounded button using PIL images with mask-based rendering"""
 
-        def __init__(self, text, btn_width=100, btn_height=30, radius=30, **kwargs):
+        def __init__(
+            self, text, btn_width=100, btn_height=30, radius=30, **kwargs
+        ) -> None:
             # Remove conflicting parameters
             kwargs.pop("image_data", None)
             kwargs.pop("border_width", None)
@@ -118,14 +120,14 @@ if HAVE_PILLOW:
                 **kwargs,
             )
 
-        def _create_mask(self):
+        def _create_mask(self) -> Image.Image:
             """Create a solid color mask of the button's shape"""
             # Use white as the mask color (can be any solid color)
             return round_rectangle(
                 (self.btn_width, self.btn_height), self.radius, (255, 255, 255, 255)
             )
 
-        def _generate_image_from_mask(self, fill_color=None):
+        def _generate_image_from_mask(self, fill_color=None) -> Image.Image:
             """Generate a button image from the mask with the specified fill color"""
             # Use instance button color if none provided
             if fill_color is None:
@@ -143,7 +145,7 @@ if HAVE_PILLOW:
 
             return img
 
-        def update_color(self, new_color):
+        def update_color(self, new_color) -> None:
             """Update the button's appearance with a new color"""
             # Update the stored button color
             self.button_color = new_color
@@ -157,15 +159,15 @@ if HAVE_PILLOW:
 
 else:
 
-    class RoundedButton(sg.Button):
+    class RoundedButton(sg.Button):  # type: ignore
         """Fallback button when PIL/Pillow is not available"""
 
-        def __init__(self, text, **kwargs):
+        def __init__(self, text, **kwargs) -> None:
             kwargs.pop("image_data", None)
             kwargs.pop("btn_width", None)
             kwargs.pop("btn_height", None)
             kwargs.pop("radius", None)
             super().__init__(text, **kwargs)
 
-        def update_color(self, new_color):
+        def update_color(self, new_color) -> None:
             pass

@@ -1547,7 +1547,7 @@ class ResticRunner:
 
     @staticmethod
     def _has_recent_snapshot(
-        snapshot_list: List, delta: int = None
+        snapshot_list: Optional[List], delta: int
     ) -> Tuple[bool, Optional[datetime]]:
         """
         Making the actual comparison a static method so we can call it from GUI too
@@ -1561,8 +1561,8 @@ class ResticRunner:
             logger.info("No valid snapshot list given")
             logger.debug(f"Snapshot list: {snapshot_list}")
             return False, backup_ts
-        if not delta:
-            logger.warning("No delta given for determining recent snapshot")
+        if not delta or delta == 0:
+            logger.info("No delta given for determining recent snapshot")
             return False, backup_ts
         tz_aware_timestamp = datetime.now(timezone.utc).astimezone()
 
@@ -1590,7 +1590,9 @@ class ResticRunner:
             )
         return False, backup_ts
 
-    def has_recent_snapshot(self, delta: int = None) -> Tuple[bool, Optional[datetime]]:
+    def has_recent_snapshot(
+        self, delta: int
+    ) -> Tuple[Optional[bool], Optional[datetime]]:
         """
         Checks if a snapshot exists that is newer that delta minutes
         Eg: if delta = -60 we expect a snapshot newer than an hour ago, and return True if exists
@@ -1635,11 +1637,11 @@ class ResticRunner:
                 return self.convert_to_json_output(None, None, **kwargs)
             return None, None
 
-    def cancel(self):
+    def cancel(self) -> None:
         """
         Makes executor stop on next tick
         """
         self._stop_on = True
 
-    def is_cancelled(self):
+    def is_cancelled(self) -> bool:
         return self._stop_on

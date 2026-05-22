@@ -96,9 +96,9 @@ def popup_wait_for_upgrade(text: str):
 
 def about_gui(
     version_string: str,
-    config_file: str,
-    full_config: dict = None,
-    auto_upgrade_result: bool = False,
+    config_file: Optional[Path],
+    full_config: Optional[CommentedMap],
+    auto_upgrade_result: Optional[bool],
 ) -> None:
 
     if auto_upgrade_result:
@@ -168,7 +168,7 @@ def viewer_create_repo(viewer_repo_uri: str, viewer_repo_password: str) -> dict:
 
 
 def viewer_repo_gui(
-    viewer_repo_uri: str = None, viewer_repo_password: str = None
+    viewer_repo_uri: Optional[str] = None, viewer_repo_password: Optional[str] = None
 ) -> Tuple[str, str]:
     """
     Ask for repo and password if not defined in env variables
@@ -176,11 +176,17 @@ def viewer_repo_gui(
     layout = [
         [
             sg.Text(_t("config_gui.backup_repo_uri"), size=(35, 1)),
-            sg.Input(viewer_repo_uri, key="-REPO-URI-"),
+            sg.Input(
+                viewer_repo_uri if viewer_repo_uri is not None else "", key="-REPO-URI-"
+            ),
         ],
         [
             sg.Text(_t("config_gui.backup_repo_password"), size=(35, 1)),
-            sg.Input(viewer_repo_password, key="-REPO-PASSWORD-", password_char="*"),
+            sg.Input(
+                viewer_repo_password if viewer_repo_password is not None else "",
+                key="-REPO-PASSWORD-",
+                password_char="*",
+            ),
         ],
         [
             sg.Push(),
@@ -359,7 +365,7 @@ def ls_window(
     )
     if not result or not result["result"]:
         sg.popup(_t("main_gui.snapshot_is_empty"))
-        return None, None
+        return False
 
     # result is {"result": True, "output": [{snapshot_description}, {entry}, {entry}]}
     # content = result["output"]
@@ -482,7 +488,7 @@ def restore_window(
     monitoring_config: dict,
     snapshot_id: str,
     restore_include: List[str],
-) -> None:
+) -> Optional[bool]:
     def _restore_window(
         repo_config: dict, snapshot: str, target: str, restore_includes: Optional[List]
     ) -> bool:
@@ -601,7 +607,9 @@ def _main_gui(viewer_mode: bool):
     global __no_lock
     global GUI_STATUS_IGNORE_ERRORS
 
-    def check_for_auto_upgrade(config_file: str, full_config: dict) -> bool:
+    def check_for_auto_upgrade(
+        config_file: Path, full_config: CommentedMap
+    ) -> Optional[bool]:
         if full_config and full_config.g("global_options.auto_upgrade_server_url"):
             upgrade_popup = popup_wait_for_upgrade(_t("main_gui.auto_upgrade_checking"))
             auto_upgrade_result = upgrade_runner.check_new_version(full_config)
@@ -621,14 +629,16 @@ def _main_gui(viewer_mode: bool):
             return auto_upgrade_result
         return None
 
-    def select_config_file(config_file: str = None) -> None:
+    def select_config_file(
+        config_file: Optional[Path] = None,
+    ) -> Tuple[Optional[Path], Optional[str]]:
         """
         Option to select a configuration file
         """
         layout = [
             [
                 sg.Text(_t("main_gui.select_config_file")),
-                sg.Input(config_file, key="-config_file-"),
+                sg.Input(str(config_file) if config_file else "", key="-config_file-"),
                 sg.FileBrowse(_t("generic.select_file")),
             ],
             [
@@ -702,7 +712,7 @@ def _main_gui(viewer_mode: bool):
 
     def get_gui_data(
         repo_config: dict, monitoring_config: dict
-    ) -> Tuple[bool, List[str]]:
+    ) -> Tuple[bool, Optional[datetime], List[str]]:
         global GUI_STATUS_IGNORE_ERRORS
 
         window["--STATE-BUTTON--"].Update(
@@ -777,7 +787,9 @@ def _main_gui(viewer_mode: bool):
                 )
         return current_state, backup_tz, snapshot_list
 
-    def get_config_file(config_file: str = None) -> str:
+    def get_config_file(
+        config_file: Optional[Path] = None,
+    ) -> Tuple[Optional[CommentedMap], Optional[Path]]:
         """
         Load config file until we got something
         """
@@ -797,7 +809,7 @@ def _main_gui(viewer_mode: bool):
                 if full_config:
                     return full_config, config_file
         else:
-            config_file = f"{SHORT_PRODUCT_NAME.lower()}.conf"
+            config_file = Path(f"{SHORT_PRODUCT_NAME.lower()}.conf")
             config_exists = False
 
         while True:
@@ -834,8 +846,10 @@ def _main_gui(viewer_mode: bool):
         return full_config, config_file
 
     def enable_gui_options(
-        full_config: dict, config_file: str, window: sg.Window
-    ) -> None:
+        full_config: CommentedMap,
+        config_file: Optional[Path],
+        window: Optional[sg.Window],
+    ) -> List[str]:
         repo_list = npbackup.configuration.get_repo_list(full_config)
         if window:
             if config_file:
@@ -852,8 +866,10 @@ def _main_gui(viewer_mode: bool):
         return repo_list
 
     def get_config(
-        config_file: str = None, window: sg.Window = None, repo_name: str = None
-    ) -> Tuple[dict, str, dict, str, str, str, List[str]]:
+        config_file: Optional[Path] = None,
+        window: Optional[sg.Window] = None,
+        repo_name: Optional[str] = None,
+    ) -> Tuple[dict, Path, dict, str, str, str, List[str]]:
         global __full_concurrency
         global __repo_aware_concurrency
         full_config, config_file = get_config_file(config_file=config_file)
@@ -1191,7 +1207,12 @@ def _main_gui(viewer_mode: bool):
         ]
     ]
 
-    if not viewer_mode and (version_dict["comp"] or _NPBACKUP_ALLOW_AUTOUPGRADE_DEBUG):
+    if (
+        not viewer_mode
+        and (version_dict["comp"] or _NPBACKUP_ALLOW_AUTOUPGRADE_DEBUG)
+        and config_file
+        and full_config
+    ):
         auto_upgrade_result = check_for_auto_upgrade(config_file, full_config)
     else:
         auto_upgrade_result = None
@@ -1454,7 +1475,7 @@ def _main_gui(viewer_mode: bool):
             change_sg_theme(window)
 
 
-def main_gui(viewer_mode=False):
+def main_gui(viewer_mode=False) -> None:
     atexit.register(
         npbackup.common.execution_logs,
         datetime.now(timezone.utc),
@@ -1483,7 +1504,7 @@ def main_gui(viewer_mode=False):
         elif version_dict["comp"]:
             npbackup.gui.windows_gui_helper.handle_current_window(action="hide")
         _main_gui(viewer_mode=viewer_mode)
-        sys.exit(logger.get_worst_logger_level(all_time=True))
+        sys.exit(logger.get_worst_logger_level(all_time=True))  # type: ignore
     except _tkinter.TclError as exc:
         logger.critical(f'Tkinter error: "{exc}". Is this a headless server ?')
         sys.exit(250)

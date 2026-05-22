@@ -25,7 +25,7 @@ from npbackup.gui.ttk_theme import TITLE_FONT, SUBTITLE_FONT
 from resources.customization import NON_INHERITED_ICON, INHERITED_ICON
 
 try:
-    from resources.customization import MONITORING_ENABLE
+    from resources.customization import MONITORING_ENABLE  # type: ignore
 except ImportError:
     # Unless specified, enable all monitoring options
     MONITORING_ENABLE = ["prometheus", "zabbix", "email", "healthchecksio", "webhooks"]

@@ -10,7 +10,7 @@ __license__ = "GPL-3.0-only"
 __build__ = "2026040301"
 
 
-from typing import Union
+from typing import Any, Union, Optional
 from logging import getLogger
 from time import sleep
 import re
@@ -51,28 +51,28 @@ TOTAL_AVERAGE_INTERVAL = 5
 
 
 def gui_thread_runner(
-    __repo_config: dict,
-    __fn_name: str,
+    __repo_config: Optional[dict] = None,
+    __fn_name: str = "function_name_not_given",
     __compact: bool = True,
     __autoclose: bool = False,
     __gui_msg: str = "",
     __stdout: bool = True,
-    __backend_binary: str = None,
+    __backend_binary: Optional[str] = None,
     __ignore_errors: bool = False,
     __no_lock: bool = False,
     __full_concurrency: bool = False,
     __repo_aware_concurrency: bool = False,
-    __monitoring_config: dict = None,
+    __monitoring_config: Optional[dict] = None,
     *args,
     **kwargs,
-) -> Union[dict, str]:
+) -> Any:
     """
     Runs any NPBackupRunner functions in threads for GUI
     also gets stdout and stderr queues output into gui window
     Has a grace period after thread end to get queue output, so we can see whenever a thread dies of mysterious causes
     """
 
-    def _upgrade_from_compact_view():
+    def _upgrade_from_compact_view() -> None:
         for key in (
             "-OPERATIONS-PROGRESS-STDOUT-TITLE-",
             "-OPERATIONS-PROGRESS-STDOUT-",
@@ -83,7 +83,9 @@ def gui_thread_runner(
         progress_window["--EXPAND--"].Update(visible=False)
         progress_window["-OPERATIONS-PROGRESS-STDOUT-"].update(autoscroll=True)
 
-    def _update_gui_from_cache(_stdout_cache: str = None, _stderr_cache: str = None):
+    def _update_gui_from_cache(
+        _stdout_cache: Optional[str] = None, _stderr_cache: Optional[str] = None
+    ):
         if _stdout_cache:
             progress_window["-OPERATIONS-PROGRESS-STDOUT-"].Update(_stdout_cache)
         if _stderr_cache:
@@ -474,11 +476,11 @@ def wait_window() -> sg.Window:
 
 
 class WaitWindow:
-    def __init__(self, thread, message: str = None):
+    def __init__(self, thread, message: str = _t("generic.please_wait")):
         self.thread = thread
-        self.message = message if message else _t("generic.please_wait")
+        self.message = message
 
-    def wait_for_thread_result(self):
+    def wait_for_thread_result(self) -> Any:
         wait_layout = [
             [sg.Text(f"{PROGRAM_NAME}: {self.message}", font=SUBTITLE_FONT)],
             [

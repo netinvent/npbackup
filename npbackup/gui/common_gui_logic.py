@@ -11,6 +11,7 @@ __build__ = "2026040301"
 
 
 import os
+from pathlib import Path
 from typing import List, Tuple, Optional, Union
 import re
 from logging import getLogger
@@ -91,7 +92,7 @@ encrypted_env_variables_tree = sg.TreeData()
 
 
 #### FILE ICON RELATED LOGIC ####
-def get_icons_per_file(file_path: str) -> Tuple[str, bytes]:
+def get_icons_per_file(file_path: str) -> Tuple[bytes, bytes]:
     """
     Get icons depending on file/folder existing paths
     """
@@ -140,7 +141,9 @@ def ask_manager_password(manager_password: str) -> bool:
     return True
 
 
-def set_permissions(full_config: dict, object_type: str, object_name: str) -> dict:
+def set_permissions(
+    full_config: CommentedMap, object_type: str, object_name: str
+) -> CommentedMap:
     """
     Sets repo wide repo_uri / password / permissions
     """
@@ -165,7 +168,7 @@ def set_permissions(full_config: dict, object_type: str, object_name: str) -> di
         [
             sg.Text(_t("config_gui.set_manager_password"), size=(40, 1)),
             sg.Input(
-                None,
+                "",
                 key="-MANAGER-PASSWORD-",
                 size=(50, 1),
                 password_char="*",
@@ -289,7 +292,9 @@ def get_user_and_password_for_run_as() -> Tuple[Optional[str], Optional[str]]:
 #### OBJECT RELATED LOGIC ###
 
 
-def create_object(window: sg.Window, full_config: dict) -> dict:
+def create_object(
+    window: sg.Window, full_config: CommentedMap
+) -> Tuple[CommentedMap, Optional[str], Optional[str]]:
     object_type = None
     object_name = None
     layout = [
@@ -373,7 +378,9 @@ def get_objects(full_config) -> List[str]:
     return object_list
 
 
-def delete_object(window: sg.Window, full_config: dict, full_object_name: str) -> dict:
+def delete_object(
+    window: sg.Window, full_config: CommentedMap, full_object_name: str
+) -> CommentedMap:
     object_type, object_name = get_object_from_combo(full_object_name)
     if not object_type and not object_name:
         popup_error(_t("config_gui.no_object_to_delete"))
@@ -392,12 +399,14 @@ def delete_object(window: sg.Window, full_config: dict, full_object_name: str) -
     return full_config
 
 
-def get_object_from_combo(combo_value: str) -> Tuple[str, str]:
+def get_object_from_combo(
+    combo_value: Optional[str],
+) -> Tuple[Optional[str], Optional[str]]:
     """
     Extracts selected object from combobox
     Returns object type and name
     """
-    try:
+    if isinstance(combo_value, str):
         if combo_value.startswith("Repo: "):
             object_type = "repos"
             object_name = combo_value[len("Repo: ") :]
@@ -410,7 +419,7 @@ def get_object_from_combo(combo_value: str) -> Tuple[str, str]:
             logger.error(
                 f"Could not obtain object_type and object_name from string {combo_value}"
             )
-    except AttributeError:
+    else:
         object_type = None
         object_name = None
         logger.error(f"Could not obtain object_type and object_name from {combo_value}")
@@ -432,10 +441,10 @@ def create_object_name_for_combo(object_type: str, object_name: str) -> Optional
 
 def update_object_selector(
     window: sg.Window,
-    full_config: dict,
+    full_config: CommentedMap,
     object_name: Optional[str] = None,
     object_type: Optional[str] = None,
-) -> Tuple[str, str]:
+) -> Tuple[Optional[str], Optional[str]]:
     object_list = get_objects(full_config)
     if not object_name or not object_type:
         if len(object_list) > 0:
@@ -462,9 +471,9 @@ def update_object_selector(
 
 def iter_over_config(
     window: sg.Window,
-    full_config: dict,
-    object_config: dict,
-    config_inheritance: Optional[dict] = None,
+    full_config: CommentedMap,
+    object_config: CommentedMap,
+    config_inheritance: Optional[CommentedMap] = None,
     object_type: Optional[str] = None,
     unencrypted: bool = False,
     is_wizard: bool = False,
@@ -509,12 +518,12 @@ def iter_over_config(
 
 def update_object_gui(
     window: sg.Window,
-    full_config: dict,
+    full_config: CommentedMap,
     object_type: Optional[str] = None,
     object_name: Optional[str] = None,
     unencrypted: bool = False,
     is_wizard: bool = False,
-) -> dict:
+) -> CommentedMap:
     """
     Reload current object configuration settings to GUI
     """
@@ -556,7 +565,7 @@ def update_object_gui(
     env_variables_tree = sg.TreeData()
     encrypted_env_variables_tree = sg.TreeData()
 
-    if object_type == "repos":
+    if object_type == "repos" and object_name:
         object_config, config_inheritance = npbackup.configuration.get_repo_config(
             full_config, object_name, eval_variables=False
         )
@@ -634,7 +643,10 @@ def update_object_gui(
 
 
 def update_global_gui(
-    window: sg.Window, full_config: dict, unencrypted: bool = False, is_wizard=False
+    window: sg.Window,
+    full_config: CommentedMap,
+    unencrypted: bool = False,
+    is_wizard=False,
 ):
     global_config = CommentedMap()
 
@@ -664,7 +676,9 @@ def update_global_gui(
             and (key[len("global_") :]) in npbackup.gui.common_gui.MONITORING_ENABLE
         ):
             global_config.s(key, full_config.g(key))
-    iter_over_config(window, full_config, global_config, None, "group", unencrypted, "")
+    iter_over_config(
+        window, full_config, global_config, None, "group", unencrypted, is_wizard, ""
+    )
 
 
 def update_monitoring_visibility(window: sg.Window, values):
@@ -719,7 +733,7 @@ def update_zabbix_option_visibility(window: sg.Window, values):
 
 def update_gui_values(
     window: sg.Window,
-    full_config: dict,
+    full_config: CommentedMap,
     key: str,
     value,
     inherited: bool,
@@ -933,7 +947,7 @@ def update_gui_values(
                 unit = None
                 try:
 
-                    matches = re.search(r"(\d+(?:\.\d+)?)\s*([\w%]*)", value)
+                    matches = re.search(r"(\d+(?:\.\d+)?)\s*([\w%]*)", str(value))
                     if matches:
                         value = str(matches.group(1))
                         unit = str(matches.group(2))
@@ -1000,17 +1014,17 @@ def validate_email_addresses(window: sg.Window) -> Optional[Union[List[str], boo
 
 def update_config_dict(
     window: sg.Window,
-    full_config: dict,
-    object_type: str,
-    object_name: str,
+    full_config: CommentedMap,
+    object_type: Optional[str],
+    object_name: Optional[str],
     values: dict,
     is_wizard: bool = False,
-) -> dict:
+) -> CommentedMap:
     """
     Update full_config with keys from GUI
     keys should always have form section.name or section.subsection.name
     """
-    if object_type == "repos":
+    if object_type == "repos" and object_name:
         object_group = full_config.g(f"{object_type}.{object_name}.repo_group")
         if not object_group:
             logger.error(
@@ -1258,7 +1272,9 @@ def update_source_layout(window: sg.Window, source_type: str):
 
 #### ADD ELEMENTS TO LIST
 def add_email_recipient_row(
-    window: sg.Window, recipient: str = None, notification_types: List[str] = None
+    window: sg.Window,
+    recipient: Optional[str] = None,
+    notification_types: Optional[List[str]] = None,
 ):
     # No need for global variable for dicts
     # global COLUMN_LIST_COUNTERS
@@ -1295,7 +1311,10 @@ def add_email_recipient_row(
 
 
 def add_generic_row(
-    window: sg.Window, column_key: str, value: str = None, inherited: bool = False
+    window: sg.Window,
+    column_key: str,
+    value: Optional[str] = None,
+    inherited: bool = False,
 ):
     # No need for global variable for dicts
     # global COLUMN_LIST_COUNTERS
@@ -1332,12 +1351,12 @@ def add_generic_row(
 
 
 def handle_gui_events(
-    full_config: dict,
+    full_config: CommentedMap,
     window: sg.Window,
     event,
-    values: dict = None,
-    object_type: str = None,
-    object_name: str = None,
+    values: dict,
+    object_type: Optional[str] = None,
+    object_name: Optional[str] = None,
     unencrypted: bool = False,
     is_wizard: bool = False,
 ):
@@ -1355,7 +1374,7 @@ def handle_gui_events(
 
     if event == "-RETENTION-POLICIES-":
         retention_policies = get_retention_policies_presets(full_config)
-        if values["-RETENTION-POLICIES-"]:
+        if values and values["-RETENTION-POLICIES-"]:
             new_retention_policy = retention_policies.g(values["-RETENTION-POLICIES-"])
             full_config.s(
                 f"{object_type}.{object_name}.repo_opts.retention_policy",
@@ -1385,7 +1404,7 @@ def handle_gui_events(
 
     if column_key and column_key not in COLUMN_LIST_COUNTERS:
         logger.debug(f"Column key {column_key} not found in COLUMN_LIST_COUNTERS")
-    else:
+    elif column_key:
         if f"-ADD-{column_key}-" in event:
             add_generic_row(window, column_key)
             return
@@ -1402,6 +1421,8 @@ def handle_gui_events(
             window.refresh()
             window[f"-{column_key}-COLUMN-"].contents_changed()
             return
+    else:
+        logger.debug("Column key not found in event, skipping generic column handling")
 
     # Email recipient column
     if event == "-ADD-EMAIL-RECIPIENT-":
@@ -1519,6 +1540,7 @@ def handle_gui_events(
     ):
         popup_text = None
         option_key = None
+        trees = {}
         if "PATHS" in event:
             option_key = "backup_opts.paths"
             tree = backup_paths_tree
@@ -1570,7 +1592,8 @@ def handle_gui_events(
                 or "B2-IDENTITY--" in event
                 or "GS-IDENTITY--" in event
             ):
-                tree = {
+                # We need to iter over two trees here
+                trees = {
                     "env.env_variables": env_variables_tree,
                     "env.encrypted_env_variables": encrypted_env_variables_tree,
                 }
@@ -1632,8 +1655,8 @@ def handle_gui_events(
                     )
                     continue
                 tree.delete(key)
-        if isinstance(tree, dict):
-            for _option_key, _tree in tree.items():
+        if trees:
+            for _option_key, _tree in trees.items():
                 window[_option_key].update(values=_tree)
         else:
             window[option_key].Update(values=tree)
@@ -1689,8 +1712,8 @@ def handle_gui_events(
 
 
 def create_scheduled_task(
-    values: dict, full_config: dict, config_file: str
-) -> Tuple[bool, dict]:
+    values: dict, full_config: CommentedMap, config_file: Path
+) -> Tuple[bool, CommentedMap]:
     """
     Read Task scheduler GUI entries and create a scheduled task accordingly
     """
@@ -1783,7 +1806,7 @@ def create_scheduled_task(
 
 @threaded
 def read_existing_scheduled_tasks_threaded(
-    config_file, full_config, operation: str = None
+    config_file, full_config, operation: Optional[str] = None
 ):
     """
     Wrapper to read scheduled tasks in a thread
@@ -1793,7 +1816,9 @@ def read_existing_scheduled_tasks_threaded(
     )
 
 
-def update_task_list(config_file: str, full_config: dict, window: sg.Window) -> dict:
+def update_task_list(
+    config_file: Path, full_config: CommentedMap, window: sg.Window
+) -> List[dict]:
     """
     Reads current scheduled tasks in a thread and updates scheduled task list
     """
@@ -1805,7 +1830,7 @@ def update_task_list(config_file: str, full_config: dict, window: sg.Window) -> 
     # We need to define a special list for sg.Table to use
     task_list = []
     number_of_backup_tasks = 0
-    if tasks:
+    if isinstance(tasks, list):
         for task in tasks:
             task_line = [
                 task["task_type"],
@@ -1830,7 +1855,7 @@ def update_task_list(config_file: str, full_config: dict, window: sg.Window) -> 
 
 
 def update_task_ui_for_object(
-    full_config: dict, window: sg.Window, task: list, is_wizard: bool = False
+    full_config: CommentedMap, window: sg.Window, task: dict, is_wizard: bool = False
 ):
     if not is_wizard:
         window["-TASK-TYPE-"].update(value=task["task_type"])
@@ -1886,7 +1911,7 @@ def update_task_ui_for_object(
 
 
 #### RETENTION POLICIES PRESETS CODE ####
-def get_retention_policies_presets(full_config: dict) -> dict:
+def get_retention_policies_presets(full_config: CommentedMap) -> CommentedMap:
     try:
         retention_policies_presets = dict(full_config.g("presets.retention_policies"))
     except Exception:
@@ -1911,15 +1936,17 @@ def get_retention_policies_presets(full_config: dict) -> dict:
 
 
 def retention_policy_preset_name(
-    full_config: dict,
-    object_type: str,
-    object_name: str,
+    full_config: CommentedMap,
+    object_type: Optional[str],
+    object_name: Optional[str],
     retention_policies_presets: dict,
 ) -> Optional[str]:
     """
     Matches current retention policy against existing presets and returns the prest name if found
     """
     # Get current retention policy
+    if not object_name:
+        return None
     if object_type == "repos":
         object_config, _ = npbackup.configuration.get_repo_config(
             full_config, object_name
@@ -1928,19 +1955,20 @@ def retention_policy_preset_name(
         object_config = npbackup.configuration.get_group_config(
             full_config, object_name
         )
-    current_retention_policy = object_config.g(f"repo_opts.retention_policy")
-    if retention_policies_presets and current_retention_policy:
-        # Let's compare only preset keys to determine if we're using a preset
-        for policy_name, policy_values in retention_policies_presets.items():
-            try:
-                # Extract the key names we want to compare from presets
-                policy_matches = True
-                for key in policy_values.keys():
-                    if not current_retention_policy[key] == policy_values[key]:
-                        policy_matches = False
-                        break
-                if policy_matches:
-                    return policy_name
-            except KeyError:
-                break
+    if object_config:
+        current_retention_policy = object_config.g(f"repo_opts.retention_policy")
+        if retention_policies_presets and current_retention_policy:
+            # Let's compare only preset keys to determine if we're using a preset
+            for policy_name, policy_values in retention_policies_presets.items():
+                try:
+                    # Extract the key names we want to compare from presets
+                    policy_matches = True
+                    for key in policy_values.keys():
+                        if not current_retention_policy[key] == policy_values[key]:
+                            policy_matches = False
+                            break
+                    if policy_matches:
+                        return policy_name
+                except KeyError:
+                    break
     return None

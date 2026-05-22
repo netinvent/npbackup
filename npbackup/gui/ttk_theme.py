@@ -25,7 +25,7 @@ from resources.customization import (
 )
 
 try:
-    from resources.customization import SG_CUSTOM_THEME, SG_CUSTOM_DARK_THEME
+    from resources.customization import SG_CUSTOM_THEME, SG_CUSTOM_DARK_THEME  # type: ignore
 
     # Override current theme names with ours
     sg.theme_add_new(SIMPLEGUI_THEME, SG_CUSTOM_THEME)
@@ -60,7 +60,7 @@ if os.environ.get("NPBACKUP_DPI_AWARENESS", "True").lower() == "true":
     sg.set_options(dpi_awareness=True)
 
 try:
-    WINDOW_SCALING = float(os.environ.get("NPBACKUP_SCALING", None))
+    WINDOW_SCALING = float(os.environ.get("NPBACKUP_SCALING", None))  # type: ignore
 except (TypeError, ValueError):
     WINDOW_SCALING = None
 

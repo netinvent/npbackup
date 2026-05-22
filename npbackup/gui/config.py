@@ -7,14 +7,16 @@ __intname__ = "npbackup.gui.config"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026030401"
+__build__ = "2026052201"
 
 
-from typing import List
+from typing import List, Optional
 import os
+from pathlib import Path
 from logging import getLogger
 import FreeSimpleGUI as sg
 import textwrap
+from ruamel.yaml.comments import CommentedMap
 from npbackup import configuration
 from npbackup.restic_wrapper.url_parser import parse_restic_repo, build_restic_uri
 from npbackup.core.i18n_helper import _t
@@ -34,7 +36,7 @@ from npbackup.gui.operations import task_scheduler
 logger = getLogger()
 
 
-def config_gui(full_config: dict, config_file: str):
+def config_gui(full_config: CommentedMap, config_file: Path) -> CommentedMap:
     logger.info("Launching configuration GUI")
 
     def object_layout() -> List[list]:
@@ -1256,36 +1258,41 @@ def config_gui(full_config: dict, config_file: str):
                 current_object_name = object_name
             continue
         if event == "--SET-PERMISSIONS--":
-            manager_password = configuration.get_manager_password(
-                full_config, object_name
-            )
-            if (
-                not manager_password
-                or npbackup.gui.common_gui_logic.ask_manager_password(manager_password)
-            ):
-                # We need to update full_config with current GUI values before using or modifying it
-                full_config = npbackup.gui.common_gui_logic.update_config_dict(
-                    window,
-                    full_config,
-                    current_object_type,
-                    current_object_name,
-                    values,
+            if current_object_type and current_object_name:
+                manager_password = configuration.get_manager_password(
+                    full_config, object_name
                 )
-                full_config = npbackup.gui.common_gui_logic.set_permissions(
-                    full_config,
-                    object_type=current_object_type,
-                    object_name=current_object_name,
-                )
-                full_config = npbackup.gui.common_gui_logic.update_object_gui(
-                    window,
-                    full_config,
-                    current_object_type,
-                    current_object_name,
-                    unencrypted=False,
-                )
-                npbackup.gui.common_gui_logic.update_global_gui(
-                    window, full_config, unencrypted=False, is_wizard=False
-                )
+                if (
+                    not manager_password
+                    or npbackup.gui.common_gui_logic.ask_manager_password(
+                        manager_password
+                    )
+                ):
+                    # We need to update full_config with current GUI values before using or modifying it
+                    full_config = npbackup.gui.common_gui_logic.update_config_dict(
+                        window,
+                        full_config,
+                        current_object_type,
+                        current_object_name,
+                        values,
+                    )
+                    full_config = npbackup.gui.common_gui_logic.set_permissions(
+                        full_config,
+                        object_type=current_object_type,
+                        object_name=current_object_name,
+                    )
+                    full_config = npbackup.gui.common_gui_logic.update_object_gui(
+                        window,
+                        full_config,
+                        current_object_type,
+                        current_object_name,
+                        unencrypted=False,
+                    )
+                    npbackup.gui.common_gui_logic.update_global_gui(
+                        window, full_config, unencrypted=False, is_wizard=False
+                    )
+            else:
+                sg.popup_error(_t("config_gui.no_object_selected"))
             continue
 
         if event == "--ACCEPT--":
@@ -1431,4 +1438,4 @@ def config_gui(full_config: dict, config_file: str):
 
 if __name__ == "__main__":
     full_config = configuration.get_default_config()
-    config_gui(full_config, config_file=None)
+    config_gui(full_config, config_file=Path("npbackup-advanced-test.conf"))
