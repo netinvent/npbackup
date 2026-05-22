@@ -1845,9 +1845,10 @@ def update_task_ui_for_object(
             value=create_object_name_for_combo(object_type, object_name)
         )
 
-    window["-FIRST-BACKUP-DATE-"].update(value=task["start_date"].strftime("%Y-%m-%d"))
-    window["-FIRST-BACKUP-HOUR-"].update(value=task["start_date"].strftime("%H"))
-    window["-FIRST-BACKUP-MINUTE-"].update(value=task["start_date"].strftime("%M"))
+    if task["start_date"]:
+        window["-FIRST-BACKUP-DATE-"].update(value=task["start_date"].strftime("%Y-%m-%d"))
+        window["-FIRST-BACKUP-HOUR-"].update(value=task["start_date"].strftime("%H"))
+        window["-FIRST-BACKUP-MINUTE-"].update(value=task["start_date"].strftime("%M"))
 
     try:
         minimum_backup_age = full_config.g(
