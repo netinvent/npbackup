@@ -1480,8 +1480,10 @@ def start_wizard(full_config: dict, config_file: str):
 
         # Loading scheduled tasks for step 4 need to be done after tab nav
         if (
-            event in ("-NEXT-", "-PREVIOUS-") and current_tab == 3
-        ) or event == "-BREADCRUMB-3-":
+            (event in ("-NEXT-", "-PREVIOUS-") and current_tab == 3)
+            or event == "-BREADCRUMB-3-"
+            or event == "--REFRESH-TASKS--"
+        ):
             if os.name == "nt":
                 if not is_admin():
                     result = sg.popup(
@@ -1515,6 +1517,8 @@ def start_wizard(full_config: dict, config_file: str):
                 wizard["-NUMBER-OF-EXISTING-BACKUP-TASKS-"].update(
                     value=str(len(tasks))
                 )
+            else:
+                wizard["-NUMBER-OF-EXISTING-BACKUP-TASKS-"].update(value="0")
 
         ## END NAVIGATION ##
     wizard.close()

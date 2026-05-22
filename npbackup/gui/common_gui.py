@@ -62,7 +62,7 @@ datepicker_options = {
 }
 
 
-def add_source_menu():
+def add_source_menu() -> list:
     return [
         "-ADD-SOURCE-",
         [
@@ -1120,6 +1120,12 @@ def scheduling_col(is_wizard: bool = False, task_types: Optional[list] = None):
                 key="-NUMBER-OF-EXISTING-BACKUP-TASKS-",
                 size=(5, 1),
                 font=SUBTITLE_FONT,
+            ),
+            sg.Push(),
+            (
+                sg.Button(_t("generic.refresh"), key="--REFRESH-TASKS--", size=(18, 1))
+                if is_wizard
+                else sg.Text("")
             ),
         ],
         [
