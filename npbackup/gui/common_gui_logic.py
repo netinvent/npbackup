@@ -1825,6 +1825,7 @@ def update_task_list(config_file: str, full_config: dict, window: sg.Window) -> 
         )
     else:
         tasks = []
+        window["-NUMBER-OF-EXISTING-BACKUP-TASKS-"].update(value="0")
     return tasks
 
 
