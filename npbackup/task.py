@@ -389,7 +389,7 @@ def create_scheduled_task_unix(
             task_arg = "--backup"
     else:
         task_arg = f"--{SCHEDULER_TASKS[task_type]}"
-    task_args = f'-c "{config_file}" {task_arg} --run-as-cli{object_args}'
+    task_args = f'-c "{str(config_file)}" {task_arg} --run-as-cli{object_args}'
     command = f'cd "{executable_dir}" && {cli_executable_path} {task_args}'
     comment = _get_cron_comment(config_file, task_type, object_type, object_name)
 
@@ -661,7 +661,7 @@ if ($results.Count -gt 0) {{
         # Verify the task arguments actually match what we expect
         if (
             f"--{SCHEDULER_TASKS[meta['task_type']]}" not in arguments
-            or config_file not in arguments
+            or str(config_file) not in arguments
             or meta["object_args"] not in arguments
         ):
             logger.debug(f"Arguments not matching, skipping task: {arguments}")
@@ -778,7 +778,7 @@ def create_scheduled_task_windows(
             task_arg = "--backup"
     else:
         task_arg = f"--{SCHEDULER_TASKS[task_type]}"
-    task_args = f'{task_args}-c "{config_file}" {task_arg} --run-as-cli{object_args}'
+    task_args = f'{task_args}-c "{str(config_file)}" {task_arg} --run-as-cli{object_args}'
 
     # For minutes/hours intervals, use Repetition inside a trigger
     # For days/weeks/months, use the appropriate CalendarTrigger schedule
