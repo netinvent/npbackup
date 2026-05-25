@@ -778,7 +778,9 @@ def create_scheduled_task_windows(
             task_arg = "--backup"
     else:
         task_arg = f"--{SCHEDULER_TASKS[task_type]}"
-    task_args = f'{task_args}-c "{str(config_file)}" {task_arg} --run-as-cli{object_args}'
+    task_args = (
+        f'{task_args}-c "{str(config_file)}" {task_arg} --run-as-cli{object_args}'
+    )
 
     # For minutes/hours intervals, use Repetition inside a trigger
     # For days/weeks/months, use the appropriate CalendarTrigger schedule
