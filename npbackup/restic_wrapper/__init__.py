@@ -31,7 +31,6 @@ from npbackup.__env__ import (
     BUILD_TYPE,
     HIDDEN_BY_NPBACKUP,
 )
-from npbackup.__version__ import CURRENT_USER
 from npbackup.path_helper import CURRENT_DIR
 from npbackup.restic_wrapper import schema
 from npbackup.restic_wrapper.url_parser import parse_restic_repo
@@ -105,7 +104,7 @@ class ResticRunner:
         try:
             self._repo_uri_dict = parse_restic_repo(self.repository)
             self._repo_type = self._repo_uri_dict.get("backend_type")
-        except AttributeError:
+        except (AttributeError, ValueError):
             self._repo_uri_dict = {}
             self._repo_type = "local"
         self._ignore_cloud_files = False
