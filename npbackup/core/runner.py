@@ -1368,8 +1368,12 @@ class NPBackupRunner:
             self.json_output = False
             # Since we don't want to close queues nor create a subthread, we need to change behavior here
             # pylint: disable=E1123 (unexpected-keyword-arg)
-            result = self.has_recent_snapshot(self, __close_queues=False, __no_threads=True)
-            has_recent_snapshots, _ = result if isinstance(result, tuple) else (result, None)
+            result = self.has_recent_snapshot(
+                self, __close_queues=False, __no_threads=True
+            )
+            has_recent_snapshots, _ = (
+                result if isinstance(result, tuple) else (result, None)
+            )
             self.json_output = json_output
             # We also need to "reapply" the json setting to backend
             self.restic_runner.json_output = json_output

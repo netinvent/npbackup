@@ -95,9 +95,7 @@ def schedule_on_chance_or_interval(
     Decide if we will run a job according to chance_percent or interval
     """
     chance = schedule_on_chance(job_name, chance_percent)
-    interval = schedule_on_interval(
-        job_name, config_uuid, repo_uuid, interval
-    )
+    interval = schedule_on_interval(job_name, config_uuid, repo_uuid, interval)
     if chance or interval:
         return True
     return False
