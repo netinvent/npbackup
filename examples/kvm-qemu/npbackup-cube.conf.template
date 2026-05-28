@@ -1,4 +1,4 @@
-conf_version: 3.0
+conf_version: 3.1.0
 repos:
   default:
     repo_uri:
@@ -14,7 +14,6 @@ repos:
     repo_opts:
       repo_password:
       retention_policy: {}
-    prometheus: {}
     env: {}
 groups:
   default_group:
@@ -24,7 +23,6 @@ groups:
       stdin_from_command:
       stdin_filename:
       tags: []
-      compression: auto
       use_fs_snapshot: false
       ignore_cloud_files: true
       exclude_caches: true
@@ -40,7 +38,7 @@ groups:
       exclude_files_larger_than:
       additional_parameters:
       additional_backup_only_parameters:
-      minimum_backup_size_error: 2 GiB
+      minimum_backup_size_error: 5 GiB
       pre_exec_commands:
       - '[ -f /opt/cube/SNAPSHOT_FAILED ] && echo "Snapshot failed for $(cat /opt/cube/SNAPSHOT_FAILED)" && exit 1 || exit 0'
       pre_exec_per_command_timeout: 3600
@@ -68,26 +66,26 @@ groups:
         apply_on_tags: []
         keep_within: true
         ntp_server:
-    prometheus:
-      backup_job: ___VM___
-      group: ${MACHINE_GROUP}
+      compression: auto
     env:
       env_variables: {}
       encrypted_env_variables: {}
     is_protected: false
+    monitoring:
+      backup_job: ___VM___
+      group: ${MACHINE_GROUP}
+      additional_labels:
+        npf_tenant: ___TENANT___
+        backup_type: vm
 identity:
   machine_id: ${HOSTNAME}_${RANDOM}[4]
   machine_group: SOME_ARBITRARY_GROUP_NAME
 global_prometheus:
-  metrics: false
-  instance: ___VM___
   destination:
   http_username:
   http_password:
-  additional_labels:
-    npf_tenant: ___TENANT___
-    backup_type: vm
   no_cert_verify: false
+  enabled: false
 global_options:
   auto_upgrade: false
   auto_upgrade_interval: 10
@@ -96,3 +94,33 @@ global_options:
   auto_upgrade_server_password:
   auto_upgrade_host_identity: ${MACHINE_ID}
   auto_upgrade_group: ${MACHINE_GROUP}
+global_zabbix:
+  enabled: false
+  server:
+  port: 10051
+  method: ZabbixProtocol
+  raw_json_collector_host:
+  discovery_wait_time: 10
+  authentication:
+  no_cert_verify: false
+  tls_cert:
+  tls_key:
+  tls_cacert:
+  psk_identity:
+  psk:
+global_healthchecksio:
+  enabled: false
+  url:
+  timeout: 10
+  username:
+  password:
+  no_cert_verify: false
+global_webhooks:
+  enabled: false
+  destination:
+  method: POST
+  username:
+  password:
+  timeout: 10
+  pretty_json: false
+  no_cert_verify: false
