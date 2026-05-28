@@ -1372,9 +1372,7 @@ class NPBackupRunner:
             self.json_output = False
             # Since we don't want to close queues nor create a subthread, we need to change behavior here
             # pylint: disable=E1123 (unexpected-keyword-arg)
-            result = self.has_recent_snapshot(
-                __close_queues=False, __no_threads=True
-            )
+            result = self.has_recent_snapshot(__close_queues=False, __no_threads=True)
             has_recent_snapshots, _ = (
                 result if isinstance(result, tuple) else (result, None)
             )
