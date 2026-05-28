@@ -1327,6 +1327,10 @@ class NPBackupRunner:
             "backup_opts.post_exec_failure_is_fatal"
         )
 
+        post_exec_execute_even_on_backup_error = self.repo_config.g(
+            "backup_opts.post_exec_execute_even_on_backup_error"
+        )
+
         # Make sure we convert tag to list if only one tag is given
         try:
             tags = self.repo_config.g("backup_opts.tags")
@@ -1543,12 +1547,19 @@ class NPBackupRunner:
                 level="info",
             )
 
-            post_exec_commands_success = _exec_commands(
-                "Post",
-                post_exec_commands,
-                post_exec_per_command_timeout,
-                post_exec_failure_is_fatal,
-                result,
+            if not result and not post_exec_execute_even_on_backup_error:
+                self.write_logs(
+                    "Backup failed, skipping post-execution commands since they are configured to not be executed on backup error",
+                    level="error",
+                )
+                post_exec_commands_success = None
+            else:
+                post_exec_commands_success = _exec_commands(
+                    "Post",
+                    post_exec_commands,
+                    post_exec_per_command_timeout,
+                    post_exec_failure_is_fatal,
+                    result,
             )
 
         try:
