@@ -149,6 +149,7 @@ def task_scheduler(config_file: Path, full_config: CommentedMap) -> None:
                 values, full_config, config_file
             )
             if not result:
+                popup_error(_t("config_gui.scheduled_task_creation_failure"))
                 continue
 
             result = save_config(config_file, full_config)

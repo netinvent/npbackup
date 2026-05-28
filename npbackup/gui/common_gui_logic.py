@@ -1798,9 +1798,6 @@ def create_scheduled_task(
         days=days,
         force=minimum_backup_age == 0,
     )
-
-    if not result:
-        popup_error(_t("config_gui.scheduled_task_creation_failure"))
     return result, full_config
 
 
