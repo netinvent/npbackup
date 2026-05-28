@@ -1782,9 +1782,9 @@ def create_scheduled_task(
             user_credentials = get_user_and_password_for_run_as()
         else:
             if CURRENT_USER:
-                user_credentials = [CURRENT_USER, None]
+                user_credentials = (CURRENT_USER, None)
             else:
-                user_credentials = [None, None]
+                user_credentials = (None, None)
 
     result = npbackup.task.create_scheduled_task(
         config_file,
