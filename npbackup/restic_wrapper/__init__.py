@@ -514,7 +514,6 @@ class ResticRunner:
         _cmd = f'"{self._binary}"{additional_parameters}{self.generic_arguments} {cmd}'
 
         self._executor_running = True
-        self._make_env()
 
         if errors_allowed:
             stderr = False
@@ -530,7 +529,8 @@ class ResticRunner:
 
         if self._executor_operation == "backup" and not self.is_init:
             self.init(errors_allowed=True)
-            self._make_env()
+        
+        self._make_env()
 
         exit_code, output = command_runner(
             _cmd,
