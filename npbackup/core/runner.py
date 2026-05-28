@@ -1373,7 +1373,7 @@ class NPBackupRunner:
             # Since we don't want to close queues nor create a subthread, we need to change behavior here
             # pylint: disable=E1123 (unexpected-keyword-arg)
             result = self.has_recent_snapshot(
-                self, __close_queues=False, __no_threads=True
+                __close_queues=False, __no_threads=True
             )
             has_recent_snapshots, _ = (
                 result if isinstance(result, tuple) else (result, None)
@@ -1560,7 +1560,7 @@ class NPBackupRunner:
                     post_exec_per_command_timeout,
                     post_exec_failure_is_fatal,
                     result,
-            )
+                )
 
         try:
             result_string = self.restic_runner.backup_result_content
