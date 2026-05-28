@@ -529,7 +529,7 @@ class ResticRunner:
 
         if self._executor_operation == "backup" and not self.is_init:
             self.init(errors_allowed=True)
-        
+
         self._make_env()
 
         exit_code, output = command_runner(
