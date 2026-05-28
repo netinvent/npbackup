@@ -1019,7 +1019,7 @@ def _main_gui(viewer_mode: bool):
             if viewer_repo_uri and viewer_repo_password:
                 repo_config = viewer_create_repo(viewer_repo_uri, viewer_repo_password)
 
-    right_click_menu = ["", [_t("generic.destination"), "Theme"]]
+    right_click_menu = ["", [_t("generic.destination")]]
     # So I did not find any good way to make sure tables have the right size on Linux
     # So here is a hack to make sure the table is larger on linux
     if os.name == "nt":
