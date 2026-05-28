@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Script ver 2025100601
+# Script ver 2026052701
 
 #TODO: blockcommit removes current snapshots, even if not done by cube
 #      - it's interesting to make housekeeping, let's make this an option
@@ -89,8 +89,8 @@ function create_snapshot {
                         qemu-img info --backing-chain -U "$disk_path" | grep "backing file:" | awk '{print $3}' >> "$BACKUP_FILE_LIST"
                         log "Current disk path: $disk_path"
                         if [ "${vm_xml}" == "" ]; then
-                                vm_xml="$(dirname "${disk_path}")/$vm.xml"
-                                vm_xml_migratable="$(dirname "${disk_path}")/$vm_migratable.xml"
+                                vm_xml="$(dirname "${disk_path}")/${vm}.xml"
+                                vm_xml_migratable="$(dirname "${disk_path}")/${vm}_migratable.xml"
                                 echo "${xml}" > "${vm_xml}" || log "Cannot create XML"
                                 echo "${xml_migratable}" > "${vm_xml_migratable}" ||log "Cannot create migratable XML"
                                 echo "${vm_xml}" >> "${BACKUP_FILE_LIST}" || log "Cannot add xml file to backup file list"
