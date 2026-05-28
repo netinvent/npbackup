@@ -1446,9 +1446,8 @@ def _main_gui(viewer_mode: bool):
             if (
                 env_manager_password and env_manager_password == manager_password
             ) or ask_manager_password(manager_password):
-                # NPF-SEC-00014: Don't leak repository url including passwords in logs/ui
-                destination_string = get_anon_repo_uri(repo_config.g("repo_uri"))
-                sg.popup_no_frame(destination_string)
+                # NPF-SEC-00014: We don't need anonymous uri here since we expect a valid manager password
+                sg.popup_no_frame(repo_config.g("repo_uri"))
             continue
         if event == "--ABOUT--":
             with HideWindow(window):
