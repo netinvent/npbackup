@@ -41,7 +41,6 @@ def metric_analyser(
     """
     Tries to get operation success and backup size checks from restic output
     """
-    backup_sub_min_size = False
     repo_name = repo_config.g("name")
     # Build labels for monitoring backends
     common_labels = {
