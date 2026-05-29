@@ -1311,20 +1311,7 @@ def config_gui(full_config: CommentedMap, config_file: Path) -> CommentedMap:
                 else:
                     try:
                         repo_uri = values["repo_uri"]
-                        try:
-                            parse_restic_repo(repo_uri)
-                        except ValueError as exc:
-                            subresult = sg.popup(
-                                _t("config_gui.repo_uri_invalid")
-                                + f":\n{repo_uri}: {str(exc)}\n"
-                                + _t("generic.are_you_sure"),
-                                keep_on_top=True,
-                                icon=sg.SYSTEM_TRAY_MESSAGE_ICON_WARNING,
-                                custom_text=(_t("generic.no"), _t("generic.yes")),
-                                title=_t("generic.warning").capitalize(),
-                            )
-                            if subresult != _t("generic.yes"):
-                                continue
+                        parse_restic_repo(repo_uri)
                     except ValueError as exc:
                         subresult = sg.popup(
                             _t("config_gui.repo_uri_invalid")
