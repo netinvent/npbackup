@@ -443,6 +443,7 @@ class ResticRunner:
         timeout: Optional[int] = None,
         stdin=None,
         encoding="utf-8",
+        prefix=None,
     ) -> Tuple[bool, str]:
         """
         Executes restic with given command
@@ -510,7 +511,7 @@ class ResticRunner:
                     self._executor_operation, f"{self._executor_operation} --dry-run", 1
                 )
 
-        _cmd = f'"{self._binary}"{additional_parameters}{self.generic_arguments} {cmd}'
+        _cmd = f'{prefix if prefix else ""}"{self._binary}"{additional_parameters}{self.generic_arguments} {cmd}'
 
         self._executor_running = True
 
@@ -525,6 +526,10 @@ class ResticRunner:
         log_replace = {}
         if self.ssh_password:
             log_replace[self.ssh_password] = HIDDEN_BY_NPBACKUP
+
+        # NPF-SEC-00016: Don't leak new keys into debug logs
+        if _cmd.startswith("key add") and prefix:
+            log_replace[prefix] = HIDDEN_BY_NPBACKUP
 
         if self._executor_operation == "backup" and not self.is_init:
             self.init(errors_allowed=True)
@@ -543,6 +548,7 @@ class ResticRunner:
             valid_exit_codes=errors_allowed,
             stop_on=self.is_cancelled,
             on_exit=self.on_exit,
+            shell=True if prefix else False,
             method=method,
             # Live output is only useful in CLI non json mode
             # But must not be used with ls since restic may produce too much output
@@ -1528,6 +1534,28 @@ class ResticRunner:
             msg = "Repo statistics command success"
         else:
             msg = f"Cannot get repo statistics:\n {output}"
+        return self.convert_to_json_output(result, output, msg=msg, **kwargs)
+
+    def keys(self, add=None, remove=None) -> Union[bool, str, dict]:
+        """
+        List keys in repository
+        """
+        kwargs = locals()
+        kwargs.pop("self")
+
+        if add:
+            cmd = "key add"
+            result, output = self.executor(cmd, prefix=f"echo {add}| ")
+        elif remove:
+            cmd = f"key remove {remove}"
+            result, output = self.executor(cmd)
+        else:
+            cmd = "key list"
+            result, output = self.executor(cmd)
+        if result:
+            msg = "Repo keys operation successfully"
+        else:
+            msg = f"Cannot operate on repo keys:\n {output}"
         return self.convert_to_json_output(result, output, msg=msg, **kwargs)
 
     def raw(self, command: str) -> Union[bool, str, dict]:

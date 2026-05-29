@@ -55,6 +55,7 @@ required_permissions = {
     "policy": ["full"],
     "housekeeping": ["full"],
     "prune": ["full"],
+    "keys": ["full"],
     "raw": ["full"],
 }
 
@@ -2033,6 +2034,40 @@ class NPBackupRunner:
     def stats(self, subject: str = None) -> bool:
         self.write_logs(f"Getting stats of repo {self.repo_name}", level="info")
         result = self.restic_runner.stats(subject)
+        return result
+
+    @threaded
+    @close_queues
+    @catch_exceptions
+    @metrics
+    @exec_timer
+    @check_concurrency
+    @has_permission
+    @is_ready
+    @apply_config_to_restic_runner
+    def keys(self, keys_arg: Optional[str] = None) -> bool:
+        add = None
+        remove = None
+        if keys_arg:
+            if keys_arg.startswith("add="):
+                add = keys_arg[len("add=") :]
+                self.write_logs(
+                    f"Adding new key to repo {self.repo_name}", level="info"
+                )
+
+            elif keys_arg.startswith("remove="):
+                remove = keys_arg[len("remove=") :]
+                self.write_logs(
+                    f"Removing key {remove} from repo {self.repo_name}", level="info"
+                )
+            else:
+                self.write_logs(
+                    f"Unknown keys argument given: {keys_arg}", level="error"
+                )
+                return False
+        else:
+            self.write_logs(f"Getting keys of repo {self.repo_name}", level="info")
+        result = self.restic_runner.keys(add=add, remove=remove)
         return result
 
     @threaded

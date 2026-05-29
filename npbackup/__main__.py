@@ -203,6 +203,14 @@ This is free software, and you are welcome to redistribute it under certain cond
         help='Get repository statistics. If snapshot id is given, only snapshot statistics will be shown. You may also pass "--mode raw-data" or "--mode debug" (with double quotes) to get full repo statistics',
     )
     parser.add_argument(
+        "--keys",
+        type=str,
+        nargs="?",
+        const="",
+        required=False,
+        help="List keys in the repository, also takes optional add=<password>,<user> or remove=<keyid> to add or remove a key",
+    )
+    parser.add_argument(
         "--raw",
         type=str,
         default=None,
@@ -646,6 +654,9 @@ This is free software, and you are welcome to redistribute it under certain cond
     elif args.stats is not None or args.group_operation == "stats":
         cli_args["operation"] = "stats"
         cli_args["op_args"] = {"subject": args.stats}
+    elif args.keys is not None or args.group_operation == "keys":
+        cli_args["operation"] = "keys"
+        cli_args["op_args"] = {"keys_arg": args.keys}
     elif args.raw or args.group_operation == "raw":
         cli_args["operation"] = "raw"
         cli_args["op_args"] = {"command": args.raw}
@@ -672,6 +683,7 @@ This is free software, and you are welcome to redistribute it under certain cond
         "recover",
         "dump",
         "stats",
+        "keys",
         "raw",
         "has_recent_snapshot",
     )
