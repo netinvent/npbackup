@@ -155,9 +155,9 @@ class MonitoringBackend(ABC):
             return default
         except (KeyError, AttributeError):
             return default
-        except (AssertionError, TypeError) as exc:
+        except (AssertionError, TypeError):
             logger.debug(
-                f"Key {key} not found in monitoring configuration ({exc}), returning default."
+                f"Key {key} not found in monitoring configuration, returning default."
             )
             return default
 
