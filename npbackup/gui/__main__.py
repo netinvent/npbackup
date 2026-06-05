@@ -419,7 +419,7 @@ def ls_window(
                 col0_heading=_t("generic.path"),
                 col0_width=80,
                 key="-TREE-",
-                show_expanded=True,
+                show_expanded=False,
                 enable_events=False,
                 expand_x=True,
                 expand_y=True,
