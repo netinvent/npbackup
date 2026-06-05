@@ -8,13 +8,13 @@ __author__ = "Orsiris de Jong"
 __site__ = "https://www.netperfect.fr/npbackup"
 __description__ = "NetPerfect Backup Client"
 __copyright__ = "Copyright (C) 2023-2026 NetInvent"
-__build__ = "2025021901"
+__build__ = "2026060501"
 
 
 import sys
 import os
 import traceback
-from typing import Callable
+from typing import Callable, Union
 from functools import wraps
 from logging import getLogger
 import json
@@ -86,7 +86,7 @@ def catch_exceptions(fn: Callable):
     return wrapper
 
 
-def fmt_json(js: dict):
+def fmt_json(js: Union[dict, list]) -> str:
     """
     Just a quick and dirty shorthand for pretty print which doesn't require pprint
     to be loaded
