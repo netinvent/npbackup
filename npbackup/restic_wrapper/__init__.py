@@ -1611,7 +1611,7 @@ class ResticRunner:
                         f"Recent snapshot {last_snapshot['short_id']} of {last_snapshot['time']} exists !"
                     )
                     return True, backup_ts
-        except TypeError:
+        except (TypeError, KeyError, IndexError):
             logger.debug(
                 f"Cannot parse snapshot time from last_snapshot: {last_snapshot}"
             )
