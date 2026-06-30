@@ -5,8 +5,8 @@
 :: Blatantly copied from https://gist.github.com/DRON-666/6e29eb6a8635fae9ab822782f34d8fd6
 :: with some mods to specify restic versions and produce both 32 and 64 bit executables
 
-SET RESTIC_VERSION=0.18.1
-SET GO_BINARIES_VERSION=1.25.6
+SET RESTIC_VERSION=0.19.0
+SET GO_BINARIES_VERSION=1.25.11
 
 SET LOG_FILE=%~n0.log
 SET BUILD_DIR=%~dp0BUILD
