@@ -211,7 +211,7 @@ empty_config_dict = {
                 "upload_speed": "800 Mib",  # allows BytesConverter units, use 0 for unlimited upload speed
                 "download_speed": "0 Mib",  # allows BytesConverter units, use 0 for unlimited download speed
                 "backend_connections": 0,  # Fine tune simultaneous connections to backend, use 0 for standard configuration
-                "retention_policy": {
+                "retention_policy": {  # last, hourly, daily, weekly, monthly and yearly accept parameter special parameter "all"
                     "last": 3,
                     "hourly": 72,
                     "daily": 30,
