@@ -528,15 +528,18 @@ def has_random_variables(full_config: CommentedMap) -> Tuple[bool, CommentedMap]
     def _has_random_variables(value) -> Any:
         nonlocal is_modified
 
-        if isinstance(value, str):
-            matches = re.search(r"\${RANDOM}\[(.*)\]", value)
-            if matches:
+        if isinstance(value, str) and "${RANDOM}" in value:
+            def _replace_random(match):
                 try:
-                    char_quantity = int(matches.group(1))
+                    char_quantity = int(match.group(1))
                 except (ValueError, TypeError):
                     char_quantity = 1
-                value = re.sub(r"\${RANDOM}\[.*\]", random_string(char_quantity), value)
+                return random_string(char_quantity)
+
+            new_value = re.sub(r"\${RANDOM}\[(\d*)\]", _replace_random, value)
+            if new_value != value:
                 is_modified = True
+            return new_value
         return value
 
     full_config = replace_in_iterable(full_config, _has_random_variables)
