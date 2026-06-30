@@ -1326,9 +1326,9 @@ class ResticRunner:
                     cmds.append(f"forget {snapshot}")
             else:
                 cmds = [f"forget {snapshots}"]
-        if tags:
+        elif tags:
             cmds = [f"forget --tag {tags} --unsafe-allow-remove-all"]
-        if policy:
+        elif policy:
             cmd = "forget"
             for key, value in policy.items():
                 if key == "keep-tags":
@@ -1346,6 +1346,11 @@ class ResticRunner:
             if group_by:
                 cmd += f' --group-by {",".join(group_by)}'
             cmds = [cmd]
+        else:
+            self.write_logs(
+                "No valid snapshot or policy defined for pruning", level="error"
+            )
+            return False
 
         # We need to be verbose here since server errors will not stop client from deletion attempts
         verbose = self.verbose
