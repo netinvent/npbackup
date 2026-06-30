@@ -1,0 +1,119 @@
+conf_version: 3.0.4
+repos:
+  default:
+    repo_uri:
+      __NPBACKUP__JAT9SY17jFitG1dxNFMnSZB8v7nkViHGjVajsspMJHgxNzY0MTIzMzAxLjQ4MjgwNA8PDw8PDw8PDw8PDw8PDzm47ypROSfI7/pKl6rru2cr3upPgi/RDPRJHl0YBmyDdlelTFLM28xfSrMGTRLUyVTTIpzR1GlZaQacM3KYomIAao0lK8RwvAVLHONz8fvb7wzLBzdC//pMPfy4F3EDolBDFlPxGeg/8g139J87UBU=__NPBACKUP__
+    repo_group: default_group
+    backup_opts:
+      paths:
+      - ___SOURCE___
+      source_type: files_from_verbatim
+      exclude_files_larger_than: 0.0 KiB
+      tags:
+      - ___VM___
+      - ___TAG___
+    repo_opts:
+      repo_password:
+        __NPBACKUP__i+4FwyzyCVZXeiOpBlkpSTcRvRyFERNx9o9kk6L4QMQxNzY0MTIzMzAxLjQ4MzEyMQ8PDw8PDw8PDw8PDw8PD6degNOcarez+PV3gmLx+iQFfgFoxyDDjQdO4f5HDiluQ5tvPfC02SOt6OvCrhk=__NPBACKUP__
+      retention_policy: {}
+      compression:
+    prometheus: {}
+    env: {}
+    is_protected: false
+groups:
+  default_group:
+    backup_opts:
+      paths: []
+      source_type:
+      stdin_from_command:
+      stdin_filename:
+      tags: []
+      use_fs_snapshot: false
+      ignore_cloud_files: true
+      exclude_caches: true
+      one_file_system: true
+      priority: low
+      excludes_case_ignore: false
+      exclude_files:
+      - excludes/generic_excluded_extensions
+      - excludes/generic_excludes
+      - excludes/windows_excludes
+      - excludes/linux_excludes
+      exclude_patterns: []
+      exclude_files_larger_than:
+      additional_parameters:
+      additional_backup_only_parameters:
+      minimum_backup_size_error: 2 GiB
+      pre_exec_commands:
+      - '[ -f /opt/cube/SNAPSHOT_FAILED ] && echo "Snapshot failed for $(cat /opt/cube/SNAPSHOT_FAILED)"
+        && exit 1 || exit 0'
+      pre_exec_per_command_timeout: 3600
+      pre_exec_failure_is_fatal: false
+      post_exec_commands: []
+      post_exec_per_command_timeout: 3600
+      post_exec_failure_is_fatal: false
+      post_exec_execute_even_on_backup_error: true
+    repo_opts:
+      repo_password:
+      repo_password_command:
+      minimum_backup_age: 1440
+      upload_speed: 800 Mib
+      download_speed: 0 Mib
+      backend_connections: 0
+      retention_policy:
+        last: 3
+        hourly: 72
+        daily: 30
+        weekly: 4
+        monthly: 12
+        yearly: 3
+        keep_within: true
+        ntp_server:
+        keep_tags: []
+      compression: auto
+    prometheus:
+      backup_job: ___VM___
+      group: ${MACHINE_GROUP}
+    env:
+      env_variables: {}
+      encrypted_env_variables: {}
+    is_protected: false
+identity:
+  machine_id: ${HOSTNAME}_vIlA
+  machine_group: lac-stor
+global_prometheus:
+  metrics: true
+  instance: ${MACHINE_ID}
+  destination: https://push.supervision.netperfect.fr/metrics/job/${BACKUP_JOB}
+  http_username:
+    __NPBACKUP__aj9lzcQax+D6AyQAmTcSAWmxsMHfqA9g2N2xfxDFkiQxNzY0MTIzMzAxLjQ4MzYxNQ8PDw8PDw8PDw8PDw8PD/EX7twniRCADdOuM7ReXRbDHXP6nNtw__NPBACKUP__
+  http_password:
+    __NPBACKUP__nStmJsKm+fcbRLXmOPPfK4PsqzwkxU3n6+yNjwxDc6sxNzY0MTIzMzAxLjQ4Mzg2Mw8PDw8PDw8PDw8PDw8PDw386f+5Scu1PtcdAQOF/7aH2zn9QXPjO6jttCRClSkbrrfu__NPBACKUP__
+  additional_labels:
+    npf_tenant: badmin
+    backup_type: vm
+  no_cert_verify: false
+global_email:
+  enable: false
+  instance: ${MACHINE_ID}
+  smtp_server:
+  smtp_port: 587
+  smtp_username:
+  smtp_password:
+  sender:
+  recipients:
+  on_backup_success: true
+  on_backup_failure: true
+  on_operations_success: false
+  on_operations_failure: true
+global_options:
+  auto_upgrade: false
+  auto_upgrade_percent_chance: 50
+  #auto_upgrade_interval: 10
+  auto_upgrade_server_url:
+  auto_upgrade_server_username:
+  auto_upgrade_server_password:
+  auto_upgrade_host_identity: ${MACHINE_ID}
+  auto_upgrade_group: ${MACHINE_GROUP}
+  machine_group: SOME_ARBITRARY_GROUP_NAME
+audience: private

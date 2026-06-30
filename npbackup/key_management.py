@@ -82,7 +82,7 @@ def get_aes_key() -> Optional[bytes]:
         else:
             key_command = os.environ.get("NPBACKUP_KEY_COMMAND", None)
             if key_command:
-                exit_code, output = command_runner( # type: ignore
+                exit_code, output = command_runner(  # type: ignore
                     key_command, encoding=False, shell=True
                 )
                 if exit_code != 0 or output is None:
