@@ -9,6 +9,7 @@ __intname__ = "npbackup.key_management"
 import sys
 import os
 from logging import getLogger
+from typing import Optional
 from command_runner import command_runner
 from cryptidy.symmetric_encryption import generate_key
 from npbackup.audience import CURRENT_AUDIENCE
@@ -62,7 +63,7 @@ if not AES_KEY:
     sys.exit(1)
 
 
-def get_aes_key():
+def get_aes_key() -> Optional[bytes]:
     """
     Get encryption key from environment variable or file
     """
@@ -81,10 +82,10 @@ def get_aes_key():
         else:
             key_command = os.environ.get("NPBACKUP_KEY_COMMAND", None)
             if key_command:
-                exit_code, output = command_runner(
+                exit_code, output = command_runner( # type: ignore
                     key_command, encoding=False, shell=True
                 )
-                if exit_code != 0:
+                if exit_code != 0 or output is None:
                     msg = f"Cannot run encryption key command: {output}"
                     return False, msg
                 key = bytes(output)
@@ -94,7 +95,7 @@ def get_aes_key():
         return False, msg
     if key:
         return obfuscation(key), msg
-    return None, ""
+    return None, b""
 
 
 def create_key_file(key_location: str):

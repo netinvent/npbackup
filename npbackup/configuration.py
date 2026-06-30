@@ -436,7 +436,7 @@ def key_should_be_encrypted(key: str, encrypted_options: List[str]) -> bool:
 
 def crypt_config(
     full_config: CommentedMap,
-    aes_key: str,
+    aes_key: bytes,
     encrypted_options: List[str],
     operation: str,
     obfuscation_fn: Callable,
@@ -504,8 +504,8 @@ def is_encrypted(full_config: CommentedMap) -> bool:
 
         if key_should_be_encrypted(key, ENCRYPTED_OPTIONS):
             if value is not None:
-                if isinstance(value, str) and (
-                    not value.startswith(ID_STRING) or not value.endswith(ID_STRING)
+                if isinstance(value, (str, int, float)) and (
+                    not str(value).startswith(ID_STRING) or not str(value).endswith(ID_STRING)
                 ):
                     is_encrypted = False
         return value
@@ -1482,8 +1482,7 @@ def save_config(config_file: Path, full_config: CommentedMap) -> bool:
     try:
         full_config = inject_permissions_into_full_config(full_config)
         full_config.s("audience", CURRENT_AUDIENCE)
-        with open(config_file, "w", encoding="utf-8") as file_handle:
-            if not is_encrypted(full_config):
+        if not is_encrypted(full_config):
                 full_config = crypt_config(
                     full_config,
                     AES_KEY,
@@ -1491,6 +1490,11 @@ def save_config(config_file: Path, full_config: CommentedMap) -> bool:
                     operation="encrypt",
                     obfuscation_fn=obfuscation,
                 )
+        if not full_config:
+            logger.critical("Cannot encrypt config file, not saving")
+            return False
+        with open(config_file, "w", encoding="utf-8") as file_handle:
+            
             yaml = YAML(typ="rt")
             yaml.dump(full_config, file_handle)
         # Since yaml is a "pointer object", we need to decrypt after saving

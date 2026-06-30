@@ -21,7 +21,7 @@ import upgrade_server.api
 from upgrade_server.__debug__ import _DEBUG
 
 if __name__ == "__main__":
-    _DEV = os.environ.get("_DEV", False)
+    _DEV = os.environ.get("_DEV", "False").strip("'\"").lower().capitalize() == "True"
 
     parser = ArgumentParser(
         prog="{} {} - {}".format(__appname__, __copyright__, __license__),
@@ -125,7 +125,7 @@ if __name__ == "__main__":
 
         server_args = {
             "workers": (multiprocessing.cpu_count() * 2) + 1,
-            "bind": f"{listen}:{port}" if listen else "0.0.0.0:8080",
+            "bind": f"{listen}:{port}" if listen and port else "0.0.0.0:8080",
             "worker_class": "uvicorn.workers.UvicornWorker",
         }
 
@@ -135,7 +135,7 @@ if __name__ == "__main__":
         else:
             StandaloneApplication(upgrade_server.api.app, server_args).run()
     except KeyboardInterrupt as exc:
-        logger.error("Program interrupted by keyoard: {}".format(exc))
+        logger.error("Program interrupted by keyboard: {}".format(exc))
         sys.exit(200)
     except Exception as exc:
         logger.error("Program interrupted by error: {}".format(exc))
