@@ -14,7 +14,10 @@ from typing import List, Optional
 import os
 from pathlib import Path
 from logging import getLogger
-import FreeSimpleGUI as sg
+try:
+    import PySimpleGUI as sg
+except ImportError:
+    import FreeSimpleGUI as sg
 import textwrap
 from ruamel.yaml.comments import CommentedMap
 from npbackup import configuration

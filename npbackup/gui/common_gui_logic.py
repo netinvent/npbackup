@@ -15,7 +15,10 @@ from pathlib import Path
 from typing import List, Tuple, Optional, Union
 import re
 from logging import getLogger
-import FreeSimpleGUI as sg
+try:
+    import PySimpleGUI as sg
+except ImportError:
+    import FreeSimpleGUI as sg
 from ruamel.yaml.comments import CommentedMap
 from datetime import datetime
 from copy import deepcopy

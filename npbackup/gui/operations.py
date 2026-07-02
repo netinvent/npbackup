@@ -17,7 +17,10 @@ from ruamel.yaml.comments import CommentedMap
 import logging
 from collections import namedtuple
 from ofunctions.misc import BytesConverter
-import FreeSimpleGUI as sg
+try:
+    import PySimpleGUI as sg
+except ImportError:
+    import FreeSimpleGUI as sg
 from npbackup.configuration import (
     get_repo_config,
     get_repo_list,

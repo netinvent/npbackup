@@ -15,7 +15,10 @@ __build__ = "2026032501"
 
 
 from logging import getLogger
-import FreeSimpleGUI as sg
+try:
+    import PySimpleGUI as sg
+except ImportError:
+    import FreeSimpleGUI as sg
 from reskinner.colorizer import Colorizer
 
 logger = getLogger()

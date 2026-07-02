@@ -17,7 +17,10 @@ from typing import Optional
 import os
 from datetime import datetime
 from logging import getLogger
-import FreeSimpleGUI as sg
+try:
+    import PySimpleGUI as sg
+except ImportError:
+    import FreeSimpleGUI as sg
 import textwrap
 from npbackup.core.i18n_helper import _t
 from npbackup.gui.constants import combo_boxes, byte_units

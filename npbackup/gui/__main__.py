@@ -26,7 +26,10 @@ import atexit
 from ofunctions.process import kill_childs
 from ofunctions.threading import threaded
 from ofunctions.misc import BytesConverter
-import FreeSimpleGUI as sg
+try:
+    import PySimpleGUI as sg
+except ImportError:
+    import FreeSimpleGUI as sg
 import _tkinter
 import npbackup.configuration
 import npbackup.common

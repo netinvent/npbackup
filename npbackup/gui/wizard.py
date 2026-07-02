@@ -14,7 +14,10 @@ from typing import List, Tuple
 from pathlib import Path
 from ruamel.yaml.comments import CommentedMap
 from logging import getLogger
-import FreeSimpleGUI as sg
+try:
+    import PySimpleGUI as sg
+except ImportError:
+    import FreeSimpleGUI as sg
 import textwrap
 from urllib.parse import urlparse
 

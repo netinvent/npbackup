@@ -17,7 +17,10 @@ import re
 import queue
 import time
 import json
-import FreeSimpleGUI as sg
+try:
+    import PySimpleGUI as sg
+except ImportError:
+    import FreeSimpleGUI as sg
 from ofunctions.threading import threaded
 from concurrent.futures._base import CancelledError, InvalidStateError
 from ofunctions.misc import BytesConverter

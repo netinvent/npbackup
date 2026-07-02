@@ -11,7 +11,10 @@ __build__ = "2026051801"
 
 import sys
 import os
-import FreeSimpleGUI as sg
+try:
+    import PySimpleGUI as sg
+except ImportError:
+    import FreeSimpleGUI as sg
 from ofunctions.platform import get_os
 from reskinner import reskin
 from npbackup.path_helper import BASEDIR
@@ -127,7 +130,7 @@ def change_sg_theme(window: sg.Window, refresh: bool = False):
     if HAVE_TTK_THEME:
         # pylint: disable=E0601 (used-before-assignment)
         style = ttk.Style(window.hidden_master_root)
-        sg._change_ttk_theme(style, sg.DEFAULT_TTK_THEME)
+        #sg._change_ttk_theme(style, sg.DEFAULT_TTK_THEME)
     reskin(
         window=window,
         new_theme=CURRENT_THEME,

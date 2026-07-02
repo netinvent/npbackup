@@ -12,7 +12,9 @@ ofunctions.mailer>=1.3.1
 #python-pidfile>=3.0.0
 # pysimplegui 5 has gone commercial, let's switch to freesimplegui
 # keep in mind that freesimplegui might higher required python version in the future
-freesimplegui @ git+https://github.com/netinvent/FreeSimpleGUI.git@npb-fixes#c7b0027f2ec369b77f8df9c1d0438f2701057bbe
+#freesimplegui @ git+https://github.com/netinvent/FreeSimpleGUI.git@npb-fixes#c7b0027f2ec369b77f8df9c1d0438f2701057bbe
+# freesimplegui is not maintained anymore, and pysimplegui 6 has become open again (!)
+pysimplegui>=6.0.0
 requests
 # For ARM builds done on Debian 11 with OpenSSL1.1.0 compat we need urllib lower than v2
 urllib3>=2.0.0; python_version >= '3.9'
