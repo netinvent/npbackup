@@ -7,7 +7,7 @@ __intname__ = "npbackup.task"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026052201"
+__build__ = "2026070301"
 
 
 import sys
@@ -244,16 +244,90 @@ _DOW_TO_CRON = {
     "saturday": "SAT",
     "sunday": "SUN",
 }
-# Reverse mapping: cron DOW integer (0=Sun) to lowercase day name
-_DOW_FROM_INT = {
-    0: "sunday",
-    1: "monday",
-    2: "tuesday",
-    3: "wednesday",
-    4: "thursday",
-    5: "friday",
-    6: "saturday",
+# Mapping from cron 3-letter abbreviations to cron DOW integers (0=Sun)
+_CRON_DOW_TO_INT = {
+    "SUN": 0,
+    "MON": 1,
+    "TUE": 2,
+    "WED": 3,
+    "THU": 4,
+    "FRI": 5,
+    "SAT": 6,
 }
+# Reverse mapping: cron DOW integer to cron 3-letter abbreviation
+_INT_TO_CRON = {value: key for key, value in _CRON_DOW_TO_INT.items()}
+# Mapping from cron DOW integer (0=Sun) to capitalized day name,
+# matching the output format of the Windows task reader and the GUI expectations
+_DOW_FROM_INT = {
+    0: "Sunday",
+    1: "Monday",
+    2: "Tuesday",
+    3: "Wednesday",
+    4: "Thursday",
+    5: "Friday",
+    6: "Saturday",
+}
+
+
+def _cron_dow_token_to_int(token: str) -> Optional[int]:
+    """
+    Convert a single cron DOW token (integer 0-7 or day name) to an integer 0-6 (0=Sunday)
+    Cron accepts both 0 and 7 for Sunday, and day names are case-insensitive
+    """
+    token = str(token).strip()
+    if not token:
+        return None
+    if token.isdigit():
+        value = int(token)
+        if 0 <= value <= 7:
+            return value % 7  # cron accepts both 0 and 7 for Sunday
+        return None
+    return _CRON_DOW_TO_INT.get(token[:3].upper())
+
+
+def _parse_cron_dow_field(dow_field: str) -> List[str]:
+    """
+    Parse a cron day-of-week field (e.g. '*', 'MON,WED', 'mon-fri', '1-5/2', '0,7')
+    into a list of capitalized day names (Sunday first),
+    matching the output format of the Windows task reader
+    """
+    found = set()
+    dow_field = str(dow_field).strip()
+    if not dow_field or dow_field == "*":
+        return []
+    for part in dow_field.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        step = 1
+        if "/" in part:
+            part, _, step_str = part.partition("/")
+            part = part.strip()
+            if step_str.strip().isdigit():
+                step = max(int(step_str.strip()), 1)
+        if part == "*":
+            start, end = 0, 6
+        elif "-" in part:
+            start_str, _, end_str = part.partition("-")
+            start = _cron_dow_token_to_int(start_str)
+            end = _cron_dow_token_to_int(end_str)
+            if start is None or end is None:
+                logger.warning(f"Cannot parse cron day-of-week range: {part}")
+                continue
+        else:
+            value = _cron_dow_token_to_int(part)
+            if value is None:
+                logger.warning(f"Cannot parse cron day-of-week value: {part}")
+            else:
+                found.add(value)
+            continue
+        if start <= end:
+            values = list(range(start, end + 1))
+        else:
+            # Wrap-around range, e.g. FRI-MON
+            values = list(range(start, 7)) + list(range(0, end + 1))
+        found.update(values[::step])
+    return [_DOW_FROM_INT[value] for value in sorted(found)]
 
 
 def _get_cron_comment(
@@ -340,21 +414,17 @@ def _read_existing_scheduled_task_unix(
                         task_info["interval"] = int(month_str[2:])
                         task_info["interval_unit"] = "months"
                     elif str(job.dow) != "*":
-                        task_info["interval"] = 7  # weekly
+                        # Weekly schedule (cron cannot express multi-week intervals)
+                        # Mirrors WeeksInterval=1 returned by the Windows task reader
+                        task_info["interval"] = 1
                         task_info["interval_unit"] = "weeks"
                     else:
                         task_info["interval"] = 1
                         task_info["interval_unit"] = "days"
 
-                    # Extract days of week
-                    dow_str = str(job.dow)
-                    if dow_str != "*":
-                        for part in dow_str.split(","):
-                            part = part.strip()
-                            if part.isdigit() and int(part) in _DOW_FROM_INT:
-                                task_info["days_of_week"].append(
-                                    _DOW_FROM_INT[int(part)]
-                                )
+                    # Extract days of week (creation writes 3-letter names,
+                    # but hand-edited crontabs may contain integers or ranges)
+                    task_info["days_of_week"] = _parse_cron_dow_field(str(job.dow))
 
                     logger.info(f"Found existing cron job: {comment}")
                     tasks.append(task_info)
@@ -448,7 +518,8 @@ def create_scheduled_task_unix(
         ) % 7  # Python weekday (Mon=0) → cron DOW (Sun=0)
         job.minute.on(ref_time.minute)
         job.hour.on(ref_time.hour)
-        job.dow.on(cron_dow)
+        # Write 3-letter day names, as done in the days-based branches
+        job.dow.on(_INT_TO_CRON[cron_dow])
     elif interval is not None and interval_unit == "months":
         # Every N months on the start day's day-of-month
         job.minute.on(ref_time.minute)
