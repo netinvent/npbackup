@@ -791,9 +791,7 @@ Write-Output ('NPBACKUP_JSON_B64:' + [Convert]::ToBase64String([System.Text.Enco
     try:
         b64_match = re.search(r"NPBACKUP_JSON_B64:([A-Za-z0-9+/=]+)", output)
         if b64_match:
-            raw_tasks = json.loads(
-                base64.b64decode(b64_match.group(1)).decode("utf-8")
-            )
+            raw_tasks = json.loads(base64.b64decode(b64_match.group(1)).decode("utf-8"))
         else:
             raw_tasks = next(extract_json(output))
     except (json.JSONDecodeError, ValueError, StopIteration, TypeError) as exc:
@@ -1213,7 +1211,9 @@ def _delete_scheduled_task_windows(
     try:
         ps_runner = PowerShellRunner()
         ps_runner.identifier_string = "npbackup_delete_task"
-        ps_runner.elevate_message = f"Running elevated {SHORT_PRODUCT_NAME} task deletion"
+        ps_runner.elevate_message = (
+            f"Running elevated {SHORT_PRODUCT_NAME} task deletion"
+        )
         exit_code, output = ps_runner.run_script(
             ps_cmd, elevated=True, valid_exit_codes=[0, 1]
         )
