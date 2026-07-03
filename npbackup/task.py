@@ -1183,6 +1183,7 @@ Register-ScheduledTask -TaskName $taskName -Xml $taskXml {}
     except OSError as exc:
         logger.error(f"Could not create new task: {exc}")
         return False
+    # NPF-SEC-00017: Remove the temporary task file even if registration failed, since it may contain credentials
     finally:
         try:
             os.remove(temp_task_file)

@@ -77,3 +77,9 @@ We need to make sure that sftp password never gets logged in debug mode
 # NPF-SEC-00016: Don't leak additional keys into debug logs
 
 We need to make sure that adding keys never gets logged in debug mode
+
+# NPF-SEC-00017: Don't leak scheduled task credentials
+
+When registering a Windows scheduled task with user credentials, the generated PowerShell script contains a password.  
+The script content must never be logged, and passwords are redacted from PowerShell output before logging errors.  
+Credentials, task names and file paths are passed as base64 encoded expressions to the generated scripts, which also prevents PowerShell injection via crafted repo/group names and avoids quoting/encoding issues.
