@@ -7,13 +7,15 @@ __intname__ = "npbackup.task"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026070301"
+__build__ = "2026070302"
 
 
 import sys
 import os
 import re
 import json
+import base64
+from xml.sax.saxutils import escape as xml_escape
 from pathlib import Path
 from typing import List, Optional, Union, Tuple
 from ruamel.yaml.comments import CommentedMap
@@ -577,13 +579,61 @@ def _delete_scheduled_task_unix(
 #### WINDOWS TASK MANAGEMENT ####
 def _parse_iso_duration_to_minutes(duration: str) -> Optional[int]:
     """Parse ISO 8601 duration (e.g. PT15M, PT1H30M, P1D) to total minutes."""
-    match = re.match(r"P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?", duration)
+    # H and M designators are only parsed after the T time separator so
+    # months (e.g. P1M) are not misread as minutes
+    match = re.match(r"P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?)?", duration)
     if not match:
         return None
     days = int(match.group(1) or 0)
     hours = int(match.group(2) or 0)
     minutes = int(match.group(3) or 0)
     return days * 1440 + hours * 60 + minutes
+
+
+# English weekday names indexed by datetime.weekday() (Monday=0)
+# We don't use strftime("%A") since it's locale dependent and would produce
+# invalid scheduled task XML day names on non-English locales
+_WEEKDAY_NAMES_EN = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+]
+
+
+def _ps_b64_literal(value: str) -> str:
+    """
+    Return a PowerShell expression that reconstructs the given string from base64
+
+    This avoids any quoting / escaping / encoding issue when injecting arbitrary
+    strings (task names, paths, credentials) into generated PowerShell scripts,
+    since the resulting script stays pure ASCII
+    """
+    b64_value = base64.b64encode(str(value).encode("utf-8")).decode("ascii")
+    return f"[System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{b64_value}'))"
+
+
+def _parse_windows_task_datetime(value: str) -> Optional[datetime.datetime]:
+    """
+    Parse scheduled task StartBoundary strings into datetime objects
+
+    Task scheduler may emit 7-digit fractional seconds or 'Z' suffixes which
+    datetime.fromisoformat does not accept on Python < 3.11
+    """
+    value = str(value).strip()
+    if not value:
+        return None
+    normalized = value.replace("Z", "+00:00")
+    # Truncate fractional seconds to 6 digits max
+    normalized = re.sub(r"(\.\d{1,6})\d*", r"\1", normalized)
+    try:
+        return datetime.datetime.fromisoformat(normalized)
+    except ValueError:
+        logger.debug(f"Cannot parse task start boundary: {value}")
+        return None
 
 
 def _get_scheduled_task_name_windows(
@@ -635,19 +685,26 @@ def _read_existing_scheduled_task_windows(
         return tasks
 
     # Build a single PowerShell script that queries all tasks at once.
-    # Escape single quotes for PowerShell string literals.
-    ps_task_names = ",".join(
-        "'{}'".format(name.replace("'", "''")) for name in task_lookup
-    )
+    # Task names are passed as base64 encoded JSON so the script stays pure
+    # ASCII regardless of config file path / object name characters
+    # (PowerShell 5.1 parses BOM-less script files as ANSI)
+    ps_task_names_b64 = base64.b64encode(
+        json.dumps(list(task_lookup)).encode("utf-8")
+    ).decode("ascii")
 
     # DaysOfWeek in CIM is a UInt16 flags enum:
     #   Sunday=1, Monday=2, Tuesday=4, Wednesday=8,
     #   Thursday=16, Friday=32, Saturday=64
+    # MonthsOfYear is a UInt16 flags enum: January=1 ... December=2048
+    # JSON output is emitted as base64 with a marker prefix so it survives
+    # any console codepage and the elevator script output handling
     ps_script = f"""$ErrorActionPreference = 'SilentlyContinue'
 $results = @()
-$taskNames = @({ps_task_names})
+$taskNamesJson = [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{ps_task_names_b64}'))
+$taskNames = @(ConvertFrom-Json $taskNamesJson)
 $dayNames = @('Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday')
 $dayBits  = @(1,2,4,8,16,32,64)
+$monthBits = @(1,2,4,8,16,32,64,128,256,512,1024,2048)
 foreach ($name in $taskNames) {{
     $task = Get-ScheduledTask -TaskName $name -ErrorAction SilentlyContinue
     if ($null -eq $task) {{ continue }}
@@ -655,6 +712,7 @@ foreach ($name in $taskNames) {{
     foreach ($action in $task.Actions) {{
         if ($action.Arguments) {{ $arguments = $action.Arguments; break }}
     }}
+    $needsXml = $false
     $triggerList = @()
     foreach ($trigger in $task.Triggers) {{
         $tType = $trigger.CimClass.CimClassName
@@ -664,6 +722,7 @@ foreach ($name in $taskNames) {{
             repetition_interval = $null
             days_interval       = $null
             weeks_interval      = $null
+            months_count        = $null
             days_of_week        = @()
         }}
         if ($trigger.Repetition -and $trigger.Repetition.Interval) {{
@@ -679,28 +738,46 @@ foreach ($name in $taskNames) {{
                     $tObj['days_of_week'] += $dayNames[$i]
                 }}
             }}
+        }} elseif ($tType -eq 'MSFT_TaskMonthlyTrigger') {{
+            $moCount = 0
+            $moFlags = [int]$trigger.MonthsOfYear
+            for ($i = 0; $i -lt 12; $i++) {{
+                if ($moFlags -band $monthBits[$i]) {{ $moCount++ }}
+            }}
+            $tObj['months_count'] = $moCount
+            if ($moCount -eq 0) {{ $needsXml = $true }}
+        }} elseif ($tType -eq 'MSFT_TaskTrigger') {{
+            # Monthly triggers may surface as generic MSFT_TaskTrigger without
+            # schedule details, we need the task XML to identify them
+            $needsXml = $true
         }}
         $triggerList += [PSCustomObject]$tObj
+    }}
+    $taskXml = ''
+    if ($needsXml) {{
+        $taskXml = [string](Export-ScheduledTask -TaskName $name -ErrorAction SilentlyContinue)
     }}
     $results += [PSCustomObject]@{{
         task_name = $name
         arguments = $arguments
         triggers  = $triggerList
+        xml       = $taskXml
     }}
 }}
 if ($results.Count -gt 0) {{
-    ConvertTo-Json -InputObject @($results) -Depth 5 -Compress
+    $json = ConvertTo-Json -InputObject @($results) -Depth 5 -Compress
 }} else {{
-    Write-Output '[]'
+    $json = '[]'
 }}
+Write-Output ('NPBACKUP_JSON_B64:' + [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($json)))
 """
     try:
-        runner = PowerShellRunner()
-        runner.identifier_string = f"npbackup_read_tasks"
-        runner.elevate_message = (
+        ps_runner = PowerShellRunner()
+        ps_runner.identifier_string = "npbackup_read_tasks"
+        ps_runner.elevate_message = (
             f"Running elevated {SHORT_PRODUCT_NAME} task processing"
         )
-        exit_code, output = runner.run_script(ps_script, elevated=True)
+        exit_code, output = ps_runner.run_script(ps_script, elevated=True)
         if exit_code != 0 or not output or not output.strip():
             logger.debug(f"No scheduled tasks found or PowerShell error: {output}")
             return tasks
@@ -708,12 +785,18 @@ if ($results.Count -gt 0) {{
         logger.error(f"Could not run PowerShell script: {exc}")
         return tasks
 
-    # When already elevated, the elevator script will prepent an optional elevate message which we need
-    # to remove in order to properly parse the JSON without a header.
-
+    # Output is base64 encoded JSON with a marker prefix so it survives any
+    # console codepage and the optional elevate message the elevator script
+    # prepends. Fallback to extracting raw JSON for robustness.
     try:
-        raw_tasks = next(extract_json(output))
-    except (json.JSONDecodeError, ValueError, StopIteration) as exc:
+        b64_match = re.search(r"NPBACKUP_JSON_B64:([A-Za-z0-9+/=]+)", output)
+        if b64_match:
+            raw_tasks = json.loads(
+                base64.b64decode(b64_match.group(1)).decode("utf-8")
+            )
+        else:
+            raw_tasks = next(extract_json(output))
+    except (json.JSONDecodeError, ValueError, StopIteration, TypeError) as exc:
         logger.error(f"Could not parse PowerShell JSON output: {exc}")
         logger.debug(f"Raw output: {output}")
         return tasks
@@ -768,10 +851,9 @@ if ($results.Count -gt 0) {{
             # StartBoundary
             start = trigger.get("start_boundary")
             if start:
-                try:
-                    task_info["start_date"] = datetime.datetime.fromisoformat(start)
-                except ValueError:
-                    task_info["start_date"] = start
+                parsed_start = _parse_windows_task_datetime(start)
+                if parsed_start:
+                    task_info["start_date"] = parsed_start
 
             # Intra-day repetition interval (applies to any trigger type)
             rep_interval = trigger.get("repetition_interval")
@@ -802,6 +884,27 @@ if ($results.Count -gt 0) {{
                     if weeks_interval:
                         task_info["interval"] = int(weeks_interval)
                         task_info["interval_unit"] = "weeks"
+
+            # MSFT_TaskMonthlyTrigger
+            elif trigger_type == "MSFT_TaskMonthlyTrigger":
+                months_count = trigger.get("months_count")
+                if months_count and not rep_interval:
+                    # Creation selects months with range(0, 12, interval) so the
+                    # closest inverse is 12 / number of selected months
+                    task_info["interval"] = max(1, round(12 / int(months_count)))
+                    task_info["interval_unit"] = "months"
+
+        # Monthly triggers may be reported as generic MSFT_TaskTrigger without
+        # any schedule detail via CIM, fallback to parsing the exported task XML
+        if task_info["interval_unit"] is None:
+            months_match = re.search(
+                r"<Months>(.*?)</Months>", raw_task.get("xml") or "", re.S
+            )
+            if months_match:
+                months_count = len(re.findall(r"<\w+\s*/>", months_match.group(1)))
+                if months_count:
+                    task_info["interval"] = max(1, round(12 / months_count))
+                    task_info["interval_unit"] = "months"
 
         tasks.append(task_info)
         logger.debug(f"Parsed task info: {task_info}")
@@ -916,7 +1019,7 @@ def create_scheduled_task_windows(
     elif interval is not None and interval_unit == "weeks":
         # Every N weeks on the start day's weekday
         ref_date = start_date_time if start_date_time else datetime.datetime.now()
-        start_day = ref_date.strftime("%A")
+        start_day = _WEEKDAY_NAMES_EN[ref_date.weekday()]
         trigger = f"""<CalendarTrigger>
             <StartBoundary>{start_date}</StartBoundary>
             <Enabled>true</Enabled>
@@ -1007,17 +1110,18 @@ def create_scheduled_task_windows(
     </Settings>
     <Actions Context="Author">
         <Exec>
-        <Command>"{runner}"</Command>
-        <Arguments>{task_args}</Arguments>
-        <WorkingDirectory>{executable_dir}</WorkingDirectory>
+        <Command>"{xml_escape(runner)}"</Command>
+        <Arguments>{xml_escape(task_args)}</Arguments>
+        <WorkingDirectory>{xml_escape(executable_dir)}</WorkingDirectory>
         </Exec>
     </Actions>
     </Task>"""
-    # Create task XML file with UTF-8 encoding to match XML declaration
-    # And yes, we know that we need to write an UTF-8 file with UTF-16 encoding
-    # thanks windows
+    # Write the task XML as UTF-8 with BOM so PowerShell 5.1 Get-Content
+    # decodes it correctly (BOM-less files would be read as ANSI and mangle
+    # non-ASCII paths). The declaration keeps UTF-16 since Register-ScheduledTask
+    # ultimately consumes the content as a native UTF-16 string
     try:
-        with open(temp_task_file, "w", encoding="utf-8") as file_handle:
+        with open(temp_task_file, "w", encoding="utf-8-sig") as file_handle:
             file_handle.write(SCHEDULED_TASK_FILE_CONTENT)
     except OSError as exc:
         logger.error(
@@ -1030,44 +1134,63 @@ def create_scheduled_task_windows(
 
     if isinstance(user_credentials, tuple) and len(user_credentials) == 2:
         logger.info(f"Registering task as user {user_credentials[0]}")
-        user_arg = f"-User {user_credentials[0]} -Password {user_credentials[1]}"
+        # NPF-SEC-00017: Credentials are passed as base64 encoded variables so
+        # they never appear as plaintext literals nor depend on quoting
+        credentials_ps = "$taskUser = {}\n$taskPassword = {}".format(
+            _ps_b64_literal(user_credentials[0]),
+            _ps_b64_literal(user_credentials[1]),
+        )
+        user_arg = "-User $taskUser -Password $taskPassword"
     else:
         logger.info("Registering task to run as SYSTEM user")
+        credentials_ps = ""
         user_arg = "-User 'SYSTEM'"
 
-    task_name = _get_scheduled_task_name_windows(
-        config_file, task_type, object_type, object_name
+    ps_script = """{}
+$taskName = {}
+$taskXml = Get-Content -LiteralPath ({}) -Raw
+Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+Register-ScheduledTask -TaskName $taskName -Xml $taskXml {}
+""".format(
+        credentials_ps,
+        _ps_b64_literal(task_name),
+        _ps_b64_literal(temp_task_file),
+        user_arg,
     )
 
-    ps_script = """
-Unregister-ScheduledTask -TaskName '{}' -Confirm:$false -ErrorAction SilentlyContinue
-Register-ScheduledTask -TaskName '{}' -Xml (Get-Content -LiteralPath '{}' -Raw) {}
-""".format(task_name, task_name, temp_task_file, user_arg)
-
     try:
-        runner = PowerShellRunner()
-        runner.identifier_string = f"npbackup_register_task"
-        runner.elevate_message = (
+        ps_runner = PowerShellRunner()
+        ps_runner.identifier_string = "npbackup_register_task"
+        ps_runner.elevate_message = (
             f"Running elevated {SHORT_PRODUCT_NAME} task registration"
         )
-        if _DEBUG == True:
-            runner.interactive = True
-        exit_code, output = runner.run_script(ps_script, elevated=True)
+        if _DEBUG:
+            ps_runner.interactive = True
+        exit_code, output = ps_runner.run_script(ps_script, elevated=True)
         if exit_code != 0:
+            # NPF-SEC-00017: Never log the script content since it may contain
+            # credentials, and redact the password from any output
+            if (
+                isinstance(user_credentials, tuple)
+                and len(user_credentials) == 2
+                and user_credentials[1]
+            ):
+                output = str(output).replace(str(user_credentials[1]), "***")
             logger.error(
-                f"Could not create new task: cmd {ps_script}\nexit_code {exit_code}: {output}"
+                f"Could not create new task {task_name}: exit_code {exit_code}: {output}"
             )
             return False
     except OSError as exc:
         logger.error(f"Could not create new task: {exc}")
         return False
-
-    for temp_file in [temp_task_file]:
+    finally:
         try:
-            os.remove(temp_file)
+            os.remove(temp_task_file)
         except OSError as exc:
             logger.warning(
-                "Could not remove temporary task file {}: {}".format(temp_file, exc)
+                "Could not remove temporary task file {}: {}".format(
+                    temp_task_file, exc
+                )
             )
     logger.info("Scheduled task created.")
     return True
@@ -1083,14 +1206,14 @@ def _delete_scheduled_task_windows(
         config_file, task_type, object_type, object_name
     )
 
-    ps_cmd = "Unregister-ScheduledTask -TaskName '{}' -Confirm:$false -ErrorAction SilentlyContinue".format(
-        task_name
+    ps_cmd = "Unregister-ScheduledTask -TaskName ({}) -Confirm:$false -ErrorAction SilentlyContinue".format(
+        _ps_b64_literal(task_name)
     )
     try:
-        runner = PowerShellRunner()
-        runner.identifier_string = f"npbackup_delete_task"
-        runner.elevate_message = f"Running elevated {SHORT_PRODUCT_NAME} task deletion"
-        exit_code, output = runner.run_script(
+        ps_runner = PowerShellRunner()
+        ps_runner.identifier_string = "npbackup_delete_task"
+        ps_runner.elevate_message = f"Running elevated {SHORT_PRODUCT_NAME} task deletion"
+        exit_code, output = ps_runner.run_script(
             ps_cmd, elevated=True, valid_exit_codes=[0, 1]
         )
         if not exit_code in [0, 1]:
