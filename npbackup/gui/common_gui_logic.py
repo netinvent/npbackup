@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.common_gui_logic"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026040301"
+__build__ = "2026070301"
 
 
 import os
@@ -1857,8 +1857,9 @@ def update_task_ui_for_object(
     if not is_wizard:
         window["-TASK-TYPE-"].update(value=task["task_type"])
     window["-BACKUP-INTERVAL-"].update(value=task["interval"])
+    # interval_unit may be None for tasks whose schedule could not be parsed
     window["-BACKUP-INTERVAL-UNIT-"].update(
-        value=combo_boxes["backup_interval_unit"][task["interval_unit"]]
+        value=combo_boxes["backup_interval_unit"].get(task["interval_unit"], "")
     )
 
     object_type = task["object_type"]
@@ -1868,7 +1869,7 @@ def update_task_ui_for_object(
             value=create_object_name_for_combo(object_type, object_name)
         )
 
-    if task["start_date"]:
+    if isinstance(task["start_date"], datetime):
         window["-FIRST-BACKUP-DATE-"].update(
             value=task["start_date"].strftime("%Y-%m-%d")
         )
