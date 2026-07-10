@@ -735,15 +735,7 @@ def global_healthchecksio_col():
                         ),
                     ],
                     [
-                        sg.Text(_t("generic.username"), size=(40, 1)),
-                        sg.Input(key="global_healthchecksio.username", size=(50, 1)),
-                    ],
-                    [
-                        sg.Text(_t("generic.password"), size=(40, 1)),
-                        sg.Input(key="global_healthchecksio.password", size=(50, 1)),
-                    ],
-                    [
-                        sg.Text(_t("generic.timeout"), size=(40, 1)),
+                        sg.Text(_t("generic.timeout") + " (" + _t("generic.seconds") + ")", size=(40, 1)),
                         sg.Input(key="global_healthchecksio.timeout", size=(50, 1)),
                     ],
                 ],

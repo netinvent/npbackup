@@ -279,11 +279,7 @@ empty_config_dict = {
     "global_webhooks": {
         "enabled": False,
         "destination": None,
-        "method": "POST",
-        "username": None,
-        "password": None,
         "timeout": 10,  # in seconds
-        "pretty_json": False,
         "no_cert_verify": False,
     },
     "global_email": {
