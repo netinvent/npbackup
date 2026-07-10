@@ -735,7 +735,10 @@ def global_healthchecksio_col():
                         ),
                     ],
                     [
-                        sg.Text(_t("generic.timeout") + " (" + _t("generic.seconds") + ")", size=(40, 1)),
+                        sg.Text(
+                            _t("generic.timeout") + " (" + _t("generic.seconds") + ")",
+                            size=(40, 1),
+                        ),
                         sg.Input(key="global_healthchecksio.timeout", size=(50, 1)),
                     ],
                 ],
