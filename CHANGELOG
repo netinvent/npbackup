@@ -30,12 +30,13 @@ as well as a newer monitoring system
    - Storage heuristics analyze modified files counts to predict possible ransomware attacks
  - GUI:
    - A new configuration wizard has been added to simplify first time setups
+   - Operation center now handles all task types
    - Windows are now DPI aware and resizable
    - Interface can now switch light and dark themes
    - Overall interface cosmetic improvements
    - Rescale GUI for screens with 1280x800 size
  - CLI:
-
+   - New forget-snapshots-with-tags option to mass remove specific snapshots
  - SFTP storage backend now works natively on Windows 7+
  - Building
    - Multiple private audiences are now accepted
@@ -49,6 +50,8 @@ as well as a newer monitoring system
 #### Misc
  - Legacy 64-bit builds now work with faster and less memory hungry json implementation (msgspec)
  - Legacy arm and arm64 builds now use Python 3.8, allowing the usage of msgspec too
+ - Updated integrated restic binaries to v0.19
+ - Legacy restic binaries for Windows are now digitally signed
  - Updated Nuitka compiler from 2.7.16 to 4.1
 
 ## 3.0.4
