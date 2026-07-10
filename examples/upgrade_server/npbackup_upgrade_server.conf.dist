@@ -10,6 +10,7 @@ http_server:
         audience:
         - private
         - public
+        - myaudience
 
 
 upgrades:
