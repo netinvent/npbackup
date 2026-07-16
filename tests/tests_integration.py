@@ -6,7 +6,7 @@ __intname__ = "npbackup_cli_tests"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "BSD-3-Clause"
-__build__ = "2026040301"
+__build__ = "2026071601"
 
 
 import os
@@ -180,6 +180,7 @@ def test_uri_parsing():
             "host": "sftp.example.com",
             "port": None,
             "path": "/path/to/repo",
+            "url_syntax": False,
         },
         "sftp:restic@192.168.254.254:/repo": {
             "backend_type": "sftp",
@@ -187,6 +188,7 @@ def test_uri_parsing():
             "host": "192.168.254.254",
             "port": None,
             "path": "/repo",
+            "url_syntax": False,
         },
         # When using custom ports, we need sftp:// url syntax and :port// format
         "sftp://user@[::1]:2222//srv/restic-repo": {
@@ -195,6 +197,15 @@ def test_uri_parsing():
             "host": "::1",
             "port": 2222,
             "path": "//srv/restic-repo",
+            "url_syntax": True,
+        },
+        "sftp://acme-user@10.10.10.10://acme-user/restic": {
+            "backend_type": "sftp",
+            "username": "acme-user",
+            "host": "10.10.10.10",
+            "port": None,
+            "path": "//acme-user/restic",
+            "url_syntax": True,
         },
         "sftp://user@sftp.example.tld:12345//myrepo": {
             "backend_type": "sftp",
@@ -202,6 +213,7 @@ def test_uri_parsing():
             "host": "sftp.example.tld",
             "port": 12345,
             "path": "//myrepo",
+            "url_syntax": True,
         },
         "sftp:restic-backup-host:/srv/restic-repo": {
             "backend_type": "sftp",
@@ -209,6 +221,7 @@ def test_uri_parsing():
             "host": "restic-backup-host",
             "port": None,
             "path": "/srv/restic-repo",
+            "url_syntax": False,
         },
         "rest:http://user:pass@host:8888/repo": {
             "backend_type": "rest",

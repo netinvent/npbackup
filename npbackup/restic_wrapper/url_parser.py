@@ -183,6 +183,9 @@ def parse_restic_repo(repo_uri: str) -> dict:
             # Step 0: restic can do sftp://user@host:port//path or sftp:user@host:/path but only the url syntax allows custom ports
             if rest.startswith("//"):
                 rest = rest[2:]
+                url_syntax = True
+            else:
+                url_syntax = False
 
             # Step 1: optional user@
             if "@" in rest:
@@ -234,6 +237,7 @@ def parse_restic_repo(repo_uri: str) -> dict:
                 "host": host,
                 "port": port,
                 "path": path,
+                "url_syntax": url_syntax,  # indicates if sftp:// syntax was used
             }
 
         def _parse_s3(rest: str) -> dict:
@@ -450,6 +454,7 @@ def build_restic_uri(_repo_uri_dict: dict, anonymized: bool = False) -> str:
 
     elif backend_type == "sftp":
         user = f"{repo_uri_dict['username']}@" if repo_uri_dict.get("username") else ""
+        url_syntax = repo_uri_dict.get("url_syntax", False)
         host = repo_uri_dict[
             "host"
         ]  # already bracketed by top-level IPv6 check if needed
@@ -463,7 +468,7 @@ def build_restic_uri(_repo_uri_dict: dict, anonymized: bool = False) -> str:
                 "/" + path
             )  # ensure path starts with slash for correct round-tripping
         # restic can use either sftp:user@host:/path or sftp://user@host:port//path syntax, only the latter supports custom ports
-        if port != ":":
+        if port != ":" or url_syntax:
             return f"{backend_type}://{user}{host}{port}{path}"
         else:
             return f"{backend_type}:{user}{host}{port}{path}"
