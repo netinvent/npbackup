@@ -2,8 +2,8 @@
 
 set -e
 
-GO_VERSION=1.25.11
 RESTIC_VERSION=0.19.1
+GO_VERSION=1.25.12
 
 LOG_FILE=${0%.sh}.log
 
@@ -51,10 +51,18 @@ if [ -d go ]; then
     rm -rf go || log_quit "Failed to remove existing Go directory" "ERROR"
 fi
 
-tar xvf go${GO_VERSION}.linux-amd64.tar.gz || log_quit "Failed to extract Go ${GO_VERSION} archive" "ERROR"
+tar xf go${GO_VERSION}.linux-amd64.tar.gz || log_quit "Failed to extract Go ${GO_VERSION} archive" "ERROR"
 
-git apply --directory=go/src --check win7sup25.diff || log_quit "Windows 7 support patch cannot be applied cleanly" "ERROR"
+git apply --directory=go/src --check win7sup25.diff
+if [ $? -ne 0 ]; then
+        log_quit "Test: Windows 7 support patch cannot be applied cleanly" "ERROR"
+fi
 git apply --directory=go/src win7sup25.diff || log_quit "Failed to apply Windows 7 support patch" "ERROR"
+if [ $? -ne 0 ]; then
+        log_quit "Actual Windows 7 support patch cannot be applied cleanly" "ERROR"
+else
+        log "Windows 7 support patch has been applied"
+fi
 
 if [ ! -f restic-${RESTIC_VERSION}.tar.gz ]; then
     ${DL_PROGRAM} https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic-${RESTIC_VERSION}.tar.gz || log_quit "Restic ${RESTIC_VERSION} archive not downloaded" "ERROR"
@@ -64,7 +72,7 @@ if [ -d restic-${RESTIC_VERSION} ]; then
     log "Removing existing restic source directory"
     rm -rf restic-${RESTIC_VERSION} || log_quit "Failed to remove existing restic source directory" "ERROR"
 fi
-tar xvf restic-${RESTIC_VERSION}.tar.gz || log_quit "Failed to extract restic ${RESTIC_VERSION} archive" "ERROR"
+tar xf restic-${RESTIC_VERSION}.tar.gz || log_quit "Failed to extract restic ${RESTIC_VERSION} archive" "ERROR"
 
 for goos in windows; do
     for goarch in 386 amd64; do

@@ -1,4 +1,4 @@
-@echo off
+::@echo off
 
 :: Runs on Win10+ and provides restic binaries for Win7 without the need to rampup all intermediate go compilers
 
@@ -6,7 +6,7 @@
 :: with some mods to specify restic versions and produce both 32 and 64 bit executables
 
 SET RESTIC_VERSION=0.19.1
-SET GO_BINARIES_VERSION=1.25.11
+SET GO_BINARIES_VERSION=1.25.12
 
 SET LOG_FILE=%~n0.log
 SET BUILD_DIR=%~dp0BUILD
@@ -17,13 +17,13 @@ set RESTIC_URL=https://github.com/restic/restic/releases/download/v%RESTIC_VERSI
 set GO_BINARIES_VERSION=https://go.dev/dl/go%GO_BINARIES_VERSION%.windows-amd64.zip
 set PATCH_URL=https://gist.github.com/DRON-666/6e29eb6a8635fae9ab822782f34d8fd6/raw/win7sup25.diff
 set BUSYBOX_URL=https://frippery.org/files/busybox/busybox64.exe
-set BUSYBOX="%BUILD_DIR%\busybox64.exe"
+set BUSYBOX=%BUILD_DIR%\busybox64.exe
 set GOTOOLCHAIN=local
 
 call:Log "Running legacy restic builder"
 
 call:Log "Fetching busybox"
-if not exist %BUSYBOX% (powershell -Command (New-Object System.Net.WebClient^).DownloadFile('"%BUSYBOX_URL%"','%BUSYBOX%'^) || GOTO ERROR)
+if not exist %BUSYBOX% (powershell -Command (New-Object System.Net.WebClient^).DownloadFile('%BUSYBOX_URL%','%BUSYBOX%'^) || GOTO ERROR)
 call:Log "Fetching GO %GO_BINARIES_VERSION% compiler"
 call:process %GO_BINARIES_VERSION% %BUILD_DIR%\go %PATCH_URL%
 call:Log "Fetching restic %RESTIC_VERSION% sources"
