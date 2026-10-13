@@ -7,15 +7,20 @@ __intname__ = "npbackup.core.monitoring.prometheus"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026031301"
+__build__ = "2026101201"
 
 from typing import Dict, List, Any
 from logging import getLogger
+import os
+import re
 import requests
 from npbackup.core.monitoring import MonitoringBackend
 from npbackup.__version__ import __intname__, version_dict
 
 logger = getLogger()
+
+# What Windows or Unix refuse in a file name, and control characters
+_FILENAME_FORBIDDEN = re.compile(r'[\x00-\x1f/\\:*?"<>|]')
 
 
 class PrometheusMonitor(MonitoringBackend):
@@ -31,7 +36,8 @@ class PrometheusMonitor(MonitoringBackend):
 
         Args:
             repo_config: Repository configuration dictionary
-            append_mode: Whether to append to metrics file instead of overwriting, useful for group runner
+            append_mode: Kept for the backend interface. Text files no longer use it:
+                each repository and operation writes a file of its own, see _write_to_file
         """
         super().__init__(repo_config, monitoring_config)
         self.append_mode = append_mode
@@ -91,7 +97,7 @@ class PrometheusMonitor(MonitoringBackend):
                 destination, no_cert_verify, prom_metrics, operation
             )
         else:
-            return self._write_to_file(destination, prom_metrics)
+            return self._write_to_file(destination, prom_metrics, operation)
 
     def _convert_to_prometheus_format(self, metrics: Dict[str, Any]) -> List[str]:
         """
@@ -182,19 +188,44 @@ class PrometheusMonitor(MonitoringBackend):
         )
         return result
 
-    def _write_to_file(self, destination: str, metrics: List[str]) -> bool:
+    def _write_to_file(
+        self, destination: str, metrics: List[str], operation: str
+    ) -> bool:
         """
         Write metrics to file for node_exporter text collector
 
+        Each repository and operation writes its own file, named like its pushgateway
+        job (see #150): npbackup.prom becomes
+        npbackup___repo_name=<repo>___action=<operation>.prom, and each run replaces
+        its own file. A single file used to be rewritten by every operation, erasing
+        the backup metrics, or appended to, repeating series node_exporter rejects.
+
         Args:
-            destination: File path
+            destination: File path, used as a name pattern
             metrics: List of Prometheus-formatted metrics
+            operation: Operation name
 
         Returns:
             True if successful, False otherwise
         """
-        result = self.write_metrics_file(destination, metrics, append=self.append_mode)
-        return result
+        repo_name = self.get_config_value("name")
+        filename = self.metrics_filename(destination, repo_name, operation)
+        return self.write_metrics_file(filename, metrics)
+
+    @staticmethod
+    def metrics_filename(destination: str, repo_name: str, operation: str) -> str:
+        """
+        File for one repository and operation: destination with the pushgateway job
+        suffix ___repo_name=<repo>___action=<operation> before its extension
+        Characters a file name cannot hold are replaced by _
+        """
+        directory, name = os.path.split(destination)
+        stem, extension = os.path.splitext(name)
+        suffix = "___repo_name={}___action={}".format(
+            _FILENAME_FORBIDDEN.sub("_", str(repo_name)),
+            _FILENAME_FORBIDDEN.sub("_", str(operation)),
+        )
+        return os.path.join(directory, f"{stem}{suffix}{extension}")
 
     @staticmethod
     def create_labels_string(labels: dict) -> str:
