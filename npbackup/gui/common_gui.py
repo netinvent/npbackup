@@ -1292,10 +1292,11 @@ def scheduling_col(is_wizard: bool = False, task_types: Optional[list] = None):
     schedule_col = object_selector
     if not is_wizard:
         schedule_col = schedule_col + [[sg.HorizontalSeparator()]]
-    if os.name == "nt":
-        schedule_col = (
-            schedule_col + first_backup_scheduling + [[sg.HorizontalSeparator()]]
-        )
+    # Every task starts from a first run date, on every platform: it decides the
+    # weekday or day of the month weekly and monthly tasks run on
+    schedule_col = (
+        schedule_col + first_backup_scheduling + [[sg.HorizontalSeparator()]]
+    )
     schedule_col += schedule
     return schedule_col
 

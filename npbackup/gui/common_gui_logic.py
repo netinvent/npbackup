@@ -7,7 +7,7 @@ __intname__ = "npbackup.gui.common_gui_logic"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026070301"
+__build__ = "2026101601"
 
 
 import os
@@ -1779,12 +1779,8 @@ def create_scheduled_task(
         date_string = f'{values["-FIRST-BACKUP-DATE-"]} {str(values["-FIRST-BACKUP-HOUR-"]).zfill(2)}:{str(values["-FIRST-BACKUP-MINUTE-"]).zfill(2)}'
         start_date_time = datetime.strptime(date_string, "%Y-%m-%d %H:%M")
     except (ValueError, TypeError, IndexError, KeyError) as exc:
-        # Only Windows task scheduler needs a first date
-        if os.name == "nt":
-            popup_error(_t("config_gui.task_invalid_date_format") + f": {exc}")
-            return False, full_config
-        else:
-            start_date_time = None
+        popup_error(_t("config_gui.task_invalid_date_format") + f": {exc}")
+        return False, full_config
 
     run_as = values["-SCHEDULE-RUN-AS-"]
     if run_as in ["SYSTEM", "root"]:

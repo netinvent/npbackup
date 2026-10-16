@@ -7,7 +7,7 @@ __intname__ = "npbackup.task"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026070302"
+__build__ = "2026101602"
 
 
 import sys
@@ -50,14 +50,34 @@ else:
 
 logger = logging.getLogger()
 
+# The command line arguments each scheduled task type runs
 SCHEDULER_TASKS = {
     "backup": "backup",
     "housekeeping": "housekeeping",
+    "quick_check": "check quick",
+    "full_check": "check full",
+    "forget": "policy",
+    "prune": "prune",
+}
+
+# What tasks created by earlier builds run instead, which the command line refuses
+# (--check takes quick or full, --forget takes snapshots, forgetting by policy is --policy)
+# Still recognized, so those tasks are listed and get replaced when saved again
+LEGACY_SCHEDULER_TASKS = {
     "quick_check": "check --quick",
     "full_check": "check --full",
     "forget": "forget",
-    "prune": "prune",
 }
+
+
+def get_task_args(task_type: str, force: bool = True) -> str:
+    """
+    Command line arguments of a scheduled task's operation
+    force only applies to backups, and skips minimum backup age and random delay
+    """
+    if task_type == "backup":
+        return "--backup --force" if force else "--backup"
+    return f"--{SCHEDULER_TASKS[task_type]}"
 
 #### JSON extractor from string ####
 #### Blatantly stolen from https://stackoverflow.com/a/55525704/2635443
@@ -197,6 +217,7 @@ def create_scheduled_task(
             object_name,
             user_credentials,
             CURRENT_EXECUTABLE,
+            start_date_time=start_date_time,
             interval=interval,
             interval_unit=interval_unit,
             days=days,
@@ -332,6 +353,65 @@ def _parse_cron_dow_field(dow_field: str) -> List[str]:
     return [_DOW_FROM_INT[value] for value in sorted(found)]
 
 
+def _cron_field_values(field: str, low: int, high: int) -> Optional[List[int]]:
+    """
+    Values a cron field allows, in the forms npbackup writes: '*', '*/N', a number,
+    or a comma separated list of numbers. None for any other form
+    """
+    field = str(field).strip()
+    if field == "*":
+        return list(range(low, high + 1))
+    if field.startswith("*/") and field[2:].isdigit() and int(field[2:]) > 0:
+        return list(range(low, high + 1, int(field[2:])))
+    values = []
+    for part in field.split(","):
+        if not part.strip().isdigit():
+            return None
+        values.append(int(part))
+    return values
+
+
+def _cron_next_run(
+    minute: str,
+    hour: str,
+    dom: str,
+    month: str,
+    dow: str,
+    now: Optional[datetime.datetime] = None,
+) -> Optional[datetime.datetime]:
+    """
+    When a cron job next runs, used as its task's start date, since cron keeps none
+    It carries the job's time of day, and its weekday or day of the month, so that a task
+    shows them and saving it again writes the same job
+    None when the fields are not in a form npbackup writes
+    """
+    now = (now or datetime.datetime.now()).replace(second=0, microsecond=0)
+    minutes = _cron_field_values(minute, 0, 59)
+    hours = _cron_field_values(hour, 0, 23)
+    days = _cron_field_values(dom, 1, 31)
+    months = _cron_field_values(month, 1, 12)
+    weekdays = _parse_cron_dow_field(dow)
+    if minutes is None or hours is None or days is None or months is None:
+        return None
+    day = now.date()
+    # Four years, so that a job on February 29 is found too
+    for _ in range(4 * 366):
+        if (
+            day.day in days
+            and day.month in months
+            and (not weekdays or _WEEKDAY_NAMES_EN[day.weekday()] in weekdays)
+        ):
+            for run_hour in hours:
+                for run_minute in minutes:
+                    run = datetime.datetime.combine(
+                        day, datetime.time(run_hour, run_minute)
+                    )
+                    if run >= now:
+                        return run
+        day += datetime.timedelta(days=1)
+    return None
+
+
 def _get_cron_comment(
     config_file: Path, task_type: str, object_type: str, object_name: str
 ) -> str:
@@ -381,7 +461,10 @@ def _read_existing_scheduled_task_unix(
                         "task_type": task_type,
                         "interval": None,
                         "interval_unit": None,
-                        "start_date": None,  # cron has no start date concept
+                        # cron keeps no start date: the job's next run stands for it
+                        "start_date": _cron_next_run(
+                            job.minute, job.hour, job.dom, job.month, job.dow
+                        ),
                         "days_of_week": [],
                     }
 
@@ -454,13 +537,7 @@ def create_scheduled_task_unix(
         cli_executable_path = f'"{cli_executable_path}"'
 
     object_args = get_object_args(object_type, object_name)
-    if task_type == "backup":
-        if force:
-            task_arg = "--backup --force"
-        else:
-            task_arg = "--backup"
-    else:
-        task_arg = f"--{SCHEDULER_TASKS[task_type]}"
+    task_arg = get_task_args(task_type, force)
     task_args = f'-c "{str(config_file)}" {task_arg} --run-as-cli{object_args}'
     command = f'cd "{executable_dir}" && {cli_executable_path} {task_args}'
     comment = _get_cron_comment(config_file, task_type, object_type, object_name)
@@ -810,9 +887,12 @@ Write-Output ('NPBACKUP_JSON_B64:' + [Convert]::ToBase64String([System.Text.Enco
         meta = task_lookup[task_name]
         arguments = raw_task.get("arguments", "")
 
-        # Verify the task arguments actually match what we expect
+        # Verify the task arguments actually match what we expect, as written now or by earlier builds
+        expected_args = [f"--{SCHEDULER_TASKS[meta['task_type']]}"]
+        if meta["task_type"] in LEGACY_SCHEDULER_TASKS:
+            expected_args.append(f"--{LEGACY_SCHEDULER_TASKS[meta['task_type']]}")
         if (
-            f"--{SCHEDULER_TASKS[meta['task_type']]}" not in arguments
+            not any(expected_arg in arguments for expected_arg in expected_args)
             or str(config_file) not in arguments
             or meta["object_args"] not in arguments
         ):
@@ -943,13 +1023,7 @@ def create_scheduled_task_windows(
     else:
         start_date = datetime.datetime.now().replace(microsecond=0).isoformat()
 
-    if task_type == "backup":
-        if force:
-            task_arg = "--backup --force"
-        else:
-            task_arg = "--backup"
-    else:
-        task_arg = f"--{SCHEDULER_TASKS[task_type]}"
+    task_arg = get_task_args(task_type, force)
     task_args = (
         f'{task_args}-c "{str(config_file)}" {task_arg} --run-as-cli{object_args}'
     )
