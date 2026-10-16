@@ -52,7 +52,9 @@ Also, when wrong password is entered, we should wait in order to reduce brute fo
 # NPF-SEC-00010: Date attacks
 
 When using retention policies, we need to make sure that current system date is good, in order to avoid wrong retention deletions.  
-When set, an external NTP server is used to get the offset. If offset is high enough (10 min), we avoid executing the retention policies.
+When set, an external NTP server is used to get the offset. If offset is high enough (10 min), we avoid executing the retention policies.  
+If the NTP server cannot be reached, retention policies are still applied by default, so anyone able to block NTP traffic can disable this check.  
+Setting `abort_on_ntp_failure` makes an unreachable NTP server prevent retention policies from being applied too.
 
 # NPF-SEC-00011: Default AES key obfuscation
 

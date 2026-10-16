@@ -42,6 +42,7 @@ as well as a newer monitoring system
    - Multiple private audiences are now accepted
    - Added migration path from public to private audiences
    - Add AES key rotation
+ - Add abort_on_ntp_failure retention option to refuse retention when the NTP server cannot be reached
    
 #### Fixes
  - A lot of smaller fixes, especially GUI related, see commit history for more details
