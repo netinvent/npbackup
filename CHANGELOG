@@ -54,6 +54,7 @@ as well as a newer monitoring system
  - Updated integrated restic binaries to v0.19
  - Legacy restic binaries for Windows are now digitally signed
  - Updated Nuitka compiler from 2.7.16 to 4.1
+ - use_fs_snapshot now defaults to off on non-Windows systems to avoid warnings about non Windows support
 
 ## 3.0.4
 #### Disruptive changes

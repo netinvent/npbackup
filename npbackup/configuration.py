@@ -7,7 +7,7 @@ __intname__ = "npbackup.configuration"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026052201"
+__build__ = "2026101801"
 __version__ = "npbackup 3.1.0+"
 
 
@@ -167,7 +167,7 @@ empty_config_dict = {
                 "stdin_filename": None,
                 "tags": [],
                 "pack_size": 0,  # integer, 4 is minimum, 16 is default with restic 0.18
-                "use_fs_snapshot": True,
+                "use_fs_snapshot": os.name == "nt",  # VSS is Windows-only, elsewhere restic would only warn on every backup
                 "ignore_cloud_files": True,
                 "one_file_system": False,
                 "priority": "low",
