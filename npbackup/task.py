@@ -108,7 +108,9 @@ def extract_json(s, index=0):
         else:
             index = min(next_brace, next_bracket)
         try:
-            yield json.loads(s, cls=(decoder := RawJSONDecoder(index)))
+            # No assignment expression: the legacy builds' Python 3.7 cannot read one
+            decoder = RawJSONDecoder(index)
+            yield json.loads(s, cls=decoder)
             index = decoder.end
         except json.JSONDecodeError:
             index += 1
