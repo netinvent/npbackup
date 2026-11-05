@@ -78,10 +78,19 @@ We need to make sure that sftp password never gets logged in debug mode
 
 # NPF-SEC-00016: Don't leak additional keys into debug logs
 
-We need to make sure that adding keys never gets logged in debug mode
+We need to make sure that adding keys never gets logged in debug mode.  
+A new key's password is never given on the command line, where every user of the machine can read it: `--keys add` reads it from `--new-key-password-file`, else asks for it, else reads it from stdin, and `--keys add=<password>` is refused.  
+It reaches restic through a pipe on restic's stdin, never through a shell or on restic's command line, and the JSON output never echoes it.
 
 # NPF-SEC-00017: Don't leak scheduled task credentials
 
 When registering a Windows scheduled task with user credentials, the generated PowerShell script contains a password.  
 The script content must never be logged, and passwords are redacted from PowerShell output before logging errors.  
 Credentials, task names and file paths are passed as base64 encoded expressions to the generated scripts, which also prevents PowerShell injection via crafted repo/group names and avoids quoting/encoding issues.
+
+# NPF-SEC-00018: Don't leak the configuration handed over to NPBackup 4.x
+
+NPBackup 4.x cannot decrypt this configuration, whose key is compiled into this build: `--export-for-4x <public key>` hands it over, its secrets decrypted, but never in clear.  
+It is sealed with HPKE (RFC 9180: X25519, HKDF-SHA256, AES-256-GCM) for the one-time public key the 4.x installer makes for that migration, and only the sealed block is written, on stdout; there is no clear mode. Its header lines are bound to it, so a changed header does not open.  
+Only an administrator may export, and a manager password set on a repository or group must be given in NPBACKUP_MANAGER_PASSWORD, as with `--show-config`. 4.x is told that there was one, not the password; the file's own text goes as it is on disk, where npbackup keeps it encrypted.  
+The configuration file is read through a private copy, so it is never rewritten, and the log says what was exported for which key, never its content.

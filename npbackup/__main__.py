@@ -10,6 +10,8 @@ import os
 import sys
 from pathlib import Path
 import atexit
+import getpass
+from typing import Optional
 from time import sleep
 from argparse import ArgumentParser
 from datetime import datetime, timezone
@@ -45,6 +47,36 @@ def json_error_logging(result: bool, msg: str, level: str):
         js = {"result": result, "reason": msg}
         print(json.dumps(js))
     logger.__getattribute__(level)(msg)
+
+
+def read_new_key_password(password_file: Optional[str]) -> Optional[str]:
+    """
+    NPF-SEC-00016: A new key's password is read from a file, else asked for (twice, not shown)
+    when stdin is a terminal, else read from stdin's first line.
+    Never from the command line, where every user of the machine can read it
+    """
+    if password_file:
+        try:
+            with open(password_file, "r", encoding="utf-8") as file_handle:
+                password = file_handle.readline().rstrip("\r\n")
+        except OSError as exc:
+            json_error_logging(
+                False,
+                f"Cannot read new key password file {password_file}: {exc}",
+                level="critical",
+            )
+            return None
+    elif sys.stdin.isatty():
+        password = getpass.getpass("New key's password: ")
+        if password != getpass.getpass("The same again: "):
+            json_error_logging(False, "The two passwords differ", level="critical")
+            return None
+    else:
+        password = sys.stdin.readline().rstrip("\r\n")
+    if not password:
+        json_error_logging(False, "The new key's password is empty", level="critical")
+        return None
+    return password
 
 
 def cli_interface():
@@ -212,7 +244,15 @@ This is free software, and you are welcome to redistribute it under certain cond
         nargs="?",
         const="",
         required=False,
-        help="List keys in the repository, also takes optional add=<password>,<user> or remove=<keyid> to add or remove a key",
+        help="List keys in the repository, also takes optional add or remove=<keyid> to add or remove a key. "
+        "The new key's password is read from --new-key-password-file, else asked for, else read from stdin",
+    )
+    parser.add_argument(
+        "--new-key-password-file",
+        type=str,
+        default=None,
+        required=False,
+        help="File holding the new key's password, for --keys add",
     )
     operations.add_argument(
         "--raw",
@@ -325,6 +365,13 @@ This is free software, and you are welcome to redistribute it under certain cond
         required=False,
         help="Check if config file is valid",
     )
+    parser.add_argument(
+        "--export-for-4x",
+        type=str,
+        default=None,
+        required=False,
+        help="Hand this configuration over to NPBackup 4.x, sealed for the public key its installer gives. Administrators only",
+    )
     args = parser.parse_args()
 
     if args.log_file:
@@ -341,6 +388,14 @@ This is free software, and you are welcome to redistribute it under certain cond
         logger = ofunctions.logger_utils.logger_get_logger(
             log_file, console=_DEBUG, debug=_DEBUG
         )
+    elif args.export_for_4x:
+        # NPF-SEC-00018: stdout carries the sealed block alone, what is said goes to stderr
+        logger = ofunctions.logger_utils.logger_get_logger(
+            log_file, console=False, debug=_DEBUG
+        )
+        stderr_handler = logging.StreamHandler(sys.stderr)
+        stderr_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
+        logger.addHandler(stderr_handler)
     else:
         logger = ofunctions.logger_utils.logger_get_logger(log_file, debug=_DEBUG)
 
@@ -382,6 +437,12 @@ This is free software, and you are welcome to redistribute it under certain cond
             msg = "Cannot run without configuration file."
             json_error_logging(False, msg, "critical")
             sys.exit(70)
+
+    if args.export_for_4x:
+        # NPF-SEC-00018: before the configuration is loaded here, since loading may rewrite it
+        from npbackup import export4x
+
+        sys.exit(export4x.cli_export(config_file, args.export_for_4x))
 
     try:
         full_config = npbackup.configuration.load_config(config_file)
@@ -661,6 +722,20 @@ This is free software, and you are welcome to redistribute it under certain cond
     elif args.keys is not None or args.group_operation == "keys":
         cli_args["operation"] = "keys"
         cli_args["op_args"] = {"keys_arg": args.keys}
+        if args.keys and args.keys.startswith("add="):
+            # NPF-SEC-00016: Not echoed, what follows add= is a password
+            json_error_logging(
+                False,
+                "--keys add=<password> would show the password to every user of this machine: use --keys add, "
+                "which reads it from --new-key-password-file, else asks for it, else reads it from stdin",
+                level="critical",
+            )
+            sys.exit(76)
+        if args.keys == "add":
+            new_key_password = read_new_key_password(args.new_key_password_file)
+            if not new_key_password:
+                sys.exit(76)
+            cli_args["op_args"]["new_key_password"] = new_key_password
     elif args.raw or args.group_operation == "raw":
         cli_args["operation"] = "raw"
         cli_args["op_args"] = {"command": args.raw}

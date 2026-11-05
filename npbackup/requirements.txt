@@ -1,5 +1,7 @@
 command_runner>=1.7.6
 cryptidy>=1.2.4
+# NPF-SEC-00018: HPKE, to hand the configuration over to NPBackup 4.x sealed
+pycryptodomex>=3.23
 python-dateutil
 ofunctions.logger_utils>=2.5.0
 ofunctions.misc>=1.8.1

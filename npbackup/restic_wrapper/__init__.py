@@ -7,7 +7,7 @@ __intname__ = "npbackup.restic_wrapper"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026051801"
+__build__ = "2026101801"
 __version__ = "2.9.1"
 
 
@@ -527,9 +527,7 @@ class ResticRunner:
         if self.ssh_password:
             log_replace[self.ssh_password] = HIDDEN_BY_NPBACKUP
 
-        # NPF-SEC-00016: Don't leak new keys into debug logs
-        if _cmd.startswith("key add") and prefix:
-            log_replace[prefix] = HIDDEN_BY_NPBACKUP
+        # NPF-SEC-00016: A new key's password never reaches the command line, see keys()
 
         if self._executor_operation == "backup" and not self.is_init:
             self.init(errors_allowed=True)
@@ -1558,14 +1556,27 @@ class ResticRunner:
 
     def keys(self, add=None, remove=None) -> Union[bool, str, dict]:
         """
-        List keys in repository
+        List keys in repository, add one (add being its password) or remove one
+
+        NPF-SEC-00016: The new key's password reaches restic through a pipe on its stdin,
+        where restic reads it (the repository's own password comes from the environment):
+        never through a shell, on a command line, in a log or in the JSON output
         """
-        kwargs = locals()
-        kwargs.pop("self")
+        kwargs = {"add": HIDDEN_BY_NPBACKUP if add else None, "remove": remove}
 
         if add:
             cmd = "key add"
-            result, output = self.executor(cmd, prefix=f"echo {add}| ")
+            read_fd, write_fd = os.pipe()
+            try:
+                # A password is far smaller than a pipe's buffer, so writing never blocks
+                os.write(write_fd, f"{add}\n".encode("utf-8"))
+                os.close(write_fd)
+                write_fd = None
+                result, output = self.executor(cmd, stdin=read_fd)
+            finally:
+                if write_fd is not None:
+                    os.close(write_fd)
+                os.close(read_fd)
         elif remove:
             cmd = f"key remove {remove}"
             result, output = self.executor(cmd)

@@ -7,7 +7,7 @@ __intname__ = "npbackup.core.runner"
 __author__ = "Orsiris de Jong"
 __copyright__ = "Copyright (C) 2022-2026 NetInvent"
 __license__ = "GPL-3.0-only"
-__build__ = "2026091001"
+__build__ = "2026101801"
 
 
 from typing import Optional, Callable, Union, List
@@ -2090,28 +2090,40 @@ class NPBackupRunner:
     @has_permission
     @is_ready
     @apply_config_to_restic_runner
-    def keys(self, keys_arg: Optional[str] = None) -> bool:
+    def keys(
+        self, keys_arg: Optional[str] = None, new_key_password: Optional[str] = None
+    ) -> bool:
+        """
+        List keys (keys_arg None, empty or "list"), add one ("add", its password
+        in new_key_password) or remove one ("remove=<keyid>")
+
+        NPF-SEC-00016: The new key's password is never part of keys_arg, which gets logged
+        """
         add = None
         remove = None
-        if keys_arg:
-            if keys_arg.startswith("add="):
-                add = keys_arg[len("add=") :]
-                self.write_logs(
-                    f"Adding new key to repo {self.repo_name}", level="info"
-                )
-
-            elif keys_arg.startswith("remove="):
-                remove = keys_arg[len("remove=") :]
-                self.write_logs(
-                    f"Removing key {remove} from repo {self.repo_name}", level="info"
-                )
-            else:
-                self.write_logs(
-                    f"Unknown keys argument given: {keys_arg}", level="error"
-                )
-                return False
-        else:
+        if not keys_arg or keys_arg == "list":
             self.write_logs(f"Getting keys of repo {self.repo_name}", level="info")
+        elif keys_arg == "add":
+            if not new_key_password:
+                self.write_logs("No password given for the new key", level="error")
+                return False
+            add = new_key_password
+            self.write_logs(f"Adding new key to repo {self.repo_name}", level="info")
+        elif keys_arg.startswith("remove="):
+            remove = keys_arg[len("remove=") :]
+            self.write_logs(
+                f"Removing key {remove} from repo {self.repo_name}", level="info"
+            )
+        elif keys_arg.startswith("add="):
+            # Not echoed: what follows add= is a password
+            self.write_logs(
+                "A new key's password is not given with add=: use add, and give the password apart",
+                level="error",
+            )
+            return False
+        else:
+            self.write_logs(f"Unknown keys argument given: {keys_arg}", level="error")
+            return False
         result = self.restic_runner.keys(add=add, remove=remove)
         return result
 
