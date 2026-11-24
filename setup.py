@@ -17,7 +17,6 @@ DESCRIPTION = "One fits all solution for deduplicated and compressed backups on 
 
 import sys
 import os
-import pkg_resources
 import setuptools
 
 
@@ -64,10 +63,12 @@ def parse_requirements(filename):
     """
     try:
         requirements_txt = _read_file(filename)
-        install_requires = [
-            str(requirement)
-            for requirement in pkg_resources.parse_requirements(requirements_txt)
-        ]
+        install_requires = []
+        for line in requirements_txt.splitlines():
+            # Drop comments (whole line or trailing) and pip options
+            line = line.split(" #")[0].strip()
+            if line and not line.startswith(("#", "-")):
+                install_requires.append(line)
         return install_requires
     except OSError:
         print(
